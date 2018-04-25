@@ -180,7 +180,11 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error describing Redshift Cluster: %s, error: %#v", cluster, err)
+		return fmt.Errorf("Error describing Redshift Cluster: %s, error: %s", cluster, err)
+	}
+
+	if resp.Clusters == nil || len(resp.Clusters) == 0 {
+		return fmt.Errorf("Error describing Redshift Cluster: %s, cluster information not found", cluster)
 	}
 
 	rsc := *resp.Clusters[0]
@@ -190,7 +194,11 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
-	d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
+
+	if len(rsc.ClusterParameterGroups) > 0 {
+		d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
+	}
+
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 
@@ -218,7 +226,11 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("encrypted", rsc.Encrypted)
-	d.Set("endpoint", rsc.Endpoint.Address)
+
+	if rsc.Endpoint != nil {
+		d.Set("endpoint", rsc.Endpoint.Address)
+	}
+
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 
 	var iamRoles []string
@@ -256,7 +268,7 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 		return loggingErr
 	}
 
-	if *loggingStatus.LoggingEnabled {
+	if loggingStatus != nil && aws.BoolValue(loggingStatus.LoggingEnabled) {
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("bucket_name", loggingStatus.BucketName)
 		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
