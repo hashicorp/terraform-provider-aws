@@ -58,3 +58,4 @@ The following attribute is additionally exported:
 * `comment` - The comment field of the Hosted Zone.
 * `name_servers` - The list of DNS name servers for the Hosted Zone.
 * `resource_record_set_count` - the number of Record Set in the Hosted Zone
+* `name_servers` - A list of name servers in associated (or default) delegation set.
