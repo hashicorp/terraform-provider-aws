@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_route53_zone: Add `name_servers` attribute [GH-4336]
+* resource/aws_codedeploy_deployment_group: Add `ec2_tag_set` argument (tag group support) [GH-4324]
 
 BUG FIXES:
 
