@@ -1,5 +1,9 @@
 ## 1.17.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_route53_zone: Add `name_servers` attribute [GH-4336]
+
 BUG FIXES:
 
 * resource/aws_route53_zone: Add domain name to CallerReference to prevent creation issues with count greater than one [GH-4341]
