@@ -57,3 +57,4 @@ The following attribute is additionally exported:
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - The comment field of the Hosted Zone.
 * `resource_record_set_count` - the number of Record Set in the Hosted Zone
+* `name_servers` - A list of name servers in associated (or default) delegation set.
