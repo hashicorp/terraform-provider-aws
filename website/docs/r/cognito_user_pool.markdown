@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool"
-side_bar_current: "docs-aws-resource-cognito-user-pool"
+sidebar_current: "docs-aws-resource-cognito-user-pool"
 description: |-
   Provides a Cognito User Pool resource.
 ---
