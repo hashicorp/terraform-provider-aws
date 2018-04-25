@@ -89,7 +89,7 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 	req := &route53.CreateHostedZoneInput{
 		Name:             aws.String(d.Get("name").(string)),
 		HostedZoneConfig: &route53.HostedZoneConfig{Comment: aws.String(d.Get("comment").(string))},
-		CallerReference:  aws.String(time.Now().Format(time.RFC3339Nano)),
+		CallerReference:  aws.String(d.Get("name").(string) + time.Now().Format(time.RFC3339Nano)),
 	}
 	if v := d.Get("vpc_id"); v != "" {
 		req.VPC = &route53.VPC{
