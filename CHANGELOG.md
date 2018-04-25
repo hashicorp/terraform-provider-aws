@@ -29,6 +29,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_target: Add `batch_target` argument [GH-4312]
 * resource/aws_cloudwatch_event_target: Add `kinesis_target` and `sqs_target` arguments [GH-4323]
 * resource/aws_cognito_user_pool: Support `user_migration` in `lambda_config` [GH-4301]
+* resource/aws_db_instance: Add `s3_import` argument [GH-2728]
 * resource/aws_elastic_beanstalk_application: Add `appversion_lifecycle` argument [GH-1907]
 * resource/aws_instance: Add `credit_specification` argument (e.g. t2.unlimited support) [GH-2619]
 * resource/aws_kinesis_firehose_delivery_stream: Support Redshift `processing_configuration` [GH-4251]
