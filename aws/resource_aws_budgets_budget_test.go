@@ -32,7 +32,6 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
-					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
@@ -51,7 +50,6 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig_Basic(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicUpdate),
-					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicUpdate.BudgetLimit.Amount),
@@ -80,7 +78,6 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
-					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
@@ -95,7 +92,6 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig_Prefix(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicUpdate),
-					resource.TestCheckNoResourceAttr("aws_budgets_budget.foo", "account_id"),
 					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicUpdate.BudgetLimit.Amount),
@@ -257,7 +253,7 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 			IncludeSupport:           aws.Bool(true),
 			IncludeTax:               aws.Bool(false),
 			IncludeUpfront:           aws.Bool(true),
-			UseBlended:               aws.Bool(true),
+			UseBlended:               aws.Bool(false),
 		},
 		TimeUnit: aws.String("MONTHLY"),
 		TimePeriod: &budgets.TimePeriod{

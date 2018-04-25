@@ -17,6 +17,7 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:         schema.TypeString,
+				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAwsAccountId,
@@ -47,11 +48,17 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 			},
 			"cost_types": {
 				Type:     schema.TypeList,
+				Computed: true,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"include_credit": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"include_discount": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -90,6 +97,11 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
+						},
+						"use_amortized": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"use_blended": {
 							Type:     schema.TypeBool,
@@ -182,32 +194,38 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("describe budget failed: %v", err)
 	}
 
-	flattenedBudget, err := expandBudgetsBudgetFlatten(describeBudgetOutput.Budget)
-	if err != nil {
-		return fmt.Errorf("failed flattening budget output: %v", err)
+	budget := describeBudgetOutput.Budget
+	if budget == nil {
+		log.Printf("[WARN] Budget %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if err := d.Set("name", flattenedBudget.name); err != nil {
-		return err
+	d.Set("account_id", accountID)
+	d.Set("budget_type", budget.BudgetType)
+
+	if err := d.Set("cost_filters", convertCostFiltersToStringMap(budget.CostFilters)); err != nil {
+		return fmt.Errorf("error setting cost_filters: %s", err)
 	}
 
-	for k, v := range map[string]interface{}{
-		"account_id":        accountID,
-		"budget_type":       flattenedBudget.budgetType,
-		"time_unit":         flattenedBudget.timeUnit,
-		"cost_filters":      convertCostFiltersToStringMap(flattenedBudget.costFilters),
-		"limit_amount":      flattenedBudget.limitAmount,
-		"limit_unit":        flattenedBudget.limitUnit,
-		"cost_types":        []interface{}{flattenedBudget.costTypes},
-		"time_period_start": flattenedBudget.timePeriodStart.Format("2006-01-02_15:04"),
-		"time_period_end":   flattenedBudget.timePeriodEnd.Format("2006-01-02_15:04"),
-	} {
-		if _, ok := d.GetOk(k); ok {
-			if err := d.Set(k, v); err != nil {
-				return err
-			}
-		}
+	if err := d.Set("cost_types", flattenBudgetsCostTypes(budget.CostTypes)); err != nil {
+		return fmt.Errorf("error setting cost_types: %s %s", err, budget.CostTypes)
 	}
+
+	if budget.BudgetLimit != nil {
+		d.Set("limit_amount", budget.BudgetLimit.Amount)
+		d.Set("limit_unit", budget.BudgetLimit.Unit)
+	}
+
+	d.Set("name", budget.BudgetName)
+
+	if budget.TimePeriod != nil {
+		d.Set("time_period_end", budget.TimePeriod.End)
+		d.Set("time_period_start", budget.TimePeriod.Start)
+	}
+
+	d.Set("time_unit", budget.TimeUnit)
+
 	return nil
 }
 
@@ -257,70 +275,25 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-type flattenedBudgetsBudget struct {
-	name            *string
-	budgetType      *string
-	timeUnit        *string
-	costFilters     map[string][]*string
-	limitAmount     *string
-	limitUnit       *string
-	costTypes       map[string]bool
-	timePeriodStart *time.Time
-	timePeriodEnd   *time.Time
-}
-
-func expandBudgetsBudgetFlatten(budget *budgets.Budget) (*flattenedBudgetsBudget, error) {
-	if budget == nil {
-		return nil, fmt.Errorf("empty budget returned from budget output: %v", budget)
+func flattenBudgetsCostTypes(costTypes *budgets.CostTypes) []map[string]interface{} {
+	if costTypes == nil {
+		return []map[string]interface{}{}
 	}
 
-	budgetLimit := budget.BudgetLimit
-	if budgetLimit == nil {
-		return nil, fmt.Errorf("empty limit in budget: %v", budget)
+	m := map[string]interface{}{
+		"include_credit":             aws.BoolValue(costTypes.IncludeCredit),
+		"include_discount":           aws.BoolValue(costTypes.IncludeDiscount),
+		"include_other_subscription": aws.BoolValue(costTypes.IncludeOtherSubscription),
+		"include_recurring":          aws.BoolValue(costTypes.IncludeRecurring),
+		"include_refund":             aws.BoolValue(costTypes.IncludeRefund),
+		"include_subscription":       aws.BoolValue(costTypes.IncludeSubscription),
+		"include_support":            aws.BoolValue(costTypes.IncludeSupport),
+		"include_tax":                aws.BoolValue(costTypes.IncludeTax),
+		"include_upfront":            aws.BoolValue(costTypes.IncludeUpfront),
+		"use_amortized":              aws.BoolValue(costTypes.UseAmortized),
+		"use_blended":                aws.BoolValue(costTypes.UseBlended),
 	}
-
-	budgetCostTypes := budget.CostTypes
-	if budgetCostTypes == nil {
-		return nil, fmt.Errorf("empty CostTypes in budget: %v", budget)
-	}
-
-	costTypesMap := map[string]bool{
-		"include_credit":             *budgetCostTypes.IncludeCredit,
-		"include_other_subscription": *budgetCostTypes.IncludeOtherSubscription,
-		"include_recurring":          *budgetCostTypes.IncludeRecurring,
-		"include_refund":             *budgetCostTypes.IncludeRefund,
-		"include_subscription":       *budgetCostTypes.IncludeSubscription,
-		"include_support":            *budgetCostTypes.IncludeSupport,
-		"include_tax":                *budgetCostTypes.IncludeTax,
-		"include_upfront":            *budgetCostTypes.IncludeUpfront,
-		"use_blended":                *budgetCostTypes.UseBlended,
-	}
-	budgetTimePeriod := budget.TimePeriod
-	if budgetTimePeriod == nil {
-		return nil, fmt.Errorf("empty TimePeriod in budget: %v", budget)
-	}
-
-	budgetTimePeriodStart := budgetTimePeriod.Start
-	if budgetTimePeriodStart == nil {
-		return nil, fmt.Errorf("empty TimePeriodStart in budget: %v", budget)
-	}
-
-	budgetTimePeriodEnd := budgetTimePeriod.End
-	if budgetTimePeriodEnd == nil {
-		return nil, fmt.Errorf("empty TimePeriodEnd in budget: %v", budget)
-	}
-
-	return &flattenedBudgetsBudget{
-		name:            budget.BudgetName,
-		budgetType:      budget.BudgetType,
-		timeUnit:        budget.TimeUnit,
-		costFilters:     budget.CostFilters,
-		limitAmount:     budgetLimit.Amount,
-		limitUnit:       budgetLimit.Unit,
-		costTypes:       costTypesMap,
-		timePeriodStart: budgetTimePeriodStart,
-		timePeriodEnd:   budgetTimePeriodEnd,
-	}, nil
+	return []map[string]interface{}{m}
 }
 
 func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]string {
@@ -389,6 +362,7 @@ func decodeBudgetsBudgetID(id string) (string, string, error) {
 func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.CostTypes {
 	costTypes := &budgets.CostTypes{
 		IncludeCredit:            aws.Bool(true),
+		IncludeDiscount:          aws.Bool(true),
 		IncludeOtherSubscription: aws.Bool(true),
 		IncludeRecurring:         aws.Bool(true),
 		IncludeRefund:            aws.Bool(true),
@@ -396,12 +370,14 @@ func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.Cos
 		IncludeSupport:           aws.Bool(true),
 		IncludeTax:               aws.Bool(true),
 		IncludeUpfront:           aws.Bool(true),
+		UseAmortized:             aws.Bool(false),
 		UseBlended:               aws.Bool(false),
 	}
 	if len(budgetCostTypes) == 1 {
 		costTypesMap := budgetCostTypes[0].(map[string]interface{})
 		for k, v := range map[string]*bool{
 			"include_credit":             costTypes.IncludeCredit,
+			"include_discount":           costTypes.IncludeDiscount,
 			"include_other_subscription": costTypes.IncludeOtherSubscription,
 			"include_recurring":          costTypes.IncludeRecurring,
 			"include_refund":             costTypes.IncludeRefund,
@@ -409,6 +385,7 @@ func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.Cos
 			"include_support":            costTypes.IncludeSupport,
 			"include_tax":                costTypes.IncludeTax,
 			"include_upfront":            costTypes.IncludeUpfront,
+			"use_amortized":              costTypes.UseAmortized,
 			"use_blended":                costTypes.UseBlended,
 		} {
 			if val, ok := costTypesMap[k]; ok {
