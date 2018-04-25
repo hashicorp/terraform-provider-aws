@@ -221,6 +221,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
 			"aws_rds_cluster":                      dataSourceAwsRdsCluster(),
+			"aws_redshift_cluster":                 dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":         dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                           dataSourceAwsRegion(),
 			"aws_route_table":                      dataSourceAwsRouteTable(),
