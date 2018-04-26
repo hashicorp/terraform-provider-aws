@@ -15,15 +15,15 @@ Provides a budgets budget resource. Budgets use the cost visualisation provided 
 ```hcl
 resource "aws_budgets_budget" "ec2" {
   name                  = "budget-ec2-monthly"
-  budget_type           = "spend"
+  budget_type           = "COST"
   limit_amount          = "1200"
-  limit_unit            = "dollars"
+  limit_unit            = "USD"
   time_period_end       = "2087-06-15_00:00"
-  time_period_start     = "2017-07-01"
+  time_period_start     = "2017-07-01_00:00"
   time_unit             = "MONTHLY"
 
   cost_filters {
-    Service = "ec2"
+    service = "ec2"
   }
 }
 ```
@@ -33,9 +33,9 @@ Create a budget for *$100*.
 ```hcl
 resource "aws_budgets_budget" "cost" {
   ...
-  budget_type  = "spend"
+  budget_type  = "COST"
   limit_amount = "100"
-  limit_unit   = "dollars"
+  limit_unit   = "USD"
 }
 ```
 
@@ -44,7 +44,7 @@ Create a budget for s3 with a limit of *3 GB* of storage.
 ```hcl
 resource "aws_budgets_budget" "s3" {
   ...
-  budget_type  = "usage"
+  budget_type  = "USAGE"
   limit_amount = "3"
   limit_unit   = "GB"
 }
@@ -81,6 +81,7 @@ The following attributes are exported:
 Valid keys for `cost_types` parameter.
 
 * `include_credit` - 	A boolean value whether to include credits in the cost budget. Defaults to `true`
+* `include_discount` - Specifies whether a budget includes discounts. Defaults to `true`
 * `include_other_subscription` - 	A boolean value whether to include other subscription costs in the cost budget. Defaults to `true`
 * `include_recurring` - A boolean value whether to include recurring costs in the cost budget. Defaults to `true`
 * `include_refund` - A boolean value whether to include refunds in the cost budget. Defaults to `true`
@@ -88,6 +89,7 @@ Valid keys for `cost_types` parameter.
 * `include_support` - A boolean value whether to include support costs in the cost budget. Defaults to `true`
 * `include_tax` - A boolean value whether to include tax in the cost budget. Defaults to `true`
 * `include_upfront` - A boolean value whether to include upfront costs in the cost budget. Defaults to `true`
+* `use_amortized` - Specifies whether a budget uses the amortized rate. Defaults to `false`
 * `use_blended` - A boolean value whether to use blended costs in the cost budget. Defaults to `false`
 
 Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CostTypes.html) for further detail.
