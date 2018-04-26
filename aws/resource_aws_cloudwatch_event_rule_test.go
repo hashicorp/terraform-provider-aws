@@ -50,8 +50,8 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSCloudWatchEventRuleConfig_prefix,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.foo", &rule),
-					resource.TestMatchResourceAttr("aws_cloudwatch_event_rule.foo", "name", startsWithPrefix),
+					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.moobar", &rule),
+					resource.TestMatchResourceAttr("aws_cloudwatch_event_rule.moobar", "name", startsWithPrefix),
 				),
 			},
 		},
