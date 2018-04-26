@@ -478,18 +478,6 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached_Ec2Classic(t *testing
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.t2.micro"),
-				ExpectError: regexp.MustCompile(`node_type "cache.t2.micro" can only be created in a VPC`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.t2.small"),
-				ExpectError: regexp.MustCompile(`node_type "cache.t2.small" can only be created in a VPC`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.t2.medium"),
-				ExpectError: regexp.MustCompile(`node_type "cache.t2.medium" can only be created in a VPC`),
-			},
-			{
 				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, "cache.m3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
@@ -522,18 +510,6 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Redis_Ec2Classic(t *testing.T) 
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.t2.micro"),
-				ExpectError: regexp.MustCompile(`node_type "cache.t2.micro" can only be created in a VPC`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.t2.small"),
-				ExpectError: regexp.MustCompile(`node_type "cache.t2.small" can only be created in a VPC`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.t2.medium"),
-				ExpectError: regexp.MustCompile(`node_type "cache.t2.medium" can only be created in a VPC`),
-			},
 			{
 				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, "cache.m3.medium"),
 				Check: resource.ComposeTestCheckFunc(
