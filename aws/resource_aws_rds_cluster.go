@@ -335,7 +335,16 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore from snapshot configuration: %s", opts)
-		_, err := conn.RestoreDBClusterFromSnapshot(&opts)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.RestoreDBClusterFromSnapshot(&opts)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error creating RDS Cluster: %s", err)
 		}
@@ -424,10 +433,20 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] Create RDS Cluster as read replica: %s", createOpts)
-		resp, err := conn.CreateDBCluster(createOpts)
+		var resp *rds.CreateDBClusterOutput
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			var err error
+			resp, err = conn.CreateDBCluster(createOpts)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
-			log.Printf("[ERROR] Error creating RDS Cluster: %s", err)
-			return err
+			return fmt.Errorf("error creating RDS cluster: %s", err)
 		}
 
 		log.Printf("[DEBUG]: RDS Cluster create response: %s", resp)
@@ -499,10 +518,20 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] RDS Cluster create options: %s", createOpts)
-		resp, err := conn.CreateDBCluster(createOpts)
+		var resp *rds.CreateDBClusterOutput
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			var err error
+			resp, err = conn.CreateDBCluster(createOpts)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
-			log.Printf("[ERROR] Error creating RDS Cluster: %s", err)
-			return err
+			return fmt.Errorf("error creating RDS cluster: %s", err)
 		}
 
 		log.Printf("[DEBUG]: RDS Cluster create response: %s", resp)
@@ -704,8 +733,10 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
 			if err != nil {
-				awsErr, ok := err.(awserr.Error)
-				if ok && awsErr.Code() == rds.ErrCodeInvalidDBClusterStateFault {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
