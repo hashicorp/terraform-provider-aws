@@ -53,14 +53,14 @@ func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta int
 
 	d.Set("vpc_peering_connection_id", pc.VpcPeeringConnectionId)
 
-	if pc.AccepterVpcInfo.PeeringOptions != nil {
+	if pc != nil && pc.AccepterVpcInfo != nil && pc.AccepterVpcInfo.PeeringOptions != nil {
 		err := d.Set("accepter", flattenVpcPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions))
 		if err != nil {
 			return fmt.Errorf("Error setting VPC Peering Connection Options accepter information: %s", err.Error())
 		}
 	}
 
-	if pc.RequesterVpcInfo.PeeringOptions != nil {
+	if pc != nil && pc.RequesterVpcInfo != nil && pc.RequesterVpcInfo.PeeringOptions != nil {
 		err := d.Set("requester", flattenVpcPeeringConnectionOptions(pc.RequesterVpcInfo.PeeringOptions))
 		if err != nil {
 			return fmt.Errorf("Error setting VPC Peering Connection Options requester information: %s", err.Error())
