@@ -982,8 +982,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 			Ipv6Address: aws.String(address.(string)),
 		})
 	}
-	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
 	networkInterface.Ipv6Addresses = ipv6Addresses
+
+	if v := ni["ipv6_address_count"].(int); v > 0 {
+		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
+	}
 
 	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
 	for _, address := range ipv4AddressList {
@@ -993,8 +996,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		}
 		ipv4Addresses = append(ipv4Addresses, privateIp)
 	}
-	networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
 	networkInterface.PrivateIpAddresses = ipv4Addresses
+
+	if v := ni["ipv4_address_count"].(int); v > 0 {
+		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	}
 
 	return networkInterface
 }
