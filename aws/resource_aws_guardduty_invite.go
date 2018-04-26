@@ -39,14 +39,14 @@ func resourceAwsGuardDutyInvite() *schema.Resource {
 
 func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
+	detectorId := d.Get("detector_id").(string)
+	accountIds := d.Get("account_ids").([]string)
 
 	params := &guardduty.InviteMembersInput{
-		DetectorId: aws.String(d.Get("detector_id").(string)),
+		DetectorId: aws.String(detectorId),
+		AccountIds: aws.StringSlice(accountIds),
 		Message: aws.String(d.Get("message").(string)),
 	}
-
-	accountIds := d.Get("account_ids").([]string)
-	params.AccountIds = aws.StringSlice(accountIds)
 
 	log.Printf("[DEBUG] GuardDuty Invite Members: %#v", params)
 	resp, err := conn.InviteMembers(params)
@@ -54,6 +54,8 @@ func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err)
 	}
+
+	d.SetId("")
 
 	for _, accountID := range accountIds {
 		for _, unprocessedAccount := range resp.UnprocessedAccounts {
@@ -68,12 +70,12 @@ func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) 
 			return err
 		}
 	}
-	d.SetId()
 
 	return nil
 }
 
 func resourceAwsGuardDutyInviteRead(d *schema.ResourceData, meta interface{}) error {
+	//TODO Do something?
 	return nil
 }
 
