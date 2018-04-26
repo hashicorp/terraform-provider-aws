@@ -280,13 +280,14 @@ func TestAccAWSDBInstance_replica(t *testing.T) {
 func TestAccAWSDBInstance_noSnapshot(t *testing.T) {
 	var snap rds.DBInstance
 
+	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfig(),
+				Config: testAccSnapshotInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.snapshot", &snap),
 				),
@@ -340,6 +341,7 @@ func TestAccAWSDBInstance_s3(t *testing.T) {
 func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := acctest.RandString(5)
+	monitoringInterval := "5"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -347,11 +349,11 @@ func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceNoSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName),
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, monitoringInterval, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &dbInstance),
 					resource.TestCheckResourceAttr(
-						"aws_db_instance.enhanced_monitoring", "monitoring_interval", "5"),
+						"aws_db_instance.enhanced_monitoring", "monitoring_interval", monitoringInterval),
 				),
 			},
 		},
@@ -390,6 +392,57 @@ func TestAccAWSDBInstance_separate_iops_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_monitoringUpdate(t *testing.T) {
+	var v rds.DBInstance
+
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, "0", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &v),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_interval"),
+				),
+			},
+			{
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, "15", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &v),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_role_arn"),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_interval"),
+				),
+			},
+			{
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, "0", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &v),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_role_arn"),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_interval"),
+				),
+			},
+			{
+				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName, "15", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &v),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_role_arn"),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.enhanced_monitoring", "monitoring_interval"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSDBInstance_portUpdate(t *testing.T) {
 	var v rds.DBInstance
 
@@ -855,6 +908,19 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 	}
 }
 
+func testAccDbInstanceEnhancedMonitoringConfig(monitoringInterval, monitoringRoleArn string) string {
+	if monitoringInterval != "" {
+		monitoringInterval = fmt.Sprintf("monitoring_interval = %s", monitoringInterval)
+	}
+	if monitoringRoleArn != "" {
+		monitoringRoleArn = fmt.Sprintf("monitoring_role_arn = \"%s\"", monitoringRoleArn)
+	}
+	return fmt.Sprintf(`
+	%s
+	%s
+	`, monitoringInterval, monitoringRoleArn)
+}
+
 // Database names cannot collide, and deletion takes so long, that making the
 // name a bit random helps so able we can kill a test that's just waiting for a
 // delete and not be blocked on kicking off another one.
@@ -1044,10 +1110,10 @@ func testAccReplicaInstanceConfig(val int) string {
 	`, val, val)
 }
 
-func testAccSnapshotInstanceConfig() string {
+func testAccSnapshotInstanceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "snapshot" {
-	identifier = "tf-test-%d"
+	identifier = "tf-test-%s"
 
 	allocated_storage = 5
 	engine = "mysql"
@@ -1064,7 +1130,7 @@ resource "aws_db_instance" "snapshot" {
 
 	skip_final_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
-}`, acctest.RandInt())
+}`, rName)
 }
 
 func testAccSnapshotInstanceConfigWithS3Import(bucketName string, bucketPrefix string, uniqueId string) string {
@@ -1225,8 +1291,36 @@ resource "aws_db_instance" "snapshot" {
 `, rInt, rInt)
 }
 
-func testAccSnapshotInstanceConfig_enhancedMonitoring(rName string) string {
+func testAccSnapshotInstanceConfig_enhancedMonitoring(rName, monitoringInterval string, monitoringRole bool) string {
+	var monitoringRoleArn string
+	if monitoringRole {
+		monitoringRoleArn = "${aws_iam_role.enhanced_policy_role.arn}"
+	}
 	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-db-instance-with-subnet-group"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-west-2a"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-1"
+	}
+}
+
+resource "aws_subnet" "bar" {
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-west-2b"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "tf-acc-db-instance-with-subnet-group-2"
+	}
+}
 resource "aws_iam_role" "enhanced_policy_role" {
     name = "enhanced-monitoring-role-%s"
     assume_role_policy = <<EOF
@@ -1291,26 +1385,32 @@ resource "aws_iam_policy" "test" {
 POLICY
 }
 
+resource "aws_db_subnet_group" "foo" {
+	name = "foo-%s"
+	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+	tags {
+		Name = "tf-dbsubnet-group-test"
+	}
+}
+
 resource "aws_db_instance" "enhanced_monitoring" {
 	identifier = "foobarbaz-enhanced-monitoring-%s"
 	depends_on = ["aws_iam_policy_attachment.test-attach"]
 
-	allocated_storage = 5
-	engine = "mysql"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
+	allocated_storage = 20
+  engine               = "mysql"
+  engine_version       = "5.6.35"
+  instance_class       = "db.t2.micro"
 	name = "baz"
 	password = "barbarbarbar"
 	username = "foo"
-	backup_retention_period = 1
-
-	parameter_group_name = "default.mysql5.6"
-
-	monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
-	monitoring_interval = "5"
-
+	backup_retention_period = 0
 	skip_final_snapshot = true
-}`, rName, rName, rName, rName)
+	parameter_group_name = "default.mysql5.6"
+  db_subnet_group_name = "${aws_db_subnet_group.foo.name}"
+	%s
+	skip_final_snapshot = true
+}`, rName, rName, rName, rName, rName, testAccDbInstanceEnhancedMonitoringConfig(monitoringInterval, monitoringRoleArn))
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
