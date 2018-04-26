@@ -315,7 +315,7 @@ func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRe
 			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
 		})
 		if err != nil {
-			if isNoSuchVpcPeeringConnectionErr(err) {
+			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 				return nil, ec2.VpcPeeringConnectionStateReasonCodeDeleted, nil
 			}
 
@@ -383,8 +383,4 @@ func vpcPeeringConnectionWaitUntilAvailable(conn *ec2.EC2, id string, timeout ti
 		return fmt.Errorf("Error waiting for VPC Peering Connection (%s) to become available: %s", id, err)
 	}
 	return nil
-}
-
-func isNoSuchVpcPeeringConnectionErr(err error) bool {
-	return isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "")
 }
