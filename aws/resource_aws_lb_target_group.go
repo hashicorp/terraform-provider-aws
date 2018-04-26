@@ -83,6 +83,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 
+			"proxy_protocol_v2": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -330,6 +336,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		attrs = append(attrs, &elbv2.TargetGroupAttribute{
 			Key:   aws.String("deregistration_delay.timeout_seconds"),
 			Value: aws.String(fmt.Sprintf("%d", d.Get("deregistration_delay").(int))),
+		})
+	}
+
+	if d.HasChange("proxy_protocol_v2") {
+		attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			Key:   aws.String("proxy_protocol_v2.enabled"),
+			Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
 		})
 	}
 
