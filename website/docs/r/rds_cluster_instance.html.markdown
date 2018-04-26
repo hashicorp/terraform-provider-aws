@@ -43,14 +43,14 @@ resource "aws_rds_cluster" "default" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-ModifyDBInstance.html).
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
 The following arguments are supported:
 
 * `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
-* `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`.
+* `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: aurora, aurora-mysql, aurora-postgresql.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
 and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
@@ -62,6 +62,12 @@ and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
   - db.r3.2xlarge
   - db.r3.4xlarge
   - db.r3.8xlarge
+  - db.r4.large
+  - db.r4.xlarge
+  - db.r4.2xlarge
+  - db.r4.4xlarge
+  - db.r4.8xlarge
+  - db.r4.16xlarge
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
 Default `false`. See the documentation on [Creating DB Instances][6] for more
 details on controlling this property.
@@ -73,7 +79,8 @@ details on controlling this property.
 enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
-* `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer. 
+* `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
+* `availability_zone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled.
   Eg: "04:00-09:00"
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
@@ -90,8 +97,7 @@ The following attributes are exported:
 * `cluster_identifier` - The RDS Cluster Identifier
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier
-* `writer` – Boolean indicating if this instance is writable. `False` indicates
-this instance is a read replica
+* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `allocated_storage` - The amount of allocated storage
 * `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable

@@ -76,3 +76,15 @@ The following arguments are supported:
 * `description` - (Optional) The description of the stage
 * `documentation_version` - (Optional) The version of the associated API documentation
 * `variables` - (Optional) A map that defines the stage variables
+* `tags` - (Optional) A mapping of tags to assign to the resource.
+
+## Attribute Reference
+
+The following attributes are exported:
+
+* `id` - The ID of the stage
+* `invoke_url` - The URL to invoke the API pointing to the stage,
+  e.g. `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/prod`
+* `execution_arn` - The execution ARN to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
+  when allowing API Gateway to invoke a Lambda function,
+  e.g. `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`

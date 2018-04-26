@@ -27,9 +27,19 @@ The following arguments are supported:
 * `name` - (Required) The name of the connection.
 * `bandwidth` - (Required) The bandwidth of the connection. Available values: 1Gbps, 10Gbps. Case sensitive.
 * `location` - (Required) The AWS Direct Connect location where the connection is located. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - The ID of the connection.
+* `arn` - The ARN of the connection.
+
+## Import
+
+Direct Connect connections can be imported using the `connection id`, e.g.
+
+```
+$ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
+```

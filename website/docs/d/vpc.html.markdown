@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific VPC
 ---
 
-# aws_vpc
+# Data Source: aws_vpc
 
 `aws_vpc` provides details about a specific VPC.
 

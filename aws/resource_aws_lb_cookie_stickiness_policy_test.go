@@ -102,7 +102,7 @@ func testAccCheckLBCookieStickinessPolicy(elbResource string, policyResource str
 	}
 }
 
-func TestAccCheckLBCookieStickinessPolicy_drift(t *testing.T) {
+func TestAccAWSLBCookieStickinessPolicy_drift(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
 
 	// We only want to remove the reference to the policy from the listner,

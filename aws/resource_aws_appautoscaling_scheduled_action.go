@@ -104,7 +104,7 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 			sta.MaxCapacity = aws.Int64(int64(max.(int)))
 		}
 		if min, ok := raw["min_capacity"]; ok {
-			sta.MaxCapacity = aws.Int64(int64(min.(int)))
+			sta.MinCapacity = aws.Int64(int64(min.(int)))
 		}
 		input.ScalableTargetAction = sta
 	}

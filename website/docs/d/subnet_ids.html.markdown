@@ -6,7 +6,7 @@ description: |-
     Provides a list of subnet Ids for a VPC
 ---
 
-# aws_subnet_ids
+# Data Source: aws_subnet_ids
 
 `aws_subnet_ids` provides a list of ids for a vpc_id
 

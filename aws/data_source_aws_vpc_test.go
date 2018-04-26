@@ -14,7 +14,7 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	rInt := rand.Intn(16)
 	cidr := fmt.Sprintf("172.%d.0.0/16", rInt)
-	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-%d", rInt)
+	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-basic-%d", rInt)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -40,7 +40,7 @@ func TestAccDataSourceAwsVpc_ipv6Associated(t *testing.T) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	rInt := rand.Intn(16)
 	cidr := fmt.Sprintf("172.%d.0.0/16", rInt)
-	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-%d", rInt)
+	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-ipv6-associated-%d", rInt)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
