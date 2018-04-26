@@ -407,7 +407,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	{
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
-		if err != nil {
+		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
 			return err
 		}
 		if err := d.Set("credit_specification", creditSpecifications); err != nil {

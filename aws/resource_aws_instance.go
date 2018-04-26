@@ -807,7 +807,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	{
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
-		if err != nil {
+		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
 			return err
 		}
 		if err := d.Set("credit_specification", creditSpecifications); err != nil {
@@ -1899,10 +1899,10 @@ func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]int
 		InstanceIds: []*string{aws.String(instanceId)},
 	})
 	if err != nil {
-		return nil, err
+		return creditSpecifications, err
 	}
-	if attr.InstanceCreditSpecifications != nil {
-		creditSpecification["cpu_credits"] = *attr.InstanceCreditSpecifications[0].CpuCredits
+	if len(attr.InstanceCreditSpecifications) > 0 {
+		creditSpecification["cpu_credits"] = aws.StringValue(attr.InstanceCreditSpecifications[0].CpuCredits)
 		creditSpecifications = append(creditSpecifications, creditSpecification)
 	}
 
