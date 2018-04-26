@@ -15,6 +15,8 @@ both a standalone VPC Peering Connection Options and a [VPC Peering Connection](
 resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
 connection in both a VPC Peering Connection resource and a VPC Peering Connection Options resource.
 Doing so will cause a conflict of options and will overwrite the options.
+Using a VPC Peering Connection Options resource decouples management of the connection options from
+management of the VPC Peering Connection and allows options to be set correctly in cross-account scenarios.
 
 Basic usage:
 
@@ -51,16 +53,20 @@ Basic cross-account usage:
 
 ```hcl
 provider "aws" {
+  alias = "requester"
+
   # Requester's credentials.
 }
 
 provider "aws" {
-  alias = "peer"
+  alias = "accepter"
 
   # Accepter's credentials.
 }
 
 resource "aws_vpc" "main" {
+  provider = "aws.requester"
+
   cidr_block = "10.0.0.0/16"
 
   enable_dns_support   = true
@@ -68,7 +74,8 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider   = "aws.peer"
+  provider = "aws.accepter"
+
   cidr_block = "10.1.0.0/16"
 
   enable_dns_support   = true
@@ -76,11 +83,13 @@ resource "aws_vpc" "peer" {
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.peer"
+  provider = "aws.accepter"
 }
 
 # Requester's side of the connection.
 resource "aws_vpc_peering_connection" "peer" {
+  provider = "aws.requester"
+
   vpc_id        = "${aws_vpc.main.id}"
   peer_vpc_id   = "${aws_vpc.peer.id}"
   peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
@@ -93,7 +102,8 @@ resource "aws_vpc_peering_connection" "peer" {
 
 # Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider                  = "aws.peer"
+  provider = "aws.accepter"
+
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
   auto_accept               = true
 
@@ -102,10 +112,11 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   }
 }
 
-# As options can't be set until the connection has been accepted
-# create an explicit dependency on the accepter.
-
 resource "aws_vpc_peering_connection_options" "requester" {
+  provider = "aws.requester"
+
+  # As options can't be set until the connection has been accepted
+  # create an explicit dependency on the accepter.
   vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
 
   requester {
@@ -114,7 +125,8 @@ resource "aws_vpc_peering_connection_options" "requester" {
 }
 
 resource "aws_vpc_peering_connection_options" "accepter" {
-  provider                  = "aws.peer"
+  provider = "aws.accepter"
+
   vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
 
   accepter {
