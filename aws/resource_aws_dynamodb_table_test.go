@@ -399,7 +399,9 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfig_backup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableHasBackup("aws_dynamodb_table.basic-dynamodb-table"),
+					testAccCheckDynamoDbTableHasPointInTimeRecoveryEnabled("aws_dynamodb_table.basic-dynamodb-table"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "point_in_time_recovery.0.enabled", "true"),
 				),
 			},
 		},
@@ -964,7 +966,7 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDynamoDbTableHasBackup(n string) resource.TestCheckFunc {
+func testAccCheckDynamoDbTableHasPointInTimeRecoveryEnabled(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1108,7 +1110,9 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     name = "TestTableHashKey"
     type = "S"
   }
-  point_in_time_backup_enabled = true
+  point_in_time_recovery {
+    enabled = true
+  }
 }
 `, rName)
 }
