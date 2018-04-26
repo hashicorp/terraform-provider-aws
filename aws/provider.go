@@ -358,6 +358,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ebs_volume":                               resourceAwsEbsVolume(),
 			"aws_ecr_lifecycle_policy":                     resourceAwsEcrLifecyclePolicy(),
 			"aws_ecr_repository":                           resourceAwsEcrRepository(),
+			"aws_ecr_repository_policy_statement":          resourceAwsEcrRepositoryPolicyStatement(),
 			"aws_ecr_repository_policy":                    resourceAwsEcrRepositoryPolicy(),
 			"aws_ecs_cluster":                              resourceAwsEcsCluster(),
 			"aws_ecs_service":                              resourceAwsEcsService(),
