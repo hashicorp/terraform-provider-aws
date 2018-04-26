@@ -952,7 +952,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Description = aws.String(v)
 	}
 
-	if v, ok := ni["device_index"].(int); ok && v != 0 {
+	if v, ok := ni["device_index"].(int); ok {
 		networkInterface.DeviceIndex = aws.Int64(int64(v))
 	}
 
