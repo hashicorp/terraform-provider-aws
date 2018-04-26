@@ -702,7 +702,17 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		}
 
 		if len(v.Groups) > 0 {
-			networkInterface["security_groups"] = aws.StringValueSlice(v.Groups)
+			raw, ok := networkInterface["security_groups"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+			list := raw.(*schema.Set)
+
+			for _, group := range v.Groups {
+				list.Add(aws.StringValue(group))
+			}
+
+			networkInterface["security_groups"] = list
 		}
 
 		s = append(s, networkInterface)
@@ -967,6 +977,12 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v, ok := ni["subnet_id"].(string); ok && v != "" {
 		networkInterface.SubnetId = aws.String(v)
+	}
+
+	if v := ni["security_groups"].(*schema.Set); v.Len() > 0 {
+		for _, v := range v.List() {
+			networkInterface.Groups = append(networkInterface.Groups, aws.String(v.(string)))
+		}
 	}
 
 	ipv6AddressList := ni["ipv6_addresses"].(*schema.Set).List()
