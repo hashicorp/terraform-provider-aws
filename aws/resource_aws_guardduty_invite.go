@@ -33,6 +33,10 @@ func resourceAwsGuardDutyInvite() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     false,
 			},
+			"unprocessed_accounts": {
+				Type:     schema.TypeMap,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -55,21 +59,14 @@ func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err)
 	}
 
-	d.SetId("")
 
-	for _, accountID := range accountIds {
-		for _, unprocessedAccount := range resp.UnprocessedAccounts {
-			if accountID == *unprocessedAccount.AccountId {
-				d.Set("unprocessed_reason", unprocessedAccount.Result)
-			}
-		}
-
-		err := resourceAwsGuardDutyMemberRead(d, meta)
-
-		if err != nil {
-			return err
-		}
+	unprocessedAccounts := make(map[string]string, len(resp.UnprocessedAccounts))
+	for _, unprocessedAccount := range resp.UnprocessedAccounts {
+		unprocessedAccounts[*unprocessedAccount.AccountId] = *unprocessedAccount.Result
 	}
+
+	d.SetId(detectorId)
+	d.Set("unprocessed_accounts", unprocessedAccounts)
 
 	return nil
 }
