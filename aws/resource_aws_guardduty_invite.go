@@ -44,11 +44,10 @@ func resourceAwsGuardDutyInvite() *schema.Resource {
 func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 	detectorId := d.Get("detector_id").(string)
-	accountIds := d.Get("account_ids").([]string)
 
 	params := &guardduty.InviteMembersInput{
 		DetectorId: aws.String(detectorId),
-		AccountIds: aws.StringSlice(accountIds),
+		AccountIds: aws.StringSlice(d.Get("account_ids").([]string)),
 		Message: aws.String(d.Get("message").(string)),
 	}
 
@@ -79,7 +78,7 @@ func resourceAwsGuardDutyInviteDelete(d* schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).guarddutyconn
 
 	params := &guardduty.DeleteInvitationsInput{
-		AccountIds: aws.StringSlice(d.Get("account_ids").([]string),
+		AccountIds: aws.StringSlice(d.Get("account_ids").([]string)),
 	}
 
 	log.Printf("[DEBUG] GuardDuty Delete Invitations: %#v", params)
