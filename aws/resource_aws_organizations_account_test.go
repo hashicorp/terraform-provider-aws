@@ -36,6 +36,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_method"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_timestamp"),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "parent_id"),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "name", name),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "email", email),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "status"),

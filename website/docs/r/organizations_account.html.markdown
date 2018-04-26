@@ -37,6 +37,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN for this account.
+* `parent_id` - The ID of the "root" the account is under.
 
 * `id` - The AWS account id
 

@@ -35,6 +35,10 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"parent_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -161,6 +165,13 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 	d.Set("joined_timestamp", account.JoinedTimestamp)
 	d.Set("name", account.Name)
 	d.Set("status", account.Status)
+
+	parentId, err := resourceAwsOrganizationsUnitGetParentId(conn, d.Id())
+	if err != nil {
+		return err
+	}
+	d.Set("parent_id", parentId)
+
 	return nil
 }
 
