@@ -262,6 +262,8 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("source_arn", arnLike["AWS:SourceArn"])
 	}
 
+	d.Set("statement_id", statement.Sid)
+
 	return nil
 }
 

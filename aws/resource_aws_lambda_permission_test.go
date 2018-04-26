@@ -213,6 +213,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	endsWithFuncName := regexp.MustCompile(":function:lambda_function_name_perm$")
 	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
 
@@ -222,7 +223,7 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withStatementIdPrefix,
+				Config: testAccAWSLambdaPermissionConfig_withStatementIdPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists("aws_lambda_permission.with_statement_id_prefix", &statement),
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_statement_id_prefix", "action", "lambda:InvokeFunction"),
@@ -618,7 +619,8 @@ EOF
 `, funcName, roleName)
 }
 
-var testAccAWSLambdaPermissionConfig_withStatementIdPrefix = `
+func testAccAWSLambdaPermissionConfig_withStatementIdPrefix(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_statement_id_prefix" {
     statement_id_prefix = "AllowExecutionWithStatementIdPrefix-"
     action = "lambda:InvokeFunction"
@@ -652,7 +654,8 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-`
+`, rName)
+}
 
 func testAccAWSLambdaPermissionConfig_withQualifier(aliasName, funcName, roleName string) string {
 	return fmt.Sprintf(`
