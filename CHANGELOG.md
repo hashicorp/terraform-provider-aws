@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_instance: Bypass `UnsupportedOperation` errors with `DescribeInstanceCreditSpecifications` call [GH-4362]
+* resource/aws_instance: Bypass `UnsupportedOperation` errors with `DescribeInstanceCreditSpecifications` call [GH-4362]
 * resource/aws_launch_template: Appropriately set `security_groups` in network interfaces [GH-4364]
 * resource/aws_route53_zone: Add domain name to CallerReference to prevent creation issues with count greater than one [GH-4341]
 
