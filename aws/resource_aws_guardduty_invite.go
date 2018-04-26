@@ -59,7 +59,6 @@ func resourceAwsGuardDutyInviteCreate(d* schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err)
 	}
 
-
 	unprocessedAccounts := make(map[string]string, len(resp.UnprocessedAccounts))
 	for _, unprocessedAccount := range resp.UnprocessedAccounts {
 		unprocessedAccounts[*unprocessedAccount.AccountId] = *unprocessedAccount.Result
@@ -77,6 +76,18 @@ func resourceAwsGuardDutyInviteRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGuardDutyInviteDelete(d* schema.ResourceData, meta interface{}) error {
-	d.SetId("")
+	conn := meta.(*AWSClient).guarddutyconn
+
+	params := &guardduty.DeleteInvitationsInput{
+		AccountIds: aws.StringSlice(d.Get("account_ids").([]string),
+	}
+
+	log.Printf("[DEBUG] GuardDuty Delete Invitations: %#v", params)
+	_, err := conn.DeleteInvitations(params)
+
+	if err != nil {
+		return fmt.Errorf("Deleting GuardDuty Invitations '%s' failed: %s", d.Id(), err.Error())
+	}
+
 	return nil
 }
