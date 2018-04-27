@@ -134,6 +134,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: suppressEquivalentDynamodbTableTtlDiffs,
 			},
 			"local_secondary_index": {
 				Type:     schema.TypeSet,

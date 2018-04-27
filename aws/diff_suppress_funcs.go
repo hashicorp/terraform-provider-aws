@@ -89,3 +89,38 @@ func suppressAutoscalingGroupAvailabilityZoneDiffs(k, old, new string, d *schema
 func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
+
+func suppressEquivalentDynamodbTableTtlDiffs(k, old, new string, d *schema.ResourceData) bool {
+	// if there are no changes then there's nothing to suppress
+	if !d.HasChange("ttl") {
+		return false
+	}
+
+	ttlOldInterface, ttlNewInterface := d.GetChange("ttl")
+	ttlOldSet := ttlOldInterface.(*schema.Set)
+	ttlNewSet := ttlNewInterface.(*schema.Set)
+
+	// if the ttl block hasn't been added or removed there's nothing to suppress
+	if ttlOldSet.Len() == ttlNewSet.Len() {
+		return false
+	}
+
+	// if the ttl block has been added,
+	// changes should be suppressed if the new block has `enabled => false`
+	if ttlOldSet.Len() == 0 {
+		enabled := ttlNewSet.List()[0].(map[string]interface{})["enabled"].(bool)
+		if !enabled {
+			return true
+		}
+	}
+
+	// if the ttl block has been removed,
+	// changes should be suppressed if the old block had `enabled => false`
+	if ttlNewSet.Len() == 0 {
+		enabled := ttlOldSet.List()[0].(map[string]interface{})["enabled"].(bool)
+		if !enabled {
+			return true
+		}
+	}
+	return false
+}
