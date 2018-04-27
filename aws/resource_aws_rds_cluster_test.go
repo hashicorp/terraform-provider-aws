@@ -79,8 +79,6 @@ func TestAccAWSRDSCluster_s3Restore(t *testing.T) {
 			{
 				Config: testAccAWSClusterConfig_s3Restore(bucket, bucketPrefix, uniqueId),
 				Check: resource.ComposeTestCheckFunc(
-                    testAccCheckAWSClusterExistsWithProvider("aws_rds_cluster.test",
-						&v, testAccAwsRegionProviderFunc("us-west-2", &providers))
 					testAccCheckAWSClusterExists("aws_rds_cluster.test", &v),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 				),
