@@ -51,6 +51,12 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 				Optional: true,
 			},
 
+			"authorization_scopes": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"api_key_required": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -126,6 +132,10 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 		input.AuthorizerId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("authorization_scopes"); ok {
+		input.AuthorizationScopes = expandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("request_validator_id"); ok {
 		input.RequestValidatorId = aws.String(v.(string))
 	}
@@ -165,6 +175,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("api_key_required", out.ApiKeyRequired)
 	d.Set("authorization", out.AuthorizationType)
 	d.Set("authorizer_id", out.AuthorizerId)
+	d.Set("authorization_scopes", out.AuthorizationScopes)
 	d.Set("request_models", aws.StringValueMap(out.RequestModels))
 	d.Set("request_validator_id", out.RequestValidatorId)
 
@@ -227,6 +238,35 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 			Path:  aws.String("/authorizerId"),
 			Value: aws.String(d.Get("authorizer_id").(string)),
 		})
+	}
+
+	if d.HasChange("authorization_scopes") {
+		o, n := d.GetChange("authorization_scopes")
+		path := "/authorizationScopes"
+
+		old := o.([]interface{})
+		new := n.([]interface{})
+
+		// Remove every authorization scope. Simpler to remove and add new ones,
+		// since there are no replacings.
+		for _, v := range old {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("remove"),
+				Path:  aws.String(path),
+				Value: aws.String(v.(string)),
+			})
+		}
+
+		// Handle additions
+		if len(new) > 0 {
+			for _, v := range new {
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:    aws.String("add"),
+					Path:  aws.String(path),
+					Value: aws.String(v.(string)),
+				})
+			}
+		}
 	}
 
 	if d.HasChange("api_key_required") {
