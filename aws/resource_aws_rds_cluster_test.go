@@ -79,6 +79,8 @@ func TestAccAWSRDSCluster_s3Restore(t *testing.T) {
 			{
 				Config: testAccAWSClusterConfig_s3Restore(bucket, bucketPrefix, uniqueId),
 				Check: resource.ComposeTestCheckFunc(
+                    testAccCheckAWSClusterExistsWithProvider("aws_rds_cluster.test",
+						&v, testAccAwsRegionProviderFunc("us-west-2", &providers))
 					testAccCheckAWSClusterExists("aws_rds_cluster.test", &v),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 				),
@@ -579,8 +581,12 @@ resource "aws_db_subnet_group" "test" {
 
 func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
 	return fmt.Sprintf(`
+
+data "aws_region" "current" {}
+    
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = "%s"
+  region = "${data.aws_region.current.name}"
 }
 
 resource "aws_s3_bucket_object" "xtrabackup_db" {
