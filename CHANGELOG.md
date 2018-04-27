@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table: Add `point_in_time_recovery` argument [GH-4063]
 * resource/aws_lambda_permission: Add `statement_id_prefix` argument [GH-2743]
 * resource/aws_lambda_permission: Make `statement_id` optional (Terraform can generate unique ID) [GH-2743]
+* resource/aws_rds_cluster: Add `s3_import` argument (Support MySQL Backup Restore from S3) [GH-4366]
 
 BUG FIXES:
 
