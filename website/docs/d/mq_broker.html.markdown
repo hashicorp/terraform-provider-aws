@@ -41,5 +41,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [MQ Broker](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
+See the [`aws_mq_broker` resource](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
 They are identical except for user password, which is not returned when describing broker.

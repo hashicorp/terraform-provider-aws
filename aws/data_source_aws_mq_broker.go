@@ -1,8 +1,8 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
@@ -17,11 +17,13 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			"broker_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"broker_name"},
 			},
 			"broker_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"broker_id"},
 			},
 			"auto_minor_version_upgrade": {
@@ -148,34 +150,31 @@ func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	if brokerId, ok := d.GetOk("broker_id"); ok {
 		d.SetId(brokerId.(string))
 	} else {
+		conn := meta.(*AWSClient).mqconn
 		brokerName := d.Get("broker_name").(string)
-		brokerId := getBrokerId(meta, brokerName)
-		if brokerId == "" {
-			return fmt.Errorf("Failed to get broker id with name: %s", brokerName)
-		}
-		d.SetId(brokerId)
-	}
-	return resourceAwsMqBrokerRead(d, meta)
-}
-
-func getBrokerId(meta interface{}, name string) (id string) {
-	conn := meta.(*AWSClient).mqconn
-	var nextToken string
-	for {
-		out, err := conn.ListBrokers(&mq.ListBrokersInput{NextToken: aws.String(nextToken)})
-		if err != nil {
-			log.Printf("[DEBUG] Failed to list brokers: %s", err)
-			return ""
-		}
-		for _, broker := range out.BrokerSummaries {
-			if *broker.BrokerName == name {
-				return *broker.BrokerId
+		var nextToken string
+		for {
+			out, err := conn.ListBrokers(&mq.ListBrokersInput{NextToken: aws.String(nextToken)})
+			if err != nil {
+				return errors.New("Failed to list mq brokers")
 			}
+			for _, broker := range out.BrokerSummaries {
+				if aws.StringValue(broker.BrokerName) == brokerName {
+					brokerId := aws.StringValue(broker.BrokerId)
+					d.Set("broker_id", brokerId)
+					d.SetId(brokerId)
+				}
+			}
+			if out.NextToken == nil {
+				break
+			}
+			nextToken = *out.NextToken
 		}
-		if out.NextToken == nil {
-			break
+
+		if d.Id() == "" {
+			return fmt.Errorf("Failed to determine mq broker: %s", brokerName)
 		}
-		nextToken = *out.NextToken
 	}
-	return ""
+
+	return resourceAwsMqBrokerRead(d, meta)
 }
