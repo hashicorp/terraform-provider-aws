@@ -125,6 +125,7 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 		ec2.VpcPeeringConnectionStateReasonCodeExpired:  true,
 		ec2.VpcPeeringConnectionStateReasonCodeFailed:   true,
 		ec2.VpcPeeringConnectionStateReasonCodeRejected: true,
+		"": true, // AWS consistency issue, see vpcPeeringConnectionRefreshState
 	}
 	if _, ok := status[statusCode]; ok {
 		log.Printf("[WARN] VPC Peering Connection (%s) has status code %s, removing from state", d.Id(), statusCode)
@@ -322,7 +323,18 @@ func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRe
 			return nil, "", err
 		}
 
+		if resp == nil || resp.VpcPeeringConnections == nil ||
+			len(resp.VpcPeeringConnections) == 0 || resp.VpcPeeringConnections[0] == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our peering connection yet. Return an empty state.
+			return nil, "", nil
+		}
 		pc := resp.VpcPeeringConnections[0]
+		if pc.Status == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our peering connection yet. Return an empty state.
+			return nil, "", nil
+		}
 		statusCode := aws.StringValue(pc.Status.Code)
 
 		// A VPC Peering Connection can exist in a failed state due to
