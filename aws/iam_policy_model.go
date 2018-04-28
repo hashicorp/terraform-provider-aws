@@ -101,7 +101,7 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 		case string:
 			raw[p.Type] = i
 		default:
-			panic("Unsupported data type for IAMPolicyStatementPrincipalSet")
+			return []byte{}, fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet", i)
 		}
 	}
 
@@ -121,10 +121,21 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 		out = append(out, IAMPolicyStatementPrincipal{Type: "*", Identifiers: []string{"*"}})
 	case map[string]interface{}:
 		for key, value := range data.(map[string]interface{}) {
-			out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: value})
+			switch vt := value.(type) {
+			case string:
+				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: value.(string)})
+			case []interface{}:
+				values := []string{}
+				for _, v := range value.([]interface{}) {
+					values = append(values, v.(string))
+				}
+				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
+			default:
+				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
+			}
 		}
 	default:
-		return fmt.Errorf("Unsupported data type %s for IAMPolicyStatementPrincipalSet", t)
+		return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet", t)
 	}
 
 	*ps = out

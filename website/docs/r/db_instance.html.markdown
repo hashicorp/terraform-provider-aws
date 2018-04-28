@@ -86,7 +86,11 @@ for more information.
 Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of DB subnet group. DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
-be created in the `default` VPC, or in EC2 Classic, if available.
+be created in the `default` VPC, or in EC2 Classic, if available. When working
+with read replicas, it needs to be specified only if the source database
+specifies an instance in another AWS Region. See [DBSubnetGroupName in API
+action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
+for additonal read replica contraints.
 * `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
    Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
@@ -171,10 +175,35 @@ for more information.
 is provided) Username for the master DB user.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
+* `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
 standalone database.
+
+### S3 Import Options
+
+Full details on the core parameters and impacts are in the API Docs: [RestoreDBInstanceFromS3](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromS3.html).  Sample 
+
+```hcl
+resource "aws_db_instance" "db" {
+  s3_import {
+    source_engine = "mysql"
+    source_engine_version = "5.6"
+    bucket_name = "mybucket"
+    bucket_prefix = "backups"
+    ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
+  }
+}
+```
+
+* `bucket_name` - (Required) The bucket name where your backup is stored
+* `bucket_prefix` - (Optional) Can be blank, but is the path to your backup
+* `ingestion_role` - (Required) Role applied to load the data.
+* `source_engine` - (Required, as of Feb 2018 only 'mysql' supported) Source engine for the backup
+* `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup
+
+This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
 
 ### Timeouts
 

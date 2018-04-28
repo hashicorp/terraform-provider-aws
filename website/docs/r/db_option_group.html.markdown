@@ -2,6 +2,8 @@
 layout: "aws"
 page_title: "AWS: aws_db_option_group"
 sidebar_current: "docs-aws-resource-db-option-group"
+description: |-
+  Provides an RDS DB option group resource.
 ---
 
 # aws_db_option_group

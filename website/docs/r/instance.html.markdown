@@ -90,6 +90,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
   "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
+* `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
 
 ### Timeouts
 
@@ -176,6 +177,14 @@ Each `network_interface` block supports the following:
 * `network_interface_id` - (Required) The ID of the network interface to attach.
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`.
 
+### Credit Specification
+
+Credit specification can be applied/modified to the EC2 Instance at any time.
+
+The `credit_specification` block supports the following:
+
+* `cpu_credits` - (Optional) The credit option for CPU usage.
+
 ### Example
 
 ```hcl
@@ -239,6 +248,7 @@ The following attributes are exported:
 * `security_groups` - The associated security groups.
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
+* `credit_specification` - Credit specification of instance.
 
 For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
 e.g. `aws_instance.web.root_block_device.0.volume_id`

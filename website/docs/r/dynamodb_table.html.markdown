@@ -90,6 +90,7 @@ attributes, etc.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 * `tags` - (Optional) A map of tags to populate on the created table.
+* `point_in_time_recovery` - (Optional) Point-in-time recovery options.
 
 ### Timeouts
 
@@ -134,6 +135,10 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 #### `server_side_encryption`
 
 * `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`.
+
+#### `point_in_time_recovery`
+
+* `enabled` - (Required) Whether to enable point-in-time recovery - note that it can take up to 10 minutes to enable for new tables. If the `point_in_time_recovery` block is not provided then this defaults to `false`.
 
 ### A note about attributes
 

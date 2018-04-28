@@ -189,6 +189,9 @@ The following arguments are supported:
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
+* `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
+* `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
+* `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data.
 
 `run_command_targets` support the following:
@@ -200,6 +203,21 @@ The following arguments are supported:
 
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. The default is 1.
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.
+
+`batch_target` support the following:
+
+* `job_definition` - (Required) The ARN or name of the job definition to use if the event target is an AWS Batch job. This job definition must already exist.
+* `job_name` - (Required) The name to use for this execution of the job, if the target is an AWS Batch job.
+* `array_size` - (Optional) The size of the array, if this is an array batch job. Valid values are integers between 2 and 10,000.
+* `job_attempts` - (Optional) The number of times to attempt to retry, if the job fails. Valid values are 1 to 10.
+
+`kinesis_target` support the following:
+
+* `partition_key_path` - (Optional) The JSON path to be extracted from the event and used as the partition key.
+
+`sqs_target` support the following:
+
+* `message_group_id` - (Optional) The FIFO message group ID to use as the target.
 
 `input_transformer` support the following:
 

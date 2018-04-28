@@ -211,6 +211,18 @@ data "aws_lb_listener" "from_lb_and_port" {
   load_balancer_arn = "${aws_lb.alb_test.arn}"
   port              = "${aws_lb_listener.front_end.port}"
 }
+
+output "front_end_load_balancer_arn" {
+  value = "${data.aws_lb_listener.front_end.load_balancer_arn}"
+}
+
+output "front_end_port" {
+  value = "${data.aws_lb_listener.front_end.port}"
+}
+
+output "from_lb_and_port_arn" {
+  value = "${data.aws_lb_listener.from_lb_and_port.arn}"
+}
 `, lbName, targetGroupName)
 }
 

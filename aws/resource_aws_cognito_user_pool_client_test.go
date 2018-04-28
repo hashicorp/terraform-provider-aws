@@ -35,6 +35,59 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resourceName := "aws_cognito_user_pool_client.client"
+
+	getStateId := func(s *terraform.State) (string, error) {
+
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return "", errors.New("No Cognito User Pool Client ID set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		userPoolId := rs.Primary.Attributes["user_pool_id"]
+		clientId := rs.Primary.ID
+
+		params := &cognitoidentityprovider.DescribeUserPoolClientInput{
+			UserPoolId: aws.String(userPoolId),
+			ClientId:   aws.String(clientId),
+		}
+
+		_, err := conn.DescribeUserPoolClient(params)
+
+		if err != nil {
+			return "", err
+		}
+
+		return fmt.Sprintf("%s/%s", userPoolId, clientId), nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: getStateId,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -142,12 +195,10 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_user_pool_client" "client" {
-  name = "%s"
-
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
-  explicit_auth_flows = [ "ADMIN_NO_SRP_AUTH" ]
+  name                = "%s"
+  user_pool_id        = "${aws_cognito_user_pool.pool.id}"
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
-
 `, userPoolName, clientName)
 }
 
