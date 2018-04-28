@@ -1769,6 +1769,8 @@ resource "aws_s3_bucket" "logs" {
   }
 }
 
+data "aws_partition" "current" {}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_elb_service_account" "current" {}
@@ -1777,11 +1779,11 @@ data "aws_iam_policy_document" "logs_bucket" {
   statement {
     actions   = ["s3:PutObject"]
     effect    = "Allow"
-    resources = ["arn:aws:s3:::${var.bucket_name}/${var.bucket_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:s3:::${var.bucket_name}/${var.bucket_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
     principals = {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_elb_service_account.current.id}:root"]
+      identifiers = ["${data.aws_elb_service_account.current.arn}"]
     }
   }
 }
