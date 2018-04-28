@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSGlueCrawler_full(t *testing.T) {
+func TestAccAWSGlueCrawler_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -164,7 +164,7 @@ const testAccGuardDutyDetectorConfigBasic = `
 	}
 	
 	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-default-policy-attachment" {
-  		policy_arn = "arn:aws:iam::aws:policy/AWSGlueServiceRole"
+  		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
   		role = "${aws_iam_role.glue.name}"
 	}
 	
