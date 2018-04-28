@@ -37,6 +37,10 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"invite": {
+				Type: schema.TypeBool,
+				Required: false,
+			},
 		},
 	}
 }
@@ -60,6 +64,19 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Creating GuardDuty Member failed: %s", err.Error())
 	}
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
+
+
+	imi := &guardduty.InviteMembersInput{
+		DetectorId: &detectorID,
+		AccountIds: []*string{&accountID},
+		Message: aws.String(d.Get("message").(string)),
+	}
+
+	_, err = conn.InviteMembers(imi)
+
+	if err != nil {
+		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err.Error())
+	}
 
 	return resourceAwsGuardDutyMemberRead(d, meta)
 }
@@ -97,6 +114,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("account_id", member.AccountId)
 	d.Set("detector_id", detectorID)
 	d.Set("email", member.Email)
+	d.Set("invite", member.RelationshipStatus == aws.String("INVITED"))
 
 	return nil
 }
