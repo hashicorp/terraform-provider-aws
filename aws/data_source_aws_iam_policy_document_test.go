@@ -298,7 +298,10 @@ data "aws_iam_policy_document" "test" {
         ]
         principals {
             type = "AWS"
-            identifiers = ["arn:blahblah:example"]
+            identifiers = [
+				"arn:blahblah:example",
+				"arn:blahblahblah:example",
+			]
         }
     }
 
@@ -378,7 +381,10 @@ var testAccAWSIAMPolicyDocumentSourceExpectedJSON = `{
         "arn:aws:s3:::foo/home/${aws:username}"
       ],
       "Principal": {
-        "AWS": "arn:blahblah:example"
+        "AWS": [
+          "arn:blahblahblah:example",
+          "arn:blahblah:example"
+        ]
       }
     },
     {

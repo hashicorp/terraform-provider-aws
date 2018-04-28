@@ -174,6 +174,10 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"source_code_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"environment": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -188,7 +192,6 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 			},
-
 			"tracing_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -204,13 +207,11 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 			},
-
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-
 			"tags": tagsSchema(),
 		},
 
@@ -443,10 +444,17 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	log.Printf("[DEBUG] Fetching Lambda Function: %s", d.Id())
-
 	params := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+
+	// qualifier for lambda function data source
+	qualifier, qualifierExistance := d.GetOk("qualifier")
+	if qualifierExistance {
+		params.Qualifier = aws.String(qualifier.(string))
+		log.Printf("[DEBUG] Fetching Lambda Function: %s:%s", d.Id(), qualifier.(string))
+	} else {
+		log.Printf("[DEBUG] Fetching Lambda Function: %s", d.Id())
 	}
 
 	getFunctionOutput, err := conn.GetFunction(params)
@@ -456,6 +464,18 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 			return nil
 		}
 		return err
+	}
+
+	if getFunctionOutput.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", nil)
+	}
+
+	// Tagging operations are permitted on Lambda functions only.
+	// Tags on aliases and versions are not supported.
+	if !qualifierExistance {
+		d.Set("tags", tagsToMapGeneric(getFunctionOutput.Tags))
 	}
 
 	// getFunctionOutput.Code.Location is a pre-signed URL pointing at the zip
@@ -474,18 +494,18 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("runtime", function.Runtime)
 	d.Set("timeout", function.Timeout)
 	d.Set("kms_key_arn", function.KMSKeyArn)
-	d.Set("tags", tagsToMapGeneric(getFunctionOutput.Tags))
+	d.Set("source_code_hash", function.CodeSha256)
+	d.Set("source_code_size", function.CodeSize)
 
 	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
 	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
-	vpcSetErr := d.Set("vpc_config", config)
-	if vpcSetErr != nil {
-		return fmt.Errorf("Failed setting vpc_config: %s", vpcSetErr)
+	if err := d.Set("vpc_config", config); err != nil {
+		return fmt.Errorf("[ERR] Error setting vpc_config for Lambda Function (%s): %s", d.Id(), err)
 	}
 
-	d.Set("source_code_hash", function.CodeSha256)
-
-	if err := d.Set("environment", flattenLambdaEnvironment(function.Environment)); err != nil {
+	environment := flattenLambdaEnvironment(function.Environment)
+	log.Printf("[INFO] Setting Lambda %s environment %#v from API", d.Id(), environment)
+	if err := d.Set("environment", environment); err != nil {
 		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
 	}
 
@@ -537,12 +557,6 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
 	}.String()
 	d.Set("invoke_arn", invokeArn)
-
-	if getFunctionOutput.Concurrency != nil {
-		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
-	} else {
-		d.Set("reserved_concurrent_executions", nil)
-	}
 
 	return nil
 }

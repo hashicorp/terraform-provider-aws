@@ -254,6 +254,7 @@ func flattenFirehoseRedshiftConfiguration(description *firehose.RedshiftDestinat
 		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":            aws.StringValue(description.ClusterJDBCURL),
 		"password":                   configuredPassword,
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_configuration":    flattenFirehoseS3Configuration(description.S3BackupDescription),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
@@ -589,6 +590,8 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 						},
+
+						"processing_configuration": processingConfigurationSchema(),
 
 						"role_arn": {
 							Type:     schema.TypeString,
@@ -1129,6 +1132,9 @@ func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3Destinati
 	if _, ok := redshift["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(redshift)
 	}
+	if _, ok := redshift["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(redshift)
+	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupConfiguration = expandS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
@@ -1158,6 +1164,9 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 
 	if _, ok := redshift["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(redshift)
+	}
+	if _, ok := redshift["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(redshift)
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
@@ -1411,12 +1420,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
-	var lastError error
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Firehose Delivery Stream: %s", err)
-			lastError = err
 
 			// Retry for IAM eventual consistency
 			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to perform") {
