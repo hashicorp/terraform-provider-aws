@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsLambdaInvoke() *schema.Resource {
+func dataSourceAwsLambdaInvocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaInvokeRead,
+		Read: dataSourceAwsLambdaInvocationRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -29,12 +29,10 @@ func dataSourceAwsLambdaInvoke() *schema.Resource {
 			},
 
 			"input": {
-				Type:     schema.TypeMap,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateJsonString,
 			},
 
 			"result": {
@@ -48,22 +46,17 @@ func dataSourceAwsLambdaInvoke() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLambdaInvokeRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-
-	payload, err := json.Marshal(d.Get("input"))
-
-	if err != nil {
-		return err
-	}
+	input := []byte(d.Get("input").(string))
 
 	res, err := conn.Invoke(&lambda.InvokeInput{
 		FunctionName:   aws.String(functionName),
 		InvocationType: aws.String(lambda.InvocationTypeRequestResponse),
-		Payload:        payload,
+		Payload:        input,
 		Qualifier:      aws.String(qualifier),
 	})
 
@@ -85,7 +78,7 @@ func dataSourceAwsLambdaInvokeRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Lambda function (%s) returned invalid JSON: %s", functionName, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(input)))
 
 	return nil
 }
