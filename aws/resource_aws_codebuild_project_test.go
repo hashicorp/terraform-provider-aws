@@ -370,7 +370,7 @@ resource "aws_codebuild_project" "foo" {
     environment_variable = {
       "name"  = "SOME_KEY"
       "value" = "SOME_VALUE"
-      "type" = "PARAMETER_STORE"
+      "type"  = "PLAINTEXT"
     }
   }
 
@@ -456,7 +456,7 @@ resource "aws_codebuild_project" "foo" {
     environment_variable = {
       "name"  = "SOME_OTHERKEY"
       "value" = "SOME_OTHERVALUE"
-      "type" = "PLAINTEXT"
+      "type"  = "PARAMETER_STORE"
     }
   }
 
@@ -638,6 +638,7 @@ resource "aws_codebuild_project" "foo" {
     environment_variable = {
       "name"  = "SOME_OTHERKEY"
       "value" = "SOME_OTHERVALUE"
+      "type"  = "PLAINTEXT"
     }
   }
 
