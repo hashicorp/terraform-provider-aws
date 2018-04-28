@@ -418,7 +418,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-multiple-conditions-${count.index}"
   }
 }
 
@@ -529,7 +529,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
   }
 }
 
@@ -640,7 +640,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-bc-${count.index}"
   }
 }
 
@@ -752,7 +752,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-update-rule-priority-${count.index}"
   }
 }
 
@@ -875,7 +875,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-change-rule-arn-${count.index}"
   }
 }
 
@@ -960,7 +960,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-rule-priority"
   }
 }
 
@@ -972,7 +972,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-rule-priority-${count.index}"
   }
 }
 

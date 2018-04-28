@@ -81,34 +81,6 @@ func TestValidateRFC3339TimeString(t *testing.T) {
 	}
 }
 
-func TestValidateInstanceUserDataSize(t *testing.T) {
-	validValues := []string{
-		"#!/bin/bash",
-		"#!/bin/bash\n" + strings.Repeat("#", 16372), // = 16384
-	}
-
-	for _, s := range validValues {
-		_, errors := validateInstanceUserDataSize(s, "user_data")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be valid user data with limited size: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"#!/bin/bash\n" + strings.Repeat("#", 16373), // = 16385
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateInstanceUserDataSize(s, "user_data")
-		if len(errors) != 1 {
-			t.Fatalf("%q should not be valid user data with limited size: %v", s, errors)
-		}
-		if !strings.Contains(errors[0].Error(), "16385") {
-			t.Fatalf("%q should trigger error message with actual size: %v", s, errors)
-		}
-	}
-}
-
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
@@ -1128,50 +1100,6 @@ func TestValidateStepFunctionStateMachineName(t *testing.T) {
 		_, errors := validateSfnStateMachineName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Step Function State Machine name", v)
-		}
-	}
-}
-
-func TestValidateEmrEbsVolumeType(t *testing.T) {
-	cases := []struct {
-		VolType  string
-		ErrCount int
-	}{
-		{
-			VolType:  "gp2",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "io1",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "standard",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "stand",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "io",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "gp1",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "fast-disk",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateAwsEmrEbsVolumeType(tc.VolType, "volume")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %d errors, got %d: %s", tc.ErrCount, len(errors), errors)
 		}
 	}
 }
@@ -2590,6 +2518,71 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
+func TestValidateLaunchTemplateName(t *testing.T) {
+	validNames := []string{
+		"fooBAR123",
+		"(./_)",
+	}
+	for _, v := range validNames {
+		_, errors := validateLaunchTemplateName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"tf",
+		strings.Repeat("W", 126), // > 125
+		"invalid*",
+		"invalid\name",
+		"inavalid&",
+		"invalid+",
+		"invalid!",
+		"invalid:",
+		"invalid;",
+	}
+	for _, v := range invalidNames {
+		_, errors := validateLaunchTemplateName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template name: %q", v, errors)
+		}
+	}
+
+	invalidNamePrefixes := []string{
+		strings.Repeat("W", 100), // > 99
+	}
+	for _, v := range invalidNamePrefixes {
+		_, errors := validateLaunchTemplateName(v, "name_prefix")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template name prefix: %q", v, errors)
+		}
+	}
+}
+
+func TestValidateLaunchTemplateId(t *testing.T) {
+	validIds := []string{
+		"lt-foobar123456",
+	}
+	for _, v := range validIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template id: %q", v, errors)
+		}
+	}
+
+	invalidIds := []string{
+		strings.Repeat("W", 256),
+		"invalid-foobar123456",
+		"lt_foobar123456",
+	}
+	for _, v := range invalidIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template id: %q", v, errors)
 		}
 	}
 }

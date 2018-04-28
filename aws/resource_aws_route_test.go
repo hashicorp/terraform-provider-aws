@@ -447,6 +447,9 @@ resource "aws_subnet" "router-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch = true
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags {
+    Name = "tf-acc-route-ipv6-network-interface-router"
+  }
 }
 
 resource "aws_subnet" "client-network" {
@@ -456,6 +459,9 @@ resource "aws_subnet" "client-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch = false
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags {
+    Name = "tf-acc-route-ipv6-network-interface-client"
+  }
 }
 
 resource "aws_route_table" "client-routes" {
@@ -550,6 +556,9 @@ resource "aws_subnet" "router-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch = true
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags {
+    Name = "tf-acc-route-ipv6-instance-router"
+  }
 }
 
 resource "aws_subnet" "client-network" {
@@ -559,6 +568,9 @@ resource "aws_subnet" "client-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch = false
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags {
+    Name = "tf-acc-route-ipv6-instance-client"
+  }
 }
 
 resource "aws_route_table" "client-routes" {
@@ -725,7 +737,7 @@ var testAccAWSRouteNoopChange = fmt.Sprint(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
   tags {
-    Name = "terraform-testacc-route-route-noop-change"
+    Name = "terraform-testacc-route-noop-change"
   }
 }
 
@@ -736,6 +748,9 @@ resource "aws_route_table" "test" {
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.10.0/24"
+  tags {
+    Name = "tf-acc-route-noop-change"
+  }
 }
 
 resource "aws_route" "test" {

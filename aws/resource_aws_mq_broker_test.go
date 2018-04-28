@@ -678,7 +678,7 @@ resource "aws_subnet" "private" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
   tags {
-    Name = "TfAccTest-MqBroker"
+    Name = "tf-acc-mq-broker-all-fields-custom-vpc-${count.index}"
   }
 }
 

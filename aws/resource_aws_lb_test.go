@@ -158,7 +158,6 @@ func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "tags.Name", "TestAccAWSALB_basic"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "enable_deletion_protection", "false"),
-					resource.TestCheckResourceAttr("aws_alb.lb_test", "enable_cross_zone_load_balancing", "false"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "idle_timeout", "30"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr("aws_alb.lb_test", "load_balancer_type", "application"),
@@ -279,6 +278,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "load_balancing.cross_zone.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "true"),
 				),
 			},
@@ -286,6 +286,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "load_balancing.cross_zone.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "false"),
 					testAccCheckAWSlbARNs(&pre, &mid),
 				),
@@ -294,6 +295,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "load_balancing.cross_zone.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_cross_zone_load_balancing", "true"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
@@ -313,25 +315,28 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
+				Config: testAccAWSLBConfig_enableHttp2(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "routing.http2.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "routing.http2.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "true"),
+					testAccCheckAWSlbARNs(&pre, &mid),
 				),
 			},
 			{
 				Config: testAccAWSLBConfig_enableHttp2(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
-					testAccCheckAWSlbARNs(&pre, &mid),
-				),
-			},
-			{
-				Config: testAccAWSLBConfig_enableHttp2(lbName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "true"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "routing.http2.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_http2", "false"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
 			},
@@ -353,6 +358,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &pre),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "deletion_protection.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
 				),
 			},
@@ -360,6 +366,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &mid),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "deletion_protection.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "true"),
 					testAccCheckAWSlbARNs(&pre, &mid),
 				),
@@ -368,6 +375,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &post),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "deletion_protection.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
 					testAccCheckAWSlbARNs(&mid, &post),
 				),
@@ -511,6 +519,9 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Config: testAccAWSLBConfig_basic(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "false"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", ""),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", ""),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -529,6 +540,9 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Config: testAccAWSLBConfig_accessLogs(true, lbName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "true"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -551,6 +565,9 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				Config: testAccAWSLBConfig_accessLogs(false, lbName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "false"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -634,6 +651,38 @@ func testAccCheckAWSLBExists(n string, res *elbv2.LoadBalancer) resource.TestChe
 
 		*res = *describe.LoadBalancers[0]
 		return nil
+	}
+}
+
+func testAccCheckAWSLBAttribute(n, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return errors.New("No LB ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
+			LoadBalancerArn: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return errwrap.Wrapf("Error retrieving LB Attributes: {{err}}", err)
+		}
+
+		for _, attr := range attributesResp.Attributes {
+			if *attr.Key == key {
+				if *attr.Value == value {
+					return nil
+				} else {
+					return fmt.Errorf("LB attribute %s expected: %q actual: %q", key, value, *attr.Value)
+				}
+			}
+		}
+		return fmt.Errorf("LB attribute %s does not exist on LB: %s", key, rs.Primary.ID)
 	}
 }
 
@@ -744,7 +793,7 @@ resource "aws_subnet" "alb_test_1" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-updated-1"
   }
 }
 
@@ -756,7 +805,7 @@ resource "aws_subnet" "alb_test_2" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-updated-2"
   }
 }
 
@@ -855,7 +904,7 @@ resource "aws_subnet" "alb_test_1" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-1"
   }
 }
 
@@ -867,7 +916,7 @@ resource "aws_subnet" "alb_test_2" {
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-with-ip-address-type-2"
   }
 }
 
@@ -927,7 +976,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-basic"
   }
 }
 
@@ -996,7 +1045,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-basic-${count.index}"
   }
 }
 
@@ -1063,7 +1112,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-basic-${count.index}"
   }
 }
 
@@ -1127,7 +1176,7 @@ resource "aws_subnet" "alb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "tf-acc-lb-network-load-balancer-subnets-1"
   }
 }
 
@@ -1137,7 +1186,7 @@ resource "aws_subnet" "alb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "tf-acc-lb-network-load-balancer-subnets-2"
   }
 }
 
@@ -1147,7 +1196,7 @@ resource "aws_subnet" "alb_test_3" {
   availability_zone = "us-west-2c"
 
   tags {
-    Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
+    Name = "tf-acc-lb-network-load-balancer-subnets-3"
   }
 }
 `, lbName)
@@ -1186,7 +1235,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "us-west-2a"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-network-load-balancer"
   }
 }
 
@@ -1209,6 +1258,9 @@ resource "aws_subnet" "public" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block = "10.10.${count.index}.0/24"
   vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
+  }
 }
 
 resource "aws_internet_gateway" "default" {
@@ -1288,7 +1340,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-bc-${count.index}"
   }
 }
 
@@ -1355,7 +1407,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-update-subnets-${count.index}"
   }
 }
 
@@ -1430,7 +1482,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-generated-name-${count.index}"
   }
 }
 
@@ -1511,7 +1563,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-zero-value-name-${count.index}"
   }
 }
 
@@ -1579,7 +1631,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-name-prefix-${count.index}"
   }
 }
 
@@ -1646,7 +1698,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-updated-tags-${count.index}"
   }
 }
 
@@ -1757,7 +1809,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-access-logs-${count.index}"
   }
 }
 
@@ -1823,7 +1875,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-no-sg-${count.index}"
   }
 }`, lbName)
 }
@@ -1866,7 +1918,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-update-security-groups-${count.index}"
   }
 }
 
