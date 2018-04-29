@@ -98,8 +98,10 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 
 	// wait until e-mail verification finishes
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		if d.Get("relationshipStatus").(string) != "EmailVerificationInProgress" {
-			return nil
+		// https://docs.aws.amazon.com/acm/latest/ug/get-members.html
+		status := d.Get("relationshipStatus").(string)
+		if status != "INVITED" {
+			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
 		}
 
 		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
