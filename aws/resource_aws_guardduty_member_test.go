@@ -12,7 +12,7 @@ import (
 	"regexp"
 )
 
-func TestAccAwsGuardDutyMember_basic(t *testing.T) {
+func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
 	accountID := "111111111111"
 	email := "required@example.com"
