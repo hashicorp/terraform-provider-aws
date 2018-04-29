@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"time"
 )
 
 func resourceAwsGuardDutyMember() *schema.Resource {
@@ -37,6 +39,23 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"relationship_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"invite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"invitation_message": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Second),
 		},
 	}
 }
@@ -59,9 +78,35 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("Creating GuardDuty Member failed: %s", err.Error())
 	}
+
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
 
-	return resourceAwsGuardDutyMemberRead(d, meta)
+	if !d.Get("invite").(bool) {
+		return resourceAwsGuardDutyMemberRead(d, meta)
+	}
+
+	imi := &guardduty.InviteMembersInput{
+		DetectorId: &detectorID,
+		AccountIds: []*string{&accountID},
+		Message:    aws.String(d.Get("message").(string)),
+	}
+
+	_, err = conn.InviteMembers(imi)
+	if err != nil {
+		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err.Error())
+	}
+
+	// wait until e-mail verification finishes
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		// https://docs.aws.amazon.com/acm/latest/ug/get-members.html
+		status := d.Get("relationship_status").(string)
+		if status != "INVITED" {
+			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
+		}
+
+		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
+		return resource.NonRetryableError(resourceAwsGuardDutyMemberRead(d, meta))
+	})
 }
 
 func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) error {
@@ -93,10 +138,12 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 		d.SetId("")
 		return nil
 	}
+
 	member := gmo.Members[0]
 	d.Set("account_id", member.AccountId)
 	d.Set("detector_id", detectorID)
 	d.Set("email", member.Email)
+	d.Set("relationship_status", member.RelationshipStatus)
 
 	return nil
 }
