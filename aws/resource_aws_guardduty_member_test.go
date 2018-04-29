@@ -6,11 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"strconv"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"regexp"
+	"strconv"
 )
 
 func testAccAwsGuardDutyMember_basic(t *testing.T) {
@@ -80,7 +80,7 @@ func testAccAwsGuardDutyMemberInvitation_timeout(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_basic2("111111111111", rEmail, "test", true),
+				Config:      testAccGuardDutyMemberConfig_basic2("111111111111", rEmail, "test", true),
 				ExpectError: regexp.MustCompile("Expected member to be invited but was in state: EmailVerificationFailed"),
 			},
 		},

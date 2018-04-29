@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"time"
-	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func resourceAwsGuardDutyMember() *schema.Resource {
@@ -40,14 +40,14 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 				ForceNew: true,
 			},
 			"relationshipStatus": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"invite": {
-				Type: schema.TypeBool,
+				Type:        schema.TypeBool,
 				Description: "Indicate whether to invite the account",
-				Default: true,
-				Optional: true,
+				Default:     true,
+				Optional:    true,
 			},
 			"invitation_message": {
 				Type:     schema.TypeString,
