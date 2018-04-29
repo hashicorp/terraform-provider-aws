@@ -58,6 +58,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-batch-compute-environment") %>>
                           <a href="/docs/providers/aws/d/batch_compute_environment.html">aws_batch_compute_environment</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-batch-job-queue") %>>
+                          <a href="/docs/providers/aws/d/batch_job_queue.html">aws_batch_job_queue</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-billing-service-account") %>>
                             <a href="/docs/providers/aws/d/billing_service_account.html">aws_billing_service_account</a>
                         </li>
@@ -175,6 +178,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-internet-gateway") %>>
                           <a href="/docs/providers/aws/d/internet_gateway.html">aws_internet_gateway</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-iot-endpoint") %>>
+                          <a href="/docs/providers/aws/d/iot_endpoint.html">aws_iot_endpoint</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-ip_ranges") %>>
                             <a href="/docs/providers/aws/d/ip_ranges.html">aws_ip_ranges</a>
                         </li>
@@ -198,7 +204,10 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-network-interface") %>>
                             <a href="/docs/providers/aws/d/network_interface.html">aws_network_interface</a>
-                         </li>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-lambda-function") %>>
+                            <a href="/docs/providers/aws/d/lambda_function.html">aws_lambda_function</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-lb-x") %>>
                             <a href="/docs/providers/aws/d/lb.html">aws_lb</a>
                         </li>
@@ -217,6 +226,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-rds-cluster") %>>
                             <a href="/docs/providers/aws/d/rds_cluster.html">aws_rds_cluster</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-redshift-cluster") %>>
+                            <a href="/docs/providers/aws/d/redshift_cluster.html">aws_redshift_cluster</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-redshift-service-account") %>>
                             <a href="/docs/providers/aws/d/redshift_service_account.html">aws_redshift_service_account</a>
                         </li>
@@ -234,6 +246,12 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-s3-bucket-object") %>>
                             <a href="/docs/providers/aws/d/s3_bucket_object.html">aws_s3_bucket_object</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-secretsmanager-secret") %>>
+                         <a href="/docs/providers/aws/d/secretsmanager_secret.html">aws_secretsmanager_secret</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-secretsmanager-secret-version") %>>
+                         <a href="/docs/providers/aws/d/secretsmanager_secret_version.html">aws_secretsmanager_secret_version</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-security-group") %>>
                          <a href="/docs/providers/aws/d/security_group.html">aws_security_group</a>
@@ -520,11 +538,11 @@
                     <ul class="nav nav-visible">
 
                         <li<%= sidebar_current("docs-aws-resource-codecommit-repository") %>>
-                            <a href="/docs/providers/aws/r/code_commit_repository.html">aws_codecommit_repository</a>
+                            <a href="/docs/providers/aws/r/codecommit_repository.html">aws_codecommit_repository</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-codecommit-trigger") %>>
-                            <a href="/docs/providers/aws/r/code_commit_trigger.html">aws_codecommit_trigger</a>
+                            <a href="/docs/providers/aws/r/codecommit_trigger.html">aws_codecommit_trigger</a>
                         </li>
                     </ul>
                 </li>
@@ -698,6 +716,14 @@
 
                         <li<%= sidebar_current("docs-aws-resource-dax-cluster") %>>
                             <a href="/docs/providers/aws/r/dax_cluster.html">aws_dax_cluster</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-dax-parameter-group") %>>
+                            <a href="/docs/providers/aws/r/dax_parameter_group.html">aws_dax_parameter_group</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-dax-subnet-group") %>>
+                            <a href="/docs/providers/aws/r/dax_subnet_group.html">aws_dax_subnet_group</a>
                         </li>
 
                     </ul>
@@ -1426,6 +1452,12 @@
                         <li<%= sidebar_current("docs-aws-resource-organizations-organization") %>>
                             <a href="/docs/providers/aws/r/organizations_organization.html">aws_organizations_organization</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-organizations-policy") %>>
+                            <a href="/docs/providers/aws/r/organizations_policy.html">aws_organizations_policy</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-organizations-policy-attachment") %>>
+                            <a href="/docs/providers/aws/r/organizations_policy_attachment.html">aws_organizations_policy_attachment</a>
+                        </li>
                     </ul>
                 </li>
 
@@ -1672,6 +1704,20 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-secretsmanager") %>>
+                    <a href="#">Secrets Manager Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-secretsmanager-secret") %>>
+                            <a href="/docs/providers/aws/r/secretsmanager_secret.html">aws_secretsmanager_secret</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-secretsmanager-secret-version") %>>
+                            <a href="/docs/providers/aws/r/secretsmanager_secret_version.html">aws_secretsmanager_secret_version</a>
+                        </li>
+
+                    </ul>
+                </li>
 
                 <li<%= sidebar_current("docs-aws-resource-ses") %>>
                     <a href="#">SES Resources</a>

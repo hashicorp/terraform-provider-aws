@@ -2537,7 +2537,6 @@ func TestValidateLaunchTemplateName(t *testing.T) {
 	invalidNames := []string{
 		"tf",
 		strings.Repeat("W", 126), // > 125
-		"invalid-",
 		"invalid*",
 		"invalid\name",
 		"inavalid&",
@@ -2560,6 +2559,30 @@ func TestValidateLaunchTemplateName(t *testing.T) {
 		_, errors := validateLaunchTemplateName(v, "name_prefix")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Launch Template name prefix: %q", v, errors)
+		}
+	}
+}
+
+func TestValidateLaunchTemplateId(t *testing.T) {
+	validIds := []string{
+		"lt-foobar123456",
+	}
+	for _, v := range validIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template id: %q", v, errors)
+		}
+	}
+
+	invalidIds := []string{
+		strings.Repeat("W", 256),
+		"invalid-foobar123456",
+		"lt_foobar123456",
+	}
+	for _, v := range invalidIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template id: %q", v, errors)
 		}
 	}
 }

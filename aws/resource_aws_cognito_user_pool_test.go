@@ -347,6 +347,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.user_migration"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
@@ -362,6 +363,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.user_migration"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
@@ -808,6 +810,7 @@ resource "aws_cognito_user_pool" "main" {
     pre_authentication             = "${aws_lambda_function.main.arn}"
     pre_sign_up                    = "${aws_lambda_function.main.arn}"
     pre_token_generation           = "${aws_lambda_function.main.arn}"
+    user_migration                 = "${aws_lambda_function.main.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
   }
 }`, name)
@@ -862,6 +865,7 @@ resource "aws_cognito_user_pool" "main" {
     pre_authentication             = "${aws_lambda_function.second.arn}"
     pre_sign_up                    = "${aws_lambda_function.second.arn}"
     pre_token_generation           = "${aws_lambda_function.second.arn}"
+    user_migration                 = "${aws_lambda_function.second.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.second.arn}"
   }
 }`, name)

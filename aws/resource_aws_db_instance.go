@@ -220,6 +220,46 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
+			"s3_import": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ConflictsWith: []string{
+					"snapshot_identifier",
+					"replicate_source_db",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"bucket_prefix": {
+							Type:     schema.TypeString,
+							Required: false,
+							Optional: true,
+							ForceNew: true,
+						},
+						"ingestion_role": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"source_engine": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"source_engine_version": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -451,6 +491,173 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+	} else if v, ok := d.GetOk("s3_import"); ok {
+
+		if _, ok := d.GetOk("allocated_storage"); !ok {
+			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "allocated_storage": required field is not set`, d.Get("name").(string))
+		}
+		if _, ok := d.GetOk("engine"); !ok {
+			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "engine": required field is not set`, d.Get("name").(string))
+		}
+		if _, ok := d.GetOk("password"); !ok {
+			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "password": required field is not set`, d.Get("name").(string))
+		}
+		if _, ok := d.GetOk("username"); !ok {
+			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "username": required field is not set`, d.Get("name").(string))
+		}
+
+		s3_bucket := v.([]interface{})[0].(map[string]interface{})
+		opts := rds.RestoreDBInstanceFromS3Input{
+			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBName:                  aws.String(d.Get("name").(string)),
+			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			Engine:                  aws.String(d.Get("engine").(string)),
+			EngineVersion:           aws.String(d.Get("engine_version").(string)),
+			S3BucketName:            aws.String(s3_bucket["bucket_name"].(string)),
+			S3Prefix:                aws.String(s3_bucket["bucket_prefix"].(string)),
+			S3IngestionRoleArn:      aws.String(s3_bucket["ingestion_role"].(string)),
+			MasterUsername:          aws.String(d.Get("username").(string)),
+			MasterUserPassword:      aws.String(d.Get("password").(string)),
+			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
+			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
+			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
+			Tags:                    tags,
+		}
+
+		if attr, ok := d.GetOk("multi_az"); ok {
+			opts.MultiAZ = aws.Bool(attr.(bool))
+
+		}
+
+		if _, ok := d.GetOk("character_set_name"); ok {
+			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "character_set_name" doesn't work with with restores"`, d.Get("name").(string))
+		}
+		if _, ok := d.GetOk("timezone"); ok {
+			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "timezone" doesn't work with with restores"`, d.Get("name").(string))
+		}
+
+		attr := d.Get("backup_retention_period")
+		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+
+		if attr, ok := d.GetOk("maintenance_window"); ok {
+			opts.PreferredMaintenanceWindow = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("backup_window"); ok {
+			opts.PreferredBackupWindow = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("license_model"); ok {
+			opts.LicenseModel = aws.String(attr.(string))
+		}
+		if attr, ok := d.GetOk("parameter_group_name"); ok {
+			opts.DBParameterGroupName = aws.String(attr.(string))
+		}
+
+		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			var s []*string
+			for _, v := range attr.List() {
+				s = append(s, aws.String(v.(string)))
+			}
+			opts.VpcSecurityGroupIds = s
+		}
+
+		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
+			var s []*string
+			for _, v := range attr.List() {
+				s = append(s, aws.String(v.(string)))
+			}
+			opts.DBSecurityGroups = s
+		}
+		if attr, ok := d.GetOk("storage_type"); ok {
+			opts.StorageType = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+			opts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("iops"); ok {
+			opts.Iops = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("port"); ok {
+			opts.Port = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("availability_zone"); ok {
+			opts.AvailabilityZone = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
+			opts.MonitoringRoleArn = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("monitoring_interval"); ok {
+			opts.MonitoringInterval = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("option_group_name"); ok {
+			opts.OptionGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("kms_key_id"); ok {
+			opts.KmsKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		}
+
+		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
+		var err error
+		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err = conn.RestoreDBInstanceFromS3(&opts)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidParameterValue", "S3 bucket cannot be found") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating DB Instance: %s", err)
+		}
+
+		d.SetId(d.Get("identifier").(string))
+
+		log.Printf("[INFO] DB Instance ID: %s", d.Id())
+
+		log.Println(
+			"[INFO] Waiting for DB Instance to be available")
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    resourceAwsDbInstanceCreatePendingStates,
+			Target:     []string{"available", "storage-optimization"},
+			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second, // Wait 30 secs before starting
+		}
+
+		// Wait, catching any errors
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return err
+		}
+
+		return resourceAwsDbInstanceRead(d, meta)
 	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -509,7 +716,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("port"); ok {
 			opts.Port = aws.Int64(int64(attr.(int)))
 		}
-
 		if attr, ok := d.GetOk("tde_credential_arn"); ok {
 			opts.TdeCredentialArn = aws.String(attr.(string))
 		}

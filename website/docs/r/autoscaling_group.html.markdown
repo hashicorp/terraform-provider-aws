@@ -10,6 +10,8 @@ description: |-
 
 Provides an AutoScaling Group resource.
 
+-> **Note:** You must specify either `launch_configuration` or `launch_template`.
+
 ## Example Usage
 
 ```hcl
@@ -60,6 +62,27 @@ EOF
     key                 = "lorem"
     value               = "ipsum"
     propagate_at_launch = false
+  }
+}
+```
+
+### With Latest Version Of Launch Template
+
+```hcl
+resource "aws_launch_template" "foobar" {
+  name_prefix = "foobar"
+  image_id = "ami-1a2b3c"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity = 1
+  max_size = 1
+  min_size = 1
+  launch_template = {
+    id = "${aws_launch_template.foobar.id}"
+    version = "$$Latest"
   }
 }
 ```
@@ -124,7 +147,9 @@ The following arguments are supported:
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `availability_zones` - (Required only for EC2-Classic) A list of one or more availability zones for the group. This parameter should not be specified when using `vpc_zone_identifier`.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
-* `launch_configuration` - (Required) The name of the launch configuration to use.
+* `launch_configuration` - (Optional) The name of the launch configuration to use.
+* `launch_template` - (Optional) Launch template specification to use to launch instances.
+  See [Launch Template Specification](#launch-template-specification) below for more details.
 * `initial_lifecycle_hook` - (Optional) One or more
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
@@ -186,6 +211,14 @@ To declare multiple tags additional `tag` blocks can be specified.
 Alternatively the `tags` attributes can be used, which accepts a list of maps containing the above field names as keys and their respective values.
 This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
+
+### Launch Template Specification
+
+The `launch_template` block supports the following:
+
+* `id` - The ID of the launch template. Conflicts with `name`.
+* `name` - The name of the launch template. Conflicts with `id`.
+* `version` - Template version. Can be version number, `$Latest` or `$Default`. (Default: `$Default`).
 
 ## Attributes Reference
 
