@@ -39,23 +39,23 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"relationshipStatus": {
+			"relationship_status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"invite": {
-				Type:        schema.TypeBool,
-				Description: "Indicate whether to invite the account",
-				Default:     true,
-				Optional:    true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 			"invitation_message": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Second),
 		},
 	}
 }
@@ -99,7 +99,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	// wait until e-mail verification finishes
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		// https://docs.aws.amazon.com/acm/latest/ug/get-members.html
-		status := d.Get("relationshipStatus").(string)
+		status := d.Get("relationship_status").(string)
 		if status != "INVITED" {
 			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
 		}
@@ -143,7 +143,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("account_id", member.AccountId)
 	d.Set("detector_id", detectorID)
 	d.Set("email", member.Email)
-	d.Set("relationshipStatus", member.RelationshipStatus)
+	d.Set("relationship_status", member.RelationshipStatus)
 
 	return nil
 }
