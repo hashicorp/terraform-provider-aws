@@ -215,9 +215,7 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-	d.Set("tags", dmsTagsToMap(tagsResp.TagList))
-
-	return nil
+	return d.Set("tags", dmsTagsToMap(tagsResp.TagList))
 }
 
 func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -316,11 +314,7 @@ func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] DMS delete endpoint: %#v", request)
 
 	_, err := conn.DeleteEndpoint(request)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
