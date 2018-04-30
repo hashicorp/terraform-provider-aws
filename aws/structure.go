@@ -3441,13 +3441,15 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 
 	out := make([]interface{}, 0)
 	for _, u := range users {
+		m := map[string]interface{}{
+			"username": *u.Username,
+		}
 		password := ""
 		if p, ok := existingPairs[*u.Username]; ok {
 			password = p
 		}
-		m := map[string]interface{}{
-			"username": *u.Username,
-			"password": password,
+		if password != "" {
+			m["password"] = password
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = *u.ConsoleAccess
