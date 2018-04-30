@@ -1,5 +1,9 @@
 ## 1.17.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_mq_broker` [GH-3163]
+
 ENHANCEMENTS:
 
 * data-source/aws_route53_zone: Add `name_servers` attribute [GH-4336]
