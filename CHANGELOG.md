@@ -3,7 +3,8 @@
 FEATURES:
 
 * **New Data Source:** `aws_mq_broker` [GH-3163]
-* **New Resouce:** `aws_budgets_budget` [GH-1879]
+* **New Resource:** `aws_budgets_budget` [GH-1879]
+* **New Resource:** `aws_vpc_peering_connection_options` [GH-3909]
 
 ENHANCEMENTS:
 
@@ -17,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_lambda_permission: Add `statement_id_prefix` argument [GH-2743]
 * resource/aws_lambda_permission: Make `statement_id` optional (Terraform can generate unique ID) [GH-2743]
 * resource/aws_rds_cluster: Add `s3_import` argument (Support MySQL Backup Restore from S3) [GH-4366]
+* resource/aws_vpc_peering_connection: Support configurable timeouts [GH-3909]
 
 BUG FIXES:
 
