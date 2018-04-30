@@ -283,7 +283,7 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"ebs_block_device": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -292,7 +292,6 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
-							ForceNew: true,
 						},
 
 						"device_name": {
@@ -312,7 +311,6 @@ func resourceAwsInstance() *schema.Resource {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
-							ForceNew:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
 
@@ -327,14 +325,12 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 
 						"volume_type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 
 						"volume_id": {
@@ -342,13 +338,6 @@ func resourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
-					return hashcode.String(buf.String())
 				},
 			},
 
@@ -1128,6 +1117,88 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("ebs_block_device") && !d.IsNewResource() {
+		o, n := d.GetChange("ebs_block_device")
+
+		oL := o.([]interface{})
+		nL := n.([]interface{})
+
+		if len(oL) != len(nL) {
+			return errors.New("Cannot change number of ebs block devices")
+		}
+
+		blockDeviceMappings := []*ec2.InstanceBlockDeviceMappingSpecification{}
+		shouldModifyAttribute := false
+
+		for i := range nL {
+			oD := oL[i].(map[string]interface{})
+			nD := nL[i].(map[string]interface{})
+
+			var shouldModifyVolume bool
+			modifyVolumeInput := ec2.ModifyVolumeInput{
+				VolumeId: aws.String(oD["volume_id"].(string)),
+			}
+
+			if oD["volume_size"].(int) != nD["volume_size"].(int) {
+				modifyVolumeInput.Size = aws.Int64(int64(nD["volume_size"].(int)))
+				shouldModifyVolume = true
+			}
+
+			if oD["volume_type"].(string) != nD["volume_type"].(string) {
+				modifyVolumeInput.VolumeType = aws.String(nD["volume_type"].(string))
+				shouldModifyVolume = true
+			}
+
+			if ec2.VolumeTypeIo1 == strings.ToLower(nD["volume_type"].(string)) {
+				if oD["iops"].(int) != nD["iops"].(int) {
+					modifyVolumeInput.Iops = aws.Int64(int64(nD["iops"].(int)))
+					shouldModifyVolume = true
+				}
+			}
+
+			if oD["delete_on_termination"].(bool) != nD["delete_on_termination"].(bool) {
+				blockDeviceMappings = append(blockDeviceMappings, &ec2.InstanceBlockDeviceMappingSpecification{
+					DeviceName: aws.String(oD["device_name"].(string)),
+					Ebs: &ec2.EbsInstanceBlockDeviceSpecification{
+						VolumeId:            aws.String(oD["volume_id"].(string)),
+						DeleteOnTermination: aws.Bool(nD["delete_on_termination"].(bool)),
+					},
+				})
+				shouldModifyAttribute = true
+			}
+
+			if shouldModifyVolume {
+				result, err := conn.ModifyVolume(&modifyVolumeInput)
+				if err != nil {
+					return err
+				}
+				stateConf := &resource.StateChangeConf{
+					Pending:    []string{"creating", "modifying"},
+					Target:     []string{"available", "in-use"},
+					Refresh:    volumeStateRefreshFunc(conn, *result.VolumeModification.VolumeId),
+					Timeout:    5 * time.Minute,
+					Delay:      10 * time.Second,
+					MinTimeout: 3 * time.Second,
+				}
+
+				if _, err := stateConf.WaitForState(); err != nil {
+					return fmt.Errorf(
+						"Error waiting for Volume (%s) to become available: %s",
+						*result.VolumeModification.VolumeId, err)
+				}
+			}
+		}
+
+		if shouldModifyAttribute {
+			if _, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+				InstanceId:          aws.String(d.Id()),
+				BlockDeviceMappings: blockDeviceMappings,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
@@ -1201,7 +1272,21 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
+	// Order EBS block devices by device mapping order to prevent spurious diffs
+	ebsDeviceMap := map[string]map[string]interface{}{}
+	ebsDevices := []map[string]interface{}{}
+	for _, device := range ibds["ebs"].([]map[string]interface{}) {
+		ebsDeviceMap[device["volume_id"].(string)] = device
+	}
+	for _, bd := range instance.BlockDeviceMappings {
+		if bd.Ebs != nil {
+			if device, ok := ebsDeviceMap[*bd.Ebs.VolumeId]; ok {
+				ebsDevices = append(ebsDevices, device)
+			}
+		}
+	}
+
+	if err := d.Set("ebs_block_device", ebsDevices); err != nil {
 		return err
 	}
 
@@ -1425,7 +1510,7 @@ func readBlockDeviceMappingsFromConfig(
 	blockDevices := make([]*ec2.BlockDeviceMapping, 0)
 
 	if v, ok := d.GetOk("ebs_block_device"); ok {
-		vL := v.(*schema.Set).List()
+		vL := v.([]interface{})
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
