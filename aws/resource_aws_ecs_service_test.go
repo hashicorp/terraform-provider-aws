@@ -862,7 +862,7 @@ resource "aws_ecs_service" "mongo" {
 func testAccAWSEcsServiceWithMultiPlacementStrategy(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
@@ -886,12 +886,12 @@ resource "aws_ecs_service" "mongo" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   ordered_placement_strategy {
-	  type = "binpack"
-	  field = "memory"
+    type = "binpack"
+    field = "memory"
   }
-	ordered_placement_strategy {
-	  field = "host"
-	  type = "spread"
+  ordered_placement_strategy {
+    field = "host"
+    type = "spread"
   }
 }
 `, clusterName, tdName, svcName)
