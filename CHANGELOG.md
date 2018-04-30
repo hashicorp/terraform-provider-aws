@@ -1,5 +1,9 @@
 ## 1.17.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_ecs_service: Please note the `placement_strategy` argument (an unordered list) has been marked deprecated in favor of the `ordered_placement_strategy` argument (an ordered list based on the Terraform configuration ordering).
+
 FEATURES:
 
 * **New Data Source:** `aws_mq_broker` [GH-3163]
@@ -15,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_rule: Make `name` optional (Terraform can generate unique ID) [GH-2752]
 * resource/aws_codedeploy_deployment_group: Add `ec2_tag_set` argument (tag group support) [GH-4324]
 * resource/aws_dynamodb_table: Add `point_in_time_recovery` argument [GH-4063]
+* resource/aws_ecs_service: Add `ordered_placement_strategy` argument, deprecate `placement_strategy` argument [GH-4390]
 * resource/aws_lambda_permission: Add `statement_id_prefix` argument [GH-2743]
 * resource/aws_lambda_permission: Make `statement_id` optional (Terraform can generate unique ID) [GH-2743]
 * resource/aws_rds_cluster: Add `s3_import` argument (Support MySQL Backup Restore from S3) [GH-4366]
