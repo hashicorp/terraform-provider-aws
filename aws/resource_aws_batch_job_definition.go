@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"math"
 
 	"encoding/json"
 
@@ -50,8 +51,24 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attempts": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 10),
+						},
+					},
+				},
+			},
+			"timeout": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attempt_duration_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(60, math.MaxInt32),
 						},
 					},
 				},
@@ -99,6 +116,10 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 		input.RetryStrategy = expandJobDefinitionRetryStrategy(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("timeout"); ok {
+		input.Timeout = expandJobDefinitionTimeout(v.([]interface{}))
+	}
+
 	out, err := conn.RegisterJobDefinition(input)
 	if err != nil {
 		return fmt.Errorf("%s %q", err, name)
@@ -123,6 +144,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	d.Set("container_properties", job.ContainerProperties)
 	d.Set("parameters", aws.StringValueMap(job.Parameters))
 	d.Set("retry_strategy", flattenRetryStrategy(job.RetryStrategy))
+	d.Set("timeout", flattenTimeout(job.Timeout))
 	d.Set("revision", job.Revision)
 	d.Set("type", job.Type)
 	return nil
@@ -195,17 +217,38 @@ func expandJobDefinitionParameters(params map[string]interface{}) map[string]*st
 }
 
 func expandJobDefinitionRetryStrategy(item []interface{}) *batch.RetryStrategy {
+	retryStrategy := &batch.RetryStrategy{}
 	data := item[0].(map[string]interface{})
-	return &batch.RetryStrategy{
-		Attempts: aws.Int64(int64(data["attempts"].(int))),
+	if v, ok := data["attempts"].(int); ok && v > 0 && v <= 10 {
+		retryStrategy.Attempts = aws.Int64(int64(v))
 	}
+	return retryStrategy
+}
+
+func expandJobDefinitionTimeout(item []interface{}) *batch.JobTimeout {
+	timeout := &batch.JobTimeout{}
+	data := item[0].(map[string]interface{})
+	if v, ok := data["attempt_duration_seconds"].(int); ok && v >= 60 {
+		timeout.AttemptDurationSeconds = aws.Int64(int64(v))
+	}
+	return timeout
 }
 
 func flattenRetryStrategy(item *batch.RetryStrategy) []map[string]interface{} {
 	data := []map[string]interface{}{}
-	if item != nil {
+	if item != nil && item.Attempts != nil {
 		data = append(data, map[string]interface{}{
 			"attempts": item.Attempts,
+		})
+	}
+	return data
+}
+
+func flattenTimeout(item *batch.JobTimeout) []map[string]interface{} {
+	data := []map[string]interface{}{}
+	if item != nil && item.AttemptDurationSeconds != nil {
+		data = append(data, map[string]interface{}{
+			"attempt_duration_seconds": item.AttemptDurationSeconds,
 		})
 	}
 	return data
