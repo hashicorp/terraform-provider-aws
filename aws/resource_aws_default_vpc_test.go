@@ -27,9 +27,6 @@ func TestAccAWSDefaultVpc_basic(t *testing.T) {
 						"aws_default_vpc.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_default_vpc.foo", "tags.Name", "terraform-testacc-default-vpc"),
-					// For backwards compatability the assign_generated_ipv6_cidr_block attribute has no default value
-					// for a region's default VPC. The assumption here is that IPv6 is not enabled.
-					testAccCheckVpcIpv6(&vpc, false),
 				),
 			},
 		},
