@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_mq_broker` [GH-3163]
+* **New Resouce:** `aws_budgets_budget` [GH-1879]
 
 ENHANCEMENTS:
 
