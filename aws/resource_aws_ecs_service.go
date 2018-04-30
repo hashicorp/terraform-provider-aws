@@ -506,9 +506,13 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("placement_strategy"); ok {
-		d.Set("placement_strategy", flattenPlacementStrategyDeprecated(service.PlacementStrategy))
+		if err := d.Set("placement_strategy", flattenPlacementStrategyDeprecated(service.PlacementStrategy)); err != nil {
+			return fmt.Errorf("error setting placement_strategy: %s", err)
+		}
 	} else {
-		d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy))
+		if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
+			return fmt.Errorf("error setting ordered_placement_strategy: %s", err)
+		}
 	}
 	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
