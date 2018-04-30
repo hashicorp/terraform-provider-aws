@@ -146,10 +146,12 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"placement_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 5,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"ordered_placement_strategy"},
+				Deprecated:    "Use `ordered_placement_strategy` instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -185,7 +187,40 @@ func resourceAwsEcsService() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
-
+			"ordered_placement_strategy": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"placement_strategy"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Required: true,
+						},
+						"field": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							StateFunc: func(v interface{}) string {
+								value := v.(string)
+								if value == "host" {
+									return "instanceId"
+								}
+								return value
+							},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if strings.ToLower(old) == strings.ToLower(new) {
+									return true
+								}
+								return false
+							},
+						},
+					},
+				},
+			},
 			"placement_constraints": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -288,20 +323,16 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
-	strategies := d.Get("placement_strategy").(*schema.Set).List()
-	if len(strategies) > 0 {
-		var ps []*ecs.PlacementStrategy
-		for _, raw := range strategies {
-			p := raw.(map[string]interface{})
-			t := p["type"].(string)
-			f := p["field"].(string)
-			if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
-				return err
-			}
-			ps = append(ps, &ecs.PlacementStrategy{
-				Type:  aws.String(p["type"].(string)),
-				Field: aws.String(p["field"].(string)),
-			})
+	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
+		ps, err := expandPlacementStrategy(v.([]interface{}))
+		if err != nil {
+			return err
+		}
+		input.PlacementStrategy = ps
+	} else {
+		ps, err := expandPlacementStrategyDeprecated(d.Get("placement_strategy").(*schema.Set))
+		if err != nil {
+			return err
 		}
 		input.PlacementStrategy = ps
 	}
@@ -474,8 +505,10 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
 
-	if err := d.Set("placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
-		log.Printf("[ERR] Error setting placement_strategy for (%s): %s", d.Id(), err)
+	if _, ok := d.GetOk("placement_strategy"); ok {
+		d.Set("placement_strategy", flattenPlacementStrategyDeprecated(service.PlacementStrategy))
+	} else {
+		d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy))
 	}
 	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
@@ -545,11 +578,71 @@ func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[st
 	return results
 }
 
-func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []map[string]interface{} {
+func flattenPlacementStrategyDeprecated(pss []*ecs.PlacementStrategy) []map[string]interface{} {
 	if len(pss) == 0 {
 		return nil
 	}
 	results := make([]map[string]interface{}, 0)
+	for _, ps := range pss {
+		c := make(map[string]interface{})
+		c["type"] = *ps.Type
+		c["field"] = *ps.Field
+
+		// for some fields the API requires lowercase for creation but will return uppercase on query
+		if *ps.Field == "MEMORY" || *ps.Field == "CPU" {
+			c["field"] = strings.ToLower(*ps.Field)
+		}
+
+		results = append(results, c)
+	}
+	return results
+}
+
+func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) {
+	if len(s) == 0 {
+		return nil, nil
+	}
+	ps := make([]*ecs.PlacementStrategy, 0)
+	for _, raw := range s {
+		p := raw.(map[string]interface{})
+		t := p["type"].(string)
+		f := p["field"].(string)
+		if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
+			return nil, err
+		}
+		ps = append(ps, &ecs.PlacementStrategy{
+			Type:  aws.String(t),
+			Field: aws.String(f),
+		})
+	}
+	return ps, nil
+}
+
+func expandPlacementStrategyDeprecated(s *schema.Set) ([]*ecs.PlacementStrategy, error) {
+	if len(s.List()) == 0 {
+		return nil, nil
+	}
+	ps := make([]*ecs.PlacementStrategy, 0)
+	for _, raw := range s.List() {
+		p := raw.(map[string]interface{})
+		t := p["type"].(string)
+		f := p["field"].(string)
+		if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
+			return nil, err
+		}
+		ps = append(ps, &ecs.PlacementStrategy{
+			Type:  aws.String(t),
+			Field: aws.String(f),
+		})
+	}
+	return ps, nil
+}
+
+func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
+	if len(pss) == 0 {
+		return nil
+	}
+	results := make([]interface{}, 0, len(pss))
 	for _, ps := range pss {
 		c := make(map[string]interface{})
 		c["type"] = *ps.Type
