@@ -2,8 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -62,13 +62,11 @@ func resourceAwsIamUserGroupMembershipRead(d *schema.ResourceData, meta interfac
 			Marker:   marker,
 		})
 		if err != nil {
-			// unwrap aws-specific error
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "NoSuchEntity" {
-					// no such user
-					d.SetId("")
-					return nil
-				}
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				// no such user
+				log.Printf("[WARN] Groups not found for user (%s), removing from state", user)
+				d.SetId("")
+				return nil
 			}
 			return err
 		}
@@ -144,7 +142,7 @@ func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
 			GroupName: group,
 		})
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchEntity" {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 				continue
 			}
 			return err

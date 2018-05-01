@@ -163,7 +163,7 @@ func testAccAWSUserGroupMembershipCheckGroupListForUser(userName string, groups 
 		for _, group := range groupsNeg {
 			for _, groupFound := range userGroupList.Groups {
 				if group == *groupFound.GroupName {
-					return fmt.Errorf("Required negative group found for %s: %s", userName, group)
+					return fmt.Errorf("Unexpected group found for %s: %s", userName, group)
 				}
 			}
 		}
