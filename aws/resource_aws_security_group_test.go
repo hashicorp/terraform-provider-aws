@@ -372,6 +372,26 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
+	var group ec2.SecurityGroup
+	sgName := fmt.Sprintf("tf-acc-security-group-%s", acctest.RandString(7))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfig_ruleGathering(sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					resource.TestCheckResourceAttr("aws_security_group.test", "name", sgName),
+				),
+			},
+		},
+	})
+}
+
 // cycleIpPermForGroup returns an IpPermission struct with a configured
 // UserIdGroupPair for the groupid given. Used in
 // TestAccAWSSecurityGroup_forceRevokeRules_should_fail to create a cyclic rule
@@ -1842,7 +1862,7 @@ resource "aws_security_group" "primary" {
 		Name = "tf-acc-revoke-test-primary"
 	}
 
-  revoke_rules_on_delete = true	
+  revoke_rules_on_delete = true
 }
 
 resource "aws_security_group" "secondary" {
@@ -1854,7 +1874,7 @@ resource "aws_security_group" "secondary" {
 		Name = "tf-acc-revoke-test-secondary"
 	}
 
-  revoke_rules_on_delete = true	
+  revoke_rules_on_delete = true
 }
 `
 
@@ -2856,3 +2876,128 @@ resource "aws_security_group" "egress" {
     }
 }
 `
+
+func testAccAWSSecurityGroupConfig_ruleGathering(sgName string) string {
+	return fmt.Sprintf(`
+variable "name" {
+  default = "%s"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "${var.name}"
+  }
+}
+
+resource "aws_route_table" "default" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id          = "${aws_vpc.test.id}"
+  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  route_table_ids = ["${aws_route_table.default.id}"]
+
+  policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid":"AllowAll",
+			"Effect":"Allow",
+			"Principal":"*",
+			"Action":"*",
+			"Resource":"*"
+		}
+	]
+}
+POLICY
+}
+
+resource "aws_security_group" "source1" {
+  name        = "${var.name}-source1"
+  description = "terraform acceptance test for security group as source1"
+  vpc_id      = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "source2" {
+  name        = "${var.name}-source2"
+  description = "terraform acceptance test for security group as source2"
+  vpc_id      = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name        = "${var.name}"
+  description = "terraform acceptance test for security group"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["10.0.0.0/24", "10.0.1.0/24"]
+    self        = true
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["10.0.2.0/24", "10.0.3.0/24"]
+    description = "ingress from 10.0.0.0/16"
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["192.168.0.0/16"]
+    description = "ingress from 192.168.0.0/16"
+  }
+
+  ingress {
+    protocol         = "tcp"
+    from_port        = 80
+    to_port          = 80
+    ipv6_cidr_blocks = ["::/0"]
+    description      = "ingress from all ipv6"
+  }
+
+  ingress {
+    protocol        = "tcp"
+    from_port       = 80
+    to_port         = 80
+    security_groups = ["${aws_security_group.source1.id}", "${aws_security_group.source2.id}"]
+    description     = "ingress from other security groups"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "egress for all ipv4"
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    ipv6_cidr_blocks = ["::/0"]
+    description      = "egress for all ipv6"
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    prefix_list_ids = ["${aws_vpc_endpoint.test.prefix_list_id}"]
+    description     = "egress for vpc endpoints"
+  }
+}
+`, sgName)
+}
