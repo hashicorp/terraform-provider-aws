@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * data-source/aws_route53_zone: Add `name_servers` attribute [GH-4336]
 * resource/aws_api_gateway_stage: Add `access_log_settings` argument (Support access logging) [GH-4369]
 * resource/aws_autoscaling_group: Add `launch_template` argument [GH-4305]
+* resource/aws_batch_job_definition: Add `timeout` argument [GH-4386]
 * resource/aws_cloudwatch_event_rule: Add `name_prefix` argument [GH-2752]
 * resource/aws_cloudwatch_event_rule: Make `name` optional (Terraform can generate unique ID) [GH-2752]
 * resource/aws_codedeploy_deployment_group: Add `ec2_tag_set` argument (tag group support) [GH-4324]
