@@ -386,6 +386,8 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
 					resource.TestCheckResourceAttr("aws_security_group.test", "name", sgName),
+					resource.TestCheckResourceAttr("aws_security_group.test", "egress.#", "3"),
+					resource.TestCheckResourceAttr("aws_security_group.test", "ingress.#", "5"),
 				),
 			},
 		},
@@ -2832,6 +2834,8 @@ resource "aws_security_group" "egress" {
 `
 
 const testAccAWSSecurityGroupConfigPrefixListEgress = `
+data "aws_region" "current" {}
+
 resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
     cidr_block = "10.0.0.0/16"
     tags {
@@ -2843,9 +2847,9 @@ resource "aws_route_table" "default" {
     vpc_id = "${aws_vpc.tf_sg_prefix_list_egress_test.id}"
 }
 
-resource "aws_vpc_endpoint" "s3-us-west-2" {
+resource "aws_vpc_endpoint" "test" {
   	vpc_id = "${aws_vpc.tf_sg_prefix_list_egress_test.id}"
-  	service_name = "com.amazonaws.us-west-2.s3"
+  	service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
   	route_table_ids = ["${aws_route_table.default.id}"]
   	policy = <<POLICY
 {
@@ -2872,7 +2876,7 @@ resource "aws_security_group" "egress" {
       protocol = "-1"
       from_port = 0
       to_port = 0
-      prefix_list_ids = ["${aws_vpc_endpoint.s3-us-west-2.prefix_list_id}"]
+      prefix_list_ids = ["${aws_vpc_endpoint.test.prefix_list_id}"]
     }
 }
 `
