@@ -51,6 +51,65 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsOrganizationsAccount_parentRoot(t *testing.T) {
+	var account organizations.Account
+
+	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
+
+	if !ok {
+		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+	}
+
+	rInt := acctest.RandInt()
+	name := fmt.Sprintf("tf_acctest_%d", rInt)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsAccountConfigUnderRoot(name, email),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "parent_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsAccount_parentOU(t *testing.T) {
+	var account organizations.Account
+
+	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
+
+	if !ok {
+		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+	}
+
+	rInt := acctest.RandInt()
+	name := fmt.Sprintf("tf_acctest_%d", rInt)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsAccountConfigUnderOU(name, email),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
+					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "parent_id"),
+					// TODO actually check that it lives under the parent
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 
@@ -117,4 +176,37 @@ resource "aws_organizations_account" "test" {
   email = "%s"
 }
 `, name, email)
+}
+
+func testAccAwsOrganizationsAccountConfigUnderRoot(name, email string) string {
+	return fmt.Sprintf(`
+data "aws_organizations_unit" "root" {
+  root = true
+}
+
+resource "aws_organizations_account" "test" {
+  name = "%s"
+  email = "%s"
+  parent_id = "${data.aws_organizations_unit.root.id}"
+}
+`, name, email)
+}
+
+func testAccAwsOrganizationsAccountConfigUnderOU(name, email string) string {
+	return fmt.Sprintf(`
+data "aws_organizations_unit" "root" {
+  root = true
+}
+
+resource "aws_organizations_unit" "test" {
+  parent_id = "${data.aws_organizations_unit.root.id}"
+  name = "%s"
+}
+
+resource "aws_organizations_account" "test" {
+  name = "%s"
+  email = "%s"
+  parent_id = "${aws_organizations_unit.test.id}"
+}
+`, name, name, email)
 }
