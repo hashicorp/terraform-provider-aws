@@ -297,6 +297,19 @@ resource "aws_iam_server_certificate" "test_cert" {
 `, testAccTLSServerCert)
 }
 
+func testAccIAMServerCertConfig_path(rInt int, path string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name = "terraform-test-cert-%d"
+  path = "%s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+`, testAccTLSServerCert, rInt, path)
+}
+
 // iam-ssl-unix-line-endings
 func testAccIAMServerCertConfig_file(rInt int, fName string) string {
 	return fmt.Sprintf(`

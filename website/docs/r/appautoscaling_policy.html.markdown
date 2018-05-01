@@ -55,6 +55,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 resource "aws_appautoscaling_policy" "ecs_policy" {
   name                    = "scale-down"
+  policy_type             = "StepScaling"
   resource_id             = "service/clusterName/serviceName"
   scalable_dimension      = "ecs:service:DesiredCount"
   service_namespace       = "ecs"
@@ -89,12 +90,41 @@ resource "aws_ecs_service" "ecs_service" {
 }
 ```
 
+### Aurora Read Replica Autoscaling
+
+```hcl
+resource "aws_appautoscaling_target" "replicas" {
+  service_namespace  = "rds"
+  scalable_dimension = "rds:cluster:ReadReplicaCount"
+  resource_id        = "cluster:${aws_rds_cluster.example.id}"
+  min_capacity       = 1
+  max_capacity       = 15
+}
+
+resource "aws_appautoscaling_policy" "replicas" {
+  name               = "cpu-auto-scaling"
+  service_namespace  = "${aws_appautoscaling_target.replicas.service_namespace}"
+  scalable_dimension = "${aws_appautoscaling_target.replicas.scalable_dimension}"
+  resource_id        = "${aws_appautoscaling_target.replicas.resource_id}"
+  policy_type        = "TargetTrackingScaling"
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "RDSReaderAverageCPUUtilization"
+    }
+    target_value = 75
+    scale_in_cooldown = 300
+    scale_out_cooldown = 300
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
-* `policy_type` - (Optional) For DynamoDB, only `TargetTrackingScaling` is supported. For any other service, only `StepScaling` is supported. Defaults to `StepScaling`.
+* `policy_type` - (Optional) For DynamoDB, only `TargetTrackingScaling` is supported. For Amazon ECS, Spot Fleet, and Amazon RDS, both `StepScaling` and `TargetTrackingScaling` are supported. For any other service, only `StepScaling` is supported. Defaults to `StepScaling`.
 * `resource_id` - (Required) The resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `scalable_dimension` - (Required) The scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `service_namespace` - (Required) The AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)

@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool"
-side_bar_current: "docs-aws-resource-cognito-user-pool"
+sidebar_current: "docs-aws-resource-cognito-user-pool"
 description: |-
   Provides a Cognito User Pool resource.
 ---
@@ -75,6 +75,7 @@ The following arguments are supported:
   * `pre_authentication` (Optional) - A pre-authentication AWS Lambda trigger.
   * `pre_sign_up` (Optional) - A pre-registration AWS Lambda trigger.
   * `pre_token_generation` (Optional) - Allow to customize identity token claims before token generation.
+  * `user_migration` (Optional) - The user migration Lambda config type.
   * `verify_auth_challenge_response` (Optional) - Verifies the authentication challenge response.
 
 #### Password Policy

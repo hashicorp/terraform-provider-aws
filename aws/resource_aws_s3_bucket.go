@@ -246,7 +246,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"days": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"expired_object_delete_marker": {
 										Type:     schema.TypeBool,
@@ -381,6 +381,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.StringInSlice([]string{
 														s3.StorageClassStandard,
+														s3.StorageClassOnezoneIa,
 														s3.StorageClassStandardIa,
 														s3.StorageClassReducedRedundancy,
 													}, false),
@@ -891,14 +892,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	lifecycle := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput)
 	if err != nil {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() != 404 {
 			return err
 		}
 	}
-	log.Printf("[DEBUG] S3 Bucket: %s, lifecycle: %v", d.Id(), lifecycle)
-	if len(lifecycle.Rules) > 0 {
+	if lifecycle, ok := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput); ok && len(lifecycle.Rules) > 0 {
+		log.Printf("[DEBUG] S3 Bucket: %s, lifecycle: %v", d.Id(), lifecycle)
 		rules := make([]map[string]interface{}, 0, len(lifecycle.Rules))
 
 		for _, lifecycleRule := range lifecycle.Rules {

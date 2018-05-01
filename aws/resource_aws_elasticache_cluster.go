@@ -287,27 +287,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				return diff.ForceNew("engine_version")
 			},
 			func(diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for node_type
-				// InvalidParameterCombination: Instance type cache.t2.micro can only be created in a VPC.
-				nodeType, nodeTypeOk := diff.GetOk("node_type")
-				if !nodeTypeOk {
-					return nil
-				}
-				vpcOnlyNodeTypes := []string{
-					"cache.t2.micro",
-					"cache.t2.small",
-					"cache.t2.medium",
-				}
-				if _, ok := diff.GetOk("subnet_group_name"); !ok {
-					for _, vpcOnlyNodeType := range vpcOnlyNodeTypes {
-						if nodeType == vpcOnlyNodeType {
-							return fmt.Errorf("node_type %q can only be created in a VPC", nodeType)
-						}
-					}
-				}
-				return nil
-			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for num_cache_nodes
 				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
 				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {

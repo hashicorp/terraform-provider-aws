@@ -92,7 +92,7 @@ The following arguments are supported:
 * `number_cache_clusters` - (Required) The number of cache clusters this replication group will have.
  If Multi-AZ is enabled , the value of this parameter must be at least 2. Changing this number will force a new resource
 * `node_type` - (Required) The compute and memory capacity of the nodes in the node group.
-* `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. Defaults to `false`.
+* `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ is disabled for this replication group. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. Defaults to `true`.
 * `availability_zones` - (Optional) A list of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not important.
 * `engine` - (Optional) The name of the cache engine to be used for the clusters in this replication group. e.g. `redis`
@@ -105,14 +105,14 @@ The following arguments are supported:
 * `subnet_group_name` - (Optional) The name of the cache subnet group to be used for the replication group.
 * `security_group_names` - (Optional) A list of cache security group names to associate with this replication group.
 * `security_group_ids` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud
-* `snapshot_arns` – (Optional) A single-element string list containing an
+* `snapshot_arns` – (Optional) A single-element string list containing an
 Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3.
 Example: `arn:aws:s3:::my_bucket/snapshot1.rdb`
 * `snapshot_name` - (Optional) The name of a snapshot from which to restore data into the new node group. Changing the `snapshot_name` forces a new resource.
-* `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
+* `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
-* `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
+* `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
 SNS topic to send ElastiCache notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 * `snapshot_window` - (Optional, Redis only) The daily time range (in UTC) during which ElastiCache will
@@ -144,7 +144,7 @@ The following attributes are exported:
 `aws_elasticache_replication_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-* `create` - (Default `50m`) How long to wait for a replication group to be created.
+* `create` - (Default `60m`) How long to wait for a replication group to be created.
 * `delete` - (Default `40m`) How long to wait for a replication group to be deleted.
 * `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for online resize operation completion, if necessary.
 

@@ -28,7 +28,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSCodeDeployDeploymentGroup(rName),
+				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo", &group),
 					resource.TestCheckResourceAttr(
@@ -41,6 +41,8 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo", "service_role_arn",
 						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/foo_role_.*")),
 
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.#", "0"),
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -59,7 +61,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSCodeDeployDeploymentGroupModified(rName),
+				Config: testAccAWSCodeDeployDeploymentGroupModified(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo", &group),
 					resource.TestCheckResourceAttr(
@@ -73,6 +75,8 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/bar_role_.*")),
 
 					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.#", "0"),
+					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.2369538975.key", "filterkey"),
@@ -80,6 +84,90 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.2369538975.type", "KEY_AND_VALUE"),
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.2369538975.value", "anotherfiltervalue"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "trigger_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
+	var group codedeploy.DeploymentGroupInfo
+
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSCodeDeployDeploymentGroup(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "app_name", "foo_app_"+rName),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "deployment_group_name", "foo_"+rName),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestMatchResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "service_role_arn",
+						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/foo_role_.*")),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2916377593.ec2_tag_filter.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.key", "filterkey"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.type", "KEY_AND_VALUE"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.value", "filtervalue"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.#", "0"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "trigger_configuration.#", "0"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSCodeDeployDeploymentGroupModified(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "app_name", "foo_app_"+rName),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "deployment_group_name", "bar_"+rName),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestMatchResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "service_role_arn",
+						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/bar_role_.*")),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2369538847.ec2_tag_filter.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.key", "filterkey"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.type", "KEY_AND_VALUE"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.value", "anotherfiltervalue"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.#", "0"),
 
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "alarm_configuration.#", "0"),
@@ -138,7 +226,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSCodeDeployDeploymentGroup(rName),
+				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo", &group),
 					testAccAWSCodeDeployDeploymentGroupDisappears(&group),
@@ -1786,7 +1874,26 @@ func testAccCheckAWSCodeDeployDeploymentGroupExists(name string, group *codedepl
 	}
 }
 
-func testAccAWSCodeDeployDeploymentGroup(rName string) string {
+func testAccAWSCodeDeployDeploymentGroup(rName string, tagGroup bool) string {
+	var tagGroupOrFilter string
+	if tagGroup {
+		tagGroupOrFilter = `ec2_tag_set {
+    ec2_tag_filter {
+      key = "filterkey"
+      type = "KEY_AND_VALUE"
+      value = "filtervalue"
+    }
+  }
+`
+	} else {
+		tagGroupOrFilter = `ec2_tag_filter {
+    key = "filterkey"
+    type = "KEY_AND_VALUE"
+    value = "filtervalue"
+  }
+`
+	}
+
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "foo_app" {
   name = "foo_app_%s"
@@ -1845,15 +1952,30 @@ resource "aws_codedeploy_deployment_group" "foo" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo_%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-  ec2_tag_filter {
-    key = "filterkey"
-    type = "KEY_AND_VALUE"
-    value = "filtervalue"
-  }
-}`, rName, rName, rName, rName)
+  %s
+}`, rName, rName, rName, rName, tagGroupOrFilter)
 }
 
-func testAccAWSCodeDeployDeploymentGroupModified(rName string) string {
+func testAccAWSCodeDeployDeploymentGroupModified(rName string, tagGroup bool) string {
+	var tagGroupOrFilter string
+	if tagGroup {
+		tagGroupOrFilter = `ec2_tag_set {
+    ec2_tag_filter {
+      key = "filterkey"
+      type = "KEY_AND_VALUE"
+      value = "anotherfiltervalue"
+    }
+  }
+`
+	} else {
+		tagGroupOrFilter = `ec2_tag_filter {
+    key = "filterkey"
+    type = "KEY_AND_VALUE"
+    value = "anotherfiltervalue"
+  }
+`
+	}
+
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "foo_app" {
   name = "foo_app_%s"
@@ -1912,12 +2034,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "bar_%s"
   service_role_arn = "${aws_iam_role.bar_role.arn}"
-  ec2_tag_filter {
-    key = "filterkey"
-    type = "KEY_AND_VALUE"
-    value = "anotherfiltervalue"
-  }
-}`, rName, rName, rName, rName)
+  %s
+}`, rName, rName, rName, rName, tagGroupOrFilter)
 }
 
 func testAccAWSCodeDeployDeploymentGroupOnPremiseTags(rName string) string {

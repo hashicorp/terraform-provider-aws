@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
@@ -145,10 +146,12 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"placement_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 5,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"ordered_placement_strategy"},
+				Deprecated:    "Use `ordered_placement_strategy` instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -184,7 +187,40 @@ func resourceAwsEcsService() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
-
+			"ordered_placement_strategy": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"placement_strategy"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Required: true,
+						},
+						"field": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							StateFunc: func(v interface{}) string {
+								value := v.(string)
+								if value == "host" {
+									return "instanceId"
+								}
+								return value
+							},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if strings.ToLower(old) == strings.ToLower(new) {
+									return true
+								}
+								return false
+							},
+						},
+					},
+				},
+			},
 			"placement_constraints": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -201,6 +237,27 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
+						},
+					},
+				},
+			},
+
+			"service_registries": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"port": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 65536),
+						},
+						"registry_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -266,20 +323,16 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
-	strategies := d.Get("placement_strategy").(*schema.Set).List()
-	if len(strategies) > 0 {
-		var ps []*ecs.PlacementStrategy
-		for _, raw := range strategies {
-			p := raw.(map[string]interface{})
-			t := p["type"].(string)
-			f := p["field"].(string)
-			if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
-				return err
-			}
-			ps = append(ps, &ecs.PlacementStrategy{
-				Type:  aws.String(p["type"].(string)),
-				Field: aws.String(p["field"].(string)),
-			})
+	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
+		ps, err := expandPlacementStrategy(v.([]interface{}))
+		if err != nil {
+			return err
+		}
+		input.PlacementStrategy = ps
+	} else {
+		ps, err := expandPlacementStrategyDeprecated(d.Get("placement_strategy").(*schema.Set))
+		if err != nil {
+			return err
 		}
 		input.PlacementStrategy = ps
 	}
@@ -304,6 +357,23 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			pc = append(pc, constraint)
 		}
 		input.PlacementConstraints = pc
+	}
+
+	serviceRegistries := d.Get("service_registries").(*schema.Set).List()
+	if len(serviceRegistries) > 0 {
+		srs := make([]*ecs.ServiceRegistry, 0, len(serviceRegistries))
+		for _, v := range serviceRegistries {
+			raw := v.(map[string]interface{})
+			sr := &ecs.ServiceRegistry{
+				RegistryArn: aws.String(raw["registry_arn"].(string)),
+			}
+			if port, ok := raw["port"].(int); ok && port != 0 {
+				sr.Port = aws.Int64(int64(port))
+			}
+
+			srs = append(srs, sr)
+		}
+		input.ServiceRegistries = srs
 	}
 
 	log.Printf("[DEBUG] Creating ECS service: %s", input)
@@ -435,8 +505,14 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
 
-	if err := d.Set("placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
-		log.Printf("[ERR] Error setting placement_strategy for (%s): %s", d.Id(), err)
+	if _, ok := d.GetOk("placement_strategy"); ok {
+		if err := d.Set("placement_strategy", flattenPlacementStrategyDeprecated(service.PlacementStrategy)); err != nil {
+			return fmt.Errorf("error setting placement_strategy: %s", err)
+		}
+	} else {
+		if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
+			return fmt.Errorf("error setting ordered_placement_strategy: %s", err)
+		}
 	}
 	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
@@ -444,6 +520,10 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("[ERR] Error setting network_configuration for (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
+		return fmt.Errorf("[ERR] Error setting service_registries for (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -502,7 +582,7 @@ func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[st
 	return results
 }
 
-func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []map[string]interface{} {
+func flattenPlacementStrategyDeprecated(pss []*ecs.PlacementStrategy) []map[string]interface{} {
 	if len(pss) == 0 {
 		return nil
 	}
@@ -517,6 +597,83 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []map[string]interfa
 			c["field"] = strings.ToLower(*ps.Field)
 		}
 
+		results = append(results, c)
+	}
+	return results
+}
+
+func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) {
+	if len(s) == 0 {
+		return nil, nil
+	}
+	ps := make([]*ecs.PlacementStrategy, 0)
+	for _, raw := range s {
+		p := raw.(map[string]interface{})
+		t := p["type"].(string)
+		f := p["field"].(string)
+		if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
+			return nil, err
+		}
+		ps = append(ps, &ecs.PlacementStrategy{
+			Type:  aws.String(t),
+			Field: aws.String(f),
+		})
+	}
+	return ps, nil
+}
+
+func expandPlacementStrategyDeprecated(s *schema.Set) ([]*ecs.PlacementStrategy, error) {
+	if len(s.List()) == 0 {
+		return nil, nil
+	}
+	ps := make([]*ecs.PlacementStrategy, 0)
+	for _, raw := range s.List() {
+		p := raw.(map[string]interface{})
+		t := p["type"].(string)
+		f := p["field"].(string)
+		if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
+			return nil, err
+		}
+		ps = append(ps, &ecs.PlacementStrategy{
+			Type:  aws.String(t),
+			Field: aws.String(f),
+		})
+	}
+	return ps, nil
+}
+
+func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
+	if len(pss) == 0 {
+		return nil
+	}
+	results := make([]interface{}, 0, len(pss))
+	for _, ps := range pss {
+		c := make(map[string]interface{})
+		c["type"] = *ps.Type
+		c["field"] = *ps.Field
+
+		// for some fields the API requires lowercase for creation but will return uppercase on query
+		if *ps.Field == "MEMORY" || *ps.Field == "CPU" {
+			c["field"] = strings.ToLower(*ps.Field)
+		}
+
+		results = append(results, c)
+	}
+	return results
+}
+
+func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface{} {
+	if len(srs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, sr := range srs {
+		c := map[string]interface{}{
+			"registry_arn": aws.StringValue(sr.RegistryArn),
+		}
+		if sr.Port != nil {
+			c["port"] = int(aws.Int64Value(sr.Port))
+		}
 		results = append(results, c)
 	}
 	return results
