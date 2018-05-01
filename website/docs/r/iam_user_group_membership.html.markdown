@@ -9,44 +9,47 @@ description: |-
 
 # aws_iam_user_group_membership
 
-Provides a resource for adding an [IAM User][2] to [IAM Groups][1].  This
-resource will not conflict with itself when used multiple times for the same
-user.
+Provides a resource for adding an [IAM User][2] to [IAM Groups][1]. This
+resource can be used multiple times with the same user for non-overlapping
+groups.
+
+To exclusively manage the users in a group, see the
+[`aws_iam_group_membership` resource][3].
 
 ## Example usage
 
 ```hcl
 resource "aws_iam_user_group_membership" {
-	user = "${aws_iam_user.user1.name}"
+  user = "${aws_iam_user.user1.name}"
 
-	groups = [
-		"${aws_iam_group.group1.name}",
-		"${aws_iam_group.group2.name}",
-	]
+  groups = [
+    "${aws_iam_group.group1.name}",
+    "${aws_iam_group.group2.name}",
+  ]
 }
 
 resource "aws_iam_user_group_membership" {
-	user = "${aws_iam_user.user1.name}"
+  user = "${aws_iam_user.user1.name}"
 
-	groups = [
-		"${aws_iam_group.group3.name}",
-	]
+  groups = [
+    "${aws_iam_group.group3.name}",
+  ]
 }
 
 resource "aws_iam_user" "user1" {
-	name = "user1"
+  name = "user1"
 }
 
 resource "aws_iam_group" "group1" {
-	name = "group1"
+  name = "group1"
 }
 
 resource "aws_iam_group" "group2" {
-	name = "group2"
+  name = "group2"
 }
 
 resource "aws_iam_group" "group3" {
-	name = "group3"
+  name = "group3"
 }
 ```
 
@@ -64,3 +67,4 @@ The following arguments are supported:
 
 [1]: /docs/providers/aws/r/iam_group.html
 [2]: /docs/providers/aws/r/iam_user.html
+[3]: /docs/providers/aws/r/iam_group_membership.html
