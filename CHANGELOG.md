@@ -8,6 +8,7 @@ FEATURES:
 
 * **New Data Source:** `aws_mq_broker` [GH-3163]
 * **New Resource:** `aws_budgets_budget` [GH-1879]
+* **New Resource:** `aws_iam_user_group_membership` [GH-3365]
 * **New Resource:** `aws_vpc_peering_connection_options` [GH-3909]
 
 ENHANCEMENTS:
