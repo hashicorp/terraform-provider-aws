@@ -232,7 +232,7 @@ func flattenBatchRetryStrategy(item *batch.RetryStrategy) []map[string]interface
 	data := []map[string]interface{}{}
 	if item != nil {
 		data = append(data, map[string]interface{}{
-			"attempts": item.Attempts,
+			"attempts": int(aws.Int64Value(item.Attempts)),
 		})
 	}
 	return data
@@ -249,7 +249,7 @@ func flattenBatchJobTimeout(item *batch.JobTimeout) []map[string]interface{} {
 	data := []map[string]interface{}{}
 	if item != nil {
 		data = append(data, map[string]interface{}{
-			"attempt_duration_seconds": item.AttemptDurationSeconds,
+			"attempt_duration_seconds": int(aws.Int64Value(item.AttemptDurationSeconds)),
 		})
 	}
 	return data
