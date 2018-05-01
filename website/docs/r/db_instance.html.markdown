@@ -84,7 +84,7 @@ for more information.
 * `copy_tags_to_snapshot` – (Optional, boolean) On delete, copy all Instance
 `tags` to the final snapshot (if `final_snapshot_identifier` is specified).
 Default is `false`.
-* `db_subnet_group_name` - (Optional) Name of DB subnet group. DB instance will
+* `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it needs to be specified only if the source database
