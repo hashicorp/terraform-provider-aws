@@ -19,7 +19,6 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 	groupName1 := fmt.Sprintf("tf-acc-ugm-basic-group1-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-ugm-basic-group2-%s", rString)
 	groupName3 := fmt.Sprintf("tf-acc-ugm-basic-group3-%s", rString)
-	membershipName := fmt.Sprintf("tf-acc-ugm-basic-membership-%s", rString)
 
 	usersAndGroupsConfig := testAccAWSUserGroupMembershipConfigUsersAndGroups(userName1, userName2, groupName1, groupName2, groupName3)
 
@@ -30,7 +29,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// simplest test
 			resource.TestStep{
-				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigInit(membershipName),
+				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigInit,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					testAccAWSUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1}, []string{groupName2, groupName3}),
@@ -38,7 +37,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 			},
 			// test adding an additional group to an existing resource
 			resource.TestStep{
-				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddOne(membershipName),
+				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddOne,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					testAccAWSUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName2}, []string{groupName3}),
@@ -46,7 +45,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 			},
 			// test adding multiple resources for the same user, and resources with the same groups for another user
 			resource.TestStep{
-				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddAll(membershipName),
+				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -58,7 +57,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 			},
 			// test that nothing happens when we apply the same config again
 			resource.TestStep{
-				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddAll(membershipName),
+				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -70,7 +69,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 			},
 			// test removing a group
 			resource.TestStep{
-				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigRemoveGroup(membershipName),
+				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigRemoveGroup,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -82,7 +81,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 			},
 			// test removing a resource
 			resource.TestStep{
-				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigDeleteResource(membershipName),
+				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigDeleteResource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -201,35 +200,27 @@ resource "aws_iam_group" "group3" {
 }
 
 // associate users and groups
-func testAccAWSUserGroupMembershipConfigInit(membershipName string) string {
-	return fmt.Sprintf(`
+const testAccAWSUserGroupMembershipConfigInit = `
 resource "aws_iam_user_group_membership" "user1_test1" {
-	name = "%s-user1_test1"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
 	]
 }
-`, membershipName)
-}
+`
 
-func testAccAWSUserGroupMembershipConfigAddOne(membershipName string) string {
-	return fmt.Sprintf(`
+const testAccAWSUserGroupMembershipConfigAddOne = `
 resource "aws_iam_user_group_membership" "user1_test1" {
-	name = "%s-user1_test1"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
 		"${aws_iam_group.group2.name}",
 	]
 }
-`, membershipName)
-}
+`
 
-func testAccAWSUserGroupMembershipConfigAddAll(membershipName string) string {
-	return fmt.Sprintf(`
+const testAccAWSUserGroupMembershipConfigAddAll = `
 resource "aws_iam_user_group_membership" "user1_test1" {
-	name = "%s-user1_test1"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
@@ -238,7 +229,6 @@ resource "aws_iam_user_group_membership" "user1_test1" {
 }
 
 resource "aws_iam_user_group_membership" "user1_test2" {
-	name = "%s-user1_test2"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group3.name}",
@@ -246,7 +236,6 @@ resource "aws_iam_user_group_membership" "user1_test2" {
 }
 
 resource "aws_iam_user_group_membership" "user2_test1" {
-	name = "%s-user2_test1"
 	user = "${aws_iam_user.user2.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
@@ -254,21 +243,17 @@ resource "aws_iam_user_group_membership" "user2_test1" {
 }
 
 resource "aws_iam_user_group_membership" "user2_test2" {
-	name = "%s-user2_test2"
 	user = "${aws_iam_user.user2.name}"
 	groups = [
 		"${aws_iam_group.group2.name}",
 		"${aws_iam_group.group3.name}",
 	]
 }
-`, membershipName, membershipName, membershipName, membershipName)
-}
+`
 
 // test removing a group
-func testAccAWSUserGroupMembershipConfigRemoveGroup(membershipName string) string {
-	return fmt.Sprintf(`
+const testAccAWSUserGroupMembershipConfigRemoveGroup = `
 resource "aws_iam_user_group_membership" "user1_test1" {
-	name = "%s-user1_test1"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
@@ -276,7 +261,6 @@ resource "aws_iam_user_group_membership" "user1_test1" {
 }
 
 resource "aws_iam_user_group_membership" "user1_test2" {
-	name = "%s-user1_test2"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group3.name}",
@@ -284,7 +268,6 @@ resource "aws_iam_user_group_membership" "user1_test2" {
 }
 
 resource "aws_iam_user_group_membership" "user2_test1" {
-	name = "%s-user2_test1"
 	user = "${aws_iam_user.user2.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
@@ -292,20 +275,16 @@ resource "aws_iam_user_group_membership" "user2_test1" {
 }
 
 resource "aws_iam_user_group_membership" "user2_test2" {
-	name = "%s-user2_test2"
 	user = "${aws_iam_user.user2.name}"
 	groups = [
 		"${aws_iam_group.group2.name}",
 	]
 }
-`, membershipName, membershipName, membershipName, membershipName)
-}
+`
 
 // test deleting an entity
-func testAccAWSUserGroupMembershipConfigDeleteResource(membershipName string) string {
-	return fmt.Sprintf(`
+const testAccAWSUserGroupMembershipConfigDeleteResource = `
 resource "aws_iam_user_group_membership" "user1_test1" {
-	name = "%s-user1_test1"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
@@ -313,7 +292,6 @@ resource "aws_iam_user_group_membership" "user1_test1" {
 }
 
 resource "aws_iam_user_group_membership" "user1_test2" {
-	name = "%s-user1_test2"
 	user = "${aws_iam_user.user1.name}"
 	groups = [
 		"${aws_iam_group.group3.name}",
@@ -321,11 +299,9 @@ resource "aws_iam_user_group_membership" "user1_test2" {
 }
 
 resource "aws_iam_user_group_membership" "user2_test1" {
-	name = "%s-user2_test1"
 	user = "${aws_iam_user.user2.name}"
 	groups = [
 		"${aws_iam_group.group1.name}",
 	]
 }
-`, membershipName, membershipName, membershipName)
-}
+`

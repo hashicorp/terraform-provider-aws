@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -17,23 +18,16 @@ func resourceAwsIamUserGroupMembership() *schema.Resource {
 		Delete: resourceAwsIamUserGroupMembershipDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"user": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"user": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"groups": &schema.Schema{
+			"groups": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 		},
 	}
@@ -49,7 +43,7 @@ func resourceAwsIamUserGroupMembershipCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(resource.UniqueId())
 
 	return resourceAwsIamUserGroupMembershipRead(d, meta)
 }

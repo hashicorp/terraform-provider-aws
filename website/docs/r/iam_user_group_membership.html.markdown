@@ -17,7 +17,6 @@ user.
 
 ```hcl
 resource "aws_iam_user_group_membership" {
-	name = "user-group-membership-1"
 	user = "${aws_iam_user.user1.name}"
 
 	groups = [
@@ -27,7 +26,6 @@ resource "aws_iam_user_group_membership" {
 }
 
 resource "aws_iam_user_group_membership" {
-	name = "user-group-membership-2"
 	user = "${aws_iam_user.user1.name}"
 
 	groups = [
@@ -56,13 +54,11 @@ resource "aws_iam_group" "group3" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to identify the user group Membership
 * `user` - (Required) The name of the [IAM User][2] to add to groups
 * `groups` - (Required) A list of [IAM Groups][1] to add the user to
 
 ## Attributes Reference
 
-* `name` - The name to identify the user group membership
 * `user` - The name of the IAM User
 * `groups` - The list of IAM Groups
 
