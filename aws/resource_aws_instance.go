@@ -1143,7 +1143,6 @@ func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 

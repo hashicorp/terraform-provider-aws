@@ -743,7 +743,6 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
 			log.Printf("[DEBUG] Removing ECS Service from state, %q is already gone", d.Id())
-			d.SetId("")
 			return nil
 		}
 		return err
@@ -751,7 +750,6 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 
 	if len(resp.Services) == 0 {
 		log.Printf("[DEBUG] Removing ECS Service from state, %q is already gone", d.Id())
-		d.SetId("")
 		return nil
 	}
 

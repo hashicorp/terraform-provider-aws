@@ -1608,7 +1608,6 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 			sn, err)
 	}
 
-	d.SetId("")
 	return nil
 }
 
