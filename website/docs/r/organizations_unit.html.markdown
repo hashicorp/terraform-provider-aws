@@ -21,6 +21,12 @@ resource "aws_organizations_unit" "tenants" {
   parent_id = "${data.aws_organizations_unit.root.id}"
   name = "tenants"
 }
+
+resource "aws_organizations_account" "tenant" {
+  name  = "my_new_account"
+  email = "john@doe.org"
+  parent_id = "${data.aws_organizations_unit.tenants.id}"
+}
 ```
 
 ## Argument Reference

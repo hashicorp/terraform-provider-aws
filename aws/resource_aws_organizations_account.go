@@ -36,8 +36,11 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				Computed: true,
 			},
 			"parent_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				ForceNew:     true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -134,6 +137,32 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 	accountId := stateResp.(*organizations.CreateAccountStatus).AccountId
 	d.SetId(*accountId)
 
+	if newParentID, ok := d.GetOk("parent_id"); ok {
+		// move under an explicit parent
+
+		// this will be the root ID
+		existingParentID, err := resourceAwsOrganizationsGetParentID(conn, d.Id())
+		if err != nil {
+			return err
+		}
+
+		newParentIdStr := newParentID.(string)
+		if newParentIdStr != existingParentID {
+			// TODO partial
+
+			moveOpts := &organizations.MoveAccountInput{
+				AccountId:           accountId,
+				SourceParentId:      aws.String(existingParentID),
+				DestinationParentId: aws.String(newParentIdStr),
+			}
+
+			_, err := conn.MoveAccount(moveOpts)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return resourceAwsOrganizationsAccountRead(d, meta)
 }
 
@@ -166,7 +195,7 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 	d.Set("name", account.Name)
 	d.Set("status", account.Status)
 
-	parentId, err := resourceAwsOrganizationsUnitGetParentId(conn, d.Id())
+	parentId, err := resourceAwsOrganizationsGetParentID(conn, d.Id())
 	if err != nil {
 		return err
 	}

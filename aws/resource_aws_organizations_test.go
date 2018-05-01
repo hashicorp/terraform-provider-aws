@@ -12,7 +12,9 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"FeatureSet":                 testAccAwsOrganizationsOrganization_FeatureSet,
 		},
 		"Account": {
-			"basic": testAccAwsOrganizationsAccount_basic,
+			"basic":      testAccAwsOrganizationsAccount_basic,
+			"parentRoot": testAccAwsOrganizationsAccount_parentRoot,
+			"parentOU":   testAccAwsOrganizationsAccount_parentOU,
 		},
 		"Unit": {
 			"basic":       testAccAwsOrganizationsUnit_basic,

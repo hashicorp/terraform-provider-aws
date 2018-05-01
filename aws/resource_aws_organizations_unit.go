@@ -105,7 +105,7 @@ func resourceAwsOrganizationsUnitRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	parentId, err := resourceAwsOrganizationsUnitGetParentId(conn, d.Id())
+	parentId, err := resourceAwsOrganizationsGetParentID(conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Unable to find parent organizational unit, removing from state: %s", d.Id())
 		d.SetId("")
@@ -155,7 +155,7 @@ func resourceAwsOrganizationsUnitDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsOrganizationsUnitGetParentId(conn *organizations.Organizations, childId string) (string, error) {
+func resourceAwsOrganizationsGetParentID(conn *organizations.Organizations, childId string) (string, error) {
 	input := &organizations.ListParentsInput{
 		ChildId: aws.String(childId),
 	}
