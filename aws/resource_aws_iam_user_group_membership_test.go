@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -97,38 +97,27 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-	// check that all users and groups have been destroyed
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type == "aws_iam_user" {
-			userName := rs.Primary.Attributes["name"]
-
-			_, err := conn.GetUser(&iam.GetUserInput{
-				UserName: &userName,
+		if rs.Type == "aws_iam_user_group_membership" {
+			input := &iam.ListGroupsForUserInput{
+				UserName: aws.String(rs.Primary.Attributes["user"]),
+			}
+			foundGroups := 0
+			err := conn.ListGroupsForUserPages(input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+				if len(page.Groups) > 0 {
+					foundGroups = foundGroups + len(page.Groups)
+				}
+				return !lastPage
 			})
 			if err != nil {
-				if ae, ok := err.(awserr.Error); ok && ae.Code() == "NoSuchEntity" {
+				if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 					continue
 				}
 				return err
 			}
-
-			return fmt.Errorf("User %s still exists", userName)
-		}
-
-		if rs.Type == "aws_iam_group" {
-			groupName := rs.Primary.Attributes["name"]
-
-			_, err := conn.GetGroup(&iam.GetGroupInput{
-				GroupName: &groupName,
-			})
-			if err != nil {
-				if ae, ok := err.(awserr.Error); ok && ae.Code() == "NoSuchEntity" {
-					continue
-				}
-				return err
+			if foundGroups > 0 {
+				return fmt.Errorf("Expected all group membership for user to be removed, found: %d", foundGroups)
 			}
-
-			return fmt.Errorf("Group %s still exists", groupName)
 		}
 	}
 
