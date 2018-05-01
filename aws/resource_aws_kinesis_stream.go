@@ -229,7 +229,6 @@ func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) er
 			sn, err)
 	}
 
-	d.SetId("")
 	return nil
 }
 

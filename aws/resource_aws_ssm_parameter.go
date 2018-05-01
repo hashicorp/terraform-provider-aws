@@ -167,7 +167,6 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-	d.SetId("")
 
 	return nil
 }

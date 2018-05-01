@@ -347,8 +347,6 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	d.SetId("")
-
 	return nil
 }
 

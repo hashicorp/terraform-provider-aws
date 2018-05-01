@@ -165,7 +165,7 @@ func resourceAwsBatchJobDefinitionDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("%s %q", err, arn)
 	}
-	d.SetId("")
+
 	return nil
 }
 
