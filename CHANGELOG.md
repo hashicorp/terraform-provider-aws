@@ -20,7 +20,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_rule: Add `name_prefix` argument [GH-2752]
 * resource/aws_cloudwatch_event_rule: Make `name` optional (Terraform can generate unique ID) [GH-2752]
 * resource/aws_codedeploy_deployment_group: Add `ec2_tag_set` argument (tag group support) [GH-4324]
-* resource/aws_default_subnet: Allow 'map_public_ip_on_launch' updates [GH-4396]
+* resource/aws_default_subnet: Allow `map_public_ip_on_launch` updates [GH-4396]
 * resource/aws_dynamodb_table: Add `point_in_time_recovery` argument [GH-4063]
 * resource/aws_ecs_service: Add `ordered_placement_strategy` argument, deprecate `placement_strategy` argument [GH-4390]
 * resource/aws_lambda_permission: Add `statement_id_prefix` argument [GH-2743]
