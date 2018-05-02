@@ -94,6 +94,28 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSClusterInstance_multiAZ(t *testing.T) {
+	var v rds.DBInstance
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfig_multiAZ(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.test", &v),
+					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.test", "multi_az", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 	var v rds.DBInstance
 
@@ -698,4 +720,53 @@ resource "aws_db_parameter_group" "bar" {
   }
 }
 `, n, n, n, n)
+}
+
+func testAccAWSClusterInstanceConfig_multiAZ(n int) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier_prefix = "tf-cluster-instance-"
+  cluster_identifier = "${aws_rds_cluster.test.id}"
+  instance_class = "db.t2.small"
+  multi_az = false
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier = "tf-aurora-cluster-%d"
+  master_username = "root"
+  master_password = "password"
+  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  skip_final_snapshot = true
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+	tags {
+		Name = "terraform-testacc-rds-cluster-instance-multi-az"
+	}
+}
+
+resource "aws_subnet" "a" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+  availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-rds-cluster-instance-multi-az-a"
+  }
+}
+
+resource "aws_subnet" "b" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.0.1.0/24"
+  availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-rds-cluster-instance-multi-az-b"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name = "tf-test-%d"
+  subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
+}
+`, n, n)
 }

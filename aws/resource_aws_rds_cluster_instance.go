@@ -196,6 +196,12 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"multi_az": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -212,7 +218,8 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags: tags,
+		MultiAZ:                 aws.Bool(d.Get("multi_az").(bool)),
+		Tags:                    tags,
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -378,6 +385,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
+	d.Set("multi_az", db.MultiAZ)
 
 	if db.MonitoringInterval != nil {
 		d.Set("monitoring_interval", db.MonitoringInterval)
@@ -470,6 +478,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("promotion_tier") {
 		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("multi_az") {
+		d.SetPartial("multi_az")
+		req.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
 		requestUpdate = true
 	}
 
