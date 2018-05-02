@@ -863,8 +863,8 @@ func parseTaskDefinition(taskDefinition string) (string, string, error) {
 
 func validateAwsEcsServiceHealthCheckGracePeriodSeconds(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
-	if (value < 0) || (value > 1800) {
-		errors = append(errors, fmt.Errorf("%q must be between 0 and 1800", k))
+	if (value < 0) || (value > 7200) {
+		errors = append(errors, fmt.Errorf("%q must be between 0 and 7200", k))
 	}
 	return
 }
