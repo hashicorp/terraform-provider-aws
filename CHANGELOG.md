@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * resource/aws_default_subnet: Allow `map_public_ip_on_launch` updates [GH-4396]
 * resource/aws_dynamodb_table: Add `point_in_time_recovery` argument [GH-4063]
 * resource/aws_ecs_service: Add `ordered_placement_strategy` argument, deprecate `placement_strategy` argument [GH-4390]
+* resource/aws_ecs_service: Allow `health_check_grace_period_seconds` up to 7200 seconds [GH-4420]
 * resource/aws_lambda_permission: Add `statement_id_prefix` argument [GH-2743]
 * resource/aws_lambda_permission: Make `statement_id` optional (Terraform can generate unique ID) [GH-2743]
 * resource/aws_rds_cluster: Add `s3_import` argument (Support MySQL Backup Restore from S3) [GH-4366]
