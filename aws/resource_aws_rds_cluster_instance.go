@@ -196,7 +196,7 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
-			"multiaz": {
+			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -218,7 +218,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		MultiAZ:                 aws.Bool(d.Get("multiaz").(bool)),
+		MultiAZ:                 aws.Bool(d.Get("multi_az").(bool)),
 		Tags:                    tags,
 	}
 
@@ -374,7 +374,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
-	d.Set("multiaz", db.MultiAZ)
+	d.Set("multi_az", db.MultiAZ)
 
 	if db.MonitoringInterval != nil {
 		d.Set("monitoring_interval", db.MonitoringInterval)
@@ -470,9 +470,9 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
-	if d.HasChange("multiaz") {
-		d.SetPartial("multiaz")
-		req.MultiAZ = aws.Bool(d.Get("multiaz").(bool))
+	if d.HasChange("multi_az") {
+		d.SetPartial("multi_az")
+		req.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
 		requestUpdate = true
 	}
 
