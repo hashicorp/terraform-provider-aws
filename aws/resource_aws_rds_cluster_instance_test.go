@@ -110,6 +110,7 @@ func TestAccAWSRDSClusterInstance_multiAZ(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster_instance.test", "multi_az", "false"),
+				),
 			},
 		},
 	})
