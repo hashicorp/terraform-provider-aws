@@ -1,13 +1,12 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"regexp"
 	"strconv"
 	"time"
-
-	"bytes"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -139,13 +138,11 @@ func resourceAwsLb() *schema.Resource {
 						"prefix": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Computed:         true,
 							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"enabled": {
 							Type:             schema.TypeBool,
 							Optional:         true,
-							Computed:         true,
 							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 					},
@@ -361,14 +358,11 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 					&elbv2.LoadBalancerAttribute{
 						Key:   aws.String("access_logs.s3.bucket"),
 						Value: aws.String(log["bucket"].(string)),
-					})
-
-				if prefix, ok := log["prefix"]; ok {
-					attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+					},
+					&elbv2.LoadBalancerAttribute{
 						Key:   aws.String("access_logs.s3.prefix"),
-						Value: aws.String(prefix.(string)),
+						Value: aws.String(log["prefix"].(string)),
 					})
-				}
 			} else if len(logs) == 0 {
 				attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 					Key:   aws.String("access_logs.s3.enabled"),
