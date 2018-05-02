@@ -3,6 +3,8 @@
 package guardduty
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -2955,7 +2957,7 @@ func (c *GuardDuty) StopMonitoringMembersRequest(input *StopMonitoringMembersInp
 //
 // Disables GuardDuty from monitoring findings of the member accounts specified
 // by the account IDs. After running this command, a master GuardDuty account
-// can run StartMonitoringMembers to re-enable GuardDuty to monitor these members'
+// can run StartMonitoringMembers to re-enable GuardDuty to monitor these members’
 // findings.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3530,10 +3532,14 @@ type AccountDetail struct {
 	_ struct{} `type:"structure"`
 
 	// Member account ID.
-	AccountId *string `locationName:"accountId" type:"string"`
+	//
+	// AccountId is a required field
+	AccountId *string `locationName:"accountId" type:"string" required:"true"`
 
 	// Member account's email address.
-	Email *string `locationName:"email" type:"string"`
+	//
+	// Email is a required field
+	Email *string `locationName:"email" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3544,6 +3550,22 @@ func (s AccountDetail) String() string {
 // GoString returns the string representation
 func (s AccountDetail) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AccountDetail) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AccountDetail"}
+	if s.AccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountId"))
+	}
+	if s.Email == nil {
+		invalidParams.Add(request.NewErrParamRequired("Email"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAccountId sets the AccountId field's value.
@@ -4046,6 +4068,16 @@ func (s *CreateMembersInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateMembersInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.AccountDetails != nil {
+		for i, v := range s.AccountDetails {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AccountDetails", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4762,51 +4794,71 @@ type Finding struct {
 
 	// AWS account ID where the activity occurred that prompted GuardDuty to generate
 	// a finding.
-	AccountId *string `locationName:"accountId" type:"string"`
+	//
+	// AccountId is a required field
+	AccountId *string `locationName:"accountId" type:"string" required:"true"`
 
 	// The ARN of a finding described by the action.
-	Arn *string `locationName:"arn" type:"string"`
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" type:"string" required:"true"`
 
 	// The confidence level of a finding.
 	Confidence *float64 `locationName:"confidence" type:"double"`
 
 	// The time stamp at which a finding was generated.
-	CreatedAt *string `locationName:"createdAt" type:"string"`
+	//
+	// CreatedAt is a required field
+	CreatedAt *string `locationName:"createdAt" type:"string" required:"true"`
 
 	// The description of a finding.
 	Description *string `locationName:"description" type:"string"`
 
 	// The identifier that corresponds to a finding described by the action.
-	Id *string `locationName:"id" type:"string"`
+	//
+	// Id is a required field
+	Id *string `locationName:"id" type:"string" required:"true"`
 
 	// The AWS resource partition.
 	Partition *string `locationName:"partition" type:"string"`
 
 	// The AWS region where the activity occurred that prompted GuardDuty to generate
 	// a finding.
-	Region *string `locationName:"region" type:"string"`
+	//
+	// Region is a required field
+	Region *string `locationName:"region" type:"string" required:"true"`
 
 	// The AWS resource associated with the activity that prompted GuardDuty to
 	// generate a finding.
-	Resource *Resource `locationName:"resource" type:"structure"`
+	//
+	// Resource is a required field
+	Resource *Resource `locationName:"resource" type:"structure" required:"true"`
 
 	// Findings' schema version.
-	SchemaVersion *string `locationName:"schemaVersion" type:"string"`
+	//
+	// SchemaVersion is a required field
+	SchemaVersion *string `locationName:"schemaVersion" type:"string" required:"true"`
 
 	// Additional information assigned to the generated finding by GuardDuty.
 	Service *Service `locationName:"service" type:"structure"`
 
 	// The severity of a finding.
-	Severity *float64 `locationName:"severity" type:"double"`
+	//
+	// Severity is a required field
+	Severity *float64 `locationName:"severity" type:"double" required:"true"`
 
 	// The title of a finding.
 	Title *string `locationName:"title" type:"string"`
 
 	// The type of a finding described by the action.
-	Type *string `locationName:"type" type:"string"`
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true"`
 
 	// The time stamp at which a finding was last updated.
-	UpdatedAt *string `locationName:"updatedAt" type:"string"`
+	//
+	// UpdatedAt is a required field
+	UpdatedAt *string `locationName:"updatedAt" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5825,7 +5877,10 @@ type InviteMembersInput struct {
 	// DetectorId is a required field
 	DetectorId *string `location:"uri" locationName:"detectorId" type:"string" required:"true"`
 
-	// The invitation message that you want to send to the accounts that you're
+	// Indicates whether invite member email notification is disabled
+	DisableEmailNotification *bool `locationName:"disableEmailNotification" type:"boolean"`
+
+	// The invitation message that you want to send to the accounts that you’re
 	// inviting to GuardDuty as members.
 	Message *string `locationName:"message" type:"string"`
 }
@@ -5862,6 +5917,12 @@ func (s *InviteMembersInput) SetAccountIds(v []*string) *InviteMembersInput {
 // SetDetectorId sets the DetectorId field's value.
 func (s *InviteMembersInput) SetDetectorId(v string) *InviteMembersInput {
 	s.DetectorId = &v
+	return s
+}
+
+// SetDisableEmailNotification sets the DisableEmailNotification field's value.
+func (s *InviteMembersInput) SetDisableEmailNotification(v bool) *InviteMembersInput {
+	s.DisableEmailNotification = &v
 	return s
 }
 
@@ -6550,25 +6611,35 @@ type Member struct {
 	_ struct{} `type:"structure"`
 
 	// AWS account ID.
-	AccountId *string `locationName:"accountId" type:"string"`
+	//
+	// AccountId is a required field
+	AccountId *string `locationName:"accountId" type:"string" required:"true"`
 
 	// The unique identifier for a detector.
 	DetectorId *string `locationName:"detectorId" type:"string"`
 
 	// Member account's email address.
-	Email *string `locationName:"email" type:"string"`
+	//
+	// Email is a required field
+	Email *string `locationName:"email" type:"string" required:"true"`
 
 	// Timestamp at which the invitation was sent
 	InvitedAt *string `locationName:"invitedAt" type:"string"`
 
 	// The master account ID.
-	MasterId *string `locationName:"masterId" type:"string"`
+	//
+	// MasterId is a required field
+	MasterId *string `locationName:"masterId" type:"string" required:"true"`
 
 	// The status of the relationship between the member and the master.
-	RelationshipStatus *string `locationName:"relationshipStatus" type:"string"`
+	//
+	// RelationshipStatus is a required field
+	RelationshipStatus *string `locationName:"relationshipStatus" type:"string" required:"true"`
 
 	// The first time a resource was created. The format will be ISO-8601.
-	UpdatedAt *string `locationName:"updatedAt" type:"string"`
+	//
+	// UpdatedAt is a required field
+	UpdatedAt *string `locationName:"updatedAt" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -7517,10 +7588,14 @@ type UnprocessedAccount struct {
 	_ struct{} `type:"structure"`
 
 	// AWS Account ID.
-	AccountId *string `locationName:"accountId" type:"string"`
+	//
+	// AccountId is a required field
+	AccountId *string `locationName:"accountId" type:"string" required:"true"`
 
 	// A reason why the account hasn't been processed.
-	Result *string `locationName:"result" type:"string"`
+	//
+	// Result is a required field
+	Result *string `locationName:"result" type:"string" required:"true"`
 }
 
 // String returns the string representation

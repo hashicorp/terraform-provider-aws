@@ -21512,6 +21512,13 @@ type ModifyDBClusterInput struct {
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
+	// The version number of the database engine to which you want to upgrade. Changing
+	// this parameter results in an outage. The change is applied during the next
+	// maintenance window unless the ApplyImmediately parameter is set to true.
+	//
+	// For a list of valid engine versions, see CreateDBInstance, or call DescribeDBEngineVersions.
+	EngineVersion *string `type:"string"`
+
 	// The new password for the master database user. This password can contain
 	// any printable ASCII character except "/", """, or "@".
 	//
@@ -21640,6 +21647,12 @@ func (s *ModifyDBClusterInput) SetDBClusterParameterGroupName(v string) *ModifyD
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *ModifyDBClusterInput) SetEnableIAMDatabaseAuthentication(v bool) *ModifyDBClusterInput {
 	s.EnableIAMDatabaseAuthentication = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *ModifyDBClusterInput) SetEngineVersion(v string) *ModifyDBClusterInput {
+	s.EngineVersion = &v
 	return s
 }
 

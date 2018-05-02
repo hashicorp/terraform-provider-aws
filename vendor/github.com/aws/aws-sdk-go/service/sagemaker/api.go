@@ -3813,6 +3813,11 @@ type CreateModelInput struct {
 	// Tags (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
+
+	// A object that specifies the VPC that you want your model to connect to. Control
+	// access to and from your training container by configuring the VPC. For more
+	// information, see host-vpc.
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -3855,6 +3860,11 @@ func (s *CreateModelInput) Validate() error {
 			}
 		}
 	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3883,6 +3893,12 @@ func (s *CreateModelInput) SetPrimaryContainer(v *ContainerDefinition) *CreateMo
 // SetTags sets the Tags field's value.
 func (s *CreateModelInput) SetTags(v []*Tag) *CreateModelInput {
 	s.Tags = v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *CreateModelInput) SetVpcConfig(v *VpcConfig) *CreateModelInput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -4349,6 +4365,11 @@ type CreateTrainingJobInput struct {
 	//
 	// TrainingJobName is a required field
 	TrainingJobName *string `min:"1" type:"string" required:"true"`
+
+	// A object that specifies the VPC that you want your training job to connect
+	// to. Control access to and from your training container by configuring the
+	// VPC. For more information, see train-vpc
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -4434,6 +4455,11 @@ func (s *CreateTrainingJobInput) Validate() error {
 			}
 		}
 	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4492,6 +4518,12 @@ func (s *CreateTrainingJobInput) SetTags(v []*Tag) *CreateTrainingJobInput {
 // SetTrainingJobName sets the TrainingJobName field's value.
 func (s *CreateTrainingJobInput) SetTrainingJobName(v string) *CreateTrainingJobInput {
 	s.TrainingJobName = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *CreateTrainingJobInput) SetVpcConfig(v *VpcConfig) *CreateTrainingJobInput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -5204,6 +5236,10 @@ type DescribeModelOutput struct {
 	//
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
+
+	// A object that specifies the VPC that this model has access to. For more information,
+	// see host-vpc
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -5243,6 +5279,12 @@ func (s *DescribeModelOutput) SetModelName(v string) *DescribeModelOutput {
 // SetPrimaryContainer sets the PrimaryContainer field's value.
 func (s *DescribeModelOutput) SetPrimaryContainer(v *ContainerDefinition) *DescribeModelOutput {
 	s.PrimaryContainer = v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *DescribeModelOutput) SetVpcConfig(v *VpcConfig) *DescribeModelOutput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -5688,6 +5730,10 @@ type DescribeTrainingJobOutput struct {
 
 	// A timestamp that indicates when training started.
 	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A object that specifies the VPC that this training job has access to. For
+	// more information, see train-vpc.
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -5799,6 +5845,12 @@ func (s *DescribeTrainingJobOutput) SetTrainingJobStatus(v string) *DescribeTrai
 // SetTrainingStartTime sets the TrainingStartTime field's value.
 func (s *DescribeTrainingJobOutput) SetTrainingStartTime(v time.Time) *DescribeTrainingJobOutput {
 	s.TrainingStartTime = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *DescribeTrainingJobOutput) SetVpcConfig(v *VpcConfig) *DescribeTrainingJobOutput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -8365,6 +8417,69 @@ func (s UpdateNotebookInstanceOutput) String() string {
 // GoString returns the string representation
 func (s UpdateNotebookInstanceOutput) GoString() string {
 	return s.String()
+}
+
+// Specifies a VPC that your training jobs and hosted models have access to.
+// Control access to and from your training and model containers by configuring
+// the VPC. For more information, see host-vpc and train-vpc.
+type VpcConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The VPC security group IDs, in the form sg-xxxxxxxx. Specify the security
+	// groups for the VPC that is specified in the Subnets field.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
+
+	// The ID of the subnets in the VPC to which you want to connect your training
+	// job or model.
+	//
+	// Subnets is a required field
+	Subnets []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfig"}
+	if s.SecurityGroupIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecurityGroupIds"))
+	}
+	if s.SecurityGroupIds != nil && len(s.SecurityGroupIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupIds", 1))
+	}
+	if s.Subnets == nil {
+		invalidParams.Add(request.NewErrParamRequired("Subnets"))
+	}
+	if s.Subnets != nil && len(s.Subnets) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Subnets", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfig) SetSecurityGroupIds(v []*string) *VpcConfig {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
+	s.Subnets = v
+	return s
 }
 
 const (
