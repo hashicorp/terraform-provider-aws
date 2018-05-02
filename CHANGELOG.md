@@ -31,6 +31,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_instance: Bypass `UnsupportedOperation` errors with `DescribeInstanceCreditSpecifications` call [GH-4362]
+* resource/aws_iam_group_policy: Properly handle generated policy name updates [GH-4379]
 * resource/aws_instance: Bypass `UnsupportedOperation` errors with `DescribeInstanceCreditSpecifications` call [GH-4362]
 * resource/aws_launch_template: Appropriately set `security_groups` in network interfaces [GH-4364]
 * resource/aws_rds_cluster: Add retries for IAM eventual consistency [GH-4371]
