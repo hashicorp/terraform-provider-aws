@@ -1566,7 +1566,7 @@ func TestAccAWSInstance_changeRootBlockDeviceVolumeSize(t *testing.T) {
 					testAccCheckInstanceNotRecreated(
 						t, &before, &after),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_size", "20"),
+						"aws_instance.foo", "root_block_device.0.volume_size", "12"),
 				),
 			},
 		},

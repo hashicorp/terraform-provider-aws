@@ -1259,55 +1259,51 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("root_block_device") {
-		if rbd, ok := d.GetOk("root_block_device"); ok {
-			rbdL := rbd.([]interface{})
-			if len(rbdL) > 1 {
-				return fmt.Errorf("Cannot specify more than one root_block_device.")
-			}
-			for _, r := range rbdL {
-				bd := r.(map[string]interface{})
-				if volumeSize, ok := bd["volume_size"].(int); ok && volumeSize != 0 {
-					volumeIds, err := getAwsInstanceVolumeIds(conn, d)
-					if err != nil {
-						return fmt.Errorf("Error retrieving volumes: %s", err)
-					}
+	if d.HasChange("root_block_device.0.volume_size") {
+		if vs, ok := d.GetOk("root_block_device.0.volume_size"); ok {
+			volumeSize := vs.(int)
+			if volumeSize != 0 {
+				volumeIds, err := getAwsInstanceVolumeIds(conn, d)
+				if err != nil {
+					return fmt.Errorf("Error retrieving volumes: %s.", err)
+				}
 
-					volResp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-						VolumeIds: volumeIds,
+				volResp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
+					VolumeIds: volumeIds,
+				})
+				if err != nil {
+					return err
+				}
+
+				if len(volResp.Volumes) < 1 {
+					return fmt.Errorf("No volumes found for %s.", d.Id())
+				}
+
+				if int64(volumeSize) != *volResp.Volumes[0].Size {
+					_, err = conn.ModifyVolume(&ec2.ModifyVolumeInput{
+						Size:     aws.Int64(int64(volumeSize)),
+						VolumeId: volumeIds[0],
 					})
 					if err != nil {
 						return err
 					}
 
-					if len(volResp.Volumes) < 1 {
-						return fmt.Errorf("Cannot fetch volume info")
+					stateConf := &resource.StateChangeConf{
+						Pending:    []string{"modifying", "optimizing"},
+						Target:     []string{"completed"},
+						Refresh:    VolumeStateRefreshFunc(conn, *volumeIds[0], "failed"),
+						Timeout:    d.Timeout(schema.TimeoutUpdate),
+						Delay:      30 * time.Second,
+						MinTimeout: 30 * time.Second,
 					}
-					if int64(volumeSize) != *volResp.Volumes[0].Size {
-						_, err = conn.ModifyVolume(&ec2.ModifyVolumeInput{
-							Size:     aws.Int64(int64(volumeSize)),
-							VolumeId: volumeIds[0],
-						})
-						if err != nil {
-							return err
-						}
 
-						stateConf := &resource.StateChangeConf{
-							Pending:    []string{"modifying", "optimizing"},
-							Target:     []string{"completed"},
-							Refresh:    VolumeStateRefreshFunc(conn, *volumeIds[0], "failed"),
-							Timeout:    d.Timeout(schema.TimeoutUpdate),
-							Delay:      30 * time.Second,
-							MinTimeout: 30 * time.Second,
-						}
-
-						_, err = stateConf.WaitForState()
-						if err != nil {
-							return fmt.Errorf("Error waiting for volume (%s) to be modified: %s", *volumeIds[0], err)
-						}
+					_, err = stateConf.WaitForState()
+					if err != nil {
+						return fmt.Errorf("Error waiting for volume (%s) to be modified: %s", *volumeIds[0], err)
 					}
 				}
 			}
+
 		}
 	}
 
@@ -1374,15 +1370,11 @@ func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.
 			VolumeIds: []*string{aws.String(volumeID)},
 		})
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVolumeID.NotFound" {
-				resp = nil
-			} else {
-				log.Printf("Error on VolumeStateRefresh: %s", err)
-				return nil, "", err
+			if isAWSErr(err, "InvalidVolumeID.NotFound", "does not exist") {
+				return nil, "", nil
 			}
-		}
-		if resp == nil {
-			return nil, "", nil
+			log.Printf("Error on VolumeStateRefresh: %s", err)
+			return nil, "", err
 		}
 
 		i := resp.VolumesModifications[0]
