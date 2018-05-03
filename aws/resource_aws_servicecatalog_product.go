@@ -233,17 +233,6 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-// Lookup the first artifact, which was the one created on inital build, by comparing created at time
-func getProvisioningArtifactSummary(resp *servicecatalog.DescribeProductAsAdminOutput) *servicecatalog.ProvisioningArtifactSummary {
-	firstPas := resp.ProvisioningArtifactSummaries[0]
-	for _, pas := range resp.ProvisioningArtifactSummaries {
-		if pas.CreatedTime.UnixNano() < firstPas.CreatedTime.UnixNano() {
-			firstPas = pas
-		}
-	}
-	return firstPas
-}
-
 func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.UpdateProductInput{}
