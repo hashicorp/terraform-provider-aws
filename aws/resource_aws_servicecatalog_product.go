@@ -217,13 +217,21 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	d.Set("support_url", pvs.SupportUrl)
 
 	var a []map[string]interface{}
-	for i, pas := range resp.ProvisioningArtifactSummaries {
+	for _, pas := range resp.ProvisioningArtifactSummaries {
 		artifact := make(map[string]interface{})
 		artifact["description"] = *pas.Description
 		artifact["id"] = *pas.Id
-		template_url_key := fmt.Sprintf("provisioning_artifact.%d.load_template_from_url", i)
-		artifact["load_template_from_url"] = d.State().Attributes[template_url_key] // loading template url from state as it is not available from API
 		artifact["name"] = *pas.Name
+
+		i := servicecatalog.DescribeProvisioningArtifactInput{
+			ProductId:              aws.String(d.Id()),
+			ProvisioningArtifactId: aws.String(*pas.Id),
+		}
+		dpao, err := conn.DescribeProvisioningArtifact(&i)
+		if err != nil {
+			return err
+		}
+		artifact["load_template_from_url"] = *dpao.Info["TemplateUrl"]
 		a = append(a, artifact)
 	}
 
