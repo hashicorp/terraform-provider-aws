@@ -114,6 +114,49 @@ func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 	})
 }
 
+func TestAccAWSDmsEndpointMongoDb(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_endpoint"
+	randId := acctest.RandString(8) + "-mongodb"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointMongoDbConfig(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointMongoDbConfigUpdate(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "key=value;"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.auth_mechanism", "SCRAM_SHA_1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "ONE"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.extract_doc_id", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.docs_to_investigate", "1001"),
+				),
+			},
+		},
+	})
+}
+
 func dmsEndpointDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
@@ -367,4 +410,62 @@ func dmsEndpointS3ConfigUpdate(randId string) string {
 		"s3:GetBucketPolicy",
 		"s3:PutBucketPolicy",
 		"s3:DeleteBucketPolicy"`)
+}
+
+func dmsEndpointMongoDbConfig(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "source"
+	engine_name = "mongodb"
+	server_name = "tftest"
+	port = 27017
+	username = "tftest"
+	password = "tftest"
+	database_name = "tftest"
+	ssl_mode = "none"
+	extra_connection_attributes = ""
+	tags {
+		Name = "tf-test-dms-endpoint-%[1]s"
+		Update = "to-update"
+		Remove = "to-remove"
+	}
+	mongodb_settings {
+		auth_type = "PASSWORD"
+		auth_mechanism = "DEFAULT"
+		nesting_level = "NONE"
+		extract_doc_id = "false"
+		docs_to_investigate = "1000"
+		auth_source = "admin"
+	}
+}
+`, randId)
+}
+
+func dmsEndpointMongoDbConfigUpdate(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "source"
+	engine_name = "mongodb"
+	server_name = "tftest-new-server_name"
+	port = 27018
+	username = "tftest-new-username"
+	password = "tftest-new-password"
+	database_name = "tftest-new-database_name"
+	ssl_mode = "require"
+	extra_connection_attributes = "key=value;"
+	tags {
+		Name = "tf-test-dms-endpoint-%[1]s"
+		Update = "updated"
+		Add = "added"
+	}
+	mongodb_settings {
+		auth_mechanism = "SCRAM_SHA_1"
+		nesting_level = "ONE"
+		extract_doc_id = "true"
+		docs_to_investigate = "1001"
+	}
+}
+`, randId)
 }

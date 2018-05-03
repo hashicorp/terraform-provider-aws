@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,6 +32,13 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+			},
+
 			"binary_media_types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -40,6 +48,13 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			"body": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"minimum_compression_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validateIntegerInRange(-1, 10485760),
 			},
 
 			"root_resource_id": {
@@ -69,9 +84,18 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		Description: description,
 	}
 
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		params.Policy = aws.String(v.(string))
+	}
+
 	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
 	if binaryMediaTypesOk {
 		params.BinaryMediaTypes = expandStringList(binaryMediaTypes.([]interface{}))
+	}
+
+	minimumCompressionSize := d.Get("minimum_compression_size").(int)
+	if minimumCompressionSize > -1 {
+		params.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
 	}
 
 	gateway, err := conn.CreateRestApi(params)
@@ -138,8 +162,21 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
-	d.Set("binary_media_types", api.BinaryMediaTypes)
 
+	// The API returns policy as an escaped JSON string
+	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
+	policy, err := strconv.Unquote(`"` + aws.StringValue(api.Policy) + `"`)
+	if err != nil {
+		return fmt.Errorf("error unescaping policy: %s", err)
+	}
+	d.Set("policy", policy)
+
+	d.Set("binary_media_types", api.BinaryMediaTypes)
+	if api.MinimumCompressionSize == nil {
+		d.Set("minimum_compression_size", -1)
+	} else {
+		d.Set("minimum_compression_size", api.MinimumCompressionSize)
+	}
 	if err := d.Set("created_date", api.CreatedDate.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_date: %s", err)
 	}
@@ -163,6 +200,27 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			Op:    aws.String("replace"),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+
+	if d.HasChange("policy") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/policy"),
+			Value: aws.String(d.Get("policy").(string)),
+		})
+	}
+
+	if d.HasChange("minimum_compression_size") {
+		minimumCompressionSize := d.Get("minimum_compression_size").(int)
+		var value string
+		if minimumCompressionSize > -1 {
+			value = strconv.Itoa(minimumCompressionSize)
+		}
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/minimumCompressionSize"),
+			Value: aws.String(value),
 		})
 	}
 

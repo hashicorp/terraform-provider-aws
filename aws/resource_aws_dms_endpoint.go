@@ -54,8 +54,8 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"source",
-					"target",
+					dms.ReplicationEndpointTypeValueSource,
+					dms.ReplicationEndpointTypeValueTarget,
 				}, false),
 			},
 			"engine_name": {
@@ -72,6 +72,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"redshift",
 					"sybase",
 					"sqlserver",
+					"mongodb",
 					"s3",
 				}, false),
 			},
@@ -106,10 +107,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Computed: true,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"none",
-					"require",
-					"verify-ca",
-					"verify-full",
+					dms.DmsSslModeValueNone,
+					dms.DmsSslModeValueRequire,
+					dms.DmsSslModeValueVerifyCa,
+					dms.DmsSslModeValueVerifyFull,
 				}, false),
 			},
 			"tags": {
@@ -119,6 +120,52 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			// With default values as per https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html
+			"mongodb_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "PASSWORD",
+						},
+						"auth_mechanism": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "DEFAULT",
+						},
+						"nesting_level": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "NONE",
+						},
+						"extract_doc_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "false",
+						},
+						"docs_to_investigate": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "1000",
+						},
+						"auth_source": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "admin",
+						},
+					},
+				},
 			},
 			"bucket_name": {
 				Type:     schema.TypeString,
@@ -147,6 +194,21 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	case "dynamodb":
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
+		}
+	case "mongodb":
+		request.MongoDbSettings = &dms.MongoDbSettings{
+			Username:     aws.String(d.Get("username").(string)),
+			Password:     aws.String(d.Get("password").(string)),
+			ServerName:   aws.String(d.Get("server_name").(string)),
+			Port:         aws.Int64(int64(d.Get("port").(int))),
+			DatabaseName: aws.String(d.Get("database_name").(string)),
+
+			AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
+			AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
+			NestingLevel:      aws.String(d.Get("mongodb_settings.0.nesting_level").(string)),
+			ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
+			DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
+			AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 		}
 	case "s3":
 		request.S3Settings = &dms.S3Settings{
@@ -256,9 +318,7 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-	d.Set("tags", dmsTagsToMap(tagsResp.TagList))
-
-	return nil
+	return d.Set("tags", dmsTagsToMap(tagsResp.TagList))
 }
 
 func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -279,8 +339,15 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		hasChanges = true
 	}
 
-	if d.HasChange("database_name") {
-		request.DatabaseName = aws.String(d.Get("database_name").(string))
+	if d.HasChange("service_access_role") {
+		request.DynamoDbSettings = &dms.DynamoDbSettings{
+			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
+		}
+		hasChanges = true
+	}
+
+	if d.HasChange("endpoint_type") {
+		request.EndpointType = aws.String(d.Get("endpoint_type").(string))
 		hasChanges = true
 	}
 
@@ -330,28 +397,8 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if d.HasChange("password") {
-		request.Password = aws.String(d.Get("password").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("port") {
-		request.Port = aws.Int64(int64(d.Get("port").(int)))
-		hasChanges = true
-	}
-
-	if d.HasChange("server_name") {
-		request.ServerName = aws.String(d.Get("server_name").(string))
-		hasChanges = true
-	}
-
 	if d.HasChange("ssl_mode") {
 		request.SslMode = aws.String(d.Get("ssl_mode").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("username") {
-		request.Username = aws.String(d.Get("username").(string))
 		hasChanges = true
 	}
 
@@ -359,6 +406,63 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := dmsSetTags(d.Get("endpoint_arn").(string), d, meta)
 		if err != nil {
 			return err
+		}
+	}
+
+	switch d.Get("engine_name").(string) {
+	case "mongodb":
+		if d.HasChange("username") ||
+			d.HasChange("password") ||
+			d.HasChange("server_name") ||
+			d.HasChange("port") ||
+			d.HasChange("database_name") ||
+			d.HasChange("mongodb_settings.0.auth_type") ||
+			d.HasChange("mongodb_settings.0.auth_mechanism") ||
+			d.HasChange("mongodb_settings.0.nesting_level") ||
+			d.HasChange("mongodb_settings.0.extract_doc_id") ||
+			d.HasChange("mongodb_settings.0.docs_to_investigate") ||
+			d.HasChange("mongodb_settings.0.auth_source") {
+			request.MongoDbSettings = &dms.MongoDbSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+
+				AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
+				AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
+				NestingLevel:      aws.String(d.Get("mongodb_settings.0.nesting_level").(string)),
+				ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
+				DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
+				AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'mongodb')
+			hasChanges = true
+		}
+	default:
+		if d.HasChange("database_name") {
+			request.DatabaseName = aws.String(d.Get("database_name").(string))
+			hasChanges = true
+		}
+
+		if d.HasChange("password") {
+			request.Password = aws.String(d.Get("password").(string))
+			hasChanges = true
+		}
+
+		if d.HasChange("port") {
+			request.Port = aws.Int64(int64(d.Get("port").(int)))
+			hasChanges = true
+		}
+
+		if d.HasChange("server_name") {
+			request.ServerName = aws.String(d.Get("server_name").(string))
+			hasChanges = true
+		}
+
+		if d.HasChange("username") {
+			request.Username = aws.String(d.Get("username").(string))
+			hasChanges = true
 		}
 	}
 
@@ -387,11 +491,7 @@ func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] DMS delete endpoint: %#v", request)
 
 	_, err := conn.DeleteEndpoint(request)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
@@ -410,6 +510,22 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
 		} else {
 			d.Set("service_access_role", "")
+		}
+	case "mongodb":
+		if endpoint.MongoDbSettings != nil {
+			d.Set("username", endpoint.MongoDbSettings.Username)
+			d.Set("server_name", endpoint.MongoDbSettings.ServerName)
+			d.Set("port", endpoint.MongoDbSettings.Port)
+			d.Set("database_name", endpoint.MongoDbSettings.DatabaseName)
+
+			if err := d.Set("mongodb_settings", flattenDmsMongoDbSettings(endpoint.MongoDbSettings)); err != nil {
+				return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
+			}
+		} else {
+			d.Set("username", endpoint.Username)
+			d.Set("server_name", endpoint.ServerName)
+			d.Set("port", endpoint.Port)
+			d.Set("database_name", endpoint.DatabaseName)
 		}
 	case "s3":
 		if endpoint.S3Settings != nil {
@@ -436,4 +552,21 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 	}
 
 	return nil
+}
+
+func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"auth_type":           aws.StringValue(settings.AuthType),
+		"auth_mechanism":      aws.StringValue(settings.AuthMechanism),
+		"nesting_level":       aws.StringValue(settings.NestingLevel),
+		"extract_doc_id":      aws.StringValue(settings.ExtractDocId),
+		"docs_to_investigate": aws.StringValue(settings.DocsToInvestigate),
+		"auth_source":         aws.StringValue(settings.AuthSource),
+	}
+
+	return []map[string]interface{}{m}
 }
