@@ -222,7 +222,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 		artifact["description"] = *pas.Description
 		artifact["id"] = *pas.Id
 		template_url_key := fmt.Sprintf("provisioning_artifact.%d.load_template_from_url", i)
-		artifact["load_template_from_url"] = d.State().Attributes[template_url_key]
+		artifact["load_template_from_url"] = d.State().Attributes[template_url_key] // loading template url from state as it is not available from API
 		artifact["name"] = *pas.Name
 		a = append(a, artifact)
 	}
