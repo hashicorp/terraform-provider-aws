@@ -33,6 +33,12 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template1.String(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.#", "2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.0.description", "ad1"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.0.name", "an1"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.1.description", "ad2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.1.name", "an2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc1"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst1"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name1),
@@ -46,6 +52,12 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template2.String(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.#", "2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.0.description", "ad1"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.0.name", "an1"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.1.description", "ad2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.1.name", "an2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name2),
@@ -59,9 +71,12 @@ func TestAccAWSServiceCatalogProductBasic(t *testing.T) {
 			resource.TestStep{
 				Config: template3.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.description", "ad"),
-					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.name", "an"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.#", "2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.0.description", "ad1"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.0.name", "an1"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "description", "dsc2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.1.description", "ad2"),
+					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "provisioning_artifact.1.name", "an2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "distributor", "dst2"),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "name", name3),
 					resource.TestCheckResourceAttr("aws_servicecatalog_product.test", "owner", "own2"),
@@ -214,9 +229,25 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "template" {
+resource "aws_s3_bucket_object" "template1" {
   bucket  = "${aws_s3_bucket.bucket.id}"
-  key     = "test_templates_for_terraform_sc_dev.json"
+  key     = "test_templates_for_terraform_sc_dev1.json"
+  content = <<EOF
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Test CF teamplate for Service Catalog terraform dev",
+  "Resources": {
+    "Empty": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    }
+  }
+}
+EOF
+}
+
+resource "aws_s3_bucket_object" "template2" {
+  bucket  = "${aws_s3_bucket.bucket.id}"
+  key     = "test_templates_for_terraform_sc_dev2.json"
   content = <<EOF
 {
   "AWSTemplateFormatVersion": "2010-09-09",
@@ -241,9 +272,15 @@ resource "aws_servicecatalog_product" "test" {
   support_url         = "{{.SupportUrl}}"
 
   provisioning_artifact {
-    description            = "ad"
-    name                   = "an"
-    load_template_from_url = "https://s3-${data.aws_region.current.name}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template.key}"
+    description            = "ad1"
+    name                   = "an1"
+    load_template_from_url = "https://s3-${data.aws_region.current.name}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template1.key}"
+  }
+
+  provisioning_artifact {
+    description            = "ad2"
+    name                   = "an2"
+    load_template_from_url = "https://s3-${data.aws_region.current.name}.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template2.key}"
   }
 }
 `

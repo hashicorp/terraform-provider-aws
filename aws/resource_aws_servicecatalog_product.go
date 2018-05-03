@@ -60,7 +60,8 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 				Optional: true,
 			},
 			"provisioning_artifact": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				MinItems: 1,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -75,13 +76,6 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 						"load_template_from_url": {
 							Type:     schema.TypeString,
 							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// Only check for a diff on initial create.
-								if d.Id() != "" {
-									return true
-								}
-								return false
-							},
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -97,9 +91,9 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.CreateProductInput{}
+	now := time.Now()
 
 	if v, ok := d.GetOk("name"); ok {
-		now := time.Now()
 		input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
 		input.Name = aws.String(v.(string))
 	}
@@ -136,25 +130,59 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	artifactSettings := d.Get("provisioning_artifact").(*schema.Set).List()[0].(map[string]interface{})
-	artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
-	artifactProperties.Description = aws.String(artifactSettings["description"].(string))
-	artifactProperties.Name = aws.String(artifactSettings["name"].(string))
-	artifactProperties.Type = aws.String("CLOUD_FORMATION_TEMPLATE")
+	if pa, ok := d.GetOk("provisioning_artifact"); ok {
+		pvs := pa.([]interface{})
+		v := pvs[0]
+		bd := v.(map[string]interface{})
+		artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
+		artifactProperties.Description = aws.String(bd["description"].(string))
+		artifactProperties.Name = aws.String(bd["name"].(string))
+		artifactProperties.Type = aws.String("CLOUD_FORMATION_TEMPLATE")
+		url := aws.String(bd["load_template_from_url"].(string))
+		info := map[string]*string{
+			"LoadTemplateFromURL": url,
+		}
+		artifactProperties.Info = info
+		input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
+		input.SetProvisioningArtifactParameters(&artifactProperties)
+		log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 
-	url := aws.String(artifactSettings["load_template_from_url"].(string))
-	info := map[string]*string{
-		"LoadTemplateFromURL": url,
 	}
-	artifactProperties.Info = info
-	input.SetProvisioningArtifactParameters(&artifactProperties)
 
-	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 	resp, err := conn.CreateProduct(&input)
 	if err != nil {
 		return fmt.Errorf("Creating ServiceCatalog product failed: %s", err.Error())
 	}
 	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
+
+	if pa, ok := d.GetOk("provisioning_artifact"); ok {
+		pvs := pa.([]interface{})
+		if len(pvs) > 1 {
+			for _, pa := range pvs[1:len(pvs)] {
+				bd := pa.(map[string]interface{})
+				parameters := servicecatalog.ProvisioningArtifactProperties{}
+				parameters.Description = aws.String(bd["description"].(string))
+				parameters.Name = aws.String(bd["name"].(string))
+				parameters.Type = aws.String("CLOUD_FORMATION_TEMPLATE")
+
+				url := aws.String(bd["load_template_from_url"].(string))
+				info := map[string]*string{
+					"LoadTemplateFromURL": url,
+				}
+				parameters.Info = info
+
+				cpai := servicecatalog.CreateProvisioningArtifactInput{}
+				cpai.Parameters = &parameters
+				cpai.ProductId = aws.String(d.Id())
+				cpai.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
+				log.Printf("[DEBUG] Adding Service Catalog Provisioning Artifact : %s", cpai)
+				resp, err := conn.CreateProvisioningArtifact(&cpai)
+				if err != nil {
+					return fmt.Errorf("Creating ServiceCatalog provisioning artifact failed: %s %s", err.Error(), resp)
+				}
+			}
+		}
+	}
 
 	return resourceAwsServiceCatalogProductRead(d, meta)
 }
@@ -188,14 +216,16 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	d.Set("support_email", pvs.SupportEmail)
 	d.Set("support_url", pvs.SupportUrl)
 
-	provisioningArtifactSummary := getProvisioningArtifactSummary(resp)
 	var a []map[string]interface{}
-	artifact := make(map[string]interface{})
-	artifact["description"] = *provisioningArtifactSummary.Description
-	artifact["id"] = *provisioningArtifactSummary.Id
-	artifact["load_template_from_url"] = "only_used_on_initial_create"
-	artifact["name"] = *provisioningArtifactSummary.Name
-	a = append(a, artifact)
+	for i, pas := range resp.ProvisioningArtifactSummaries {
+		artifact := make(map[string]interface{})
+		artifact["description"] = *pas.Description
+		artifact["id"] = *pas.Id
+		template_url_key := fmt.Sprintf("provisioning_artifact.%d.load_template_from_url", i)
+		artifact["load_template_from_url"] = d.State().Attributes[template_url_key]
+		artifact["name"] = *pas.Name
+		a = append(a, artifact)
+	}
 
 	if err := d.Set("provisioning_artifact", a); err != nil {
 		return err
