@@ -41,6 +41,13 @@ func testSweepSecurityGroups(region string) error {
 		},
 	}
 	resp, err := conn.DescribeSecurityGroups(req)
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
+	}
 
 	if len(resp.SecurityGroups) == 0 {
 		log.Print("[DEBUG] No aws security groups to sweep")

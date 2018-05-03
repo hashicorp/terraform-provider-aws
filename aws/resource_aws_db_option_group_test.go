@@ -35,6 +35,10 @@ func testSweepDbOptionGroups(region string) error {
 	opts := rds.DescribeOptionGroupsInput{}
 	resp, err := conn.DescribeOptionGroups(&opts)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS DB Option Group sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("error describing DB Option Groups in Sweeper: %s", err)
 	}
 

@@ -28,7 +28,7 @@ func testSweepSpotFleetRequests(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	return conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, isLast bool) bool {
+	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, isLast bool) bool {
 		if len(page.SpotFleetRequestConfigs) == 0 {
 			log.Print("[DEBUG] No Spot Fleet Requests to sweep")
 			return false
@@ -45,6 +45,14 @@ func testSweepSpotFleetRequests(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving EC2 Spot Fleet Requests: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
