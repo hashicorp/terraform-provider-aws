@@ -4,21 +4,6 @@ about: If something isn't working as expected 🤔.
 
 ---
 
-<!--- Please keep this note for the community --->
-
-### Community Note
-
-* Please vote on this issue by adding a :+1: reaction to the original issue to help the community and maintainers prioritize this request
-* If you are interested in working on this issue or have submitted a pull request, please leave a comment
-
-<!--- Thank you for keeping this note for the community --->
-
-### Terraform Version
-
-Please run `terraform -v` to show the Terraform core version and provider version(s). If you are not running the latest version of Terraform or the provider, please upgrade because your issue may have already been fixed. [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions).
-
-### Affected Resource(s)
-
 Please note the following potential times when an issue might be in Terraform core:
 
 * [Configuration Language](https://www.terraform.io/docs/configuration/index.html) or resource ordering issues
@@ -29,7 +14,24 @@ Please note the following potential times when an issue might be in Terraform co
 
 If you are running into one of these scenarios, we recommend opening an issue in the [Terraform core repository](https://github.com/hashicorp/terraform/) instead.
 
-If you believe this is still a provider issue, please list the resources and data sources, for example:
+---
+
+<!--- Please keep this note for the community --->
+
+### Community Note
+
+* Please vote on this issue by adding a 👍 reaction to the original issue to help the community and maintainers prioritize this request
+* If you are interested in working on this issue or have submitted a pull request, please leave a comment
+
+<!--- Thank you for keeping this note for the community --->
+
+### Terraform Version
+
+Please run `terraform -v` to show the Terraform core version and provider version(s). If you are not running the latest version of Terraform or the provider, please upgrade because your issue may have already been fixed. [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions).
+
+### Affected Resource(s)
+
+Please list the resources and data sources, for example:
 
 * aws_instance
 * aws_rds_cluster

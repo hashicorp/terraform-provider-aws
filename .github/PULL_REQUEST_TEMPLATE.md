@@ -5,3 +5,11 @@ Changes proposed in this pull request:
 
 * Change 1
 * Change 2
+
+Output from acceptance testing:
+
+```
+$ make testacc TESTARGS='-run=TestAccAWSAvailabilityZones'
+
+...
+```

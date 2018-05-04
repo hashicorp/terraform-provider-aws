@@ -8,7 +8,7 @@ about: I have a suggestion (and might want to implement myself 🙂)!
 
 ### Community Note
 
-* Please vote on this issue by adding a :+1: reaction to the original issue to help the community and maintainers prioritize this request
+* Please vote on this issue by adding a 👍 reaction to the original issue to help the community and maintainers prioritize this request
 * If you are interested in working on this issue or have submitted a pull request, please leave a comment
 
 <!--- Thank you for keeping this note for the community --->
