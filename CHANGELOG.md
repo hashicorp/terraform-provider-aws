@@ -3,7 +3,7 @@
 BUG FIXES:
 
 * data-source/aws_autoscaling_groups: Correctly paginate through over 50 results [GH-4433]
-* resource/aws_ssm_document: Add missing account ID `arn` attribute [GH-4436]
+* resource/aws_ssm_document: Add missing account ID to `arn` attribute [GH-4436]
 
 ## 1.17.0 (May 02, 2018)
 
