@@ -56,6 +56,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"user_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -136,7 +137,7 @@ func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta inter
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
 	params := &cognitoidentityprovider.UpdateIdentityProviderInput{
-		UserPoolId:   aws.String(d.Get("UserPoolId").(string)),
+		UserPoolId:   aws.String(d.Get("user_pool_id").(string)),
 		ProviderName: aws.String(d.Id()),
 	}
 
