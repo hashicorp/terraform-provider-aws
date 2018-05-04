@@ -298,7 +298,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Found rule for Security Group Rule (%s): %s", d.Id(), rule)
 
 	d.Set("type", ruleType)
-	if err := setFromIPPerm(d, sg, rule); err != nil {
+	if err := setFromIPPerm(d, sg, p); err != nil {
 		return errwrap.Wrapf("Error setting IP Permission for Security Group Rule: {{err}}", err)
 	}
 
