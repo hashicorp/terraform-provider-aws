@@ -98,6 +98,22 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"cidr_blocks", "self"},
+				// The following documentation https://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide/vpc-peering-security-groups.html
+				// demonstrates cross account SG referencing only by ID, implying all security group IDs are unique
+				// therefore the account prefix should not be needed for a diff
+				// users can then supply 123456/sg-1234 or just sg-1234 and the diff will be suppressed
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldSG := old
+					if items := strings.Split(old, "/"); len(items) > 1 {
+						oldSG = items[1]
+					}
+					newSG := new
+					if items := strings.Split(new, "/"); len(items) > 1 {
+						newSG = items[1]
+					}
+
+					return newSG == oldSG
+				},
 			},
 
 			"self": {
@@ -282,7 +298,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Found rule for Security Group Rule (%s): %s", d.Id(), rule)
 
 	d.Set("type", ruleType)
-	if err := setFromIPPerm(d, sg, p); err != nil {
+	if err := setFromIPPerm(d, sg, rule); err != nil {
 		return errwrap.Wrapf("Error setting IP Permission for Security Group Rule: {{err}}", err)
 	}
 
@@ -689,10 +705,15 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 	if len(rule.UserIdGroupPairs) > 0 {
 		s := rule.UserIdGroupPairs[0]
 
+		accountPrefix := aws.StringValue(s.UserId)
+		if accountPrefix != "" {
+			accountPrefix += "/"
+		}
+
 		if isVPC {
-			d.Set("source_security_group_id", *s.GroupId)
+			d.Set("source_security_group_id", accountPrefix+*s.GroupId)
 		} else {
-			d.Set("source_security_group_id", *s.GroupName)
+			d.Set("source_security_group_id", accountPrefix+*s.GroupName)
 		}
 	}
 
