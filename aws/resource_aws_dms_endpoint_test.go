@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSDmsEndpointBasic(t *testing.T) {
+func TestAccAwsDmsEndpointBasic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-basic"
 
@@ -51,7 +51,7 @@ func TestAccAWSDmsEndpointBasic(t *testing.T) {
 }
 
 func TestAccAwsDmsEndpointS3(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_point"
+	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-s3"
 
 	resource.Test(t, resource.TestCase{
@@ -76,6 +76,14 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 				Config: dmsEndpointS3ConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "key=value;"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
 				),
 			},
 		},
@@ -114,7 +122,7 @@ func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsEndpointMongoDb(t *testing.T) {
+func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-mongodb"
 
@@ -133,6 +141,7 @@ func TestAccAWSDmsEndpointMongoDb(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
@@ -249,167 +258,280 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointTargetConfig(randId string, engineName string, actionList string) string {
-	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-endpoint_id = "tf-test-dms-endpoint-%[1]s"
-endpoint_type = "target"
-engine_name = "%[2]s"
-service_access_role = "${aws_iam_role.iam_role.arn}"
-ssl_mode = "none"
-tags {
-	Name = "tf-test-%[2]s-endpoint-%[1]s"
-	Update = "to-update"
-	Remove = "to-remove"
-}
-
-depends_on = ["aws_iam_role_policy.dms_%[2]s_access"]
-}
-resource "aws_iam_role" "iam_role" {
-name = "tf-test-iam-%[2]s-role-%[1]s"
-
-assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-			"Service": "dms.amazonaws.com"
-		},
-		"Effect": "Allow"
-	}
-]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_%[2]s_access" {
-name = "tf-test-iam-%[2]s-role-policy-%[1]s"
-role = "${aws_iam_role.iam_role.name}"
-
-policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-{
-	"Effect": "Allow",
-	"Action": [
-			%[3]s
-	],
-	"Resource": "*"
-}
-]
-}
-EOF
-}
-
-`, randId, engineName, actionList)
-}
-
-func dmsEndpointTargetUpdateConfig(randId string, engineName string, actionList string) string {
-	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-endpoint_id = "tf-test-dms-endpoint-%[1]s"
-endpoint_type = "target"
-engine_name = "%[2]s"
-service_access_role = "${aws_iam_role.iam_role.arn}"
-ssl_mode = "none"
-tags {
-	Name = "tf-test-%[2]s-endpoint-%[1]s"
-	Update = "updated"
-	Add = "added"
-}
-}
-resource "aws_iam_role" "iam_role" {
-name = "tf-test-iam-%[2]s-role-%[1]s"
-
-assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-			"Service": "dms.amazonaws.com"
-		},
-		"Effect": "Allow"
-	}
-]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_%[2]s_access" {
-name = "tf-test-iam-%[2]s-role-policy-%[1]s"
-role = "${aws_iam_role.iam_role.name}"
-
-policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-{
-	"Effect": "Allow",
-	"Action": [
-			%[3]s
-	],
-	"Resource": "*"
-}
-]
-}
-EOF
-}
-`, randId, engineName, actionList)
-}
-
 func dmsEndpointDynamoDbConfig(randId string) string {
-	return dmsEndpointTargetConfig(randId, "dynamodb", `
-		"dynamodb:PutItem",
-		"dynamodb:CreateTable",
-		"dynamodb:DescribeTable",
-		"dynamodb:DeleteTable",
-		"dynamodb:DeleteItem",
-		"dynamodb:ListTables"`)
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "target"
+	engine_name = "dynamodb"
+	service_access_role = "${aws_iam_role.iam_role.arn}"
+	ssl_mode = "none"
+	tags {
+		Name = "tf-test-dynamodb-endpoint-%[1]s"
+		Update = "to-update"
+		Remove = "to-remove"
+	}
+
+	depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
+}
+
+resource "aws_iam_role" "iam_role" {
+	name = "tf-test-iam-dynamodb-role-%[1]s"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_dynamodb_access" {
+	name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+	role = "${aws_iam_role.iam_role.name}"
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"dynamodb:PutItem",
+				"dynamodb:CreateTable",
+				"dynamodb:DescribeTable",
+				"dynamodb:DeleteTable",
+				"dynamodb:DeleteItem",
+				"dynamodb:ListTables"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, randId)
 }
 
 func dmsEndpointDynamoDbConfigUpdate(randId string) string {
-	return dmsEndpointTargetUpdateConfig(randId, "dynamodb", `
-		"dynamodb:PutItem",
-		"dynamodb:CreateTable",
-		"dynamodb:DescribeTable",
-		"dynamodb:DeleteTable",
-		"dynamodb:DeleteItem",
-		"dynamodb:ListTables"`)
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "target"
+	engine_name = "dynamodb"
+	service_access_role = "${aws_iam_role.iam_role.arn}"
+	ssl_mode = "none"
+	tags {
+		Name = "tf-test-dynamodb-endpoint-%[1]s"
+		Update = "updated"
+		Add = "added"
+	}
+}
+
+resource "aws_iam_role" "iam_role" {
+	name = "tf-test-iam-dynamodb-role-%[1]s"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_dynamodb_access" {
+	name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+	role = "${aws_iam_role.iam_role.name}"
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"dynamodb:PutItem",
+				"dynamodb:CreateTable",
+				"dynamodb:DescribeTable",
+				"dynamodb:DeleteTable",
+				"dynamodb:DeleteItem",
+				"dynamodb:ListTables"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, randId)
 }
 
 func dmsEndpointS3Config(randId string) string {
-	return dmsEndpointTargetConfig(randId, "s3", `
-		"s3:CreateBucket",
-		"s3:ListBucket",
-		"s3:DeleteBucket",
-		"s3:GetBucketLocation",
-		"s3:GetObject",
-		"s3:PutObject",
-		"s3:DeleteObject",
-		"s3:GetObjectVersion",
-		"s3:GetBucketPolicy",
-		"s3:PutBucketPolicy",
-		"s3:DeleteBucketPolicy"`)
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "target"
+	engine_name = "s3"
+	ssl_mode = "none"
+	extra_connection_attributes = ""
+	tags {
+		Name = "tf-test-s3-endpoint-%[1]s"
+		Update = "to-update"
+		Remove = "to-remove"
+	}
+	s3_settings {
+		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+		external_table_definition = ""
+		csv_row_delimiter = "\\n"
+		csv_delimiter = ","
+		bucket_folder = ""
+		bucket_name = ""
+		compression_type = "NONE"
+	}
+
+	depends_on = ["aws_iam_role_policy.dms_s3_access"]
+}
+
+resource "aws_iam_role" "iam_role" {
+	name = "tf-test-iam-s3-role-%[1]s"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_s3_access" {
+	name = "tf-test-iam-s3-role-policy-%[1]s"
+	role = "${aws_iam_role.iam_role.name}"
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:CreateBucket",
+				"s3:ListBucket",
+				"s3:DeleteBucket",
+				"s3:GetBucketLocation",
+				"s3:GetObject",
+				"s3:PutObject",
+				"s3:DeleteObject",
+				"s3:GetObjectVersion",
+				"s3:GetBucketPolicy",
+				"s3:PutBucketPolicy",
+				"s3:DeleteBucketPolicy"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, randId)
 }
 
 func dmsEndpointS3ConfigUpdate(randId string) string {
-	return dmsEndpointTargetUpdateConfig(randId, "s3", `
-		"s3:CreateBucket",
-		"s3:ListBucket",
-		"s3:DeleteBucket",
-		"s3:GetBucketLocation",
-		"s3:GetObject",
-		"s3:PutObject",
-		"s3:DeleteObject",
-		"s3:GetObjectVersion",
-		"s3:GetBucketPolicy",
-		"s3:PutBucketPolicy",
-		"s3:DeleteBucketPolicy"`)
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "target"
+	engine_name = "s3"
+	ssl_mode = "none"
+	extra_connection_attributes = "key=value;"
+	tags {
+		Name = "tf-test-s3-endpoint-%[1]s"
+		Update = "updated"
+		Add = "added"
+	}
+	s3_settings {
+		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+		external_table_definition = "new-external_table_definition"
+		csv_row_delimiter = "\\r"
+		csv_delimiter = "."
+		bucket_folder = "new-bucket_folder"
+		bucket_name = "new-bucket_name"
+		compression_type = "GZIP"
+	}
+}
+
+resource "aws_iam_role" "iam_role" {
+	name = "tf-test-iam-s3-role-%[1]s"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_s3_access" {
+	name = "tf-test-iam-s3-role-policy-%[1]s"
+	role = "${aws_iam_role.iam_role.name}"
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:CreateBucket",
+				"s3:ListBucket",
+				"s3:DeleteBucket",
+				"s3:GetBucketLocation",
+				"s3:GetObject",
+				"s3:PutObject",
+				"s3:DeleteObject",
+				"s3:GetObjectVersion",
+				"s3:GetBucketPolicy",
+				"s3:PutBucketPolicy",
+				"s3:DeleteBucketPolicy"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, randId)
 }
 
 func dmsEndpointMongoDbConfig(randId string) string {

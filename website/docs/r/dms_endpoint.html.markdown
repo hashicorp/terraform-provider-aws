@@ -62,10 +62,9 @@ The following arguments are supported:
 * `ssl_mode` - (Optional, Default: none) The SSL mode to use for the connection. Can be one of `none | require | verify-ca | verify-full`
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `username` - (Optional) The user name to be used to login to the endpoint database.
-* `service_access_role` - (Optional) The Amazon Resource Name (ARN) used by the service access IAM role for `dynamodb | s3` endpoints.
+* `service_access_role` - (Optional) The Amazon Resource Name (ARN) used by the service access IAM role for dynamodb endpoints.
 * `mongodb_settings` - (Optional) Settings for the source MongoDB endpoint. Available settings are `auth_type` (default: `PASSWORD`), `auth_mechanism` (default: `DEFAULT`), `nesting_level` (default: `NONE`), `extract_doc_id` (default: `false`), `docs_to_investigate` (default: `1000`) and `auth_source` (default: `admin`). For more details, see [Using MongoDB as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html).
-* `bucket_name` - (Optional) The S3 bucket name.
-* `bucket_folder` - (Optional) If provided, tables are created in the path <bucket_folder>/<schema_name>/<table_name>/.
+* `s3_settings` - (Optional) Settings for the target S3 endpoint. Available settings are `service_access_role_arn`, `external_table_definition`, `csv_row_delimiter` (default: `\\n`), `csv_delimiter` (default: `,`), `bucket_folder`, `bucket_name` and `compression_type` (default: `NONE`). For more details, see [Using Amazon S3 as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html).
 
 ## Attributes Reference
 
