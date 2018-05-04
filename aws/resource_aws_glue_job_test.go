@@ -61,6 +61,10 @@ func testSweepGlueJobs(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Glue Jobs: %s", err)
 	}
 

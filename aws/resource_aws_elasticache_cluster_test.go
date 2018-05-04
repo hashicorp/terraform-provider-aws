@@ -42,7 +42,7 @@ func testSweepElasticacheClusters(region string) error {
 		"tf-acc-test-",
 	}
 
-	return conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
+	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
 			return false
@@ -69,6 +69,14 @@ func testSweepElasticacheClusters(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticache Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Elasticache Clusters: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {

@@ -37,7 +37,7 @@ func testSweepELBs(region string) error {
 		"test-elb-",
 	}
 
-	return conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
+	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
 			log.Println("[INFO] No ELBs found for sweeping")
 			return false
@@ -71,6 +71,14 @@ func testSweepELBs(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ELB sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving ELBs: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSELB_basic(t *testing.T) {

@@ -28,7 +28,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 	}
 	conn := client.(*AWSClient).secretsmanagerconn
 
-	return conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, isLast bool) bool {
+	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, isLast bool) bool {
 		if len(page.SecretList) == 0 {
 			log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
 			return true
@@ -57,6 +57,14 @@ func testSweepSecretsManagerSecrets(region string) error {
 
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Secrets Manager Secrets: %s", err)
+	}
+	return nil
 }
 
 func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {

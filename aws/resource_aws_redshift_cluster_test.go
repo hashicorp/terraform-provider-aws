@@ -31,7 +31,7 @@ func testSweepRedshiftClusters(region string) error {
 	}
 	conn := client.(*AWSClient).redshiftconn
 
-	return conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, isLast bool) bool {
+	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, isLast bool) bool {
 		if len(resp.Clusters) == 0 {
 			log.Print("[DEBUG] No Redshift clusters to sweep")
 			return false
@@ -55,6 +55,14 @@ func testSweepRedshiftClusters(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Redshift Clusters: %s", err)
+	}
+	return nil
 }
 
 func TestValidateRedshiftClusterDbName(t *testing.T) {
