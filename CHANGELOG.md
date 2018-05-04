@@ -1,4 +1,9 @@
 ## 1.18.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_autoscaling_groups: Correctly paginate through over 50 results [GH-4433]
+
 ## 1.17.0 (May 02, 2018)
 
 NOTES:
