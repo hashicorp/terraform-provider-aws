@@ -422,7 +422,7 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "node_type", "dc1.8xlarge"),
+						"aws_redshift_cluster.default", "node_type", "dc2.large"),
 				),
 			},
 		},
@@ -787,7 +787,7 @@ resource "aws_redshift_cluster" "default" {
   database_name = "mydb"
   master_username = "foo_test"
   master_password = "Mustbe8characters"
-  node_type = "dc1.8xlarge"
+  node_type = "dc2.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade = false
   number_of_nodes = 1
