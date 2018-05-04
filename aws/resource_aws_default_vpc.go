@@ -15,6 +15,11 @@ func resourceAwsDefaultVpc() *schema.Resource {
 	dvpc.Create = resourceAwsDefaultVpcCreate
 	dvpc.Delete = resourceAwsDefaultVpcDelete
 
+	// Can't "terraform import" a Default VPC; Use "terraform apply"
+	dvpc.Importer = nil
+
+	dvpc.CustomizeDiff = resourceAwsDefaultVpcCustomizeDiff
+
 	// cidr_block is a computed value for Default VPCs
 	dvpc.Schema["cidr_block"] = &schema.Schema{
 		Type:     schema.TypeString,
@@ -36,6 +41,48 @@ func resourceAwsDefaultVpc() *schema.Resource {
 }
 
 func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error {
+	vpc, err := resourceAwsDefaultVpcFindVpc(meta)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.StringValue(vpc.VpcId))
+	return resourceAwsVpcUpdate(d, meta)
+}
+
+func resourceAwsDefaultVpcDelete(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[WARN] Cannot destroy Default VPC. Terraform will remove this resource from the state file, however resources may remain.")
+	return nil
+}
+
+func resourceAwsDefaultVpcCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.Id() == "" {
+		// New resource.
+		v, ok := diff.GetOkExists("assign_generated_ipv6_cidr_block")
+		if ok {
+			// assign_generated_ipv6_cidr_block specified.
+			newIpv6Flag := v.(bool)
+
+			// See if the Default VPC already has an IPv6 CIDR block assigned.
+			vpc, err := resourceAwsDefaultVpcFindVpc(meta)
+			if err != nil {
+				return err
+			}
+
+			oldIpv6Flag := resourceAwsVpcFindIpv6CidrBlockAssociation(vpc) != nil
+			log.Printf("[DEBUG] Default VPC IPv6 %v -> %v", oldIpv6Flag, newIpv6Flag)
+			if newIpv6Flag == oldIpv6Flag {
+				diff.Clear("assign_generated_ipv6_cidr_block")
+			} else {
+				diff.SetNew("assign_generated_ipv6_cidr_block", newIpv6Flag)
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsDefaultVpcFindVpc(meta interface{}) (*ec2.Vpc, error) {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeVpcsInput{}
@@ -45,20 +92,14 @@ func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error
 		},
 	)
 
-	log.Printf("[DEBUG] Reading Default VPC: %s", req)
+	log.Printf("[DEBUG] Reading Default VPC: %#v", req)
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Vpcs == nil || len(resp.Vpcs) == 0 {
-		return fmt.Errorf("No default VPC found in this region.")
+		return nil, fmt.Errorf("No default VPC found in this region.")
 	}
 
-	d.SetId(aws.StringValue(resp.Vpcs[0].VpcId))
-	return resourceAwsVpcUpdate(d, meta)
-}
-
-func resourceAwsDefaultVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] Cannot destroy Default VPC. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
+	return resp.Vpcs[0], nil
 }
