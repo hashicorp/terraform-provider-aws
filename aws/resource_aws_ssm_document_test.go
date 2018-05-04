@@ -20,7 +20,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMDocumentBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -40,7 +40,7 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMDocument20Config(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -52,7 +52,7 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 						"aws_ssm_document.foo", "default_version", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMDocument20UpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -73,7 +73,7 @@ func TestAccAWSSSMDocument_permission(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMDocumentPermissionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -94,7 +94,7 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMDocumentParamConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -123,7 +123,7 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSSMDocumentTypeAutomationConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
