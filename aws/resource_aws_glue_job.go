@@ -25,7 +25,7 @@ func resourceAwsGlueJob() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      10,
-				ValidateFunc: validation.IntBetween(2, 100),
+				ValidateFunc: validation.IntAtLeast(2),
 			},
 			"command": {
 				Type:     schema.TypeList,
@@ -69,7 +69,7 @@ func resourceAwsGlueJob() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      1,
-							ValidateFunc: validation.IntBetween(1, 3),
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
 				},
