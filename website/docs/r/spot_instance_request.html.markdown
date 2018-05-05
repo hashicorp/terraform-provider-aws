@@ -48,7 +48,7 @@ resource "aws_spot_instance_request" "cheap_worker" {
 Spot Instance Requests support all the same arguments as
 [`aws_instance`](instance.html), with the addition of:
 
-* `spot_price` - (Required) The price to request on the spot market.
+* `spot_price` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
   timeout of 10m is reached.

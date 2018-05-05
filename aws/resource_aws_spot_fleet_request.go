@@ -294,7 +294,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"terminate_instances_with_expiration": {
