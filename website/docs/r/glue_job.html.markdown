@@ -55,6 +55,7 @@ The following arguments are supported:
 * `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `role` – (Required) The ARN of the IAM role associated with this job.
+* `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
 
 ### command Argument Reference
 
