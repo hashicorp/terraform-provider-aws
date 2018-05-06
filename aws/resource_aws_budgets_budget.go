@@ -130,6 +130,40 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"notification": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"comparison_operator": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"threshold": {
+							Type:     schema.TypeFloat,
+							Required: true,
+						},
+						"threshold_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"notification_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"subscriber_email_addresses": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subscriber_sns_topic_arns": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 		},
 		Create: resourceAwsBudgetsBudgetCreate,
 		Read:   resourceAwsBudgetsBudgetRead,
@@ -174,7 +208,78 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountID, *budget.BudgetName))
+
+	notificationsRaw := d.Get("notification").(*schema.Set).List()
+	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
+
+	err = resourceAwsBudgetsBudgetNotificationsCreate(notifications, subscribers, *budget.BudgetName, accountID, meta)
+
+	if err != nil {
+		return fmt.Errorf("create budget notification failed: %v", err)
+	}
+
 	return resourceAwsBudgetsBudgetRead(d, meta)
+}
+
+func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
+	client := meta.(*AWSClient).budgetconn
+
+	for i, notification := range notifications {
+		subscribers := subscribers[i]
+		if len(subscribers) == 0 {
+			return fmt.Errorf("Notification must have at least one subscriber!")
+		}
+		_, err := client.CreateNotification(&budgets.CreateNotificationInput{
+			BudgetName:   aws.String(budgetName),
+			AccountId:    aws.String(accountID),
+			Notification: notification,
+			Subscribers:  subscribers,
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {
+
+	notifications := make([]*budgets.Notification, len(notificationsRaw))
+	subscribersForNotifications := make([][]*budgets.Subscriber, len(notificationsRaw))
+	for i, notificationRaw := range notificationsRaw {
+		notificationRaw := notificationRaw.(map[string]interface{})
+		comparisonOperator := notificationRaw["comparison_operator"].(string)
+		threshold := notificationRaw["threshold"].(float64)
+		thresholdType := notificationRaw["threshold_type"].(string)
+		notificationType := notificationRaw["notification_type"].(string)
+
+		notifications[i] = &budgets.Notification{
+			ComparisonOperator: aws.String(comparisonOperator),
+			Threshold:          aws.Float64(threshold),
+			ThresholdType:      aws.String(thresholdType),
+			NotificationType:   aws.String(notificationType),
+		}
+
+		emailSubscribers := expandSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
+		snsSubscribers := expandSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
+
+		subscribersForNotifications[i] = append(emailSubscribers, snsSubscribers...)
+	}
+	return notifications, subscribersForNotifications
+}
+
+func expandSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
+	result := make([]*budgets.Subscriber, 0)
+	addrs := expandStringSet(rawList.(*schema.Set))
+	for _, addr := range addrs {
+		result = append(result, &budgets.Subscriber{
+			SubscriptionType: aws.String(subscriptionType),
+			Address:          addr,
+		})
+	}
+	return result
 }
 
 func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
@@ -230,7 +335,75 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("time_unit", budget.TimeUnit)
 
+	return resourceAwsBudgetsBudgetNotificationRead(d, meta)
+}
+
+func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*AWSClient).budgetconn
+
+	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
+
+	describeNotificationsForBudgetOutput, err := client.DescribeNotificationsForBudget(&budgets.DescribeNotificationsForBudgetInput{
+		BudgetName: aws.String(budgetName),
+		AccountId:  aws.String(accountID),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	notifications := make([]map[string]interface{}, 0)
+
+	for _, notificationOutput := range describeNotificationsForBudgetOutput.Notifications {
+		setNotificationDefaults(notificationOutput)
+		notification := make(map[string]interface{})
+		notification["comparison_operator"] = *notificationOutput.ComparisonOperator
+		notification["threshold_type"] = *notificationOutput.ThresholdType
+		notification["threshold"] = *notificationOutput.Threshold
+		notification["notification_type"] = *notificationOutput.NotificationType
+
+		subscribersOutput, err := client.DescribeSubscribersForNotification(&budgets.DescribeSubscribersForNotificationInput{
+			BudgetName:   aws.String(budgetName),
+			AccountId:    aws.String(accountID),
+			Notification: notificationOutput,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		snsSubscribers := make([]interface{}, 0)
+		emailSubscribers := make([]interface{}, 0)
+
+		for _, subscriberOutput := range subscribersOutput.Subscribers {
+			if *subscriberOutput.SubscriptionType == budgets.SubscriptionTypeSns {
+				snsSubscribers = append(snsSubscribers, *subscriberOutput.Address)
+			} else if *subscriberOutput.SubscriptionType == budgets.SubscriptionTypeEmail {
+				emailSubscribers = append(emailSubscribers, *subscriberOutput.Address)
+			}
+		}
+		if len(snsSubscribers) > 0 {
+			notification["subscriber_sns_topic_arns"] = schema.NewSet(schema.HashString, snsSubscribers)
+		}
+		if len(emailSubscribers) > 0 {
+			notification["subscriber_email_addresses"] = schema.NewSet(schema.HashString, emailSubscribers)
+		}
+		notifications = append(notifications, notification)
+	}
+
+	if err := d.Set("notification", notifications); err != nil {
+		return fmt.Errorf("error setting notification: %s %s", err, describeNotificationsForBudgetOutput.Notifications)
+	}
+
 	return nil
+}
+
+func setNotificationDefaults(notification *budgets.Notification) {
+	// The AWS API doesn't seem to return a ThresholdType if it's set to PERCENTAGE
+	// Set it manually to make behavior more predictable
+	if notification.ThresholdType == nil {
+		notification.ThresholdType = aws.String(budgets.ThresholdTypePercentage)
+	}
 }
 
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -253,7 +426,46 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("update budget failed: %v", err)
 	}
 
+	err = resourceAwsBudgetsBudgetNotificationsUpdate(d, meta)
+
+	if err != nil {
+		return fmt.Errorf("update budget notification failed: %v", err)
+	}
+
 	return resourceAwsBudgetsBudgetRead(d, meta)
+}
+func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*AWSClient).budgetconn
+	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if d.HasChange("notification") {
+		o, n := d.GetChange("notification")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		removeNotifications, _ := expandBudgetNotificationsUnmarshal(os.Difference(ns).List())
+		addNotifications, addSubscribers := expandBudgetNotificationsUnmarshal(ns.Difference(os).List())
+
+		for _, notification := range removeNotifications {
+			client.DeleteNotification(&budgets.DeleteNotificationInput{
+				Notification: notification,
+				BudgetName:   aws.String(budgetName),
+				AccountId:    aws.String(accountID),
+			})
+		}
+
+		err = resourceAwsBudgetsBudgetNotificationsCreate(addNotifications, addSubscribers, budgetName, accountID, meta)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
