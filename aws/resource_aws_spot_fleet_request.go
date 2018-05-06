@@ -303,14 +303,16 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				ForceNew: true,
 			},
 			"valid_from": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			},
 			"valid_until": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			},
 			"spot_request_state": {
 				Type:     schema.TypeString,
@@ -601,22 +603,22 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		valid_from, err := time.Parse(awsAutoscalingScheduleTimeLayout, v.(string))
+		valid_from, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidFrom = &valid_from
+		spotFleetConfig.ValidFrom = aws.Time(valid_from)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		valid_until, err := time.Parse(awsAutoscalingScheduleTimeLayout, v.(string))
+		valid_until, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidUntil = &valid_until
+		spotFleetConfig.ValidUntil = aws.Time(valid_until)
 	} else {
 		valid_until := time.Now().Add(24 * time.Hour)
-		spotFleetConfig.ValidUntil = &valid_until
+		spotFleetConfig.ValidUntil = aws.Time(valid_until)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -880,12 +882,12 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	if config.ValidFrom != nil {
 		d.Set("valid_from",
-			aws.TimeValue(config.ValidFrom).Format(awsAutoscalingScheduleTimeLayout))
+			aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
 	}
 
 	if config.ValidUntil != nil {
 		d.Set("valid_until",
-			aws.TimeValue(config.ValidUntil).Format(awsAutoscalingScheduleTimeLayout))
+			aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
