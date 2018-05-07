@@ -390,6 +390,47 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "cluster_type", "multi-node"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "node_type", "dc1.large"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
+	var v redshift.Cluster
+
+	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updateNodeType(ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "node_type", "dc1.large"),
+				),
+			},
+
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "cluster_type", "single-node"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "node_type", "dc2.large"),
 				),
 			},
 		},
@@ -741,6 +782,23 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade = false
   number_of_nodes = 2
+  skip_final_snapshot = true
+}
+`, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_updateNodeType(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier = "tf-redshift-cluster-%d"
+  availability_zone = "us-west-2a"
+  database_name = "mydb"
+  master_username = "foo_test"
+  master_password = "Mustbe8characters"
+  node_type = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade = false
+  number_of_nodes = 1
   skip_final_snapshot = true
 }
 `, rInt)
