@@ -1,5 +1,10 @@
 ## 1.18.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_spot_fleet_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
+* resource/aws_spot_instance_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
+
 BUG FIXES:
 
 * data-source/aws_autoscaling_groups: Correctly paginate through over 50 results [GH-4433]
