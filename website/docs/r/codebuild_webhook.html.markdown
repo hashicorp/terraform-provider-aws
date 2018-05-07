@@ -35,6 +35,7 @@ resource "github_repository_webhook" "aws_codebuild" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the build project.
+* `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built.
 
 ## Attributes Reference
 

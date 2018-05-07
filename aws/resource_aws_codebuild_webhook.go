@@ -18,6 +18,10 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"branch_filter": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -30,13 +34,15 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).codebuildconn
 
 	resp, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
-		ProjectName: aws.String(d.Get("name").(string)),
+		ProjectName:  aws.String(d.Get("name").(string)),
+		BranchFilter: aws.String(d.Get("branch_filter").(string)),
 	})
 	if err != nil {
 		return err
 	}
 
 	d.SetId(d.Get("name").(string))
+	d.Set("branch_filter", d.Get("branch_filter").(string))
 	d.Set("url", resp.Webhook.Url)
 	return nil
 }
