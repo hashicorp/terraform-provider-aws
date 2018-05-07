@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_lb_target_group: Add `proxy_protocol_v2` argument [GH-4365]
 * resource/aws_spot_fleet_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
 * resource/aws_spot_fleet_request: Add plan time validation for `valid_from` and `valid_until` arguments [GH-4463]
 * resource/aws_spot_instance_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
