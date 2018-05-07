@@ -72,6 +72,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"badge_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cache": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -546,7 +551,8 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("description", project.Description)
-	d.Set("badge_enabled", project.BadgeEnabled)
+	d.Set("badge_enabled", project.Badge.BadgeEnabled)
+	d.Set("badge_url", project.Badge.BadgeRequestUrl)
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
@@ -600,7 +606,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("badge_enabled") {
-		params.BadgeEnabled = aws.String(d.Get("badge_enabled").(bool))
+		params.BadgeEnabled = aws.Bool(d.Get("badge_enabled").(bool))
 	}
 
 	if d.HasChange("encryption_key") {
