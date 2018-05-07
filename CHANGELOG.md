@@ -13,7 +13,6 @@ BUG FIXES:
 * resource/aws_launch_template: Prevent `parameter iops is not supported for gp2 volumes` error [GH-4344]
 * resource/aws_launch_template: Prevent `'iamInstanceProfile.name' may not be used in combination with 'iamInstanceProfile.arn'` error [GH-4344]
 * resource/aws_launch_template: Prevent `parameter groupName cannot be used with the parameter subnet` error [GH-4344]
-* resource/aws_launch_template: Allow `network_interface` `device_index` to be 0 [GH-4344]
 * resource/aws_launch_template: Separate usage of `ipv4_address_count`/`ipv6_address_count` from `ipv4_addresses`/`ipv6_addresses` [GH-4344]
 * resource/aws_redshift_cluster: Properly send all required parameters when resizing [GH-3127]
 * resource/aws_s3_bucket: Prevent crash from empty string CORS arguments [GH-4465]
