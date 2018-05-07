@@ -73,6 +73,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"sybase",
 					"sqlserver",
 					"mongodb",
+					"s3",
 				}, false),
 			},
 			"extra_connection_attributes": {
@@ -165,6 +166,56 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"s3_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"external_table_definition": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"csv_row_delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "\\n",
+						},
+						"csv_delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  ",",
+						},
+						"bucket_folder": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"compression_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "NONE",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -200,6 +251,16 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
 			AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 		}
+	case "s3":
+		request.S3Settings = &dms.S3Settings{
+			ServiceAccessRoleArn:    aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
+			ExternalTableDefinition: aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
+			CsvRowDelimiter:         aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
+			CsvDelimiter:            aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
+			BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
+			BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
+			CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
+		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
@@ -212,13 +273,13 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		if v, ok := d.GetOk("extra_connection_attributes"); ok {
 			request.ExtraConnectionAttributes = aws.String(v.(string))
 		}
+		if v, ok := d.GetOk("kms_key_arn"); ok {
+			request.KmsKeyId = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
 		request.CertificateArn = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("kms_key_arn"); ok {
-		request.KmsKeyId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("ssl_mode"); ok {
 		request.SslMode = aws.String(v.(string))
@@ -290,6 +351,11 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	hasChanges := false
 
+	if d.HasChange("endpoint_type") {
+		request.EndpointType = aws.String(d.Get("endpoint_type").(string))
+		hasChanges = true
+	}
+
 	if d.HasChange("certificate_arn") {
 		request.CertificateArn = aws.String(d.Get("certificate_arn").(string))
 		hasChanges = true
@@ -330,6 +396,13 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	switch d.Get("engine_name").(string) {
+	case "dynamodb":
+		if d.HasChange("service_access_role") {
+			request.DynamoDbSettings = &dms.DynamoDbSettings{
+				ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
+			}
+			hasChanges = true
+		}
 	case "mongodb":
 		if d.HasChange("username") ||
 			d.HasChange("password") ||
@@ -357,6 +430,26 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 			}
 			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'mongodb')
+			hasChanges = true
+		}
+	case "s3":
+		if d.HasChange("s3_settings.0.service_access_role_arn") ||
+			d.HasChange("s3_settings.0.external_table_definition") ||
+			d.HasChange("s3_settings.0.csv_row_delimiter") ||
+			d.HasChange("s3_settings.0.csv_delimiter") ||
+			d.HasChange("s3_settings.0.bucket_folder") ||
+			d.HasChange("s3_settings.0.bucket_name") ||
+			d.HasChange("s3_settings.0.compression_type") {
+			request.S3Settings = &dms.S3Settings{
+				ServiceAccessRoleArn:    aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
+				ExternalTableDefinition: aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
+				CsvRowDelimiter:         aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
+				CsvDelimiter:            aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
+				BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
+				BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
+				CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 's3')
 			hasChanges = true
 		}
 	default:
@@ -436,15 +529,18 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 			d.Set("server_name", endpoint.MongoDbSettings.ServerName)
 			d.Set("port", endpoint.MongoDbSettings.Port)
 			d.Set("database_name", endpoint.MongoDbSettings.DatabaseName)
-
-			if err := d.Set("mongodb_settings", flattenDmsMongoDbSettings(endpoint.MongoDbSettings)); err != nil {
-				return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
-			}
 		} else {
 			d.Set("username", endpoint.Username)
 			d.Set("server_name", endpoint.ServerName)
 			d.Set("port", endpoint.Port)
 			d.Set("database_name", endpoint.DatabaseName)
+		}
+		if err := d.Set("mongodb_settings", flattenDmsMongoDbSettings(endpoint.MongoDbSettings)); err != nil {
+			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
+		}
+	case "s3":
+		if err := d.Set("s3_settings", flattenDmsS3Settings(endpoint.S3Settings)); err != nil {
+			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
@@ -452,9 +548,9 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
+		d.Set("kms_key_arn", endpoint.KmsKeyId)
 	}
 
-	d.Set("kms_key_arn", endpoint.KmsKeyId)
 	d.Set("ssl_mode", endpoint.SslMode)
 
 	return nil
@@ -472,6 +568,24 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 		"extract_doc_id":      aws.StringValue(settings.ExtractDocId),
 		"docs_to_investigate": aws.StringValue(settings.DocsToInvestigate),
 		"auth_source":         aws.StringValue(settings.AuthSource),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"service_access_role_arn":   aws.StringValue(settings.ServiceAccessRoleArn),
+		"external_table_definition": aws.StringValue(settings.ExternalTableDefinition),
+		"csv_row_delimiter":         aws.StringValue(settings.CsvRowDelimiter),
+		"csv_delimiter":             aws.StringValue(settings.CsvDelimiter),
+		"bucket_folder":             aws.StringValue(settings.BucketFolder),
+		"bucket_name":               aws.StringValue(settings.BucketName),
+		"compression_type":          aws.StringValue(settings.CompressionType),
 	}
 
 	return []map[string]interface{}{m}
