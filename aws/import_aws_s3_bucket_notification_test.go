@@ -10,6 +10,7 @@ import (
 
 func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
+	partition := testAccGetPartition()
 
 	topicName := fmt.Sprintf("tf-acc-topic-s3-b-n-import-%s", rString)
 	bucketName := fmt.Sprintf("tf-acc-bucket-n-import-%s", rString)
@@ -25,7 +26,7 @@ func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName),
+				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName, partition),
 			},
 
 			resource.TestStep{
@@ -42,7 +43,7 @@ func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName),
+				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName, partition),
 			},
 
 			resource.TestStep{

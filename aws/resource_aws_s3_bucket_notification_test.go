@@ -18,6 +18,7 @@ import (
 
 func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 	rString := acctest.RandString(8)
+	partition := testAccGetPartition()
 
 	topicName := fmt.Sprintf("tf-acc-topic-s3-b-notification-%s", rString)
 	bucketName := fmt.Sprintf("tf-acc-bucket-notification-%s", rString)
@@ -31,7 +32,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName),
+				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName, partition),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -68,7 +69,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName),
+				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName, partition),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketQueueNotification(
 						"aws_s3_bucket.bucket",
@@ -119,6 +120,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 
 func TestAccAWSS3BucketNotification_withoutFilter(t *testing.T) {
 	rString := acctest.RandString(8)
+	partition := testAccGetPartition()
 
 	topicName := fmt.Sprintf("tf-acc-topic-s3-b-notification-wo-f-%s", rString)
 	bucketName := fmt.Sprintf("tf-acc-bucket-notification-wo-f-%s", rString)
@@ -129,7 +131,7 @@ func TestAccAWSS3BucketNotification_withoutFilter(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName),
+				Config: testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName, partition),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -352,7 +354,7 @@ func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events [
 	}
 }
 
-func testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName string) string {
+func testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName, partition string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "topic" {
     name = "%s"
@@ -364,7 +366,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:%s",
+		"Resource": "arn:%s:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}
@@ -400,10 +402,10 @@ resource "aws_s3_bucket_notification" "notification" {
 		filter_suffix = ".log"
 	}
 }
-`, topicName, topicName, bucketName)
+`, topicName, partition, topicName, bucketName)
 }
 
-func testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName string) string {
+func testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName, partition string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
     name = "%s"
@@ -414,7 +416,7 @@ resource "aws_sqs_queue" "queue" {
 		"Effect":"Allow",
 		"Principal":"*",
 		"Action":"sqs:SendMessage",
-		"Resource":"arn:aws:sqs:*:*:%s",
+		"Resource":"arn:%s:sqs:*:*:%s",
 		"Condition":{
 			"ArnEquals":{
 				"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"
@@ -443,7 +445,7 @@ resource "aws_s3_bucket_notification" "notification" {
 		filter_suffix = ".mp4"
 	}
 }
-`, queueName, queueName, bucketName)
+`, queueName, partition, queueName, bucketName)
 }
 
 func testAccAWSS3BucketConfigWithLambdaNotification(roleName, lambdaFuncName, bucketName string) string {
@@ -504,7 +506,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, roleName, lambdaFuncName, bucketName)
 }
 
-func testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName string) string {
+func testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName, partition string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "topic" {
     name = "%s"
@@ -516,7 +518,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:%s",
+		"Resource": "arn:%s:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}
@@ -541,5 +543,5 @@ resource "aws_s3_bucket_notification" "notification" {
 		]
 	}
 }
-`, topicName, topicName, bucketName)
+`, topicName, partition, topicName, bucketName)
 }
