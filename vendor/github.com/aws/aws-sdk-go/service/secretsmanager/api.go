@@ -203,8 +203,8 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 // You provide the secret data to be encrypted by putting text in either the
 // SecretString parameter or binary data in the SecretBinary parameter, but
 // not both. If you include SecretString or SecretBinary then Secrets Manager
-// also creates an initial secret version and, if you don't supply a staging
-// label, automatically maps the new version's ID to the staging label AWSCURRENT.
+// also creates an initial secret version and automatically attaches the staging
+// label AWSCURRENT to the new version.
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
 // or SecretBinary for a secret in the same account as the calling user and
@@ -1121,7 +1121,8 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //
 // Stores a new encrypted secret value in the specified secret. To do this,
 // the operation creates a new version and attaches it to the secret. The version
-// can contain a new SecretString value or a new SecretBinary value.
+// can contain a new SecretString value or a new SecretBinary value. You can
+// also specify the staging labels that are initially attached to the new version.
 //
 // The Secrets Manager console uses only the SecretString field. To add binary
 // data to a secret with the SecretBinary field you must use the AWS CLI or
@@ -1133,18 +1134,18 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //
 //    * If another version of this secret already exists, then this operation
 //    does not automatically move any staging labels other than those that you
-//    specify in the VersionStages parameter.
+//    explicitly specify in the VersionStages parameter.
+//
+//    * If this operation moves the staging label AWSCURRENT from another version
+//    to this version (because you included it in the StagingLabels parameter)
+//    then Secrets Manager also automatically moves the staging label AWSPREVIOUS
+//    to the version that AWSCURRENT was removed from.
 //
 //    * This operation is idempotent. If a version with a SecretVersionId with
 //    the same value as the ClientRequestToken parameter already exists and
 //    you specify the same secret data, the operation succeeds but does nothing.
 //    However, if the secret data is different, then the operation fails because
 //    you cannot modify an existing version; you can only create new ones.
-//
-//    * If this operation moves the staging label AWSCURRENT to this version
-//    (because you included it in the StagingLabels parameter) then Secrets
-//    Manager also automatically moves the staging label AWSPREVIOUS to the
-//    version that AWSCURRENT was removed from.
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
 // or SecretBinary for a secret in the same account as the calling user and
@@ -1782,15 +1783,13 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 // binary data as part of the version of a secret, you must use either the AWS
 // CLI or one of the AWS SDKs.
 //
-//    * If this update creates the first version of the secret or if you did
-//    not include the VersionStages parameter then Secrets Manager automatically
-//    attaches the staging label AWSCURRENT to the new version and removes it
-//    from any version that had it previously. The previous version (if any)
-//    is then given the staging label AWSPREVIOUS.
-//
 //    * If a version with a SecretVersionId with the same value as the ClientRequestToken
 //    parameter already exists, the operation generates an error. You cannot
 //    modify an existing version, you can only create new ones.
+//
+//    * If you include SecretString or SecretBinary to create a new secret version,
+//    Secrets Manager automatically attaches the staging label AWSCURRENT to
+//    the new version.
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
 // or SecretBinary for a secret in the same account as the calling user and
