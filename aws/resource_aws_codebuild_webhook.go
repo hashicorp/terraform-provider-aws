@@ -11,6 +11,7 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 		Create: resourceAwsCodeBuildWebhookCreate,
 		Read:   resourceAwsCodeBuildWebhookRead,
 		Delete: resourceAwsCodeBuildWebhookDelete,
+		Update: resourceAwsCodeBuildWebhookUpdate,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -66,7 +67,28 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	project := resp.Projects[0]
+	d.Set("branch_filter", project.Webhook.BranchFilter)
 	d.Set("url", project.Webhook.Url)
+	return nil
+}
+
+func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).codebuildconn
+
+	if !d.HasChange("branch_filter") {
+		return nil
+	}
+
+	_, err := conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
+		ProjectName:  aws.String(d.Id()),
+		BranchFilter: aws.String(d.Get("branch_filter").(string)),
+		RotateSecret: aws.Bool(false),
+	})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -70,7 +70,7 @@ func testAccCheckAwsCodeBuildWebhookExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCodeBuildWebhookConfig_basic(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName, "", "") + `
 resource "aws_codebuild_webhook" "test" {
   name = "${aws_codebuild_project.foo.name}"
 }
