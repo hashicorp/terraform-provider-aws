@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -290,6 +291,18 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 }
 
 func testAccAWSCodeBuildProjectConfig_basic(rName, vpcConfig, vpcResources string) string {
+	// This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.
+	// In order for that resource to work the Terraform AWS user must have done a GitHub
+	// OAuth dance.
+	//
+	// Additionally, the GitHub user that the Terraform AWS user logs in as must have
+	// access to the GitHub repository. This allows others to run tests for the webhook
+	// without having to have access to the Packer GitHub repository.
+	sourceURL, ok := os.LookupEnv("CODEBUILD_GITHUB_SOURCE_URL")
+	if !ok {
+		sourceURL = "https://github.com/hashicorp/packer.git"
+	}
+
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-%s"
@@ -375,7 +388,7 @@ resource "aws_codebuild_project" "foo" {
 
   source {
     type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
+    location = "%s"
   }
 
   tags {
@@ -384,7 +397,7 @@ resource "aws_codebuild_project" "foo" {
 	%s
 }
 %s
-`, rName, rName, rName, rName, vpcConfig, vpcResources)
+`, rName, rName, rName, rName, sourceURL, vpcConfig, vpcResources)
 }
 
 func testAccAWSCodeBuildProjectConfig_basicUpdated(rName string) string {
