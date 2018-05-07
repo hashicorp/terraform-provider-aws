@@ -294,7 +294,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"terminate_instances_with_expiration": {
@@ -582,7 +582,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		LaunchSpecifications:             launch_specs,
-		SpotPrice:                        aws.String(d.Get("spot_price").(string)),
 		TargetCapacity:                   aws.Int64(int64(d.Get("target_capacity").(int))),
 		ClientToken:                      aws.String(resource.UniqueId()),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
@@ -598,6 +597,10 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.AllocationStrategy = aws.String(v.(string))
 	} else {
 		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
+	}
+
+	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
+		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
