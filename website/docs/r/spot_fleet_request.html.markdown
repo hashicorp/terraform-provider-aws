@@ -115,9 +115,8 @@ lowestPrice.
 * `instance_interruption_behavior` - (Optional) Indicates whether a Spot
   instance stops or terminates when it is interrupted. Default is
   `terminate`.
-* `valid_until` - The end date and time of the request, in UTC ISO8601 format
-  (for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance
-requests are placed or enabled to fulfill the request. Defaults to 24 hours.
+* `valid_until` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. Defaults to 24 hours.
+* `valid_from` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
 * `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with
 Application Load Balancing.
