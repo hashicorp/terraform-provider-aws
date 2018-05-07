@@ -493,6 +493,17 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return errwrap.Wrapf("Error retrieving Target Group Attributes: {{err}}", err)
 	}
 
+	for _, attr := range attrResp.Attributes {
+		switch *attr.Key {
+		case "proxy_protocol_v2.enabled":
+			enabled, err := strconv.ParseBool(*attr.Value)
+			if err != nil {
+				return fmt.Errorf("Error converting proxy_protocol_v2.enabled to bool: %s", *attr.Value)
+			}
+			d.Set("proxy_protocol_v2", enabled)
+		}
+	}
+
 	// We only read in the stickiness attributes if the target group is not
 	// TCP-based. This ensures we don't end up causing a spurious diff if someone
 	// has defined the stickiness block on a TCP target group (albeit with

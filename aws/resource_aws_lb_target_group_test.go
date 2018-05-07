@@ -157,10 +157,31 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ExpectError:        regexp.MustCompile("Health check interval cannot be updated"),
 			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
+	var confBefore, confAfter elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &confBefore),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "false"),
+				),
+			},
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &confBefore),
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &confAfter),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "true"),
 				),
 			},
@@ -1250,8 +1271,8 @@ func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName str
   protocol = "TCP"
   vpc_id = "${aws_vpc.test.id}"
 	
-	proxy_protocol_v2 = "true"
-  deregistration_delay = 200
+	proxy_protocol_v2 = "true"    
+	deregistration_delay = 200
 
   health_check {
     interval = 10
