@@ -1,5 +1,9 @@
 ## 1.18.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_glue_catalog_table` [GH-4368]
+
 ENHANCEMENTS:
 
 * resource/aws_dms_endpoint: Support `s3` `engine_name` and add `s3_settings` argument [GH-1685] and [GH-4447]
