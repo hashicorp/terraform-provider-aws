@@ -472,7 +472,10 @@ func testAccCheckGlueTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		catalogId, dbName, tableName := readAwsGlueTableID(rs.Primary.ID)
+		catalogId, dbName, tableName, err := readAwsGlueTableID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		input := &glue.GetTableInput{
 			DatabaseName: aws.String(dbName),
@@ -503,7 +506,10 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		catalogId, dbName, tableName := readAwsGlueTableID(rs.Primary.ID)
+		catalogId, dbName, tableName, err := readAwsGlueTableID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		glueconn := testAccProvider.Meta().(*AWSClient).glueconn
 		out, err := glueconn.GetTable(&glue.GetTableInput{
