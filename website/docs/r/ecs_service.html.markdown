@@ -74,7 +74,7 @@ The following arguments are supported:
 * `deployment_maximum_percent` - (Optional) The upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment.
 * `deployment_minimum_healthy_percent` - (Optional) The lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
 * `placement_strategy` - (Optional) **Deprecated**, use `ordered_placement_strategy` instead.
-* `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. The maximum number of `placement_strategy` blocks is `5`. Defined below.
+* `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. The maximum number of `ordered_placement_strategy` blocks is `5`. Defined below.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 7200. Only valid for services configured to use load balancers.
 * `load_balancer` - (Optional) A load balancer block. Load balancers documented below.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
