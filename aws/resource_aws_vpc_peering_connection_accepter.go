@@ -8,15 +8,29 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	schemaNameVPCPeeringConnectionID = "vpc_peering_connection_id"
+)
+
 func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsVPCPeeringAccepterCreate,
 		Read:   resourceAwsVPCPeeringRead,
 		Update: resourceAwsVPCPeeringUpdate,
 		Delete: resourceAwsVPCPeeringAccepterDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(data *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
+				err = data.Set(schemaNameVPCPeeringConnectionID, data.Id())
+				if err != nil {
+					return nil, fmt.Errorf("setting attribute '%s': %v", schemaNameVPCPeeringConnectionID, err)
+				}
+
+				return []*schema.ResourceData{data}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_peering_connection_id": &schema.Schema{
+			schemaNameVPCPeeringConnectionID: &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,7 +68,7 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 }
 
 func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	id := d.Get("vpc_peering_connection_id").(string)
+	id := d.Get(schemaNameVPCPeeringConnectionID).(string)
 	d.SetId(id)
 
 	if err := resourceAwsVPCPeeringRead(d, meta); err != nil {
