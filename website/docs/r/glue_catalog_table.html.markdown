@@ -74,3 +74,10 @@ The following arguments are supported:
 * `skewed_column_value_location_maps` - (Optional) A list of values that appear so frequently as to be considered skewed.
 * `skewed_column_values` - (Optional) A mapping of skewed values to the columns that contain them.
 
+## Import
+
+Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.
+
+```
+$ terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
+```
