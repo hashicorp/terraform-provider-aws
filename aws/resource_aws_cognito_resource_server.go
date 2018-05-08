@@ -129,13 +129,13 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Failed setting schema: %s", err)
 	}
 
-	var scope_identifiers []string
+	var scopeIdentifiers []string
 	for _, elem := range scopes {
 
-		scope_identifier := elem["scope_identifier"].(string)
-		scope_identifiers = append(scope_identifiers, scope_identifier)
+		scopeIdentifier := elem["scope_identifier"].(string)
+		scopeIdentifiers = append(scopeIdentifiers, scopeIdentifier)
 	}
-	d.Set("scope_identifiers", scope_identifiers)
+	d.Set("scope_identifiers", scopeIdentifiers)
 	return nil
 }
 
