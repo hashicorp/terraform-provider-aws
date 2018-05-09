@@ -37,7 +37,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 			// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html
 			"certificate_authority_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -68,7 +68,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_ASN1Subject.html
 						"subject": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
