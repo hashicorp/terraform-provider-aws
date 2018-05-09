@@ -116,11 +116,7 @@ func TestAccAWSGlueJob_AllocatedCapacity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSGlueJobConfig_AllocatedCapacity(rName, 1),
-				ExpectError: regexp.MustCompile(`expected allocated_capacity to be in the range`),
-			},
-			{
-				Config:      testAccAWSGlueJobConfig_AllocatedCapacity(rName, 101),
-				ExpectError: regexp.MustCompile(`expected allocated_capacity to be in the range`),
+				ExpectError: regexp.MustCompile(`expected allocated_capacity to be at least`),
 			},
 			{
 				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 2),
@@ -130,10 +126,10 @@ func TestAccAWSGlueJob_AllocatedCapacity(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 100),
+				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "allocated_capacity", "100"),
+					resource.TestCheckResourceAttr(resourceName, "allocated_capacity", "3"),
 				),
 			},
 			{
@@ -266,11 +262,7 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSGlueJobConfig_ExecutionProperty(rName, 0),
-				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be in the range`),
-			},
-			{
-				Config:      testAccAWSGlueJobConfig_ExecutionProperty(rName, 4),
-				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be in the range`),
+				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
 			},
 			{
 				Config: testAccAWSGlueJobConfig_ExecutionProperty(rName, 1),
