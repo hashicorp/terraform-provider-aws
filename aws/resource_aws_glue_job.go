@@ -90,6 +90,11 @@ func resourceAwsGlueJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateArn,
 			},
+			"timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  2880,
+			},
 		},
 	}
 }
@@ -102,6 +107,7 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
+		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
 	if v, ok := d.GetOk("allocated_capacity"); ok {
@@ -187,6 +193,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("max_retries", int(aws.Int64Value(job.MaxRetries)))
 	d.Set("name", job.Name)
 	d.Set("role_arn", job.Role)
+	d.Set("timeout", int(aws.Int64Value(job.Timeout)))
 
 	return nil
 }
@@ -197,6 +204,7 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	jobUpdate := &glue.JobUpdate{
 		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 		Role:    aws.String(d.Get("role_arn").(string)),
+		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
 	if v, ok := d.GetOk("allocated_capacity"); ok {
