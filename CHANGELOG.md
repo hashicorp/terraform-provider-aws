@@ -9,6 +9,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_dms_endpoint: Support `s3` `engine_name` and add `s3_settings` argument [GH-1685] and [GH-4447]
+* resource/aws_glue_job: Add `timeout` argument [GH-4460]
 * resource/aws_lb_target_group: Add `proxy_protocol_v2` argument [GH-4365]
 * resource/aws_spot_fleet_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
 * resource/aws_spot_fleet_request: Add plan time validation for `valid_from` and `valid_until` arguments [GH-4463]
