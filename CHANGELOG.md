@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_acmpca_certificate_authority` [GH-4458]
+* **New Resource:** `aws_acmpca_certificate_authority` [GH-4458]
 * **New Resource:** `aws_glue_catalog_table` [GH-4368]
 
 ENHANCEMENTS:
