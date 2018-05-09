@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Lower retry threshold for DNS resolution failures [GH-4459]
 * resource/aws_dms_endpoint: Support `s3` `engine_name` and add `s3_settings` argument [GH-1685] and [GH-4447]
 * resource/aws_glue_job: Add `timeout` argument [GH-4460]
 * resource/aws_lb_target_group: Add `proxy_protocol_v2` argument [GH-4365]
