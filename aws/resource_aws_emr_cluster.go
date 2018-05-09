@@ -26,6 +26,10 @@ func resourceAwsEMRCluster() *schema.Resource {
 		Read:   resourceAwsEMRClusterRead,
 		Update: resourceAwsEMRClusterUpdate,
 		Delete: resourceAwsEMRClusterDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
