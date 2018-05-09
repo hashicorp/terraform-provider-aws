@@ -15,6 +15,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_autoscaling_groups: Correctly paginate through over 50 results [GH-4433]
+* resource/aws_elastic_beanstalk_environment: Correctly handle `cname_prefix` attribute China partition [GH-4485]
 * resource/aws_launch_template: Prevent `parameter iops is not supported for gp2 volumes` error [GH-4344]
 * resource/aws_launch_template: Prevent `'iamInstanceProfile.name' may not be used in combination with 'iamInstanceProfile.arn'` error [GH-4344]
 * resource/aws_launch_template: Prevent `parameter groupName cannot be used with the parameter subnet` error [GH-4344]
