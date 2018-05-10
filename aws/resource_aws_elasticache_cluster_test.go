@@ -62,9 +62,13 @@ func testSweepElasticacheClusters(region string) error {
 				continue
 			}
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
-			err := deleteElasticacheCluster(id, 40*time.Minute, conn)
+			err := deleteElasticacheCacheCluster(conn, id)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Elasticache Cluster (%s): %s", id, err)
+				log.Printf("[ERROR] Failed to delete Elasticache Cache Cluster (%s): %s", id, err)
+			}
+			err = deleteElasticacheCacheClusterWaiter(conn, id, 40*time.Minute)
+			if err != nil {
+				log.Printf("[ERROR] Failed waiting for Elasticache Cache Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
 		return !isLast
