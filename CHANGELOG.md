@@ -1,4 +1,9 @@
 ## 1.19.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_security_group: Fix rule description handling when gathering multiple rules with same permissions [GH-4416]
+
 ## 1.18.0 (May 10, 2018)
 
 FEATURES:
