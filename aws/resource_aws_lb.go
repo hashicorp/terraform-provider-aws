@@ -103,10 +103,12 @@ func resourceAwsLb() *schema.Resource {
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -122,25 +124,29 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"access_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBType("network"),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:             schema.TypeString,
+							Required:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeBool,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfLBType("network"),
 						},
 					},
 				},
@@ -153,21 +159,24 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"idle_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  60,
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          60,
+				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
 			"enable_cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("application"),
 			},
 
 			"enable_http2": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          true,
+				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
 			"ip_address_type": {
@@ -193,6 +202,12 @@ func resourceAwsLb() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+	}
+}
+
+func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("load_balancer_type").(string) == t
 	}
 }
 

@@ -33,6 +33,13 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+			},
+
 			"binary_media_types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -80,6 +87,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	params := &apigateway.CreateRestApiInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Description: description,
+	}
+
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		params.Policy = aws.String(v.(string))
 	}
 
 	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
@@ -156,6 +167,15 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
+
+	// The API returns policy as an escaped JSON string
+	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
+	policy, err := strconv.Unquote(`"` + aws.StringValue(api.Policy) + `"`)
+	if err != nil {
+		return fmt.Errorf("error unescaping policy: %s", err)
+	}
+	d.Set("policy", policy)
+
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 
 	arn := arn.ARN{
@@ -195,6 +215,14 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			Op:    aws.String("replace"),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+
+	if d.HasChange("policy") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/policy"),
+			Value: aws.String(d.Get("policy").(string)),
 		})
 	}
 

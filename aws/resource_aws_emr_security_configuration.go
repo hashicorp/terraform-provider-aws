@@ -106,12 +106,10 @@ func resourceAwsEmrSecurityConfigurationDelete(d *schema.ResourceData, meta inte
 	})
 	if err != nil {
 		if isAWSErr(err, "InvalidRequestException", "does not exist") {
-			d.SetId("")
 			return nil
 		}
 		return err
 	}
-	d.SetId("")
 
 	return nil
 }

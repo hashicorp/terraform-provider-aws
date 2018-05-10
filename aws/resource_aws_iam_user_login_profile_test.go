@@ -20,6 +20,42 @@ import (
 	"github.com/hashicorp/vault/helper/pgpkeys"
 )
 
+func TestGenerateIAMPassword(t *testing.T) {
+	p := generateIAMPassword(6)
+	if len(p) != 6 {
+		t.Fatalf("expected a 6 character password, got: %q", p)
+	}
+
+	p = generateIAMPassword(128)
+	if len(p) != 128 {
+		t.Fatalf("expected a 128 character password, got: %q", p)
+	}
+}
+
+func TestIAMPasswordPolicyCheck(t *testing.T) {
+	for _, tc := range []struct {
+		pass  string
+		valid bool
+	}{
+		// no symbol
+		{pass: "abCD12", valid: false},
+		// no number
+		{pass: "abCD%$", valid: false},
+		// no upper
+		{pass: "abcd1#", valid: false},
+		// no lower
+		{pass: "ABCD1#", valid: false},
+		{pass: "abCD11#$", valid: true},
+	} {
+		t.Run(tc.pass, func(t *testing.T) {
+			valid := checkIAMPwdPolicy([]byte(tc.pass))
+			if valid != tc.valid {
+				t.Fatalf("expected %q to be valid==%t, got %t", tc.pass, tc.valid, valid)
+			}
+		})
+	}
+}
+
 func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
@@ -189,10 +225,14 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 			iamAsCreatedUser := iam.New(iamAsCreatedUserSession)
 			_, err = iamAsCreatedUser.ChangePassword(&iam.ChangePasswordInput{
 				OldPassword: aws.String(decryptedPassword.String()),
-				NewPassword: aws.String(generatePassword(20)),
+				NewPassword: aws.String(generateIAMPassword(20)),
 			})
 			if err != nil {
-				if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "InvalidClientTokenId" {
+				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
+				if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "InvalidClientTokenId", "") {
 					return resource.RetryableError(err)
 				}
 

@@ -65,15 +65,13 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 			raw[i] = *v.ResourceId
 		}
 	} else {
-
-		resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
-		if err != nil {
+		if err := conn.DescribeAutoScalingGroupsPages(&autoscaling.DescribeAutoScalingGroupsInput{}, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+			for _, group := range resp.AutoScalingGroups {
+				raw = append(raw, *group.AutoScalingGroupName)
+			}
+			return true
+		}); err != nil {
 			return fmt.Errorf("Error fetching Autoscaling Groups: %s", err)
-		}
-
-		raw = make([]string, len(resp.AutoScalingGroups))
-		for i, v := range resp.AutoScalingGroups {
-			raw[i] = *v.AutoScalingGroupName
 		}
 	}
 

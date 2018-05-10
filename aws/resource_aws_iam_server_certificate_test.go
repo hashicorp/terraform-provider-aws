@@ -58,6 +58,10 @@ func testSweepIamServerCertificates(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Server Certificate sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving IAM Server Certificates: %s", err)
 	}
 
@@ -295,6 +299,19 @@ resource "aws_iam_server_certificate" "test_cert" {
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
 `, testAccTLSServerCert)
+}
+
+func testAccIAMServerCertConfig_path(rInt int, path string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name = "terraform-test-cert-%d"
+  path = "%s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+`, testAccTLSServerCert, rInt, path)
 }
 
 // iam-ssl-unix-line-endings

@@ -37,7 +37,7 @@ func testSweepELBs(region string) error {
 		"test-elb-",
 	}
 
-	return conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
+	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
 			log.Println("[INFO] No ELBs found for sweeping")
 			return false
@@ -71,6 +71,14 @@ func testSweepELBs(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ELB sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving ELBs: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSELB_basic(t *testing.T) {
@@ -369,9 +377,11 @@ func TestAccAWSELB_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_iam_server_cert(t *testing.T) {
+func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	// var td elb.TagDescription
+	rName := fmt.Sprintf("tf-acctest-%s", acctest.RandString(10))
+	resourceName := "aws_elb.bar"
+
 	testCheck := func(*terraform.State) error {
 		if len(conf.ListenerDescriptions) != 1 {
 			return fmt.Errorf(
@@ -380,19 +390,26 @@ func TestAccAWSELB_iam_server_cert(t *testing.T) {
 		}
 		return nil
 	}
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_elb.bar",
-		Providers:     testAccProvidersWithTLS,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccELBIAMServerCertConfig(
-					fmt.Sprintf("tf-acctest-%s", acctest.RandString(10))),
+				Config:      testAccELBConfig_Listener_IAMServerCertificate(rName, "tcp"),
+				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
+			},
+			{
+				Config: testAccELBConfig_Listener_IAMServerCertificate(rName, "https"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
+					testAccCheckAWSELBExists(resourceName, &conf),
 					testCheck,
 				),
+			},
+			{
+				Config:      testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(rName),
+				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
 			},
 		},
 	})
@@ -1624,33 +1641,63 @@ resource "aws_security_group" "bar" {
 }
 `
 
-func testAccELBIAMServerCertConfig(certName string) string {
+func testAccELBConfig_Listener_IAMServerCertificate(certName, lbProtocol string) string {
 	return fmt.Sprintf(`
-%s 
+data "aws_availability_zones" "available" {}
+
+%[1]s
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name = "%s"
+  name             = "%[2]s"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
 
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
   listener {
-    instance_port = 8000
-    instance_protocol = "https"
-    lb_port = 80
-    // Protocol should be case insensitive
-    lb_protocol = "HttPs"
+    instance_port      = 443
+    instance_protocol  = "%[3]s"
+    lb_port            = 443
+    lb_protocol        = "%[3]s"
+    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+  }
+}
+`, testAccTLSServerCert, certName, lbProtocol)
+}
+
+func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+%[1]s
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name             = "%[2]s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+
+resource "aws_elb" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+
+  listener {
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
     ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
   }
 
-	tags {
-		bar = "baz"
-	}
-
-  cross_zone_load_balancing = true
+  # lb_protocol tcp and ssl_certificate_id is not valid
+  listener {
+    instance_port      = 8443
+    instance_protocol  = "tcp"
+    lb_port            = 8443
+    lb_protocol        = "tcp"
+    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+  }
 }
 `, testAccTLSServerCert, certName)
 }

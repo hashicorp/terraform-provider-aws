@@ -30,6 +30,10 @@ func testSweepWafRegexMatchSet(region string) error {
 	req := &waf.ListRegexMatchSetsInput{}
 	resp, err := conn.ListRegexMatchSets(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regex Match Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing WAF Regex Match Sets: %s", err)
 	}
 
@@ -72,7 +76,25 @@ func testSweepWafRegexMatchSet(region string) error {
 	return nil
 }
 
-func TestAccAWSWafRegexMatchSet_basic(t *testing.T) {
+// Serialized acceptance tests due to WAF account limits
+// https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
+func TestAccAWSWafRegexMatchSet(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":          testAccAWSWafRegexMatchSet_basic,
+		"changePatterns": testAccAWSWafRegexMatchSet_changePatterns,
+		"noPatterns":     testAccAWSWafRegexMatchSet_noPatterns,
+		"disappears":     testAccAWSWafRegexMatchSet_disappears,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAWSWafRegexMatchSet_basic(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	var patternSet waf.RegexPatternSet
 	var idx int
@@ -108,7 +130,7 @@ func TestAccAWSWafRegexMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegexMatchSet_changePatterns(t *testing.T) {
+func testAccAWSWafRegexMatchSet_changePatterns(t *testing.T) {
 	var before, after waf.RegexMatchSet
 	var patternSet waf.RegexPatternSet
 	var idx1, idx2 int
@@ -153,7 +175,7 @@ func TestAccAWSWafRegexMatchSet_changePatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegexMatchSet_noPatterns(t *testing.T) {
+func testAccAWSWafRegexMatchSet_noPatterns(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -174,7 +196,7 @@ func TestAccAWSWafRegexMatchSet_noPatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegexMatchSet_disappears(t *testing.T) {
+func testAccAWSWafRegexMatchSet_disappears(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))

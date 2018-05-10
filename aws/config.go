@@ -16,12 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -54,6 +56,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -74,6 +77,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -167,10 +171,12 @@ type AWSClient struct {
 	emrconn               *emr.EMR
 	esconn                *elasticsearch.ElasticsearchService
 	acmconn               *acm.ACM
+	acmpcaconn            *acmpca.ACMPCA
 	apigateway            *apigateway.APIGateway
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	secretsmanagerconn    *secretsmanager.SecretsManager
 	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
@@ -189,6 +195,7 @@ type AWSClient struct {
 	kmsconn               *kms.KMS
 	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
+	fmsconn               *fms.FMS
 	inspectorconn         *inspector.Inspector
 	elasticacheconn       *elasticache.ElastiCache
 	elasticbeanstalkconn  *elasticbeanstalk.ElasticBeanstalk
@@ -217,6 +224,7 @@ type AWSClient struct {
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
+	budgetconn            *budgets.Budgets
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -279,16 +287,27 @@ func (c *Config) Client() (interface{}, error) {
 	cp, err := creds.Get()
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			// If a profile wasn't specified then error out
+			// If a profile wasn't specified, the session may still be able to resolve credentials from shared config.
 			if c.Profile == "" {
-				return nil, errors.New(`No valid credential sources found for AWS Provider.
-  Please see https://terraform.io/docs/providers/aws/index.html for more information on
-  providing credentials for the AWS Provider`)
+				sess, err := session.NewSession()
+				if err != nil {
+					return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+				}
+				_, err = sess.Config.Credentials.Get()
+				if err != nil {
+					return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+				}
+				log.Printf("[INFO] Using session-derived AWS Auth")
+				opt.Config.Credentials = sess.Config.Credentials
+			} else {
+				log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
+				opt.Profile = c.Profile
+				opt.SharedConfigState = session.SharedConfigEnable
 			}
-			// add the profile and enable share config file usage
-			log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
-			opt.Profile = c.Profile
-			opt.SharedConfigState = session.SharedConfigEnable
 		} else {
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
 		}
@@ -331,6 +350,26 @@ func (c *Config) Client() (interface{}, error) {
 	if c.MaxRetries > 0 {
 		sess = sess.Copy(&aws.Config{MaxRetries: aws.Int(c.MaxRetries)})
 	}
+
+	// Generally, we want to configure a lower retry theshold for networking issues
+	// as the session retry threshold is very high by default and can mask permanent
+	// networking failures, such as a non-existent service endpoint.
+	// MaxRetries will override this logic if it has a lower retry threshold.
+	// NOTE: This logic can be fooled by other request errors raising the retry count
+	//       before any networking error occurs
+	sess.Handlers.Retry.PushBack(func(r *request.Request) {
+		// We currently depend on the DefaultRetryer exponential backoff here.
+		// ~10 retries gives a fair backoff of a few seconds.
+		if r.RetryCount < 9 {
+			return
+		}
+		// RequestError: send request failed
+		// caused by: Post https://FQDN/: dial tcp: lookup FQDN: no such host
+		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
+			log.Printf("[WARN] Disabling retries after next request due to networking issue")
+			r.Retryable = aws.Bool(false)
+		}
+	})
 
 	// This restriction should only be used for Route53 sessions.
 	// Other resources that have restrictions should allow the API to fail, rather
@@ -406,7 +445,9 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	client.budgetconn = budgets.New(sess)
 	client.acmconn = acm.New(awsAcmSess)
+	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
 	client.autoscalingconn = autoscaling.New(sess)
@@ -439,6 +480,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.emrconn = emr.New(sess)
 	client.esconn = elasticsearch.New(awsEsSess)
 	client.firehoseconn = firehose.New(sess)
+	client.fmsconn = fms.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
@@ -460,6 +502,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.scconn = servicecatalog.New(sess)
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
+	client.secretsmanagerconn = secretsmanager.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)

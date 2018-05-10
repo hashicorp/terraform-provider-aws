@@ -351,6 +351,10 @@ func expandOptionConfiguration(configured []interface{}) ([]*rds.OptionConfigura
 			o.OptionSettings = expandOptionSetting(raw.(*schema.Set).List())
 		}
 
+		if raw, ok := data["version"]; ok && raw.(string) != "" {
+			o.OptionVersion = aws.String(raw.(string))
+		}
+
 		option = append(option, o)
 	}
 
@@ -644,6 +648,10 @@ func flattenOptions(list []*rds.Option) []map[string]interface{} {
 			r["port"] = ""
 			if i.Port != nil {
 				r["port"] = int(*i.Port)
+			}
+			r["version"] = ""
+			if i.OptionVersion != nil {
+				r["version"] = strings.ToLower(*i.OptionVersion)
 			}
 			if i.VpcSecurityGroupMemberships != nil {
 				vpcs := make([]string, 0, len(i.VpcSecurityGroupMemberships))
@@ -2111,15 +2119,6 @@ func buildApiGatewayInvokeURL(restApiId, region, stageName string) string {
 		restApiId, region, stageName)
 }
 
-func buildApiGatewayExecutionARN(restApiId, region, accountId string) (string, error) {
-	if accountId == "" {
-		return "", fmt.Errorf("Unable to build execution ARN for %s as account ID is missing",
-			restApiId)
-	}
-	return fmt.Sprintf("arn:aws:execute-api:%s:%s:%s",
-		region, accountId, restApiId), nil
-}
-
 func expandCognitoSupportedLoginProviders(config map[string]interface{}) map[string]*string {
 	m := map[string]*string{}
 	for k, v := range config {
@@ -2354,6 +2353,10 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 		configs.PreTokenGeneration = aws.String(v.(string))
 	}
 
+	if v, ok := config["user_migration"]; ok && v.(string) != "" {
+		configs.UserMigration = aws.String(v.(string))
+	}
+
 	if v, ok := config["verify_auth_challenge_response"]; ok && v.(string) != "" {
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
@@ -2398,6 +2401,10 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 
 	if s.PreTokenGeneration != nil {
 		m["pre_token_generation"] = *s.PreTokenGeneration
+	}
+
+	if s.UserMigration != nil {
+		m["user_migration"] = *s.UserMigration
 	}
 
 	if s.VerifyAuthChallengeResponse != nil {
@@ -3022,7 +3029,7 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 			"attribute_data_type":      aws.StringValue(input.AttributeDataType),
 			"developer_only_attribute": aws.BoolValue(input.DeveloperOnlyAttribute),
 			"mutable":                  aws.BoolValue(input.Mutable),
-			"name":                     strings.TrimPrefix(aws.StringValue(input.Name), "dev:custom:"),
+			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
 			"required":                 aws.BoolValue(input.Required),
 		}
 
@@ -3155,12 +3162,6 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 	return []map[string]interface{}{}
 }
 
-func buildLambdaInvokeArn(lambdaArn, region string) string {
-	apiVersion := "2015-03-31"
-	return fmt.Sprintf("arn:aws:apigateway:%s:lambda:path/%s/functions/%s/invocations",
-		region, apiVersion, lambdaArn)
-}
-
 func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	for i, t := range l {
 		if reflect.DeepEqual(m, t.(map[string]interface{})) {
@@ -3171,12 +3172,10 @@ func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	return -1, false
 }
 
-func expandAwsSsmTargets(d *schema.ResourceData) []*ssm.Target {
+func expandAwsSsmTargets(in []interface{}) []*ssm.Target {
 	targets := make([]*ssm.Target, 0)
 
-	targetConfig := d.Get("targets").([]interface{})
-
-	for _, tConfig := range targetConfig {
+	for _, tConfig := range in {
 		config := tConfig.(map[string]interface{})
 
 		target := &ssm.Target{
@@ -3442,13 +3441,15 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 
 	out := make([]interface{}, 0)
 	for _, u := range users {
+		m := map[string]interface{}{
+			"username": *u.Username,
+		}
 		password := ""
 		if p, ok := existingPairs[*u.Username]; ok {
 			password = p
 		}
-		m := map[string]interface{}{
-			"username": *u.Username,
-			"password": password,
+		if password != "" {
+			m["password"] = password
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = *u.ConsoleAccess
@@ -3538,6 +3539,36 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	}
 
 	return l
+}
+
+func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLifecycleConfig) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, 1)
+
+	anything_enabled := false
+	appversion_lifecycle := make(map[string]interface{})
+
+	if rlc.ServiceRole != nil {
+		appversion_lifecycle["service_role"] = *rlc.ServiceRole
+	}
+
+	if vlc := rlc.VersionLifecycleConfig; vlc != nil {
+		if mar := vlc.MaxAgeRule; mar != nil && *mar.Enabled {
+			anything_enabled = true
+			appversion_lifecycle["max_age_in_days"] = *mar.MaxAgeInDays
+			appversion_lifecycle["delete_source_from_s3"] = *mar.DeleteSourceFromS3
+		}
+		if mcr := vlc.MaxCountRule; mcr != nil && *mcr.Enabled {
+			anything_enabled = true
+			appversion_lifecycle["max_count"] = *mcr.MaxCount
+			appversion_lifecycle["delete_source_from_s3"] = *mcr.DeleteSourceFromS3
+		}
+	}
+
+	if anything_enabled {
+		result = append(result, appversion_lifecycle)
+	}
+
+	return result
 }
 
 func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
@@ -3663,6 +3694,21 @@ func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
 	}
 
 	return []interface{}{}
+}
+
+func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
+	m := map[string]interface{}{}
+	if pitrDesc.ContinuousBackupsDescription != nil {
+		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
+		if pitr != nil {
+			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
+		}
+	}
+	if len(m) > 0 {
+		return []interface{}{m}
+	}
+
+	return []interface{}{m}
 }
 
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
@@ -3954,4 +4000,91 @@ func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]inte
 	m["searchable_attributes"] = flattenStringList(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
+}
+
+func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.LaunchTemplateSpecification, error) {
+	if len(specs) < 1 {
+		return nil, nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	if idValue == "" && nameValue == "" {
+		return nil, fmt.Errorf("One of `id` or `name` must be set for `launch_template`")
+	}
+
+	result := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result, nil
+}
+
+func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// id and name are always returned by DescribeAutoscalingGroups
+	attrs["id"] = *lt.LaunchTemplateId
+	attrs["name"] = *lt.LaunchTemplateName
+
+	// version is returned only if it was previosly set
+	if lt.Version != nil {
+		attrs["version"] = *lt.Version
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
+}
+
+func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if options.AllowDnsResolutionFromRemoteVpc != nil {
+		m["allow_remote_vpc_dns_resolution"] = *options.AllowDnsResolutionFromRemoteVpc
+	}
+
+	if options.AllowEgressFromLocalClassicLinkToRemoteVpc != nil {
+		m["allow_classic_link_to_remote_vpc"] = *options.AllowEgressFromLocalClassicLinkToRemoteVpc
+	}
+
+	if options.AllowEgressFromLocalVpcToRemoteClassicLink != nil {
+		m["allow_vpc_to_remote_classic_link"] = *options.AllowEgressFromLocalVpcToRemoteClassicLink
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
+	options := &ec2.PeeringConnectionOptionsRequest{}
+
+	if v, ok := m["allow_remote_vpc_dns_resolution"]; ok {
+		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["allow_classic_link_to_remote_vpc"]; ok {
+		options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["allow_vpc_to_remote_classic_link"]; ok {
+		options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v.(bool))
+	}
+
+	return options
 }

@@ -83,6 +83,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 
+			"proxy_protocol_v2": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -333,6 +339,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		})
 	}
 
+	if d.HasChange("proxy_protocol_v2") {
+		attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			Key:   aws.String("proxy_protocol_v2.enabled"),
+			Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+		})
+	}
+
 	// In CustomizeDiff we allow LB stickiness to be declared for TCP target
 	// groups, so long as it's not enabled. This allows for better support for
 	// modules, but also means we need to completely skip sending the data to the
@@ -478,6 +491,17 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	})
 	if err != nil {
 		return errwrap.Wrapf("Error retrieving Target Group Attributes: {{err}}", err)
+	}
+
+	for _, attr := range attrResp.Attributes {
+		switch *attr.Key {
+		case "proxy_protocol_v2.enabled":
+			enabled, err := strconv.ParseBool(*attr.Value)
+			if err != nil {
+				return fmt.Errorf("Error converting proxy_protocol_v2.enabled to bool: %s", *attr.Value)
+			}
+			d.Set("proxy_protocol_v2", enabled)
+		}
 	}
 
 	// We only read in the stickiness attributes if the target group is not

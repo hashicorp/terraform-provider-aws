@@ -25,6 +25,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -293,7 +294,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"terminate_instances_with_expiration": {
@@ -302,14 +303,16 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				ForceNew: true,
 			},
 			"valid_from": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			},
 			"valid_until": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRFC3339TimeString,
 			},
 			"spot_request_state": {
 				Type:     schema.TypeString,
@@ -581,7 +584,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		LaunchSpecifications:             launch_specs,
-		SpotPrice:                        aws.String(d.Get("spot_price").(string)),
 		TargetCapacity:                   aws.Int64(int64(d.Get("target_capacity").(int))),
 		ClientToken:                      aws.String(resource.UniqueId()),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
@@ -599,23 +601,27 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
 	}
 
+	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
+		spotFleetConfig.SpotPrice = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("valid_from"); ok {
-		valid_from, err := time.Parse(awsAutoscalingScheduleTimeLayout, v.(string))
+		valid_from, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidFrom = &valid_from
+		spotFleetConfig.ValidFrom = aws.Time(valid_from)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		valid_until, err := time.Parse(awsAutoscalingScheduleTimeLayout, v.(string))
+		valid_until, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidUntil = &valid_until
+		spotFleetConfig.ValidUntil = aws.Time(valid_until)
 	} else {
 		valid_until := time.Now().Add(24 * time.Hour)
-		spotFleetConfig.ValidUntil = &valid_until
+		spotFleetConfig.ValidUntil = aws.Time(valid_until)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -879,12 +885,12 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	if config.ValidFrom != nil {
 		d.Set("valid_from",
-			aws.TimeValue(config.ValidFrom).Format(awsAutoscalingScheduleTimeLayout))
+			aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
 	}
 
 	if config.ValidUntil != nil {
 		d.Set("valid_until",
-			aws.TimeValue(config.ValidUntil).Format(awsAutoscalingScheduleTimeLayout))
+			aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
@@ -1118,25 +1124,21 @@ func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{})
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
-	resp, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
-		SpotFleetRequestIds: []*string{aws.String(d.Id())},
+	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
+	if err != nil {
+		return fmt.Errorf("error deleting spot request (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, timeout time.Duration, conn *ec2.EC2) error {
+	_, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
+		SpotFleetRequestIds: []*string{aws.String(spotFleetRequestID)},
 		TerminateInstances:  aws.Bool(terminateInstances),
 	})
-
 	if err != nil {
-		return fmt.Errorf("Error cancelling spot request (%s): %s", d.Id(), err)
-	}
-
-	// check response successfulFleetRequestSet to make sure our request was canceled
-	var found bool
-	for _, s := range resp.SuccessfulFleetRequests {
-		if *s.SpotFleetRequestId == d.Id() {
-			found = true
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("[ERR] Spot Fleet request (%s) was not found to be successfully canceled, dangling resources may exit", d.Id())
+		return err
 	}
 
 	// Only wait for instance termination if requested
@@ -1144,20 +1146,20 @@ func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(timeout, func() *resource.RetryError {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
-			SpotFleetRequestId: aws.String(d.Id()),
+			SpotFleetRequestId: aws.String(spotFleetRequestID),
 		})
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		if len(resp.ActiveInstances) == 0 {
-			log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", d.Id())
+			log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
 			return nil
 		}
 
-		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", d.Id(), len(resp.ActiveInstances))
+		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, len(resp.ActiveInstances))
 
 		return resource.RetryableError(
 			fmt.Errorf("fleet still has (%d) running instances", len(resp.ActiveInstances)))
