@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"regexp"
@@ -17,7 +16,6 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
 	accountID := "111111111111"
 	email := "required@example.com"
-	invite := true
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
@@ -32,7 +30,6 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
-					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(true)),
 				),
 			},
 			{
@@ -47,15 +44,16 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyMemberConfig_basic2(accountID, email, invitationMessage, invite),
+				Config: testAccGuardDutyMemberConfig_basic2(accountID, email, invitationMessage, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
-					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(invite)),
+					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(true)),
 					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
 				),
+				ExpectError: regexp.MustCompile("Expected member to be invited but was in state: EmailVerificationFailed"),
 			},
 		},
 	})
@@ -77,23 +75,6 @@ func testAccAwsGuardDutyMember_import(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccAwsGuardDutyMemberInvitation_timeout(t *testing.T) {
-
-	rEmail := acctest.RandString(10) + "@" + acctest.RandString(5) + ".com"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGuardDutyMemberConfig_basic2("111111111111", rEmail, "test", true),
-				ExpectError: regexp.MustCompile("Expected member to be invited but was in state: EmailVerificationFailed"),
 			},
 		},
 	})
@@ -187,7 +168,7 @@ resource "aws_guardduty_member" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
   email       = "%[3]s"
   invite      = "%[4]s"
-  invite      = "%[5]s"
+  invitation_message      = "%[5]s"
 }
 `, testAccGuardDutyDetectorConfig_basic1, accountID, email, strconv.FormatBool(invite), invitationMessage)
 }
