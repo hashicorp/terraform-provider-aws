@@ -275,72 +275,123 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 				},
 			},
 		},
+		{
+			IpProtocol: aws.String("-1"),
+			FromPort:   aws.Int64(int64(8080)),
+			ToPort:     aws.Int64(int64(8080)),
+			IpRanges: []*ec2.IpRange{
+				// Multiple different descriptions
+				{
+					CidrIp:      aws.String("10.0.1.0/24"),
+					Description: aws.String("some-desc"),
+				},
+				{
+					CidrIp:      aws.String("10.0.2.0/24"),
+					Description: aws.String("some-other-desc"),
+				},
+			},
+		},
 	}
 
 	local := []map[string]interface{}{
 		{
+			"description": "desc",
+			"protocol":    "tcp",
+			"from_port":   int64(1),
+			"to_port":     int64(-1),
+			"self":        true,
+		},
+		{
+			"description": "",
 			"protocol":    "tcp",
 			"from_port":   int64(1),
 			"to_port":     int64(-1),
 			"cidr_blocks": []string{"0.0.0.0/0"},
-			"self":        true,
-			"description": "desc",
 		},
 		{
-			"protocol":  "tcp",
-			"from_port": int64(80),
-			"to_port":   int64(80),
+			"description": "",
+			"protocol":    "tcp",
+			"from_port":   int64(80),
+			"to_port":     int64(80),
 			"security_groups": schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
 		{
-			"protocol":  "tcp",
-			"from_port": int64(443),
-			"to_port":   int64(443),
+			"description": "",
+			"protocol":    "tcp",
+			"from_port":   int64(443),
+			"to_port":     int64(443),
 			"security_groups": schema.NewSet(schema.HashString, []interface{}{
 				"ec2_classic",
 				"amazon-elb/amazon-elb-sg",
 			}),
 		},
 		{
+			"description":     "desc",
 			"protocol":        "-1",
 			"from_port":       int64(0),
 			"to_port":         int64(0),
 			"prefix_list_ids": []string{"pl-12345678"},
+		},
+		{
+			"description": "",
+			"protocol":    "-1",
+			"from_port":   int64(0),
+			"to_port":     int64(0),
 			"security_groups": schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
-			"description": "desc",
+		},
+		{
+			"description": "some-desc",
+			"protocol":    "-1",
+			"from_port":   int64(8080),
+			"to_port":     int64(8080),
+			"cidr_blocks": []string{"10.0.1.0/24"},
+		},
+		{
+			"description": "some-other-desc",
+			"protocol":    "-1",
+			"from_port":   int64(8080),
+			"to_port":     int64(8080),
+			"cidr_blocks": []string{"10.0.2.0/24"},
 		},
 	}
 
-	out := resourceAwsSecurityGroupIPPermGather("sg-11111", raw, aws.String("12345"))
-	for _, i := range out {
-		// loop and match rules, because the ordering is not guarneteed
+	matched := 0
+	rules := resourceAwsSecurityGroupIPPermGather("sg-11111", raw, aws.String("12345"))
+	for _, r := range rules {
+		// Loop and match rules, because the ordering is not guarneteed
 		for _, l := range local {
-			if i["from_port"] == l["from_port"] {
+			if r["description"] == l["description"] && r["from_port"] == l["from_port"] {
+				// Keep track of all the rules we tested
+				matched++
 
-				if i["to_port"] != l["to_port"] {
-					t.Fatalf("to_port does not match")
+				if r["to_port"] != l["to_port"] {
+					t.Fatal("to_port does not match")
 				}
 
-				if _, ok := i["cidr_blocks"]; ok {
-					if !reflect.DeepEqual(i["cidr_blocks"], l["cidr_blocks"]) {
-						t.Fatalf("error matching cidr_blocks")
+				if _, ok := r["cidr_blocks"]; ok {
+					if !reflect.DeepEqual(r["cidr_blocks"], l["cidr_blocks"]) {
+						t.Fatal("error matching cidr_blocks")
 					}
 				}
 
-				if _, ok := i["security_groups"]; ok {
-					outSet := i["security_groups"].(*schema.Set)
+				if _, ok := r["security_groups"]; ok {
+					outSet := r["security_groups"].(*schema.Set)
 					localSet := l["security_groups"].(*schema.Set)
 
 					if !outSet.Equal(localSet) {
-						t.Fatalf("Security Group sets are not equal")
+						t.Fatal("Security Group sets are not equal")
 					}
 				}
 			}
 		}
+	}
+
+	if len(local) != matched {
+		t.Fatal("not all rules are matched")
 	}
 }
 
