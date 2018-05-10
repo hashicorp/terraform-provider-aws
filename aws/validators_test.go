@@ -522,6 +522,42 @@ func TestValidateLogGroupNamePrefix(t *testing.T) {
 	}
 }
 
+func TestValidateS3BucketName(t *testing.T) {
+	validDnsNames := []string{
+		"foobar",
+		"foo.bar",
+		"foo.bar.baz",
+		"1234",
+		"foo-bar",
+		strings.Repeat("x", 63),
+	}
+
+	for _, v := range validDnsNames {
+		_, errors := validateS3BucketName(v, "bucket")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid S3 bucket name: %q", v, errors)
+		}
+	}
+
+	invalidDnsNames := []string{
+		"foo..bar",
+		"Foo.Bar",
+		"192.168.0.1",
+		"127.0.0.1",
+		".foo",
+		"bar.",
+		"foo_bar",
+		strings.Repeat("x", 64),
+	}
+
+	for _, v := range invalidDnsNames {
+		_, errors := validateS3BucketName(v, "bucket")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid S3 bucket name", v)
+		}
+	}
+}
+
 func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 	validDates := []string{
 		"2016-01-01",

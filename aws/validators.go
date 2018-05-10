@@ -530,6 +530,31 @@ func validateLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func validateS3BucketName(v interface{}, k string) (ws []string, errors []error) {
+	// https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html#bucketnamingrules
+
+	value := v.(string)
+	if (len(value) < 3) || (len(value) > 63) {
+		errors = append(errors, fmt.Errorf("%q must contain from 3 to 63 characters", k))
+	}
+	if !regexp.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value))
+	}
+	if regexp.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q must not be formatted as an IP address", value))
+	}
+	if strings.HasPrefix(value, `.`) {
+		errors = append(errors, fmt.Errorf("%q cannot start with a period", value))
+	}
+	if strings.HasSuffix(value, `.`) {
+		errors = append(errors, fmt.Errorf("%q cannot end with a period", value))
+	}
+	if strings.Contains(value, `..`) {
+		errors = append(errors, fmt.Errorf("%q can be only one period between labels", value))
+	}
+	return
+}
+
 func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", value))
