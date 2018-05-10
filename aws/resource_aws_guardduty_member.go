@@ -55,7 +55,7 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Second),
+			Create: schema.DefaultTimeout(10 * time.Second),
 		},
 	}
 }
@@ -88,7 +88,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	imi := &guardduty.InviteMembersInput{
 		DetectorId: &detectorID,
 		AccountIds: []*string{&accountID},
-		Message:    aws.String(d.Get("message").(string)),
+		Message:    aws.String(d.Get("invitation_message").(string)),
 	}
 
 	_, err = conn.InviteMembers(imi)
@@ -98,14 +98,19 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 
 	// wait until e-mail verification finishes
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		// https://docs.aws.amazon.com/acm/latest/ug/get-members.html
+		err := resourceAwsGuardDutyMemberRead(d, meta)
+
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("Error inviting member: %s", err))
+		}
+
 		status := d.Get("relationship_status").(string)
-		if status != "INVITED" {
+		if status != "Invited" {
 			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
 		}
 
 		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
-		return resource.NonRetryableError(resourceAwsGuardDutyMemberRead(d, meta))
+		return resource.NonRetryableError(err)
 	})
 }
 
