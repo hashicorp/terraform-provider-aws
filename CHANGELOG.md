@@ -1,34 +1,34 @@
-## 1.18.0 (Unreleased)
+## 1.18.0 (May 10, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_acmpca_certificate_authority` [GH-4458]
-* **New Resource:** `aws_acmpca_certificate_authority` [GH-4458]
-* **New Resource:** `aws_glue_catalog_table` [GH-4368]
+* **New Data Source:** `aws_acmpca_certificate_authority` ([#4458](https://github.com/terraform-providers/terraform-provider-aws/issues/4458))
+* **New Resource:** `aws_acmpca_certificate_authority` ([#4458](https://github.com/terraform-providers/terraform-provider-aws/issues/4458))
+* **New Resource:** `aws_glue_catalog_table` ([#4368](https://github.com/terraform-providers/terraform-provider-aws/issues/4368))
 
 ENHANCEMENTS:
 
-* provider: Lower retry threshold for DNS resolution failures [GH-4459]
-* resource/aws_dms_endpoint: Support `s3` `engine_name` and add `s3_settings` argument [GH-1685] and [GH-4447]
-* resource/aws_glue_job: Add `timeout` argument [GH-4460]
-* resource/aws_lb_target_group: Add `proxy_protocol_v2` argument [GH-4365]
-* resource/aws_spot_fleet_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
-* resource/aws_spot_fleet_request: Add plan time validation for `valid_from` and `valid_until` arguments [GH-4463]
-* resource/aws_spot_instance_request: Mark `spot_price` optional (defaults to on-demand price) [GH-4424]
+* provider: Lower retry threshold for DNS resolution failures ([#4459](https://github.com/terraform-providers/terraform-provider-aws/issues/4459))
+* resource/aws_dms_endpoint: Support `s3` `engine_name` and add `s3_settings` argument ([#1685](https://github.com/terraform-providers/terraform-provider-aws/issues/1685)] and [[#4447](https://github.com/terraform-providers/terraform-provider-aws/issues/4447))
+* resource/aws_glue_job: Add `timeout` argument ([#4460](https://github.com/terraform-providers/terraform-provider-aws/issues/4460))
+* resource/aws_lb_target_group: Add `proxy_protocol_v2` argument ([#4365](https://github.com/terraform-providers/terraform-provider-aws/issues/4365))
+* resource/aws_spot_fleet_request: Mark `spot_price` optional (defaults to on-demand price) ([#4424](https://github.com/terraform-providers/terraform-provider-aws/issues/4424))
+* resource/aws_spot_fleet_request: Add plan time validation for `valid_from` and `valid_until` arguments ([#4463](https://github.com/terraform-providers/terraform-provider-aws/issues/4463))
+* resource/aws_spot_instance_request: Mark `spot_price` optional (defaults to on-demand price) ([#4424](https://github.com/terraform-providers/terraform-provider-aws/issues/4424))
 
 BUG FIXES:
 
-* data-source/aws_autoscaling_groups: Correctly paginate through over 50 results [GH-4433]
-* resource/aws_elastic_beanstalk_environment: Correctly handle `cname_prefix` attribute in China partition [GH-4485]
-* resource/aws_glue_job: Remove `allocated_capacity` and `max_concurrent_runs` upper plan time validation limits [GH-4461]
-* resource/aws_instance: Fix `root_device_mapping` matching of expected root device name with multiple block devices. [GH-4489]
-* resource/aws_launch_template: Prevent `parameter iops is not supported for gp2 volumes` error [GH-4344]
-* resource/aws_launch_template: Prevent `'iamInstanceProfile.name' may not be used in combination with 'iamInstanceProfile.arn'` error [GH-4344]
-* resource/aws_launch_template: Prevent `parameter groupName cannot be used with the parameter subnet` error [GH-4344]
-* resource/aws_launch_template: Separate usage of `ipv4_address_count`/`ipv6_address_count` from `ipv4_addresses`/`ipv6_addresses` [GH-4344]
-* resource/aws_redshift_cluster: Properly send all required parameters when resizing [GH-3127]
-* resource/aws_s3_bucket: Prevent crash from empty string CORS arguments [GH-4465]
-* resource/aws_ssm_document: Add missing account ID to `arn` attribute [GH-4436]
+* data-source/aws_autoscaling_groups: Correctly paginate through over 50 results ([#4433](https://github.com/terraform-providers/terraform-provider-aws/issues/4433))
+* resource/aws_elastic_beanstalk_environment: Correctly handle `cname_prefix` attribute in China partition ([#4485](https://github.com/terraform-providers/terraform-provider-aws/issues/4485))
+* resource/aws_glue_job: Remove `allocated_capacity` and `max_concurrent_runs` upper plan time validation limits ([#4461](https://github.com/terraform-providers/terraform-provider-aws/issues/4461))
+* resource/aws_instance: Fix `root_device_mapping` matching of expected root device name with multiple block devices. ([#4489](https://github.com/terraform-providers/terraform-provider-aws/issues/4489))
+* resource/aws_launch_template: Prevent `parameter iops is not supported for gp2 volumes` error ([#4344](https://github.com/terraform-providers/terraform-provider-aws/issues/4344))
+* resource/aws_launch_template: Prevent `'iamInstanceProfile.name' may not be used in combination with 'iamInstanceProfile.arn'` error ([#4344](https://github.com/terraform-providers/terraform-provider-aws/issues/4344))
+* resource/aws_launch_template: Prevent `parameter groupName cannot be used with the parameter subnet` error ([#4344](https://github.com/terraform-providers/terraform-provider-aws/issues/4344))
+* resource/aws_launch_template: Separate usage of `ipv4_address_count`/`ipv6_address_count` from `ipv4_addresses`/`ipv6_addresses` ([#4344](https://github.com/terraform-providers/terraform-provider-aws/issues/4344))
+* resource/aws_redshift_cluster: Properly send all required parameters when resizing ([#3127](https://github.com/terraform-providers/terraform-provider-aws/issues/3127))
+* resource/aws_s3_bucket: Prevent crash from empty string CORS arguments ([#4465](https://github.com/terraform-providers/terraform-provider-aws/issues/4465))
+* resource/aws_ssm_document: Add missing account ID to `arn` attribute ([#4436](https://github.com/terraform-providers/terraform-provider-aws/issues/4436))
 
 ## 1.17.0 (May 02, 2018)
 
