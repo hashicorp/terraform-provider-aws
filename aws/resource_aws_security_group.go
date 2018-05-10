@@ -707,7 +707,8 @@ func resourceAwsSecurityGroupUpdateRules(
 		// to deal with complicated unrolling to get individual CIDR blocks
 		// to avoid authorizing already authorized sources. Removing before
 		// adding is easier here, and Terraform should be fast enough to
-		// not have service issues.
+		// not have service issues. If you add before removing you also run
+		// the risk of hitting a rule limit failure unnecessarily.
 
 		if len(remove) > 0 || len(add) > 0 {
 			conn := meta.(*AWSClient).ec2conn
