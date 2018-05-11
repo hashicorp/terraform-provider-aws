@@ -18,7 +18,7 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 	if connectionId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	vifName := fmt.Sprintf("tf-dx-vif-%s", acctest.RandString(5))
+	vifName := fmt.Sprintf("terraform-testacc-dx-vif-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
