@@ -33,6 +33,7 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateDbEventSubscriptionName,
@@ -151,7 +152,7 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Get("name").(string), conn)
+	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
 		return fmt.Errorf("Error retrieving RDS Event Subscription %s: %s", d.Id(), err)
 	}
