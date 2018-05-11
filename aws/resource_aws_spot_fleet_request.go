@@ -372,7 +372,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 
 	if v, ok := d["iam_instance_profile"]; ok {
 		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
-			Name: aws.String(v.(string)),
+			Arn: aws.String(v.(string)),
 		}
 	}
 
@@ -935,8 +935,8 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 		m["monitoring"] = aws.BoolValue(l.Monitoring.Enabled)
 	}
 
-	if l.IamInstanceProfile != nil && l.IamInstanceProfile.Name != nil {
-		m["iam_instance_profile"] = aws.StringValue(l.IamInstanceProfile.Name)
+	if l.IamInstanceProfile != nil && l.IamInstanceProfile.Arn != nil {
+		m["iam_instance_profile"] = aws.StringValue(l.IamInstanceProfile.Arn)
 	}
 
 	if l.UserData != nil {

@@ -27,6 +27,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     ami               = "ami-1234"
     spot_price        = "2.793"
     placement_tenancy = "dedicated"
+    iam_instance_profile = "arn:aws:iam::12345678:instance-profile/webserver-role"
   }
 
   launch_specification {
@@ -34,6 +35,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     ami               = "ami-5678"
     key_name          = "my-key"
     spot_price        = "1.117"
+    iam_instance_profile = "arn:aws:iam::12345678:instance-profile/webserver-role"
     availability_zone = "us-west-1a"
     subnet_id         = "subnet-1234"
     weighted_capacity = 35
