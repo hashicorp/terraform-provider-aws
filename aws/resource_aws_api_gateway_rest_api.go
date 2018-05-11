@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/errwrap"
@@ -63,6 +64,10 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			},
 
 			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"execution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,6 +177,16 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("policy", policy)
 
 	d.Set("binary_media_types", api.BinaryMediaTypes)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  d.Id(),
+	}.String()
+	d.Set("execution_arn", arn)
+
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
 	} else {
