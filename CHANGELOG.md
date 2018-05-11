@@ -4,6 +4,10 @@ NOTES:
 
 * data-source/aws_iam_policy_document: Please note there is a behavior change in the rendering of `principal`/`not_principal` in the case of `type = "AWS"` and `identifiers = ["*"]`. This will now render as `Principal": {"AWS": "*"}` instead of `"Principal": "*"`. This change is required for IAM role trust policy support as well as differentiating between anonymous access versus AWS access in policies. To keep the old behavior of anonymous access, use `type = "*"` and `identifiers = ["*"]`, which will continue to render as `"Principal": "*"`. For additional information, see the [`aws_iam_policy_document` documentation](https://www.terraform.io/docs/providers/aws/d/iam_policy_document.html).
 
+FEATURES:
+
+* **New Resource:** `aws_sns_sms_preferences` [GH-3858]
+
 ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Allow rendering of `"Principal": {"AWS": "*"}` (required for IAM role trust policies) [GH-4248]
