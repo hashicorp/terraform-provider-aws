@@ -38,8 +38,6 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 func TestAccAWSCognitoResourceServer_full(t *testing.T) {
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	scopeName := fmt.Sprintf("tf-acc-test-resource-server-scope-name-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	scopeDescription := fmt.Sprintf("tf-acc-test-resource-server-scope-description-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
@@ -48,13 +46,13 @@ func TestAccAWSCognitoResourceServer_full(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoResourceServerConfig_full(identifier, name, scopeName, scopeDescription, poolName),
+				Config: testAccAWSCognitoResourceServerConfig_full(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoResourceServerExists("aws_cognito_resource_server.main"),
 					resource.TestCheckResourceAttr("aws_cognito_resource_server.main", "identifier", identifier),
 					resource.TestCheckResourceAttr("aws_cognito_resource_server.main", "name", name),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "name", poolName),
 					resource.TestCheckResourceAttrSet("aws_cognito_resource_server.main", "scope_identifiers"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "name", poolName),
 				),
 			},
 		},
@@ -125,15 +123,20 @@ resource "aws_cognito_user_pool" "main" {
 `, identifier, name, poolName)
 }
 
-func testAccAWSCognitoResourceServerConfig_full(identifier string, name string, scopeName string, scopeDescription string, poolName string) string {
+func testAccAWSCognitoResourceServerConfig_full(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
   name = "%s"
 
   scope = {
-	scope_name = "%s"
-    scope_description = "%s"
+	scope_name = "scope_1_name"
+    scope_description = "scope_1_description"
+  }
+
+  scope = {
+	scope_name = "scope_2_name"
+    scope_description = "scope_2_description"
   }
 
   user_pool_id = "${aws_cognito_user_pool.main.id}"
@@ -142,5 +145,5 @@ resource "aws_cognito_resource_server" "main" {
 resource "aws_cognito_user_pool" "main" {
   name = "%s"
 }
-`, identifier, name, scopeName, scopeDescription, poolName)
+`, identifier, name, poolName)
 }
