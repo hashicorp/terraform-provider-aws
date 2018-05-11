@@ -1143,7 +1143,6 @@ func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 
@@ -1336,7 +1335,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	// BlockDeviceMapping entry serves as the root device.
 	rootDeviceNameInMapping := false
 	for _, bdm := range image.BlockDeviceMappings {
-		if bdm.DeviceName == image.RootDeviceName {
+		if aws.StringValue(bdm.DeviceName) == aws.StringValue(image.RootDeviceName) {
 			rootDeviceNameInMapping = true
 		}
 	}

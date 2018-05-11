@@ -81,6 +81,10 @@ func testSweepMqBrokers(region string) error {
 		MaxResults: aws.Int64(100),
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error listing MQ brokers: %s", err)
 	}
 

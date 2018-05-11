@@ -346,8 +346,6 @@ func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interfa
 	}
 	log.Println("[INFO] CloudWatch Event Target deleted")
 
-	d.SetId("")
-
 	return nil
 }
 

@@ -821,7 +821,6 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	}
 	if g == nil {
 		log.Printf("[WARN] Autoscaling Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
 		return nil
 	}
 	if len(g.Instances) > 0 || *g.DesiredCapacity > 0 {

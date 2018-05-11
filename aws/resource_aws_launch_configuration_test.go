@@ -34,6 +34,10 @@ func testSweepLaunchConfigurations(region string) error {
 
 	resp, err := autoscalingconn.DescribeLaunchConfigurations(&autoscaling.DescribeLaunchConfigurationsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping AutoScaling Launch Configuration sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving launch configuration: %s", err)
 	}
 

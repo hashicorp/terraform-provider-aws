@@ -54,6 +54,10 @@ func testSweepDynamoDbTables(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping DynamoDB Table sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving DynamoDB Tables: %s", err)
 	}
 
