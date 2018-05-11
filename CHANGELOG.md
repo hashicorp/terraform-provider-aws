@@ -12,6 +12,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_elb: Ensure `bucket_prefix` for access logging can be updated to `""` [GH-4383]
+* resource/aws_lb: Ensure `bucket_prefix` for access logging can be updated to `""` [GH-4383]
 * resource/aws_security_group: Fix rule description handling when gathering multiple rules with same permissions [GH-4416]
 
 ## 1.18.0 (May 10, 2018)
