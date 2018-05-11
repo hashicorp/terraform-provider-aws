@@ -79,7 +79,7 @@ func isNoSuchDxVirtualInterfaceErr(err error) bool {
 func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
 	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err.Error())
+		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err)
 	}
 	if state == directconnect.VirtualInterfaceStateDeleted {
 		return nil, nil
@@ -116,7 +116,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		if isNoSuchDxVirtualInterfaceErr(err) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err.Error())
+		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err)
 	}
 
 	deleteStateConf := &resource.StateChangeConf{
@@ -175,7 +175,7 @@ func dxVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directco
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect virtual interface %s to become available: %s", d.Id(), err.Error())
+		return fmt.Errorf("Error waiting for Direct Connect virtual interface %s to become available: %s", d.Id(), err)
 	}
 
 	return nil
@@ -225,23 +225,4 @@ func dxVirtualInterfaceArnAttribute(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 
 	return nil
-}
-
-func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
-	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg), len(cfg))
-	for i, p := range cfg {
-		prefix := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(p.(string)),
-		}
-		prefixes[i] = prefix
-	}
-	return prefixes
-}
-
-func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
-	out := make([]interface{}, 0)
-	for _, prefix := range prefixes {
-		out = append(out, aws.StringValue(prefix.Cidr))
-	}
-	return schema.NewSet(schema.HashString, out)
 }

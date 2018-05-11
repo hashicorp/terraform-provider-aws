@@ -19,6 +19,7 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: resourceAwsDxPublicVirtualInterfaceCustomizeDiff,
 
 		Schema: mergeSchemas(
 			dxVirtualInterfaceSchemaWithTags,
@@ -43,35 +44,23 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	addressFamily := d.Get("address_family").(string)
-	caRaw, caOk := d.GetOk("customer_address")
-	aaRaw, aaOk := d.GetOk("amazon_address")
-	if addressFamily == directconnect.AddressFamilyIpv4 {
-		if !caOk {
-			return fmt.Errorf("'customer_address' must be set when 'address_family' is '%s'", addressFamily)
-		}
-		if !aaOk {
-			return fmt.Errorf("'amazon_address' must be set when 'address_family' is '%s'", addressFamily)
-		}
-	}
-
 	req := &directconnect.CreatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
 		NewPublicVirtualInterface: &directconnect.NewPublicVirtualInterface{
 			VirtualInterfaceName: aws.String(d.Get("name").(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
-			AddressFamily:        aws.String(addressFamily),
+			AddressFamily:        aws.String(d.Get("address_family").(string)),
 		},
 	}
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
 		req.NewPublicVirtualInterface.AuthKey = aws.String(v.(string))
 	}
-	if caOk {
-		req.NewPublicVirtualInterface.CustomerAddress = aws.String(caRaw.(string))
+	if v, ok := d.GetOk("customer_address"); ok {
+		req.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
-	if aaOk {
-		req.NewPublicVirtualInterface.AmazonAddress = aws.String(aaRaw.(string))
+	if v, ok := d.GetOk("amazon_address"); ok {
+		req.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
 		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set).List())
@@ -80,7 +69,7 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %#v", req)
 	resp, err := conn.CreatePublicVirtualInterface(req)
 	if err != nil {
-		return fmt.Errorf("Error creating Direct Connect public virtual interface: %s", err.Error())
+		return fmt.Errorf("Error creating Direct Connect public virtual interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
@@ -125,6 +114,22 @@ func resourceAwsDxPublicVirtualInterfaceUpdate(d *schema.ResourceData, meta inte
 
 func resourceAwsDxPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
+}
+
+func resourceAwsDxPublicVirtualInterfaceCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.Id() == "" {
+		// New resource.
+		if addressFamily := diff.Get("address_family").(string); addressFamily == directconnect.AddressFamilyIpv4 {
+			if _, ok := diff.GetOk("customer_address"); !ok {
+				return fmt.Errorf("'customer_address' must be set when 'address_family' is '%s'", addressFamily)
+			}
+			if _, ok := diff.GetOk("amazon_address"); !ok {
+				return fmt.Errorf("'amazon_address' must be set when 'address_family' is '%s'", addressFamily)
+			}
+		}
+	}
+
+	return nil
 }
 
 func dxPublicVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
