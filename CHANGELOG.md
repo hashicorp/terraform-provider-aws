@@ -1,5 +1,9 @@
 ## 1.19.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_dms_endpoint: Add `azuredb` for `engine_name` validation [GH-4506]
+
 BUG FIXES:
 
 * resource/aws_security_group: Fix rule description handling when gathering multiple rules with same permissions [GH-4416]
