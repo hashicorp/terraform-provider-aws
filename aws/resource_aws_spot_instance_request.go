@@ -44,7 +44,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 
 			s["spot_price"] = &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			}
 			s["spot_type"] = &schema.Schema{

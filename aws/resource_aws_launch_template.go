@@ -89,11 +89,13 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Computed: true,
 										Optional: true,
 									},
 									"kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -102,10 +104,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -158,8 +162,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"iam_instance_profile.0.name"},
+							ValidateFunc:  validateArn,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -362,9 +368,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
 
 			"vpc_security_group_ids": {
@@ -926,8 +933,8 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v := ebs["iops"]; v != nil {
-		ebsDevice.Iops = aws.Int64(int64(v.(int)))
+	if v := ebs["iops"].(int); v > 0 {
+		ebsDevice.Iops = aws.Int64(int64(v))
 	}
 
 	if v := ebs["kms_key_id"].(string); v != "" {
@@ -991,8 +998,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 			Ipv6Address: aws.String(address.(string)),
 		})
 	}
-	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
 	networkInterface.Ipv6Addresses = ipv6Addresses
+
+	if v := ni["ipv6_address_count"].(int); v > 0 {
+		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
+	}
 
 	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
 	for _, address := range ipv4AddressList {
@@ -1002,8 +1012,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		}
 		ipv4Addresses = append(ipv4Addresses, privateIp)
 	}
-	networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
 	networkInterface.PrivateIpAddresses = ipv4Addresses
+
+	if v := ni["ipv4_address_count"].(int); v > 0 {
+		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	}
 
 	return networkInterface
 }

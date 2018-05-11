@@ -38,6 +38,10 @@ func testSweepInternetGateways(region string) error {
 	}
 	resp, err := conn.DescribeInternetGateways(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Internet Gateway sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing Internet Gateways: %s", err)
 	}
 

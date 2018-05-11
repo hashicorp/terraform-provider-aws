@@ -3248,6 +3248,8 @@ type CaptionDestinationSettings struct {
 
 	EmbeddedPlusScte20DestinationSettings *EmbeddedPlusScte20DestinationSettings `locationName:"embeddedPlusScte20DestinationSettings" type:"structure"`
 
+	RtmpCaptionInfoDestinationSettings *RtmpCaptionInfoDestinationSettings `locationName:"rtmpCaptionInfoDestinationSettings" type:"structure"`
+
 	Scte20PlusEmbeddedDestinationSettings *Scte20PlusEmbeddedDestinationSettings `locationName:"scte20PlusEmbeddedDestinationSettings" type:"structure"`
 
 	Scte27DestinationSettings *Scte27DestinationSettings `locationName:"scte27DestinationSettings" type:"structure"`
@@ -3318,6 +3320,12 @@ func (s *CaptionDestinationSettings) SetEmbeddedDestinationSettings(v *EmbeddedD
 // SetEmbeddedPlusScte20DestinationSettings sets the EmbeddedPlusScte20DestinationSettings field's value.
 func (s *CaptionDestinationSettings) SetEmbeddedPlusScte20DestinationSettings(v *EmbeddedPlusScte20DestinationSettings) *CaptionDestinationSettings {
 	s.EmbeddedPlusScte20DestinationSettings = v
+	return s
+}
+
+// SetRtmpCaptionInfoDestinationSettings sets the RtmpCaptionInfoDestinationSettings field's value.
+func (s *CaptionDestinationSettings) SetRtmpCaptionInfoDestinationSettings(v *RtmpCaptionInfoDestinationSettings) *CaptionDestinationSettings {
+	s.RtmpCaptionInfoDestinationSettings = v
 	return s
 }
 
@@ -7353,7 +7361,7 @@ type InputLocation struct {
 
 	// Uniform Resource Identifier - This should be a path to a file accessible
 	// to the Live system (eg. a http:// URI) depending on the output type. For
-	// example, a rtmpEndpoint should have a uri simliar to: "rtmp://fmsserver/live".
+	// example, a RTMP destination should have a uri simliar to: "rtmp://fmsserver/live".
 	//
 	// Uri is a required field
 	Uri *string `locationName:"uri" type:"string" required:"true"`
@@ -8705,6 +8713,11 @@ type M3u8Settings struct {
 	// When set to passthrough, timed metadata is passed through from input to output.
 	TimedMetadataBehavior *string `locationName:"timedMetadataBehavior" type:"string" enum:"M3u8TimedMetadataBehavior"`
 
+	// Packet Identifier (PID) of the timed metadata stream in the transport stream.
+	// Can be entered as a decimal or hexadecimal value. Valid values are 32 (or
+	// 0x20)..8182 (or 0x1ff6).
+	TimedMetadataPid *string `locationName:"timedMetadataPid" type:"string"`
+
 	// The value of the transport stream ID field in the Program Map Table.
 	TransportStreamId *int64 `locationName:"transportStreamId" type:"integer"`
 
@@ -8801,6 +8814,12 @@ func (s *M3u8Settings) SetTimedMetadataBehavior(v string) *M3u8Settings {
 	return s
 }
 
+// SetTimedMetadataPid sets the TimedMetadataPid field's value.
+func (s *M3u8Settings) SetTimedMetadataPid(v string) *M3u8Settings {
+	s.TimedMetadataPid = &v
+	return s
+}
+
 // SetTransportStreamId sets the TransportStreamId field's value.
 func (s *M3u8Settings) SetTransportStreamId(v int64) *M3u8Settings {
 	s.TransportStreamId = &v
@@ -8869,8 +8888,7 @@ type MsSmoothGroupSettings struct {
 
 	// If set to verifyAuthenticity, verify the https certificate chain to a trusted
 	// Certificate Authority (CA). This will cause https outputs to self-signed
-	// certificates to fail unless those certificates are manually added to the
-	// OS trusted keystore.
+	// certificates to fail.
 	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"SmoothGroupCertificateMode"`
 
 	// Number of seconds to wait before retrying connection to the IIS server if
@@ -9273,6 +9291,9 @@ type OutputDestinationSettings struct {
 	// key used to extract the password from EC2 Parameter store
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
+	// Stream name for RTMP destinations (URLs of type rtmp://)
+	StreamName *string `locationName:"streamName" type:"string"`
+
 	// A URL specifying a destination
 	Url *string `locationName:"url" type:"string"`
 
@@ -9293,6 +9314,12 @@ func (s OutputDestinationSettings) GoString() string {
 // SetPasswordParam sets the PasswordParam field's value.
 func (s *OutputDestinationSettings) SetPasswordParam(v string) *OutputDestinationSettings {
 	s.PasswordParam = &v
+	return s
+}
+
+// SetStreamName sets the StreamName field's value.
+func (s *OutputDestinationSettings) SetStreamName(v string) *OutputDestinationSettings {
+	s.StreamName = &v
 	return s
 }
 
@@ -9394,6 +9421,8 @@ type OutputGroupSettings struct {
 
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
 
+	RtmpGroupSettings *RtmpGroupSettings `locationName:"rtmpGroupSettings" type:"structure"`
+
 	UdpGroupSettings *UdpGroupSettings `locationName:"udpGroupSettings" type:"structure"`
 }
 
@@ -9425,6 +9454,11 @@ func (s *OutputGroupSettings) Validate() error {
 			invalidParams.AddNested("MsSmoothGroupSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.RtmpGroupSettings != nil {
+		if err := s.RtmpGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("RtmpGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9447,6 +9481,12 @@ func (s *OutputGroupSettings) SetHlsGroupSettings(v *HlsGroupSettings) *OutputGr
 // SetMsSmoothGroupSettings sets the MsSmoothGroupSettings field's value.
 func (s *OutputGroupSettings) SetMsSmoothGroupSettings(v *MsSmoothGroupSettings) *OutputGroupSettings {
 	s.MsSmoothGroupSettings = v
+	return s
+}
+
+// SetRtmpGroupSettings sets the RtmpGroupSettings field's value.
+func (s *OutputGroupSettings) SetRtmpGroupSettings(v *RtmpGroupSettings) *OutputGroupSettings {
+	s.RtmpGroupSettings = v
 	return s
 }
 
@@ -9488,6 +9528,8 @@ type OutputSettings struct {
 
 	MsSmoothOutputSettings *MsSmoothOutputSettings `locationName:"msSmoothOutputSettings" type:"structure"`
 
+	RtmpOutputSettings *RtmpOutputSettings `locationName:"rtmpOutputSettings" type:"structure"`
+
 	UdpOutputSettings *UdpOutputSettings `locationName:"udpOutputSettings" type:"structure"`
 }
 
@@ -9512,6 +9554,11 @@ func (s *OutputSettings) Validate() error {
 	if s.HlsOutputSettings != nil {
 		if err := s.HlsOutputSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RtmpOutputSettings != nil {
+		if err := s.RtmpOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("RtmpOutputSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.UdpOutputSettings != nil {
@@ -9541,6 +9588,12 @@ func (s *OutputSettings) SetHlsOutputSettings(v *HlsOutputSettings) *OutputSetti
 // SetMsSmoothOutputSettings sets the MsSmoothOutputSettings field's value.
 func (s *OutputSettings) SetMsSmoothOutputSettings(v *MsSmoothOutputSettings) *OutputSettings {
 	s.MsSmoothOutputSettings = v
+	return s
+}
+
+// SetRtmpOutputSettings sets the RtmpOutputSettings field's value.
+func (s *OutputSettings) SetRtmpOutputSettings(v *RtmpOutputSettings) *OutputSettings {
+	s.RtmpOutputSettings = v
 	return s
 }
 
@@ -9633,6 +9686,176 @@ func (s *RemixSettings) SetChannelsIn(v int64) *RemixSettings {
 // SetChannelsOut sets the ChannelsOut field's value.
 func (s *RemixSettings) SetChannelsOut(v int64) *RemixSettings {
 	s.ChannelsOut = &v
+	return s
+}
+
+type RtmpCaptionInfoDestinationSettings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RtmpCaptionInfoDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RtmpCaptionInfoDestinationSettings) GoString() string {
+	return s.String()
+}
+
+type RtmpGroupSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Authentication scheme to use when connecting with CDN
+	AuthenticationScheme *string `locationName:"authenticationScheme" type:"string" enum:"AuthenticationScheme"`
+
+	// Controls behavior when content cache fills up. If remote origin server stalls
+	// the RTMP connection and does not accept content fast enough the 'Media Cache'
+	// will fill up. When the cache reaches the duration specified by cacheLength
+	// the cache will stop accepting new content. If set to disconnectImmediately,
+	// the RTMP output will force a disconnect. Clear the media cache, and reconnect
+	// after restartDelay seconds. If set to waitForServer, the RTMP output will
+	// wait up to 5 minutes to allow the origin server to begin accepting data again.
+	CacheFullBehavior *string `locationName:"cacheFullBehavior" type:"string" enum:"RtmpCacheFullBehavior"`
+
+	// Cache length, in seconds, is used to calculate buffer size.
+	CacheLength *int64 `locationName:"cacheLength" min:"30" type:"integer"`
+
+	// Controls the types of data that passes to onCaptionInfo outputs. If set to
+	// 'all' then 608 and 708 carried DTVCC data will be passed. If set to 'field1AndField2608'
+	// then DTVCC data will be stripped out, but 608 data from both fields will
+	// be passed. If set to 'field1608' then only the data carried in 608 from field
+	// 1 video will be passed.
+	CaptionData *string `locationName:"captionData" type:"string" enum:"RtmpCaptionData"`
+
+	// If a streaming output fails, number of seconds to wait until a restart is
+	// initiated. A value of 0 means never restart.
+	RestartDelay *int64 `locationName:"restartDelay" type:"integer"`
+}
+
+// String returns the string representation
+func (s RtmpGroupSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RtmpGroupSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RtmpGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RtmpGroupSettings"}
+	if s.CacheLength != nil && *s.CacheLength < 30 {
+		invalidParams.Add(request.NewErrParamMinValue("CacheLength", 30))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthenticationScheme sets the AuthenticationScheme field's value.
+func (s *RtmpGroupSettings) SetAuthenticationScheme(v string) *RtmpGroupSettings {
+	s.AuthenticationScheme = &v
+	return s
+}
+
+// SetCacheFullBehavior sets the CacheFullBehavior field's value.
+func (s *RtmpGroupSettings) SetCacheFullBehavior(v string) *RtmpGroupSettings {
+	s.CacheFullBehavior = &v
+	return s
+}
+
+// SetCacheLength sets the CacheLength field's value.
+func (s *RtmpGroupSettings) SetCacheLength(v int64) *RtmpGroupSettings {
+	s.CacheLength = &v
+	return s
+}
+
+// SetCaptionData sets the CaptionData field's value.
+func (s *RtmpGroupSettings) SetCaptionData(v string) *RtmpGroupSettings {
+	s.CaptionData = &v
+	return s
+}
+
+// SetRestartDelay sets the RestartDelay field's value.
+func (s *RtmpGroupSettings) SetRestartDelay(v int64) *RtmpGroupSettings {
+	s.RestartDelay = &v
+	return s
+}
+
+type RtmpOutputSettings struct {
+	_ struct{} `type:"structure"`
+
+	// If set to verifyAuthenticity, verify the tls certificate chain to a trusted
+	// Certificate Authority (CA). This will cause rtmps outputs with self-signed
+	// certificates to fail.
+	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"RtmpOutputCertificateMode"`
+
+	// Number of seconds to wait before retrying a connection to the Flash Media
+	// server if the connection is lost.
+	ConnectionRetryInterval *int64 `locationName:"connectionRetryInterval" min:"1" type:"integer"`
+
+	// The RTMP endpoint excluding the stream name (eg. rtmp://host/appname). For
+	// connection to Akamai, a username and password must be supplied. URI fields
+	// accept format identifiers.
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
+
+	// Number of retry attempts.
+	NumRetries *int64 `locationName:"numRetries" type:"integer"`
+}
+
+// String returns the string representation
+func (s RtmpOutputSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RtmpOutputSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RtmpOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RtmpOutputSettings"}
+	if s.ConnectionRetryInterval != nil && *s.ConnectionRetryInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConnectionRetryInterval", 1))
+	}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateMode sets the CertificateMode field's value.
+func (s *RtmpOutputSettings) SetCertificateMode(v string) *RtmpOutputSettings {
+	s.CertificateMode = &v
+	return s
+}
+
+// SetConnectionRetryInterval sets the ConnectionRetryInterval field's value.
+func (s *RtmpOutputSettings) SetConnectionRetryInterval(v int64) *RtmpOutputSettings {
+	s.ConnectionRetryInterval = &v
+	return s
+}
+
+// SetDestination sets the Destination field's value.
+func (s *RtmpOutputSettings) SetDestination(v *OutputLocationRef) *RtmpOutputSettings {
+	s.Destination = v
+	return s
+}
+
+// SetNumRetries sets the NumRetries field's value.
+func (s *RtmpOutputSettings) SetNumRetries(v int64) *RtmpOutputSettings {
+	s.NumRetries = &v
 	return s
 }
 
@@ -11363,6 +11586,14 @@ const (
 )
 
 const (
+	// AuthenticationSchemeAkamai is a AuthenticationScheme enum value
+	AuthenticationSchemeAkamai = "AKAMAI"
+
+	// AuthenticationSchemeCommon is a AuthenticationScheme enum value
+	AuthenticationSchemeCommon = "COMMON"
+)
+
+const (
 	// AvailBlankingStateDisabled is a AvailBlankingState enum value
 	AvailBlankingStateDisabled = "DISABLED"
 
@@ -12566,6 +12797,33 @@ const (
 
 	// NetworkInputServerValidationCheckCryptographyOnly is a NetworkInputServerValidation enum value
 	NetworkInputServerValidationCheckCryptographyOnly = "CHECK_CRYPTOGRAPHY_ONLY"
+)
+
+const (
+	// RtmpCacheFullBehaviorDisconnectImmediately is a RtmpCacheFullBehavior enum value
+	RtmpCacheFullBehaviorDisconnectImmediately = "DISCONNECT_IMMEDIATELY"
+
+	// RtmpCacheFullBehaviorWaitForServer is a RtmpCacheFullBehavior enum value
+	RtmpCacheFullBehaviorWaitForServer = "WAIT_FOR_SERVER"
+)
+
+const (
+	// RtmpCaptionDataAll is a RtmpCaptionData enum value
+	RtmpCaptionDataAll = "ALL"
+
+	// RtmpCaptionDataField1608 is a RtmpCaptionData enum value
+	RtmpCaptionDataField1608 = "FIELD1_608"
+
+	// RtmpCaptionDataField1AndField2608 is a RtmpCaptionData enum value
+	RtmpCaptionDataField1AndField2608 = "FIELD1_AND_FIELD2_608"
+)
+
+const (
+	// RtmpOutputCertificateModeSelfSigned is a RtmpOutputCertificateMode enum value
+	RtmpOutputCertificateModeSelfSigned = "SELF_SIGNED"
+
+	// RtmpOutputCertificateModeVerifyAuthenticity is a RtmpOutputCertificateMode enum value
+	RtmpOutputCertificateModeVerifyAuthenticity = "VERIFY_AUTHENTICITY"
 )
 
 const (

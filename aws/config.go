@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -223,6 +224,7 @@ type AWSClient struct {
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
+	budgetconn            *budgets.Budgets
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -349,6 +351,26 @@ func (c *Config) Client() (interface{}, error) {
 		sess = sess.Copy(&aws.Config{MaxRetries: aws.Int(c.MaxRetries)})
 	}
 
+	// Generally, we want to configure a lower retry theshold for networking issues
+	// as the session retry threshold is very high by default and can mask permanent
+	// networking failures, such as a non-existent service endpoint.
+	// MaxRetries will override this logic if it has a lower retry threshold.
+	// NOTE: This logic can be fooled by other request errors raising the retry count
+	//       before any networking error occurs
+	sess.Handlers.Retry.PushBack(func(r *request.Request) {
+		// We currently depend on the DefaultRetryer exponential backoff here.
+		// ~10 retries gives a fair backoff of a few seconds.
+		if r.RetryCount < 9 {
+			return
+		}
+		// RequestError: send request failed
+		// caused by: Post https://FQDN/: dial tcp: lookup FQDN: no such host
+		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
+			log.Printf("[WARN] Disabling retries after next request due to networking issue")
+			r.Retryable = aws.Bool(false)
+		}
+	})
+
 	// This restriction should only be used for Route53 sessions.
 	// Other resources that have restrictions should allow the API to fail, rather
 	// than Terraform abstracting the region for the user. This can lead to breaking
@@ -423,6 +445,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	client.budgetconn = budgets.New(sess)
 	client.acmconn = acm.New(awsAcmSess)
 	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)

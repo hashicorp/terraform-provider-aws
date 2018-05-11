@@ -84,7 +84,7 @@ for more information.
 * `copy_tags_to_snapshot` – (Optional, boolean) On delete, copy all Instance
 `tags` to the final snapshot (if `final_snapshot_identifier` is specified).
 Default is `false`.
-* `db_subnet_group_name` - (Optional) Name of DB subnet group. DB instance will
+* `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it needs to be specified only if the source database
@@ -94,7 +94,7 @@ for additonal read replica contraints.
 * `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
    Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) The database engine to use.
+is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
 is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
 this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).

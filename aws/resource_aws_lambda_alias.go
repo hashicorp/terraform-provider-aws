@@ -119,8 +119,6 @@ func resourceAwsLambdaAliasDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error deleting Lambda alias: %s", err)
 	}
 
-	d.SetId("")
-
 	return nil
 }
 

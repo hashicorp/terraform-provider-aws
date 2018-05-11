@@ -71,6 +71,10 @@ func testSweepAPIGatewayRestApis(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway REST API sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving API Gateway REST APIs: %s", err)
 	}
 
