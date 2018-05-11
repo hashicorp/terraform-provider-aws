@@ -7,6 +7,7 @@ NOTES:
 ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Allow rendering of `"Principal": {"AWS": "*"}` (required for IAM role trust policies) [GH-4248]
+* resource/aws_api_gateway_rest_api: Add `execution_arn` attribute [GH-3968]
 * resource/aws_dms_endpoint: Add `azuredb` for `engine_name` validation [GH-4506]
 
 BUG FIXES:
