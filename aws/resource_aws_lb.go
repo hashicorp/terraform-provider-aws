@@ -714,11 +714,11 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	for _, attr := range attributesResp.Attributes {
 		switch *attr.Key {
 		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = *attr.Value
+			accessLogMap["enabled"] = aws.StringValue(attr.Value) == "true"
 		case "access_logs.s3.bucket":
-			accessLogMap["bucket"] = *attr.Value
+			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
-			accessLogMap["prefix"] = *attr.Value
+			accessLogMap["prefix"] = aws.StringValue(attr.Value)
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(*attr.Value)
 			if err != nil {
@@ -741,9 +741,10 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		}
 	}
 
-	log.Printf("[DEBUG] Setting ALB Access Logs: %#v", accessLogMap)
 	if accessLogMap["bucket"] != "" || accessLogMap["prefix"] != "" {
-		d.Set("access_logs", []interface{}{accessLogMap})
+		if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
+			return fmt.Errorf("error setting access_logs: %s", err)
+		}
 	} else {
 		d.Set("access_logs", []interface{}{})
 	}
