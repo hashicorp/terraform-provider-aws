@@ -191,6 +191,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 							Optional: true,
 						},
+						"iam_instance_profile_arn": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+						},
 						"ami": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -375,6 +380,12 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	if v, ok := d["iam_instance_profile"]; ok {
 		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
 			Name: aws.String(v.(string)),
+		}
+	}
+
+	if v, ok := d["iam_instance_profile_arn"]; ok {
+		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
+			Arn: aws.String(v.(string)),
 		}
 	}
 
@@ -942,6 +953,10 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 
 	if l.IamInstanceProfile != nil && l.IamInstanceProfile.Name != nil {
 		m["iam_instance_profile"] = aws.StringValue(l.IamInstanceProfile.Name)
+	}
+
+	if l.IamInstanceProfile != nil && l.IamInstanceProfile.Arn != nil {
+		m["iam_instance_profile_arn"] = aws.StringValue(l.IamInstanceProfile.Arn)
 	}
 
 	if l.UserData != nil {
