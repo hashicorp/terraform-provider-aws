@@ -43,6 +43,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"backtrack_window": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 259200),
+			},
+
 			"cluster_identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -328,9 +334,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
+			BacktrackWindow:     aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
+			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                tags,
 		}
 
@@ -420,6 +427,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
+			BacktrackWindow:             aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 			Engine:                      aws.String(d.Get("engine").(string)),
 			StorageEncrypted:            aws.Bool(d.Get("storage_encrypted").(bool)),
@@ -499,17 +507,18 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		s3_bucket := v.([]interface{})[0].(map[string]interface{})
 		createOpts := &rds.RestoreDBClusterFromS3Input{
+			BacktrackWindow:     aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
-			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                tags,
 			S3BucketName:        aws.String(s3_bucket["bucket_name"].(string)),
 			S3IngestionRoleArn:  aws.String(s3_bucket["ingestion_role"].(string)),
 			S3Prefix:            aws.String(s3_bucket["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion: aws.String(s3_bucket["source_engine_version"].(string)),
+			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
+			Tags:                tags,
 		}
 
 		if v := d.Get("database_name"); v.(string) != "" {
@@ -591,6 +600,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
+			BacktrackWindow:     aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
@@ -751,6 +761,7 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 		d.Set("database_name", dbc.DatabaseName)
 	}
 
+	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
@@ -819,6 +830,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		DBClusterIdentifier: aws.String(d.Id()),
 	}
 
+	if d.HasChange("backtrack_window") {
+		req.BacktrackWindow = aws.Int64(int64(d.Get("backtrack_window").(int)))
+		requestUpdate = true
+	}
+
 	if d.HasChange("master_password") {
 		req.MasterUserPassword = aws.String(d.Get("master_password").(string))
 		requestUpdate = true
@@ -875,6 +891,21 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to modify RDS Cluster (%s): %s", d.Id(), err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    resourceAwsRdsClusterUpdatePendingStates,
+			Target:     []string{"available"},
+			Refresh:    resourceAwsRDSClusterStateRefreshFunc(d, meta),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			MinTimeout: 10 * time.Second,
+			Delay:      10 * time.Second,
+		}
+
+		log.Printf("[INFO] Waiting for RDS Cluster (%s) to modify", d.Id())
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for RDS Cluster (%s) to modify: %s", d.Id(), err)
 		}
 	}
 
@@ -1058,4 +1089,10 @@ var resourceAwsRdsClusterDeletePendingStates = []string{
 	"deleting",
 	"backing-up",
 	"modifying",
+}
+
+var resourceAwsRdsClusterUpdatePendingStates = []string{
+	"backing-up",
+	"modifying",
+	"resetting-master-credentials",
 }
