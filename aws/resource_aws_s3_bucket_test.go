@@ -109,14 +109,12 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 
 func TestAccAWSS3Bucket_region(t *testing.T) {
 	rInt := acctest.RandInt()
-	partition := testAccGetPartition()
-
-	if partition == "aws-us-gov" {
-		t.Skip("skipping replication tests; govcloud only includes a single region")
-	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -133,14 +131,12 @@ func TestAccAWSS3Bucket_region(t *testing.T) {
 
 func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	rInt := acctest.RandInt()
-	partition := testAccGetPartition()
-
-	if partition == "aws-us-gov" {
-		t.Skip("skipping acceleration tests; govcloud does not support cloudfront")
-	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccHasServicePreCheck("cloudfront", t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -773,15 +769,14 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 	region := testAccGetRegion()
 	partition := testAccGetPartition()
 
-	if partition == "aws-us-gov" {
-		t.Skip("skipping replication tests; govcloud only includes a single region")
-	}
-
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -858,17 +853,15 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
-	partition := testAccGetPartition()
-
-	if partition == "aws-us-gov" {
-		t.Skip("skipping replication tests; govcloud only includes a single region")
-	}
 
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -885,17 +878,15 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 
 func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T) {
 	rInt := acctest.RandInt()
-	partition := testAccGetPartition()
-
-	if partition == "aws-us-gov" {
-		t.Skip("skipping replication tests; govcloud only includes a single region")
-	}
 
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1536,15 +1527,8 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccAWSS3BucketConfigWithoutAcceleration(randInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	alias = "west"
-	region = "eu-west-1"
-}
-
 resource "aws_s3_bucket" "bucket" {
-	provider = "aws.west"
 	bucket = "tf-test-bucket-%d"
-	region = "eu-west-1"
 	acl = "public-read"
 	acceleration_status = "Suspended"
 }
