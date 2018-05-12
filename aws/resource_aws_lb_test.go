@@ -610,6 +610,11 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
+			{
+				ResourceName:      "aws_lb.lb_test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
