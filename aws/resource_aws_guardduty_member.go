@@ -91,10 +91,10 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	imi := &guardduty.InviteMembersInput{
-		DetectorId: aws.String(detectorID),
-		AccountIds: []*string{aws.String(accountID)},
+		DetectorId:               aws.String(detectorID),
+		AccountIds:               []*string{aws.String(accountID)},
 		DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
-		Message:    aws.String(d.Get("invitation_message").(string)),
+		Message:                  aws.String(d.Get("invitation_message").(string)),
 	}
 
 	_, err = conn.InviteMembers(imi)
