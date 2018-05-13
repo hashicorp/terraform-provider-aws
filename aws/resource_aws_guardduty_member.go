@@ -55,7 +55,7 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Second),
+			Create: schema.DefaultTimeout(60 * time.Second),
 		},
 	}
 }

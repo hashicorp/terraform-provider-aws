@@ -44,6 +44,14 @@ The following arguments are supported:
 * `invite` - (Optional) The flag to send an invitation to specified AWS account ID.
 * `invitation_message` - (Optional) Message for invitation.
 
+## Timeouts
+
+`aws_guardduty_member` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `60s`) How long to wait for a certificate to be issued.
+
+
 ## Attributes Reference
 
 The following additional attributes are exported:
