@@ -986,6 +986,9 @@ func (c *CodeDeploy) CreateDeploymentRequest(input *CreateDeploymentInput) (req 
 //   The IgnoreApplicationStopFailures value is invalid. For AWS Lambda deployments,
 //   false is expected. For EC2/On-premises deployments, true or false is expected.
 //
+//   * ErrCodeInvalidGitHubAccountTokenException "InvalidGitHubAccountTokenException"
+//   The GitHub token is not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateDeployment
 func (c *CodeDeploy) CreateDeployment(input *CreateDeploymentInput) (*CreateDeploymentOutput, error) {
 	req, out := c.CreateDeploymentRequest(input)
@@ -6678,10 +6681,10 @@ type DeploymentReadyOption struct {
 	//    after the new application revision is installed on the instances in the
 	//    replacement environment.
 	//
-	//    * STOP_DEPLOYMENT: Do not register new instances with load balancer unless
-	//    traffic is rerouted manually. If traffic is not rerouted manually before
-	//    the end of the specified wait period, the deployment status is changed
-	//    to Stopped.
+	//    * STOP_DEPLOYMENT: Do not register new instances with a load balancer
+	//    unless traffic rerouting is started using ContinueDeployment. If traffic
+	//    rerouting is not started before the end of the specified wait period,
+	//    the deployment status is changed to Stopped.
 	ActionOnTimeout *string `locationName:"actionOnTimeout" type:"string" enum:"DeploymentReadyAction"`
 
 	// The number of minutes to wait before the status of a blue/green deployment

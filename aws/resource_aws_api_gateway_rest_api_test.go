@@ -71,6 +71,10 @@ func testSweepAPIGatewayRestApis(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway REST API sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving API Gateway REST APIs: %s", err)
 	}
 
@@ -95,6 +99,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
 			},
@@ -110,6 +115,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.0", "application/octet-stream"),
 				),
@@ -174,6 +180,7 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
 			},
@@ -186,6 +193,7 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/update"}),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "test"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
 				),
 			},
 		},

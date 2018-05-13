@@ -733,7 +733,6 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 	// Update other attributes outside of DistributionConfig
-	d.SetId(*resp.Distribution.Id)
 	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
 	if err != nil {
 		return err
@@ -794,7 +793,6 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	// skip delete if retain_on_delete is enabled
 	if d.Get("retain_on_delete").(bool) {
 		log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
-		d.SetId("")
 		return nil
 	}
 
@@ -825,8 +823,6 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("CloudFront Distribution %s cannot be deleted: %s", d.Id(), err)
 	}
 
-	// Done
-	d.SetId("")
 	return nil
 }
 

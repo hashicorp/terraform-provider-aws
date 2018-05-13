@@ -223,8 +223,6 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 	}
 	log.Println("[INFO] CloudWatch Event Rule deleted")
 
-	d.SetId("")
-
 	return nil
 }
 

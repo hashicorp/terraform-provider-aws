@@ -31,6 +31,10 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	req := &waf.ListRegexMatchSetsInput{}
 	resp, err := conn.ListRegexMatchSets(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regional Regex Match Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing WAF Regional Regex Match Sets: %s", err)
 	}
 

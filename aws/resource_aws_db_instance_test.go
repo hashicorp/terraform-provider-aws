@@ -74,6 +74,10 @@ func testSweepDbInstances(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving DB instances: %s", err)
 	}
 

@@ -340,7 +340,6 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Lambda permission with ID %q removed", d.Id())
-	d.SetId("")
 
 	return nil
 }

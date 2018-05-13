@@ -275,12 +275,12 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
 					roleName, policyName, tgName, lbName, svcName, -1),
-				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+				ExpectError: regexp.MustCompile(`must be between 0 and 7200`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, tgName, lbName, svcName, 1801),
-				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+					roleName, policyName, tgName, lbName, svcName, 7201),
+				ExpectError: regexp.MustCompile(`must be between 0 and 7200`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
@@ -457,14 +457,27 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 				Config: testAccAWSEcsService(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "0"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", "memory"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithMultiPlacementStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", "memory"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.1.type", "spread"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.1.field", "instanceId"),
 				),
 			},
 		},
@@ -838,9 +851,47 @@ resource "aws_ecs_service" "mongo" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
-  placement_strategy {
+  ordered_placement_strategy {
     type = "binpack"
     field = "memory"
+  }
+}
+`, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithMultiPlacementStrategy(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  ordered_placement_strategy {
+    type = "binpack"
+    field = "memory"
+  }
+  ordered_placement_strategy {
+    field = "host"
+    type = "spread"
   }
 }
 `, clusterName, tdName, svcName)

@@ -7,14 +7,14 @@ const (
 	// ErrCodeDecryptionFailure for service response error code
 	// "DecryptionFailure".
 	//
-	// AWS Secrets Manager can't decrypt the protected secret text using the provided
+	// Secrets Manager can't decrypt the protected secret text using the provided
 	// KMS key.
 	ErrCodeDecryptionFailure = "DecryptionFailure"
 
 	// ErrCodeEncryptionFailure for service response error code
 	// "EncryptionFailure".
 	//
-	// AWS Secrets Manager can't encrypt the protected secret text using the provided
+	// Secrets Manager can't encrypt the protected secret text using the provided
 	// KMS key. Check that the customer master key (CMK) is available, enabled,
 	// and not in an invalid state. For more information, see How Key State Affects
 	// Use of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html).
@@ -50,8 +50,8 @@ const (
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
-	// The request failed because it would exceed one of the AWS Secrets Manager
-	// internal limits.
+	// The request failed because it would exceed one of the Secrets Manager internal
+	// limits.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
 	// ErrCodeMalformedPolicyDocumentException for service response error code

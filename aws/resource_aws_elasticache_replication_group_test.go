@@ -36,7 +36,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		"tf-acc-test-",
 	}
 
-	return conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
+	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
 		if len(page.ReplicationGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
 			return false
@@ -63,6 +63,14 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Elasticache Replication Groups: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {

@@ -8,12 +8,71 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func TestFetchRootDevice(t *testing.T) {
+	cases := []struct {
+		label  string
+		images []*ec2.Image
+		name   string
+	}{
+		{
+			"device name in mappings",
+			[]*ec2.Image{{
+				RootDeviceType: aws.String("ebs"),
+				RootDeviceName: aws.String("/dev/xvda"),
+				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
+					{DeviceName: aws.String("/dev/xvdb")},
+					{DeviceName: aws.String("/dev/xvda")},
+				},
+			}},
+			"/dev/xvda",
+		},
+		{
+			"device name not in mappings",
+			[]*ec2.Image{{
+				RootDeviceType: aws.String("ebs"),
+				RootDeviceName: aws.String("/dev/xvda"),
+				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
+					{DeviceName: aws.String("/dev/xvdb")},
+					{DeviceName: aws.String("/dev/xvdc")},
+				},
+			}},
+			"/dev/xvdb",
+		},
+		{
+			"no images",
+			[]*ec2.Image{},
+			"",
+		},
+	}
+
+	conn := ec2.New(session.New(nil))
+
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
+			conn.Handlers.Clear()
+			conn.Handlers.Send.PushBack(func(r *request.Request) {
+				data := r.Data.(*ec2.DescribeImagesOutput)
+				data.Images = tc.images
+			})
+			name, err := fetchRootDeviceName("ami-123", conn)
+			if err != nil {
+				t.Errorf("Error fetching device name: %s", err)
+			}
+			if tc.name != aws.StringValue(name) {
+				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
+			}
+		})
+	}
+}
 
 func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
