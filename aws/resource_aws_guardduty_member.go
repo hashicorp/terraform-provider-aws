@@ -91,8 +91,8 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	imi := &guardduty.InviteMembersInput{
-		DetectorId: &detectorID,
-		AccountIds: []*string{&accountID},
+		DetectorId: aws.String(detectorID),
+		AccountIds: []*string{aws.String(accountID)},
 		DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
 		Message:    aws.String(d.Get("invitation_message").(string)),
 	}
@@ -104,15 +104,37 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 
 	// wait until e-mail verification finishes
 	if err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		err := resourceAwsGuardDutyMemberRead(d, meta)
-
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error inviting member: %s", err))
+		input := guardduty.GetMembersInput{
+			DetectorId: imi.DetectorId,
+			AccountIds: imi.AccountIds,
 		}
 
-		status := d.Get("relationship_status").(string)
-		if status != "Invited" {
-			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
+		log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
+		gmo, err := conn.GetMembers(&input)
+
+		if err != nil {
+			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+				log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.RetryableError(fmt.Errorf("Reading GuardDuty Member '%s' failed: %s", d.Id(), err.Error()))
+		}
+
+		if gmo.Members == nil || (len(gmo.Members) < 1) {
+			log.Printf("[WARN] GuardDuty Member %q not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		member := gmo.Members[0]
+		d.Set("account_id", member.AccountId)
+		d.Set("detector_id", detectorID)
+		d.Set("email", member.Email)
+		d.Set("relationship_status", member.RelationshipStatus)
+
+		if aws.StringValue(member.RelationshipStatus) != "Invited" {
+			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", member.RelationshipStatus))
 		}
 
 		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
