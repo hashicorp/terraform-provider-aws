@@ -134,7 +134,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 		d.Set("relationship_status", member.RelationshipStatus)
 
 		if aws.StringValue(member.RelationshipStatus) != "Invited" {
-			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", member.RelationshipStatus))
+			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", aws.StringValue(member.RelationshipStatus)))
 		}
 
 		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
