@@ -116,7 +116,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
-		return resource.NonRetryableError(err)
+		return nil
 	})
 }
 
