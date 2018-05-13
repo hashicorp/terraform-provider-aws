@@ -103,7 +103,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	// wait until e-mail verification finishes
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	if err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		err := resourceAwsGuardDutyMemberRead(d, meta)
 
 		if err != nil {
@@ -117,7 +117,11 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 
 		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	return resourceAwsGuardDutyMemberRead(d, meta)
 }
 
 func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) error {
