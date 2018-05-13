@@ -16,6 +16,29 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
 	accountID := "111111111111"
 	email := "required@example.com"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyMemberConfig_basic(accountID, email),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttr(resourceName, "email", email),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsGuardDutyMember_invite(t *testing.T) {
+	resourceName := "aws_guardduty_member.test"
+	accountID := "111111111111"
+	email := "required@example.com"
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
@@ -24,16 +47,7 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_basic1(accountID, email),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
-					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "email", email),
-				),
-			},
-			{
-				Config: testAccGuardDutyMemberConfig_basic2(accountID, email, invitationMessage, false),
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
@@ -44,7 +58,7 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyMemberConfig_basic2(accountID, email, invitationMessage, true),
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
@@ -68,9 +82,8 @@ func testAccAwsGuardDutyMember_import(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_basic1("111111111111", "required@example.com"),
+				Config: testAccGuardDutyMemberConfig_basic("111111111111", "required@example.com"),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -147,7 +160,7 @@ func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccGuardDutyMemberConfig_basic1(accountID, email string) string {
+func testAccGuardDutyMemberConfig_basic(accountID, email string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -159,7 +172,7 @@ resource "aws_guardduty_member" "test" {
 `, testAccGuardDutyDetectorConfig_basic1, accountID, email)
 }
 
-func testAccGuardDutyMemberConfig_basic2(accountID, email, invitationMessage string, invite bool) string {
+func testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage string, invite bool) string {
 	return fmt.Sprintf(`
 %[1]s
 

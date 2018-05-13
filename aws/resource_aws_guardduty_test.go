@@ -20,6 +20,7 @@ func TestAccAWSGuardDuty(t *testing.T) {
 		},
 		"Member": {
 			"basic":  testAccAwsGuardDutyMember_basic,
+			"invite": testAccAwsGuardDutyMember_invite,
 			"import": testAccAwsGuardDutyMember_import,
 		},
 	}
