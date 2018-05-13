@@ -1,13 +1,14 @@
 package aws
 
 import (
-	"testing"
-
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"testing"
 )
 
 func TestAccAwsIamRolePolicyAttachmentImport(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test-attach"
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -15,7 +16,7 @@ func TestAccAwsIamRolePolicyAttachmentImport(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRolePolicyAttachConfig,
+				Config: testAccAWSRolePolicyAttachConfig(rInt),
 			},
 			{
 				ResourceName:      resourceName,
