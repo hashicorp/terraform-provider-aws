@@ -29,6 +29,9 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
+					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(false)),
+					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", strconv.FormatBool(false)),
+					resource.TestCheckResourceAttr(resourceName, "invitation_message", ""),
 				),
 			},
 		},
@@ -47,24 +50,27 @@ func testAccAwsGuardDutyMember_invite(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyMemberExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
-					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "email", email),
-					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(false)),
-					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
-				),
-			},
-			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage, true),
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
 					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(true)),
+					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", strconv.FormatBool(false)),
+					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
+				),
+				ExpectError: regexp.MustCompile("Expected member to be invited but was in state: EmailVerificationFailed"),
+			},
+			{
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttr(resourceName, "email", email),
+					resource.TestCheckResourceAttr(resourceName, "invite", strconv.FormatBool(true)),
+					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", strconv.FormatBool(true)),
 					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
 				),
 				ExpectError: regexp.MustCompile("Expected member to be invited but was in state: EmailVerificationFailed"),
@@ -172,7 +178,7 @@ resource "aws_guardduty_member" "test" {
 `, testAccGuardDutyDetectorConfig_basic1, accountID, email)
 }
 
-func testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage string, invite bool) string {
+func testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage string, invite, disableEmailNotification bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -181,7 +187,8 @@ resource "aws_guardduty_member" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
   email       = "%[3]s"
   invite      = "%[4]s"
-  invitation_message      = "%[5]s"
+  disable_email_notification = "%[5]s"
+  invitation_message      = "%[6]s"
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, strconv.FormatBool(invite), invitationMessage)
+`, testAccGuardDutyDetectorConfig_basic1, accountID, email, strconv.FormatBool(invite), strconv.FormatBool(disableEmailNotification), invitationMessage)
 }

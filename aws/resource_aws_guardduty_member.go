@@ -48,6 +48,11 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"disable_email_notification": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"invitation_message": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -88,6 +93,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	imi := &guardduty.InviteMembersInput{
 		DetectorId: &detectorID,
 		AccountIds: []*string{&accountID},
+		DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
 		Message:    aws.String(d.Get("invitation_message").(string)),
 	}
 
