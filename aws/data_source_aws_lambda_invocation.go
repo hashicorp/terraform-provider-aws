@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -36,6 +37,11 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			},
 
 			"result": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"result_map": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -68,14 +74,18 @@ func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Lambda function (%s) returned error: (%s)", functionName, string(res.Payload))
 	}
 
+	if err = d.Set("result", string(res.Payload)); err != nil {
+		return err
+	}
+
 	var result map[string]interface{}
 
 	if err = json.Unmarshal(res.Payload, &result); err != nil {
 		return err
 	}
 
-	if err = d.Set("result", result); err != nil {
-		return fmt.Errorf("Lambda function (%s) returned invalid JSON: %s", functionName, err)
+	if err = d.Set("result_map", result); err != nil {
+		log.Printf("[WARN] Cannot use the result invocation as a string map: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(input)))

@@ -9,12 +9,8 @@ description: |-
 # Data Source: aws_lambda_invocation
 
 Use this data source to invoke custom lambda functions as data source.
-
-~> **NOTE**: The `input` argument is JSON encoded and passed as payload to the
-lambda function. All values in `input` map are converted to strings.
-The lambda function is invoked with
-[RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax)
-invocation type. Response of lambda must be map of primitive types (string, bool or float).
+The lambda function is invoked with [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax)
+invocation type.
 
 ## Example Usage
 
@@ -31,8 +27,12 @@ JSON
 
 }
 
+output "result_entry" {
+  value = "${data.aws_lambda_invocation.result_map["key1"]}"
+}
+
 output "result" {
-  value = "${data.aws_lambda_invocation.result["key1"]}"
+  value = "${data.aws_lambda_invocation.result}"
 }
 ```
 
@@ -45,4 +45,5 @@ output "result" {
 
 ## Attributes Reference
 
- * `result` - A map of string values returned from the lambda invocation.
+ * `result` - A result of the lambda function invocation.
+ * `result_map` - This field is set only if result is a map of primitive types.
