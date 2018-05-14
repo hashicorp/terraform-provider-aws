@@ -427,12 +427,16 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
-			BacktrackWindow:             aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 			Engine:                      aws.String(d.Get("engine").(string)),
 			StorageEncrypted:            aws.Bool(d.Get("storage_encrypted").(bool)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
 			Tags: tags,
+		}
+
+		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
+		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
@@ -507,7 +511,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		s3_bucket := v.([]interface{})[0].(map[string]interface{})
 		createOpts := &rds.RestoreDBClusterFromS3Input{
-			BacktrackWindow:     aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
@@ -519,6 +522,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			SourceEngineVersion: aws.String(s3_bucket["source_engine_version"].(string)),
 			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                tags,
+		}
+
+		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
+		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
 		if v := d.Get("database_name"); v.(string) != "" {
@@ -600,13 +608,17 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
-			BacktrackWindow:     aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                tags,
+		}
+
+		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
+		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
 		if v := d.Get("database_name"); v.(string) != "" {
