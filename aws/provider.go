@@ -165,6 +165,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ami":                              dataSourceAwsAmi(),
 			"aws_ami_ids":                          dataSourceAwsAmiIds(),
 			"aws_api_gateway_rest_api":             dataSourceAwsApiGatewayRestApi(),
+			"aws_arn":                              dataSourceAwsArn(),
 			"aws_autoscaling_groups":               dataSourceAwsAutoscalingGroups(),
 			"aws_availability_zone":                dataSourceAwsAvailabilityZone(),
 			"aws_availability_zones":               dataSourceAwsAvailabilityZones(),
