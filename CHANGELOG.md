@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_lambda_invocation` [GH-4222]
 * **New Resource:** `aws_sns_sms_preferences` [GH-3858]
 
 ENHANCEMENTS:
