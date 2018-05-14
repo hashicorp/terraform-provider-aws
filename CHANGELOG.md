@@ -19,6 +19,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_elb: Ensure `bucket_prefix` for access logging can be updated to `""` [GH-4383]
+* resource/aws_kinesis_firehose_delivery_stream: Retry on Elasticsearch destination IAM role errors and update IAM errors [GH-4518]
 * resource/aws_launch_template: Allow `network_interfaces` `device_index` to be set to 0 [GH-4367]
 * resource/aws_lb: Ensure `bucket_prefix` for access logging can be updated to `""` [GH-4383]
 * resource/aws_lb: Ensure `access_logs` is properly set into Terraform state [GH-4517]
