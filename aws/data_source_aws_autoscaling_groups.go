@@ -53,16 +53,16 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 
 	tf := d.Get("filter").(*schema.Set)
 	if tf.Len() > 0 {
-		out, err := conn.DescribeTags(&autoscaling.DescribeTagsInput{
+		input := &autoscaling.DescribeTagsInput{
 			Filters: expandAsgTagFilters(tf.List()),
-		})
-		if err != nil {
-			return err
 		}
-
-		raw = make([]string, len(out.Tags))
-		for i, v := range out.Tags {
-			raw[i] = *v.ResourceId
+		if err := conn.DescribeTagsPages(input, func(resp *autoscaling.DescribeTagsOutput, lastPage bool) bool {
+			for _, v := range resp.Tags {
+				raw = append(raw, *v.ResourceId)
+			}
+			return true
+		}); err != nil {
+			return err
 		}
 	} else {
 		if err := conn.DescribeAutoScalingGroupsPages(&autoscaling.DescribeAutoScalingGroupsInput{}, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
