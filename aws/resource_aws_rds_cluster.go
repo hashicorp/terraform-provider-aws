@@ -334,11 +334,16 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
-			BacktrackWindow:     aws.Int64(int64(d.Get("backtrack_window").(int))),
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                tags,
+		}
+
+		// Need to check value > 0 due to:
+		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
+		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+			opts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
@@ -434,6 +439,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags: tags,
 		}
 
+		// Need to check value > 0 due to:
 		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
 		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
@@ -524,6 +530,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                tags,
 		}
 
+		// Need to check value > 0 due to:
 		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
 		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
@@ -616,6 +623,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                tags,
 		}
 
+		// Need to check value > 0 due to:
 		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
 		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
