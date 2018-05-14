@@ -77,14 +77,15 @@ The following arguments are supported:
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `resource_id` - (Required) The API resource ID
 * `http_method` - (Required) The HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
-* `authorization` - (Required) The type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`)
-* `authorizer_id` - (Optional) The authorizer id to be used when the authorization is `CUSTOM`
+* `authorization` - (Required) The type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`, `COGNITO_USER_POOLS`)
+* `authorizer_id` - (Optional) The authorizer id to be used when the authorization is `CUSTOM` or `COGNITO_USER_POOLS`
 * `api_key_required` - (Optional) Specify if the method requires an API key
 * `request_models` - (Optional) A map of the API models used for the request's content type
   where key is the content type (e.g. `application/json`)
   and value is either `Error`, `Empty` (built-in models) or `aws_api_gateway_model`'s `name`.
 * `request_validator_id` - (Optional) The ID of a `aws_api_gateway_request_validator`
 * `request_parameters` - (Optional) A map of request query string parameters and headers that should be passed to the integration.
+* `authorization_scopes` - (Optional) The authorization scopes used when the authorization is `COGNITO_USER_POOLS`
   For example:
 ```hcl
 request_parameters = {

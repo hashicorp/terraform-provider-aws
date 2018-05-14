@@ -403,23 +403,6 @@ resource "aws_iam_role" "invocation_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "invocation_policy" {
-  name = "tf-acc-api-gateway-%d"
-  role = "${aws_iam_role.invocation_role.id}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "lambda:InvokeFunction",
-      "Effect": "Allow",
-      "Resource": "${aws_lambda_function.authorizer.arn}"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_iam_role" "iam_for_lambda" {
   name = "tf_acc_iam_for_lambda_api_gateway_authorizer-%d"
   assume_role_policy = <<EOF
@@ -439,12 +422,17 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
+resource "aws_cognito_user_pool" "test" {
+  name = "tf-acc-test-cognito-pool"
+}
+
+
 resource "aws_api_gateway_authorizer" "test" {
   name = "tf-acc-test-cognito-authorizer"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri = "${var.cognito_user_pool_arn}"
+  authorizer_uri = "${aws_cognito_user_pool.test.arn}"
 	identity_source = "method.request.header.Authorization"
-	provider_arns = ["${var.cognito_user_pool_arn}"]
+	provider_arns = ["${aws_cognito_user_pool.test.arn}"]
 	type = "COGNITO_USER_POOLS"
 }
 
@@ -470,7 +458,7 @@ resource "aws_api_gateway_method" "test" {
     "method.request.header.Content-Type" = false
 	  "method.request.querystring.page" = true
   }
-}`, rInt, rInt, rInt, rInt)
+}`, rInt, rInt, rInt)
 }
 
 func testAccAWSAPIGatewayMethodConfig(rInt int) string {
