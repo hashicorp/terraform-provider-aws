@@ -334,6 +334,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codecommit_repository":                    resourceAwsCodeCommitRepository(),
 			"aws_codecommit_trigger":                       resourceAwsCodeCommitTrigger(),
 			"aws_codebuild_project":                        resourceAwsCodeBuildProject(),
+			"aws_codebuild_webhook":                        resourceAwsCodeBuildWebhook(),
 			"aws_codepipeline":                             resourceAwsCodePipeline(),
 			"aws_customer_gateway":                         resourceAwsCustomerGateway(),
 			"aws_dax_cluster":                              resourceAwsDaxCluster(),
