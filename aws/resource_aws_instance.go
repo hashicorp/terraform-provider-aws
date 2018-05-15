@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -51,8 +53,9 @@ func resourceAwsInstance() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"ami": {
 				Type:     schema.TypeString,
-				Required: true,
 				ForceNew: true,
+				Computed: true,
+				Optional: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -119,6 +122,7 @@ func resourceAwsInstance() *schema.Resource {
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
@@ -200,6 +204,7 @@ func resourceAwsInstance() *schema.Resource {
 			"ebs_optimized": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"enclave_options": {
@@ -281,7 +286,8 @@ func resourceAwsInstance() *schema.Resource {
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
+				Optional: true,
 			},
 			"ipv6_address_count": {
 				Type:     schema.TypeInt,
@@ -304,6 +310,38 @@ func resourceAwsInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
+			},
+			"launch_template": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"launch_template.0.name"},
+							ValidateFunc:  validateLaunchTemplateId,
+						},
+						"name": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"launch_template.0.id"},
+							ValidateFunc:  validateLaunchTemplateName,
+						},
+						"version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+							Default:      "$Default",
+						},
+					},
+				},
 			},
 			"metadata_options": {
 				Type:     schema.TypeList,
@@ -336,6 +374,7 @@ func resourceAwsInstance() *schema.Resource {
 			"monitoring": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"network_interface": {
 				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
@@ -516,6 +555,7 @@ func resourceAwsInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
+				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
@@ -540,6 +580,7 @@ func resourceAwsInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
+				Computed:      true,
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
 					s := v.(string)
@@ -592,7 +633,59 @@ func resourceAwsInstance() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			SetTagsDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				if diff.HasChange("launch_template.0.version") {
+					conn := meta.(*AWSClient).ec2conn
+
+					stateVersion := diff.Get("launch_template.0.version")
+
+					var err error
+					var templateId, instanceVersion, defaultVersion, latestVersion string
+
+					templateId, err = getAwsInstanceLaunchTemplateId(conn, diff.Id())
+					if err != nil {
+						return err
+					}
+
+					if templateId != "" {
+						instanceVersion, err = getAwsInstanceLaunchTemplateVersion(conn, diff.Id())
+						if err != nil {
+							return err
+						}
+
+						_, defaultVersion, latestVersion, err = getAwsLaunchtemplateSpecification(conn, templateId)
+						if err != nil {
+							return err
+						}
+					}
+
+					switch stateVersion {
+					case "$Default":
+						if instanceVersion != defaultVersion {
+							diff.ForceNew("launch_template.0.version")
+						}
+					case "$Latest":
+						if instanceVersion != latestVersion {
+							diff.ForceNew("launch_template.0.version")
+						}
+					default:
+						if stateVersion != instanceVersion {
+							diff.ForceNew("launch_template.0.version")
+						}
+					}
+				}
+
+				return nil
+			},
+			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("launch_template.0.name")
+			}),
+			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("launch_template.0.id")
+			}),
+		),
 	}
 }
 
@@ -619,7 +712,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("error collecting instance settings: %w", err)
 	}
 
 	tagSpecifications := ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
@@ -639,6 +732,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Ipv6AddressCount:                  instanceOpts.Ipv6AddressCount,
 		Ipv6Addresses:                     instanceOpts.Ipv6Addresses,
 		KeyName:                           instanceOpts.KeyName,
+		LaunchTemplate:                    instanceOpts.LaunchTemplate,
 		MaxCount:                          aws.Int64(int64(1)),
 		MinCount:                          aws.Int64(int64(1)),
 		NetworkInterfaces:                 instanceOpts.NetworkInterfaces,
@@ -792,16 +886,18 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
 		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
 		// Some other error, report it
-		return err
+		return fmt.Errorf("error retrieving instance (%s): %w", d.Id(), err)
 	}
 
 	// If nothing was found, then return no state
 	if instance == nil {
+		log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -865,6 +961,16 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("iam_instance_profile", name)
 	} else {
 		d.Set("iam_instance_profile", nil)
+	}
+
+	{
+		launchTemplate, err := getAwsInstanceLaunchTemplate(conn, d)
+		if err != nil {
+			return fmt.Errorf("error reading Instance (%s) Launch Template: %w", d.Id(), err)
+		}
+		if err := d.Set("launch_template", launchTemplate); err != nil {
+			return fmt.Errorf("error setting launch_template: %w", err)
+		}
 	}
 
 	// Set configured Network Interface Device Index Slice
@@ -1937,6 +2043,66 @@ func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instanc
 		aws.StringValue(bd.DeviceName) == aws.StringValue(instance.RootDeviceName)
 }
 
+func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) {
+	if len(specs) < 1 {
+		return "", errors.New("Cannot fetch AMI for blank launch template.")
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	if idValue == "" && nameValue == "" {
+		return "", fmt.Errorf("One of `id` or `name` must be set for `launch_template`")
+	}
+
+	request := &ec2.DescribeLaunchTemplateVersionsInput{}
+
+	if idOk && idValue != "" {
+		request.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		request.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	var isLatest bool
+	defaultFilter := []*ec2.Filter{
+		{
+			Name:   aws.String("is-default-version"),
+			Values: aws.StringSlice([]string{"true"}),
+		},
+	}
+	if v, ok := spec["version"]; ok && v != "" {
+		switch v {
+		case "$Default":
+			request.Filters = defaultFilter
+		case "$Latest":
+			isLatest = true
+		default:
+			request.Versions = []*string{aws.String(v.(string))}
+		}
+	}
+
+	dltv, err := conn.DescribeLaunchTemplateVersions(request)
+	if err != nil {
+		return "", err
+	}
+
+	var ltData *ec2.ResponseLaunchTemplateData
+	if isLatest {
+		index := len(dltv.LaunchTemplateVersions) - 1
+		ltData = dltv.LaunchTemplateVersions[index].LaunchTemplateData
+	} else {
+		ltData = dltv.LaunchTemplateVersions[0].LaunchTemplateData
+	}
+
+	if ltData.ImageId != nil {
+		return *ltData.ImageId, nil
+	}
+
+	return "", nil
+}
+
 func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	if ami == "" {
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
@@ -2190,6 +2356,24 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 				}
 			}
 
+			var ami string
+			if v, ok := d.GetOk("launch_template"); ok {
+				var err error
+				ami, err = fetchLaunchTemplateAmi(v.([]interface{}), conn)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			// AMI id from attributes overrides ami from launch template
+			if v, ok := d.GetOk("ami"); ok {
+				ami = v.(string)
+			}
+
+			if ami == "" {
+				return nil, errors.New("`ami` must be set or provided via launch template")
+			}
+
 			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
@@ -2359,6 +2543,7 @@ type awsInstanceOpts struct {
 	Ipv6AddressCount                  *int64
 	Ipv6Addresses                     []*ec2.InstanceIpv6Address
 	KeyName                           *string
+	LaunchTemplate                    *ec2.LaunchTemplateSpecification
 	NetworkInterfaces                 []*ec2.InstanceNetworkInterfaceSpecification
 	Placement                         *ec2.Placement
 	PrivateIPAddress                  *string
@@ -2377,14 +2562,39 @@ type awsInstanceOpts struct {
 func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*AWSClient).ec2conn
 
+	amiValue, amiOk := d.GetOk("ami")
+	typeValue, typeOk := d.GetOk("instance_type")
+	templateValue, templateOk := d.GetOk("launch_template")
+
+	if !amiOk && !templateOk {
+		return nil, fmt.Errorf("Either `ami` must be set or `launch_template` that defines `image_id` must be provided")
+	}
+
+	if !typeOk && !templateOk {
+		return nil, fmt.Errorf("Either `instance_type` must be set or `launch_template` must be provided")
+	}
+
 	instanceType := d.Get("instance_type").(string)
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		ImageID:               aws.String(d.Get("ami").(string)),
-		InstanceType:          aws.String(instanceType),
 		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 		EnclaveOptions:        expandEc2EnclaveOptions(d.Get("enclave_options").([]interface{})),
+	}
+	if amiOk {
+		opts.ImageID = aws.String(amiValue.(string))
+	}
+
+	if typeOk {
+		opts.InstanceType = aws.String(typeValue.(string))
+	}
+
+	if templateOk {
+		var err error
+		opts.LaunchTemplate, err = expandEc2LaunchTemplateSpecification(templateValue.([]interface{}))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Set default cpu_credits as Unlimited for T3 instance type
@@ -2883,4 +3093,119 @@ func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) 
 	}
 
 	return resp.Reservations[0].Instances, nil
+}
+
+func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[string]interface{}, error) {
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	id, err := getAwsInstanceLaunchTemplateId(conn, d.Id())
+	if err != nil {
+		return nil, err
+	}
+	if id == "" {
+		return nil, nil
+	}
+
+	name, defaultVersion, latestVersion, err := getAwsLaunchtemplateSpecification(conn, id)
+
+	if err != nil {
+		if isAWSErr(err, "InvalidLaunchTemplateId.Malformed", "") {
+			// Instance is tagged with non existent template just set it to nil
+			log.Printf("[WARN] Launch template %s not found, removing from state", id)
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error reading Launch Template: %s", err)
+	}
+
+	attrs["id"] = id
+	attrs["name"] = name
+
+	version, err := getAwsInstanceLaunchTemplateVersion(conn, d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	dltvi := &ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: aws.String(id),
+		Versions:         []*string{aws.String(version)},
+	}
+
+	if _, err := conn.DescribeLaunchTemplateVersions(dltvi); err != nil {
+		if isAWSErr(err, "InvalidLaunchTemplateId.VersionNotFound", "") {
+			// Instance is tagged with non existent template version, just don't set it
+			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, version)
+			result = append(result, attrs)
+			return result, nil
+		}
+		return nil, fmt.Errorf("error reading Launch Template Version: %s", err)
+	}
+
+	if v, ok := d.GetOk("launch_template.0.version"); ok {
+		switch v {
+		case "$Default":
+			if version == defaultVersion {
+				attrs["version"] = "$Default"
+			} else {
+				attrs["version"] = version
+			}
+		case "$Latest":
+			if version == latestVersion {
+				attrs["version"] = "$Latest"
+			} else {
+				attrs["version"] = version
+			}
+		default:
+			attrs["version"] = version
+		}
+	}
+
+	result = append(result, attrs)
+
+	return result, nil
+}
+
+func getAwsInstanceLaunchTemplateId(conn *ec2.EC2, instanceId string) (string, error) {
+	idTag := "aws:ec2launchtemplate:id"
+
+	launchTemplateId, err := getInstanceTagValue(conn, instanceId, idTag)
+	if err != nil {
+		return "", fmt.Errorf("error reading Instance Launch Template Id Tag: %s", err)
+	}
+	if launchTemplateId == nil {
+		return "", nil
+	}
+
+	return *launchTemplateId, nil
+}
+
+func getAwsInstanceLaunchTemplateVersion(conn *ec2.EC2, instanceId string) (string, error) {
+	versionTag := "aws:ec2launchtemplate:version"
+
+	launchTemplateVersion, err := getInstanceTagValue(conn, instanceId, versionTag)
+	if err != nil {
+		return "", fmt.Errorf("error reading Instance Launch Template Version Tag: %s", err)
+	}
+	if launchTemplateVersion == nil {
+		return "", nil
+	}
+
+	return *launchTemplateVersion, nil
+}
+
+// getAwsLaunchtemplateSpecification takes conn and template id
+// returns name, default version, latest version
+func getAwsLaunchtemplateSpecification(conn *ec2.EC2, id string) (string, string, string, error) {
+	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
+		LaunchTemplateIds: []*string{aws.String(id)},
+	})
+	if err != nil {
+		return "", "", "", err
+	}
+
+	name := *dlt.LaunchTemplates[0].LaunchTemplateName
+	defaultVersion := strconv.FormatInt(*dlt.LaunchTemplates[0].DefaultVersionNumber, 10)
+	latestVersion := strconv.FormatInt(*dlt.LaunchTemplates[0].LatestVersionNumber, 10)
+
+	return name, defaultVersion, latestVersion, nil
 }

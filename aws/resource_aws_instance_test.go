@@ -2616,6 +2616,70 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	})
 }
 
+// Test suite for instance launch_template feature
+// 1. Create instance without launch template
+// 2. Update with launch_template - this should recreate instance
+// 3. Root volume size should be overridden from instance attributes
+// 4. Creating new template version should not trigger instance recreation when default is used
+// 5. Updating from $Default version to exact version should not trigger recreation
+// 6. Updating to latest template version should recreate instance
+func TestAccAWSInstance_LaunchTemplate(t *testing.T) {
+	var v1, v2, v3, v4, v5 ec2.Instance
+
+	resName := "aws_instance.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCreateWithoutTemplate,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resName, &v1),
+					resource.TestCheckResourceAttr(resName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resName, "root_block_device.0.volume_size", "10"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigUpdateWithTemplate,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resName, "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resName, "root_block_device.0.volume_size", "11"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigUpdateTemplateSettings,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resName, &v3),
+					testAccCheckInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resName, "instance_type", "t2.micro"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigUpdateInstanceTemplateVersion,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resName, "instance_type", "t2.micro"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigUpdateInstanceTemplateLatest,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resName, &v5),
+					testAccCheckInstanceRecreated(&v4, &v5),
+					resource.TestCheckResourceAttr(resName, "instance_type", "t2.nano"),
+					resource.TestCheckResourceAttr(resName, "root_block_device.0.volume_size", "10"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
@@ -6008,7 +6072,9 @@ resource "aws_subnet" "test" {
 }
 
 func testAccInstanceConfigHibernation(hibernation bool) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -6258,3 +6324,259 @@ resource "aws_ec2_capacity_reservation" "test" {
 }
 `, rName, ec2.CapacityReservationInstancePlatformLinuxUnix))
 }
+
+const testAccInstanceConfigCreateWithoutTemplate = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_instance" "foo" {
+  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
+  associate_public_ip_address = true
+  instance_type               = "t2.medium"
+
+  root_block_device {
+    volume_size           = "10"
+    volume_type           = "standard"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "test-terraform"
+  }
+}
+`
+
+const testAccInstanceConfigUpdateWithTemplate = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_instance" "foo" {
+  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
+  associate_public_ip_address = true
+
+  launch_template {
+    id = "${aws_launch_template.foobar.id}"
+  }
+
+  root_block_device {
+    volume_size           = "11"
+    volume_type           = "standard"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "test-terraform"
+  }
+}
+`
+
+const testAccInstanceConfigUpdateTemplateSettings = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.nano"
+}
+
+resource "aws_instance" "foo" {
+  associate_public_ip_address = true
+
+  launch_template {
+    id = "${aws_launch_template.foobar.id}"
+  }
+
+  root_block_device {
+    volume_size           = "11"
+    volume_type           = "standard"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "test-terraform"
+  }
+}
+`
+
+const testAccInstanceConfigUpdateInstanceTemplateVersion = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.nano"
+}
+
+resource "aws_instance" "foo" {
+  associate_public_ip_address = true
+
+  launch_template {
+    id      = "${aws_launch_template.foobar.id}"
+    version = "1"
+  }
+
+  root_block_device {
+    volume_size           = "11"
+    volume_type           = "standard"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "test-terraform"
+  }
+}
+`
+
+const testAccInstanceConfigUpdateInstanceTemplateLatest = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix   = "foobar"
+  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.nano"
+}
+
+resource "aws_instance" "foo" {
+  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
+  associate_public_ip_address = true
+
+  launch_template {
+    id      = "${aws_launch_template.foobar.id}"
+    version = "${aws_launch_template.foobar.latest_version}"
+  }
+
+  root_block_device {
+    volume_size           = "10"
+    volume_type           = "standard"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "test-terraform"
+  }
+}
+`
