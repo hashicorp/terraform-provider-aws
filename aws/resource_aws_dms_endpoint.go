@@ -244,6 +244,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			ServerName:   aws.String(d.Get("server_name").(string)),
 			Port:         aws.Int64(int64(d.Get("port").(int))),
 			DatabaseName: aws.String(d.Get("database_name").(string)),
+			KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 			AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 			AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
@@ -422,6 +423,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ServerName:   aws.String(d.Get("server_name").(string)),
 				Port:         aws.Int64(int64(d.Get("port").(int))),
 				DatabaseName: aws.String(d.Get("database_name").(string)),
+				KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 				AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 				AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
@@ -549,9 +551,9 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
-		d.Set("kms_key_arn", endpoint.KmsKeyId)
 	}
 
+	d.Set("kms_key_arn", endpoint.KmsKeyId)
 	d.Set("ssl_mode", endpoint.SslMode)
 
 	return nil
