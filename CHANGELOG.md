@@ -1,4 +1,4 @@
-## 1.19.0 (Unreleased)
+## 1.19.0 (May 16, 2018)
 
 NOTES:
 
@@ -6,28 +6,28 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_arn` [GH-3996]
-* **New Data Source:** `aws_lambda_invocation` [GH-4222]
-* **New Resource:** `aws_sns_sms_preferences` [GH-3858]
+* **New Data Source:** `aws_arn` ([#3996](https://github.com/terraform-providers/terraform-provider-aws/issues/3996))
+* **New Data Source:** `aws_lambda_invocation` ([#4222](https://github.com/terraform-providers/terraform-provider-aws/issues/4222))
+* **New Resource:** `aws_sns_sms_preferences` ([#3858](https://github.com/terraform-providers/terraform-provider-aws/issues/3858))
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_policy_document: Allow rendering of `"Principal": {"AWS": "*"}` (required for IAM role trust policies) [GH-4248]
-* resource/aws_api_gateway_rest_api: Add `execution_arn` attribute [GH-3968]
-* resource/aws_db_event_subscription: Add `name_prefix` argument [GH-2754]
-* resource/aws_dms_endpoint: Add `azuredb` for `engine_name` validation [GH-4506]
-* resource/aws_rds_cluster: Add `backtrack_window` argument and wait for updates to complete [GH-4524]
-* resource/aws_spot_fleet_request: Add `launch_specification` `iam_instance_profile_arn` argument [GH-4511]
+* data-source/aws_iam_policy_document: Allow rendering of `"Principal": {"AWS": "*"}` (required for IAM role trust policies) ([#4248](https://github.com/terraform-providers/terraform-provider-aws/issues/4248))
+* resource/aws_api_gateway_rest_api: Add `execution_arn` attribute ([#3968](https://github.com/terraform-providers/terraform-provider-aws/issues/3968))
+* resource/aws_db_event_subscription: Add `name_prefix` argument ([#2754](https://github.com/terraform-providers/terraform-provider-aws/issues/2754))
+* resource/aws_dms_endpoint: Add `azuredb` for `engine_name` validation ([#4506](https://github.com/terraform-providers/terraform-provider-aws/issues/4506))
+* resource/aws_rds_cluster: Add `backtrack_window` argument and wait for updates to complete ([#4524](https://github.com/terraform-providers/terraform-provider-aws/issues/4524))
+* resource/aws_spot_fleet_request: Add `launch_specification` `iam_instance_profile_arn` argument ([#4511](https://github.com/terraform-providers/terraform-provider-aws/issues/4511))
 
 BUG FIXES:
 
-* data-source/aws_autoscaling_groups: Use pagination function for DescribeTags filtering [GH-4535]
-* resource/aws_elb: Ensure `bucket_prefix` for access logging can be updated to `""` [GH-4383]
-* resource/aws_kinesis_firehose_delivery_stream: Retry on Elasticsearch destination IAM role errors and update IAM errors [GH-4518]
-* resource/aws_launch_template: Allow `network_interfaces` `device_index` to be set to 0 [GH-4367]
-* resource/aws_lb: Ensure `bucket_prefix` for access logging can be updated to `""` [GH-4383]
-* resource/aws_lb: Ensure `access_logs` is properly set into Terraform state [GH-4517]
-* resource/aws_security_group: Fix rule description handling when gathering multiple rules with same permissions [GH-4416]
+* data-source/aws_autoscaling_groups: Use pagination function for DescribeTags filtering ([#4535](https://github.com/terraform-providers/terraform-provider-aws/issues/4535))
+* resource/aws_elb: Ensure `bucket_prefix` for access logging can be updated to `""` ([#4383](https://github.com/terraform-providers/terraform-provider-aws/issues/4383))
+* resource/aws_kinesis_firehose_delivery_stream: Retry on Elasticsearch destination IAM role errors and update IAM errors ([#4518](https://github.com/terraform-providers/terraform-provider-aws/issues/4518))
+* resource/aws_launch_template: Allow `network_interfaces` `device_index` to be set to 0 ([#4367](https://github.com/terraform-providers/terraform-provider-aws/issues/4367))
+* resource/aws_lb: Ensure `bucket_prefix` for access logging can be updated to `""` ([#4383](https://github.com/terraform-providers/terraform-provider-aws/issues/4383))
+* resource/aws_lb: Ensure `access_logs` is properly set into Terraform state ([#4517](https://github.com/terraform-providers/terraform-provider-aws/issues/4517))
+* resource/aws_security_group: Fix rule description handling when gathering multiple rules with same permissions ([#4416](https://github.com/terraform-providers/terraform-provider-aws/issues/4416))
 
 ## 1.18.0 (May 10, 2018)
 
