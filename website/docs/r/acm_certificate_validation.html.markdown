@@ -48,7 +48,7 @@ resource "aws_acm_certificate_validation" "cert" {
 
 resource "aws_lb_listener" "front_end" {
   # [...]
-  certificate_arn   = "${aws_acm_certificate_validation.cert.certificate_arn}"
+  certificate_arn   = "${aws_acm_certificate.cert.arn}"
 }
 ```
 
