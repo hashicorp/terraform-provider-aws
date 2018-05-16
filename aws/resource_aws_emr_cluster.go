@@ -100,34 +100,42 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"key_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_slave_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_master_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_slave_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"instance_profile": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"service_access_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -827,7 +835,6 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[ERR] Error waiting for EMR Cluster (%s) Instances to drain", d.Id())
 	}
 
-	d.SetId("")
 	return nil
 }
 
@@ -1374,23 +1381,25 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 			return nil, "", err
 		}
 
-		emrc := resp.Cluster
-
-		if emrc == nil {
+		if resp.Cluster == nil {
 			return 42, "destroyed", nil
 		}
 
-		if resp.Cluster.Status != nil {
-			log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), *resp.Cluster.Status)
+		if resp.Cluster.Status == nil {
+			return resp.Cluster, "", fmt.Errorf("cluster status not provided")
 		}
 
-		status := emrc.Status
-		if *status.State == "TERMINATING" || *status.State == "TERMINATED_WITH_ERRORS" {
-			reason := *status.StateChangeReason
-			return emrc, *status.State, fmt.Errorf("%s: %s",
-				*reason.Code, *reason.Message)
+		state := aws.StringValue(resp.Cluster.Status.State)
+		log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), state)
+
+		if state == emr.ClusterStateTerminating || state == emr.ClusterStateTerminatedWithErrors {
+			reason := resp.Cluster.Status.StateChangeReason
+			if reason == nil {
+				return resp.Cluster, state, fmt.Errorf("%s: reason code and message not provided", state)
+			}
+			return resp.Cluster, state, fmt.Errorf("%s: %s: %s", state, aws.StringValue(reason.Code), aws.StringValue(reason.Message))
 		}
 
-		return emrc, *status.State, nil
+		return resp.Cluster, state, nil
 	}
 }

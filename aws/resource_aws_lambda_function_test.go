@@ -386,6 +386,20 @@ func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
 					},
 				),
 			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            "aws_lambda_function.lambda_function_test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			// Ensure configuration can be removed
+			{
+				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+				),
+			},
 		},
 	})
 }

@@ -122,7 +122,7 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, ok := d.GetOk("targets"); ok {
-		assosciationInput.Targets = expandAwsSsmTargets(d)
+		assosciationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
@@ -216,7 +216,7 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("targets") {
-		associationInput.Targets = expandAwsSsmTargets(d)
+		associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
 	}
 
 	_, err := ssmconn.UpdateAssociation(associationInput)

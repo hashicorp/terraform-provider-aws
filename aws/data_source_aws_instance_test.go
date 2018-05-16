@@ -283,6 +283,24 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+
+				Config: testAccInstanceDataSourceConfig_creditSpecification,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_instance.foo", "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 const testAccInstanceDataSourceConfig = `
 resource "aws_instance" "web" {
@@ -658,3 +676,27 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 	}
 	`, rInt, val)
 }
+
+const testAccInstanceDataSourceConfig_creditSpecification = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-bf4193c7"
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.foo.id}"
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
+}
+`
