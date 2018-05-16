@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayRestApi() *schema.Resource {
@@ -71,6 +72,15 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoint_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  apigateway.EndpointTypeEdge,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.EndpointTypeEdge,
+					apigateway.EndpointTypeRegional,
+				}, false),
+			},
 		},
 	}
 }
@@ -87,6 +97,9 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	params := &apigateway.CreateRestApiInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Description: description,
+		EndpointConfiguration: &apigateway.EndpointConfiguration{
+			Types: []*string{aws.String(d.Get("endpoint_type").(string))},
+		},
 	}
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
@@ -264,6 +277,14 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 				})
 			}
 		}
+	}
+
+	if d.HasChange("endpoint_type") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/endpointConfiguration/types/0"),
+			Value: aws.String(d.Get("endpoint_type").(string)),
+		})
 	}
 
 	return operations
