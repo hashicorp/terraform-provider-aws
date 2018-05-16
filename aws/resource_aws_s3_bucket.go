@@ -51,6 +51,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Computed: true,
 			},
 
+			"bucket_regional_domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"arn": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1078,6 +1083,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Add the bucket_regional_domain_name as an attribute
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Get("bucket").(string), region))
+
 	// Add the hosted zone ID for this bucket's region as an attribute
 	hostedZoneID, err := HostedZoneIDForRegion(region)
 	if err != nil {
@@ -1441,6 +1449,18 @@ func bucketDomainName(bucket string) string {
 	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
 }
 
+func bucketRegionalDomainName(bucket string, region string) string {
+	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+	// China regions uses different domain
+	if isCNRegion(region) {
+		return fmt.Sprintf("%s.s3.%s.amazonaws.com.cn", bucket, region)
+	}
+	if region == "us-east-1" {
+		return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
+	}
+	return fmt.Sprintf("%s.s3-%s.amazonaws.com", bucket, region)
+}
+
 func WebsiteEndpoint(bucket string, region string) *S3Website {
 	domain := WebsiteDomainUrl(region)
 	return &S3Website{Endpoint: fmt.Sprintf("%s.%s", bucket, domain), Domain: domain}
@@ -1470,6 +1490,19 @@ func isOldRegion(region string) bool {
 		"us-west-2",
 	}
 	for _, r := range oldRegions {
+		if region == r {
+			return true
+		}
+	}
+	return false
+}
+
+func isCNRegion(region string) bool {
+	CNRegions := []string{
+		"cn-north-1",
+		"cn-northwest-1",
+	}
+	for _, r := range CNRegions {
 		if region == r {
 			return true
 		}
