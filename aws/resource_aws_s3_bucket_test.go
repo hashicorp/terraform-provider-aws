@@ -126,6 +126,27 @@ func TestAccAWSS3Bucket_region(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_bucketRegionalDomainName(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigRegionalDomainName(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "region", "ap-south-1"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, "ap-south-1")),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	rInt := acctest.RandInt()
 
@@ -1331,6 +1352,10 @@ func testAccBucketDomainName(randInt int) string {
 	return fmt.Sprintf("tf-test-bucket-%d.s3.amazonaws.com", randInt)
 }
 
+func testAccBucketRegionalDomainName(randInt int, region string) string {
+	return fmt.Sprintf("tf-test-bucket-%d.s3-%s.amazonaws.com", randInt, region)
+}
+
 func testAccWebsiteEndpoint(randInt int) string {
 	return fmt.Sprintf("tf-test-bucket-%d.s3-website-us-west-2.amazonaws.com", randInt)
 }
@@ -1427,6 +1452,21 @@ resource "aws_s3_bucket" "bucket" {
 	provider = "aws.west"
 	bucket = "tf-test-bucket-%d"
 	region = "eu-west-1"
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketConfigRegionalDomainName(randInt int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	alias = "asia"
+	region = "ap-south-1"
+}
+
+resource "aws_s3_bucket" "bucket" {
+	provider = "aws.asia"
+	bucket = "tf-test-bucket-%d"
+	region = "ap-south-1"
 }
 `, randInt)
 }
