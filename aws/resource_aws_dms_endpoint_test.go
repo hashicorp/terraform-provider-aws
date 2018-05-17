@@ -63,7 +63,13 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 				Config: dmsEndpointS3Config(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
 				),
 			},
 			{
@@ -397,12 +403,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	}
 	s3_settings {
 		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-		external_table_definition = ""
-		csv_row_delimiter = "\\n"
-		csv_delimiter = ","
-		bucket_folder = ""
-		bucket_name = ""
-		compression_type = "NONE"
+		bucket_name = "bucket_name"
 	}
 
 	depends_on = ["aws_iam_role_policy.dms_s3_access"]
@@ -536,6 +537,10 @@ EOF
 
 func dmsEndpointMongoDbConfig(randId string) string {
 	return fmt.Sprintf(`
+data "aws_kms_alias" "dms" {
+	name = "alias/aws/dms"
+}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
 	endpoint_id = "tf-test-dms-endpoint-%[1]s"
 	endpoint_type = "source"
@@ -547,6 +552,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	database_name = "tftest"
 	ssl_mode = "none"
 	extra_connection_attributes = ""
+	kms_key_arn = "${data.aws_kms_alias.dms.target_key_arn}"
 	tags {
 		Name = "tf-test-dms-endpoint-%[1]s"
 		Update = "to-update"
@@ -566,6 +572,10 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func dmsEndpointMongoDbConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
+data "aws_kms_alias" "dms" {
+	name = "alias/aws/dms"
+}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
 	endpoint_id = "tf-test-dms-endpoint-%[1]s"
 	endpoint_type = "source"
@@ -577,6 +587,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	database_name = "tftest-new-database_name"
 	ssl_mode = "require"
 	extra_connection_attributes = "key=value;"
+	kms_key_arn = "${data.aws_kms_alias.dms.target_key_arn}"
 	tags {
 		Name = "tf-test-dms-endpoint-%[1]s"
 		Update = "updated"
