@@ -166,7 +166,7 @@ func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] KMS Alias: (%s) deleted.", d.Id())
-	d.SetId("")
+
 	return nil
 }
 

@@ -268,9 +268,20 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Creating RDS DB Instance opts: %s", createOpts)
-	resp, err := conn.CreateDBInstance(createOpts)
+	var resp *rds.CreateDBInstanceOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.CreateDBInstance(createOpts)
+		if err != nil {
+			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating RDS DB Instance: %s", err)
 	}
 
 	d.SetId(*resp.DBInstance.DBInstanceIdentifier)
@@ -465,7 +476,16 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
-		_, err := conn.ModifyDBInstance(req)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBInstance(req)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}

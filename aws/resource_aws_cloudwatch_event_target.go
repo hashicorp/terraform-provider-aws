@@ -130,6 +130,35 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				},
 			},
 
+			"kinesis_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"partition_key_path": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 256),
+						},
+					},
+				},
+			},
+
+			"sqs_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"message_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"input_transformer": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -243,6 +272,18 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if t.KinesisParameters != nil {
+		if err := d.Set("kinesis_target", flattenAwsCloudWatchEventTargetKinesisParameters(t.KinesisParameters)); err != nil {
+			return fmt.Errorf("[DEBUG] Error setting kinesis_target error: %#v", err)
+		}
+	}
+
+	if t.SqsParameters != nil {
+		if err := d.Set("sqs_target", flattenAwsCloudWatchEventTargetSqsParameters(t.SqsParameters)); err != nil {
+			return fmt.Errorf("[DEBUG] Error setting sqs_target error: %#v", err)
+		}
+	}
+
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenAwsCloudWatchInputTransformer(t.InputTransformer)); err != nil {
 			return fmt.Errorf("[DEBUG] Error setting input_transformer error: %#v", err)
@@ -305,8 +346,6 @@ func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interfa
 	}
 	log.Println("[INFO] CloudWatch Event Target deleted")
 
-	d.SetId("")
-
 	return nil
 }
 
@@ -335,6 +374,14 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	}
 	if v, ok := d.GetOk("batch_target"); ok {
 		e.BatchParameters = expandAwsCloudWatchEventTargetBatchParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("kinesis_target"); ok {
+		e.KinesisParameters = expandAwsCloudWatchEventTargetKinesisParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("sqs_target"); ok {
+		e.SqsParameters = expandAwsCloudWatchEventTargetSqsParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("input_transformer"); ok {
@@ -402,6 +449,30 @@ func expandAwsCloudWatchEventTargetBatchParameters(config []interface{}) *events
 	return batchParameters
 }
 
+func expandAwsCloudWatchEventTargetKinesisParameters(config []interface{}) *events.KinesisParameters {
+	kinesisParameters := &events.KinesisParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["partition_key_path"].(string); ok && v != "" {
+			kinesisParameters.PartitionKeyPath = aws.String(v)
+		}
+	}
+
+	return kinesisParameters
+}
+
+func expandAwsCloudWatchEventTargetSqsParameters(config []interface{}) *events.SqsParameters {
+	sqsParameters := &events.SqsParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["message_group_id"].(string); ok && v != "" {
+			sqsParameters.MessageGroupId = aws.String(v)
+		}
+	}
+
+	return sqsParameters
+}
+
 func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events.InputTransformer {
 	transformerParameters := &events.InputTransformer{}
 
@@ -453,6 +524,20 @@ func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.Batc
 	if batchParameters.RetryStrategy != nil {
 		config["job_attempts"] = int(aws.Int64Value(batchParameters.RetryStrategy.Attempts))
 	}
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetKinesisParameters(kinesisParameters *events.KinesisParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["partition_key_path"] = *kinesisParameters.PartitionKeyPath
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetSqsParameters(sqsParameters *events.SqsParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["message_group_id"] = *sqsParameters.MessageGroupId
 	result := []map[string]interface{}{config}
 	return result
 }

@@ -807,7 +807,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	{
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
-		if err != nil {
+		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
 			return err
 		}
 		if err := d.Set("credit_specification", creditSpecifications); err != nil {
@@ -1143,7 +1143,6 @@ func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 
@@ -1336,7 +1335,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	// BlockDeviceMapping entry serves as the root device.
 	rootDeviceNameInMapping := false
 	for _, bdm := range image.BlockDeviceMappings {
-		if bdm.DeviceName == image.RootDeviceName {
+		if aws.StringValue(bdm.DeviceName) == aws.StringValue(image.RootDeviceName) {
 			rootDeviceNameInMapping = true
 		}
 	}
@@ -1899,10 +1898,10 @@ func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]int
 		InstanceIds: []*string{aws.String(instanceId)},
 	})
 	if err != nil {
-		return nil, err
+		return creditSpecifications, err
 	}
-	if attr.InstanceCreditSpecifications != nil {
-		creditSpecification["cpu_credits"] = *attr.InstanceCreditSpecifications[0].CpuCredits
+	if len(attr.InstanceCreditSpecifications) > 0 {
+		creditSpecification["cpu_credits"] = aws.StringValue(attr.InstanceCreditSpecifications[0].CpuCredits)
 		creditSpecifications = append(creditSpecifications, creditSpecification)
 	}
 

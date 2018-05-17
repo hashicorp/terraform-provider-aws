@@ -89,11 +89,13 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Computed: true,
 										Optional: true,
 									},
 									"kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -102,10 +104,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -158,8 +162,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"iam_instance_profile.0.name"},
+							ValidateFunc:  validateArn,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -362,9 +368,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
 
 			"vpc_security_group_ids": {
@@ -597,7 +604,7 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
 
-			mapping["ebs"] = ebs
+			mapping["ebs"] = []interface{}{ebs}
 		}
 		s = append(s, mapping)
 	}
@@ -702,7 +709,17 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		}
 
 		if len(v.Groups) > 0 {
-			networkInterface["security_groups"] = aws.StringValueSlice(v.Groups)
+			raw, ok := networkInterface["security_groups"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+			list := raw.(*schema.Set)
+
+			for _, group := range v.Groups {
+				list.Add(aws.StringValue(group))
+			}
+
+			networkInterface["security_groups"] = list
 		}
 
 		s = append(s, networkInterface)
@@ -882,16 +899,16 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v := bdm["device_name"]; v != nil {
-		blockDeviceMapping.DeviceName = aws.String(v.(string))
+	if v := bdm["device_name"].(string); v != "" {
+		blockDeviceMapping.DeviceName = aws.String(v)
 	}
 
-	if v := bdm["no_device"]; v != nil {
-		blockDeviceMapping.NoDevice = aws.String(v.(string))
+	if v := bdm["no_device"].(string); v != "" {
+		blockDeviceMapping.NoDevice = aws.String(v)
 	}
 
-	if v := bdm["virtual_name"]; v != nil {
-		blockDeviceMapping.VirtualName = aws.String(v.(string))
+	if v := bdm["virtual_name"].(string); v != "" {
+		blockDeviceMapping.VirtualName = aws.String(v)
 	}
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
@@ -916,24 +933,24 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v := ebs["iops"]; v != nil {
-		ebsDevice.Iops = aws.Int64(int64(v.(int)))
+	if v := ebs["iops"].(int); v > 0 {
+		ebsDevice.Iops = aws.Int64(int64(v))
 	}
 
-	if v := ebs["kms_key_id"]; v != nil {
-		ebsDevice.KmsKeyId = aws.String(v.(string))
+	if v := ebs["kms_key_id"].(string); v != "" {
+		ebsDevice.KmsKeyId = aws.String(v)
 	}
 
-	if v := ebs["snapshot_id"]; v != nil {
-		ebsDevice.SnapshotId = aws.String(v.(string))
+	if v := ebs["snapshot_id"].(string); v != "" {
+		ebsDevice.SnapshotId = aws.String(v)
 	}
 
 	if v := ebs["volume_size"]; v != nil {
 		ebsDevice.VolumeSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := ebs["volume_type"]; v != nil {
-		ebsDevice.VolumeType = aws.String(v.(string))
+	if v := ebs["volume_type"].(string); v != "" {
+		ebsDevice.VolumeType = aws.String(v)
 	}
 
 	return ebsDevice
@@ -952,7 +969,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Description = aws.String(v)
 	}
 
-	if v, ok := ni["device_index"].(int); ok && v != 0 {
+	if v, ok := ni["device_index"].(int); ok {
 		networkInterface.DeviceIndex = aws.Int64(int64(v))
 	}
 
@@ -969,14 +986,23 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.SubnetId = aws.String(v)
 	}
 
+	if v := ni["security_groups"].(*schema.Set); v.Len() > 0 {
+		for _, v := range v.List() {
+			networkInterface.Groups = append(networkInterface.Groups, aws.String(v.(string)))
+		}
+	}
+
 	ipv6AddressList := ni["ipv6_addresses"].(*schema.Set).List()
 	for _, address := range ipv6AddressList {
 		ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
 			Ipv6Address: aws.String(address.(string)),
 		})
 	}
-	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
 	networkInterface.Ipv6Addresses = ipv6Addresses
+
+	if v := ni["ipv6_address_count"].(int); v > 0 {
+		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
+	}
 
 	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
 	for _, address := range ipv4AddressList {
@@ -986,8 +1012,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		}
 		ipv4Addresses = append(ipv4Addresses, privateIp)
 	}
-	networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
 	networkInterface.PrivateIpAddresses = ipv4Addresses
+
+	if v := ni["ipv4_address_count"].(int); v > 0 {
+		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	}
 
 	return networkInterface
 }

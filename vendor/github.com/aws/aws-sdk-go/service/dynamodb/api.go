@@ -569,6 +569,21 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 //
 //    *  The tables must have DynamoDB Streams enabled (NEW_AND_OLD_IMAGES).
 //
+//
+//    *  The tables must have same provisioned and maximum write capacity units.
+//
+//
+// If global secondary indexes are specified, then the following conditions
+// must also be met:
+//
+//    *  The global secondary indexes must have the same name.
+//
+//    *  The global secondary indexes must have the same hash key and sort key
+//    (if present).
+//
+//    *  The global secondary indexes must have the same provisioned and maximum
+//    write capacity units.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1204,8 +1219,7 @@ func (c *DynamoDB) DescribeContinuousBackupsRequest(input *DescribeContinuousBac
 // to any point in time within EarliestRestorableDateTime and LatestRestorableDateTime.
 //
 // LatestRestorableDateTime is typically 5 minutes before the current time.
-// You can restore your table to any point in time during the last 35 days with
-// a 1-minute granularity.
+// You can restore your table to any point in time during the last 35 days.
 //
 // You can call DescribeContinuousBackups at a maximum rate of 10 times per
 // second.
@@ -1324,6 +1338,88 @@ func (c *DynamoDB) DescribeGlobalTable(input *DescribeGlobalTableInput) (*Descri
 // for more information on using Contexts.
 func (c *DynamoDB) DescribeGlobalTableWithContext(ctx aws.Context, input *DescribeGlobalTableInput, opts ...request.Option) (*DescribeGlobalTableOutput, error) {
 	req, out := c.DescribeGlobalTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeGlobalTableSettings = "DescribeGlobalTableSettings"
+
+// DescribeGlobalTableSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeGlobalTableSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeGlobalTableSettings for more information on using the DescribeGlobalTableSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeGlobalTableSettingsRequest method.
+//    req, resp := client.DescribeGlobalTableSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeGlobalTableSettings
+func (c *DynamoDB) DescribeGlobalTableSettingsRequest(input *DescribeGlobalTableSettingsInput) (req *request.Request, output *DescribeGlobalTableSettingsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeGlobalTableSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeGlobalTableSettingsInput{}
+	}
+
+	output = &DescribeGlobalTableSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeGlobalTableSettings API operation for Amazon DynamoDB.
+//
+// Describes region specific settings for a global table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation DescribeGlobalTableSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+//   The specified global table does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeGlobalTableSettings
+func (c *DynamoDB) DescribeGlobalTableSettings(input *DescribeGlobalTableSettingsInput) (*DescribeGlobalTableSettingsOutput, error) {
+	req, out := c.DescribeGlobalTableSettingsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeGlobalTableSettingsWithContext is the same as DescribeGlobalTableSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeGlobalTableSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) DescribeGlobalTableSettingsWithContext(ctx aws.Context, input *DescribeGlobalTableSettingsInput, opts ...request.Option) (*DescribeGlobalTableSettingsOutput, error) {
+	req, out := c.DescribeGlobalTableSettingsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2630,9 +2726,26 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 //
 // Restores the specified table to the specified point in time within EarliestRestorableDateTime
 // and LatestRestorableDateTime. You can restore your table to any point in
-// time during the last 35 days with a 1-minute granularity. Any number of users
-// can execute up to 4 concurrent restores (any type of restore) in a given
-// account.
+// time during the last 35 days. Any number of users can execute up to 4 concurrent
+// restores (any type of restore) in a given account.
+//
+// When you restore using point in time recovery, DynamoDB restores your table
+// data to the state based on the selected date and time (day:hour:minute:second)
+// to a new table.
+//
+// Along with data, the following are also included on the new restored table
+// using point in time recovery:
+//
+//    * Global secondary indexes (GSIs)
+//
+//    * Local secondary indexes (LSIs)
+//
+//    * Provisioned read and write capacity
+//
+//    * Encryption settings
+//
+//  All these settings come from the current settings of the source table at
+//    the time of restore.
 //
 // You must manually set up the following on the restored table:
 //
@@ -3160,8 +3273,7 @@ func (c *DynamoDB) UpdateContinuousBackupsRequest(input *UpdateContinuousBackups
 // to any point in time within EarliestRestorableDateTime and LatestRestorableDateTime.
 //
 // LatestRestorableDateTime is typically 5 minutes before the current time.
-// You can restore your table to any point in time during the last 35 days with
-// a 1-minute granularity.
+// You can restore your table to any point in time during the last 35 days..
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3250,11 +3362,23 @@ func (c *DynamoDB) UpdateGlobalTableRequest(input *UpdateGlobalTableInput) (req 
 // Adds or removes replicas in the specified global table. The global table
 // must already exist to be able to use this operation. Any replica to be added
 // must be empty, must have the same name as the global table, must have the
-// same key schema, and must have DynamoDB Streams enabled.
+// same key schema, and must have DynamoDB Streams enabled and must have same
+// provisioned and maximum write capacity units.
 //
 // Although you can use UpdateGlobalTable to add replicas and remove replicas
 // in a single request, for simplicity we recommend that you issue separate
 // requests for adding or removing replicas.
+//
+// If global secondary indexes are specified, then the following conditions
+// must also be met:
+//
+//    *  The global secondary indexes must have the same name.
+//
+//    *  The global secondary indexes must have the same hash key and sort key
+//    (if present).
+//
+//    *  The global secondary indexes must have the same provisioned and maximum
+//    write capacity units.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3297,6 +3421,113 @@ func (c *DynamoDB) UpdateGlobalTable(input *UpdateGlobalTableInput) (*UpdateGlob
 // for more information on using Contexts.
 func (c *DynamoDB) UpdateGlobalTableWithContext(ctx aws.Context, input *UpdateGlobalTableInput, opts ...request.Option) (*UpdateGlobalTableOutput, error) {
 	req, out := c.UpdateGlobalTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateGlobalTableSettings = "UpdateGlobalTableSettings"
+
+// UpdateGlobalTableSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateGlobalTableSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateGlobalTableSettings for more information on using the UpdateGlobalTableSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateGlobalTableSettingsRequest method.
+//    req, resp := client.UpdateGlobalTableSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateGlobalTableSettings
+func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSettingsInput) (req *request.Request, output *UpdateGlobalTableSettingsOutput) {
+	op := &request.Operation{
+		Name:       opUpdateGlobalTableSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateGlobalTableSettingsInput{}
+	}
+
+	output = &UpdateGlobalTableSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateGlobalTableSettings API operation for Amazon DynamoDB.
+//
+// Updates settings for a global table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation UpdateGlobalTableSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+//   The specified global table does not exist.
+//
+//   * ErrCodeReplicaNotFoundException "ReplicaNotFoundException"
+//   The specified replica is no longer part of the global table.
+//
+//   * ErrCodeIndexNotFoundException "IndexNotFoundException"
+//   The operation tried to access a nonexistent index.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   Up to 50 CreateBackup operations are allowed per second, per account. There
+//   is no limit to the number of daily on-demand backups that can be taken.
+//
+//   Up to 10 simultaneous table operations are allowed per account. These operations
+//   include CreateTable, UpdateTable, DeleteTable,UpdateTimeToLive, RestoreTableFromBackup,
+//   and RestoreTableToPointInTime.
+//
+//   For tables with secondary indexes, only one of those tables can be in the
+//   CREATING state at any point in time. Do not attempt to create more than one
+//   such table simultaneously.
+//
+//   The total limit of tables in the ACTIVE state is 250.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The operation conflicts with the resource's availability. For example, you
+//   attempted to recreate an existing table, or tried to delete a table currently
+//   in the CREATING state.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateGlobalTableSettings
+func (c *DynamoDB) UpdateGlobalTableSettings(input *UpdateGlobalTableSettingsInput) (*UpdateGlobalTableSettingsOutput, error) {
+	req, out := c.UpdateGlobalTableSettingsRequest(input)
+	return out, req.Send()
+}
+
+// UpdateGlobalTableSettingsWithContext is the same as UpdateGlobalTableSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateGlobalTableSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) UpdateGlobalTableSettingsWithContext(ctx aws.Context, input *UpdateGlobalTableSettingsInput, opts ...request.Option) (*UpdateGlobalTableSettingsOutput, error) {
+	req, out := c.UpdateGlobalTableSettingsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6165,6 +6396,79 @@ func (s *DescribeGlobalTableOutput) SetGlobalTableDescription(v *GlobalTableDesc
 	return s
 }
 
+type DescribeGlobalTableSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global table to describe.
+	//
+	// GlobalTableName is a required field
+	GlobalTableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeGlobalTableSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeGlobalTableSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeGlobalTableSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeGlobalTableSettingsInput"}
+	if s.GlobalTableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalTableName"))
+	}
+	if s.GlobalTableName != nil && len(*s.GlobalTableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("GlobalTableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalTableName sets the GlobalTableName field's value.
+func (s *DescribeGlobalTableSettingsInput) SetGlobalTableName(v string) *DescribeGlobalTableSettingsInput {
+	s.GlobalTableName = &v
+	return s
+}
+
+type DescribeGlobalTableSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global table.
+	GlobalTableName *string `min:"3" type:"string"`
+
+	// The region specific settings for the global table.
+	ReplicaSettings []*ReplicaSettingsDescription `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeGlobalTableSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeGlobalTableSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalTableName sets the GlobalTableName field's value.
+func (s *DescribeGlobalTableSettingsOutput) SetGlobalTableName(v string) *DescribeGlobalTableSettingsOutput {
+	s.GlobalTableName = &v
+	return s
+}
+
+// SetReplicaSettings sets the ReplicaSettings field's value.
+func (s *DescribeGlobalTableSettingsOutput) SetReplicaSettings(v []*ReplicaSettingsDescription) *DescribeGlobalTableSettingsOutput {
+	s.ReplicaSettings = v
+	return s
+}
+
 // Represents the input of a DescribeLimits operation. Has no content.
 type DescribeLimitsInput struct {
 	_ struct{} `type:"structure"`
@@ -7248,6 +7552,63 @@ func (s *GlobalTableDescription) SetReplicationGroup(v []*ReplicaDescription) *G
 	return s
 }
 
+// Represents the settings of a global secondary index for a global table that
+// will be modified.
+type GlobalTableGlobalSecondaryIndexSettingsUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index. The name must be unique among all
+	// other indexes on this table.
+	//
+	// IndexName is a required field
+	IndexName *string `min:"3" type:"string" required:"true"`
+
+	// The maximum number of writes consumed per second before DynamoDB returns
+	// a ThrottlingException.
+	ProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s GlobalTableGlobalSecondaryIndexSettingsUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalTableGlobalSecondaryIndexSettingsUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GlobalTableGlobalSecondaryIndexSettingsUpdate"}
+	if s.IndexName == nil {
+		invalidParams.Add(request.NewErrParamRequired("IndexName"))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.ProvisionedWriteCapacityUnits != nil && *s.ProvisionedWriteCapacityUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ProvisionedWriteCapacityUnits", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetIndexName(v string) *GlobalTableGlobalSecondaryIndexSettingsUpdate {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedWriteCapacityUnits sets the ProvisionedWriteCapacityUnits field's value.
+func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetProvisionedWriteCapacityUnits(v int64) *GlobalTableGlobalSecondaryIndexSettingsUpdate {
+	s.ProvisionedWriteCapacityUnits = &v
+	return s
+}
+
 // Information about item collections, if any, that were affected by the operation.
 // ItemCollectionMetrics is only returned if the request asked for it. If the
 // table does not have any local secondary indexes, this information is not
@@ -8144,13 +8505,11 @@ func (s *LocalSecondaryIndexInfo) SetProjection(v *Projection) *LocalSecondaryIn
 type PointInTimeRecoveryDescription struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the earliest point in time you can restore your table to. It is
-	// equal to the maximum of point in time recovery enabled time and CurrentTime
-	// - PointInTimeRecoveryPeriod.
+	// Specifies the earliest point in time you can restore your table to. It You
+	// can restore your table to any point in time during the last 35 days.
 	EarliestRestorableDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// LatestRestorableDateTime is 5 minutes from now and there is a +/- 1 minute
-	// fuzziness on the restore times.
+	// LatestRestorableDateTime is typically 5 minutes before the current time.
 	LatestRestorableDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The current state of point in time recovery:
@@ -9356,6 +9715,280 @@ func (s ReplicaDescription) GoString() string {
 // SetRegionName sets the RegionName field's value.
 func (s *ReplicaDescription) SetRegionName(v string) *ReplicaDescription {
 	s.RegionName = &v
+	return s
+}
+
+// Represents the properties of a global secondary index.
+type ReplicaGlobalSecondaryIndexSettingsDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index. The name must be unique among all
+	// other indexes on this table.
+	//
+	// IndexName is a required field
+	IndexName *string `min:"3" type:"string" required:"true"`
+
+	// The current status of the global secondary index:
+	//
+	//    * CREATING - The global secondary index is being created.
+	//
+	//    * UPDATING - The global secondary index is being updated.
+	//
+	//    * DELETING - The global secondary index is being deleted.
+	//
+	//    * ACTIVE - The global secondary index is ready for use.
+	IndexStatus *string `type:"string" enum:"IndexStatus"`
+
+	// The maximum number of strongly consistent reads consumed per second before
+	// DynamoDB returns a ThrottlingException.
+	ProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
+
+	// The maximum number of writes consumed per second before DynamoDB returns
+	// a ThrottlingException.
+	ProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ReplicaGlobalSecondaryIndexSettingsDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaGlobalSecondaryIndexSettingsDescription) GoString() string {
+	return s.String()
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetIndexName(v string) *ReplicaGlobalSecondaryIndexSettingsDescription {
+	s.IndexName = &v
+	return s
+}
+
+// SetIndexStatus sets the IndexStatus field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetIndexStatus(v string) *ReplicaGlobalSecondaryIndexSettingsDescription {
+	s.IndexStatus = &v
+	return s
+}
+
+// SetProvisionedReadCapacityUnits sets the ProvisionedReadCapacityUnits field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedReadCapacityUnits(v int64) *ReplicaGlobalSecondaryIndexSettingsDescription {
+	s.ProvisionedReadCapacityUnits = &v
+	return s
+}
+
+// SetProvisionedWriteCapacityUnits sets the ProvisionedWriteCapacityUnits field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedWriteCapacityUnits(v int64) *ReplicaGlobalSecondaryIndexSettingsDescription {
+	s.ProvisionedWriteCapacityUnits = &v
+	return s
+}
+
+// Represents the settings of a global secondary index for a global table that
+// will be modified.
+type ReplicaGlobalSecondaryIndexSettingsUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index. The name must be unique among all
+	// other indexes on this table.
+	//
+	// IndexName is a required field
+	IndexName *string `min:"3" type:"string" required:"true"`
+
+	// The maximum number of strongly consistent reads consumed per second before
+	// DynamoDB returns a ThrottlingException.
+	ProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ReplicaGlobalSecondaryIndexSettingsUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaGlobalSecondaryIndexSettingsUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplicaGlobalSecondaryIndexSettingsUpdate"}
+	if s.IndexName == nil {
+		invalidParams.Add(request.NewErrParamRequired("IndexName"))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.ProvisionedReadCapacityUnits != nil && *s.ProvisionedReadCapacityUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ProvisionedReadCapacityUnits", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetIndexName(v string) *ReplicaGlobalSecondaryIndexSettingsUpdate {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedReadCapacityUnits sets the ProvisionedReadCapacityUnits field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetProvisionedReadCapacityUnits(v int64) *ReplicaGlobalSecondaryIndexSettingsUpdate {
+	s.ProvisionedReadCapacityUnits = &v
+	return s
+}
+
+// Represents the properties of a replica.
+type ReplicaSettingsDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The region name of the replica.
+	//
+	// RegionName is a required field
+	RegionName *string `type:"string" required:"true"`
+
+	// Replica global secondary index settings for the global table.
+	ReplicaGlobalSecondaryIndexSettings []*ReplicaGlobalSecondaryIndexSettingsDescription `type:"list"`
+
+	// The maximum number of strongly consistent reads consumed per second before
+	// DynamoDB returns a ThrottlingException. For more information, see Specifying
+	// Read and Write Requirements (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
+	// in the Amazon DynamoDB Developer Guide.
+	ReplicaProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
+
+	// The maximum number of writes consumed per second before DynamoDB returns
+	// a ThrottlingException. For more information, see Specifying Read and Write
+	// Requirements (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
+	// in the Amazon DynamoDB Developer Guide.
+	ReplicaProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
+
+	// The current state of the region:
+	//
+	//    * CREATING - The region is being created.
+	//
+	//    * UPDATING - The region is being updated.
+	//
+	//    * DELETING - The region is being deleted.
+	//
+	//    * ACTIVE - The region is ready for use.
+	ReplicaStatus *string `type:"string" enum:"ReplicaStatus"`
+}
+
+// String returns the string representation
+func (s ReplicaSettingsDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaSettingsDescription) GoString() string {
+	return s.String()
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *ReplicaSettingsDescription) SetRegionName(v string) *ReplicaSettingsDescription {
+	s.RegionName = &v
+	return s
+}
+
+// SetReplicaGlobalSecondaryIndexSettings sets the ReplicaGlobalSecondaryIndexSettings field's value.
+func (s *ReplicaSettingsDescription) SetReplicaGlobalSecondaryIndexSettings(v []*ReplicaGlobalSecondaryIndexSettingsDescription) *ReplicaSettingsDescription {
+	s.ReplicaGlobalSecondaryIndexSettings = v
+	return s
+}
+
+// SetReplicaProvisionedReadCapacityUnits sets the ReplicaProvisionedReadCapacityUnits field's value.
+func (s *ReplicaSettingsDescription) SetReplicaProvisionedReadCapacityUnits(v int64) *ReplicaSettingsDescription {
+	s.ReplicaProvisionedReadCapacityUnits = &v
+	return s
+}
+
+// SetReplicaProvisionedWriteCapacityUnits sets the ReplicaProvisionedWriteCapacityUnits field's value.
+func (s *ReplicaSettingsDescription) SetReplicaProvisionedWriteCapacityUnits(v int64) *ReplicaSettingsDescription {
+	s.ReplicaProvisionedWriteCapacityUnits = &v
+	return s
+}
+
+// SetReplicaStatus sets the ReplicaStatus field's value.
+func (s *ReplicaSettingsDescription) SetReplicaStatus(v string) *ReplicaSettingsDescription {
+	s.ReplicaStatus = &v
+	return s
+}
+
+// Represents the settings for a global table in a region that will be modified.
+type ReplicaSettingsUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The region of the replica to be added.
+	//
+	// RegionName is a required field
+	RegionName *string `type:"string" required:"true"`
+
+	// Represents the settings of a global secondary index for a global table that
+	// will be modified.
+	ReplicaGlobalSecondaryIndexSettingsUpdate []*ReplicaGlobalSecondaryIndexSettingsUpdate `min:"1" type:"list"`
+
+	// The maximum number of strongly consistent reads consumed per second before
+	// DynamoDB returns a ThrottlingException. For more information, see Specifying
+	// Read and Write Requirements (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
+	// in the Amazon DynamoDB Developer Guide.
+	ReplicaProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ReplicaSettingsUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaSettingsUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplicaSettingsUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplicaSettingsUpdate"}
+	if s.RegionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RegionName"))
+	}
+	if s.ReplicaGlobalSecondaryIndexSettingsUpdate != nil && len(s.ReplicaGlobalSecondaryIndexSettingsUpdate) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReplicaGlobalSecondaryIndexSettingsUpdate", 1))
+	}
+	if s.ReplicaProvisionedReadCapacityUnits != nil && *s.ReplicaProvisionedReadCapacityUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ReplicaProvisionedReadCapacityUnits", 1))
+	}
+	if s.ReplicaGlobalSecondaryIndexSettingsUpdate != nil {
+		for i, v := range s.ReplicaGlobalSecondaryIndexSettingsUpdate {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReplicaGlobalSecondaryIndexSettingsUpdate", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *ReplicaSettingsUpdate) SetRegionName(v string) *ReplicaSettingsUpdate {
+	s.RegionName = &v
+	return s
+}
+
+// SetReplicaGlobalSecondaryIndexSettingsUpdate sets the ReplicaGlobalSecondaryIndexSettingsUpdate field's value.
+func (s *ReplicaSettingsUpdate) SetReplicaGlobalSecondaryIndexSettingsUpdate(v []*ReplicaGlobalSecondaryIndexSettingsUpdate) *ReplicaSettingsUpdate {
+	s.ReplicaGlobalSecondaryIndexSettingsUpdate = v
+	return s
+}
+
+// SetReplicaProvisionedReadCapacityUnits sets the ReplicaProvisionedReadCapacityUnits field's value.
+func (s *ReplicaSettingsUpdate) SetReplicaProvisionedReadCapacityUnits(v int64) *ReplicaSettingsUpdate {
+	s.ReplicaProvisionedReadCapacityUnits = &v
 	return s
 }
 
@@ -11282,6 +11915,137 @@ func (s *UpdateGlobalTableOutput) SetGlobalTableDescription(v *GlobalTableDescri
 	return s
 }
 
+type UpdateGlobalTableSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the settings of a global secondary index for a global table that
+	// will be modified.
+	GlobalTableGlobalSecondaryIndexSettingsUpdate []*GlobalTableGlobalSecondaryIndexSettingsUpdate `min:"1" type:"list"`
+
+	// The name of the global table
+	//
+	// GlobalTableName is a required field
+	GlobalTableName *string `min:"3" type:"string" required:"true"`
+
+	// The maximum number of writes consumed per second before DynamoDB returns
+	// a ThrottlingException.
+	GlobalTableProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
+
+	// Represents the settings for a global table in a region that will be modified.
+	ReplicaSettingsUpdate []*ReplicaSettingsUpdate `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateGlobalTableSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateGlobalTableSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateGlobalTableSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateGlobalTableSettingsInput"}
+	if s.GlobalTableGlobalSecondaryIndexSettingsUpdate != nil && len(s.GlobalTableGlobalSecondaryIndexSettingsUpdate) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlobalTableGlobalSecondaryIndexSettingsUpdate", 1))
+	}
+	if s.GlobalTableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalTableName"))
+	}
+	if s.GlobalTableName != nil && len(*s.GlobalTableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("GlobalTableName", 3))
+	}
+	if s.GlobalTableProvisionedWriteCapacityUnits != nil && *s.GlobalTableProvisionedWriteCapacityUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("GlobalTableProvisionedWriteCapacityUnits", 1))
+	}
+	if s.ReplicaSettingsUpdate != nil && len(s.ReplicaSettingsUpdate) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReplicaSettingsUpdate", 1))
+	}
+	if s.GlobalTableGlobalSecondaryIndexSettingsUpdate != nil {
+		for i, v := range s.GlobalTableGlobalSecondaryIndexSettingsUpdate {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GlobalTableGlobalSecondaryIndexSettingsUpdate", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ReplicaSettingsUpdate != nil {
+		for i, v := range s.ReplicaSettingsUpdate {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReplicaSettingsUpdate", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalTableGlobalSecondaryIndexSettingsUpdate sets the GlobalTableGlobalSecondaryIndexSettingsUpdate field's value.
+func (s *UpdateGlobalTableSettingsInput) SetGlobalTableGlobalSecondaryIndexSettingsUpdate(v []*GlobalTableGlobalSecondaryIndexSettingsUpdate) *UpdateGlobalTableSettingsInput {
+	s.GlobalTableGlobalSecondaryIndexSettingsUpdate = v
+	return s
+}
+
+// SetGlobalTableName sets the GlobalTableName field's value.
+func (s *UpdateGlobalTableSettingsInput) SetGlobalTableName(v string) *UpdateGlobalTableSettingsInput {
+	s.GlobalTableName = &v
+	return s
+}
+
+// SetGlobalTableProvisionedWriteCapacityUnits sets the GlobalTableProvisionedWriteCapacityUnits field's value.
+func (s *UpdateGlobalTableSettingsInput) SetGlobalTableProvisionedWriteCapacityUnits(v int64) *UpdateGlobalTableSettingsInput {
+	s.GlobalTableProvisionedWriteCapacityUnits = &v
+	return s
+}
+
+// SetReplicaSettingsUpdate sets the ReplicaSettingsUpdate field's value.
+func (s *UpdateGlobalTableSettingsInput) SetReplicaSettingsUpdate(v []*ReplicaSettingsUpdate) *UpdateGlobalTableSettingsInput {
+	s.ReplicaSettingsUpdate = v
+	return s
+}
+
+type UpdateGlobalTableSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global table.
+	GlobalTableName *string `min:"3" type:"string"`
+
+	// The region specific settings for the global table.
+	ReplicaSettings []*ReplicaSettingsDescription `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateGlobalTableSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateGlobalTableSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalTableName sets the GlobalTableName field's value.
+func (s *UpdateGlobalTableSettingsOutput) SetGlobalTableName(v string) *UpdateGlobalTableSettingsOutput {
+	s.GlobalTableName = &v
+	return s
+}
+
+// SetReplicaSettings sets the ReplicaSettings field's value.
+func (s *UpdateGlobalTableSettingsOutput) SetReplicaSettings(v []*ReplicaSettingsDescription) *UpdateGlobalTableSettingsOutput {
+	s.ReplicaSettings = v
+	return s
+}
+
 // Represents the input of an UpdateItem operation.
 type UpdateItemInput struct {
 	_ struct{} `type:"structure"`
@@ -12085,6 +12849,20 @@ const (
 
 	// ProjectionTypeInclude is a ProjectionType enum value
 	ProjectionTypeInclude = "INCLUDE"
+)
+
+const (
+	// ReplicaStatusCreating is a ReplicaStatus enum value
+	ReplicaStatusCreating = "CREATING"
+
+	// ReplicaStatusUpdating is a ReplicaStatus enum value
+	ReplicaStatusUpdating = "UPDATING"
+
+	// ReplicaStatusDeleting is a ReplicaStatus enum value
+	ReplicaStatusDeleting = "DELETING"
+
+	// ReplicaStatusActive is a ReplicaStatus enum value
+	ReplicaStatusActive = "ACTIVE"
 )
 
 // Determines the level of detail about provisioned throughput consumption that

@@ -595,8 +595,6 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error deleting Lambda Function: %s", err)
 	}
 
-	d.SetId("")
-
 	return nil
 }
 

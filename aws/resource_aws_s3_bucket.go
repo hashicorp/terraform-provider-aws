@@ -1259,8 +1259,9 @@ func resourceAwsS3BucketCorsUpdate(s3conn *s3.S3, d *schema.ResourceData) error 
 				} else {
 					vMap := make([]*string, len(v.([]interface{})))
 					for i, vv := range v.([]interface{}) {
-						str := vv.(string)
-						vMap[i] = aws.String(str)
+						if str, ok := vv.(string); ok {
+							vMap[i] = aws.String(str)
+						}
 					}
 					switch k {
 					case "allowed_headers":
