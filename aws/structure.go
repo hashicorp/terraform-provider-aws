@@ -3697,15 +3697,19 @@ func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
 }
 
 func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
-	m := map[string]interface{}{}
+	m := map[string]interface{}{
+		"enabled": false,
+	}
+
+	if pitrDesc == nil {
+		return []interface{}{m}
+	}
+
 	if pitrDesc.ContinuousBackupsDescription != nil {
 		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
 		if pitr != nil {
 			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
 		}
-	}
-	if len(m) > 0 {
-		return []interface{}{m}
 	}
 
 	return []interface{}{m}
