@@ -188,7 +188,8 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	//https://docs.aws.amazon.com/guardduty/latest/ug/list-members.html
 	if status == "Created" || status == "Resigned" {
 		d.Set("invited", false)
-	} else if status == "Disabled" || status == "Enabled" || status == "EmailVerificationInProgress" || status == "EmailVerificationFailed" {
+	} else if status == "Disabled" || status == "Enabled" ||
+		status == "EmailVerificationInProgress" || status == "EmailVerificationFailed" || status == "Removed" {
 		d.Set("invited", true)
 	}
 
