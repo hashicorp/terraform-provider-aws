@@ -24,34 +24,55 @@ func setTagsKinesis(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove), len(remove))
-			for i, t := range remove {
-				k[i] = t.Key
-			}
 
-			_, err := conn.RemoveTagsFromStream(&kinesis.RemoveTagsFromStreamInput{
-				StreamName: aws.String(sn),
-				TagKeys:    k,
-			})
-			if err != nil {
-				return err
+			// Kinesis requires these operations be split into 10 tag batches
+			tagKeysBatchLimit := 10
+			tagKeysBatch := make([]*string, 0, tagKeysBatchLimit)
+			tagKeysBatches := make([][]*string, 0, len(remove)/tagKeysBatchLimit+1)
+			for _, tag := range remove {
+				if len(tagKeysBatch) == tagKeysBatchLimit {
+					tagKeysBatches = append(tagKeysBatches, tagKeysBatch)
+					tagKeysBatch = make([]*string, 0, tagKeysBatchLimit)
+				}
+				tagKeysBatch = append(tagKeysBatch, tag.Key)
+			}
+			tagKeysBatches = append(tagKeysBatches, tagKeysBatch)
+
+			for _, tagKeys := range tagKeysBatches {
+				_, err := conn.RemoveTagsFromStream(&kinesis.RemoveTagsFromStreamInput{
+					StreamName: aws.String(sn),
+					TagKeys:    tagKeys,
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 
 		if len(create) > 0 {
-
 			log.Printf("[DEBUG] Creating tags: %#v", create)
-			t := make(map[string]*string)
-			for _, tag := range create {
-				t[*tag.Key] = tag.Value
-			}
 
-			_, err := conn.AddTagsToStream(&kinesis.AddTagsToStreamInput{
-				StreamName: aws.String(sn),
-				Tags:       t,
-			})
-			if err != nil {
-				return err
+			// Kinesis requires these operations be split into 10 tag batches
+			tagsBatchLimit := 10
+			tagsBatch := make(map[string]*string)
+			tagsBatches := make([]map[string]*string, 0, len(create)/tagsBatchLimit+1)
+			for _, tag := range create {
+				if len(tagsBatch) == tagsBatchLimit {
+					tagsBatches = append(tagsBatches, tagsBatch)
+					tagsBatch = make(map[string]*string)
+				}
+				tagsBatch[aws.StringValue(tag.Key)] = tag.Value
+			}
+			tagsBatches = append(tagsBatches, tagsBatch)
+
+			for _, tags := range tagsBatches {
+				_, err := conn.AddTagsToStream(&kinesis.AddTagsToStreamInput{
+					StreamName: aws.String(sn),
+					Tags:       tags,
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
