@@ -193,6 +193,12 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"dns_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"cluster_public_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -567,6 +573,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 		if rsc.Endpoint.Port != nil {
 			endpoint = fmt.Sprintf("%s:%d", endpoint, *rsc.Endpoint.Port)
 		}
+		d.Set("dns_name", rsc.Endpoint.Address)
 		d.Set("port", rsc.Endpoint.Port)
 		d.Set("endpoint", endpoint)
 	}
