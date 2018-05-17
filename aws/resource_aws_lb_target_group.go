@@ -631,6 +631,12 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 	}
 
 	if protocol == "TCP" {
+		if diff.HasChange("health_check.0.protocol") {
+			old, new := diff.GetChange("protocol")
+			return fmt.Errorf("Health check protocol cannot be updated from %d to %d for TCP based Target Group %s"+
+				" use 'terraform taint' to recreate the resource if you wish",
+				old, new, diff.Id())
+		}
 		if diff.HasChange("health_check.0.interval") {
 			old, new := diff.GetChange("health_check.0.interval")
 			return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
