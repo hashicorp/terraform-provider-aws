@@ -94,8 +94,8 @@ The following arguments are supported:
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that
   instances in the DB cluster can be created in
-* `backup_retention_period` - (Optional) The days to retain backups for. Default
-1
+* `backtrack_window` - (Optional) The target backtrack window, in seconds. Only available for `aurora` or `aurora-mysql` engines. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
+* `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g. wed:04:00-wed:04:30
@@ -116,6 +116,32 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: aurora,aurora-mysql,aurora-postgresql
 * `engine_version` - (Optional) The database engine version.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
+
+### S3 Import Options
+
+Full details on the core parameters and impacts are in the API Docs: [RestoreDBClusterFromS3](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterFromS3.html).  Requires that the S3 bucket be in the same region as the RDS cluster you're trying to create.  Sample 
+
+```hcl
+resource "aws_rds_cluster" "db" {
+  engine = "aurora"
+
+  s3_import {
+    source_engine = "mysql"
+    source_engine_version = "5.6"
+    bucket_name = "mybucket"
+    bucket_prefix = "backups"
+    ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
+  }
+}
+```
+
+* `bucket_name` - (Required) The bucket name where your backup is stored
+* `bucket_prefix` - (Optional) Can be blank, but is the path to your backup
+* `ingestion_role` - (Required) Role applied to load the data.
+* `source_engine` - (Required) Source engine for the backup
+* `source_engine_version` - (Required) Version of the source engine used to make the backup
+
+This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.  This only works currently with the aurora engine.  See AWS for currently supported engines and options.  [Aurora S3 Migration Docs](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Migrating.ExtMySQL.html#AuroraMySQL.Migrating.ExtMySQL.S3)
 
 ## Attributes Reference
 

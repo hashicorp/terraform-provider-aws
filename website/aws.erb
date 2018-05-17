@@ -28,6 +28,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-acm-certificate") %>>
                             <a href="/docs/providers/aws/d/acm_certificate.html">aws_acm_certificate</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-acmpca-certificate-authority") %>>
+                            <a href="/docs/providers/aws/d/acmpca_certificate_authority.html">aws_acmpca_certificate_authority</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-alb-x") %>>
                             <a href="/docs/providers/aws/d/lb.html">aws_alb</a>
                         </li>
@@ -45,6 +48,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws_api_gateway_rest_api") %>>
                             <a href="/docs/providers/aws/d/api_gateway_rest_api.html">aws_api_gateway_rest_api</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-arn") %>>
+                            <a href="/docs/providers/aws/d/arn.html">aws_arn</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-autoscaling-groups") %>>
                             <a href="/docs/providers/aws/d/autoscaling_groups.html">aws_autoscaling_groups</a>
@@ -199,6 +205,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-kms-secret") %>>
                             <a href="/docs/providers/aws/d/kms_secret.html">aws_kms_secret</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-lambda-invocation") %>>
+                            <a href="/docs/providers/aws/d/lambda_invocation.html">aws_lambda_invocation</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-nat-gateway") %>>
                            <a href="/docs/providers/aws/d/nat_gateway.html">aws_nat_gateway</a>
                         </li>
@@ -216,6 +225,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-lb-target-group") %>>
                             <a href="/docs/providers/aws/d/lb_target_group.html">aws_lb_target_group</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-mq-broker") %>>
+                            <a href="/docs/providers/aws/d/mq_broker.html">aws_mq_broker</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-partition") %>>
                             <a href="/docs/providers/aws/d/partition.html">aws_partition</a>
@@ -297,6 +309,15 @@
                     </li>
                     <li<%= sidebar_current("docs-aws-resource-acm-certificate-validation") %>>
                       <a href="/docs/providers/aws/r/acm_certificate_validation.html">aws_acm_certificate_validation</a>
+                    </li>
+                  </ul>
+                </li>
+
+                <li<%= sidebar_current("docs-aws-resource-acmpca") %>>
+                  <a href="#">ACM PCA Resources</a>
+                  <ul class="nav nav-visible">
+                    <li<%= sidebar_current("docs-aws-resource-acmpca-certificate-authority") %>>
+                      <a href="/docs/providers/aws/r/acmpca_certificate_authority.html">aws_acmpca_certificate_authority</a>
                     </li>
                   </ul>
                 </li>
@@ -432,6 +453,15 @@
                     <ul class="nav nav-visible">
                         <li<%= sidebar_current("docs-aws-resource-cloud9-environment-ec2") %>>
                             <a href="/docs/providers/aws/r/cloud9_environment_ec2.html">aws_cloud9_environment_ec2</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li<%= sidebar_current("docs-aws-resource-budgets-budget") %>>
+                    <a href="#">Budget Resources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-budgets-budget") %>>
+                            <a href="/docs/providers/aws/r/budgets_budget.html">aws_budgets_budget</a>
                         </li>
                     </ul>
                 </li>
@@ -1093,6 +1123,9 @@
                         <li<%= sidebar_current("docs-aws-resource-glue-catalog-database") %>>
                             <a href="/docs/providers/aws/r/glue_catalog_database.html">aws_glue_catalog_database</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-glue-catalog-table") %>>
+                            <a href="/docs/providers/aws/r/glue_catalog_table.html">aws_glue_catalog_table</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-glue-connection") %>>
                             <a href="/docs/providers/aws/r/glue_connection.html">aws_glue_connection</a>
                         </li>
@@ -1197,6 +1230,10 @@
 
                         <li<%= sidebar_current("docs-aws-resource-iam-user") %>>
                             <a href="/docs/providers/aws/r/iam_user.html">aws_iam_user</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-iam-user-group-membership") %>>
+                            <a href="/docs/providers/aws/r/iam_user_group_membership.html">aws_iam_user_group_membership</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-iam-user-login-profile") %>>
@@ -2053,6 +2090,10 @@
 
                         <li<%= sidebar_current("docs-aws-resource-vpc-peering-accepter") %>>
                             <a href="/docs/providers/aws/r/vpc_peering_accepter.html">aws_vpc_peering_connection_accepter</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-vpc-peering-options") %>>
+                            <a href="/docs/providers/aws/r/vpc_peering_options.html">aws_vpc_peering_connection_options</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-vpn-connection") %>>

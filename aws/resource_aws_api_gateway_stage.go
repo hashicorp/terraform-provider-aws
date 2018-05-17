@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +22,27 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 		Delete: resourceAwsApiGatewayStageDelete,
 
 		Schema: map[string]*schema.Schema{
+			"access_log_settings": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+							StateFunc: func(arn interface{}) string {
+								// arns coming from a TF reference to a log group contain a trailing `:*` which is not valid
+								return strings.TrimSuffix(arn.(string), ":*")
+							},
+						},
+						"format": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"cache_cluster_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -153,6 +175,9 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 	if _, ok := d.GetOk("client_certificate_id"); ok {
 		return resourceAwsApiGatewayStageUpdate(d, meta)
 	}
+	if _, ok := d.GetOk("access_log_settings"); ok {
+		return resourceAwsApiGatewayStageUpdate(d, meta)
+	}
 	return resourceAwsApiGatewayStageRead(d, meta)
 }
 
@@ -176,6 +201,10 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 	log.Printf("[DEBUG] Received API Gateway Stage: %s", stage)
+
+	if err := d.Set("access_log_settings", flattenApiGatewayStageAccessLogSettings(stage.AccessLogSettings)); err != nil {
+		return fmt.Errorf("error setting access_log_settings: %s", err)
+	}
 
 	d.Set("client_certificate_id", stage.ClientCertificateId)
 
@@ -275,6 +304,27 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		oldV := o.(map[string]interface{})
 		newV := n.(map[string]interface{})
 		operations = append(operations, diffVariablesOps("/variables/", oldV, newV)...)
+	}
+	if d.HasChange("access_log_settings") {
+		accessLogSettings := d.Get("access_log_settings").([]interface{})
+		if len(accessLogSettings) == 1 {
+			operations = append(operations,
+				&apigateway.PatchOperation{
+					Op:   aws.String("replace"),
+					Path: aws.String("/accessLogSettings/destinationArn"),
+					// arns coming from a TF reference to a log group contain a trailing `:*` which is not valid
+					Value: aws.String(strings.TrimSuffix(d.Get("access_log_settings.0.destination_arn").(string), ":*")),
+				}, &apigateway.PatchOperation{
+					Op:    aws.String("replace"),
+					Path:  aws.String("/accessLogSettings/format"),
+					Value: aws.String(d.Get("access_log_settings.0.format").(string)),
+				})
+		} else if len(accessLogSettings) == 0 {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:   aws.String("remove"),
+				Path: aws.String("/accessLogSettings"),
+			})
+		}
 	}
 
 	input := apigateway.UpdateStageInput{
@@ -383,4 +433,15 @@ func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func flattenApiGatewayStageAccessLogSettings(accessLogSettings *apigateway.AccessLogSettings) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, 1)
+	if accessLogSettings != nil {
+		result = append(result, map[string]interface{}{
+			"destination_arn": aws.StringValue(accessLogSettings.DestinationArn),
+			"format":          aws.StringValue(accessLogSettings.Format),
+		})
+	}
+	return result
 }

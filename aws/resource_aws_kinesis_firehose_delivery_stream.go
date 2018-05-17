@@ -1426,7 +1426,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 			log.Printf("[DEBUG] Error creating Firehose Delivery Stream: %s", err)
 
 			// Retry for IAM eventual consistency
-			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to perform") {
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
 				return resource.RetryableError(err)
 			}
 			// IAM roles can take ~10 seconds to propagate in AWS:
@@ -1545,7 +1545,28 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		}
 	}
 
-	_, err := conn.UpdateDestination(updateInput)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.UpdateDestination(updateInput)
+		if err != nil {
+			log.Printf("[DEBUG] Error creating Firehose Delivery Stream: %s", err)
+
+			// Retry for IAM eventual consistency
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
+				return resource.RetryableError(err)
+			}
+			// IAM roles can take ~10 seconds to propagate in AWS:
+			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
+				log.Printf("[DEBUG] Firehose could not assume role referenced, retrying...")
+				return resource.RetryableError(err)
+			}
+			// Not retryable
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return fmt.Errorf(
 			"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
@@ -1608,7 +1629,6 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 			sn, err)
 	}
 
-	d.SetId("")
 	return nil
 }
 

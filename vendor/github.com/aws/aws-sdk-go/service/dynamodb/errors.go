@@ -41,6 +41,12 @@ const (
 	// The specified global table does not exist.
 	ErrCodeGlobalTableNotFoundException = "GlobalTableNotFoundException"
 
+	// ErrCodeIndexNotFoundException for service response error code
+	// "IndexNotFoundException".
+	//
+	// The operation tried to access a nonexistent index.
+	ErrCodeIndexNotFoundException = "IndexNotFoundException"
+
 	// ErrCodeInternalServerError for service response error code
 	// "InternalServerError".
 	//

@@ -835,7 +835,6 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[ERR] Error waiting for EMR Cluster (%s) Instances to drain", d.Id())
 	}
 
-	d.SetId("")
 	return nil
 }
 

@@ -49,6 +49,34 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
+	var v rds.EventSubscription
+	rInt := acctest.RandInt()
+	startsWithPrefix := regexp.MustCompile("^tf-acc-test-rds-event-subs-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfigWithPrefix(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists("aws_db_event_subscription.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "source_type", "db-instance"),
+					resource.TestMatchResourceAttr(
+						"aws_db_event_subscription.bar", "name", startsWithPrefix),
+					resource.TestCheckResourceAttr(
+						"aws_db_event_subscription.bar", "tags.Name", "name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
@@ -217,6 +245,29 @@ resource "aws_db_event_subscription" "bar" {
     Name = "name"
   }
 }`, rInt, rInt)
+}
+
+func testAccAWSDBEventSubscriptionConfigWithPrefix(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "aws_sns_topic" {
+  name = "tf-acc-test-rds-event-subs-sns-topic-%d"
+}
+
+resource "aws_db_event_subscription" "bar" {
+  name_prefix = "tf-acc-test-rds-event-subs-"
+  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  source_type = "db-instance"
+  event_categories = [
+    "availability",
+    "backup",
+    "creation",
+    "deletion",
+    "maintenance"
+  ]
+  tags {
+    Name = "name"
+  }
+}`, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdate(rInt int) string {

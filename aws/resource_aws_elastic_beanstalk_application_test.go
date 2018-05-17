@@ -32,6 +32,10 @@ func testSweepBeanstalkApplications(region string) error {
 
 	resp, err := beanstalkconn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving beanstalk application: %s", err)
 	}
 

@@ -225,6 +225,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Partition: meta.(*AWSClient).partition,
 		Service:   "ssm",
 		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("document/%s", *doc.Name),
 	}.String()
 	if err := d.Set("arn", arn); err != nil {
@@ -346,8 +347,6 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
-
-	d.SetId("")
 
 	return nil
 }
