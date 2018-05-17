@@ -47,6 +47,7 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"disable_email_notification": {
 				Type:     schema.TypeBool,
@@ -180,7 +181,16 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("account_id", member.AccountId)
 	d.Set("detector_id", detectorID)
 	d.Set("email", member.Email)
-	d.Set("relationship_status", member.RelationshipStatus)
+
+	status := aws.StringValue(member.RelationshipStatus)
+	d.Set("relationship_status", status)
+
+	//https://docs.aws.amazon.com/guardduty/latest/ug/list-members.html
+	if status == "Created" || status == "Resigned" {
+		d.Set("invited", false)
+	} else if status == "Disabled" || status == "Enabled" || status == "EmailVerificationInProgress" || status == "EmailVerificationFailed" {
+		d.Set("invited", true)
+	}
 
 	return nil
 }
