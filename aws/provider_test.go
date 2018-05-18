@@ -158,5 +158,10 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "UnsupportedOperation", "") {
 		return true
 	}
+	// Ignore more unsupported API calls
+	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
+	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
 	return false
 }
