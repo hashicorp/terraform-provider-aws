@@ -359,6 +359,8 @@ resource "aws_lb" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
+
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_lb_target_group" "test" {
