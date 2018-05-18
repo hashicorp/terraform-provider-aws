@@ -1,4 +1,9 @@
 ## 1.20.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ssm_patch_baseline: Add `approval_rule` `enable_non_security` argument [GH-4546]
+
 ## 1.19.0 (May 16, 2018)
 
 NOTES:
