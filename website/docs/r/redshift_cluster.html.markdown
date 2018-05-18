@@ -104,6 +104,7 @@ The following attributes are exported:
 * `encrypted` - Whether the data in the cluster is encrypted
 * `cluster_security_groups` - The security groups associated with the cluster
 * `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
+* `dns_name` - The DNS name of the cluster
 * `port` - The Port the cluster responds on
 * `cluster_version` - The version of Redshift engine software
 * `cluster_parameter_group_name` - The name of the parameter group to be associated with this cluster
