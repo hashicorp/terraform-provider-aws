@@ -2200,7 +2200,7 @@ type CreateSecretInput struct {
 	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide. For example:
 	//
-	// [{"Key":"username","Value":"bob"},{"Key":"password","Value":"abc123xyz456"}]
+	// [{"username":"bob"},{"password":"abc123xyz456"}]
 	//
 	// If your command-line tool or SDK requires quotation marks around the parameter,
 	// you should use single quotes to avoid confusion with the double quotes required
@@ -3311,6 +3311,14 @@ type PutSecretValueInput struct {
 	// JSON parameter for the various command line tool environments, see Using
 	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide.
+	//
+	// For example:
+	//
+	// [{"username":"bob"},{"password":"abc123xyz456"}]
+	//
+	// If your command-line tool or SDK requires quotation marks around the parameter,
+	// you should use single quotes to avoid confusion with the double quotes required
+	// in the JSON text.
 	SecretString *string `type:"string"`
 
 	// (Optional) Specifies a list of staging labels that are attached to this version
@@ -4209,7 +4217,13 @@ type UpdateSecretInput struct {
 	// argument and specify key/value pairs. For information on how to format a
 	// JSON parameter for the various command line tool environments, see Using
 	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
-	// in the AWS CLI User Guide.
+	// in the AWS CLI User Guide. For example:
+	//
+	// [{"username":"bob"},{"password":"abc123xyz456"}]
+	//
+	// If your command-line tool or SDK requires quotation marks around the parameter,
+	// you should use single quotes to avoid confusion with the double quotes required
+	// in the JSON text.
 	SecretString *string `type:"string"`
 }
 

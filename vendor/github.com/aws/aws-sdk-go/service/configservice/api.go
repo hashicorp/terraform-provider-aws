@@ -10062,4 +10062,7 @@ const (
 
 	// ResourceTypeAwsElasticLoadBalancingLoadBalancer is a ResourceType enum value
 	ResourceTypeAwsElasticLoadBalancingLoadBalancer = "AWS::ElasticLoadBalancing::LoadBalancer"
+
+	// ResourceTypeAwsXrayEncryptionConfig is a ResourceType enum value
+	ResourceTypeAwsXrayEncryptionConfig = "AWS::XRay::EncryptionConfig"
 )
