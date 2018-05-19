@@ -2268,11 +2268,7 @@ func (c *EC2) CancelSpotInstanceRequestsRequest(input *CancelSpotInstanceRequest
 
 // CancelSpotInstanceRequests API operation for Amazon Elastic Compute Cloud.
 //
-// Cancels one or more Spot Instance requests. Spot Instances are instances
-// that Amazon EC2 starts on your behalf when the maximum price that you specify
-// exceeds the current Spot price. For more information, see Spot Instance Requests
-// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html) in
-// the Amazon EC2 User Guide for Linux Instances.
+// Cancels one or more Spot Instance requests.
 //
 // Canceling a Spot Instance request does not terminate running Spot Instances
 // associated with the request.
@@ -4179,8 +4175,8 @@ func (c *EC2) CreateNetworkInterfacePermissionRequest(input *CreateNetworkInterf
 
 // CreateNetworkInterfacePermission API operation for Amazon Elastic Compute Cloud.
 //
-// Grants an AWS authorized partner account permission to attach the specified
-// network interface to an instance in their account.
+// Grants an AWS-authorized account permission to attach the specified network
+// interface to an instance in their account.
 //
 // You can grant permission to a single AWS account only, and only one account
 // at a time.
@@ -13675,11 +13671,7 @@ func (c *EC2) DescribeSpotInstanceRequestsRequest(input *DescribeSpotInstanceReq
 
 // DescribeSpotInstanceRequests API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the Spot Instance requests that belong to your account. Spot Instances
-// are instances that Amazon EC2 launches when the Spot price that you specify
-// exceeds the current Spot price. For more information, see Spot Instance Requests
-// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html) in
-// the Amazon EC2 User Guide for Linux Instances.
+// Describes the specified Spot Instance requests.
 //
 // You can use DescribeSpotInstanceRequests to find a running Spot Instance
 // by examining the response. If the status of the Spot Instance is fulfilled,
@@ -21367,9 +21359,9 @@ func (c *EC2) RequestSpotInstancesRequest(input *RequestSpotInstancesInput) (req
 
 // RequestSpotInstances API operation for Amazon Elastic Compute Cloud.
 //
-// Creates a Spot Instance request. Spot Instances are instances that Amazon
-// EC2 launches when the maximum price that you specify exceeds the current
-// Spot price. For more information, see Spot Instance Requests (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html)
+// Creates a Spot Instance request.
+//
+// For more information, see Spot Instance Requests (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html)
 // in the Amazon EC2 User Guide for Linux Instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -66969,7 +66961,7 @@ type TagSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are instance and volume.
+	// on creation are instance, snapshot, and volume.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -70694,6 +70686,9 @@ const (
 	// InstanceTypeI316xlarge is a InstanceType enum value
 	InstanceTypeI316xlarge = "i3.16xlarge"
 
+	// InstanceTypeI3Metal is a InstanceType enum value
+	InstanceTypeI3Metal = "i3.metal"
+
 	// InstanceTypeHi14xlarge is a InstanceType enum value
 	InstanceTypeHi14xlarge = "hi1.4xlarge"
 
@@ -70753,6 +70748,24 @@ const (
 
 	// InstanceTypeC518xlarge is a InstanceType enum value
 	InstanceTypeC518xlarge = "c5.18xlarge"
+
+	// InstanceTypeC5dLarge is a InstanceType enum value
+	InstanceTypeC5dLarge = "c5d.large"
+
+	// InstanceTypeC5dXlarge is a InstanceType enum value
+	InstanceTypeC5dXlarge = "c5d.xlarge"
+
+	// InstanceTypeC5d2xlarge is a InstanceType enum value
+	InstanceTypeC5d2xlarge = "c5d.2xlarge"
+
+	// InstanceTypeC5d4xlarge is a InstanceType enum value
+	InstanceTypeC5d4xlarge = "c5d.4xlarge"
+
+	// InstanceTypeC5d9xlarge is a InstanceType enum value
+	InstanceTypeC5d9xlarge = "c5d.9xlarge"
+
+	// InstanceTypeC5d18xlarge is a InstanceType enum value
+	InstanceTypeC5d18xlarge = "c5d.18xlarge"
 
 	// InstanceTypeCc14xlarge is a InstanceType enum value
 	InstanceTypeCc14xlarge = "cc1.4xlarge"
