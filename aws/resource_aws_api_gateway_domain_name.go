@@ -41,7 +41,12 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 			"certificate_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn"},
+				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn", "regional_certificate_name"},
+			},
+			"regional_certificate_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"certificate_arn", "regional_certificate_name", "certificate_name"},
 			},
 
 			"certificate_private_key": {
@@ -50,6 +55,15 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ConflictsWith: []string{"certificate_arn"},
+			},
+
+			"endpoint_configuration": {
+				Type: schema.TypeSet,
+				//Type:     schema.TypeSet,
+				//Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"domain_name": {
@@ -61,7 +75,12 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 			"certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_body", "certificate_chain", "certificate_name", "certificate_private_key"},
+				ConflictsWith: []string{"certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_arn"},
+			},
+			"regional_certificate_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_name"},
 			},
 
 			"cloudfront_domain_name": {
@@ -90,12 +109,24 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
+	if v, ok := d.GetOk("endpoint_configuration"); ok {
+		params.EndpointConfiguration = expandEndpoints(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("certificate_arn"); ok {
 		params.CertificateArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("regional_certificate_arn"); ok {
+		params.RegionalCertificateArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("certificate_name"); ok {
 		params.CertificateName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("regional_certificate_name"); ok {
+		params.RegionalCertificateName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("certificate_body"); ok {
@@ -207,4 +238,11 @@ func resourceAwsApiGatewayDomainNameDelete(d *schema.ResourceData, meta interfac
 
 		return resource.NonRetryableError(err)
 	})
+}
+
+func expandEndpoints(as *schema.Set) *apigateway.EndpointConfiguration {
+	s := as.List()
+	var endpoints apigateway.EndpointConfiguration
+	endpoints.Types = expandStringList(s)
+	return &endpoints
 }
