@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -256,7 +257,7 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
 	var resp *applicationautoscaling.PutScalingPolicyOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
@@ -285,10 +286,24 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	p, err := getAwsAppautoscalingPolicy(d, meta)
+	var p *applicationautoscaling.ScalingPolicy
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		p, err = getAwsAppautoscalingPolicy(d, meta)
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+					return resource.RetryableError(err)
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to read scaling policy: %s", err)
 	}
+
 	if p == nil {
 		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -320,7 +335,17 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
-	_, err := conn.PutScalingPolicy(&params)
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutScalingPolicy(&params)
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+					return resource.RetryableError(err)
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}
@@ -345,10 +370,20 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
-	if _, err := conn.DeleteScalingPolicy(&params); err != nil {
-		return fmt.Errorf("Failed to delete autoscaling policy: %s", err)
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		_, err = conn.DeleteScalingPolicy(&params)
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+					return resource.RetryableError(err)
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to delete scaling policy: %s", err)
 	}
-
 	return nil
 }
 
