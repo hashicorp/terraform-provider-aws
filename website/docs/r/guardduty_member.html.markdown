@@ -41,15 +41,16 @@ The following arguments are supported:
 * `account_id` - (Required) AWS account ID for member account.
 * `detector_id` - (Required) The detector ID of the GuardDuty account where you want to create member accounts.
 * `email` - (Required) Email address for member account.
-* `invite` - (Optional) The flag to send an invitation to specified AWS account ID.
+* `invite` - (Optional) Specifies whether to invite the account to GuardDuty as members.
 * `invitation_message` - (Optional) Message for invitation.
+* `disable_email_notification` - (Optional) Specifies whether an email notification is sent to the accounts.
 
 ## Timeouts
 
 `aws_guardduty_member` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-- `create` - (Default `60s`) How long to wait for a certificate to be issued.
+- `create` - (Default `60s`) How long to wait for a verification to be done against inviting GuardDuty member account.
 
 
 ## Attributes Reference
