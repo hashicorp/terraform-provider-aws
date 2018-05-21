@@ -70,7 +70,14 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  bucket,
 	}.String()
 	d.Set("arn", arn)
-	d.Set("bucket_domain_name", bucketDomainName(bucket))
+
+	var awsRegion string
+	if region, ok := d.GetOk("region"); ok {
+		awsRegion = region.(string)
+	} else {
+		awsRegion = meta.(*AWSClient).region
+	}
+	d.Set("bucket_domain_name", bucketDomainName(bucket, awsRegion))
 
 	if err := bucketLocation(d, bucket, conn); err != nil {
 		return err
