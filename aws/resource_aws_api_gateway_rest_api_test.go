@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -101,6 +102,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
 				),
 			},
 
@@ -127,6 +129,75 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(&conf),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "-1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
+	var restApi apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, "REGIONAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "REGIONAL"),
+				),
+			},
+			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig_Name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "REGIONAL"),
+				),
+			},
+			// Test updating endpoint type
+			{
+				PreConfig: func() {
+					// Ensure region supports EDGE endpoint
+					// This can eventually be moved to a PreCheck function
+					// If the region does not support EDGE endpoint type, this test will either show
+					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
+					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
+						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
+						EndpointConfiguration: &apigateway.EndpointConfiguration{
+							Types: []*string{aws.String("EDGE")},
+						},
+					})
+					if err != nil {
+						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type EDGE is not supported in this region") {
+							t.Skip("Region does not support EDGE endpoint type")
+						}
+						t.Fatal(err)
+					}
+
+					// Be kind and rewind. :)
+					_, err = conn.DeleteRestApi(&apigateway.DeleteRestApiInput{
+						RestApiId: output.Id,
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, "EDGE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "EDGE"),
 				),
 			},
 		},
@@ -335,6 +406,26 @@ resource "aws_api_gateway_rest_api" "test" {
   minimum_compression_size = 0
 }
 `
+
+func testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, endpointType string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = "%s"
+
+  endpoint_configuration {
+    types = ["%s"]
+  }
+}
+`, rName, endpointType)
+}
+
+func testAccAWSAPIGatewayRestAPIConfig_Name(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = "%s"
+}
+`, rName)
+}
 
 const testAccAWSAPIGatewayRestAPIConfigWithPolicy = `
 resource "aws_api_gateway_rest_api" "test" {

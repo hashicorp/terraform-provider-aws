@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayRestApi() *schema.Resource {
@@ -71,6 +72,31 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"endpoint_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MinItems: 1,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"types": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									apigateway.EndpointTypeEdge,
+									apigateway.EndpointTypeRegional,
+								}, false),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -87,6 +113,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	params := &apigateway.CreateRestApiInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Description: description,
+	}
+
+	if v, ok := d.GetOk("endpoint_configuration"); ok {
+		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
@@ -196,6 +226,10 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 		log.Printf("[DEBUG] Error setting created_date: %s", err)
 	}
 
+	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(api.EndpointConfiguration)); err != nil {
+		return fmt.Errorf("error setting endpoint_configuration: %s", err)
+	}
+
 	return nil
 }
 
@@ -266,6 +300,20 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		}
 	}
 
+	if d.HasChange("endpoint_configuration.0.types") {
+		// The REST API must have an endpoint type.
+		// If attempting to remove the configuration, do nothing.
+		if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
+			m := v.([]interface{})[0].(map[string]interface{})
+
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("replace"),
+				Path:  aws.String("/endpointConfiguration/types/0"),
+				Value: aws.String(m["types"].([]interface{})[0].(string)),
+			})
+		}
+	}
+
 	return operations
 }
 
@@ -318,4 +366,30 @@ func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}
 
 		return resource.NonRetryableError(err)
 	})
+}
+
+func expandApiGatewayEndpointConfiguration(l []interface{}) *apigateway.EndpointConfiguration {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	endpointConfiguration := &apigateway.EndpointConfiguration{
+		Types: expandStringList(m["types"].([]interface{})),
+	}
+
+	return endpointConfiguration
+}
+
+func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.EndpointConfiguration) []interface{} {
+	if endpointConfiguration == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"types": flattenStringList(endpointConfiguration.Types),
+	}
+
+	return []interface{}{m}
 }

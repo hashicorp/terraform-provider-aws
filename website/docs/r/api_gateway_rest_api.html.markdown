@@ -12,10 +12,24 @@ Provides an API Gateway REST API.
 
 ## Example Usage
 
+### Basic
+
 ```hcl
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
+}
+```
+
+### Regional Endpoint Type
+
+```hcl
+resource "aws_api_gateway_rest_api" "example" {
+  name        = "regional-example"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 ```
 
@@ -25,6 +39,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the REST API
 * `description` - (Optional) The description of the REST API
+* `endpoint_configuration` - (Optional) Nested argument defining API endpoint configuration including endpoint type. Defined below.
 * `binary_media_types` - (Optional) The list of binary media types supported by the RestApi. By default, the RestApi supports only UTF-8-encoded text payloads.
 * `minimum_compression_size` - (Optional) Minimum response size to compress for the REST API. Integer between -1 and 10485760 (10MB). Setting a value greater than -1 will enable compression, -1 disables compression (default).
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the REST API.
@@ -40,6 +55,10 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 * `aws_api_gateway_integration_response`
 * `aws_api_gateway_gateway_response`
 * `aws_api_gateway_model`
+
+### endpoint_configuration
+
+* `types` - (Required) A list of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
 
 ## Attributes Reference
 
