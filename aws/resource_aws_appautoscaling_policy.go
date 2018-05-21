@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -292,11 +291,10 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		var err error
 		p, err = getAwsAppautoscalingPolicy(d, meta)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+				return resource.RetryableError(err)
 			}
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -338,11 +336,10 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+				return resource.RetryableError(err)
 			}
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -373,11 +370,10 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+				return resource.RetryableError(err)
 			}
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
