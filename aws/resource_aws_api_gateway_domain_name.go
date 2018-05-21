@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayDomainName() *schema.Resource {
@@ -28,14 +29,14 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn"},
 			},
 
 			"certificate_chain": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn"},
 			},
 
 			"certificate_name": {
@@ -49,7 +50,7 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 				ForceNew:      true,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn"},
 			},
 
 			"domain_name": {
@@ -79,16 +80,42 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 				Computed: true,
 			},
 
+			"endpoint_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MinItems: 1,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"types": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							// BadRequestException: Cannot create an api with multiple Endpoint Types
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									apigateway.EndpointTypeEdge,
+									apigateway.EndpointTypeRegional,
+								}, false),
+							},
+						},
+					},
+				},
+			},
+
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "certificate_body", "certificate_chain", "certificate_name", "certificate_private_key"},
+				ConflictsWith: []string{"certificate_arn", "certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_name"},
 			},
 
 			"regional_certificate_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "certificate_body", "certificate_chain", "certificate_name", "certificate_private_key"},
+				ConflictsWith: []string{"certificate_arn", "certificate_name", "regional_certificate_arn"},
 			},
 
 			"regional_domain_name": {
@@ -106,7 +133,6 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 
 func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
-	endpointType := apigateway.EndpointTypeEdge
 	log.Printf("[DEBUG] Creating API Gateway Domain Name")
 
 	params := &apigateway.CreateDomainNameInput{
@@ -133,18 +159,16 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 		params.CertificatePrivateKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("regional_certificate_arn"); ok {
-		endpointType = apigateway.EndpointTypeRegional
+	if v, ok := d.GetOk("endpoint_configuration"); ok {
+		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("regional_certificate_arn"); ok && v.(string) != "" {
 		params.RegionalCertificateArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("regional_certificate_name"); ok {
-		endpointType = apigateway.EndpointTypeRegional
+	if v, ok := d.GetOk("regional_certificate_name"); ok && v.(string) != "" {
 		params.RegionalCertificateName = aws.String(v.(string))
-	}
-
-	params.EndpointConfiguration = &apigateway.EndpointConfiguration{
-		Types: []*string{aws.String(endpointType)},
 	}
 
 	domainName, err := conn.CreateDomainName(params)
@@ -153,10 +177,6 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId(*domainName.DomainName)
-	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
-	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
-	d.Set("regional_domain_name", domainName.RegionalDomainName)
-	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
 
 	return resourceAwsApiGatewayDomainNameRead(d, meta)
 }
@@ -178,25 +198,31 @@ func resourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
+	d.Set("certificate_arn", domainName.CertificateArn)
 	d.Set("certificate_name", domainName.CertificateName)
 	if err := d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting certificate_upload_date: %s", err)
 	}
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
+	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
 	d.Set("domain_name", domainName.DomainName)
-	d.Set("certificate_arn", domainName.CertificateArn)
+
+	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
+		return fmt.Errorf("error setting endpoint_configuration: %s", err)
+	}
+
 	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
 	d.Set("regional_certificate_name", domainName.RegionalCertificateName)
+	d.Set("regional_domain_name", domainName.RegionalDomainName)
+	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
 
 	return nil
 }
 
 func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
-	endpointType := ""
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if d.HasChange("certificate_name") {
-		endpointType = apigateway.EndpointTypeEdge
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
 			Path:  aws.String("/certificateName"),
@@ -205,7 +231,6 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 	}
 
 	if d.HasChange("certificate_arn") {
-		endpointType = apigateway.EndpointTypeEdge
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
 			Path:  aws.String("/certificateArn"),
@@ -214,7 +239,6 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 	}
 
 	if d.HasChange("regional_certificate_name") {
-		endpointType = apigateway.EndpointTypeRegional
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
 			Path:  aws.String("/regionalCertificateName"),
@@ -223,7 +247,6 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 	}
 
 	if d.HasChange("regional_certificate_arn") {
-		endpointType = apigateway.EndpointTypeRegional
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
 			Path:  aws.String("/regionalCertificateArn"),
@@ -231,15 +254,18 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 		})
 	}
 
-	// If the certificate name or ARN is changed it's possible that we've changed from one endpoint type to another, so
-	// we'll always update the endpoint type in that case.
+	if d.HasChange("endpoint_configuration.0.types") {
+		// The domain name must have an endpoint type.
+		// If attempting to remove the configuration, do nothing.
+		if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
+			m := v.([]interface{})[0].(map[string]interface{})
 
-	if endpointType != "" {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
-			Path:  aws.String("/endpointConfiguration/types/0"),
-			Value: aws.String(endpointType),
-		})
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("replace"),
+				Path:  aws.String("/endpointConfiguration/types/0"),
+				Value: aws.String(m["types"].([]interface{})[0].(string)),
+			})
+		}
 	}
 
 	return operations

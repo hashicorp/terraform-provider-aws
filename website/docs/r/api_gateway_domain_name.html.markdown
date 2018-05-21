@@ -66,24 +66,27 @@ The following arguments are supported:
   certificate as an IAM server certificate. Conflicts with `certificate_arn`, `regional_certificate_arn`, and
   `regional_certificate_name`. Required if `certificate_arn` is not set.
 * `certificate_body` - (Optional) The certificate issued for the domain name
-  being registered, in PEM format. Conflicts with `certificate_arn`, `regional_certificate_arn`, and
+  being registered, in PEM format. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and
   `regional_certificate_name`.
 * `certificate_chain` - (Optional) The certificate for the CA that issued the
   certificate, along with any intermediate CA certificates required to
-  create an unbroken chain to a certificate trusted by the intended API clients. Conflicts with `certificate_arn`,
+  create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`,
   `regional_certificate_arn`, and `regional_certificate_name`.
 * `certificate_private_key` - (Optional) The private key associated with the
-  domain certificate given in `certificate_body`. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+  domain certificate given in `certificate_body`. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
 * `certificate_arn` - (Optional) The ARN for an AWS-managed certificate. Used when an edge-optimized domain name is
   desired. Conflicts with `certificate_name`, `certificate_body`, `certificate_chain`, `certificate_private_key`,
   `regional_certificate_arn`, and `regional_certificate_name`.
+* `endpoint_configuration` - (Optional) Nested argument defining API endpoint configuration including endpoint type. Defined below.
 * `regional_certificate_arn` - (Optional) The ARN for an AWS-managed certificate. Used when a regional domain name is
   desired. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and
   `certificate_private_key`.
-* `regional_certificate_name` - (Optional) The unique name to use when registering this certificate as an IAM server
-  certificate. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and
+* `regional_certificate_name` - (Optional) The user-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and
   `certificate_private_key`.
 
+### endpoint_configuration
+
+* `types` - (Required) A list of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
 
 ## Attributes Reference
 
