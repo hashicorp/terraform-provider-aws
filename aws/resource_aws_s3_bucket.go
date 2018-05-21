@@ -654,7 +654,14 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("bucket", d.Id())
 	}
 
-	d.Set("bucket_domain_name", bucketDomainName(d.Get("bucket").(string)))
+	var awsRegion string
+	if region, ok := d.GetOk("region"); ok {
+		awsRegion = region.(string)
+	} else {
+		awsRegion = meta.(*AWSClient).region
+	}
+
+	d.Set("bucket_domain_name", bucketDomainName(d.Get("bucket").(string), awsRegion))
 
 	// Read the policy
 	if _, ok := d.GetOk("policy"); ok {
@@ -1437,8 +1444,8 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 	return WebsiteEndpoint(bucket, region), nil
 }
 
-func bucketDomainName(bucket string) string {
-	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
+func bucketDomainName(bucket string, region string) string {
+	return fmt.Sprintf("%s.s3-%s.amazonaws.com", bucket, region)
 }
 
 func WebsiteEndpoint(bucket string, region string) *S3Website {
