@@ -1,9 +1,12 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -81,6 +84,13 @@ func testAccGetRegion() string {
 	return v
 }
 
+func testAccGetPartition() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
 func testAccEC2ClassicPreCheck(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
@@ -88,6 +98,22 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 	if !hasEc2Classic(platforms) {
 		t.Skipf("This test can only run in EC2 Classic, platforms available in %s: %q",
 			region, platforms)
+	}
+}
+
+func testAccHasServicePreCheck(service string, t *testing.T) {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		if _, ok := partition.Services()[service]; !ok {
+			t.Skip(fmt.Sprintf("skipping tests; partition does not support %s service", service))
+		}
+	}
+}
+
+func testAccMultipleRegionsPreCheck(t *testing.T) {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		if len(partition.Regions()) < 2 {
+			t.Skip("skipping tests; partition only includes a single region")
+		}
 	}
 }
 
