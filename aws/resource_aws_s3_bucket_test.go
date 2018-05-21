@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -25,8 +26,8 @@ import (
 func TestAccAWSS3Bucket_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	arnRegexp := regexp.MustCompile(
-		"^arn:aws:s3:::")
-	hostedZoneID, _ := HostedZoneIDForRegion("us-west-2")
+		fmt.Sprintf("^%s", regionArn()))
+	hostedZoneID, _ := HostedZoneIDForRegion(region())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -44,7 +45,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
 					resource.TestCheckResourceAttr(
-						"aws_s3_bucket.bucket", "region", "us-west-2"),
+						"aws_s3_bucket.bucket", "region", region()),
 					resource.TestCheckNoResourceAttr(
 						"aws_s3_bucket.bucket", "website_endpoint"),
 					resource.TestMatchResourceAttr(
@@ -794,7 +795,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region(), &providers)),
 					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "0"),
 				),
@@ -802,14 +803,14 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region(), &providers)),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
 					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
 					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 					testAccCheckAWSS3BucketReplicationRules(
 						"aws_s3_bucket.bucket",
-						testAccAwsRegionProviderFunc("us-west-2", &providers),
+						testAccAwsRegionProviderFunc(region(), &providers),
 						[]*s3.ReplicationRule{
 							{
 								ID: aws.String("foobar"),
@@ -827,13 +828,13 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region(), &providers)),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
 					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
 					testAccCheckAWSS3BucketReplicationRules(
 						"aws_s3_bucket.bucket",
-						testAccAwsRegionProviderFunc("us-west-2", &providers),
+						testAccAwsRegionProviderFunc(region(), &providers),
 						[]*s3.ReplicationRule{
 							{
 								ID: aws.String("foobar"),
@@ -875,7 +876,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithoutStorageClass(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region(), &providers)),
 					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
 				),
 			},
@@ -913,7 +914,7 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 
 	for _, v := range validDnsNames {
-		if err := validateS3BucketName(v, "us-west-2"); err != nil {
+		if err := validateS3BucketName(v, region()); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
@@ -930,7 +931,7 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 
 	for _, v := range invalidDnsNames {
-		if err := validateS3BucketName(v, "us-west-2"); err == nil {
+		if err := validateS3BucketName(v, region()); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
@@ -1328,11 +1329,11 @@ func testAccBucketName(randInt int) string {
 }
 
 func testAccBucketDomainName(randInt int) string {
-	return fmt.Sprintf("tf-test-bucket-%d.s3.amazonaws.com", randInt)
+	return fmt.Sprintf("tf-test-bucket-%d.s3-%s.amazonaws.com", randInt, region())
 }
 
 func testAccWebsiteEndpoint(randInt int) string {
-	return fmt.Sprintf("tf-test-bucket-%d.s3-website-us-west-2.amazonaws.com", randInt)
+	return fmt.Sprintf("tf-test-bucket-%d.s3-website-%s.amazonaws.com", randInt, region())
 }
 
 func testAccAWSS3BucketPolicy(randInt int) string {
@@ -1877,7 +1878,7 @@ provider "aws" {
 
 provider "aws" {
   alias  = "uswest2"
-  region = "us-west-2"
+  region = region()
 }
 
 resource "aws_iam_role" "role" {
@@ -2095,3 +2096,26 @@ resource "aws_s3_bucket" "test" {
 	bucket_prefix = "tf-test-"
 }
 `
+
+var (
+	defaultRegion = "us-west-2"
+	arnRegExp     = "arn:aws:s3:::"
+)
+
+func region() string {
+	region := os.Getenv("AWS_DEFAULT_REGION")
+	if region == "" {
+		region = defaultRegion
+	}
+	return region
+}
+
+func regionArn() string {
+	switch {
+	case strings.HasPrefix(region(), "cn-"):
+		arnRegExp = "arn:aws-cn:s3:::"
+	case strings.HasPrefix(region(), "us-gov-"):
+		arnRegExp = "arn:aws-us-gov:s3:::"
+	}
+	return arnRegExp
+}
