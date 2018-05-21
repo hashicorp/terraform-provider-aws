@@ -183,9 +183,9 @@ resource "aws_guardduty_member" "test" {
   account_id  = "%[2]s"
   detector_id = "${aws_guardduty_detector.test.id}"
   email       = "%[3]s"
-  invite      = "%[4]s"
-  disable_email_notification = "%[5]s"
+  invite      = "%[4]t"
+  disable_email_notification = "%[5]t"
   invitation_message      = "%[6]s"
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, strconv.FormatBool(invite), strconv.FormatBool(disableEmailNotification), invitationMessage)
+`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invite, disableEmailNotification, invitationMessage)
 }
