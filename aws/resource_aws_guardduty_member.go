@@ -129,9 +129,6 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		member := gmo.Members[0]
-		d.Set("account_id", member.AccountId)
-		d.Set("detector_id", detectorID)
-		d.Set("email", member.Email)
 		d.Set("relationship_status", member.RelationshipStatus)
 
 		if aws.StringValue(member.RelationshipStatus) != "Invited" {
