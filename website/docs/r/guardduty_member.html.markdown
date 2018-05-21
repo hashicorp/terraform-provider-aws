@@ -58,6 +58,7 @@ configuration options:
 The following additional attributes are exported:
 
 * `id` - The ID of the GuardDuty member
+* `invited` - If you already have invited another account as a member, then this value is calculated based on `relationship_status`. This is marked as true if the status is either "Disabled", "Enabled", "Invited", or "EmailVerificationInProgress".
 * `relationship_status` - The status of the relationship between the member account and its master account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).
 
 ## Import
