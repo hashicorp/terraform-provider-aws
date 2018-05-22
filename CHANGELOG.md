@@ -16,6 +16,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_s3_bucket: Prevent panic from CORS reading errors [GH-4603]
+* resource/aws_spot_fleet_request: Prevent empty `iam_instance_profile_arn` from overwriting `iam_instance_profile` [GH-4591]
 
 ## 1.19.0 (May 16, 2018)
 
