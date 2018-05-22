@@ -8,6 +8,10 @@ ENHANCEMENTS:
 * resource/aws_guardduty_member: Support member account invitation on creation [GH-4357]
 * resource/aws_ssm_patch_baseline: Add `approval_rule` `enable_non_security` argument [GH-4546]
 
+BUG FIXES:
+
+* resource/aws_s3_bucket: Prevent panic from CORS reading errors [GH-4603]
+
 ## 1.19.0 (May 16, 2018)
 
 NOTES:
