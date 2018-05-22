@@ -21,7 +21,7 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 	"Statement": [{
 		"Sid": "",
 		"Effect": "Allow",
-		"Principal": "*",
+		"Principal": {"AWS":"*"},
 		"Action": "s3:*",
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
@@ -52,7 +52,7 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 	"Statement": [{
 		"Sid": "",
 		"Effect": "Allow",
-		"Principal": "*",
+		"Principal": {"AWS":"*"},
 		"Action": "s3:*",
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
@@ -63,7 +63,7 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 	"Statement":[{
 		"Sid": "",
 		"Effect": "Allow",
-		"Principal": "*",
+		"Principal": {"AWS":"*"},
 		"Action": ["s3:DeleteBucket", "s3:ListBucket", "s3:ListBucketVersions"],
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
