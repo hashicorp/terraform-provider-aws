@@ -690,14 +690,18 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	cors := corsResponse.(*s3.GetBucketCorsOutput)
 	if err != nil {
 		// An S3 Bucket might not have CORS configuration set.
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() != "NoSuchCORSConfiguration" {
+				return err
+			}
+			log.Printf("[WARN] S3 bucket: %s, no CORS configuration could be found.", d.Id())
+		} else {
 			return err
 		}
-		log.Printf("[WARN] S3 bucket: %s, no CORS configuration could be found.", d.Id())
 	}
+	cors := corsResponse.(*s3.GetBucketCorsOutput)
 	log.Printf("[DEBUG] S3 bucket: %s, read CORS: %v", d.Id(), cors)
 	if cors.CORSRules != nil {
 		rules := make([]map[string]interface{}, 0, len(cors.CORSRules))
