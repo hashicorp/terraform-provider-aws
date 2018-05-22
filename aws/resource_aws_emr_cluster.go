@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -44,11 +43,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"additional_info": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateJsonString,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -493,7 +492,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("additional_info"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return errwrap.Wrapf("Additional Info contains an invalid JSON: {{err}}", err)
+			return fmt.Errorf("Additional Info contains an invalid JSON: {{err}}", err)
 		}
 		params.AdditionalInfo = aws.String(info)
 	}
@@ -702,6 +701,15 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("step", flattenEmrStepSummaries(stepSummaries)); err != nil {
 		return fmt.Errorf("error setting step: %s", err)
+	}
+
+	// AWS provides no other way to read back the additional_info
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: {{err}}", err)
+		}
+		d.Set("additional_info", info)
 	}
 
 	return nil
