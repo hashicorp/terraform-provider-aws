@@ -198,6 +198,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elasticache_replication_group":    dataSourceAwsElasticacheReplicationGroup(),
 			"aws_elb_hosted_zone_id":               dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":              dataSourceAwsElbServiceAccount(),
+			"aws_glue_script":                      dataSourceAwsGlueScript(),
 			"aws_iam_account_alias":                dataSourceAwsIamAccountAlias(),
 			"aws_iam_group":                        dataSourceAwsIAMGroup(),
 			"aws_iam_instance_profile":             dataSourceAwsIAMInstanceProfile(),
