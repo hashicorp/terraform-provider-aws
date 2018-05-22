@@ -492,7 +492,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("additional_info"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return fmt.Errorf("Additional Info contains an invalid JSON: {{err}}", err)
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
 		}
 		params.AdditionalInfo = aws.String(info)
 	}
@@ -707,7 +707,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("additional_info"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return fmt.Errorf("Additional Info contains an invalid JSON: {{err}}", err)
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
 		}
 		d.Set("additional_info", info)
 	}
