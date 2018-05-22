@@ -29,26 +29,45 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email", email),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func testAccAwsGuardDutyMember_import(t *testing.T) {
+func testAccAwsGuardDutyMember_invite(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
+	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
+	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccGuardDutyMemberConfig_basic("111111111111", "required@example.com"),
+			{
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "email", email),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
+				),
 			},
-
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"disable_email_notification",
+					"invitation_message",
+				},
 			},
 		},
 	})
@@ -131,4 +150,19 @@ resource "aws_guardduty_member" "test" {
   email       = "%[3]s"
 }
 `, testAccGuardDutyDetectorConfig_basic1, accountID, email)
+}
+
+func testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_guardduty_member" "test" {
+  account_id                 = "%[2]s"
+  detector_id                = "${aws_guardduty_detector.test.id}"
+  disable_email_notification = true
+  email                      = "%[3]s"
+  invitation_message         = "%[4]s"
+  invite                     = true
+}
+`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invitationMessage)
 }
