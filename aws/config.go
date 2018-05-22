@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -147,6 +148,7 @@ type Config struct {
 }
 
 type AWSClient struct {
+	StopContext           context.Context
 	cfconn                *cloudformation.CloudFormation
 	cloud9conn            *cloud9.Cloud9
 	cloudfrontconn        *cloudfront.CloudFront
@@ -246,7 +248,7 @@ func (c *AWSClient) IsChinaCloud() bool {
 }
 
 // Client configures and returns a fully initialized AWSClient
-func (c *Config) Client() (interface{}, error) {
+func (c *Config) Client() (*AWSClient, error) {
 	// Get the auth and region. This can fail if keys/regions were not
 	// specified and we're attempting to use the environment.
 	if c.SkipRegionValidation {
