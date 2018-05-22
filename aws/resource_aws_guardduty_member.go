@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"time"
 )
 
 func resourceAwsGuardDutyMember() *schema.Resource {
@@ -100,7 +100,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 
 	_, err = conn.InviteMembers(imi)
 	if err != nil {
-		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err.Error())
+		return fmt.Errorf("Inviting GuardDuty Member failed: %s", err)
 	}
 
 	// wait until e-mail verification finishes
@@ -119,24 +119,25 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 				d.SetId("")
 				return nil
 			}
-			return resource.RetryableError(fmt.Errorf("Reading GuardDuty Member '%s' failed: %s", d.Id(), err.Error()))
+			return resource.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", d.Id(), err))
 		}
 
-		if gmo.Members == nil || (len(gmo.Members) < 1) {
-			log.Printf("[WARN] GuardDuty Member %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+		if gmo == nil || len(gmo.Members) == 0 {
+			return resource.RetryableError(fmt.Errorf("error reading GuardDuty Member %q: member missing from response", d.Id()))
 		}
 
 		member := gmo.Members[0]
-		d.Set("relationship_status", member.RelationshipStatus)
+		status := aws.StringValue(member.RelationshipStatus)
 
-		if aws.StringValue(member.RelationshipStatus) != "Invited" {
-			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", aws.StringValue(member.RelationshipStatus)))
+		if status == "Disabled" || status == "Enabled" || status == "Invited" {
+			return nil
 		}
 
-		log.Printf("[INFO] Email verification for %s is still in progress", accountID)
-		return nil
+		if status == "Created" || status == "EmailVerificationInProgress" {
+			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
+		}
+
+		return resource.NonRetryableError(fmt.Errorf("error inviting GuardDuty Member %q: invalid status: %s", d.Id(), status))
 	}); err != nil {
 		return err
 	}
@@ -182,10 +183,10 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	status := aws.StringValue(member.RelationshipStatus)
 	d.Set("relationship_status", status)
 
-	//https://docs.aws.amazon.com/guardduty/latest/ug/list-members.html
-	d.Set("invited", false)
+	// https://docs.aws.amazon.com/guardduty/latest/ug/list-members.html
+	d.Set("invite", false)
 	if status == "Disabled" || status == "Enabled" || status == "Invited" || status == "EmailVerificationInProgress" {
-		d.Set("invited", true)
+		d.Set("invite", true)
 	}
 
 	return nil

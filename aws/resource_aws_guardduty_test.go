@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"os"
 	"testing"
 )
 
@@ -21,7 +22,6 @@ func TestAccAWSGuardDuty(t *testing.T) {
 		"Member": {
 			"basic":  testAccAwsGuardDutyMember_basic,
 			"invite": testAccAwsGuardDutyMember_invite,
-			"import": testAccAwsGuardDutyMember_import,
 		},
 	}
 
@@ -36,4 +36,22 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testAccAWSGuardDutyMemberFromEnv(t *testing.T) (string, string) {
+	accountID := os.Getenv("AWS_GUARDDUTY_MEMBER_ACCOUNT_ID")
+	if accountID == "" {
+		t.Skip(
+			"Environment variable AWS_GUARDDUTY_MEMBER_ACCOUNT_ID is not set. " +
+				"To properly test inviting GuardDuty member accounts, " +
+				"a valid AWS account ID must be provided.")
+	}
+	email := os.Getenv("AWS_GUARDDUTY_MEMBER_EMAIL")
+	if email == "" {
+		t.Skip(
+			"Environment variable AWS_GUARDDUTY_MEMBER_EMAIL is not set. " +
+				"To properly test inviting GuardDuty member accounts, " +
+				"a valid email associated with the AWS_GUARDDUTY_MEMBER_ACCOUNT_ID must be provided.")
+	}
+	return accountID, email
 }

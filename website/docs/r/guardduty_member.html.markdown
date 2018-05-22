@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage a GuardDuty member.
 
-~> **NOTE:** Currently after using this resource, you must manually accept member account invitations before GuardDuty will begin sending cross-account events. More information for how to accomplish this via the AWS Console or API can be found in the [GuardDuty User Guide](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_accounts.html). Terraform implementation of member invitation and acceptance resources can be tracked in [Github](https://github.com/terraform-providers/terraform-provider-aws/issues/2489).
+~> **NOTE:** Currently after using this resource, you must manually accept member account invitations before GuardDuty will begin sending cross-account events. More information for how to accomplish this via the AWS Console or API can be found in the [GuardDuty User Guide](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_accounts.html). Terraform implementation of the member acceptance resource can be tracked in [Github](https://github.com/terraform-providers/terraform-provider-aws/issues/2489).
 
 ## Example Usage
 
@@ -41,9 +41,9 @@ The following arguments are supported:
 * `account_id` - (Required) AWS account ID for member account.
 * `detector_id` - (Required) The detector ID of the GuardDuty account where you want to create member accounts.
 * `email` - (Required) Email address for member account.
-* `invite` - (Optional) Specifies whether to invite the account to GuardDuty as members.
+* `invite` - (Optional) Boolean whether to invite the account to GuardDuty as a member. Defaults to `false`. To detect if an invitation needs to be (re-)sent, the Terraform state value is `true` based on a `relationship_status` of `Disabled`, `Enabled`, `Invited`, or `EmailVerificationInProgress`.
 * `invitation_message` - (Optional) Message for invitation.
-* `disable_email_notification` - (Optional) Specifies whether an email notification is sent to the accounts.
+* `disable_email_notification` - (Optional) Boolean whether an email notification is sent to the accounts. Defaults to `false`.
 
 ## Timeouts
 
@@ -58,7 +58,6 @@ configuration options:
 The following additional attributes are exported:
 
 * `id` - The ID of the GuardDuty member
-* `invited` - If you already have invited another account as a member, then this value is calculated based on `relationship_status`. This is marked as true if the status is either "Disabled", "Enabled", "Invited", or "EmailVerificationInProgress".
 * `relationship_status` - The status of the relationship between the member account and its master account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).
 
 ## Import
