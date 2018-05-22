@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_glue_trigger"
 sidebar_current: "docs-aws-resource-glue-trigger"
 description: |-
-  Provides an Glue Trigger resource.
+  Manages a Glue Trigger resource.
 ---
 
 # aws_glue_trigger
 
-Provides a Glue Job resource.
+Manages a Glue Trigger resource.
 
 ## Example Usage
 
@@ -102,11 +102,10 @@ configuration options:
 - `create` - (Default `5m`) How long to wait for a trigger to be created.
 - `delete` - (Default `5m`) How long to wait for a trigger to be deleted.
 
-
 ## Import
 
 Glue Triggers can be imported using `name`, e.g.
 
 ```
-$ terraform import aws_glue_trigger.MyTrigger Myrigger
+$ terraform import aws_glue_trigger.MyTrigger MyTrigger
 ```

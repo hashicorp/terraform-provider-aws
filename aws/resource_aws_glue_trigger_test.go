@@ -33,7 +33,7 @@ func testSweepGlueTriggers(region string) error {
 
 	input := &glue.GetTriggersInput{}
 	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
-		if len(page.Triggers) == 0 {
+		if page == nil || len(page.Triggers) == 0 {
 			log.Printf("[INFO] No Glue Triggers to sweep")
 			return false
 		}

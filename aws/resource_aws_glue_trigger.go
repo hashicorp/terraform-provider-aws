@@ -217,11 +217,15 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("description", trigger.Description)
 
+	var enabled bool
+	state := aws.StringValue(trigger.State)
+
 	if aws.StringValue(trigger.Type) == glue.TriggerTypeOnDemand {
-		d.Set("enabled", (aws.StringValue(trigger.State) == glue.TriggerStateCreated || aws.StringValue(trigger.State) == glue.TriggerStateCreating))
+		enabled = (state == glue.TriggerStateCreated || state == glue.TriggerStateCreating)
 	} else {
-		d.Set("enabled", (aws.StringValue(trigger.State) == glue.TriggerStateActivated || aws.StringValue(trigger.State) == glue.TriggerStateActivating))
+		enabled = (state == glue.TriggerStateActivated || state == glue.TriggerStateActivating)
 	}
+	d.Set("enabled", enabled)
 
 	if err := d.Set("predicate", flattenGluePredicate(trigger.Predicate)); err != nil {
 		return fmt.Errorf("error setting predicate: %s", err)
