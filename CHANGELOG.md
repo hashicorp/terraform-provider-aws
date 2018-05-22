@@ -4,6 +4,10 @@ NOTES:
 
 * resource/aws_guardduty_member: Terraform will now try to properly detect if a member account has been invited based on its relationship status (`Disabled`/`Enabled`/`Invited`) and appropriately flag the new `invite` argument for update. You will want to set `invite = true` in your Terraform configuration if you previously handled the invitation process for a member, otherwise the resource will attempt to disassociate the member upon updating the provider to this version.
 
+FEATURES:
+
+* **New Data Source:** `aws_glue_script` [GH-4481]
+
 ENHANCEMENTS:
 
 * resource/aws_api_gateway_domain_name: Add `endpoint_configuration` argument, `regional_certificate_arn` argument, `regional_certificate_name` argument, `regional_domain_name` attribute, and `regional_zone_id` attribute (support regional domain names) [GH-2866]
