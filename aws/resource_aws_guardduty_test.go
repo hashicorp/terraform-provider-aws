@@ -20,8 +20,10 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"import": testAccAwsGuardDutyThreatintelset_import,
 		},
 		"Member": {
-			"basic":  testAccAwsGuardDutyMember_basic,
-			"invite": testAccAwsGuardDutyMember_invite,
+			"basic":              testAccAwsGuardDutyMember_basic,
+			"inviteOnUpdate":     testAccAwsGuardDutyMember_invite_onUpdate,
+			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
+			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
 		},
 	}
 

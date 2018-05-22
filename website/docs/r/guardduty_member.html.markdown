@@ -51,6 +51,7 @@ The following arguments are supported:
 configuration options:
 
 - `create` - (Default `60s`) How long to wait for a verification to be done against inviting GuardDuty member account.
+- `update` - (Default `60s`) How long to wait for a verification to be done against inviting GuardDuty member account.
 
 
 ## Attributes Reference
