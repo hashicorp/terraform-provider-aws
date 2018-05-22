@@ -27,6 +27,7 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
 			},
 			{
@@ -38,7 +39,83 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsGuardDutyMember_invite(t *testing.T) {
+func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
+	resourceName := "aws_guardduty_member.test"
+	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
+				),
+			},
+			// Disassociate member
+			{
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Removed"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"disable_email_notification",
+				},
+			},
+		},
+	})
+}
+
+func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
+	resourceName := "aws_guardduty_member.test"
+	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
+				),
+			},
+			// Invite member
+			{
+				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyMemberExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"disable_email_notification",
+				},
+			},
+		},
+	})
+}
+
+func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 	resourceName := "aws_guardduty_member.test"
 	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
 	invitationMessage := "inviting"
@@ -49,7 +126,7 @@ func testAccAwsGuardDutyMember_invite(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage),
+				Config: testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
@@ -58,6 +135,7 @@ func testAccAwsGuardDutyMember_invite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email", email),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
 			},
 			{
@@ -152,7 +230,21 @@ resource "aws_guardduty_member" "test" {
 `, testAccGuardDutyDetectorConfig_basic1, accountID, email)
 }
 
-func testAccGuardDutyMemberConfig_invite(accountID, email, invitationMessage string) string {
+func testAccGuardDutyMemberConfig_invite(accountID, email string, invite bool) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_guardduty_member" "test" {
+  account_id                 = "%[2]s"
+  detector_id                = "${aws_guardduty_detector.test.id}"
+  disable_email_notification = true
+  email                      = "%[3]s"
+  invite                     = %[4]t
+}
+`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invite)
+}
+
+func testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage string) string {
 	return fmt.Sprintf(`
 %[1]s
 
