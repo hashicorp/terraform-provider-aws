@@ -1,11 +1,16 @@
 ## 1.20.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_guardduty_member: Terraform will now try to properly detect if a member account has been invited based on its relationship status (`Disabled`/`Enabled`/`Invited`) and appropriately flag the new `invite` argument for update. You will want to set `invite = true` in your Terraform configuration if you previously handled the invitation process for a member, otherwise the resource will attempt to disassociate the member upon updating the provider to this version.
+
 ENHANCEMENTS:
 
 * resource/aws_api_gateway_domain_name: Add `endpoint_configuration` argument, `regional_certificate_arn` argument, `regional_certificate_name` argument, `regional_domain_name` attribute, and `regional_zone_id` attribute (support regional domain names) [GH-2866]
 * resource/aws_api_gateway_rest_api: Add `endpoint_configuration` argument (support regional endpoint type) [GH-2866]
 * resource/aws_appautoscaling_policy: Add retry logic for rate exceeded errors during read, update and delete [GH-4594]
 * resource/aws_guardduty_member: Support member account invitation on creation [GH-4357]
+* resource/aws_guardduty_member: Support `invite` argument updates (invite or disassociate on update) [GH-4604]
 * resource/aws_ssm_patch_baseline: Add `approval_rule` `enable_non_security` argument [GH-4546]
 
 BUG FIXES:
