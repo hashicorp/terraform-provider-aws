@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_domain_name: Add `endpoint_configuration` argument, `regional_certificate_arn` argument, `regional_certificate_name` argument, `regional_domain_name` attribute, and `regional_zone_id` attribute (support regional domain names) [GH-2866]
 * resource/aws_api_gateway_rest_api: Add `endpoint_configuration` argument (support regional endpoint type) [GH-2866]
 * resource/aws_appautoscaling_policy: Add retry logic for rate exceeded errors during read, update and delete [GH-4594]
+* resource/aws_guardduty_member: Support member account invitation on creation [GH-4357]
 * resource/aws_ssm_patch_baseline: Add `approval_rule` `enable_non_security` argument [GH-4546]
 
 ## 1.19.0 (May 16, 2018)
