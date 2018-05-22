@@ -6,11 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsGlueScript() *schema.Resource {
@@ -102,9 +101,12 @@ func dataSourceAwsGlueScript() *schema.Resource {
 func dataSourceAwsGlueScriptRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
+	dagEdge := d.Get("dag_edge").([]interface{})
+	dagNode := d.Get("dag_node").([]interface{})
+
 	input := &glue.CreateScriptInput{
-		DagEdges: expandGlueCodeGenEdges(d.Get("dag_edge").([]interface{})),
-		DagNodes: expandGlueCodeGenNodes(d.Get("dag_node").([]interface{})),
+		DagEdges: expandGlueCodeGenEdges(dagEdge),
+		DagNodes: expandGlueCodeGenNodes(dagNode),
 	}
 
 	if v, ok := d.GetOk("language"); ok && v.(string) != "" {

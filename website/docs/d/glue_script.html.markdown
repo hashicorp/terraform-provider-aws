@@ -68,16 +68,16 @@ output "scala_code" {
 
 * `args` - (Required) Nested configuration an argument or property of a node. Defined below.
 * `id` - (Required) A node identifier that is unique within the node's graph.
-* `line_number` - (Optional) The line number of the node.
 * `node_type` - (Required) The type of node this is.
+* `line_number` - (Optional) The line number of the node.
 
 #### args Argument Reference
 
 * `name` - (Required) The name of the argument or property.
-* `param` - (Optional) Boolean if the value is used as a parameter. Defaults to `false`.
 * `value` - (Required) The value of the argument or property.
+* `param` - (Optional) Boolean if the value is used as a parameter. Defaults to `false`.
 
 ## Attributes Reference
 
-* `python_script` - The Python script generated from the DAG. The `language` argument must be set to `PYTHON`.
-* `scala_code` - The Scala code generated from the DAG. The `language` argument must be set to `SCALA`.
+* `python_script` - The Python script generated from the DAG when the `language` argument is set to `PYTHON`.
+* `scala_code` - The Scala code generated from the DAG when the `language` argument is set to `SCALA`.
