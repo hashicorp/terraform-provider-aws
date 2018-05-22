@@ -14,11 +14,12 @@ install:
 - bash scripts/gogetcookie.sh
 - go get github.com/kardianos/govendor
 
-script:
-- make test
-- make vendor-status
-- make vet
-- make website-test
+jobs:
+  include:
+    - script: make test
+    - script: make vendor-status
+    - script: make vet
+    - script: make website-test
 
 branches:
   only:
