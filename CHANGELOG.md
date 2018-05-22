@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_glue_script` [GH-4481]
+* **New Resource:** `aws_glue_trigger` [GH-4464]
 
 ENHANCEMENTS:
 
