@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
@@ -200,7 +201,15 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
-	policy, err := strconv.Unquote(`"` + aws.StringValue(api.Policy) + `"`)
+	// The string must be normalized before unquoting as it may contain escaped
+	// forward slashes in CIDR blocks, which will break strconv.Unquote
+
+	// I'm not sure why it needs to be wrapped with double quotes first, but it does
+	normalized_policy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
+	if err != nil {
+		fmt.Printf("error normalizing policy JSON: %s\n", err)
+	}
+	policy, err := strconv.Unquote(normalized_policy)
 	if err != nil {
 		return fmt.Errorf("error unescaping policy: %s", err)
 	}
