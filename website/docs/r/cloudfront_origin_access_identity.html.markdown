@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront origin access identity.
 ---
 
-# aws\_cloudfront\_origin\_access\_identity
+# aws_cloudfront_origin_access_identity
 
 Creates an Amazon CloudFront origin access identity.
 

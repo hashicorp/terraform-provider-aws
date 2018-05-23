@@ -6,7 +6,7 @@ description: |-
   Generates an IAM policy document in JSON format
 ---
 
-# aws\_iam\_policy\_document
+# Data Source: aws_iam_policy_document
 
 Generates an IAM policy document in JSON format.
 
@@ -78,6 +78,14 @@ valid to use literal JSON strings within your configuration, or to use the
 The following arguments are supported:
 
 * `policy_id` (Optional) - An ID for the policy document.
+* `source_json` (Optional) - An IAM policy document to import as a base for the
+  current policy document.  Statements with non-blank `sid`s in the current
+  policy document will overwrite statements with the same `sid` in the source
+  json.  Statements without an `sid` cannot be overwritten.
+* `override_json` (Optional) - An IAM policy document to import and override the
+  current policy document.  Statements with non-blank `sid`s in the override
+  document will overwrite statements with the same `sid` in the current document.
+  Statements without an `sid` cannot be overwritten.
 * `statement` (Required) - A nested configuration block (described below)
   configuring one *statement* to be included in the policy document.
 
@@ -139,6 +147,16 @@ uses `${...}`-style syntax that is in conflict with Terraform's interpolation
 syntax, so this data source instead uses `&{...}` syntax for interpolations that
 should be processed by AWS rather than by Terraform.
 
+## Wildcard Principal
+
+In order to define wildcard principal (a.k.a. anonymous user) use `type = "*"` and
+`identifiers = ["*"]`. In that case the rendered json will contain `"Principal": "*"`.
+Note, that even though the [IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html)
+states that `"Principal": "*"` and `"Principal": {"AWS": "*"}` are equivalent,
+those principals have different behavior for IAM Role Trust Policy. Therefore
+Terraform will normalize the principal field only in above-mentioned case and principals
+like `type = "AWS"` and `identifiers = ["*"]` will be rendered as `"Principal": {"AWS": "*"}`.
+
 ## Attributes Reference
 
 The following attribute is exported:
@@ -166,3 +184,116 @@ data "aws_iam_policy_document" "event_stream_bucket_role_assume_role_policy" {
   }
 }
 ```
+
+## Example with Source and Override
+
+Showing how you can use `source_json` and `override_json`
+
+```hcl
+data "aws_iam_policy_document" "source" {
+  statement {
+    actions   = ["ec2:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "SidToOverwrite"
+
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "source_json_example" {
+  source_json = "${data.aws_iam_policy_document.source.json}"
+
+  statement {
+    sid = "SidToOverwrite"
+
+    actions = ["s3:*"]
+
+    resources = [
+      "arn:aws:s3:::somebucket",
+      "arn:aws:s3:::somebucket/*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid = "SidToOverwrite"
+
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override_json_example" {
+  override_json = "${data.aws_iam_policy_document.override.json}"
+
+  statement {
+    actions   = ["ec2:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "SidToOverwrite"
+
+    actions = ["s3:*"]
+
+    resources = [
+      "arn:aws:s3:::somebucket",
+      "arn:aws:s3:::somebucket/*",
+    ]
+  }
+}
+```
+
+`data.aws_iam_policy_document.source_json_example.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "SidToOverwrite",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::somebucket/*",
+        "arn:aws:s3:::somebucket"
+      ]
+    }
+  ]
+}
+```
+
+`data.aws_iam_policy_document.override_json_example.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "SidToOverwrite",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+You can also combine `source_json` and `override_json` in the same document.

@@ -6,12 +6,14 @@ description: |-
   Provides a VPC/Subnet/ENI Flow Log
 ---
 
-# aws\_flow\_log
+# aws_flow_log
 
 Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network
 interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group.
 
-```
+## Example Usage
+
+```hcl
 resource "aws_flow_log" "test_flow_log" {
   log_group_name = "${aws_cloudwatch_log_group.test_log_group.name}"
   iam_role_arn   = "${aws_iam_role.test_role.arn}"

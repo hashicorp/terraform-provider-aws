@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +18,68 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elb", &resource.Sweeper{
+		Name: "aws_elb",
+		F:    testSweepELBs,
+	})
+}
+
+func testSweepELBs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elbconn
+
+	prefixes := []string{
+		"test-elb-",
+	}
+
+	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
+		if len(out.LoadBalancerDescriptions) == 0 {
+			log.Println("[INFO] No ELBs found for sweeping")
+			return false
+		}
+
+		for _, lb := range out.LoadBalancerDescriptions {
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*lb.LoadBalancerName, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping ELB: %s", *lb.LoadBalancerName)
+				continue
+			}
+			log.Printf("[INFO] Deleting ELB: %s", *lb.LoadBalancerName)
+
+			_, err := conn.DeleteLoadBalancer(&elb.DeleteLoadBalancerInput{
+				LoadBalancerName: lb.LoadBalancerName,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
+				continue
+			}
+			err = cleanupELBNetworkInterfaces(client.(*AWSClient).ec2conn, *lb.LoadBalancerName)
+			if err != nil {
+				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ELB sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving ELBs: %s", err)
+	}
+	return nil
+}
 
 func TestAccAWSELB_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
@@ -313,9 +377,11 @@ func TestAccAWSELB_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_iam_server_cert(t *testing.T) {
+func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	// var td elb.TagDescription
+	rName := fmt.Sprintf("tf-acctest-%s", acctest.RandString(10))
+	resourceName := "aws_elb.bar"
+
 	testCheck := func(*terraform.State) error {
 		if len(conf.ListenerDescriptions) != 1 {
 			return fmt.Errorf(
@@ -324,19 +390,26 @@ func TestAccAWSELB_iam_server_cert(t *testing.T) {
 		}
 		return nil
 	}
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_elb.bar",
-		Providers:     testAccProvidersWithTLS,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccELBIAMServerCertConfig(
-					fmt.Sprintf("tf-acctest-%s", acctest.RandString(10))),
+				Config:      testAccELBConfig_Listener_IAMServerCertificate(rName, "tcp"),
+				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
+			},
+			{
+				Config: testAccELBConfig_Listener_IAMServerCertificate(rName, "https"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
+					testAccCheckAWSELBExists(resourceName, &conf),
 					testCheck,
 				),
+			},
+			{
+				Config:      testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(rName),
+				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
 			},
 		},
 	})
@@ -427,31 +500,113 @@ func TestAccAWSELB_InstanceAttaching(t *testing.T) {
 	})
 }
 
-func TestAccAWSELBUpdate_Listener(t *testing.T) {
+func TestAccAWSELB_listener(t *testing.T) {
 	var conf elb.LoadBalancerDescription
+	resourceName := "aws_elb.bar"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_elb.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testAccCheckAWSELBAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "listener.206423021.instance_port", "8000"),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
 				),
 			},
-
+			{
+				Config: testAccAWSELBConfigListener_multipleListeners,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.829854800.instance_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "listener.829854800.instance_protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "listener.829854800.lb_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "listener.829854800.lb_protocol", "tcp"),
+				),
+			},
+			{
+				Config: testAccAWSELBConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+				),
+			},
 			{
 				Config: testAccAWSELBConfigListener_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "listener.3931999347.instance_port", "8080"),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.instance_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.lb_protocol", "http"),
+				),
+			},
+			{
+				PreConfig: func() {
+					// Simulate out of band listener removal
+					conn := testAccProvider.Meta().(*AWSClient).elbconn
+					input := &elb.DeleteLoadBalancerListenersInput{
+						LoadBalancerName:  conf.LoadBalancerName,
+						LoadBalancerPorts: []*int64{aws.Int64(int64(80))},
+					}
+					if _, err := conn.DeleteLoadBalancerListeners(input); err != nil {
+						t.Fatalf("Error deleting listener: %s", err)
+					}
+				},
+				Config: testAccAWSELBConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+				),
+			},
+			{
+				PreConfig: func() {
+					// Simulate out of band listener addition
+					conn := testAccProvider.Meta().(*AWSClient).elbconn
+					input := &elb.CreateLoadBalancerListenersInput{
+						LoadBalancerName: conf.LoadBalancerName,
+						Listeners: []*elb.Listener{
+							&elb.Listener{
+								InstancePort:     aws.Int64(int64(22)),
+								InstanceProtocol: aws.String("tcp"),
+								LoadBalancerPort: aws.Int64(int64(22)),
+								Protocol:         aws.String("tcp"),
+							},
+						},
+					}
+					if _, err := conn.CreateLoadBalancerListeners(input); err != nil {
+						t.Fatalf("Error creating listener: %s", err)
+					}
+				},
+				Config: testAccAWSELBConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
 				),
 			},
 		},
@@ -1231,6 +1386,11 @@ resource "aws_elb" "foo" {
     lb_protocol = "http"
   }
 }
+
+# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+output "lb_name" {
+  value = "${aws_elb.foo.name}"
+}
 `
 
 const testAccAWSELBConfig_AvailabilityZonesUpdate = `
@@ -1356,6 +1516,26 @@ resource "aws_elb" "bar" {
 }
 `
 
+const testAccAWSELBConfigListener_multipleListeners = `
+resource "aws_elb" "bar" {
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+
+  listener {
+    instance_port = 8000
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  listener {
+    instance_port = 22
+    instance_protocol = "tcp"
+    lb_port = 22
+    lb_protocol = "tcp"
+  }
+}
+`
+
 const testAccAWSELBConfigIdleTimeout = `
 resource "aws_elb" "bar" {
 	availability_zones = ["us-west-2a"]
@@ -1461,33 +1641,63 @@ resource "aws_security_group" "bar" {
 }
 `
 
-func testAccELBIAMServerCertConfig(certName string) string {
+func testAccELBConfig_Listener_IAMServerCertificate(certName, lbProtocol string) string {
 	return fmt.Sprintf(`
-%s 
+data "aws_availability_zones" "available" {}
+
+%[1]s
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name = "%s"
+  name             = "%[2]s"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
 
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
   listener {
-    instance_port = 8000
-    instance_protocol = "https"
-    lb_port = 80
-    // Protocol should be case insensitive
-    lb_protocol = "HttPs"
+    instance_port      = 443
+    instance_protocol  = "%[3]s"
+    lb_port            = 443
+    lb_protocol        = "%[3]s"
+    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+  }
+}
+`, testAccTLSServerCert, certName, lbProtocol)
+}
+
+func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+%[1]s
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name             = "%[2]s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+
+resource "aws_elb" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+
+  listener {
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
     ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
   }
 
-	tags {
-		bar = "baz"
-	}
-
-  cross_zone_load_balancing = true
+  # lb_protocol tcp and ssl_certificate_id is not valid
+  listener {
+    instance_port      = 8443
+    instance_protocol  = "tcp"
+    lb_port            = 8443
+    lb_protocol        = "tcp"
+    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+  }
 }
 `, testAccTLSServerCert, certName)
 }
@@ -1502,7 +1712,7 @@ resource "aws_vpc" "azelb" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "subnet-vpc"
+    Name = "terraform-testacc-elb-subnets"
   }
 }
 
@@ -1511,6 +1721,9 @@ resource "aws_subnet" "public_a_one" {
 
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnets-a-one"
+  }
 }
 
 resource "aws_subnet" "public_b_one" {
@@ -1518,6 +1731,9 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-elb-subnets-b-one"
+  }
 }
 
 resource "aws_subnet" "public_a_two" {
@@ -1525,6 +1741,9 @@ resource "aws_subnet" "public_a_two" {
 
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnets-a-two"
+  }
 }
 
 resource "aws_elb" "ourapp" {
@@ -1564,7 +1783,7 @@ resource "aws_vpc" "azelb" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "subnet-vpc"
+    Name = "terraform-testacc-elb-subnet-swap"
   }
 }
 
@@ -1573,6 +1792,9 @@ resource "aws_subnet" "public_a_one" {
 
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnet-swap-a-one"
+  }
 }
 
 resource "aws_subnet" "public_b_one" {
@@ -1580,6 +1802,9 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-elb-subnet-swap-b-one"
+  }
 }
 
 resource "aws_subnet" "public_a_two" {
@@ -1587,6 +1812,9 @@ resource "aws_subnet" "public_a_two" {
 
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-elb-subnet-swap-a-two"
+  }
 }
 
 resource "aws_elb" "ourapp" {

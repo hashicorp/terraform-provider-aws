@@ -6,7 +6,7 @@ description: |-
   Creates and manages a custom Amazon Machine Image (AMI).
 ---
 
-# aws\_ami
+# aws_ami
 
 The AMI resource allows the creation and management of a completely-custom
 *Amazon Machine Image* (AMI).

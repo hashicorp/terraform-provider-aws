@@ -6,7 +6,7 @@ description: |-
   Provides a Virtual Private Gateway attachment resource.
 ---
 
-# aws\_vpn\_gateway\_attachment
+# aws_vpn_gateway_attachment
 
 Provides a Virtual Private Gateway attachment resource, allowing for an existing
 hardware VPN gateway to be attached and/or detached from a VPC.

@@ -6,7 +6,7 @@ description: |-
   Provides a SimpleDB domain resource.
 ---
 
-# aws\_simpledb\_domain
+# aws_simpledb_domain
 
 Provides a SimpleDB domain resource
 

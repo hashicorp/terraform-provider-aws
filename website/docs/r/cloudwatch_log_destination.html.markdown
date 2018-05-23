@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Logs destination.
 ---
 
-# aws\_cloudwatch\_log\_destination
+# aws_cloudwatch_log_destination
 
 Provides a CloudWatch Logs destination resource.
 

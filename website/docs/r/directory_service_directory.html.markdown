@@ -6,7 +6,7 @@ description: |-
   Provides a directory in AWS Directory Service.
 ---
 
-# aws\_directory\_service\_directory
+# aws_directory_service_directory
 
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
@@ -14,6 +14,8 @@ Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 [Read more about sensitive data in state](/docs/state/sensitive-data.html).
 
 ## Example Usage
+
+### SimpleAD
 
 ```hcl
 resource "aws_directory_service_directory" "bar" {
@@ -48,6 +50,76 @@ resource "aws_subnet" "bar" {
 }
 ```
 
+### Microsoft Active Directory (MicrosoftAD)
+
+```hcl
+resource "aws_directory_service_directory" "bar" {
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  edition  = "Standard"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  }
+
+  tags {
+    Project = "foo"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id            = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2a"
+  cidr_block        = "10.0.1.0/24"
+}
+
+resource "aws_subnet" "bar" {
+  vpc_id            = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2b"
+  cidr_block        = "10.0.2.0/24"
+}
+```
+
+### Microsoft Active Directory Connector (ADConnector)
+
+```hcl
+resource "aws_directory_service_directory" "connector" {
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+  type     = "ADConnector"
+
+  connect_settings {
+    customer_dns_ips  = ["A.B.C.D"]
+    customer_username = "Administrator"
+    subnet_ids        = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    vpc_id            = "${aws_vpc.main.id}"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id            = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2a"
+  cidr_block        = "10.0.1.0/24"
+}
+
+resource "aws_subnet" "bar" {
+  vpc_id            = "${aws_vpc.main.id}"
+  availability_zone = "us-west-2b"
+  cidr_block        = "10.0.2.0/24"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -61,15 +133,16 @@ The following arguments are supported:
 * `description` - (Optional) A textual description for the directory.
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
-* `type` (Optional) - The directory type (`SimpleAD` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
+* `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
-**vpc\_settings** supports the following:
+**vpc_settings** supports the following:
 
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpc_id` - (Required) The identifier of the VPC that the directory is in.
 
-**connect\_settings** supports the following:
+**connect_settings** supports the following:
 
 * `customer_username` - (Required) The username corresponding to the password provided.
 * `customer_dns_ips` - (Required) The DNS IP addresses of the domain to connect to.
@@ -83,6 +156,7 @@ The following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
+* `security_group_id` - The ID of the security group created by the directory (`SimpleAD` or `MicrosoftAD` only).
 
 
 ## Import

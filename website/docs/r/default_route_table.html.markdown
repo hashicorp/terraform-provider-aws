@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage a Default VPC Routing Table.
 ---
 
-# aws\_default\_route\_table
+# aws_default_route_table
 
 Provides a resource to manage a Default VPC Routing Table.
 

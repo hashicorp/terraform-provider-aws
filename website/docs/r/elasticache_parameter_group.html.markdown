@@ -2,9 +2,11 @@
 layout: "aws"
 page_title: "AWS: aws_elasticache_parameter_group"
 sidebar_current: "docs-aws-resource-elasticache-parameter-group"
+description: |-
+  Provides an ElastiCache parameter group resource.
 ---
 
-# aws\_elasticache\_parameter\_group
+# aws_elasticache_parameter_group
 
 Provides an ElastiCache parameter group resource.
 

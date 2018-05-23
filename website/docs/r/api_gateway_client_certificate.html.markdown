@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Client Certificate.
 ---
 
-# aws\_api\_gateway\_client\_certificate
+# aws_api_gateway_client_certificate
 
 Provides an API Gateway Client Certificate.
 

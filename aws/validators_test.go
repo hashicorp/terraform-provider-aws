@@ -2,12 +2,84 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+func TestValidateRFC3339TimeString(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "2018-03-01T00:00:00Z",
+		},
+		{
+			val: "2018-03-01T00:00:00-05:00",
+		},
+		{
+			val: "2018-03-01T00:00:00+05:00",
+		},
+		{
+			val:         "03/01/2018",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "1/2018" as "2006"`)),
+		},
+		{
+			val:         "03-01-2018",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "1-2018" as "2006"`)),
+		},
+		{
+			val:         "2018-03-01",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "T"`)),
+		},
+		{
+			val:         "2018-03-01T",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "15"`)),
+		},
+		{
+			val:         "2018-03-01T00:00:00",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "Z07:00"`)),
+		},
+		{
+			val:         "2018-03-01T00:00:00Z05:00",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`extra text: 05:00`)),
+		},
+		{
+			val:         "2018-03-01T00:00:00Z-05:00",
+			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`extra text: -05:00`)),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := validateRFC3339TimeString(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
 
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
@@ -318,53 +390,6 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 	}
 }
 
-func TestValidateHTTPMethod(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "delete",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateHTTPMethod(tc.Value, "http_method")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "ANY",
-			ErrCount: 0,
-		},
-		{
-			Value:    "DELETE",
-			ErrCount: 0,
-		},
-		{
-			Value:    "OPTIONS",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateHTTPMethod(tc.Value, "http_method")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
 func TestValidateLogMetricFilterName(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
@@ -519,217 +544,6 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 		_, errors := validateS3BucketLifecycleTimestamp(v, "date")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be invalid date", v)
-		}
-	}
-}
-
-func TestValidateS3BucketLifecycleExpirationDays(t *testing.T) {
-	validDays := []int{
-		1,
-		31,
-		1024,
-	}
-
-	for _, v := range validDays {
-		_, errors := validateS3BucketLifecycleExpirationDays(v, "days")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be valid days: %q", v, errors)
-		}
-	}
-
-	invalidDays := []int{
-		-1,
-		0,
-	}
-
-	for _, v := range invalidDays {
-		_, errors := validateS3BucketLifecycleExpirationDays(v, "date")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be invalid days", v)
-		}
-	}
-}
-
-func TestValidateS3BucketLifecycleTransitionDays(t *testing.T) {
-	validDays := []int{
-		0,
-		1,
-		31,
-		1024,
-	}
-
-	for _, v := range validDays {
-		_, errors := validateS3BucketLifecycleTransitionDays(v, "days")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be valid days: %q", v, errors)
-		}
-	}
-
-	invalidDays := []int{
-		-1,
-	}
-
-	for _, v := range invalidDays {
-		_, errors := validateS3BucketLifecycleTransitionDays(v, "date")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be invalid days", v)
-		}
-	}
-}
-
-func TestValidateS3BucketLifecycleStorageClass(t *testing.T) {
-	validStorageClass := []string{
-		"STANDARD_IA",
-		"GLACIER",
-	}
-
-	for _, v := range validStorageClass {
-		_, errors := validateS3BucketLifecycleStorageClass(v, "storage_class")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be valid storage class: %q", v, errors)
-		}
-	}
-
-	invalidStorageClass := []string{
-		"STANDARD",
-		"1234",
-	}
-	for _, v := range invalidStorageClass {
-		_, errors := validateS3BucketLifecycleStorageClass(v, "storage_class")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be invalid storage class", v)
-		}
-	}
-}
-
-func TestValidateS3BucketReplicationRuleId(t *testing.T) {
-	validId := []string{
-		"YadaHereAndThere",
-		"Valid-5Rule_ID",
-		"This . is also %% valid@!)+*(:ID",
-		"1234",
-		strings.Repeat("W", 255),
-	}
-	for _, v := range validId {
-		_, errors := validateS3BucketReplicationRuleId(v, "id")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid lifecycle rule id: %q", v, errors)
-		}
-	}
-
-	invalidId := []string{
-		// length > 255
-		strings.Repeat("W", 256),
-	}
-	for _, v := range invalidId {
-		_, errors := validateS3BucketReplicationRuleId(v, "id")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid replication configuration rule id", v)
-		}
-	}
-}
-
-func TestValidateS3BucketReplicationRulePrefix(t *testing.T) {
-	validId := []string{
-		"YadaHereAndThere",
-		"Valid-5Rule_ID",
-		"This . is also %% valid@!)+*(:ID",
-		"1234",
-		strings.Repeat("W", 1024),
-	}
-	for _, v := range validId {
-		_, errors := validateS3BucketReplicationRulePrefix(v, "id")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid lifecycle rule id: %q", v, errors)
-		}
-	}
-
-	invalidId := []string{
-		// length > 1024
-		strings.Repeat("W", 1025),
-	}
-	for _, v := range invalidId {
-		_, errors := validateS3BucketReplicationRulePrefix(v, "id")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid replication configuration rule id", v)
-		}
-	}
-}
-
-func TestValidateS3BucketReplicationDestinationStorageClass(t *testing.T) {
-	validStorageClass := []string{
-		s3.StorageClassStandard,
-		s3.StorageClassStandardIa,
-		s3.StorageClassReducedRedundancy,
-	}
-
-	for _, v := range validStorageClass {
-		_, errors := validateS3BucketReplicationDestinationStorageClass(v, "storage_class")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be valid storage class: %q", v, errors)
-		}
-	}
-
-	invalidStorageClass := []string{
-		"FOO",
-		"1234",
-	}
-	for _, v := range invalidStorageClass {
-		_, errors := validateS3BucketReplicationDestinationStorageClass(v, "storage_class")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be invalid storage class", v)
-		}
-	}
-}
-
-func TestValidateS3BucketReplicationRuleStatus(t *testing.T) {
-	validRuleStatuses := []string{
-		s3.ReplicationRuleStatusEnabled,
-		s3.ReplicationRuleStatusDisabled,
-	}
-
-	for _, v := range validRuleStatuses {
-		_, errors := validateS3BucketReplicationRuleStatus(v, "status")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be valid rule status: %q", v, errors)
-		}
-	}
-
-	invalidRuleStatuses := []string{
-		"FOO",
-		"1234",
-	}
-	for _, v := range invalidRuleStatuses {
-		_, errors := validateS3BucketReplicationRuleStatus(v, "status")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be invalid rule status", v)
-		}
-	}
-}
-
-func TestValidateS3BucketLifecycleRuleId(t *testing.T) {
-	validId := []string{
-		"YadaHereAndThere",
-		"Valid-5Rule_ID",
-		"This . is also %% valid@!)+*(:ID",
-		"1234",
-		strings.Repeat("W", 255),
-	}
-	for _, v := range validId {
-		_, errors := validateS3BucketLifecycleRuleId(v, "id")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid lifecycle rule id: %q", v, errors)
-		}
-	}
-
-	invalidId := []string{
-		// length > 255
-		strings.Repeat("W", 256),
-	}
-	for _, v := range invalidId {
-		_, errors := validateS3BucketLifecycleRuleId(v, "id")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid lifecycle rule id", v)
 		}
 	}
 }
@@ -984,49 +798,6 @@ func TestValidateCloudFormationTemplate(t *testing.T) {
 	}
 }
 
-func TestValidateApiGatewayIntegrationType(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "aws_proxy",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateApiGatewayIntegrationType(tc.Value, "types")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "MOCK",
-			ErrCount: 0,
-		},
-		{
-			Value:    "AWS_PROXY",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateApiGatewayIntegrationType(tc.Value, "types")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
 func TestValidateSQSQueueName(t *testing.T) {
 	validNames := []string{
 		"valid-name",
@@ -1037,8 +808,12 @@ func TestValidateSQSQueueName(t *testing.T) {
 		strings.Repeat("W", 80),
 	}
 	for _, v := range validNames {
-		if errors := validateSQSQueueName(v, "name"); len(errors) > 0 {
+		if _, errors := validateSQSQueueName(v, "name"); len(errors) > 0 {
 			t.Fatalf("%q should be a valid SQS queue Name", v)
+		}
+
+		if errors := validateSQSNonFifoQueueName(v, "name"); len(errors) > 0 {
+			t.Fatalf("%q should be a valid SQS non-fifo queue Name", v)
 		}
 	}
 
@@ -1054,8 +829,12 @@ func TestValidateSQSQueueName(t *testing.T) {
 		strings.Repeat("W", 81), // length > 80
 	}
 	for _, v := range invalidNames {
-		if errors := validateSQSQueueName(v, "name"); len(errors) == 0 {
+		if _, errors := validateSQSQueueName(v, "name"); len(errors) == 0 {
 			t.Fatalf("%q should be an invalid SQS queue Name", v)
+		}
+
+		if errors := validateSQSNonFifoQueueName(v, "name"); len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SQS non-fifo queue Name", v)
 		}
 	}
 }
@@ -1073,6 +852,10 @@ func TestValidateSQSFifoQueueName(t *testing.T) {
 		fmt.Sprintf("%s.fifo", strings.Repeat("W", 75)),
 	}
 	for _, v := range validNames {
+		if _, errors := validateSQSQueueName(v, "name"); len(errors) > 0 {
+			t.Fatalf("%q should be a valid SQS queue Name", v)
+		}
+
 		if errors := validateSQSFifoQueueName(v, "name"); len(errors) > 0 {
 			t.Fatalf("%q should be a valid SQS FIFO queue Name: %v", v, errors)
 		}
@@ -1091,59 +874,12 @@ func TestValidateSQSFifoQueueName(t *testing.T) {
 		strings.Repeat("W", 81), // length > 80
 	}
 	for _, v := range invalidNames {
+		if _, errors := validateSQSQueueName(v, "name"); len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SQS queue Name", v)
+		}
+
 		if errors := validateSQSFifoQueueName(v, "name"); len(errors) == 0 {
 			t.Fatalf("%q should be an invalid SQS FIFO queue Name: %v", v, errors)
-		}
-	}
-}
-
-func TestValidateSNSSubscriptionProtocol(t *testing.T) {
-	validProtocols := []string{
-		"lambda",
-		"sqs",
-		"sqs",
-		"application",
-		"http",
-		"https",
-		"sms",
-	}
-	for _, v := range validProtocols {
-		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SNS Subscription protocol: %v", v, errors)
-		}
-	}
-
-	invalidProtocols := []string{
-		"Email",
-		"email",
-		"Email-JSON",
-		"email-json",
-	}
-	for _, v := range invalidProtocols {
-		if _, errors := validateSNSSubscriptionProtocol(v, "protocol"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SNS Subscription protocol: %v", v, errors)
-		}
-	}
-}
-
-func TestValidateSecurityRuleType(t *testing.T) {
-	validTypes := []string{
-		"ingress",
-		"egress",
-	}
-	for _, v := range validTypes {
-		if _, errors := validateSecurityRuleType(v, "type"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid Security Group Rule type: %v", v, errors)
-		}
-	}
-
-	invalidTypes := []string{
-		"foo",
-		"ingresss",
-	}
-	for _, v := range invalidTypes {
-		if _, errors := validateSecurityRuleType(v, "type"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid Security Group Rule type: %v", v, errors)
 		}
 	}
 }
@@ -1240,45 +976,6 @@ func TestValidateOnceADayWindowFormat(t *testing.T) {
 	}
 }
 
-func TestValidateRoute53RecordType(t *testing.T) {
-	validTypes := []string{
-		"AAAA",
-		"SOA",
-		"A",
-		"TXT",
-		"CNAME",
-		"MX",
-		"NAPTR",
-		"PTR",
-		"SPF",
-		"SRV",
-		"NS",
-		"CAA",
-	}
-
-	invalidTypes := []string{
-		"a",
-		"alias",
-		"SpF",
-		"Txt",
-		"AaAA",
-	}
-
-	for _, v := range validTypes {
-		_, errors := validateRoute53RecordType(v, "route53_record")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid Route53 record type: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidTypes {
-		_, errors := validateRoute53RecordType(v, "route53_record")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Route53 record type", v)
-		}
-	}
-}
-
 func TestValidateEcsPlacementConstraint(t *testing.T) {
 	cases := []struct {
 		constType string
@@ -1362,56 +1059,6 @@ func TestValidateEcsPlacementStrategy(t *testing.T) {
 	}
 }
 
-func TestValidateStepFunctionActivityName(t *testing.T) {
-	validTypes := []string{
-		"foo",
-		"FooBar123",
-	}
-
-	invalidTypes := []string{
-		strings.Repeat("W", 81), // length > 80
-	}
-
-	for _, v := range validTypes {
-		_, errors := validateSfnActivityName(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid Step Function Activity name: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidTypes {
-		_, errors := validateSfnActivityName(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Step Function Activity name", v)
-		}
-	}
-}
-
-func TestValidateStepFunctionStateMachineDefinition(t *testing.T) {
-	validDefinitions := []string{
-		"foobar",
-		strings.Repeat("W", 1048576),
-	}
-
-	invalidDefinitions := []string{
-		strings.Repeat("W", 1048577), // length > 1048576
-	}
-
-	for _, v := range validDefinitions {
-		_, errors := validateSfnStateMachineDefinition(v, "definition")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid Step Function State Machine definition: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidDefinitions {
-		_, errors := validateSfnStateMachineDefinition(v, "definition")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Step Function State Machine definition", v)
-		}
-	}
-}
-
 func TestValidateStepFunctionStateMachineName(t *testing.T) {
 	validTypes := []string{
 		"foo",
@@ -1457,120 +1104,26 @@ func TestValidateStepFunctionStateMachineName(t *testing.T) {
 	}
 }
 
-func TestValidateEmrEbsVolumeType(t *testing.T) {
+func TestValidateEmrCustomAmiId(t *testing.T) {
 	cases := []struct {
-		VolType  string
+		Value    string
 		ErrCount int
 	}{
 		{
-			VolType:  "gp2",
+			Value:    "ami-dbcf88b1",
 			ErrCount: 0,
 		},
 		{
-			VolType:  "io1",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "standard",
-			ErrCount: 0,
-		},
-		{
-			VolType:  "stand",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "io",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "gp1",
-			ErrCount: 1,
-		},
-		{
-			VolType:  "fast-disk",
+			Value:    "vol-as7d65ash",
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validateAwsEmrEbsVolumeType(tc.VolType, "volume")
+		_, errors := validateAwsEmrCustomAmiId(tc.Value, "custom_ami_id")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d errors, got %d: %s", tc.ErrCount, len(errors), errors)
-		}
-	}
-}
-
-func TestValidateAppautoscalingScalableDimension(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "ecs:service:DesiredCount",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ec2:spot-fleet-request:TargetCapacity",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ec2:service:DesiredCount",
-			ErrCount: 1,
-		},
-		{
-			Value:    "ecs:spot-fleet-request:TargetCapacity",
-			ErrCount: 1,
-		},
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateAppautoscalingScalableDimension(tc.Value, "scalable_dimension")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Scalable Dimension validation failed for value %q: %q", tc.Value, errors)
-		}
-	}
-}
-
-func TestValidateAppautoscalingServiceNamespace(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "ecs",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ec2",
-			ErrCount: 0,
-		},
-		{
-			Value:    "autoscaling",
-			ErrCount: 1,
-		},
-		{
-			Value:    "s3",
-			ErrCount: 1,
-		},
-		{
-			Value:    "es",
-			ErrCount: 1,
-		},
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateAppautoscalingServiceNamespace(tc.Value, "service_namespace")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Service Namespace validation failed for value %q: %q", tc.Value, errors)
 		}
 	}
 }
@@ -1804,34 +1357,6 @@ func TestValidateIamRoleProfileNamePrefix(t *testing.T) {
 		_, errors := validateIamRolePolicyNamePrefix(s, "name_prefix")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid IAM role policy name prefix: %v", s, errors)
-		}
-	}
-}
-
-func TestValidateApiGatewayUsagePlanQuotaSettingsPeriod(t *testing.T) {
-	validEntries := []string{
-		"DAY",
-		"WEEK",
-		"MONTH",
-	}
-
-	invalidEntries := []string{
-		"fooBAR",
-		"foobar45Baz",
-		"foobar45Baz@!",
-	}
-
-	for _, v := range validEntries {
-		_, errors := validateApiGatewayUsagePlanQuotaSettingsPeriod(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid API Gateway Quota Settings Period: %v", v, errors)
-		}
-	}
-
-	for _, v := range invalidEntries {
-		_, errors := validateApiGatewayUsagePlanQuotaSettingsPeriod(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a API Gateway Quota Settings Period", v)
 		}
 	}
 }
@@ -2092,6 +1617,50 @@ func TestValidateDbOptionGroupNamePrefix(t *testing.T) {
 	}
 }
 
+func TestValidateDbParamGroupName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "tEsting123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "1testing123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing--123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing123-",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(256),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateDbParamGroupName(tc.Value, "aws_db_parameter_group_name")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the DB Parameter Group Name to trigger a validation error")
+		}
+	}
+}
+
 func TestValidateOpenIdURL(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -2151,6 +1720,36 @@ func TestValidateAwsKmsName(t *testing.T) {
 		_, errors := validateAwsKmsName(tc.Value, "name")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
+		}
+	}
+}
+
+func TestValidateAwsKmsGrantName(t *testing.T) {
+	validValues := []string{
+		"123",
+		"Abc",
+		"grant_1",
+		"grant:/-",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateAwsKmsGrantName(s, "name")
+		if len(errors) > 0 {
+			t.Fatalf("%q AWS KMS Grant Name should have been valid: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		strings.Repeat("w", 257),
+		"grant.invalid",
+		";",
+		"white space",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateAwsKmsGrantName(s, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid AWS KMS Grant Name", s)
 		}
 	}
 }
@@ -2327,7 +1926,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
-		"{####}" + strings.Repeat("W", 1994), // = 2000
+		"{####}" + strings.Repeat("W", 19994), // = 20000
 	}
 
 	for _, s := range validValues {
@@ -2340,7 +1939,7 @@ func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 	invalidValues := []string{
 		"Foo",
 		"{###}",
-		"{####}" + strings.Repeat("W", 1995), // > 2000
+		"{####}" + strings.Repeat("W", 19995), // > 20000
 	}
 
 	for _, s := range invalidValues {
@@ -2516,32 +2115,6 @@ func TestValidateAwsSSMName(t *testing.T) {
 	}
 }
 
-func TestValidateSsmParameterType(t *testing.T) {
-	validTypes := []string{
-		"String",
-		"StringList",
-		"SecureString",
-	}
-	for _, v := range validTypes {
-		_, errors := validateSsmParameterType(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid SSM parameter type: %q", v, errors)
-		}
-	}
-
-	invalidTypes := []string{
-		"foo",
-		"string",
-		"Securestring",
-	}
-	for _, v := range invalidTypes {
-		_, errors := validateSsmParameterType(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SSM parameter type", v)
-		}
-	}
-}
-
 func TestValidateBatchName(t *testing.T) {
 	validNames := []string{
 		strings.Repeat("W", 128), // <= 128
@@ -2608,60 +2181,59 @@ func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testin
 	}
 }
 
-func TestValidateCognitoRoleMappingsAmbiguousRoleResolution(t *testing.T) {
-	validValues := []string{
-		cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-		cognitoidentity.AmbiguousRoleResolutionTypeDeny,
+func TestValidateCognitoRoleMappingsRulesConfiguration(t *testing.T) {
+	cases := []struct {
+		MappingRule []interface{}
+		Type        string
+		ErrCount    int
+	}{
+		{
+			MappingRule: nil,
+			Type:        cognitoidentity.RoleMappingTypeRules,
+			ErrCount:    1,
+		},
+		{
+			MappingRule: []interface{}{
+				map[string]interface{}{
+					"Claim":     "isAdmin",
+					"MatchType": "Equals",
+					"RoleARN":   "arn:foo",
+					"Value":     "paid",
+				},
+			},
+			Type:     cognitoidentity.RoleMappingTypeRules,
+			ErrCount: 0,
+		},
+		{
+			MappingRule: []interface{}{
+				map[string]interface{}{
+					"Claim":     "isAdmin",
+					"MatchType": "Equals",
+					"RoleARN":   "arn:foo",
+					"Value":     "paid",
+				},
+			},
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 1,
+		},
+		{
+			MappingRule: nil,
+			Type:        cognitoidentity.RoleMappingTypeToken,
+			ErrCount:    0,
+		},
 	}
 
-	for _, s := range validValues {
-		_, errors := validateCognitoRoleMappingsAmbiguousRoleResolution(s, "ambiguous_role_resolution")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Ambiguous Role Resolution type: %v", s, errors)
+	for _, tc := range cases {
+		m := make(map[string]interface{})
+		// Reproducing the undefined mapping_rule
+		if tc.MappingRule != nil {
+			m["mapping_rule"] = tc.MappingRule
 		}
-	}
+		m["type"] = tc.Type
 
-	invalidValues := []string{
-		"foo",
-		"123",
-		"foo-bar",
-		"foo_bar123",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoRoleMappingsAmbiguousRoleResolution(s, "ambiguous_role_resolution")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Ambiguous Role Resolution type: %v", s, errors)
-		}
-	}
-}
-
-func TestValidateCognitoRoleMappingsRulesMatchType(t *testing.T) {
-	validValues := []string{
-		cognitoidentity.MappingRuleMatchTypeEquals,
-		cognitoidentity.MappingRuleMatchTypeContains,
-		cognitoidentity.MappingRuleMatchTypeStartsWith,
-		cognitoidentity.MappingRuleMatchTypeNotEqual,
-	}
-
-	for _, s := range validValues {
-		_, errors := validateCognitoRoleMappingsRulesMatchType(s, "match_type")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Role Mappings Rules Match Type: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"foo",
-		"123",
-		"foo-bar",
-		"foo_bar123",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoRoleMappingsRulesMatchType(s, "match_type")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Role Mappings Rules Match Type: %v", s, errors)
+		errors := validateCognitoRoleMappingsRulesConfiguration(m)
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Cognito Role Mappings validation failed: %v, expected err count %d, got %d, for config %#v", errors, tc.ErrCount, len(errors), m)
 		}
 	}
 }
@@ -2688,34 +2260,6 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 		_, errors := validateSecurityGroupRuleDescription(v, "description")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid security group rule description", v)
-		}
-	}
-}
-
-func TestValidateCognitoRoleMappingsType(t *testing.T) {
-	validValues := []string{
-		cognitoidentity.RoleMappingTypeToken,
-		cognitoidentity.RoleMappingTypeRules,
-	}
-
-	for _, s := range validValues {
-		_, errors := validateCognitoRoleMappingsType(s, "match_type")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Role Mappings Type: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"foo",
-		"123",
-		"foo-bar",
-		"foo_bar123",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoRoleMappingsType(s, "match_type")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Role Mappings Type: %v", s, errors)
 		}
 	}
 }
@@ -2747,29 +2291,49 @@ func TestValidateCognitoRoles(t *testing.T) {
 	}
 }
 
-func TestValidateDxConnectionBandWidth(t *testing.T) {
-	validValues := []string{
-		"1Gbps",
-		"10Gbps",
+func TestValidateKmsKey(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "arbitrary-uuid-1234",
+			ErrCount: 0,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:key/arbitrary-uuid-1234",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/arbitrary-key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/arbitrary/key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary-key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary/key",
+			ErrCount: 0,
+		},
+		{
+			Value:    "$%wrongkey",
+			ErrCount: 1,
+		},
+		{
+			Value:    "arn:aws:lamda:foo:bar:key/xyz",
+			ErrCount: 1,
+		},
 	}
 
-	for _, s := range validValues {
-		_, errors := validateDxConnectionBandWidth(s, "match_type")
-		if len(errors) > 0 {
-			t.Fatalf("%s should be a valid Direct Connect Connection Bandwidth: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"1gbps",
-		"10GBPS",
-		"invalid character",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateDxConnectionBandWidth(s, "match_type")
-		if len(errors) == 0 {
-			t.Fatalf("%s should not be a valid Direct Connect Connection Bandwidth: %v", s, errors)
+	for _, tc := range cases {
+		_, errors := validateKmsKey(tc.Value, "key_id")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("%q validation failed: %v", tc.Value, errors)
 		}
 	}
 }
@@ -2796,6 +2360,229 @@ func TestValidateCognitoUserPoolReplyEmailAddress(t *testing.T) {
 		_, errors := validateCognitoUserPoolReplyEmailAddress(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Cognito User Pool Reply Email Address", v)
+		}
+	}
+}
+
+func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "this-is-valid!#%()^",
+			ErrCount: 0,
+		},
+		{
+			Value:    "this-is-not",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid\"",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid@",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid/",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateAwsElastiCacheReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolDomain(t *testing.T) {
+	validTypes := []string{
+		"valid-domain",
+		"validdomain",
+		"val1d-d0main",
+	}
+	for _, v := range validTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Domain: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"UpperCase",
+		"-invalid",
+		"invalid-",
+		strings.Repeat("i", 64), // > 63
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateCognitoUserPoolDomain(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Cognito User Pool Domain", v)
+		}
+	}
+}
+
+func TestValidateCognitoUserGroupName(t *testing.T) {
+	validValues := []string{
+		"foo",
+		"7346241598935552",
+		"foo_bar",
+		"foo:bar",
+		"foo/bar",
+		"foo-bar",
+		"$foobar",
+		strings.Repeat("W", 128),
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserGroupName(s, "name")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Group Name: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"",
+		strings.Repeat("W", 129), // > 128
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserGroupName(s, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool Group Name: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateCognitoUserPoolId(t *testing.T) {
+	validValues := []string{
+		"eu-west-1_Foo123",
+		"ap-southeast-2_BaRBaz987",
+	}
+
+	for _, s := range validValues {
+		_, errors := validateCognitoUserPoolId(s, "user_pool_id")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito User Pool Id: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"",
+		"foo",
+		"us-east-1-Foo123",
+		"eu-central-2_Bar+4",
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validateCognitoUserPoolId(s, "user_pool_id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito User Pool Id: %v", s, errors)
+		}
+	}
+}
+
+func TestValidateAmazonSideAsn(t *testing.T) {
+	validAsns := []string{
+		"64512",
+		"64513",
+		"65533",
+		"65534",
+		"4200000000",
+		"4200000001",
+		"4294967293",
+		"4294967294",
+	}
+	for _, v := range validAsns {
+		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"1",
+		"ABCDEFG",
+		"",
+	}
+	for _, v := range invalidAsns {
+		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
+func TestValidateLaunchTemplateName(t *testing.T) {
+	validNames := []string{
+		"fooBAR123",
+		"(./_)",
+	}
+	for _, v := range validNames {
+		_, errors := validateLaunchTemplateName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"tf",
+		strings.Repeat("W", 126), // > 125
+		"invalid*",
+		"invalid\name",
+		"inavalid&",
+		"invalid+",
+		"invalid!",
+		"invalid:",
+		"invalid;",
+	}
+	for _, v := range invalidNames {
+		_, errors := validateLaunchTemplateName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template name: %q", v, errors)
+		}
+	}
+
+	invalidNamePrefixes := []string{
+		strings.Repeat("W", 100), // > 99
+	}
+	for _, v := range invalidNamePrefixes {
+		_, errors := validateLaunchTemplateName(v, "name_prefix")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template name prefix: %q", v, errors)
+		}
+	}
+}
+
+func TestValidateLaunchTemplateId(t *testing.T) {
+	validIds := []string{
+		"lt-foobar123456",
+	}
+	for _, v := range validIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Launch Template id: %q", v, errors)
+		}
+	}
+
+	invalidIds := []string{
+		strings.Repeat("W", 256),
+		"invalid-foobar123456",
+		"lt_foobar123456",
+	}
+	for _, v := range invalidIds {
+		_, errors := validateLaunchTemplateId(v, "id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Launch Template id: %q", v, errors)
 		}
 	}
 }

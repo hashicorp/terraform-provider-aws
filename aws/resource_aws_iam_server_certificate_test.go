@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 
@@ -11,6 +12,61 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
+		Name: "aws_iam_server_certificate",
+		F:    testSweepIamServerCertificates,
+	})
+}
+
+func testSweepIamServerCertificates(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).iamconn
+
+	prefixes := []string{
+		"tf-acctest-",
+		"test_cert_",
+		"terraform-test-cert-",
+	}
+
+	err = conn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
+		for _, sc := range out.ServerCertificateMetadataList {
+			hasPrefix := false
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(*sc.ServerCertificateName, prefix) {
+					hasPrefix = true
+				}
+			}
+			if !hasPrefix {
+				continue
+			}
+			log.Printf("[INFO] Deleting IAM Server Certificate: %s", *sc.ServerCertificateName)
+
+			_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
+				ServerCertificateName: sc.ServerCertificateName,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete IAM Server Certificate %s: %s",
+					*sc.ServerCertificateName, err)
+				continue
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Server Certificate sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving IAM Server Certificates: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate
@@ -92,7 +148,7 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 }
 
 func TestAccAWSIAMServerCertificate_file(t *testing.T) {
-	var _cert iam.ServerCertificate
+	var cert iam.ServerCertificate
 
 	rInt := acctest.RandInt()
 	unixFile := "test-fixtures/iam-ssl-unix-line-endings.pem"
@@ -106,13 +162,13 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, unixFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
 				),
 			},
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, winFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
 				),
 			},
 		},
@@ -243,6 +299,19 @@ resource "aws_iam_server_certificate" "test_cert" {
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
 `, testAccTLSServerCert)
+}
+
+func testAccIAMServerCertConfig_path(rInt int, path string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name = "terraform-test-cert-%d"
+  path = "%s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+`, testAccTLSServerCert, rInt, path)
 }
 
 // iam-ssl-unix-line-endings
