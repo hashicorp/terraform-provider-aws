@@ -249,6 +249,15 @@ func resourceAwsEcsService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"container_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"container_port": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 65536),
+						},
 						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -369,6 +378,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			if port, ok := raw["port"].(int); ok && port != 0 {
 				sr.Port = aws.Int64(int64(port))
+			}
+			if raw, ok := raw["container_port"].(int); ok && raw != 0 {
+				sr.ContainerPort = aws.Int64(int64(raw))
+			}
+			if raw, ok := raw["container_name"].(string); ok && raw != "" {
+				sr.ContainerName = aws.String(raw)
 			}
 
 			srs = append(srs, sr)
@@ -673,6 +688,12 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 		}
 		if sr.Port != nil {
 			c["port"] = int(aws.Int64Value(sr.Port))
+		}
+		if sr.ContainerPort != nil {
+			c["container_port"] = int(aws.Int64Value(sr.ContainerPort))
+		}
+		if sr.ContainerName != nil {
+			c["container_name"] = aws.StringValue(sr.ContainerName)
 		}
 		results = append(results, c)
 	}
