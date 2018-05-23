@@ -195,7 +195,6 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 
 			"dns_name": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 

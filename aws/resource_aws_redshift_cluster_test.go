@@ -104,7 +104,7 @@ func TestValidateRedshiftClusterDbName(t *testing.T) {
 func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	config := testAccAWSRedshiftClusterConfig_basic(ri)
 
 	resource.Test(t, resource.TestCase{
@@ -120,32 +120,7 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 						"aws_redshift_cluster.default", "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "publicly_accessible", "true"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSRedshiftCluster_dnsName(t *testing.T) {
-	var v redshift.Cluster
-
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	config := testAccAWSRedshiftClusterConfig_basic(ri)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "publicly_accessible", "true"),
-					testAccCheckAWSRedshiftClusterDNSName(&v, ri),
+					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "address", regexp.MustCompile(fmt.Sprintf("^tf-redshift-cluster-%d.*\\.redshift\\..*", ri))),
 				),
 			},
 		},
@@ -652,23 +627,6 @@ func testAccCheckAWSRedshiftClusterMasterUsername(c *redshift.Cluster, value str
 		if *c.MasterUsername != value {
 			return fmt.Errorf("Expected cluster's MasterUsername: %q, given: %q", value, *c.MasterUsername)
 		}
-		return nil
-	}
-}
-
-func testAccCheckAWSRedshiftClusterDNSName(c *redshift.Cluster, rInt int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if c.Endpoint == nil {
-			return fmt.Errorf("Expected cluster Endpoint to be set, got nil")
-		}
-
-		//validate the cluster address
-		str := fmt.Sprintf("tf-redshift-cluster-%d.?[a-zA-Z0-9].*?.us-west-2.redshift.amazonaws.com", rInt)
-		re := regexp.MustCompile(str)
-		if !re.MatchString(*c.Endpoint.Address) {
-			return fmt.Errorf("Expected cluster DNS name, got %s", *c.Endpoint.Address)
-		}
-
 		return nil
 	}
 }
