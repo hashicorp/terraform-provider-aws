@@ -758,6 +758,25 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		UserData: aws.String(d.Get("user_data").(string)),
 	}
 
+	conn := meta.(*AWSClient).ec2conn
+	imagesOutput, err := conn.DescribeImages(&ec2.DescribeImagesInput{
+		ImageIds: []*string{
+			aws.String(d.Get("image_id").(string)),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	image := imagesOutput.Images[0]
+	snapshotMappings := map[string]bool{}
+	for _, mapping := range image.BlockDeviceMappings {
+		if mapping.Ebs != nil {
+			if mapping.Ebs.SnapshotId != nil {
+				snapshotMappings[*mapping.DeviceName] = true
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("image_id"); ok {
 		opts.ImageId = aws.String(v.(string))
 	}
@@ -803,7 +822,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
-			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{})))
+			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}), snapshotMappings))
 		}
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
@@ -896,7 +915,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	return opts, nil
 }
 
-func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
+func readBlockDeviceMappingFromConfig(bdm map[string]interface{}, snapshotMappings map[string]bool) *ec2.LaunchTemplateBlockDeviceMappingRequest {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
 	if v := bdm["device_name"].(string); v != "" {
@@ -915,14 +934,14 @@ func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTem
 		ebs := v.([]interface{})
 		if len(ebs) > 0 {
 			ebsData := ebs[0]
-			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}))
+			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}), snapshotMappings[*blockDeviceMapping.DeviceName])
 		}
 	}
 
 	return blockDeviceMapping
 }
 
-func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplateEbsBlockDeviceRequest {
+func readEbsBlockDeviceFromConfig(ebs map[string]interface{}, isSnapshot bool) *ec2.LaunchTemplateEbsBlockDeviceRequest {
 	ebsDevice := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
 	if v := ebs["delete_on_termination"]; v != nil {
@@ -930,7 +949,9 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 	}
 
 	if v := ebs["encrypted"]; v != nil {
-		ebsDevice.Encrypted = aws.Bool(v.(bool))
+		if !isSnapshot {
+			ebsDevice.Encrypted = aws.Bool(v.(bool))
+		}
 	}
 
 	if v := ebs["iops"].(int); v > 0 {
