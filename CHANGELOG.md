@@ -23,6 +23,7 @@ BUG FIXES:
 
 * resource/aws_api_gateway_rest_api: Prevent error with `policy` containing special characters (e.g. forward slashes in CIDRs) [GH-4606]
 * resource/aws_cloudwatch_event_rule: Prevent multiple names on creation [GH-4579]
+* resource/aws_dynamodb_table: Prevent error with APIs that do not support point in time recovery (e.g. AWS China) [GH-4573]
 * resource/aws_kinesis_stream: Handle tag additions/removals of more than 10 tags [GH-4574]
 * resource/aws_kinesis_stream: Prevent perpetual `encryption_type` difference with APIs that do not support encryption (e.g. AWS China) [GH-4575]
 * resource/aws_s3_bucket: Prevent panic from CORS reading errors [GH-4603]
