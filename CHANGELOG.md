@@ -1,4 +1,4 @@
-## 1.20.0 (Unreleased)
+## 1.20.0 (May 23, 2018)
 
 NOTES:
 
@@ -6,30 +6,30 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_glue_script` [GH-4481]
-* **New Resource:** `aws_glue_trigger` [GH-4464]
+* **New Data Source:** `aws_glue_script` ([#4481](https://github.com/terraform-providers/terraform-provider-aws/issues/4481))
+* **New Resource:** `aws_glue_trigger` ([#4464](https://github.com/terraform-providers/terraform-provider-aws/issues/4464))
 
 ENHANCEMENTS:
 
-* resource/aws_api_gateway_domain_name: Add `endpoint_configuration` argument, `regional_certificate_arn` argument, `regional_certificate_name` argument, `regional_domain_name` attribute, and `regional_zone_id` attribute (support regional domain names) [GH-2866]
-* resource/aws_api_gateway_rest_api: Add `endpoint_configuration` argument (support regional endpoint type) [GH-2866]
-* resource/aws_appautoscaling_policy: Add retry logic for rate exceeded errors during read, update and delete [GH-4594]
-* resource/aws_ecs_service: Add `container_name` and `container_port` arguments for `service_registry` (support bridge and host network mode for service registry) [GH-4623]
-* resource/aws_emr_cluster: Add `additional_info` argument [GH-4590]
-* resource/aws_guardduty_member: Support member account invitation on creation [GH-4357]
-* resource/aws_guardduty_member: Support `invite` argument updates (invite or disassociate on update) [GH-4604]
-* resource/aws_ssm_patch_baseline: Add `approval_rule` `enable_non_security` argument [GH-4546]
+* resource/aws_api_gateway_domain_name: Add `endpoint_configuration` argument, `regional_certificate_arn` argument, `regional_certificate_name` argument, `regional_domain_name` attribute, and `regional_zone_id` attribute (support regional domain names) ([#2866](https://github.com/terraform-providers/terraform-provider-aws/issues/2866))
+* resource/aws_api_gateway_rest_api: Add `endpoint_configuration` argument (support regional endpoint type) ([#2866](https://github.com/terraform-providers/terraform-provider-aws/issues/2866))
+* resource/aws_appautoscaling_policy: Add retry logic for rate exceeded errors during read, update and delete ([#4594](https://github.com/terraform-providers/terraform-provider-aws/issues/4594))
+* resource/aws_ecs_service: Add `container_name` and `container_port` arguments for `service_registry` (support bridge and host network mode for service registry) ([#4623](https://github.com/terraform-providers/terraform-provider-aws/issues/4623))
+* resource/aws_emr_cluster: Add `additional_info` argument ([#4590](https://github.com/terraform-providers/terraform-provider-aws/issues/4590))
+* resource/aws_guardduty_member: Support member account invitation on creation ([#4357](https://github.com/terraform-providers/terraform-provider-aws/issues/4357))
+* resource/aws_guardduty_member: Support `invite` argument updates (invite or disassociate on update) ([#4604](https://github.com/terraform-providers/terraform-provider-aws/issues/4604))
+* resource/aws_ssm_patch_baseline: Add `approval_rule` `enable_non_security` argument ([#4546](https://github.com/terraform-providers/terraform-provider-aws/issues/4546))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_rest_api: Prevent error with `policy` containing special characters (e.g. forward slashes in CIDRs) [GH-4606]
-* resource/aws_cloudwatch_event_rule: Prevent multiple names on creation [GH-4579]
-* resource/aws_dynamodb_table: Prevent error with APIs that do not support point in time recovery (e.g. AWS China) [GH-4573]
-* resource/aws_glue_catalog_table: Prevent multiple potential panic scenarios [GH-4621]
-* resource/aws_kinesis_stream: Handle tag additions/removals of more than 10 tags [GH-4574]
-* resource/aws_kinesis_stream: Prevent perpetual `encryption_type` difference with APIs that do not support encryption (e.g. AWS China) [GH-4575]
-* resource/aws_s3_bucket: Prevent panic from CORS reading errors [GH-4603]
-* resource/aws_spot_fleet_request: Prevent empty `iam_instance_profile_arn` from overwriting `iam_instance_profile` [GH-4591]
+* resource/aws_api_gateway_rest_api: Prevent error with `policy` containing special characters (e.g. forward slashes in CIDRs) ([#4606](https://github.com/terraform-providers/terraform-provider-aws/issues/4606))
+* resource/aws_cloudwatch_event_rule: Prevent multiple names on creation ([#4579](https://github.com/terraform-providers/terraform-provider-aws/issues/4579))
+* resource/aws_dynamodb_table: Prevent error with APIs that do not support point in time recovery (e.g. AWS China) ([#4573](https://github.com/terraform-providers/terraform-provider-aws/issues/4573))
+* resource/aws_glue_catalog_table: Prevent multiple potential panic scenarios ([#4621](https://github.com/terraform-providers/terraform-provider-aws/issues/4621))
+* resource/aws_kinesis_stream: Handle tag additions/removals of more than 10 tags ([#4574](https://github.com/terraform-providers/terraform-provider-aws/issues/4574))
+* resource/aws_kinesis_stream: Prevent perpetual `encryption_type` difference with APIs that do not support encryption (e.g. AWS China) ([#4575](https://github.com/terraform-providers/terraform-provider-aws/issues/4575))
+* resource/aws_s3_bucket: Prevent panic from CORS reading errors ([#4603](https://github.com/terraform-providers/terraform-provider-aws/issues/4603))
+* resource/aws_spot_fleet_request: Prevent empty `iam_instance_profile_arn` from overwriting `iam_instance_profile` ([#4591](https://github.com/terraform-providers/terraform-provider-aws/issues/4591))
 
 ## 1.19.0 (May 16, 2018)
 
