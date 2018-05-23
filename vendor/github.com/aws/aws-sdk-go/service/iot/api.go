@@ -266,7 +266,7 @@ func (c *IoT) AssociateTargetsWithJobRequest(input *AssociateTargetsWithJobInput
 //   The specified resource does not exist.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -368,7 +368,7 @@ func (c *IoT) AttachPolicyRequest(input *AttachPolicyInput) (req *request.Reques
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) AttachPolicy(input *AttachPolicyInput) (*AttachPolicyOutput, error) {
 	req, out := c.AttachPolicyRequest(input)
@@ -470,7 +470,7 @@ func (c *IoT) AttachPrincipalPolicyRequest(input *AttachPrincipalPolicyInput) (r
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) AttachPrincipalPolicy(input *AttachPrincipalPolicyInput) (*AttachPrincipalPolicyOutput, error) {
 	req, out := c.AttachPrincipalPolicyRequest(input)
@@ -925,7 +925,7 @@ func (c *IoT) CreateAuthorizerRequest(input *CreateAuthorizerInput) (req *reques
 //   The request is not valid.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -1151,7 +1151,7 @@ func (c *IoT) CreateJobRequest(input *CreateJobInput) (req *request.Request, out
 //   The resource already exists.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -1627,7 +1627,7 @@ func (c *IoT) CreateRoleAliasRequest(input *CreateRoleAliasInput) (req *request.
 //   The request is not valid.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -2411,6 +2411,202 @@ func (c *IoT) DeleteCertificate(input *DeleteCertificateInput) (*DeleteCertifica
 // for more information on using Contexts.
 func (c *IoT) DeleteCertificateWithContext(ctx aws.Context, input *DeleteCertificateInput, opts ...request.Option) (*DeleteCertificateOutput, error) {
 	req, out := c.DeleteCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteJob = "DeleteJob"
+
+// DeleteJobRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteJob for more information on using the DeleteJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteJobRequest method.
+//    req, resp := client.DeleteJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, output *DeleteJobOutput) {
+	op := &request.Operation{
+		Name:       opDeleteJob,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/jobs/{jobId}",
+	}
+
+	if input == nil {
+		input = &DeleteJobInput{}
+	}
+
+	output = &DeleteJobOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteJob API operation for AWS IoT.
+//
+// Deletes a job and its related job executions.
+//
+// Deleting a job may take time, depending on the number of job executions created
+// for the job and various other factors. While the job is being deleted, the
+// status of the job will be shown as "DELETION_IN_PROGRESS". Attempting to
+// delete or cancel a job whose status is already "DELETION_IN_PROGRESS" will
+// result in an error.
+//
+// Only 10 jobs may have status "DELETION_IN_PROGRESS" at the same time, or
+// a LimitExceededException will occur.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   An attempt was made to change to an invalid state, for example by deleting
+//   a job or a job execution which is "IN_PROGRESS" without setting the force
+//   parameter.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit has been exceeded.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) DeleteJob(input *DeleteJobInput) (*DeleteJobOutput, error) {
+	req, out := c.DeleteJobRequest(input)
+	return out, req.Send()
+}
+
+// DeleteJobWithContext is the same as DeleteJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteJobWithContext(ctx aws.Context, input *DeleteJobInput, opts ...request.Option) (*DeleteJobOutput, error) {
+	req, out := c.DeleteJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteJobExecution = "DeleteJobExecution"
+
+// DeleteJobExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteJobExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteJobExecution for more information on using the DeleteJobExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteJobExecutionRequest method.
+//    req, resp := client.DeleteJobExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteJobExecutionRequest(input *DeleteJobExecutionInput) (req *request.Request, output *DeleteJobExecutionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteJobExecution,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/things/{thingName}/jobs/{jobId}/executionNumber/{executionNumber}",
+	}
+
+	if input == nil {
+		input = &DeleteJobExecutionInput{}
+	}
+
+	output = &DeleteJobExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteJobExecution API operation for AWS IoT.
+//
+// Deletes a job execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteJobExecution for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   An attempt was made to change to an invalid state, for example by deleting
+//   a job or a job execution which is "IN_PROGRESS" without setting the force
+//   parameter.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) DeleteJobExecution(input *DeleteJobExecutionInput) (*DeleteJobExecutionOutput, error) {
+	req, out := c.DeleteJobExecutionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteJobExecutionWithContext is the same as DeleteJobExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteJobExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteJobExecutionWithContext(ctx aws.Context, input *DeleteJobExecutionInput, opts ...request.Option) (*DeleteJobExecutionOutput, error) {
+	req, out := c.DeleteJobExecutionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4923,7 +5119,7 @@ func (c *IoT) DetachPolicyRequest(input *DetachPolicyInput) (req *request.Reques
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) DetachPolicy(input *DetachPolicyInput) (*DetachPolicyOutput, error) {
 	req, out := c.DetachPolicyRequest(input)
@@ -5380,7 +5576,7 @@ func (c *IoT) GetEffectivePoliciesRequest(input *GetEffectivePoliciesInput) (req
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) GetEffectivePolicies(input *GetEffectivePoliciesInput) (*GetEffectivePoliciesOutput, error) {
 	req, out := c.GetEffectivePoliciesRequest(input)
@@ -6258,7 +6454,7 @@ func (c *IoT) ListAttachedPoliciesRequest(input *ListAttachedPoliciesInput) (req
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) ListAttachedPolicies(input *ListAttachedPoliciesInput) (*ListAttachedPoliciesOutput, error) {
 	req, out := c.ListAttachedPoliciesRequest(input)
@@ -7868,7 +8064,7 @@ func (c *IoT) ListTargetsForPolicyRequest(input *ListTargetsForPolicyInput) (req
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) ListTargetsForPolicy(input *ListTargetsForPolicyInput) (*ListTargetsForPolicyOutput, error) {
 	req, out := c.ListTargetsForPolicyRequest(input)
@@ -8818,7 +9014,7 @@ func (c *IoT) RegisterCACertificateRequest(input *RegisterCACertificateInput) (r
 //   The rate exceeds the limit.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeUnauthorizedException "UnauthorizedException"
 //   You are not authorized to perform this operation.
@@ -10118,7 +10314,7 @@ func (c *IoT) TestAuthorizationRequest(input *TestAuthorizationInput) (req *requ
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) TestAuthorization(input *TestAuthorizationInput) (*TestAuthorizationOutput, error) {
 	req, out := c.TestAuthorizationRequest(input)
@@ -10403,7 +10599,7 @@ func (c *IoT) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (req *reques
 //   The request is not valid.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -14876,6 +15072,187 @@ func (s DeleteCertificateOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteJobExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the job execution to be deleted. The executionNumber refers to
+	// the execution of a particular job on a particular device.
+	//
+	// Note that once a job execution is deleted, the executionNumber may be reused
+	// by IoT, so be sure you get and use the correct value here.
+	//
+	// ExecutionNumber is a required field
+	ExecutionNumber *int64 `location:"uri" locationName:"executionNumber" type:"long" required:"true"`
+
+	// (Optional) When true, you can delete a job execution which is "IN_PROGRESS".
+	// Otherwise, you can only delete a job execution which is in a terminal state
+	// ("SUCCEEDED", "FAILED", "REJECTED", "REMOVED" or "CANCELED") or an exception
+	// will occur. The default is false.
+	//
+	// Deleting a job execution which is "IN_PROGRESS", will cause the device to
+	// be unable to access job information or update the job execution status. Use
+	// caution and ensure that the device is able to recover to a valid state.
+	Force *bool `location:"querystring" locationName:"force" type:"boolean"`
+
+	// The ID of the job whose execution on a particular device will be deleted.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"jobId" min:"1" type:"string" required:"true"`
+
+	// The name of the thing whose job execution will be deleted.
+	//
+	// ThingName is a required field
+	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteJobExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteJobExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteJobExecutionInput"}
+	if s.ExecutionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExecutionNumber"))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.ThingName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingName"))
+	}
+	if s.ThingName != nil && len(*s.ThingName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExecutionNumber sets the ExecutionNumber field's value.
+func (s *DeleteJobExecutionInput) SetExecutionNumber(v int64) *DeleteJobExecutionInput {
+	s.ExecutionNumber = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteJobExecutionInput) SetForce(v bool) *DeleteJobExecutionInput {
+	s.Force = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *DeleteJobExecutionInput) SetJobId(v string) *DeleteJobExecutionInput {
+	s.JobId = &v
+	return s
+}
+
+// SetThingName sets the ThingName field's value.
+func (s *DeleteJobExecutionInput) SetThingName(v string) *DeleteJobExecutionInput {
+	s.ThingName = &v
+	return s
+}
+
+type DeleteJobExecutionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteJobExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobExecutionOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) When true, you can delete a job which is "IN_PROGRESS". Otherwise,
+	// you can only delete a job which is in a terminal state ("COMPLETED" or "CANCELED")
+	// or an exception will occur. The default is false.
+	//
+	// Deleting a job which is "IN_PROGRESS", will cause a device which is executing
+	// the job to be unable to access job information or update the job execution
+	// status. Use caution and ensure that each device executing a job which is
+	// deleted is able to recover to a valid state.
+	Force *bool `location:"querystring" locationName:"force" type:"boolean"`
+
+	// The ID of the job to be deleted.
+	//
+	// After a job deletion is completed, you may reuse this jobId when you create
+	// a new job. However, this is not recommended, and you must ensure that your
+	// devices are not using the jobId to refer to the deleted job.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"jobId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteJobInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteJobInput) SetForce(v bool) *DeleteJobInput {
+	s.Force = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *DeleteJobInput) SetJobId(v string) *DeleteJobInput {
+	s.JobId = &v
+	return s
+}
+
+type DeleteJobOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteOTAUpdateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18410,7 +18787,7 @@ func (s *ImplicitDeny) SetPolicies(v []*Policy) *ImplicitDeny {
 	return s
 }
 
-// Sends message data to an AWS IoT Analytics channel.
+// Sends messge data to an AWS IoT Analytics channel.
 type IotAnalyticsAction struct {
 	_ struct{} `type:"structure"`
 
@@ -18421,8 +18798,8 @@ type IotAnalyticsAction struct {
 	// The name of the IoT Analytics channel to which message data will be sent.
 	ChannelName *string `locationName:"channelName" type:"string"`
 
-	// The ARN of the role which has a policy that grants IoT permission to send
-	// message data via IoT Analytics (iotanalytics:BatchPutMessage).
+	// The ARN of the role which has a policy that grants IoT Analytics permission
+	// to send message data via IoT Analytics (iotanalytics:BatchPutMessage).
 	RoleArn *string `locationName:"roleArn" type:"string"`
 }
 
