@@ -1,4 +1,9 @@
 ## 1.21.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_redshift_cluster: Add `dns_name` attribute [GH-4582]
+
 ## 1.20.0 (May 23, 2018)
 
 NOTES:
