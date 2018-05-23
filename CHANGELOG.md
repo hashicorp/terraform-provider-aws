@@ -22,6 +22,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_api_gateway_rest_api: Prevent error with `policy` containing special characters (e.g. forward slashes in CIDRs) [GH-4606]
+* resource/aws_cloudwatch_event_rule: Prevent multiple names on creation [GH-4579]
 * resource/aws_s3_bucket: Prevent panic from CORS reading errors [GH-4603]
 * resource/aws_spot_fleet_request: Prevent empty `iam_instance_profile_arn` from overwriting `iam_instance_profile` [GH-4591]
 
