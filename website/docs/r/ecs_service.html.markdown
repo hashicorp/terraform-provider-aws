@@ -130,6 +130,8 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `registry_arn` - (Required) The ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service(`aws_service_discovery_service`). For more information, see [Service](https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html)
 * `port` - (Optional) The port value used if your Service Discovery service specified an SRV record.
+* `container_port` - (Optional) The port value, already specified in the task definition, to be used for your service discovery service.
+* `container_name` - (Optional) The container name value, already specified in the task definition, to be used for your service discovery service.
 
 ## Attributes Reference
 
