@@ -9,6 +9,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+// Kinesis requires tagging operations be split into 10 tag batches
+const kinesisTagBatchLimit = 10
+
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
 func setTagsKinesis(conn *kinesis.Kinesis, d *schema.ResourceData) error {
@@ -25,14 +28,12 @@ func setTagsKinesis(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
 
-			// Kinesis requires these operations be split into 10 tag batches
-			tagKeysBatchLimit := 10
-			tagKeysBatch := make([]*string, 0, tagKeysBatchLimit)
-			tagKeysBatches := make([][]*string, 0, len(remove)/tagKeysBatchLimit+1)
+			tagKeysBatch := make([]*string, 0, kinesisTagBatchLimit)
+			tagKeysBatches := make([][]*string, 0, len(remove)/kinesisTagBatchLimit+1)
 			for _, tag := range remove {
-				if len(tagKeysBatch) == tagKeysBatchLimit {
+				if len(tagKeysBatch) == kinesisTagBatchLimit {
 					tagKeysBatches = append(tagKeysBatches, tagKeysBatch)
-					tagKeysBatch = make([]*string, 0, tagKeysBatchLimit)
+					tagKeysBatch = make([]*string, 0, kinesisTagBatchLimit)
 				}
 				tagKeysBatch = append(tagKeysBatch, tag.Key)
 			}
@@ -52,12 +53,10 @@ func setTagsKinesis(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 		if len(create) > 0 {
 			log.Printf("[DEBUG] Creating tags: %#v", create)
 
-			// Kinesis requires these operations be split into 10 tag batches
-			tagsBatchLimit := 10
 			tagsBatch := make(map[string]*string)
-			tagsBatches := make([]map[string]*string, 0, len(create)/tagsBatchLimit+1)
+			tagsBatches := make([]map[string]*string, 0, len(create)/kinesisTagBatchLimit+1)
 			for _, tag := range create {
-				if len(tagsBatch) == tagsBatchLimit {
+				if len(tagsBatch) == kinesisTagBatchLimit {
 					tagsBatches = append(tagsBatches, tagsBatch)
 					tagsBatch = make(map[string]*string)
 				}
