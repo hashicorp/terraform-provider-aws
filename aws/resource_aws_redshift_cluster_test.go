@@ -120,7 +120,7 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 						"aws_redshift_cluster.default", "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "publicly_accessible", "true"),
-					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "address", regexp.MustCompile(fmt.Sprintf("^tf-redshift-cluster-%d.*\\.redshift\\..*", ri))),
+					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "dns_name", regexp.MustCompile(fmt.Sprintf("^tf-redshift-cluster-%d.*\\.redshift\\..*", ri))),
 				),
 			},
 		},
