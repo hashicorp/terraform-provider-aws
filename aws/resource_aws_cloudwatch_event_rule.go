@@ -80,7 +80,16 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input, err := buildPutRuleInputStruct(d)
+	var name string
+	if v, ok := d.GetOk("name"); ok {
+		name = v.(string)
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		name = resource.PrefixedUniqueId(v.(string))
+	} else {
+		name = resource.UniqueId()
+	}
+
+	input, err := buildPutRuleInputStruct(d, name)
 	if err != nil {
 		return errwrap.Wrapf("Creating CloudWatch Event Rule failed: {{err}}", err)
 	}
@@ -172,7 +181,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 		log.Printf("[DEBUG] CloudWatch Event Rule (%q) enabled", d.Id())
 	}
 
-	input, err := buildPutRuleInputStruct(d)
+	input, err := buildPutRuleInputStruct(d, d.Id())
 	if err != nil {
 		return errwrap.Wrapf("Updating CloudWatch Event Rule failed: {{err}}", err)
 	}
@@ -226,16 +235,7 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func buildPutRuleInputStruct(d *schema.ResourceData) (*events.PutRuleInput, error) {
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
-
+func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRuleInput, error) {
 	input := events.PutRuleInput{
 		Name: aws.String(name),
 	}
