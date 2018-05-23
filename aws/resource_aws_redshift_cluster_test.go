@@ -104,7 +104,7 @@ func TestValidateRedshiftClusterDbName(t *testing.T) {
 func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := acctest.RandInt()
+	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 	config := testAccAWSRedshiftClusterConfig_basic(ri)
 
 	resource.Test(t, resource.TestCase{
