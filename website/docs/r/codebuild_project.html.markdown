@@ -130,6 +130,7 @@ The following arguments are supported:
 
 * `name` - (Required) The projects name.
 * `description` - (Optional) A short description of the project.
+* `badge_enabled` - (Optional) If set to `true`, enable a public status badge for the project. The badge's public URL is exported as `badge_url`. Defaults to `false`.
 * `encryption_key` - (Optional) The AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `service_role` - (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `build_timeout` - (Optional) How long in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
@@ -191,6 +192,7 @@ The following attributes are exported:
 
 * `id` - The ARN of the CodeBuild project.
 * `description` - A short description of the project.
+* `badge_url` - The public URL of the status badge for the project.
 * `encryption_key` - The AWS Key Management Service (AWS KMS) customer master key (CMK) that was used for encrypting the build project's build output artifacts.
 * `name` - The projects name.
 * `service_role` - The ARN of the IAM service role.
