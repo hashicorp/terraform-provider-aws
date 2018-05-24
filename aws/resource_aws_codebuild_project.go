@@ -232,6 +232,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Default:      "60",
 				ValidateFunc: validation.IntBetween(5, 480),
 			},
+			"badge_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"badge_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 			"vpc_config": {
 				Type:     schema.TypeList,
@@ -314,6 +323,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("vpc_config"); ok {
 		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("badge_enabled"); ok {
+		params.BadgeEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -541,6 +554,13 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
 	d.Set("build_timeout", project.TimeoutInMinutes)
+	if project.Badge != nil {
+		d.Set("badge_enabled", project.Badge.BadgeEnabled)
+		d.Set("badge_url", project.Badge.BadgeRequestUrl)
+	} else {
+		d.Set("badge_enabled", false)
+		d.Set("badge_url", "")
+	}
 
 	if err := d.Set("tags", tagsToMapCodeBuild(project.Tags)); err != nil {
 		return err
@@ -599,6 +619,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("build_timeout") {
 		params.TimeoutInMinutes = aws.Int64(int64(d.Get("build_timeout").(int)))
+	}
+
+	if d.HasChange("badge_enabled") {
+		params.BadgeEnabled = aws.Bool(d.Get("badge_enabled").(bool))
 	}
 
 	// The documentation clearly says "The replacement set of tags for this build project."
