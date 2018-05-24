@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_codebuild_project: Add `badge_enabled` argument and `badge_url` attribute [GH-3504]
 * resource/aws_redshift_cluster: Add `dns_name` attribute [GH-4582]
 
 BUG FIXES:
