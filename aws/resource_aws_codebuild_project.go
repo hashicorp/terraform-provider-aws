@@ -24,9 +24,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		Update: resourceAwsCodeBuildProjectUpdate,
 		Delete: resourceAwsCodeBuildProjectDelete,
 
-		SchemaVersion: 2,
-		MigrateState:  resourceAwsCodebuildMigrateState,
-
 		Schema: map[string]*schema.Schema{
 			"artifacts": {
 				Type:     schema.TypeSet,
