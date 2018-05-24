@@ -96,12 +96,67 @@ resource "aws_codebuild_project" "foo" {
     environment_variable {
       "name"  = "SOME_KEY2"
       "value" = "SOME_VALUE2"
+      "type"  = "PARAMETER_STORE"
     }
   }
 
   source {
-    type     = "GITHUB"
-    location = "https://github.com/mitchellh/packer.git"
+    type            = "GITHUB"
+    location        = "https://github.com/mitchellh/packer.git"
+    git_clone_depth = 1
+  }
+
+  vpc_config {
+    vpc_id = "vpc-725fca"
+
+    subnets = [
+      "subnet-ba35d2e0",
+      "subnet-ab129af1",
+    ]
+
+    security_group_ids = [
+      "sg-f9f27d91",
+      "sg-e4f48g23",
+    ]
+  }
+
+  tags {
+    "Environment" = "Test"
+  }
+}
+
+resource "aws_codebuild_project" "github_enterprise" {
+  name         = "test-project"
+  description  = "test_codebuild_project"
+  build_timeout      = "5"
+  service_role = "${aws_iam_role.codebuild_role.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "aws/codebuild/nodejs:6.3.1"
+    type         = "LINUX_CONTAINER"
+
+    environment_variable {
+      "name"  = "SOME_KEY1"
+      "value" = "SOME_VALUE1"
+    }
+
+    environment_variable {
+      "name"  = "SOME_KEY2"
+      "value" = "SOME_VALUE2"
+      "type"  = "PARAMETER_STORE"
+    }
+  }
+
+  source {
+    type            = "GITHUB_ENTERPRISE"
+    location        = "https://somewhere/org/repo.git"
+    git_clone_depth = 1
+    insecure_ssl    = true
   }
 
   vpc_config {
@@ -175,6 +230,8 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
 * `location` - (Optional) The location of the source code from git or s3.
+* `git_clone_depth` - (Optional) Truncate git history to this many commits.
+* `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 
 `auth` supports the following:
 
