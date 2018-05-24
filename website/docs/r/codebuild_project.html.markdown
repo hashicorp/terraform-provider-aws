@@ -13,13 +13,13 @@ Provides a CodeBuild Project resource.
 ## Example Usage
 
 ```hcl
-resource "aws_s3_bucket" "foo" {
-  bucket = "test-bucket"
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
   acl    = "private"
 }
 
-resource "aws_iam_role" "codebuild_role" {
-  name = "codebuild-role-"
+resource "aws_iam_role" "example" {
+  name = "example"
 
   assume_role_policy = <<EOF
 {
@@ -37,10 +37,8 @@ resource "aws_iam_role" "codebuild_role" {
 EOF
 }
 
-resource "aws_iam_policy" "codebuild_policy" {
-  name        = "codebuild-policy"
-  path        = "/service-role/"
-  description = "Policy used in trust relationship with CodeBuild"
+resource "aws_iam_role_policy" "example" {
+  role        = "${aws_iam_role.example.name}"
 
   policy = <<POLICY
 {
@@ -56,23 +54,40 @@ resource "aws_iam_policy" "codebuild_policy" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.example.arn}",
+        "${aws_s3_bucket.example.arn}/*"
+      ]
     }
   ]
 }
 POLICY
 }
 
-resource "aws_iam_policy_attachment" "codebuild_policy_attachment" {
-  name       = "codebuild-policy-attachment"
-  policy_arn = "${aws_iam_policy.codebuild_policy.arn}"
-  roles      = ["${aws_iam_role.codebuild_role.id}"]
-}
-
-resource "aws_codebuild_project" "foo" {
+resource "aws_codebuild_project" "example" {
   name         = "test-project"
   description  = "test_codebuild_project"
   build_timeout      = "5"
-  service_role = "${aws_iam_role.codebuild_role.arn}"
+  service_role = "${aws_iam_role.example.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -80,7 +95,7 @@ resource "aws_codebuild_project" "foo" {
 
   cache {
     type     = "S3"
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.example.bucket}"
   }
 
   environment {
@@ -124,77 +139,24 @@ resource "aws_codebuild_project" "foo" {
     "Environment" = "Test"
   }
 }
-
-resource "aws_codebuild_project" "github_enterprise" {
-  name         = "test-project"
-  description  = "test_codebuild_project"
-  build_timeout      = "5"
-  service_role = "${aws_iam_role.codebuild_role.arn}"
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "aws/codebuild/nodejs:6.3.1"
-    type         = "LINUX_CONTAINER"
-
-    environment_variable {
-      "name"  = "SOME_KEY1"
-      "value" = "SOME_VALUE1"
-    }
-
-    environment_variable {
-      "name"  = "SOME_KEY2"
-      "value" = "SOME_VALUE2"
-      "type"  = "PARAMETER_STORE"
-    }
-  }
-
-  source {
-    type            = "GITHUB_ENTERPRISE"
-    location        = "https://somewhere/org/repo.git"
-    git_clone_depth = 1
-    insecure_ssl    = true
-  }
-
-  vpc_config {
-    vpc_id = "vpc-725fca"
-
-    subnets = [
-      "subnet-ba35d2e0",
-      "subnet-ab129af1",
-    ]
-
-    security_group_ids = [
-      "sg-f9f27d91",
-      "sg-e4f48g23",
-    ]
-  }
-
-  tags {
-    "Environment" = "Test"
-  }
-}
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
+* `artifacts` - (Required) Information about the project's build output artifacts. Artifact blocks are documented below.
+* `environment` - (Required) Information about the project's build environment. Environment blocks are documented below.
 * `name` - (Required) The projects name.
+* `source` - (Required) Information about the project's input source code. Source blocks are documented below.
+* `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as `badge_url` attribute when enabled.
+* `build_timeout` - (Optional) How long in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
+* `cache` - (Optional) Information about the cache storage for the project. Cache blocks are documented below.
 * `description` - (Optional) A short description of the project.
 * `encryption_key` - (Optional) The AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `service_role` - (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
-* `build_timeout` - (Optional) How long in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
-* `artifacts` - (Required) Information about the project's build output artifacts. Artifact blocks are documented below.
-* `cache` - (Optional) Information about the cache storage for the project. Cache blocks are documented below.
-* `environment` - (Required) Information about the project's build environment. Environment blocks are documented below.
-* `source` - (Required) Information about the project's input source code. Source blocks are documented below.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
-* `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as `badge_url` attribute when enabled.
 
 `artifacts` supports the following:
 
@@ -215,8 +177,8 @@ The following arguments are supported:
 * `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`
 * `image` - (Required) The *image identifier* of the Docker image to use for this build project ([list of Docker images provided by AWS CodeBuild.](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html)). You can read more about the AWS curated environment images in the [documentation](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListCuratedEnvironmentImages.html).
 * `type` - (Required) The type of build environment to use for related builds. The only valid value is `LINUX_CONTAINER`.
-* `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
+* `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 
 `environment_variable` supports the following:
 
@@ -229,9 +191,9 @@ The following arguments are supported:
 * `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
-* `location` - (Optional) The location of the source code from git or s3.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
+* `location` - (Optional) The location of the source code from git or s3.
 
 `auth` supports the following:
 
@@ -240,17 +202,13 @@ The following arguments are supported:
 
 `vpc_config` supports the following:
 
-* `vpc_id` - (Required) The ID of the VPC within which to run builds.
-* `subnets` - (Required) The subnet IDs within which to run builds.
 * `security_group_ids` - (Required) The security group IDs to assign to running builds.
+* `subnets` - (Required) The subnet IDs within which to run builds.
+* `vpc_id` - (Required) The ID of the VPC within which to run builds.
 
 ## Attributes Reference
 
-The following attributes are exported:
+The following additional attributes are exported:
 
 * `id` - The ARN of the CodeBuild project.
-* `description` - A short description of the project.
-* `encryption_key` - The AWS Key Management Service (AWS KMS) customer master key (CMK) that was used for encrypting the build project's build output artifacts.
-* `name` - The projects name.
-* `service_role` - The ARN of the IAM service role.
 * `badge_url` - The URL of the build badge when `badge_enabled` is enabled.
