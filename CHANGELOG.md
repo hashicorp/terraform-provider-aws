@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_redshift_cluster: Add `dns_name` attribute [GH-4582]
 
+BUG FIXES:
+
+* resource/aws_dms_endpoint: Additionally specify MongoDB connection info in the top-level API namespace to prevent issues connecting [GH-4636]
+
 ## 1.20.0 (May 23, 2018)
 
 NOTES:
