@@ -240,7 +240,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"badge_url": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"tags": tagsSchema(),
 			"vpc_config": {
@@ -555,7 +554,13 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
 	d.Set("build_timeout", project.TimeoutInMinutes)
-	d.Set("badge_url", project.Badge.BadgeRequestUrl)
+	if project.Badge != nil {
+		d.Set("badge_enabled", project.Badge.BadgeEnabled)
+		d.Set("badge_url", project.Badge.BadgeRequestUrl)
+	} else {
+		d.Set("badge_enabled", false)
+		d.Set("badge_url", "")
+	}
 
 	if err := d.Set("tags", tagsToMapCodeBuild(project.Tags)); err != nil {
 		return err
