@@ -135,6 +135,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  codebuild.EnvironmentVariableTypePlaintext,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.EnvironmentVariableTypeParameterStore,
+											codebuild.EnvironmentVariableTypePlaintext,
+										}, false),
+									},
 								},
 							},
 						},

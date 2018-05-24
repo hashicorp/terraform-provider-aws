@@ -91,11 +91,13 @@ resource "aws_codebuild_project" "foo" {
     environment_variable {
       "name"  = "SOME_KEY1"
       "value" = "SOME_VALUE1"
+      "type"  = "PARAMETER_STORE"
     }
 
     environment_variable {
       "name"  = "SOME_KEY2"
       "value" = "SOME_VALUE2"
+      "type"  = "PLAINTEXT"
     }
   }
 
@@ -166,7 +168,8 @@ The following arguments are supported:
 `environment_variable` supports the following:
 
 * `name` - (Required) The environment variable's name or key.
-* `value` - (Required) The environment variable's value.
+* `value` - (Required) The environment variable's value. If `type` is set to `PARAMETER_STORE` this should be the name of the Parameter.
+* `type` - (Optional) Valid values for this parameter are: `PLAINTEXT` or `PARAMETER_STORE`. Defaults to `PLAINTEXT`.
 
 `source` supports the following:
 
