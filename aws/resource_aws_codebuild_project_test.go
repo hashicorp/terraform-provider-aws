@@ -653,8 +653,9 @@ resource "aws_codebuild_project" "foo" {
     type         = "LINUX_CONTAINER"
 
     environment_variable = {
-      "name"  = "SOME_OTHERKEY"
-      "value" = "SOME_OTHERVALUE"
+      name  = "SOME_OTHERKEY"
+      value = "SOME_OTHERVALUE"
+      type = "PARAMETER_STORE"
     }
   }
 

@@ -135,6 +135,14 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.EnvironmentVariableTypeParameterStore,
+											codebuild.EnvironmentVariableTypePlaintext,
+										}, false),
+									},
 								},
 							},
 						},
@@ -448,6 +456,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 
 				if v := config["value"].(string); v != "" {
 					projectEnvironmentVar.Value = &v
+				}
+
+				if v := config["type"].(string); v != "" {
+					projectEnvironmentVar.Type = &v
 				}
 
 				projectEnvironmentVariables = append(projectEnvironmentVariables, projectEnvironmentVar)
@@ -839,6 +851,9 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 			item := map[string]interface{}{}
 			item["name"] = *env.Name
 			item["value"] = *env.Value
+			if env.Type != nil {
+				item["type"] = *env.Type
+			}
 			envVariables = append(envVariables, item)
 		}
 	}
