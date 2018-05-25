@@ -97,13 +97,13 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	if valdom_ok {
 		domvalopts := make([]*acm.DomainValidationOption, 0, 0)
 		domvalopts = append(domvalopts, &acm.DomainValidationOption{
-			DomainName:  params.DomainName,
+			DomainName:       params.DomainName,
 			ValidationDomain: aws.String(valdom.(string)),
 		})
 		if sans_ok {
 			for _, san := range params.SubjectAlternativeNames {
 				domvalopts = append(domvalopts, &acm.DomainValidationOption{
-					DomainName:  san,
+					DomainName:       san,
 					ValidationDomain: aws.String(valdom.(string)),
 				})
 			}
