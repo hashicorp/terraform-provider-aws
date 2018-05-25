@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_budgets_budget: Force new resource when updating `name` [GH-4656]
 * resource/aws_dms_endpoint: Additionally specify MongoDB connection info in the top-level API namespace to prevent issues connecting [GH-4636]
 
 ## 1.20.0 (May 23, 2018)
