@@ -527,27 +527,33 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		})
 	}
 
-	// List is sorted from oldest to latest
-	// so this may get costly over time :'(
-	var lastVersion, lastQualifiedArn string
-	err = listVersionsByFunctionPages(conn, &lambda.ListVersionsByFunctionInput{
-		FunctionName: function.FunctionName,
-		MaxItems:     aws.Int64(10000),
-	}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
-		if lastPage {
-			last := p.Versions[len(p.Versions)-1]
-			lastVersion = *last.Version
-			lastQualifiedArn = *last.FunctionArn
-			return false
+	// Get latest version and ARN unless qualifier is specified via data source
+	if qualifierExistance {
+		d.Set("version", function.Version)
+		d.Set("qualified_arn", function.FunctionArn)
+	} else {
+		// List is sorted from oldest to latest
+		// so this may get costly over time :'(
+		var lastVersion, lastQualifiedArn string
+		err = listVersionsByFunctionPages(conn, &lambda.ListVersionsByFunctionInput{
+			FunctionName: function.FunctionName,
+			MaxItems:     aws.Int64(10000),
+		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+			if lastPage {
+				last := p.Versions[len(p.Versions)-1]
+				lastVersion = *last.Version
+				lastQualifiedArn = *last.FunctionArn
+				return false
+			}
+			return true
+		})
+		if err != nil {
+			return err
 		}
-		return true
-	})
-	if err != nil {
-		return err
-	}
 
-	d.Set("version", lastVersion)
-	d.Set("qualified_arn", lastQualifiedArn)
+		d.Set("version", lastVersion)
+		d.Set("qualified_arn", lastQualifiedArn)
+	}
 
 	invokeArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
