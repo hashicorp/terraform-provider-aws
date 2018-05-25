@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,21 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.
+// In order for that resource to work the Terraform AWS user must have done a GitHub
+// OAuth dance.
+//
+// Additionally, the GitHub user that the Terraform AWS user logs in as must have
+// access to the GitHub repository. This allows others to run tests for the webhook
+// without having to have access to the Packer GitHub repository.
+func testAccAWSCodeBuildSourceLocationFromEnv() string {
+	sourceLocation := os.Getenv("AWS_CODEBUILD_SOURCE_LOCATION")
+	if sourceLocation == "" {
+		return "https://github.com/hashicorp/packer.git"
+	}
+	return sourceLocation
+}
 
 func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	var project codebuild.Project
@@ -567,11 +583,11 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    location = "https://github.com/hashicorp/packer.git"
+    location = "%s"
     type     = "GITHUB"
   }
 }
-`, rName)
+`, rName, testAccAWSCodeBuildSourceLocationFromEnv())
 }
 
 func testAccAWSCodebuildProjectConfig_BadgeEnabled(rName string, badgeEnabled bool) string {
