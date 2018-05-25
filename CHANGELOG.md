@@ -1,5 +1,9 @@
 ## 1.21.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_codebuild_webhook` [GH-4473]
+
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `badge_enabled` argument and `badge_url` attribute [GH-3504]
