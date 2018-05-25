@@ -688,14 +688,14 @@ func resourceAwsSecurityGroupUpdateRules(
 			n = new(schema.Set)
 		}
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os := expandRules(o.(*schema.Set))
+		ns := expandRules(n.(*schema.Set))
 
-		remove, err := expandIPPerms(group, os.Difference(ns).List())
+		remove, err := expandIPPerms(group, collapseRules(ruleset, os.Difference(ns).List()))
 		if err != nil {
 			return err
 		}
-		add, err := expandIPPerms(group, ns.Difference(os).List())
+		add, err := expandIPPerms(group, collapseRules(ruleset, ns.Difference(os).List()))
 		if err != nil {
 			return err
 		}
@@ -1142,6 +1142,96 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 	}
 
 	return saves
+}
+
+func collapseRules(ruleset string, rules []interface{}) []interface{} {
+
+	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+
+	collapsed := make(map[string]map[string]interface{})
+
+	for _, rule := range rules {
+		r := rule.(map[string]interface{})
+
+		var selfVal bool
+		if v, ok := r["self"]; ok {
+			selfVal = v.(bool)
+		}
+		ruleHash := idHash(ruleset, r["protocol"].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), selfVal)
+
+		if _, ok := collapsed[ruleHash]; !ok {
+			collapsed[ruleHash] = r
+			continue
+		}
+
+		for _, key := range keys_to_collapse {
+			if _, ok := r[key]; !ok {
+				continue
+			}
+			if _, ok := collapsed[ruleHash][key]; ok {
+				collapsed[ruleHash][key] = append(collapsed[ruleHash][key].([]interface{}), r[key].([]interface{})...)
+			} else {
+				collapsed[ruleHash][key] = r[key]
+			}
+		}
+	}
+
+	values := make([]interface{}, 0, len(collapsed))
+	for _, val := range collapsed {
+		values = append(values, val)
+	}
+	return values
+}
+
+func expandOneRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
+	var keys_to_copy = []string{"description", "from_port", "to_port", "protocol"}
+
+	dst := make(map[string]interface{})
+
+	for _, key := range keys_to_copy {
+		dst[key] = src[key]
+	}
+	if k != "" {
+		val := make([]interface{}, 0)
+		dst[k] = append(val, v)
+	}
+	dst["self"] = self
+
+	return dst
+}
+
+func expandRules(rules *schema.Set) *schema.Set {
+	var string_sections = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids"}
+
+	normalized := schema.NewSet(resourceAwsSecurityGroupRuleHash, nil)
+
+	for _, rawRule := range rules.List() {
+		rule := rawRule.(map[string]interface{})
+
+		if v, ok := rule["self"]; ok && v.(bool) {
+			new_rule := expandOneRule(rule, true, "", nil)
+			normalized.Add(new_rule)
+		}
+
+		if raw, ok := rule["security_groups"]; ok {
+			list := raw.(*schema.Set).List()
+			for _, v := range list {
+				new_rule := expandOneRule(rule, false, "security_groups", v)
+				normalized.Add(new_rule)
+			}
+		}
+
+		for _, section := range string_sections {
+			if raw, ok := rule[section]; ok {
+				list := raw.([]interface{})
+				for _, v := range list {
+					new_rule := expandOneRule(rule, false, section, v)
+					normalized.Add(new_rule)
+				}
+			}
+		}
+	}
+	return normalized
 }
 
 // Creates a unique hash for the type, ports, and protocol, used as a key in
