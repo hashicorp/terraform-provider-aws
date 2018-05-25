@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_lambda_function: Qualifiers explicitly set are now honoured [GH-4654]
 * resource/aws_budgets_budget: Force new resource when updating `name` [GH-4656]
 * resource/aws_dms_endpoint: Additionally specify MongoDB connection info in the top-level API namespace to prevent issues connecting [GH-4636]
 
