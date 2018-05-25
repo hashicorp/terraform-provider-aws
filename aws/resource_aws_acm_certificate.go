@@ -38,6 +38,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"email_validation_domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,10 +87,28 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		ValidationMethod: aws.String(d.Get("validation_method").(string)),
 	}
 
-	sans, ok := d.GetOk("subject_alternative_names")
-	if ok {
+	sans, sans_ok := d.GetOk("subject_alternative_names")
+	if sans_ok {
 		sanStrings := sans.([]interface{})
 		params.SubjectAlternativeNames = expandStringList(sanStrings)
+	}
+
+	valdom, valdom_ok := d.GetOk("email_validation_domain")
+	if valdom_ok {
+		domvalopts := make([]*acm.DomainValidationOption, 0, 0)
+		domvalopts = append(domvalopts, &acm.DomainValidationOption{
+			DomainName:  params.DomainName,
+			ValidationDomain: aws.String(valdom.(string)),
+		})
+		if sans_ok {
+			for _, san := range params.SubjectAlternativeNames {
+				domvalopts = append(domvalopts, &acm.DomainValidationOption{
+					DomainName:  san,
+					ValidationDomain: aws.String(valdom.(string)),
+				})
+			}
+		}
+		params.DomainValidationOptions = domvalopts
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
