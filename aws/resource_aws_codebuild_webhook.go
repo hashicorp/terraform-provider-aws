@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -13,8 +15,12 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 		Delete: resourceAwsCodeBuildWebhookDelete,
 		Update: resourceAwsCodeBuildWebhookUpdate,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"project_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -22,6 +28,14 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 			"branch_filter": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"payload_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"secret": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -34,18 +48,17 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	resp, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
-		ProjectName:  aws.String(d.Get("name").(string)),
+	_, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
+		ProjectName:  aws.String(d.Get("project_name").(string)),
 		BranchFilter: aws.String(d.Get("branch_filter").(string)),
 	})
 	if err != nil {
 		return err
 	}
 
-	d.SetId(d.Get("name").(string))
-	d.Set("branch_filter", d.Get("branch_filter").(string))
-	d.Set("url", resp.Webhook.Url)
-	return nil
+	d.SetId(d.Get("project_name").(string))
+
+	return resourceAwsCodeBuildWebhookRead(d, meta)
 }
 
 func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) error {
@@ -62,22 +75,23 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(resp.Projects) == 0 {
+		log.Printf("[WARN] CodeBuild Project %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	project := resp.Projects[0]
 	d.Set("branch_filter", project.Webhook.BranchFilter)
+	d.Set("payload_url", project.Webhook.PayloadUrl)
+	d.Set("project_name", project.Name)
+	d.Set("secret", project.Webhook.Secret)
 	d.Set("url", project.Webhook.Url)
+
 	return nil
 }
 
 func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
-
-	if !d.HasChange("branch_filter") {
-		return nil
-	}
 
 	_, err := conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
 		ProjectName:  aws.String(d.Id()),
@@ -89,7 +103,7 @@ func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	return nil
+	return resourceAwsCodeBuildWebhookRead(d, meta)
 }
 
 func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{}) error {
@@ -101,12 +115,10 @@ func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{})
 
 	if err != nil {
 		if isAWSErr(err, codebuild.ErrCodeResourceNotFoundException, "") {
-			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }

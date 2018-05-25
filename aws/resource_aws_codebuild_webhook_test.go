@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,24 +12,102 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsCodeBuildWebhook_basic(t *testing.T) {
+func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsCodeBuildWebhookDestroy,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeBuildWebhookConfig_basic(acctest.RandString(5)),
+				Config: testAccAWSCodeBuildWebhookConfig_GitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCodeBuildWebhookExists("aws_codebuild_webhook.test"),
-					resource.TestCheckResourceAttrSet("aws_codebuild_webhook.test", "url"),
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
+					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
+					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
+					// Checking secret value can be flakey, we may need to wait for its generation
+					// resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "url", regexp.MustCompile(`^https://`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckAwsCodeBuildWebhookDestroy(s *terraform.State) error {
+func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
+					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
+					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
+					// Checking secret value can be flakey, we may need to wait for its generation
+					// resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "url", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, "master"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, "dev"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -52,27 +131,87 @@ func testAccCheckAwsCodeBuildWebhookDestroy(s *terraform.State) error {
 
 		project := resp.Projects[0]
 		if project.Webhook != nil && project.Webhook.Url != nil {
-			return fmt.Errorf("Found CodeBuild Webhook: %s", rs.Primary.ID)
+			return fmt.Errorf("Found CodeBuild Project %q Webhook: %s", rs.Primary.ID, project.Webhook)
 		}
 	}
 	return nil
 }
 
-func testAccCheckAwsCodeBuildWebhookExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webhook) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
+		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+
+		resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
+			Names: []*string{
+				aws.String(rs.Primary.ID),
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if len(resp.Projects) == 0 {
+			return fmt.Errorf("CodeBuild Project %q not found", rs.Primary.ID)
+		}
+
+		project := resp.Projects[0]
+		if project.Webhook == nil || aws.StringValue(project.Webhook.PayloadUrl) == "" {
+			return fmt.Errorf("CodeBuild Project %q Webhook not found", rs.Primary.ID)
+		}
+
+		*webhook = *project.Webhook
 
 		return nil
 	}
 }
 
-func testAccCodeBuildWebhookConfig_basic(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName, "", "") + `
+func testAccAWSCodeBuildWebhookConfig_GitHub(rName string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
 resource "aws_codebuild_webhook" "test" {
-  name = "${aws_codebuild_project.foo.name}"
+  project_name = "${aws_codebuild_project.test.name}"
 }
 `)
+}
+
+func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://example.com/terraform/acceptance-testing.git"
+    type     = "GITHUB_ENTERPRISE"
+  }
+}
+
+resource "aws_codebuild_webhook" "test" {
+  project_name = "${aws_codebuild_project.test.name}"
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+resource "aws_codebuild_webhook" "test" {
+  branch_filter = "%s"
+  project_name  = "${aws_codebuild_project.test.name}"
+}
+`, branchFilter)
 }
