@@ -107,7 +107,6 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "false"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
@@ -138,7 +137,6 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confAfter, 10),
@@ -213,7 +211,6 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "30"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confBefore, 30),
@@ -240,7 +237,6 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "30"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confAfter, 30),
@@ -504,7 +500,6 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "10000"),
@@ -532,7 +527,6 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "10000"),
@@ -574,7 +568,6 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "30"),
@@ -596,7 +589,6 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -622,7 +614,6 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -1058,7 +1049,6 @@ func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -1098,7 +1088,6 @@ func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) strin
   vpc_id = "${aws_vpc.test2.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -1146,7 +1135,6 @@ func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -1186,7 +1174,6 @@ func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -1227,7 +1214,6 @@ func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) str
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -1263,7 +1249,6 @@ func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   health_check {
     interval = 10
@@ -1296,7 +1281,6 @@ func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName str
 	
 	proxy_protocol_v2 = "true"    
 	deregistration_delay = 200
-	slow_start = 0
 
   health_check {
     interval = 10
@@ -1328,7 +1312,6 @@ func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName strin
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   health_check {
     interval = 10
@@ -1360,7 +1343,6 @@ func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName strin
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   health_check {
     interval = 10
@@ -1392,7 +1374,6 @@ func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   health_check {
     interval = 30
@@ -1465,7 +1446,6 @@ func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickin
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
 
   %s
 

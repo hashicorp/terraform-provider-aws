@@ -190,7 +190,6 @@ resource "aws_lb_target_group" "test" {
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
   deregistration_delay = 200
-  slow_start = 0
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
@@ -243,7 +242,6 @@ resource "aws_lb_target_group" "test" {
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
   deregistration_delay = 200
-  slow_start = 0
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
@@ -296,7 +294,6 @@ resource "aws_alb_target_group" "test" {
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
   deregistration_delay = 200
-  slow_start = 0
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
@@ -348,7 +345,6 @@ resource "aws_lb_target_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
   target_type = "ip"
   deregistration_delay = 200
-  slow_start = 0
   stickiness {
     type = "lb_cookie"
     cookie_duration = 10000
