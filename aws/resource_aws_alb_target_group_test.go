@@ -65,6 +65,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "instance"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "true"),
@@ -288,6 +289,7 @@ func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.cookie_duration", "10000"),
@@ -312,6 +314,7 @@ func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.cookie_duration", "10000"),
@@ -350,6 +353,7 @@ func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "health_check.0.interval", "30"),
@@ -371,6 +375,7 @@ func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -396,6 +401,7 @@ func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -484,6 +490,7 @@ func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -523,6 +530,7 @@ func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -562,6 +570,7 @@ func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) stri
   vpc_id = "${aws_vpc.test2.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -609,6 +618,7 @@ func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -648,6 +658,7 @@ func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -688,6 +699,7 @@ func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) st
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -733,6 +745,7 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   %s
 

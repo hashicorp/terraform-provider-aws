@@ -781,6 +781,7 @@ resource "aws_lb_target_group" "test" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -892,6 +893,7 @@ resource "aws_lb_target_group" "test" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
