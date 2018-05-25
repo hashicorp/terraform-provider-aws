@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
 	"testing"
 	"text/template"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -18,6 +20,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -128,6 +131,7 @@ func TestAccAWSS3Bucket_region(t *testing.T) {
 
 func TestAccAWSS3Bucket_bucketRegionalDomainName(t *testing.T) {
 	rInt := acctest.RandInt()
+	region := testAccFindRandomRegion()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -135,12 +139,12 @@ func TestAccAWSS3Bucket_bucketRegionalDomainName(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketConfigRegionalDomainName(rInt),
+				Config: testAccAWSS3BucketConfigRegionalDomainName(rInt, region),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "region", "ap-south-1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "region", region),
 					resource.TestCheckResourceAttr(
-						"aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, "ap-south-1")),
+						"aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
 				),
 			},
 		},
@@ -1352,8 +1356,24 @@ func testAccBucketDomainName(randInt int) string {
 	return fmt.Sprintf("tf-test-bucket-%d.s3.amazonaws.com", randInt)
 }
 
+func testAccFindRandomRegion() string {
+	regions := []string{}
+	for _, partition := range endpoints.DefaultPartitions() {
+		for k, _ := range partition.Regions() {
+			regions = append(regions, k)
+		}
+	}
+	rand.Seed(time.Now().Unix())
+	return regions[rand.Intn(len(regions))]
+}
+
 func testAccBucketRegionalDomainName(randInt int, region string) string {
-	return fmt.Sprintf("tf-test-bucket-%d.s3-%s.amazonaws.com", randInt, region)
+	bucket := fmt.Sprintf("tf-test-bucket-%d", randInt)
+	regionalEndpoint, err := BucketRegionalDomainName(bucket, region)
+	if err != nil {
+		return fmt.Sprintf("Regional endpoint not found for bucket %s", bucket)
+	}
+	return regionalEndpoint
 }
 
 func testAccWebsiteEndpoint(randInt int) string {
@@ -1456,19 +1476,19 @@ resource "aws_s3_bucket" "bucket" {
 `, randInt)
 }
 
-func testAccAWSS3BucketConfigRegionalDomainName(randInt int) string {
+func testAccAWSS3BucketConfigRegionalDomainName(randInt int, region string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	alias = "asia"
-	region = "ap-south-1"
+	alias = "custom"
+	region = "%s"
 }
 
 resource "aws_s3_bucket" "bucket" {
-	provider = "aws.asia"
+	provider = "aws.custom"
 	bucket = "tf-test-bucket-%d"
-	region = "ap-south-1"
+	region = "%s"
 }
-`, randInt)
+`, region, randInt, region)
 }
 
 func testAccAWSS3BucketWebsiteConfig(randInt int) string {

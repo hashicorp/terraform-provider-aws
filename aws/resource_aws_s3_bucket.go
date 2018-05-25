@@ -1085,7 +1085,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Add the bucket_regional_domain_name as an attribute
-	regionalEndpoint, err := bucketRegionalDomainName(d.Get("bucket").(string), region)
+	regionalEndpoint, err := BucketRegionalDomainName(d.Get("bucket").(string), region)
 	if err != nil {
 		return err
 	}
@@ -1454,7 +1454,7 @@ func bucketDomainName(bucket string) string {
 	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
 }
 
-func bucketRegionalDomainName(bucket string, region string) (string, error) {
+func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 
 	for _, partition := range endpoints.DefaultPartitions() {
