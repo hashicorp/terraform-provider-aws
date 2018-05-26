@@ -439,7 +439,7 @@ func validateAwsLbTargetGroupHealthCheckPath(v interface{}, k string) (ws []stri
 func validateSlowStart(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
 
-	// Check if the value is either 5 or 60 (minutes).
+	// Check if the value is between 30-900 or 0 (seconds).
 	if value == 0 || (value < 30 || value > 900) {
 		errors = append(errors, fmt.Errorf(
 			"%q contains an invalid Slow Start Duration \"%d\". "+
