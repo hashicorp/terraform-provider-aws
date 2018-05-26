@@ -64,13 +64,10 @@ func dataSourceAwsRoute() *schema.Resource {
 func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	req := &ec2.DescribeRouteTablesInput{}
-	rtbId, rtbOk := d.GetOk("route_table_id")
+	rtbId := d.Get("route_table_id")
 	cidr := d.Get("destination_cidr_block")
 	ipv6Cidr := d.Get("destination_ipv6_cidr_block")
 
-	if !rtbOk {
-		return fmt.Errorf("Route table must be assigned")
-	}
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
 			"route-table-id":                    rtbId.(string),
