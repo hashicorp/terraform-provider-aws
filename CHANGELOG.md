@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_route` [GH-4529]
 * **New Resource:** `aws_codebuild_webhook` [GH-4473]
 
 ENHANCEMENTS:
