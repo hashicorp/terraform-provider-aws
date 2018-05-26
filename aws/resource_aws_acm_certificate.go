@@ -35,7 +35,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			},
 			"validation_method": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"arn": {
