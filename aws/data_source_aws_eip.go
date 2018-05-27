@@ -24,6 +24,8 @@ func dataSourceAwsEip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"filter":   dataSourceFiltersSchema(),
+			"eip_tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -39,6 +41,16 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	if public_ip := d.Get("public_ip"); public_ip != "" {
 		req.PublicIps = []*string{aws.String(public_ip.(string))}
+	}
+
+	if filters, ok := d.GetOk("filter"); ok {
+		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	}
+
+	if tags, ok := d.GetOk("eip_tags"); ok {
+		req.Filters = append(req.Filters, buildEC2TagFilterList(
+			tagsFromMap(tags.(map[string]interface{})),
+		)...)
 	}
 
 	log.Printf("[DEBUG] Reading EIP: %s", req)

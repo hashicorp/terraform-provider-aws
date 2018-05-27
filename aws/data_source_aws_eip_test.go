@@ -18,6 +18,7 @@ func TestAccDataSourceAwsEip_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsEipCheck("data.aws_eip.by_id"),
 					testAccDataSourceAwsEipCheck("data.aws_eip.by_public_ip"),
+					resource.TestCheckResourceAttr("data.aws_eip.by_tags", "eip_tags.%", "1"),
 				),
 			},
 		},
@@ -64,7 +65,11 @@ provider "aws" {
 }
 
 resource "aws_eip" "wrong1" {}
-resource "aws_eip" "test" {}
+resource "aws_eip" "test" {
+  tags {
+    Name = "test_tag"
+  }
+}
 resource "aws_eip" "wrong2" {}
 
 data "aws_eip" "by_id" {
@@ -73,5 +78,18 @@ data "aws_eip" "by_id" {
 
 data "aws_eip" "by_public_ip" {
   public_ip = "${aws_eip.test.public_ip}"
+}
+
+data "aws_eip" "by_filter" {
+  filter {
+    name   = "tag:Name"
+    values = ["${aws_eip.test.tags["Name"]}"]
+  }
+}
+
+data "aws_eip" "by_tags" {
+  eip_tags {
+    Name = "${aws_eip.test.tags["Name"]}"
+  }
 }
 `

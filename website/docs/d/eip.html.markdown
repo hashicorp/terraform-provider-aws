@@ -42,9 +42,17 @@ Elastic IP whose data will be exported as attributes.
 
 * `public_ip` - (Optional) The public IP of the specific EIP to retrieve.
 
+* `eip_tags` - (Optional) A mapping of tags, each pair of which must
+exactly match a pair on the desired EIP to retrieve.
+
+* `filter` - (Optional) One or more name/value pairs to use as filters. There are
+several valid keys, for a full reference, check out
+[describe-addresses in the AWS CLI reference][1].
+
 ## Attributes Reference
 
 All of the argument attributes are also exported as result attributes. This
 data source will complete the data by populating any fields that are not
 included in the configuration with the data for the selected Elastic IP.
 
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-addresses.html
