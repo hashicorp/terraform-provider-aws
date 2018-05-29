@@ -223,6 +223,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_mq_broker":                        dataSourceAwsMqBroker(),
 			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
 			"aws_network_interface":                dataSourceAwsNetworkInterface(),
+			"aws_organizations_account_ids":        dataSourceAwsOrganizationsAccountIDs(),
 			"aws_organizations_account":            dataSourceAwsOrganizationsAccount(),
 			"aws_organizations_organization":       dataSourceAwsOrganizationsOrganization(),
 			"aws_partition":                        dataSourceAwsPartition(),
