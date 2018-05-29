@@ -699,6 +699,8 @@ func init() {
 
 		"sqs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"ssm_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
 			"default value is `false`",
 
@@ -804,6 +806,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
 		config.StsEndpoint = endpoints["sts"].(string)
+		config.SsmEndpoint = endpoints["ssm"].(string)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -1002,6 +1005,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["sts_endpoint"],
+				},
+				"ssm": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ssm_endpoint"],
 				},
 			},
 		},

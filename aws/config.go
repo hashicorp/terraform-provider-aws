@@ -136,6 +136,7 @@ type Config struct {
 	SnsEndpoint              string
 	SqsEndpoint              string
 	StsEndpoint              string
+	SsmEndpoint              string
 	Insecure                 bool
 
 	SkipCredsValidation     bool
@@ -400,6 +401,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
 	awsStsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})
 	awsDeviceFarmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DeviceFarmEndpoint)})
+	awsSsmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SsmEndpoint)})
 
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
@@ -506,7 +508,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
-	client.ssmconn = ssm.New(sess)
+	client.ssmconn = ssm.New(awsSsmSess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
