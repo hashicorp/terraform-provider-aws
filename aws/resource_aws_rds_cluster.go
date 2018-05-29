@@ -585,9 +585,15 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore options: %s", createOpts)
+		// Retry for IAM/S3 eventual consistency
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			resp, err := conn.RestoreDBClusterFromS3(createOpts)
 			if err != nil {
+				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded.
+				// Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
+				if isAWSErr(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
+					return resource.RetryableError(err)
+				}
 				if isAWSErr(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
 					return resource.RetryableError(err)
 				}
