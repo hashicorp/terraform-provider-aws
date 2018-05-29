@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,69 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lb_target_group", &resource.Sweeper{
+		Name: "aws_lb_target_group",
+		F:    testSweepLBTargetGroups,
+		Dependencies: []string{
+			"aws_lb",
+		},
+	})
+}
+
+func testSweepLBTargetGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elbv2conn
+
+	prefixes := []string{
+		"tf-",
+		"tf-test-",
+		"tf-acc-test-",
+		"test",
+	}
+
+	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, isLast bool) bool {
+		if page == nil || len(page.TargetGroups) == 0 {
+			log.Print("[DEBUG] No LB Target Groups to sweep")
+			return false
+		}
+
+		for _, targetGroup := range page.TargetGroups {
+			name := aws.StringValue(targetGroup.TargetGroupName)
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(name, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping LB Target Group: %s", name)
+				continue
+			}
+			log.Printf("[INFO] Deleting LB Target Group: %s", name)
+			_, err := conn.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
+				TargetGroupArn: targetGroup.TargetGroupArn,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete LB Target Group (%s): %s", name, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping LB Target Group sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving LB Target Groups: %s", err)
+	}
+	return nil
+}
 
 func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
