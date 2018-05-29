@@ -88,7 +88,7 @@ The following arguments are supported:
 
 * `vpc` - (Optional) Boolean if the EIP is in a VPC or not.
 * `instance` - (Optional) EC2 instance ID.
-* `network_interface` - (Optional) Network interface ID to associate with.
+* `network_interface` - (Optional) Network interface ID to associate with. Do not use this to associate the EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocation_id` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
 * `associate_with_private_ip` - (Optional) A user specified primary or secondary private IP address to
   associate with the Elastic IP address. If no private IP address is specified,
   the Elastic IP address is associated with the primary private IP address.
