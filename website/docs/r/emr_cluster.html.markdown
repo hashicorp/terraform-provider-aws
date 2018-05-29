@@ -261,7 +261,7 @@ Attributes for Hadoop job step configuration
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the EMR Cluster
 * `name` - The name of the cluster.

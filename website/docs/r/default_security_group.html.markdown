@@ -119,7 +119,7 @@ they are at the time of removal. You can resume managing them via the AWS Consol
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the security group
 * `vpc_id` - The VPC ID.

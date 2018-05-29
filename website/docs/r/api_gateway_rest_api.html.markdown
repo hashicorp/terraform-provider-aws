@@ -62,7 +62,7 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the REST API
 * `root_resource_id` - The resource ID of the REST API's root

@@ -67,7 +67,7 @@ created implicitly and cannot be specified.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 ~> **NOTE:** Only the target type that is specified (one of the above)
 will be exported as an attribute once the resource is created.

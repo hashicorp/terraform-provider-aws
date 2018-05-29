@@ -32,7 +32,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `aws_account_id` - The AWS account ID for the user pool owner.
 * `cloudfront_distribution_arn` - The ARN of the CloudFront distribution.

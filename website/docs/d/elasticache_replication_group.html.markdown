@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `replication_group_id` - The identifier for the replication group.
 * `replication_group_description` - The description of the replication group.

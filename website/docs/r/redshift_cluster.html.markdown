@@ -90,7 +90,7 @@ For more information on the permissions required for the bucket, please read the
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier

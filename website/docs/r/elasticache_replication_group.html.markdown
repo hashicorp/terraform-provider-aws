@@ -133,7 +133,7 @@ Cluster Mode (`cluster_mode`) supports the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the ElastiCache Replication Group.
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.

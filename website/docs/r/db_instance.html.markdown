@@ -223,7 +223,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `address` - The address of the RDS instance.
 * `arn` - The ARN of the RDS instance.
