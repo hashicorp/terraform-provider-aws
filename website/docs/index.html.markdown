@@ -345,7 +345,7 @@ Nested `endpoints` block supports the following:
 
 * `ssm` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
-  custom STS endpoints.
+  custom SSM endpoints.
 
 ## Getting the Account ID
 
