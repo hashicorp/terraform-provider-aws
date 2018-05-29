@@ -1,0 +1,30 @@
+June 21, 2018 the AWS team is going to put together a virtual all time zones (best we can) community gardening session. https://github.com/golang/go/wiki/Gardening
+
+
+What we plan to do first
+Weeding
+Why are we starting here?
+We currently have 1600 issues for AWS.
+There are certainly duplicates
+Bugs that have been fixed
+Bugs that need to be fixed that we do not have time for due to volume
+We also have some amazing contributors to AWS and want to get them more involved. 
+This allows people with all levels of AWS knowledge to participate from the small, medium to larger infrastructures. As well as the beginners having an opportunity to get positive support from more advanced users.
+HashiCorp participants 
+What we are giving away for participating
+Sweatshirts for the top 5 people who close the most issues via bug closure or finding duplicates and closing issues
+T-shirts for the next top 10 people who close the most issues via bug closure or finding duplicates and closing issues
+HashiCorp mug next top 10 who close the most issues via bug closure or finding duplicates and closing.
+Stickers for everyone.
+
+If you are going to be at HashiConf let us know and we will set the goodies aside for you. Otherwise please feel free to get Beth Fuller your address and she’ll send that to you.
+
+We will have a slack and a someone from HashiCorp on Zoom through out the time zones.
+
+Anything marked HashiCorp in Progress please reach out first via the Slack or Zoom channel.
+
+We plan to do this for all providers and OSS projects eventually. 
+
+AWS is our first step, as contributors to this project, we want your feedback on how the event went. Please send all good, bad, could be better feedback to beth@hashicorp.com so that we can make improvements on a continuous basis.
+
+We really appreciate the communities feedback, help and participation. We also want to make sure we are bring you along with our roadmap and listening to your feedback about what business problems you are running into so that we can adjust quicker.
