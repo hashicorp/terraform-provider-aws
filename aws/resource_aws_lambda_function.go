@@ -519,13 +519,16 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("dead_letter_config", []interface{}{})
 	}
 
+	// Assume `PassThrough` on partitions that don't support tracing config
+	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
-		d.Set("tracing_config", []interface{}{
-			map[string]interface{}{
-				"mode": *function.TracingConfig.Mode,
-			},
-		})
+		tracingConfigMode = *function.TracingConfig.Mode
 	}
+	d.Set("tracing_config", []interface{}{
+		map[string]interface{}{
+			"mode": tracingConfigMode,
+		},
+	})
 
 	// Get latest version and ARN unless qualifier is specified via data source
 	if qualifierExistance {
