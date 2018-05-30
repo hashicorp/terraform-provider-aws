@@ -12,6 +12,8 @@ Provides an Elastic IP resource.
 
 ~> **Note:** EIP may require IGW to exist prior to association. Use `depends_on` to set an explicit dependency on the IGW.
 
+~> **Note:** Do not use `network_interface` to associate the EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocation_id` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
+
 ## Example Usage
 
 Single EIP associated with an instance:
@@ -88,7 +90,7 @@ The following arguments are supported:
 
 * `vpc` - (Optional) Boolean if the EIP is in a VPC or not.
 * `instance` - (Optional) EC2 instance ID.
-* `network_interface` - (Optional) Network interface ID to associate with. Do not use this to associate the EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocation_id` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
+* `network_interface` - (Optional) Network interface ID to associate with.
 * `associate_with_private_ip` - (Optional) A user specified primary or secondary private IP address to
   associate with the Elastic IP address. If no private IP address is specified,
   the Elastic IP address is associated with the primary private IP address.
