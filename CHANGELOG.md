@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add `environment_variable` argument `type` (support parameter store environment variables) [GH-2811] / [GH-4021]
 * resource/aws_codebuild_project: Add `source` argument `git_clone_depth` and `insecure_ssl` [GH-3929]
 * resource/aws_elasticache_replication_group: Support `number_cache_nodes` updates [GH-4504]
+* resource/aws_lb_target_group: Add `slow_start` argument [GH-4661]
 * resource/aws_redshift_cluster: Add `dns_name` attribute [GH-4582]
 * resource/aws_s3_bucket: Add `bucket_regional_domain_name` attribute [GH-4556]
 
