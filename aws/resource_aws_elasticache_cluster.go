@@ -413,7 +413,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(id)
 
-	err = createElasticacheCacheClusterWaiter(conn, d.Id(), 40*time.Minute)
+	err = waitForCreateElasticacheCacheCluster(conn, d.Id(), 40*time.Minute)
 	if err != nil {
 		return fmt.Errorf("error waiting for Elasticache Cache Cluster (%s) to be created: %s", d.Id(), err)
 	}
@@ -674,7 +674,7 @@ func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{
 		}
 		return fmt.Errorf("error deleting Elasticache Cache Cluster (%s): %s", d.Id(), err)
 	}
-	err = deleteElasticacheCacheClusterWaiter(conn, d.Id(), 40*time.Minute)
+	err = waitForDeleteElasticacheCacheCluster(conn, d.Id(), 40*time.Minute)
 	if err != nil {
 		return fmt.Errorf("error waiting for Elasticache Cache Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
@@ -768,7 +768,7 @@ func createElasticacheCacheCluster(conn *elasticache.ElastiCache, input *elastic
 	return strings.ToLower(aws.StringValue(output.CacheCluster.CacheClusterId)), nil
 }
 
-func createElasticacheCacheClusterWaiter(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) error {
+func waitForCreateElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) error {
 	pending := []string{"creating", "modifying", "restoring", "snapshotting"}
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
@@ -807,7 +807,7 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 	return err
 }
 
-func deleteElasticacheCacheClusterWaiter(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) error {
+func waitForDeleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network", "restore-failed", "snapshotting"},
 		Target:     []string{},

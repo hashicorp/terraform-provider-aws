@@ -404,7 +404,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 			return fmt.Errorf("error modifying Elasticache Replication Group shard configuration: %s", err)
 		}
 
-		err = modifyElasticacheReplicationGroupWaiter(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForModifyElasticacheReplicationGroup(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for Elasticache Replication Group (%s) shard reconfiguration completion: %s", d.Id(), err)
 		}
@@ -441,7 +441,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 			// Wait for all Cache Cluster creations
 			for _, cacheClusterID := range addClusterIDs {
-				err := createElasticacheCacheClusterWaiter(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
+				err := waitForCreateElasticacheCacheCluster(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return fmt.Errorf("error waiting for Elasticache Cache Cluster (%s) to be created (adding replica): %s", cacheClusterID, err)
 				}
@@ -516,7 +516,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 						if err != nil {
 							return fmt.Errorf("error modifying Elasticache Replication Group (%s) to set new primary: %s", d.Id(), err)
 						}
-						err = modifyElasticacheReplicationGroupWaiter(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+						err = waitForModifyElasticacheReplicationGroup(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 						if err != nil {
 							return fmt.Errorf("error waiting for Elasticache Replication Group (%s) to be available: %s", d.Id(), err)
 						}
@@ -533,7 +533,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 					if err != nil {
 						return fmt.Errorf("error modifying Elasticache Replication Group (%s) to set new primary: %s", d.Id(), err)
 					}
-					err = modifyElasticacheReplicationGroupWaiter(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+					err = waitForModifyElasticacheReplicationGroup(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 					if err != nil {
 						return fmt.Errorf("error waiting for Elasticache Replication Group (%s) to be available: %s", d.Id(), err)
 					}
@@ -548,7 +548,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 			// Wait for all Cache Cluster deletions
 			for _, cacheClusterID := range removeClusterIDs {
-				err := deleteElasticacheCacheClusterWaiter(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
+				err := waitForDeleteElasticacheCacheCluster(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return fmt.Errorf("error waiting for Elasticache Cache Cluster (%s) to be deleted (removing replica): %s", cacheClusterID, err)
 				}
@@ -652,7 +652,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 			return fmt.Errorf("error updating Elasticache Replication Group (%s): %s", d.Id(), err)
 		}
 
-		err = modifyElasticacheReplicationGroupWaiter(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForModifyElasticacheReplicationGroup(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for Elasticache Replication Group (%s) to be updated: %s", d.Id(), err)
 		}
@@ -776,7 +776,7 @@ func flattenElasticacheNodeGroupsToClusterMode(clusterEnabled bool, nodeGroups [
 	return []map[string]interface{}{m}
 }
 
-func modifyElasticacheReplicationGroupWaiter(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
+func waitForModifyElasticacheReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
 	pending := []string{"creating", "modifying", "snapshotting"}
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,

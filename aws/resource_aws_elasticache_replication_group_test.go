@@ -545,7 +545,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error setting new primary cache cluster: %s", err)
 					}
-					if err := modifyElasticacheReplicationGroupWaiter(conn, rName, 40*time.Minute); err != nil {
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for new primary cache cluster: %s", err)
 					}
 				},
@@ -593,7 +593,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error disabling automatic failover: %s", err)
 					}
-					if err := modifyElasticacheReplicationGroupWaiter(conn, rName, 40*time.Minute); err != nil {
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for disabling automatic failover: %s", err)
 					}
 
@@ -606,7 +606,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error setting new primary cache cluster: %s", err)
 					}
-					if err := modifyElasticacheReplicationGroupWaiter(conn, rName, 40*time.Minute); err != nil {
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for new primary cache cluster: %s", err)
 					}
 
@@ -619,7 +619,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error enabled automatic failover: %s", err)
 					}
-					if err := modifyElasticacheReplicationGroupWaiter(conn, rName, 40*time.Minute); err != nil {
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for enabled automatic failover: %s", err)
 					}
 				},
