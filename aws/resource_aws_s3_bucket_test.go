@@ -998,13 +998,13 @@ func TestBucketRegionalDomainName(t *testing.T) {
 	}{
 		{
 			Region:           "",
-			ExpectedErrCount: 1,
-			ExpectedOutput:   "",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.amazonaws.com",
 		},
 		{
-			Region:           "does-not-exist",
-			ExpectedErrCount: 1,
-			ExpectedOutput:   "",
+			Region:           "custom",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.custom.amazonaws.com",
 		},
 		{
 			Region:           "us-east-1",

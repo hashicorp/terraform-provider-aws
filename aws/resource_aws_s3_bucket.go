@@ -1458,21 +1458,18 @@ func bucketDomainName(bucket string) string {
 	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
 }
 
+// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 func BucketRegionalDomainName(bucket string, region string) (string, error) {
-	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-
-	for _, partition := range endpoints.DefaultPartitions() {
-		for _, reg := range partition.Regions() {
-			if region == reg.ID() {
-				regionEndpointS3, err := reg.ResolveEndpoint(endpoints.S3ServiceID)
-				if err != nil {
-					return "", err
-				}
-				return fmt.Sprintf("%s.%s", bucket, strings.TrimPrefix(regionEndpointS3.URL, "https://")), nil
-			}
-		}
+	// Return a default AWS Commercial domain name if no region is provided
+	// Otherwise EndpointFor() will return BUCKET.s3..amazonaws.com
+	if region == "" {
+		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil
 	}
-	return "", fmt.Errorf("Regional endpoint not found for bucket %s", bucket)
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s.%s", bucket, strings.TrimPrefix(endpoint.URL, "https://")), nil
 }
 
 func WebsiteEndpoint(bucket string, region string) *S3Website {
