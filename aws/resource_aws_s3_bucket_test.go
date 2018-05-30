@@ -53,6 +53,8 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 						"aws_s3_bucket.bucket", "bucket", testAccBucketName(rInt)),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketDomainName(rInt)),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
 				),
 			},
 		},
@@ -1351,6 +1353,15 @@ func testAccBucketName(randInt int) string {
 
 func testAccBucketDomainName(randInt int) string {
 	return fmt.Sprintf("tf-test-bucket-%d.s3.amazonaws.com", randInt)
+}
+
+func testAccBucketRegionalDomainName(randInt int, region string) string {
+	bucket := fmt.Sprintf("tf-test-bucket-%d", randInt)
+	regionalEndpoint, err := BucketRegionalDomainName(bucket, region)
+	if err != nil {
+		return fmt.Sprintf("Regional endpoint not found for bucket %s", bucket)
+	}
+	return regionalEndpoint
 }
 
 func testAccWebsiteEndpoint(randInt int, region string) string {
