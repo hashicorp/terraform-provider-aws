@@ -17,6 +17,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_lambda_function: Qualifiers explicitly set are now honoured [GH-4654]
+* resource/aws_batch_job_definition: Properly force new resource when updating timeout `attempt_duration_seconds` argument [GH-4697]
 * resource/aws_budgets_budget: Force new resource when updating `name` [GH-4656]
 * resource/aws_dms_endpoint: Additionally specify MongoDB connection info in the top-level API namespace to prevent issues connecting [GH-4636]
 * resource/aws_rds_cluster: Prevent additional retry error during S3 import for IAM/S3 eventual consistency [GH-4683]
