@@ -528,6 +528,12 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 				return fmt.Errorf("Error converting proxy_protocol_v2.enabled to bool: %s", *attr.Value)
 			}
 			d.Set("proxy_protocol_v2", enabled)
+		case "slow_start.duration_seconds":
+			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("slow_start", slowStart)
 		}
 	}
 
