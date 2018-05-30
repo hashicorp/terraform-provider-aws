@@ -149,7 +149,9 @@ provider "aws" {
 
 ## Argument Reference
 
-The following arguments are supported in the `provider` block:
+In addition to [generic `provider` arguments](https://www.terraform.io/docs/configuration/providers.html)
+(e.g. `alias` and `version`), the following arguments are supported in the AWS
+ `provider` block:
 
 * `access_key` - (Optional) This is the AWS access key. It must be provided, but
   it can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable, or via
