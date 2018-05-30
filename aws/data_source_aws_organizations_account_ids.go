@@ -27,16 +27,16 @@ func dataSourceAwsOrganizationsAccountIDsRead(d *schema.ResourceData, meta inter
 
 	req := &organizations.ListAccountsInput{}
 
-	log.Printf("[DEBUG] ListAccounts %s\n", req)
-	resp, err := conn.ListAccounts(req)
-	if err != nil {
-		return err
-	}
-
 	accounts := make([]string, 0)
 
-	for _, account := range resp.Accounts {
-		accounts = append(accounts, *account.Id)
+	log.Printf("[DEBUG] ListAccounts %s\n", req)
+	if err := conn.ListAccountsPages(req, func(resp *organizations.ListAccountsOutput, lastPage bool) bool {
+		for _, account := range resp.Accounts {
+			accounts = append(accounts, *account.Id)
+		}
+		return true
+	}); err != nil {
+		return err
 	}
 
 	log.Printf("[DEBUG] ListAccountsResponse %s\n", accounts)
