@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -47,6 +48,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"bucket_domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1082,6 +1088,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Add the bucket_regional_domain_name as an attribute
+	regionalEndpoint, err := BucketRegionalDomainName(d.Get("bucket").(string), region)
+	if err != nil {
+		return err
+	}
+	d.Set("bucket_regional_domain_name", regionalEndpoint)
+
 	// Add the hosted zone ID for this bucket's region as an attribute
 	hostedZoneID, err := HostedZoneIDForRegion(region)
 	if err != nil {
@@ -1443,6 +1456,20 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 
 func bucketDomainName(bucket string) string {
 	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
+}
+
+// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+func BucketRegionalDomainName(bucket string, region string) (string, error) {
+	// Return a default AWS Commercial domain name if no region is provided
+	// Otherwise EndpointFor() will return BUCKET.s3..amazonaws.com
+	if region == "" {
+		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil
+	}
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s.%s", bucket, strings.TrimPrefix(endpoint.URL, "https://")), nil
 }
 
 func WebsiteEndpoint(bucket string, region string) *S3Website {

@@ -53,6 +53,8 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 						"aws_s3_bucket.bucket", "bucket", testAccBucketName(rInt)),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketDomainName(rInt)),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
 				),
 			},
 		},
@@ -986,6 +988,60 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 }
 
+func TestBucketRegionalDomainName(t *testing.T) {
+	const bucket = "bucket-name"
+
+	var testCases = []struct {
+		ExpectedErrCount int
+		ExpectedOutput   string
+		Region           string
+	}{
+		{
+			Region:           "",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.amazonaws.com",
+		},
+		{
+			Region:           "custom",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.custom.amazonaws.com",
+		},
+		{
+			Region:           "us-east-1",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.amazonaws.com",
+		},
+		{
+			Region:           "us-west-2",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.us-west-2.amazonaws.com",
+		},
+		{
+			Region:           "us-gov-west-1",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.us-gov-west-1.amazonaws.com",
+		},
+		{
+			Region:           "cn-north-1",
+			ExpectedErrCount: 0,
+			ExpectedOutput:   bucket + ".s3.cn-north-1.amazonaws.com.cn",
+		},
+	}
+
+	for _, tc := range testCases {
+		output, err := BucketRegionalDomainName(bucket, tc.Region)
+		if tc.ExpectedErrCount == 0 && err != nil {
+			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Region, err)
+		}
+		if tc.ExpectedErrCount > 0 && err == nil {
+			t.Fatalf("expected %q to trigger an error", tc.Region)
+		}
+		if output != tc.ExpectedOutput {
+			t.Fatalf("expected %q, received %q", tc.ExpectedOutput, output)
+		}
+	}
+}
+
 func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
 	return testAccCheckAWSS3BucketDestroyWithProvider(s, testAccProvider)
 }
@@ -1351,6 +1407,15 @@ func testAccBucketName(randInt int) string {
 
 func testAccBucketDomainName(randInt int) string {
 	return fmt.Sprintf("tf-test-bucket-%d.s3.amazonaws.com", randInt)
+}
+
+func testAccBucketRegionalDomainName(randInt int, region string) string {
+	bucket := fmt.Sprintf("tf-test-bucket-%d", randInt)
+	regionalEndpoint, err := BucketRegionalDomainName(bucket, region)
+	if err != nil {
+		return fmt.Sprintf("Regional endpoint not found for bucket %s", bucket)
+	}
+	return regionalEndpoint
 }
 
 func testAccWebsiteEndpoint(randInt int, region string) string {
