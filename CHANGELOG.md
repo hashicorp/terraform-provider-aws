@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Support custom endpoint for SSM [GH-4670]
 * resource/aws_codebuild_project: Add `badge_enabled` argument and `badge_url` attribute [GH-3504]
 * resource/aws_codebuild_project: Add `environment_variable` argument `type` (support parameter store environment variables) [GH-2811] / [GH-4021]
 * resource/aws_codebuild_project: Add `source` argument `git_clone_depth` and `insecure_ssl` [GH-3929]
