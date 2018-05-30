@@ -15,23 +15,23 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyDetectorConfigBasic,
+				Config: testAccGlueCrawlerConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "tf-test"),
+					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test"),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"name",
-						"tf-test",
+						"test",
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"database_name",
-						"db-name",
+						"db_name",
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"role",
-						"default",
+						"AWSGlueServiceRoleDefault",
 					),
 				),
 			},
@@ -153,7 +153,7 @@ func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.Tes
 	}
 }
 
-const testAccGuardDutyDetectorConfigBasic = `
+const testAccGlueCrawlerConfigBasic = `
 	resource "aws_glue_catalog_crawler" "test" {
 	  name = "test"
 	  database_name = "db_name"
