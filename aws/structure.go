@@ -2719,7 +2719,7 @@ func expandCognitoResourceServerScope(inputs []interface{}) []*cognitoidentitypr
 	return configs
 }
 
-func flattenCognitoResourceServerScope(identifier string, inputs []*cognitoidentityprovider.ResourceServerScopeType) []map[string]interface{} {
+func flattenCognitoResourceServerScope(inputs []*cognitoidentityprovider.ResourceServerScopeType) []map[string]interface{} {
 	values := make([]map[string]interface{}, 0)
 
 	for _, input := range inputs {
@@ -2729,7 +2729,6 @@ func flattenCognitoResourceServerScope(identifier string, inputs []*cognitoident
 		var value = map[string]interface{}{
 			"scope_name":        aws.StringValue(input.ScopeName),
 			"scope_description": aws.StringValue(input.ScopeDescription),
-			"scope_identifier":  strings.Join([]string{identifier, "/", aws.StringValue(input.ScopeName)}, ""),
 		}
 		values = append(values, value)
 	}

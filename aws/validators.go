@@ -1386,18 +1386,6 @@ func validateCognitoUserPoolClientURL(v interface{}, k string) (ws []string, es 
 	return
 }
 
-func validateCognitoResourceServerScopeDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
-	}
-	if len(value) > 256 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 character", k))
-	}
-	return
-}
-
 func validateCognitoResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 

@@ -20,8 +20,8 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_resource_server" "resource" {
-  identifier = "res"
-  name         = "resource"
+  identifier = "https://example.com"
+  name       = "example"
 
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
 }
@@ -35,13 +35,13 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_resource_server" "resource" {
-  identifier = "res"
-  name         = "resource"
+  identifier = "https://example.com"
+  name       = "example"
 
-  scope       = {
+  scope = [{
     scope_name = "sample-scope"
     scope_description = "a Sample Scope Description"
-  }
+  }]
 
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
 }
@@ -53,7 +53,7 @@ The following arguments are supported:
 
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
-* `scope` - (Optional) The configuration for an [Authorization Scope](#authorization_scope).
+* `scope` - (Optional) A list of [Authorization Scope](#authorization_scope).
 
 ### Authorization Scope
 
@@ -65,3 +65,11 @@ The following arguments are supported:
 In addition to the arguments, which are exported, the following attributes are exported:
 
 * `scope_identifiers` - A list of all scopes configured for this resource server in the format identifier/scope_name.
+
+## Import
+
+`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.
+
+```
+$ terraform import aws_cognito_resource_server.example xxx_yyyyy|https://example.com
+```
