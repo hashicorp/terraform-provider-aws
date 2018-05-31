@@ -130,6 +130,7 @@ const (
 	ModelsLexServiceID                    = "models.lex"                   // ModelsLex.
 	MonitoringServiceID                   = "monitoring"                   // Monitoring.
 	MturkRequesterServiceID               = "mturk-requester"              // MturkRequester.
+	NeptuneServiceID                      = "neptune"                      // Neptune.
 	OpsworksServiceID                     = "opsworks"                     // Opsworks.
 	OpsworksCmServiceID                   = "opsworks-cm"                  // OpsworksCm.
 	OrganizationsServiceID                = "organizations"                // Organizations.
@@ -1626,6 +1627,35 @@ var awsPartition = partition{
 				"us-east-1": endpoint{},
 			},
 		},
+		"neptune": service{
+
+			Endpoints: endpoints{
+				"eu-west-1": endpoint{
+					Hostname: "rds.eu-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-1",
+					},
+				},
+				"us-east-1": endpoint{
+					Hostname: "rds.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				"us-east-2": endpoint{
+					Hostname: "rds.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				"us-west-2": endpoint{
+					Hostname: "rds.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+			},
+		},
 		"opsworks": service{
 
 			Endpoints: endpoints{
@@ -1848,6 +1878,22 @@ var awsPartition = partition{
 				},
 				"eu-west-2": endpoint{},
 				"eu-west-3": endpoint{},
+				"fips-us-east-1": endpoint{
+					Hostname:          "s3-fips.us-east-1.amazonaws.com",
+					SignatureVersions: []string{"s3", "s3v4"},
+				},
+				"fips-us-east-2": endpoint{
+					Hostname:          "s3-fips.us-east-2.amazonaws.com",
+					SignatureVersions: []string{"s3", "s3v4"},
+				},
+				"fips-us-west-1": endpoint{
+					Hostname:          "s3-fips.us-west-1.amazonaws.com",
+					SignatureVersions: []string{"s3", "s3v4"},
+				},
+				"fips-us-west-2": endpoint{
+					Hostname:          "s3-fips.us-west-2.amazonaws.com",
+					SignatureVersions: []string{"s3", "s3v4"},
+				},
 				"s3-external-1": endpoint{
 					Hostname:          "s3-external-1.amazonaws.com",
 					SignatureVersions: []string{"s3", "s3v4"},
@@ -2515,13 +2561,15 @@ var awscnPartition = partition{
 		"ecr": service{
 
 			Endpoints: endpoints{
-				"cn-north-1": endpoint{},
+				"cn-north-1":     endpoint{},
+				"cn-northwest-1": endpoint{},
 			},
 		},
 		"ecs": service{
 
 			Endpoints: endpoints{
-				"cn-north-1": endpoint{},
+				"cn-north-1":     endpoint{},
+				"cn-northwest-1": endpoint{},
 			},
 		},
 		"elasticache": service{
@@ -3005,7 +3053,8 @@ var awsusgovPartition = partition{
 			},
 			Endpoints: endpoints{
 				"fips-us-gov-west-1": endpoint{
-					Hostname: "s3-fips-us-gov-west-1.amazonaws.com",
+					Hostname:          "s3-fips.us-gov-west-1.amazonaws.com",
+					SignatureVersions: []string{"s3", "s3v4"},
 					CredentialScope: credentialScope{
 						Region: "us-gov-west-1",
 					},
