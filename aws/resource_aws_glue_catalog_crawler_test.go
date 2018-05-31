@@ -158,6 +158,8 @@ const testAccGlueCrawlerConfigBasic = `
 	  name = "test"
 	  database_name = "db_name"
 	  role = "${aws_iam_role.glue.name}"
+	  description = "TF-test-crawler"
+	  schedule="cron(0 1 * * ? *)"
 	  s3_target {
 		path = "s3://bucket"
 	  }

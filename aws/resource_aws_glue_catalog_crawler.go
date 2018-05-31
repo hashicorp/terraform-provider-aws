@@ -33,15 +33,16 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			//"description": {
-			//	Type:     schema.TypeString,
-			//	Optional: true,
-			//},
-			//"schedule": {
-			//	Type: schema.TypeString,
-			//	//TODO: Write a validate function on cron
-			//	//ValidateFunc: validateCron,
-			//},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"schedule": {
+				Type:     schema.TypeString,
+				Optional: true,
+				//TODO: Write a validate function on cron
+				//ValidateFunc: validateCron,
+			},
 			//"classifiers": {
 			//	Type:     schema.TypeList,
 			//	Optional: true,
@@ -150,12 +151,12 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 		Role:         aws.String(d.Get("role").(string)),
 		Targets:      createCrawlerTargets(d),
 	}
-	//if description, ok := d.GetOk("description"); ok {
-	//	crawlerInput.Description = aws.String(description.(string))
-	//}
-	//if schedule, ok := d.GetOk("schedule"); ok {
-	//	crawlerInput.Description = aws.String(schedule.(string))
-	//}
+	if description, ok := d.GetOk("description"); ok {
+		crawlerInput.Description = aws.String(description.(string))
+	}
+	if schedule, ok := d.GetOk("schedule"); ok {
+		crawlerInput.Schedule = aws.String(schedule.(string))
+	}
 	//if classifiers, ok := d.GetOk("classifiers"); ok {
 	//	crawlerInput.Classifiers = expandStringList(classifiers.(*schema.Set).List())
 	//}
@@ -298,8 +299,8 @@ func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{})
 	d.Set("name", crawlerOutput.Crawler.Name)
 	d.Set("database_name", crawlerOutput.Crawler.DatabaseName)
 	d.Set("role", crawlerOutput.Crawler.Role)
-	//d.Set("description", crawler.Description)
-	//d.Set("schedule", crawler.Schedule)
+	d.Set("description", crawlerOutput.Crawler.Description)
+	d.Set("schedule", crawlerOutput.Crawler.Schedule)
 
 	//var classifiers []string
 	//if len(crawler.Classifiers) > 0 {
