@@ -1,4 +1,9 @@
 ## 1.22.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_ecs_service` [GH-3617]
+
 ## 1.21.0 (May 31, 2018)
 
 FEATURES:
