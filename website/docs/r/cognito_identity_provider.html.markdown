@@ -12,18 +12,16 @@ Provides a Cognito User Identity Provider resource.
 
 ## Example Usage
 
-### Basic configuration
-
 ```hcl
 resource "aws_cognito_user_pool" "example" {
-  name 						= "example-pool"
+  name                      = "example-pool"
   auto_verified_attributes  = ["email"]
 }
 
 resource "aws_cognito_identity_provider" "example_provider" {
-  user_pool_id  	= "${aws_cognito_user_pool.example.id}"
-  provider_name 	= "example_name"
-  provider_type 	= "Google"
+  user_pool_id  = "${aws_cognito_user_pool.example.id}"
+  provider_name = "example_name"
+  provider_type = "Google"
 
   provider_details {
     authorize_scopes  = "email"
@@ -32,12 +30,11 @@ resource "aws_cognito_identity_provider" "example_provider" {
   }
 
   attribute_mapping {
-  	email 		= "email"
-    username 	= "sub"
+    email    = "email"
+    username = "sub"
   }
 }
 ```
-
 
 ## Argument Reference
 
@@ -47,11 +44,13 @@ The following arguments are supported:
 * `provider_name` (Required) - The provider name
 * `provider_type` (Required) - The provider type.  [See AWS API for valid values](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-ProviderType)
 * `attribute_mapping` (Optional) - The map of attribute mapping of user pool attributes. [AttributeMapping in AWS API documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-AttributeMapping)
-* `idp_identifiers` (Optional) - The list of identity providers. 
+* `idp_identifiers` (Optional) - The list of identity providers.
 * `provider_details` (Optional) - The map of identity details, such as access token
 
-## Timeouts
+## Import
 
-`aws_cognito_identity_provider` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-- `delete` - (Default `5 minutes`) Used for provider deletion
+`aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.
+
+```
+$ terraform import aws_cognito_identity_provider.example xxx_yyyyy:example
+```

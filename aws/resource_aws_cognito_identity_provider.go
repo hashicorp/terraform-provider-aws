@@ -3,12 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -19,8 +17,8 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 		Update: resourceAwsCognitoIdentityProviderUpdate,
 		Delete: resourceAwsCognitoIdentityProviderDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,8 +37,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 
 			"provider_details": {
 				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 
 			"provider_name": {
@@ -66,19 +63,20 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).cognitoidpconn
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
-	name := aws.String(d.Get("provider_name").(string))
+	providerName := d.Get("provider_name").(string)
+	userPoolID := d.Get("user_pool_id").(string)
 	params := &cognitoidentityprovider.CreateIdentityProviderInput{
-		ProviderName: name,
+		ProviderName: aws.String(providerName),
 		ProviderType: aws.String(d.Get("provider_type").(string)),
-		UserPoolId:   aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId:   aws.String(userPoolID),
 	}
 
 	if v, ok := d.GetOk("attribute_mapping"); ok {
-		params.AttributeMapping = expandCognitoIdentityProviderMap(v.(map[string]interface{}))
+		params.AttributeMapping = stringMapToPointers(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("provider_details"); ok {
-		params.ProviderDetails = expandCognitoIdentityProviderMap(v.(map[string]interface{}))
+		params.ProviderDetails = stringMapToPointers(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("idp_identifiers"); ok {
@@ -90,7 +88,7 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error creating Cognito Identity Provider: %s", err)
 	}
 
-	d.SetId(*name)
+	d.SetId(fmt.Sprintf("%s:%s", userPoolID, providerName))
 
 	return resourceAwsCognitoIdentityProviderRead(d, meta)
 }
@@ -99,17 +97,29 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 	conn := meta.(*AWSClient).cognitoidpconn
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
+	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
+	if err != nil {
+		return err
+	}
+
 	ret, err := conn.DescribeIdentityProvider(&cognitoidentityprovider.DescribeIdentityProviderInput{
-		ProviderName: aws.String(d.Id()),
-		UserPoolId:   aws.String(d.Get("user_pool_id").(string)),
+		ProviderName: aws.String(providerName),
+		UserPoolId:   aws.String(userPoolID),
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
+	}
+
+	if ret == nil || ret.IdentityProvider == nil {
+		log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	ip := ret.IdentityProvider
@@ -117,16 +127,16 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 	d.Set("provider_type", ip.ProviderType)
 	d.Set("user_pool_id", ip.UserPoolId)
 
-	if err := d.Set("attribute_mapping", flattenCognitoIdentityProviderMap(ip.AttributeMapping)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting attribute_mapping error: %#v", err)
+	if err := d.Set("attribute_mapping", aws.StringValueMap(ip.AttributeMapping)); err != nil {
+		return fmt.Errorf("error setting attribute_mapping error: %s", err)
 	}
 
-	if err := d.Set("provider_details", flattenCognitoIdentityProviderMap(ip.ProviderDetails)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting provider_details error: %#v", err)
+	if err := d.Set("provider_details", aws.StringValueMap(ip.ProviderDetails)); err != nil {
+		return fmt.Errorf("error setting provider_details error: %s", err)
 	}
 
 	if err := d.Set("idp_identifiers", flattenStringList(ip.IdpIdentifiers)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting idp_identifiers error: %#v", err)
+		return fmt.Errorf("error setting idp_identifiers error: %s", err)
 	}
 
 	return nil
@@ -136,24 +146,29 @@ func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).cognitoidpconn
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
+	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
+	if err != nil {
+		return err
+	}
+
 	params := &cognitoidentityprovider.UpdateIdentityProviderInput{
-		UserPoolId:   aws.String(d.Get("user_pool_id").(string)),
-		ProviderName: aws.String(d.Id()),
+		ProviderName: aws.String(providerName),
+		UserPoolId:   aws.String(userPoolID),
 	}
 
 	if d.HasChange("attribute_mapping") {
-		params.AttributeMapping = expandCognitoIdentityProviderMap(d.Get("attribute_mapping").(map[string]interface{}))
+		params.AttributeMapping = stringMapToPointers(d.Get("attribute_mapping").(map[string]interface{}))
 	}
 
 	if d.HasChange("provider_details") {
-		params.ProviderDetails = expandCognitoIdentityProviderMap(d.Get("provider_details").(map[string]interface{}))
+		params.ProviderDetails = stringMapToPointers(d.Get("provider_details").(map[string]interface{}))
 	}
 
 	if d.HasChange("idp_identifiers") {
 		params.IdpIdentifiers = expandStringList(d.Get("supported_login_providers").([]interface{}))
 	}
 
-	_, err := conn.UpdateIdentityProvider(params)
+	_, err = conn.UpdateIdentityProvider(params)
 	if err != nil {
 		return fmt.Errorf("Error updating Cognito Identity Provider: %s", err)
 	}
@@ -165,17 +180,30 @@ func resourceAwsCognitoIdentityProviderDelete(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).cognitoidpconn
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteIdentityProvider(&cognitoidentityprovider.DeleteIdentityProviderInput{
-			ProviderName: aws.String(d.Id()),
-			UserPoolId:   aws.String(d.Get("user_pool_id").(string)),
-		})
+	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
+	if err != nil {
+		return err
+	}
 
-		if err == nil {
-			d.SetId("")
+	_, err = conn.DeleteIdentityProvider(&cognitoidentityprovider.DeleteIdentityProviderInput{
+		ProviderName: aws.String(providerName),
+		UserPoolId:   aws.String(userPoolID),
+	})
+
+	if err != nil {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
+		return err
+	}
 
-		return resource.NonRetryableError(err)
-	})
+	return nil
+}
+
+func decodeCognitoIdentityProviderID(id string) (string, string, error) {
+	idParts := strings.Split(id, ":")
+	if len(idParts) != 2 {
+		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)
+	}
+	return idParts[0], idParts[1], nil
 }
