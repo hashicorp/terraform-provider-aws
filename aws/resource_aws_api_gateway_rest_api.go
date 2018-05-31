@@ -38,6 +38,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			"api_key_source": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "HEADER",
 			},
 
 			"policy": {
