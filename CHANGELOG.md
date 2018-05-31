@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_route` [GH-4529]
 * **New Resource:** `aws_codebuild_webhook` [GH-4473]
+* **New Resource:** `aws_cognito_identity_provider` [GH-3601]
 * **New Resource:** `aws_glue_classifier` [GH-4472]
 
 ENHANCEMENTS:
