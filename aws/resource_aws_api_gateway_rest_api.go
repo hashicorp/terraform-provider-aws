@@ -35,6 +35,11 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"api_key_source": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -120,6 +125,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("api_key_source"); ok && v.(string) != "" {
+		params.ApiKeySource = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
 		params.Policy = aws.String(v.(string))
 	}
@@ -198,6 +207,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
+	d.Set("api_key_source", api.ApiKeySource)
 
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
