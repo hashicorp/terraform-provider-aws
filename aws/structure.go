@@ -3021,8 +3021,22 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 				}
 			}
 		}
-		if !configured && cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
-			continue
+		if !configured {
+			if cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
+				continue
+			}
+			// When adding a Cognito Identity Provider, the API will automatically add an "identities" attribute
+			identitiesAttribute := cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:          aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute:     aws.Bool(false),
+				Mutable:                    aws.Bool(true),
+				Name:                       aws.String("identities"),
+				Required:                   aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{},
+			}
+			if reflect.DeepEqual(*input, identitiesAttribute) {
+				continue
+			}
 		}
 
 		var value = map[string]interface{}{
