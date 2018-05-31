@@ -5,7 +5,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"log"
+	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -118,46 +120,55 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueCatalogCrawlerCreate(resource *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCatalogCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
-	name := resource.Get("name").(string)
+	name := d.Get("name").(string)
 
-	_, err := glueConn.CreateCrawler(createCrawlerInput(name, resource))
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := glueConn.CreateCrawler(createCrawlerInput(name, d))
+		if err != nil {
+			if isAWSErr(err, "InvalidInputException", "Service is unable to assume role") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil {
 		return fmt.Errorf("error creating Glue crawler: %s", err)
 	}
-	resource.SetId(fmt.Sprintf("%s", name))
+	d.SetId(fmt.Sprintf("%s", name))
 
-	return resourceAwsGlueCatalogCrawlerUpdate(resource, meta)
+	return resourceAwsGlueCatalogCrawlerUpdate(d, meta)
 }
 
-func createCrawlerInput(crawlerName string, resource *schema.ResourceData) *glue.CreateCrawlerInput {
+func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.CreateCrawlerInput {
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
-		DatabaseName: aws.String(resource.Get("database_name").(string)),
-		Role:         aws.String(resource.Get("role").(string)),
-		Targets:      createCrawlerTargets(resource),
+		DatabaseName: aws.String(d.Get("database_name").(string)),
+		Role:         aws.String(d.Get("role").(string)),
+		Targets:      createCrawlerTargets(d),
 	}
-	//if description, ok := resource.GetOk("description"); ok {
+	//if description, ok := d.GetOk("description"); ok {
 	//	crawlerInput.Description = aws.String(description.(string))
 	//}
-	//if schedule, ok := resource.GetOk("schedule"); ok {
+	//if schedule, ok := d.GetOk("schedule"); ok {
 	//	crawlerInput.Description = aws.String(schedule.(string))
 	//}
-	//if classifiers, ok := resource.GetOk("classifiers"); ok {
+	//if classifiers, ok := d.GetOk("classifiers"); ok {
 	//	crawlerInput.Classifiers = expandStringList(classifiers.(*schema.Set).List())
 	//}
-	//if v, ok := resource.GetOk("schema_change_policy"); ok {
+	//if v, ok := d.GetOk("schema_change_policy"); ok {
 	//	crawlerInput.SchemaChangePolicy = createSchemaPolicy(v)
 	//}
-	//if tablePrefix, ok := resource.GetOk("table_prefix"); ok {
+	//if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 	//	crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
 	//}
-	//if targets, ok := resource.GetOk("targets"); ok {
+	//if targets, ok := d.GetOk("targets"); ok {
 	//	crawlerInput.Targets = createCrawlerTargets(targets)
 	//}
-	//if configuration, ok := resource.GetOk("configuration"); ok {
+	//if configuration, ok := d.GetOk("configuration"); ok {
 	//	crawlerInput.Configuration = aws.String(configuration.(string))
 	//}
 	return crawlerInput
@@ -253,22 +264,22 @@ func expandS3Target(cfg map[string]interface{}) *glue.S3Target {
 	}
 }
 
-func resourceAwsGlueCatalogCrawlerUpdate(resource *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCatalogCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
-	name := resource.Get("name").(string)
+	name := d.Get("name").(string)
 
-	crawlerInput := glue.UpdateCrawlerInput(*createCrawlerInput(name, resource))
+	crawlerInput := glue.UpdateCrawlerInput(*createCrawlerInput(name, d))
 
 	if _, err := glueConn.UpdateCrawler(&crawlerInput); err != nil {
 		return err
 	}
 
-	return resourceAwsGlueCatalogCrawlerRead(resource, meta)
+	return resourceAwsGlueCatalogCrawlerRead(d, meta)
 }
 
-func resourceAwsGlueCatalogCrawlerRead(resource *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
-	name := resource.Get("name").(string)
+	name := d.Get("name").(string)
 
 	input := &glue.GetCrawlerInput{
 		Name: aws.String(name),
@@ -277,18 +288,18 @@ func resourceAwsGlueCatalogCrawlerRead(resource *schema.ResourceData, meta inter
 	crawlerOutput, err := glueConn.GetCrawler(input)
 	if err != nil {
 		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", resource.Id())
-			resource.SetId("")
+			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
+			d.SetId("")
 		}
 
 		return fmt.Errorf("error reading Glue crawler: %s", err.Error())
 	}
 
-	resource.Set("name", crawlerOutput.Crawler.Name)
-	resource.Set("database_name", crawlerOutput.Crawler.DatabaseName)
-	resource.Set("role", crawlerOutput.Crawler.Role)
-	//resource.Set("description", crawler.Description)
-	//resource.Set("schedule", crawler.Schedule)
+	d.Set("name", crawlerOutput.Crawler.Name)
+	d.Set("database_name", crawlerOutput.Crawler.DatabaseName)
+	d.Set("role", crawlerOutput.Crawler.Role)
+	//d.Set("description", crawler.Description)
+	//d.Set("schedule", crawler.Schedule)
 
 	//var classifiers []string
 	//if len(crawler.Classifiers) > 0 {
@@ -296,17 +307,17 @@ func resourceAwsGlueCatalogCrawlerRead(resource *schema.ResourceData, meta inter
 	//		classifiers = append(classifiers, *value)
 	//	}
 	//}
-	//resource.Set("classifiers", crawler.Classifiers)
+	//d.Set("classifiers", crawler.Classifiers)
 
 	//if crawlerOutput.Crawler.SchemaChangePolicy != nil {
 	//	schemaPolicy := map[string]string{
 	//		"delete_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.DeleteBehavior,
 	//		"update_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.UpdateBehavior,
 	//	}
-	//	resource.Set("schema_change_policy", schemaPolicy)
+	//	d.Set("schema_change_policy", schemaPolicy)
 	//}
 	//
-	//resource.Set("table_prefix", crawlerOutput.Crawler.TablePrefix)
+	//d.Set("table_prefix", crawlerOutput.Crawler.TablePrefix)
 
 	return nil
 }
