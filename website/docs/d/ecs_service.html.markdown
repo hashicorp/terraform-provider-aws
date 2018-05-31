@@ -14,37 +14,9 @@ Service within a AWS ECS Cluster.
 ## Example Usage
 
 ```hcl
-data "aws_ecs_service" "ecs-mongo" {
-  service_name = "${aws_ecs_service.mongo.name}"
-  cluster_arn  = "${aws_ecs_cluster.foo.arn}"
-}
-
-resource "aws_ecs_cluster" "foo" {
-  name = "foo"
-}
-
-resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 128,
-    "memoryReservation": 64,
-    "name": "mongodb"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "mongo" {
-  name          = "mongo"
-  cluster       = "${aws_ecs_cluster.foo.id}"
-  desired_count = 2
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+data "aws_ecs_service" "example" {
+  service_name = "example"
+  cluster_arn  = "${data.aws_ecs_cluster.example.arn}"
 }
 ```
 

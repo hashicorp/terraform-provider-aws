@@ -30,15 +30,15 @@ func dataSourceAwsEcsService() *schema.Resource {
 			},
 			"desired_count": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"launch_type": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"task_definition": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -47,9 +47,12 @@ func dataSourceAwsEcsService() *schema.Resource {
 func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
+	clusterArn := d.Get("cluster_arn").(string)
+	serviceName := d.Get("service_name").(string)
+
 	params := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(d.Get("cluster_arn").(string)),
-		Services: []*string{aws.String(d.Get("service_name").(string))},
+		Cluster:  aws.String(clusterArn),
+		Services: []*string{aws.String(serviceName)},
 	}
 
 	log.Printf("[DEBUG] Reading ECS Service: %s", params)
@@ -59,25 +62,23 @@ func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	for _, service := range desc.Services {
-		if aws.StringValue(service.ClusterArn) != d.Get("cluster_arn").(string) {
-			continue
-		}
-		if aws.StringValue(service.ServiceName) != d.Get("service_name").(string) {
-			continue
-		}
-		d.SetId(aws.StringValue(service.ServiceArn))
-		d.Set("service_name", service.ServiceName)
-		d.Set("arn", service.ServiceArn)
-		d.Set("cluster_arn", service.ClusterArn)
-		d.Set("desired_count", service.DesiredCount)
-		d.Set("launch_type", service.LaunchType)
-		d.Set("task_definition", service.TaskDefinition)
+	if desc == nil || len(desc.Services) == 0 {
+		return fmt.Errorf("service with name %q in cluster %q not found", serviceName, clusterArn)
 	}
 
-	if d.Id() == "" {
-		return fmt.Errorf("service with name %q in cluster %q not found", d.Get("service_name").(string), d.Get("cluster_arn").(string))
+	if len(desc.Services) > 1 {
+		return fmt.Errorf("multiple services with name %q found in cluster %q", serviceName, clusterArn)
 	}
+
+	service := desc.Services[0]
+	d.SetId(aws.StringValue(service.ServiceArn))
+
+	d.Set("service_name", service.ServiceName)
+	d.Set("arn", service.ServiceArn)
+	d.Set("cluster_arn", service.ClusterArn)
+	d.Set("desired_count", service.DesiredCount)
+	d.Set("launch_type", service.LaunchType)
+	d.Set("task_definition", service.TaskDefinition)
 
 	return nil
 }

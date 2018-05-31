@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSEcsDataSource_ecsService(t *testing.T) {
+func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
+	dataSourceName := "data.aws_ecs_service.test"
+	resourceName := "aws_ecs_service.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -16,11 +19,11 @@ func TestAccAWSEcsDataSource_ecsService(t *testing.T) {
 			{
 				Config: testAccCheckAwsEcsServiceDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ecs_service.default", "service_name", "mongodb"),
-					resource.TestCheckResourceAttr("data.aws_ecs_service.default", "desired_count", "1"),
-					resource.TestCheckResourceAttr("data.aws_ecs_service.default", "launch_type", "EC2"),
-					resource.TestCheckResourceAttrSet("data.aws_ecs_service.default", "arn"),
-					resource.TestCheckResourceAttrSet("data.aws_ecs_service.default", "task_definition"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_type", dataSourceName, "launch_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "service_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
 				),
 			},
 		},
@@ -28,11 +31,11 @@ func TestAccAWSEcsDataSource_ecsService(t *testing.T) {
 }
 
 var testAccCheckAwsEcsServiceDataSourceConfig = fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
-  name = "default-%d"
+resource "aws_ecs_cluster" "test" {
+  name = "tf-acc-%d"
 }
 
-resource "aws_ecs_task_definition" "mongo" {
+resource "aws_ecs_task_definition" "test" {
   family = "mongodb"
   container_definitions = <<DEFINITION
 [
@@ -48,15 +51,15 @@ resource "aws_ecs_task_definition" "mongo" {
 DEFINITION
 }
 
-resource "aws_ecs_service" "mongo" {
+resource "aws_ecs_service" "test" {
   name = "mongodb"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  cluster = "${aws_ecs_cluster.test.id}"
+  task_definition = "${aws_ecs_task_definition.test.arn}"
   desired_count = 1
 }
 
-data "aws_ecs_service" "default" {
-  service_name = "${aws_ecs_service.mongo.name}"
-  cluster_arn = "${aws_ecs_cluster.default.arn}"
+data "aws_ecs_service" "test" {
+  service_name = "${aws_ecs_service.test.name}"
+  cluster_arn = "${aws_ecs_cluster.test.arn}"
 }
 `, acctest.RandInt())
