@@ -1,32 +1,32 @@
-## 1.21.0 (Unreleased)
+## 1.21.0 (May 31, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_route` [GH-4529]
-* **New Resource:** `aws_codebuild_webhook` [GH-4473]
-* **New Resource:** `aws_cognito_identity_provider` [GH-3601]
-* **New Resource:** `aws_cognito_resource_server` [GH-4530]
-* **New Resource:** `aws_glue_classifier` [GH-4472]
+* **New Data Source:** `aws_route` ([#4529](https://github.com/terraform-providers/terraform-provider-aws/issues/4529))
+* **New Resource:** `aws_codebuild_webhook` ([#4473](https://github.com/terraform-providers/terraform-provider-aws/issues/4473))
+* **New Resource:** `aws_cognito_identity_provider` ([#3601](https://github.com/terraform-providers/terraform-provider-aws/issues/3601))
+* **New Resource:** `aws_cognito_resource_server` ([#4530](https://github.com/terraform-providers/terraform-provider-aws/issues/4530))
+* **New Resource:** `aws_glue_classifier` ([#4472](https://github.com/terraform-providers/terraform-provider-aws/issues/4472))
 
 ENHANCEMENTS:
 
-* provider: Support custom endpoint for SSM [GH-4670]
-* resource/aws_codebuild_project: Add `badge_enabled` argument and `badge_url` attribute [GH-3504]
-* resource/aws_codebuild_project: Add `environment_variable` argument `type` (support parameter store environment variables) [GH-2811] / [GH-4021]
-* resource/aws_codebuild_project: Add `source` argument `git_clone_depth` and `insecure_ssl` [GH-3929]
-* resource/aws_elasticache_replication_group: Support `number_cache_nodes` updates [GH-4504]
-* resource/aws_lb_target_group: Add `slow_start` argument [GH-4661]
-* resource/aws_redshift_cluster: Add `dns_name` attribute [GH-4582]
-* resource/aws_s3_bucket: Add `bucket_regional_domain_name` attribute [GH-4556]
+* provider: Support custom endpoint for SSM ([#4670](https://github.com/terraform-providers/terraform-provider-aws/issues/4670))
+* resource/aws_codebuild_project: Add `badge_enabled` argument and `badge_url` attribute ([#3504](https://github.com/terraform-providers/terraform-provider-aws/issues/3504))
+* resource/aws_codebuild_project: Add `environment_variable` argument `type` (support parameter store environment variables) ([#2811](https://github.com/terraform-providers/terraform-provider-aws/issues/2811)] / [[#4021](https://github.com/terraform-providers/terraform-provider-aws/issues/4021))
+* resource/aws_codebuild_project: Add `source` argument `git_clone_depth` and `insecure_ssl` ([#3929](https://github.com/terraform-providers/terraform-provider-aws/issues/3929))
+* resource/aws_elasticache_replication_group: Support `number_cache_nodes` updates ([#4504](https://github.com/terraform-providers/terraform-provider-aws/issues/4504))
+* resource/aws_lb_target_group: Add `slow_start` argument ([#4661](https://github.com/terraform-providers/terraform-provider-aws/issues/4661))
+* resource/aws_redshift_cluster: Add `dns_name` attribute ([#4582](https://github.com/terraform-providers/terraform-provider-aws/issues/4582))
+* resource/aws_s3_bucket: Add `bucket_regional_domain_name` attribute ([#4556](https://github.com/terraform-providers/terraform-provider-aws/issues/4556))
 
 BUG FIXES:
 
-* data-source/aws_lambda_function: Qualifiers explicitly set are now honoured [GH-4654]
-* resource/aws_batch_job_definition: Properly force new resource when updating timeout `attempt_duration_seconds` argument [GH-4697]
-* resource/aws_budgets_budget: Force new resource when updating `name` [GH-4656]
-* resource/aws_dms_endpoint: Additionally specify MongoDB connection info in the top-level API namespace to prevent issues connecting [GH-4636]
-* resource/aws_rds_cluster: Prevent additional retry error during S3 import for IAM/S3 eventual consistency [GH-4683]
-* resource/aws_sns_sms_preferences: Properly add SNS preferences to website docs [GH-4694]
+* data-source/aws_lambda_function: Qualifiers explicitly set are now honoured ([#4654](https://github.com/terraform-providers/terraform-provider-aws/issues/4654))
+* resource/aws_batch_job_definition: Properly force new resource when updating timeout `attempt_duration_seconds` argument ([#4697](https://github.com/terraform-providers/terraform-provider-aws/issues/4697))
+* resource/aws_budgets_budget: Force new resource when updating `name` ([#4656](https://github.com/terraform-providers/terraform-provider-aws/issues/4656))
+* resource/aws_dms_endpoint: Additionally specify MongoDB connection info in the top-level API namespace to prevent issues connecting ([#4636](https://github.com/terraform-providers/terraform-provider-aws/issues/4636))
+* resource/aws_rds_cluster: Prevent additional retry error during S3 import for IAM/S3 eventual consistency ([#4683](https://github.com/terraform-providers/terraform-provider-aws/issues/4683))
+* resource/aws_sns_sms_preferences: Properly add SNS preferences to website docs ([#4694](https://github.com/terraform-providers/terraform-provider-aws/issues/4694))
 
 ## 1.20.0 (May 23, 2018)
 
