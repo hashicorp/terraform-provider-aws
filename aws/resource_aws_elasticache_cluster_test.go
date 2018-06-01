@@ -42,7 +42,7 @@ func testSweepElasticacheClusters(region string) error {
 		"tf-acc-test-",
 	}
 
-	return conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
+	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
 			return false
@@ -62,13 +62,25 @@ func testSweepElasticacheClusters(region string) error {
 				continue
 			}
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
-			err := deleteElasticacheCluster(id, 40*time.Minute, conn)
+			err := deleteElasticacheCacheCluster(conn, id)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Elasticache Cluster (%s): %s", id, err)
+				log.Printf("[ERROR] Failed to delete Elasticache Cache Cluster (%s): %s", id, err)
+			}
+			err = waitForDeleteElasticacheCacheCluster(conn, id, 40*time.Minute)
+			if err != nil {
+				log.Printf("[ERROR] Failed waiting for Elasticache Cache Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticache Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Elasticache Clusters: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {

@@ -414,10 +414,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic,
-		ri, ri, ri, ri, ri, ri)
+		ri, ri, ri, ri, ri)
 	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
-			ri, ri, ri, ri, ri, ri)
+			ri, ri, ri, ri, ri)
 
 	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
@@ -1285,27 +1285,35 @@ resource "aws_elasticsearch_domain" "test_cluster" {
   cluster_config {
     instance_type = "m3.medium.elasticsearch"
   }
+}
 
-  access_policies = <<CONFIG
+resource "aws_iam_role_policy" "firehose-elasticsearch" {
+  name   = "elasticsearch"
+  role   = "${aws_iam_role.firehose.id}"
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "es:*",
-      "Resource": "arn:aws:es:us-east-1:${data.aws_caller_identity.current.account_id}:domain/es-test-%d/*"
+      "Action": [
+        "es:*"
+      ],
+      "Resource": [
+        "${aws_elasticsearch_domain.test_cluster.arn}",
+        "${aws_elasticsearch_domain.test_cluster.arn}/*"
+      ]
     }
   ]
 }
-CONFIG
-}`
+EOF
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_elasticsearch_domain.test_cluster"]
+  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+
   name = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
   s3_configuration {
@@ -1322,7 +1330,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_elasticsearch_domain.test_cluster"]
+  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+
   name = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
   s3_configuration {

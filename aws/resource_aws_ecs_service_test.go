@@ -275,12 +275,12 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
 					roleName, policyName, tgName, lbName, svcName, -1),
-				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+				ExpectError: regexp.MustCompile(`must be between 0 and 7200`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, tgName, lbName, svcName, 1801),
-				ExpectError: regexp.MustCompile(`must be between 0 and 1800`),
+					roleName, policyName, tgName, lbName, svcName, 7201),
+				ExpectError: regexp.MustCompile(`must be between 0 and 7200`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
@@ -457,14 +457,27 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 				Config: testAccAWSEcsService(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "0"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", "memory"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithMultiPlacementStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", "memory"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.1.type", "spread"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.1.field", "instanceId"),
 				),
 			},
 		},
@@ -628,6 +641,30 @@ func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsService_withServiceRegistries(rString, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.test", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.test", "service_registries.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsService_withServiceRegistries_container(rString, clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.test", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.test", "service_registries.#", "1"),
@@ -838,9 +875,47 @@ resource "aws_ecs_service" "mongo" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
-  placement_strategy {
+  ordered_placement_strategy {
     type = "binpack"
     field = "memory"
+  }
+}
+`, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithMultiPlacementStrategy(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  ordered_placement_strategy {
+    type = "binpack"
+    field = "memory"
+  }
+  ordered_placement_strategy {
+    field = "host"
+    type = "spread"
   }
 }
 `, clusterName, tdName, svcName)
@@ -1791,6 +1866,91 @@ resource "aws_ecs_service" "test" {
   network_configuration {
     security_groups = ["${aws_security_group.test.id}"]
     subnets = ["${aws_subnet.test.*.id}"]
+  }
+}
+`, rName, rName, rName, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsService_withServiceRegistries_container(rName, clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "test" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name        = "tf-acc-sg-%s"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    protocol = "-1"
+    from_port = 0
+    to_port = 0
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "tf-acc-sd-%s.terraform.local"
+  description = "test"
+  vpc = "${aws_vpc.test.id}"
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = "tf-acc-sd-%s"
+  dns_config {
+    namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+    dns_records {
+      ttl = 5
+      type = "SRV"
+    }
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = "%s"
+  network_mode = "bridge"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "portMappings": [
+    {
+      "hostPort": 0,
+      "protocol": "tcp",
+      "containerPort": 27017
+    }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.test.id}"
+  task_definition = "${aws_ecs_task_definition.test.arn}"
+  desired_count = 1
+  service_registries {
+    container_name = "mongodb"
+    container_port = 27017
+    registry_arn = "${aws_service_discovery_service.test.arn}"
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)

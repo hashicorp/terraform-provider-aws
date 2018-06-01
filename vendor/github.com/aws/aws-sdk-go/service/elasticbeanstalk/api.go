@@ -3867,6 +3867,9 @@ func (s AbortEnvironmentUpdateOutput) GoString() string {
 type ApplicationDescription struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the application.
+	ApplicationArn *string `type:"string"`
+
 	// The name of the application.
 	ApplicationName *string `min:"1" type:"string"`
 
@@ -3897,6 +3900,12 @@ func (s ApplicationDescription) String() string {
 // GoString returns the string representation
 func (s ApplicationDescription) GoString() string {
 	return s.String()
+}
+
+// SetApplicationArn sets the ApplicationArn field's value.
+func (s *ApplicationDescription) SetApplicationArn(v string) *ApplicationDescription {
+	s.ApplicationArn = &v
+	return s
 }
 
 // SetApplicationName sets the ApplicationName field's value.
@@ -4080,6 +4089,9 @@ type ApplicationVersionDescription struct {
 	// The name of the application to which the application version belongs.
 	ApplicationName *string `min:"1" type:"string"`
 
+	// The Amazon Resource Name (ARN) of the application version.
+	ApplicationVersionArn *string `type:"string"`
+
 	// Reference to the artifact from the AWS CodeBuild build.
 	BuildArn *string `type:"string"`
 
@@ -4120,6 +4132,12 @@ func (s ApplicationVersionDescription) GoString() string {
 // SetApplicationName sets the ApplicationName field's value.
 func (s *ApplicationVersionDescription) SetApplicationName(v string) *ApplicationVersionDescription {
 	s.ApplicationName = &v
+	return s
+}
+
+// SetApplicationVersionArn sets the ApplicationVersionArn field's value.
+func (s *ApplicationVersionDescription) SetApplicationVersionArn(v string) *ApplicationVersionDescription {
+	s.ApplicationVersionArn = &v
 	return s
 }
 
@@ -7612,7 +7630,7 @@ type EnvironmentDescription struct {
 	EndpointURL *string `type:"string"`
 
 	// The environment's Amazon Resource Name (ARN), which can be used in other
-	// API reuqests that require an ARN.
+	// API requests that require an ARN.
 	EnvironmentArn *string `type:"string"`
 
 	// The ID of this environment.

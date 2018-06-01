@@ -701,8 +701,6 @@ func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		switch err {
 		case r53NoHostedZoneFound, r53NoRecordsFound:
-			log.Printf("[DEBUG] %s for: %s, removing from state file", err, d.Id())
-			d.SetId("")
 			return nil
 		default:
 			return err

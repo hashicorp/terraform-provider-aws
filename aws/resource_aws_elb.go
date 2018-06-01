@@ -584,17 +584,12 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		logs := d.Get("access_logs").([]interface{})
 		if len(logs) == 1 {
 			l := logs[0].(map[string]interface{})
-			accessLog := &elb.AccessLog{
-				Enabled:      aws.Bool(l["enabled"].(bool)),
-				EmitInterval: aws.Int64(int64(l["interval"].(int))),
-				S3BucketName: aws.String(l["bucket"].(string)),
+			attrs.LoadBalancerAttributes.AccessLog = &elb.AccessLog{
+				Enabled:        aws.Bool(l["enabled"].(bool)),
+				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
+				S3BucketName:   aws.String(l["bucket"].(string)),
+				S3BucketPrefix: aws.String(l["bucket_prefix"].(string)),
 			}
-
-			if l["bucket_prefix"] != "" {
-				accessLog.S3BucketPrefix = aws.String(l["bucket_prefix"].(string))
-			}
-
-			attrs.LoadBalancerAttributes.AccessLog = accessLog
 		} else if len(logs) == 0 {
 			// disable access logs
 			attrs.LoadBalancerAttributes.AccessLog = &elb.AccessLog{

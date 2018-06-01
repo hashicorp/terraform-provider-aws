@@ -72,7 +72,7 @@ you see this behaviour, use the `iam_arn` instead:
 data "aws_iam_policy_document" "s3_policy" {
   statement {
     actions   = ["s3:GetObject"]
-    resources = ["${module.names.s3_endpoint_arn_base}/*"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
 
     principals {
       type        = "AWS"
@@ -82,7 +82,7 @@ data "aws_iam_policy_document" "s3_policy" {
 
   statement {
     actions   = ["s3:ListBucket"]
-    resources = ["${module.names.s3_endpoint_arn_base}"]
+    resources = ["${aws_s3_bucket.example.arn}"]
 
     principals {
       type        = "AWS"
@@ -91,8 +91,8 @@ data "aws_iam_policy_document" "s3_policy" {
   }
 }
 
-resource "aws_s3_bucket" "bucket" {
-  # ...
+resource "aws_s3_bucket_policy" "example" {
+  bucket = "${aws_s3_bucket.example.id}"
   policy = "${data.aws_iam_policy_document.s3_policy.json}"
 }
 ```

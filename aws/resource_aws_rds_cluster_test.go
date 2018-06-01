@@ -31,6 +31,7 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 				Config: testAccAWSClusterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -39,6 +40,44 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_BacktrackWindow(t *testing.T) {
+	var dbCluster rds.DBCluster
+	resourceName := "aws_rds_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_BacktrackWindow(43200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "43200"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfig_BacktrackWindow(86400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "86400"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -533,6 +572,19 @@ resource "aws_rds_cluster" "default" {
     Environment = "production"
   }
 }`, n)
+}
+
+func testAccAWSClusterConfig_BacktrackWindow(backtrackWindow int) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  backtrack_window          = %d
+  cluster_identifier_prefix = "tf-acc-test-"
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
+}
+`, backtrackWindow)
 }
 
 func testAccAWSClusterConfig_namePrefix(n int) string {

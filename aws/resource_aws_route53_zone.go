@@ -277,8 +277,6 @@ func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := r53.DeleteHostedZone(&route53.DeleteHostedZoneInput{Id: aws.String(d.Id())})
 	if err != nil {
 		if r53err, ok := err.(awserr.Error); ok && r53err.Code() == "NoSuchHostedZone" {
-			log.Printf("[DEBUG] No matching Route 53 Zone found for: %s, removing from state file", d.Id())
-			d.SetId("")
 			return nil
 		}
 		return err

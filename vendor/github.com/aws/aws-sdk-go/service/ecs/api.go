@@ -203,11 +203,11 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 //    Zones in this manner (although you can choose a different placement strategy)
 //    with the placementStrategy parameter):
 //
-// Sort the valid container instances by the fewest number of running tasks
-//    for this service in the same Availability Zone as the instance. For example,
-//    if zone A has one running service task and zones B and C each have zero,
-//    valid container instances in either zone B or C are considered optimal
-//    for placement.
+// Sort the valid container instances, giving priority to instances that have
+//    the fewest number of running tasks for this service in their respective
+//    Availability Zone. For example, if zone A has one running service task
+//    and zones B and C each have zero, valid container instances in either
+//    zone B or C are considered optimal for placement.
 //
 // Place the new service task on a valid container instance in an optimal Availability
 //    Zone (based on the previous steps), favoring container instances with
@@ -4201,6 +4201,8 @@ type ContainerDefinition struct {
 	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
 	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
 	// and the --hostname option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// The hostname parameter is not supported if using the awsvpc networkMode.
 	Hostname *string `locationName:"hostname" type:"string"`
 
 	// The image used to start a container. This string is passed directly to the
@@ -4707,12 +4709,12 @@ type ContainerInstance struct {
 	RegisteredResources []*Resource `locationName:"registeredResources" type:"list"`
 
 	// For CPU and memory resource types, this parameter describes the remaining
-	// CPU and memory on the that has not already been allocated to tasks (and is
-	// therefore available for new tasks). For port resource types, this parameter
-	// describes the ports that were reserved by the Amazon ECS container agent
-	// (at instance registration time) and any task containers that have reserved
-	// port mappings on the host (with the host or bridge network mode). Any port
-	// that is not specified here is available for new tasks.
+	// CPU and memory that has not already been allocated to tasks and is therefore
+	// available for new tasks. For port resource types, this parameter describes
+	// the ports that were reserved by the Amazon ECS container agent (at instance
+	// registration time) and any task containers that have reserved port mappings
+	// on the host (with the host or bridge network mode). Any port that is not
+	// specified here is available for new tasks.
 	RemainingResources []*Resource `locationName:"remainingResources" type:"list"`
 
 	// The number of tasks on the container instance that are in the RUNNING status.
@@ -5027,8 +5029,8 @@ func (s *CreateClusterOutput) SetCluster(v *Cluster) *CreateClusterOutput {
 type CreateServiceInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. Up to 32 ASCII characters are allowed.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. Up to 32 ASCII characters are allowed.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The short name or full Amazon Resource Name (ARN) of the cluster on which
@@ -5077,6 +5079,13 @@ type CreateServiceInput struct {
 	// balancer. When a task from this service is placed on a container instance,
 	// the container instance and port combination is registered as a target in
 	// the target group specified here.
+	//
+	// Services with tasks that use the awsvpc network mode (for example, those
+	// with the Fargate launch type) only support Application Load Balancers and
+	// Network Load Balancers; Classic Load Balancers are not supported. Also, when
+	// you create any target groups for these services, you must choose ip as the
+	// target type, not instance, because tasks that use the awsvpc network mode
+	// are associated with an elastic network interface, not an Amazon EC2 instance.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
 	// The network configuration for the service. This parameter is required for
@@ -5130,7 +5139,11 @@ type CreateServiceInput struct {
 	ServiceName *string `locationName:"serviceName" type:"string" required:"true"`
 
 	// The details of the service discovery registries you want to assign to this
-	// service. For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguideservice-discovery.html).
+	// service. For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html).
+	//
+	// Service discovery is supported for Fargate tasks if using platform version
+	// v1.1.0 or later. For more information, see AWS Fargate Platform Versions
+	// (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
 
 	// The family and revision (family:revision) or full ARN of the task definition
@@ -5914,7 +5927,8 @@ type DescribeContainerInstancesInput struct {
 	// default cluster is assumed.
 	Cluster *string `locationName:"cluster" type:"string"`
 
-	// A list of container instance IDs or full ARN entries.
+	// A list of up to 100 container instance IDs or full Amazon Resource Name (ARN)
+	// entries.
 	//
 	// ContainerInstances is a required field
 	ContainerInstances []*string `locationName:"containerInstances" type:"list" required:"true"`
@@ -6689,12 +6703,18 @@ type LinuxParameters struct {
 	// command: sudo docker version | grep "Server API version"
 	InitProcessEnabled *bool `locationName:"initProcessEnabled" type:"boolean"`
 
-	// The value for the size of the /dev/shm volume. This parameter maps to the
-	// --shm-size option to docker run (https://docs.docker.com/engine/reference/run/).
+	// The value for the size (in MiB) of the /dev/shm volume. This parameter maps
+	// to the --shm-size option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// If you are using tasks that use the Fargate launch type, the sharedMemorySize
+	// parameter is not supported.
 	SharedMemorySize *int64 `locationName:"sharedMemorySize" type:"integer"`
 
-	// The container path, mount options, and size of the tmpfs mount. This parameter
-	// maps to the --tmpfs option to docker run (https://docs.docker.com/engine/reference/run/).
+	// The container path, mount options, and size (in MiB) of the tmpfs mount.
+	// This parameter maps to the --tmpfs option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// If you are using tasks that use the Fargate launch type, the tmpfs parameter
+	// is not supported.
 	Tmpfs []*Tmpfs `locationName:"tmpfs" type:"list"`
 }
 
@@ -7581,6 +7601,13 @@ func (s *ListTasksOutput) SetTaskArns(v []*string) *ListTasksOutput {
 }
 
 // Details on a load balancer that is used with a service.
+//
+// Services with tasks that use the awsvpc network mode (for example, those
+// with the Fargate launch type) only support Application Load Balancers and
+// Network Load Balancers; Classic Load Balancers are not supported. Also, when
+// you create any target groups for these services, you must choose ip as the
+// target type, not instance, because tasks that use the awsvpc network mode
+// are associated with an elastic network interface, not an Amazon EC2 instance.
 type LoadBalancer struct {
 	_ struct{} `type:"structure"`
 
@@ -7599,6 +7626,11 @@ type LoadBalancer struct {
 
 	// The full Amazon Resource Name (ARN) of the Elastic Load Balancing target
 	// group associated with a service.
+	//
+	// If your service's task definition uses the awsvpc network mode (which is
+	// required for the Fargate launch type), you must choose ip as the target type,
+	// not instance, because tasks that use the awsvpc network mode are associated
+	// with an elastic network interface, not an Amazon EC2 instance.
 	TargetGroupArn *string `locationName:"targetGroupArn" type:"string"`
 }
 
@@ -8542,7 +8574,8 @@ type Resource struct {
 	// precision floating-point type.
 	LongValue *int64 `locationName:"longValue" type:"long"`
 
-	// The name of the resource, such as cpu, memory, ports, or a user-defined resource.
+	// The name of the resource, such as CPU, MEMORY, PORTS, PORTS_UDP, or a user-defined
+	// resource.
 	Name *string `locationName:"name" type:"string"`
 
 	// When the stringSetValue type is set, the value of the resource must be a
@@ -8832,6 +8865,13 @@ type Service struct {
 	// A list of Elastic Load Balancing load balancer objects, containing the load
 	// balancer name, the container name (as it appears in a container definition),
 	// and the container port to access from the load balancer.
+	//
+	// Services with tasks that use the awsvpc network mode (for example, those
+	// with the Fargate launch type) only support Application Load Balancers and
+	// Network Load Balancers; Classic Load Balancers are not supported. Also, when
+	// you create any target groups for these services, you must choose ip as the
+	// target type, not instance, because tasks that use the awsvpc network mode
+	// are associated with an elastic network interface, not an Amazon EC2 instance.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
 	// The VPC subnet and security group configuration for tasks that receive their
@@ -9064,12 +9104,32 @@ func (s *ServiceEvent) SetMessage(v string) *ServiceEvent {
 type ServiceRegistry struct {
 	_ struct{} `type:"structure"`
 
-	// The port value used if your Service Discovery service specified an SRV record.
+	// The container name value, already specified in the task definition, to be
+	// used for your service discovery service. If the task definition that your
+	// service task specifies uses the bridge or host network mode, you must specify
+	// a containerName and containerPort combination from the task definition. If
+	// the task definition that your service task specifies uses the awsvpc network
+	// mode and a type SRV DNS record is used, you must specify either a containerName
+	// and containerPort combination or a port value, but not both.
+	ContainerName *string `locationName:"containerName" type:"string"`
+
+	// The port value, already specified in the task definition, to be used for
+	// your service discovery service. If the task definition your service task
+	// specifies uses the bridge or host network mode, you must specify a containerName
+	// and containerPort combination from the task definition. If the task definition
+	// your service task specifies uses the awsvpc network mode and a type SRV DNS
+	// record is used, you must specify either a containerName and containerPort
+	// combination or a port value, but not both.
+	ContainerPort *int64 `locationName:"containerPort" type:"integer"`
+
+	// The port value used if your service discovery service specified an SRV record.
+	// This field is required if both the awsvpc network mode and SRV records are
+	// used.
 	Port *int64 `locationName:"port" type:"integer"`
 
-	// The Amazon Resource Name (ARN) of the Service Registry. The currently supported
-	// service registry is Amazon Route 53 Auto Naming Service. For more information,
-	// see Service (https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
+	// The Amazon Resource Name (ARN) of the service registry. The currently supported
+	// service registry is Amazon Route 53 Auto Naming. For more information, see
+	// Service (https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
 	RegistryArn *string `locationName:"registryArn" type:"string"`
 }
 
@@ -9081,6 +9141,18 @@ func (s ServiceRegistry) String() string {
 // GoString returns the string representation
 func (s ServiceRegistry) GoString() string {
 	return s.String()
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ServiceRegistry) SetContainerName(v string) *ServiceRegistry {
+	s.ContainerName = &v
+	return s
+}
+
+// SetContainerPort sets the ContainerPort field's value.
+func (s *ServiceRegistry) SetContainerPort(v int64) *ServiceRegistry {
+	s.ContainerPort = &v
+	return s
 }
 
 // SetPort sets the Port field's value.
@@ -10261,7 +10333,7 @@ type Tmpfs struct {
 	// | "slave" | "rslave" | "relatime" | "norelatime" | "strictatime" | "nostrictatime"
 	MountOptions []*string `locationName:"mountOptions" type:"list"`
 
-	// The size of the tmpfs volume.
+	// The size (in MiB) of the tmpfs volume.
 	//
 	// Size is a required field
 	Size *int64 `locationName:"size" type:"integer" required:"true"`

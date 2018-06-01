@@ -36,7 +36,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		"tf-acc-test-",
 	}
 
-	return conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
+	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
 		if len(page.ReplicationGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
 			return false
@@ -63,6 +63,14 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Elasticache Replication Groups: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
@@ -463,6 +471,163 @@ func TestAccAWSElasticacheReplicationGroup_enableAtRestEncryption(t *testing.T) 
 					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "at_rest_encryption_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters(t *testing.T) {
+	var replicationGroup elasticache.ReplicationGroup
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(4))
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 2, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 4, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 2, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFailoverDisabled(t *testing.T) {
+	var replicationGroup elasticache.ReplicationGroup
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(4))
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 3, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
+				),
+			},
+			{
+				PreConfig: func() {
+					// Simulate failover so primary is on node we are trying to delete
+					conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+					input := &elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						PrimaryClusterId:   aws.String(fmt.Sprintf("%s-003", rName)),
+						ReplicationGroupId: aws.String(rName),
+					}
+					if _, err := conn.ModifyReplicationGroup(input); err != nil {
+						t.Fatalf("error setting new primary cache cluster: %s", err)
+					}
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+						t.Fatalf("error waiting for new primary cache cluster: %s", err)
+					}
+				},
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 2, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFailoverEnabled(t *testing.T) {
+	var replicationGroup elasticache.ReplicationGroup
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(4))
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 3, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
+				),
+			},
+			{
+				PreConfig: func() {
+					// Simulate failover so primary is on node we are trying to delete
+					conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+					var input *elasticache.ModifyReplicationGroupInput
+
+					// Must disable automatic failover first
+					input = &elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:         aws.Bool(true),
+						AutomaticFailoverEnabled: aws.Bool(false),
+						ReplicationGroupId:       aws.String(rName),
+					}
+					if _, err := conn.ModifyReplicationGroup(input); err != nil {
+						t.Fatalf("error disabling automatic failover: %s", err)
+					}
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+						t.Fatalf("error waiting for disabling automatic failover: %s", err)
+					}
+
+					// Failover
+					input = &elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						PrimaryClusterId:   aws.String(fmt.Sprintf("%s-003", rName)),
+						ReplicationGroupId: aws.String(rName),
+					}
+					if _, err := conn.ModifyReplicationGroup(input); err != nil {
+						t.Fatalf("error setting new primary cache cluster: %s", err)
+					}
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+						t.Fatalf("error waiting for new primary cache cluster: %s", err)
+					}
+
+					// Re-enable automatic failover like nothing ever happened
+					input = &elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:         aws.Bool(true),
+						AutomaticFailoverEnabled: aws.Bool(true),
+						ReplicationGroupId:       aws.String(rName),
+					}
+					if _, err := conn.ModifyReplicationGroup(input); err != nil {
+						t.Fatalf("error enabled automatic failover: %s", err)
+					}
+					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+						t.Fatalf("error waiting for enabled automatic failover: %s", err)
+					}
+				},
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 				),
 			},
 		},
@@ -1240,4 +1405,44 @@ resource "aws_elasticache_replication_group" "bar" {
   auth_token = "%s"
 }
 `, rInt, rInt, rString10, rString16)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName string, numberCacheClusters int, autoFailover bool) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "192.168.0.0/16"
+  tags {
+      Name = "terraform-testacc-elasticache-replication-group-number-cache-clusters"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "192.168.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = "%[1]s"
+  subnet_ids = ["${aws_subnet.test.*.id}"]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  # InvalidParameterCombination: Automatic failover is not supported for T1 and T2 cache node types.
+  automatic_failover_enabled    = %[2]t
+  node_type                     = "cache.m3.medium"
+  number_cache_clusters         = %[3]d
+  parameter_group_name          = "default.redis3.2"
+  replication_group_id          = "%[1]s"
+  replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
+  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
+}`, rName, autoFailover, numberCacheClusters)
 }

@@ -519,35 +519,44 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("dead_letter_config", []interface{}{})
 	}
 
+	// Assume `PassThrough` on partitions that don't support tracing config
+	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
-		d.Set("tracing_config", []interface{}{
-			map[string]interface{}{
-				"mode": *function.TracingConfig.Mode,
-			},
-		})
+		tracingConfigMode = *function.TracingConfig.Mode
 	}
-
-	// List is sorted from oldest to latest
-	// so this may get costly over time :'(
-	var lastVersion, lastQualifiedArn string
-	err = listVersionsByFunctionPages(conn, &lambda.ListVersionsByFunctionInput{
-		FunctionName: function.FunctionName,
-		MaxItems:     aws.Int64(10000),
-	}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
-		if lastPage {
-			last := p.Versions[len(p.Versions)-1]
-			lastVersion = *last.Version
-			lastQualifiedArn = *last.FunctionArn
-			return false
-		}
-		return true
+	d.Set("tracing_config", []interface{}{
+		map[string]interface{}{
+			"mode": tracingConfigMode,
+		},
 	})
-	if err != nil {
-		return err
-	}
 
-	d.Set("version", lastVersion)
-	d.Set("qualified_arn", lastQualifiedArn)
+	// Get latest version and ARN unless qualifier is specified via data source
+	if qualifierExistance {
+		d.Set("version", function.Version)
+		d.Set("qualified_arn", function.FunctionArn)
+	} else {
+		// List is sorted from oldest to latest
+		// so this may get costly over time :'(
+		var lastVersion, lastQualifiedArn string
+		err = listVersionsByFunctionPages(conn, &lambda.ListVersionsByFunctionInput{
+			FunctionName: function.FunctionName,
+			MaxItems:     aws.Int64(10000),
+		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+			if lastPage {
+				last := p.Versions[len(p.Versions)-1]
+				lastVersion = *last.Version
+				lastQualifiedArn = *last.FunctionArn
+				return false
+			}
+			return true
+		})
+		if err != nil {
+			return err
+		}
+
+		d.Set("version", lastVersion)
+		d.Set("qualified_arn", lastQualifiedArn)
+	}
 
 	invokeArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -594,8 +603,6 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Error deleting Lambda Function: %s", err)
 	}
-
-	d.SetId("")
 
 	return nil
 }
