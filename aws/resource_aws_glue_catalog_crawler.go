@@ -43,10 +43,11 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 				//TODO: Write a validate function on cron
 				//ValidateFunc: validateCron,
 			},
-			//"classifiers": {
-			//	Type:     schema.TypeList,
-			//	Optional: true,
-			//},
+			"classifiers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			//"schema_change_policy": {
 			//	Type:     schema.TypeSet,
 			//	Optional: true,
@@ -157,9 +158,9 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 	if schedule, ok := d.GetOk("schedule"); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
-	//if classifiers, ok := d.GetOk("classifiers"); ok {
-	//	crawlerInput.Classifiers = expandStringList(classifiers.(*schema.Set).List())
-	//}
+	if classifiers, ok := d.GetOk("classifiers"); ok {
+		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
+	}
 	//if v, ok := d.GetOk("schema_change_policy"); ok {
 	//	crawlerInput.SchemaChangePolicy = createSchemaPolicy(v)
 	//}
@@ -301,14 +302,14 @@ func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{})
 	d.Set("role", crawlerOutput.Crawler.Role)
 	d.Set("description", crawlerOutput.Crawler.Description)
 	d.Set("schedule", crawlerOutput.Crawler.Schedule)
-
+	d.Set("classifiers", flattenStringList(crawlerOutput.Crawler.Classifiers))
 	//var classifiers []string
-	//if len(crawler.Classifiers) > 0 {
-	//	for _, value := range crawler.Classifiers {
+	//if len(crawlerOutput.Crawler.Classifiers) > 0 {
+	//	for _, value := range crawlerOutput.Crawler.Classifiers {
 	//		classifiers = append(classifiers, *value)
 	//	}
 	//}
-	//d.Set("classifiers", crawler.Classifiers)
+	//d.Set("classifiers", classifiers)
 
 	//if crawlerOutput.Crawler.SchemaChangePolicy != nil {
 	//	schemaPolicy := map[string]string{
