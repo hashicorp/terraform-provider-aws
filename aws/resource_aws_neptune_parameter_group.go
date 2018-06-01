@@ -91,7 +91,7 @@ func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Create Neptune Parameter Group: %#v", createOpts)
 	resp, err := conn.CreateDBParameterGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Cache Parameter Group: %s", err)
+		return fmt.Errorf("Error creating Neptune Parameter Group: %s", err)
 	}
 
 	d.Partial(true)
