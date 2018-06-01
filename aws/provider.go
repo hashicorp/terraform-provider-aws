@@ -688,6 +688,8 @@ func init() {
 
 		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"efs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"elb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -795,6 +797,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.Ec2Endpoint = endpoints["ec2"].(string)
 		config.EcrEndpoint = endpoints["ecr"].(string)
 		config.EcsEndpoint = endpoints["ecs"].(string)
+		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
@@ -941,6 +944,13 @@ func endpointsSchema() *schema.Schema {
 					Description: descriptions["ecs_endpoint"],
 				},
 
+				"efs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["efs_endpoint"],
+				},
+
 				"elb": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1031,6 +1041,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["dynamodb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["iam"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["ec2"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
