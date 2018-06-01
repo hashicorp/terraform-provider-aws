@@ -40,6 +40,7 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 }
 
 func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
+	const resourceName = "aws_glue_catalog_crawler.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -49,19 +50,24 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test"),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_crawler.test",
+						resourceName,
 						"name",
 						"test",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_crawler.test",
+						resourceName,
 						"database_name",
 						"db_name",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_crawler.test",
+						resourceName,
 						"role",
 						"AWSGlueServiceRoleDefault",
+					),
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"table_prefix",
+						"table_prefix",
 					),
 				),
 			},
@@ -145,6 +151,7 @@ const testAccGlueCrawlerConfigCustomClassifiers = `
 	  s3_target {
 		path = "s3://bucket"
 	  }
+      table_prefix = "table_prefix"
 	}
 
 	resource "aws_glue_classifier" "test" {

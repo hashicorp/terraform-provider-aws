@@ -68,10 +68,10 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 			//		},
 			//	},
 			//},
-			//"table_prefix": {
-			//	Type:     schema.TypeString,
-			//	Optional: true,
-			//},
+			"table_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"s3_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -164,9 +164,9 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 	//if v, ok := d.GetOk("schema_change_policy"); ok {
 	//	crawlerInput.SchemaChangePolicy = createSchemaPolicy(v)
 	//}
-	//if tablePrefix, ok := d.GetOk("table_prefix"); ok {
-	//	crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
-	//}
+	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
+		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
+	}
 	//if targets, ok := d.GetOk("targets"); ok {
 	//	crawlerInput.Targets = createCrawlerTargets(targets)
 	//}
@@ -303,13 +303,7 @@ func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", crawlerOutput.Crawler.Description)
 	d.Set("schedule", crawlerOutput.Crawler.Schedule)
 	d.Set("classifiers", flattenStringList(crawlerOutput.Crawler.Classifiers))
-	//var classifiers []string
-	//if len(crawlerOutput.Crawler.Classifiers) > 0 {
-	//	for _, value := range crawlerOutput.Crawler.Classifiers {
-	//		classifiers = append(classifiers, *value)
-	//	}
-	//}
-	//d.Set("classifiers", classifiers)
+	d.Set("table_prefix", crawlerOutput.Crawler.TablePrefix)
 
 	//if crawlerOutput.Crawler.SchemaChangePolicy != nil {
 	//	schemaPolicy := map[string]string{
