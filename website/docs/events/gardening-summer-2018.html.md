@@ -42,7 +42,7 @@ We will have a [Gitter](https://gitter.im/) room available (TBD) and a someone f
 
 ### Community Issue Selection
 
-Anything marked `HashiCorp in Progress` please reach out first via the Slack or Zoom channel.
+Anything marked `HashiCorp in Progress` please reach out first via the Gitter room or Zoom channel.
 
 ## Feedback
 
