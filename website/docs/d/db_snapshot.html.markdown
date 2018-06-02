@@ -68,7 +68,7 @@ copied or restored by any AWS account, otherwise set this value to false. The de
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The snapshot ID.
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).

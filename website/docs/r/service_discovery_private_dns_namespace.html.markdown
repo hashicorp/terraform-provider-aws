@@ -34,7 +34,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of a namespace.
 * `arn` - The ARN that Amazon Route 53 assigns to the namespace when you create it.

@@ -46,7 +46,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the SNS topic
 * `arn` - The ARN of the SNS topic, as a more obvious property (clone of id)

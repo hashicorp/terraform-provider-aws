@@ -145,7 +145,7 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The RDS Cluster Identifier
 * `cluster_identifier` - The RDS Cluster Identifier

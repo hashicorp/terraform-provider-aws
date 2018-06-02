@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the Cloudwatch log group
 * `creation_time` - The creation time of the log group, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC.

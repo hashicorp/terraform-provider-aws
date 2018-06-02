@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Amazon Resource Name (ARN) of the certificate authority.
 * `certificate` - Base64-encoded certificate authority (CA) certificate. Only available after the certificate authority certificate has been imported.

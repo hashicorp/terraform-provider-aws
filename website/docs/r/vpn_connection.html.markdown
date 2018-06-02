@@ -59,7 +59,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The amazon-assigned ID of the VPN connection.
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).

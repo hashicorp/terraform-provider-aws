@@ -88,6 +88,6 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF WebACL.

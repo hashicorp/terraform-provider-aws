@@ -174,7 +174,7 @@ infinite loop in planning.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The arn of the table
 * `id` - The name of the table

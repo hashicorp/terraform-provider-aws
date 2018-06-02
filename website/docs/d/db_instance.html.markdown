@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `address` - The address of the RDS instance.
 * `allocated_storage` - Specifies the allocated storage size specified in gigabytes.

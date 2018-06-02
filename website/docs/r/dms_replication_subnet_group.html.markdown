@@ -43,7 +43,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `vpc_id` - The ID of the VPC the subnet group is in.
 
