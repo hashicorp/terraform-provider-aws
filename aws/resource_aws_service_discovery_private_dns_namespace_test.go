@@ -36,7 +36,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(acctest.RandString(8) + "." + acctest.RandString(8) + "." + acctest.RandString(8) + "." + acctest.RandString(8)),
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(acctest.RandString(64-len("example.com")) + ".example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),

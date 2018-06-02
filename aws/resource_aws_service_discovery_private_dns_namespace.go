@@ -1,9 +1,6 @@
 package aws
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,16 +46,17 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	// The CreatorRequestId has a limit of 64 bytes; roughly 30 bytes are used for timestamp and prefix.
 	name := d.Get("name").(string)
-	if len(name) > 32 {
-		hash := sha1.Sum([]byte(name))
-		name = hex.EncodeToString(hash[:])[0:32]
+	// The CreatorRequestId has a limit of 64 bytes
+	var requestId string
+	if len(name) > (64 - resource.UniqueIDSuffixLength) {
+		requestId = resource.PrefixedUniqueId(name[0:(64 - resource.UniqueIDSuffixLength - 1)])
+	} else {
+		requestId = resource.PrefixedUniqueId(name)
 	}
 
-	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(name),
 		Vpc:              aws.String(d.Get("vpc").(string)),
 		CreatorRequestId: aws.String(requestId),
 	}
