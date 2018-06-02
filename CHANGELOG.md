@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_service_discovery_private_dns_namespace: Prevent creation error with names longer than 34 characters [GH-4702]
 * resource/aws_vpn_connection: Allow period in `tunnel[1-2]_preshared_key` validation [GH-4731]
 
 ## 1.21.0 (May 31, 2018)
