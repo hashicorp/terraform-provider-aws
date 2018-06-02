@@ -124,6 +124,7 @@ type Config struct {
 	Ec2Endpoint              string
 	EcsEndpoint              string
 	EcrEndpoint              string
+	EfsEndpoint              string
 	EsEndpoint               string
 	ElbEndpoint              string
 	IamEndpoint              string
@@ -389,6 +390,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
+	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
 	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
 	awsEsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
@@ -473,7 +475,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(awsEcrSess)
 	client.ecsconn = ecs.New(awsEcsSess)
-	client.efsconn = efs.New(sess)
+	client.efsconn = efs.New(awsEfsSess)
 	client.elasticacheconn = elasticache.New(sess)
 	client.elasticbeanstalkconn = elasticbeanstalk.New(sess)
 	client.elastictranscoderconn = elastictranscoder.New(sess)
