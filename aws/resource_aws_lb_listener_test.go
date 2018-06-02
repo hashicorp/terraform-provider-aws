@@ -99,7 +99,7 @@ func TestAccAWSLBListener_https(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_auth(t *testing.T) {
+func TestAccAWSLBListener_cognito(t *testing.T) {
 	var conf elbv2.Listener
 	rName := acctest.RandString(5)
 
@@ -110,7 +110,7 @@ func TestAccAWSLBListener_auth(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_auth(rName),
+				Config: testAccAWSLBListenerConfig_cognito(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "load_balancer_arn"),
@@ -520,7 +520,7 @@ resource "tls_self_signed_cert" "example" {
 `, lbName, targetGroupName, acctest.RandInt())
 }
 
-func testAccAWSLBListenerConfig_auth(rName string) string {
+func testAccAWSLBListenerConfig_cognito(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = "%s"
