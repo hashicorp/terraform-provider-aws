@@ -29,6 +29,24 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(acctest.RandString(8) + "." + acctest.RandString(8) + "." + acctest.RandString(8) + "." + acctest.RandString(8)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sdconn
 
