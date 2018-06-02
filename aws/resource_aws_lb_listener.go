@@ -270,12 +270,12 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 					action.TargetGroupArn = aws.String(v)
 				}
 			case elbv2.ActionTypeEnumAuthenticateOidc:
-				cfgs := d.Get("authenticate_oidc_config").(*schema.Set).List()
+				cfgs := defaultActionMap["authenticate_oidc_config"].(*schema.Set).List()
 				if len(cfgs) > 0 {
 					action.AuthenticateOidcConfig = expandELbAuthenticateOidcActionConfig(cfgs[0].(map[string]interface{}))
 				}
 			case elbv2.ActionTypeEnumAuthenticateCognito:
-				cfgs := d.Get("authenticate_cognito_config").(*schema.Set).List()
+				cfgs := defaultActionMap["authenticate_cognito_config"].(*schema.Set).List()
 				if len(cfgs) > 0 {
 					action.AuthenticateCognitoConfig = expandELbAuthenticateCognitoActionConfig(cfgs[0].(map[string]interface{}))
 				}
@@ -391,12 +391,12 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 					action.TargetGroupArn = aws.String(v)
 				}
 			case elbv2.ActionTypeEnumAuthenticateOidc:
-				cfgs := d.Get("authenticate_oidc_config").(*schema.Set).List()
+				cfgs := defaultActionMap["authenticate_oidc_config"].(*schema.Set).List()
 				if len(cfgs) > 0 {
 					action.AuthenticateOidcConfig = expandELbAuthenticateOidcActionConfig(cfgs[0].(map[string]interface{}))
 				}
 			case elbv2.ActionTypeEnumAuthenticateCognito:
-				cfgs := d.Get("authenticate_cognito_config").(*schema.Set).List()
+				cfgs := defaultActionMap["authenticate_cognito_config"].(*schema.Set).List()
 				if len(cfgs) > 0 {
 					action.AuthenticateCognitoConfig = expandELbAuthenticateCognitoActionConfig(cfgs[0].(map[string]interface{}))
 				}
@@ -525,13 +525,13 @@ func expandELbAuthenticateOidcActionConfig(cfg map[string]interface{}) *elbv2.Au
 	return result
 }
 
-func flattenElbActions(actions []*elbv2.Action) []interface{} {
+func flattenElbActions(actions []*elbv2.Action) []map[string]interface{} {
 	if len(actions) == 0 {
-		return []interface{}{}
+		return nil
 	}
-	result := make([]interface{}, len(actions), len(actions))
+	result := make([]map[string]interface{}, 0, len(actions))
 	for _, action := range actions {
-		m := make(map[string]interface{}, 0)
+		m := make(map[string]interface{})
 		if action.Order != nil {
 			m["order"] = int(aws.Int64Value(action.Order))
 		}
@@ -554,9 +554,8 @@ func flattenElbActions(actions []*elbv2.Action) []interface{} {
 
 func flattenELbAuthenticateOidcActionConfig(cfg *elbv2.AuthenticateOidcActionConfig) []map[string]interface{} {
 	if cfg == nil {
-		return []map[string]interface{}{}
+		return nil
 	}
-	result := make([]map[string]interface{}, 0, 1)
 	m := make(map[string]interface{})
 
 	m["authorization_endpoint"] = aws.StringValue(cfg.AuthorizationEndpoint)
@@ -571,7 +570,7 @@ func flattenELbAuthenticateOidcActionConfig(cfg *elbv2.AuthenticateOidcActionCon
 	m["user_info_endpoint"] = aws.StringValue(cfg.UserInfoEndpoint)
 
 	if len(cfg.AuthenticationRequestExtraParams) > 0 {
-		params := make([]map[string]interface{}, len(cfg.AuthenticationRequestExtraParams), len(cfg.AuthenticationRequestExtraParams))
+		params := make([]map[string]interface{}, 0, len(cfg.AuthenticationRequestExtraParams))
 		for k, v := range cfg.AuthenticationRequestExtraParams {
 			param := map[string]interface{}{
 				"key":   k,
@@ -582,15 +581,13 @@ func flattenELbAuthenticateOidcActionConfig(cfg *elbv2.AuthenticateOidcActionCon
 		m["authentication_request_extra_params"] = params
 	}
 
-	result = append(result, m)
-	return result
+	return []map[string]interface{}{m}
 }
 
 func flattenELbAuthenticateCognitoActionConfig(cfg *elbv2.AuthenticateCognitoActionConfig) []map[string]interface{} {
 	if cfg == nil {
-		return []map[string]interface{}{}
+		return nil
 	}
-	result := make([]map[string]interface{}, 0, 1)
 	m := make(map[string]interface{})
 
 	m["on_unauthenticated_request"] = aws.StringValue(cfg.OnUnauthenticatedRequest)
@@ -602,7 +599,7 @@ func flattenELbAuthenticateCognitoActionConfig(cfg *elbv2.AuthenticateCognitoAct
 	m["user_pool_domain"] = aws.StringValue(cfg.UserPoolDomain)
 
 	if len(cfg.AuthenticationRequestExtraParams) > 0 {
-		params := make([]map[string]interface{}, len(cfg.AuthenticationRequestExtraParams), len(cfg.AuthenticationRequestExtraParams))
+		params := make([]map[string]interface{}, 0, len(cfg.AuthenticationRequestExtraParams))
 		for k, v := range cfg.AuthenticationRequestExtraParams {
 			param := map[string]interface{}{
 				"key":   k,
@@ -613,6 +610,5 @@ func flattenELbAuthenticateCognitoActionConfig(cfg *elbv2.AuthenticateCognitoAct
 		m["authentication_request_extra_params"] = params
 	}
 
-	result = append(result, m)
-	return result
+	return []map[string]interface{}{m}
 }

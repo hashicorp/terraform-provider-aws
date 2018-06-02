@@ -99,6 +99,37 @@ func TestAccAWSLBListener_https(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBListener_auth(t *testing.T) {
+	var conf elbv2.Listener
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener.test",
+		Providers:     testAccProvidersWithTLS,
+		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerConfig_auth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerExists("aws_lb_listener.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "load_balancer_arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "protocol", "HTTPS"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "port", "443"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "default_action.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "default_action.0.type", "authenticate-cognito"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "default_action.0.order", "1"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "default_action.0.authenticate_cognito_config"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "default_action.1.type", "forward"),
+					resource.TestCheckResourceAttr("aws_lb_listener.test", "default_action.1.order", "2"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "default_action.1.target_group_arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -487,4 +518,150 @@ resource "tls_self_signed_cert" "example" {
   ]
 }
 `, lbName, targetGroupName, acctest.RandInt())
+}
+
+func testAccAWSLBListenerConfig_auth(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = "%s"
+  internal        = false
+  security_groups = ["${aws_security_group.test.id}"]
+  subnets         = ["${aws_subnet.test.*.id}"]
+  enable_deletion_protection = false
+}
+
+resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 8080
+  protocol = "HTTP"
+  vpc_id = "${aws_vpc.test.id}"
+
+  health_check {
+    path = "/health"
+	  interval = 60
+	  port = 8081
+	  protocol = "HTTP"
+	  timeout = 3
+	  healthy_threshold = 3
+	  unhealthy_threshold = 3
+	  matcher = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_subnet" "test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+}
+
+resource "aws_security_group" "test" {
+  name        = "%s"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+	  from_port   = 0
+	  to_port     = 0
+	  protocol    = "-1"
+	  cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+	  from_port   = 0
+	  to_port     = 0
+	  protocol    = "-1"
+	  cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = "%s"
+  user_pool_id = "${aws_cognito_user_pool.test.id}"
+	generate_secret = true
+	allowed_oauth_flows_user_pool_client = true
+	allowed_oauth_flows = ["code", "implicit"]
+	allowed_oauth_scopes = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
+	callback_urls = ["https://www.example.com/callback", "https://www.example.com/redirect"]
+  default_redirect_uri = "https://www.example.com/redirect"
+  logout_urls = ["https://www.example.com/login"]
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain = "%s"
+  user_pool_id = "${aws_cognito_user_pool.test.id}"
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name = "terraform-test-cert-%s"
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.test.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = "${aws_lb.test.id}"
+	protocol = "HTTPS"
+	port = "443"
+	ssl_policy = "ELBSecurityPolicy-2015-05"
+	certificate_arn = "${aws_iam_server_certificate.test.arn}"
+
+	default_action {
+    order = 1
+	  type = "authenticate-cognito"
+    authenticate_cognito_config {
+			user_pool_arn = "${aws_cognito_user_pool.test.arn}"
+			user_pool_client = "${aws_cognito_user_pool_client.test.id}"
+			user_pool_domain = "${aws_cognito_user_pool_domain.test.domain}"
+		}
+  }
+
+  default_action {
+    order = 2
+    target_group_arn = "${aws_lb_target_group.test.id}"
+	  type = "forward"
+  }
+}
+`, rName, rName, rName, rName, rName, rName, rName)
 }
