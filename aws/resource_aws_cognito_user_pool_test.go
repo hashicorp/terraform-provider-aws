@@ -88,6 +88,8 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
 						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
+					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
+						regexp.MustCompile("^cognito-idp\\.[^.]+\\.amazonaws.com/[\\w-]+_[0-9a-zA-Z]+$")),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
