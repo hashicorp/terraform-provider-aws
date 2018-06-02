@@ -568,7 +568,7 @@ func validateVpnConnectionTunnelPreSharedKey(v interface{}, k string) (ws []stri
 	}
 
 	if !regexp.MustCompile(`^[0-9a-zA-Z_.]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q can only contain alphanumeric, periods(.) and underscores(_) characters", k))
+		errors = append(errors, fmt.Errorf("%q can only contain alphanumeric, period and underscore characters", k))
 	}
 
 	return
