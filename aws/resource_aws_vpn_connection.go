@@ -567,8 +567,8 @@ func validateVpnConnectionTunnelPreSharedKey(v interface{}, k string) (ws []stri
 		errors = append(errors, fmt.Errorf("%q cannot start with zero character", k))
 	}
 
-	if !regexp.MustCompile(`^[0-9a-zA-Z_]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q can only contain alphanumeric and underscore characters", k))
+	if !regexp.MustCompile(`^[0-9a-zA-Z_.]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q can only contain alphanumeric, periods(.) and underscores(_) characters", k))
 	}
 
 	return
