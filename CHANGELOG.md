@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_ecs_service` [GH-3617]
 
+ENHANCEMENTS:
+
+* resource/aws_cognito_user_pool: Add `endpoint` attribute [GH-4718]
+
 ## 1.21.0 (May 31, 2018)
 
 FEATURES:
