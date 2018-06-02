@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_cognito_identity_pool: Add `arn` attribute [GH-4719]
 * resource/aws_cognito_user_pool: Add `endpoint` attribute [GH-4718]
 
 ## 1.21.0 (May 31, 2018)
