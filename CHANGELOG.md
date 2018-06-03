@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_ecs_service` [GH-3617]
+* **New Resource:** `aws_config_aggregate_authorization` [GH-4263]
 
 ENHANCEMENTS:
 
