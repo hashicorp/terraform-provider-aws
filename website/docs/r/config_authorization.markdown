@@ -1,0 +1,41 @@
+---
+layout: "aws"
+page_title: "AWS: aws_config_authorization"
+sidebar_current: "docs-aws-resource-config-authorization"
+description: |-
+  Provides an AWS Config Authorization.
+---
+
+# aws_config_authorization
+
+Provides an AWS Config Authorization
+
+## Example Usage
+
+```hcl
+resource "aws_config_authorization" "example" {
+  account_id = "123456789012" # Required
+  region     = "eu-west-2"    # Required
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `account_id` - (Required) Account ID
+* `region` - (Required) Region
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `arn` - The ARN of the authorization
+
+## Import
+
+Config authorizations can be imported using `account_id:region`, e.g.
+
+```
+$ terraform import aws_config_authorization.example 123456789012:us-east-1
+```
