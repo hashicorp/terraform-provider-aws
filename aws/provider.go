@@ -321,6 +321,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudwatch_log_subscription_filter":       resourceAwsCloudwatchLogSubscriptionFilter(),
 			"aws_config_aggregate_authorization":           resourceAwsConfigAggregateAuthorization(),
 			"aws_config_config_rule":                       resourceAwsConfigConfigRule(),
+			"aws_config_configuration_aggregator":          resourceAwsConfigConfigurationAggregator(),
 			"aws_config_configuration_recorder":            resourceAwsConfigConfigurationRecorder(),
 			"aws_config_configuration_recorder_status":     resourceAwsConfigConfigurationRecorderStatus(),
 			"aws_config_delivery_channel":                  resourceAwsConfigDeliveryChannel(),
