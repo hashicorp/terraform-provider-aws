@@ -72,14 +72,14 @@ func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta in
 	d.Set("account_id", accountId)
 	d.Set("region", region)
 
-	res, err := conn.DescribeAggregationAuthorizations(&configservice.DescribeAggregationAuthorizationsInput{})
+	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
 	if err != nil {
 		return fmt.Errorf("Error retrieving list of aggregate authorizations: %s", err)
 	}
 
 	// Check for existing authorization
-	for _, auth := range res.AggregationAuthorizations {
-		if accountId == *auth.AuthorizedAccountId && region == *auth.AuthorizedAwsRegion {
+	for _, auth := range aggregateAuthorizations {
+		if accountId == aws.StringValue(auth.AuthorizedAccountId) && region == aws.StringValue(auth.AuthorizedAwsRegion) {
 			d.Set("arn", auth.AggregationAuthorizationArn)
 			return nil
 		}
@@ -108,8 +108,28 @@ func resourceAwsConfigAggregateAuthorizationDelete(d *schema.ResourceData, meta 
 		return fmt.Errorf("Error deleting aggregate authorization: %s", err)
 	}
 
-	d.SetId("")
 	return nil
+}
+
+func describeConfigAggregateAuthorizations(conn *configservice.ConfigService) ([]*configservice.AggregationAuthorization, error) {
+	aggregationAuthorizations := []*configservice.AggregationAuthorization{}
+	input := &configservice.DescribeAggregationAuthorizationsInput{}
+
+	for {
+		output, err := conn.DescribeAggregationAuthorizations(input)
+		if err != nil {
+			return aggregationAuthorizations, err
+		}
+		for _, aggregationAuthorization := range output.AggregationAuthorizations {
+			aggregationAuthorizations = append(aggregationAuthorizations, aggregationAuthorization)
+		}
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return aggregationAuthorizations, nil
 }
 
 func resourceAwsConfigAggregateAuthorizationParseID(id string) (string, string, error) {

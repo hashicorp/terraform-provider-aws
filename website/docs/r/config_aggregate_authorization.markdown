@@ -3,19 +3,19 @@ layout: "aws"
 page_title: "AWS: aws_config_aggregate_authorization"
 sidebar_current: "docs-aws-resource-config-aggregate-authorization"
 description: |-
-  Provides an AWS Config Aggregate Authorization.
+  Manages an AWS Config Aggregate Authorization.
 ---
 
 # aws_config_aggregate_authorization
 
-Provides an AWS Config Aggregate Authorization
+Manages an AWS Config Aggregate Authorization
 
 ## Example Usage
 
 ```hcl
 resource "aws_config_aggregate_authorization" "example" {
-  account_id = "123456789012" # Required
-  region     = "eu-west-2"    # Required
+  account_id = "123456789012"
+  region     = "eu-west-2"
 }
 ```
 
@@ -28,13 +28,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the authorization
 
 ## Import
 
-Config authorizations can be imported using `account_id:region`, e.g.
+Config aggregate authorizations can be imported using `account_id:region`, e.g.
 
 ```
 $ terraform import aws_config_authorization.example 123456789012:us-east-1

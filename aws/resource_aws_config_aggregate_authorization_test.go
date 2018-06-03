@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -26,19 +27,19 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 	}
 	conn := client.(*AWSClient).configconn
 
-	resp, err := conn.DescribeAggregationAuthorizations(&configservice.DescribeAggregationAuthorizationsInput{})
+	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
 	if err != nil {
 		return fmt.Errorf("Error retrieving config aggregate authorizations: %s", err)
 	}
 
-	if len(resp.AggregationAuthorizations) == 0 {
+	if len(aggregateAuthorizations) == 0 {
 		log.Print("[DEBUG] No config aggregate authorizations to sweep")
 		return nil
 	}
 
-	log.Printf("[INFO] Found %d config aggregate authorizations", len(resp.AggregationAuthorizations))
+	log.Printf("[INFO] Found %d config aggregate authorizations", len(aggregateAuthorizations))
 
-	for _, auth := range resp.AggregationAuthorizations {
+	for _, auth := range aggregateAuthorizations {
 		log.Printf("[INFO] Deleting config authorization %s", *auth.AggregationAuthorizationArn)
 		_, err := conn.DeleteAggregationAuthorization(&configservice.DeleteAggregationAuthorizationInput{
 			AuthorizedAccountId: auth.AuthorizedAccountId,
@@ -68,6 +69,11 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_config_aggregate_authorization.example", "arn", regexp.MustCompile("^arn:aws:config:[\\w-]+:\\d{12}:aggregation-authorization/\\d{12}/[\\w-]+$")),
 				),
 			},
+			{
+				ResourceName:      "aws_config_aggregate_authorization.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -80,12 +86,20 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 			continue
 		}
 
-		resp, err := conn.DescribeAggregationAuthorizations(&configservice.DescribeAggregationAuthorizationsInput{})
+		accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
-		if err == nil {
-			if len(resp.AggregationAuthorizations) != 0 &&
-				*resp.AggregationAuthorizations[0].AuthorizedAccountId == rs.Primary.Attributes["account_id"] {
-				return fmt.Errorf("Config aggregate authorization still exists: %s", rs.Primary.Attributes["account_id"])
+		aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
+
+		if err != nil {
+			return err
+		}
+
+		for _, auth := range aggregateAuthorizations {
+			if accountId == aws.StringValue(auth.AuthorizedAccountId) && region == aws.StringValue(auth.AuthorizedAwsRegion) {
+				return fmt.Errorf("Config aggregate authorization still exists: %s", rs.Primary.ID)
 			}
 		}
 	}
@@ -96,7 +110,7 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 func testAccAWSConfigAggregateAuthorizationConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_config_aggregate_authorization" "example" {
-  account_id = "%s" # Required
-  region = "eu-west-1"    # Required
+  account_id = "%s"
+  region = "eu-west-1"
 }`, rString)
 }
