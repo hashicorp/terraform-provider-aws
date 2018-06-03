@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccConfigAggregator_import(t *testing.T) {
-	resourceName := "aws_config_aggregator.example"
+	resourceName := "aws_config_configuration_aggregator.example"
 	rString := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{

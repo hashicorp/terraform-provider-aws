@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsConfigAggregator() *schema.Resource {
+func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigAggregatorPut,
-		Read:   resourceAwsConfigAggregatorRead,
-		Update: resourceAwsConfigAggregatorPut,
-		Delete: resourceAwsConfigAggregatorDelete,
+		Create: resourceAwsConfigConfigurationAggregatorPut,
+		Read:   resourceAwsConfigConfigurationAggregatorRead,
+		Update: resourceAwsConfigConfigurationAggregatorPut,
+		Delete: resourceAwsConfigConfigurationAggregatorDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -107,7 +107,7 @@ func resourceAwsConfigAggregator() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigAggregatorPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
 	name := d.Get("name").(string)
@@ -133,10 +133,10 @@ func resourceAwsConfigAggregatorPut(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(strings.ToLower(name))
 
-	return resourceAwsConfigAggregatorRead(d, meta)
+	return resourceAwsConfigConfigurationAggregatorRead(d, meta)
 }
 
-func resourceAwsConfigAggregatorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
@@ -177,7 +177,7 @@ func resourceAwsConfigAggregatorRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsConfigAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
 	req := &configservice.DeleteConfigurationAggregatorInput{

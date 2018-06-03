@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_config_aggregator"
-sidebar_current: "docs-aws-resource-config-aws_config_aggregator"
+page_title: "AWS: aws_config_configuration_aggregator"
+sidebar_current: "docs-aws-resource-config-aws_config_configuration_aggregator"
 description: |-
-  Provides an AWS Config Aggregator.
+  Provides an AWS Config Configuration Aggregator.
 ---
 
-# aws_config_aggregator
+# aws_config_configuration_aggregator
 
-Provides an AWS Config Aggregator
+Provides an AWS Config Configuration Aggregator
 
 ## Example Usage
 
 ```hcl
-resource "aws_config_aggregator" "account" {
+resource "aws_config_configuration_aggregator" "account" {
   name = "example" # Required
 
   account_aggregation_source {
@@ -24,7 +24,7 @@ resource "aws_config_aggregator" "account" {
 ```
 
 ```hcl
-resource "aws_config_aggregator" "organization" {
+resource "aws_config_configuration_aggregator" "organization" {
   depends_on = ["aws_iam_role_policy_attachment.organization"]
 
   name = "example" # Required
@@ -100,5 +100,5 @@ The following attributes are exported:
 Aggregators can be imported using the name, e.g.
 
 ```
-$ terraform import aws_config_aggregator.example foo
+$ terraform import aws_config_configuration_aggregator.example foo
 ```
