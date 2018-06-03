@@ -24,6 +24,8 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
+			// This is to prevent this error:
+			// All fields are ForceNew or Computed w/out Optional, Update is superfluous
 			customdiff.ForceNewIfChange("account_aggregation_source", func(old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
@@ -152,7 +154,7 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 		return err
 	}
 
-	if len(res.ConfigurationAggregators) == 0 {
+	if res == nil || len(res.ConfigurationAggregators) == 0 {
 		log.Printf("[WARN] No aggregators returned (%s), removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -162,16 +164,12 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 	d.Set("arn", aggregator.ConfigurationAggregatorArn)
 	d.Set("name", aggregator.ConfigurationAggregatorName)
 
-	if aggregator.AccountAggregationSources != nil {
-		d.Set("account_aggregation_source", flattenConfigAccountAggregationSources(aggregator.AccountAggregationSources))
-	} else {
-		d.Set("account_aggregation_source", nil)
+	if err := d.Set("account_aggregation_source", flattenConfigAccountAggregationSources(aggregator.AccountAggregationSources)); err != nil {
+		return fmt.Errorf("error setting account_aggregation_source: %s", err)
 	}
 
-	if aggregator.OrganizationAggregationSource != nil {
-		d.Set("organization_aggregation_source", flattenConfigOrganizationAggregationSource(aggregator.OrganizationAggregationSource))
-	} else {
-		d.Set("organization_aggregation_source", nil)
+	if err := d.Set("organization_aggregation_source", flattenConfigOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
+		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
 	}
 
 	return nil

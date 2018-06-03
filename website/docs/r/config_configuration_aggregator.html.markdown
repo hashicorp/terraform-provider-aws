@@ -3,25 +3,29 @@ layout: "aws"
 page_title: "AWS: aws_config_configuration_aggregator"
 sidebar_current: "docs-aws-resource-config-aws_config_configuration_aggregator"
 description: |-
-  Provides an AWS Config Configuration Aggregator.
+  Manages an AWS Config Configuration Aggregator.
 ---
 
 # aws_config_configuration_aggregator
 
-Provides an AWS Config Configuration Aggregator
+Manages an AWS Config Configuration Aggregator
 
 ## Example Usage
 
+### Account Based Aggregation
+
 ```hcl
 resource "aws_config_configuration_aggregator" "account" {
-  name = "example" # Required
+  name = "example"
 
   account_aggregation_source {
-    account_ids = ["123456789012"] # Required
-    regions     = ["us-west-2"]    # Optional
+    account_ids = ["123456789012"]
+    regions     = ["us-west-2"]
   }
 }
 ```
+
+### Organization Based Aggregation
 
 ```hcl
 resource "aws_config_configuration_aggregator" "organization" {
@@ -30,8 +34,8 @@ resource "aws_config_configuration_aggregator" "organization" {
   name = "example" # Required
 
   organization_aggregation_source {
-    all_regions = true                               # Optional
-    role_arn    = "${aws_iam_role.organization.arn}" # Required
+    all_regions = true
+    role_arn    = "${aws_iam_role.organization.arn}"
   }
 }
 
@@ -91,13 +95,13 @@ Either `regions` or `all_regions` (as true) must be specified.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the aggregator
 
 ## Import
 
-Aggregators can be imported using the name, e.g.
+Configuration Aggregators can be imported using the name, e.g.
 
 ```
 $ terraform import aws_config_configuration_aggregator.example foo

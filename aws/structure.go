@@ -1952,11 +1952,16 @@ func expandConfigOrganizationAggregationSource(configured map[string]interface{}
 }
 
 func flattenConfigAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
-	source := sources[0]
 	var result []interface{}
+
+	if len(sources) == 0 {
+		return result
+	}
+
+	source := sources[0]
 	m := make(map[string]interface{})
 	m["account_ids"] = flattenStringList(source.AccountIds)
-	m["all_regions"] = *source.AllAwsRegions
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
 	m["regions"] = flattenStringList(source.AwsRegions)
 	result = append(result, m)
 	return result
@@ -1964,10 +1969,15 @@ func flattenConfigAccountAggregationSources(sources []*configservice.AccountAggr
 
 func flattenConfigOrganizationAggregationSource(source *configservice.OrganizationAggregationSource) []interface{} {
 	var result []interface{}
+
+	if source == nil {
+		return result
+	}
+
 	m := make(map[string]interface{})
-	m["all_regions"] = *source.AllAwsRegions
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
 	m["regions"] = flattenStringList(source.AwsRegions)
-	m["role_arn"] = *source.RoleArn
+	m["role_arn"] = aws.StringValue(source.RoleArn)
 	result = append(result, m)
 	return result
 }

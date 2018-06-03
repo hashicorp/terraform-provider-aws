@@ -58,7 +58,7 @@ func testSweepConfigConfigurationAggregators(region string) error {
 	return nil
 }
 
-func TestAccConfigAggregator_account(t *testing.T) {
+func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rString := acctest.RandString(10)
 	expectedName := fmt.Sprintf("tf-%s", rString)
@@ -66,13 +66,13 @@ func TestAccConfigAggregator_account(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConfigAggregatorDestroy,
+		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigAggregatorConfig_account(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigAggregatorExists("aws_config_configuration_aggregator.example", &ca),
-					testAccCheckConfigAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorExists("aws_config_configuration_aggregator.example", &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.account_ids.#", "1"),
@@ -81,11 +81,16 @@ func TestAccConfigAggregator_account(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.regions.0", "us-west-2"),
 				),
 			},
+			{
+				ResourceName:      "aws_config_configuration_aggregator.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccConfigAggregator_organization(t *testing.T) {
+func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rString := acctest.RandString(10)
 	expectedName := fmt.Sprintf("tf-%s", rString)
@@ -93,40 +98,45 @@ func TestAccConfigAggregator_organization(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConfigAggregatorDestroy,
+		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigAggregatorConfig_organization(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_organization(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigAggregatorExists("aws_config_configuration_aggregator.example", &ca),
-					testAccCheckConfigAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorExists("aws_config_configuration_aggregator.example", &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "1"),
 					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.role_arn", regexp.MustCompile("^arn:aws:iam::\\d+:role/")),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
+			{
+				ResourceName:      "aws_config_configuration_aggregator.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccConfigAggregator_switch(t *testing.T) {
+func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	rString := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConfigAggregatorDestroy,
+		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigAggregatorConfig_account(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rString),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "0"),
 				),
 			},
 			{
-				Config: testAccConfigAggregatorConfig_organization(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_organization(rString),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "0"),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "1"),
@@ -136,7 +146,7 @@ func TestAccConfigAggregator_switch(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigAggregatorName(n, desired string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
+func testAccCheckAWSConfigConfigurationAggregatorName(n, desired string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,7 +159,7 @@ func testAccCheckConfigAggregatorName(n, desired string, obj *configservice.Conf
 	}
 }
 
-func testAccCheckConfigAggregatorExists(n string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
+func testAccCheckAWSConfigConfigurationAggregatorExists(n string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -178,7 +188,7 @@ func testAccCheckConfigAggregatorExists(n string, obj *configservice.Configurati
 	}
 }
 
-func testAccCheckConfigAggregatorDestroy(s *terraform.State) error {
+func testAccCheckAWSConfigConfigurationAggregatorDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).configconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -201,7 +211,7 @@ func testAccCheckConfigAggregatorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccConfigAggregatorConfig_account(rString string) string {
+func testAccAWSConfigConfigurationAggregatorConfig_account(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_aggregator" "example" {
   name = "tf-%s"
@@ -216,8 +226,10 @@ data "aws_caller_identity" "current" {}
 `, rString)
 }
 
-func testAccConfigAggregatorConfig_organization(rString string) string {
+func testAccAWSConfigConfigurationAggregatorConfig_organization(rString string) string {
 	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
 resource "aws_config_configuration_aggregator" "example" {
   depends_on = ["aws_iam_role_policy_attachment.example"]
 
