@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsConfigAuthorization() *schema.Resource {
+func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigAuthorizationPut,
-		Read:   resourceAwsConfigAuthorizationRead,
-		Delete: resourceAwsConfigAuthorizationDelete,
+		Create: resourceAwsConfigAggregateAuthorizationPut,
+		Read:   resourceAwsConfigAggregateAuthorizationRead,
+		Delete: resourceAwsConfigAggregateAuthorizationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -41,7 +41,7 @@ func resourceAwsConfigAuthorization() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
 	accountId := d.Get("account_id").(string)
@@ -54,17 +54,17 @@ func resourceAwsConfigAuthorizationPut(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.PutAggregationAuthorization(req)
 	if err != nil {
-		return fmt.Errorf("Error creating authorization: %s", err)
+		return fmt.Errorf("Error creating aggregate authorization: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountId, region))
-	return resourceAwsConfigAuthorizationRead(d, meta)
+	return resourceAwsConfigAggregateAuthorizationRead(d, meta)
 }
 
-func resourceAwsConfigAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
-	accountId, region, err := resourceAwsConfigAuthorizationParseID(d.Id())
+	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func resourceAwsConfigAuthorizationRead(d *schema.ResourceData, meta interface{}
 
 	res, err := conn.DescribeAggregationAuthorizations(&configservice.DescribeAggregationAuthorizationsInput{})
 	if err != nil {
-		return fmt.Errorf("Error retrieving list of authorizations: %s", err)
+		return fmt.Errorf("Error retrieving list of aggregate authorizations: %s", err)
 	}
 
 	// Check for existing authorization
@@ -85,15 +85,15 @@ func resourceAwsConfigAuthorizationRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	log.Printf("[WARN] Authorization not found, removing from state: %s", d.Id())
+	log.Printf("[WARN] Aggregate Authorization not found, removing from state: %s", d.Id())
 	d.SetId("")
 	return nil
 }
 
-func resourceAwsConfigAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
-	accountId, region, err := resourceAwsConfigAuthorizationParseID(d.Id())
+	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -105,14 +105,14 @@ func resourceAwsConfigAuthorizationDelete(d *schema.ResourceData, meta interface
 
 	_, err = conn.DeleteAggregationAuthorization(req)
 	if err != nil {
-		return fmt.Errorf("Error deleting authorization: %s", err)
+		return fmt.Errorf("Error deleting aggregate authorization: %s", err)
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func resourceAwsConfigAuthorizationParseID(id string) (string, string, error) {
+func resourceAwsConfigAggregateAuthorizationParseID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("Please make sure the ID is in the form account_id:region (i.e. 123456789012:us-east-1")

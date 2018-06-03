@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_config_authorization"
-sidebar_current: "docs-aws-resource-config-authorization"
+page_title: "AWS: aws_config_aggregate_authorization"
+sidebar_current: "docs-aws-resource-config-aggregate-authorization"
 description: |-
-  Provides an AWS Config Authorization.
+  Provides an AWS Config Aggregate Authorization.
 ---
 
-# aws_config_authorization
+# aws_config_aggregate_authorization
 
-Provides an AWS Config Authorization
+Provides an AWS Config Aggregate Authorization
 
 ## Example Usage
 
 ```hcl
-resource "aws_config_authorization" "example" {
+resource "aws_config_aggregate_authorization" "example" {
   account_id = "123456789012" # Required
   region     = "eu-west-2"    # Required
 }
