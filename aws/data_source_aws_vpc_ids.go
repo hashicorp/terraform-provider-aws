@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -54,7 +55,7 @@ func dataSourceAwsVpcIDsRead(d *schema.ResourceData, meta interface{}) error {
 		vpcs = append(vpcs, *vpc.VpcId)
 	}
 
-	d.SetId(vpcs[0])
+	d.SetId(time.Now().UTC().String())
 	d.Set("ids", vpcs)
 
 	return nil
