@@ -1162,7 +1162,7 @@ resource "aws_elasticache_cluster" "bar" {
     security_group_ids = ["${aws_security_group.bar.id}"]
     parameter_group_name = "default.memcached1.4"
     az_mode = "cross-az"
-    availability_zones = [
+    preferred_availability_zones = [
         "us-west-2a",
         "us-west-2b"
     ]

@@ -180,7 +180,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		ForceNew: true,
 	}
 
-	resourceSchema["availability_zones"].ConflictsWith = []string{"availability_zones"}
+	resourceSchema["availability_zones"].ConflictsWith = []string{"preferred_availability_zones"}
 	resourceSchema["availability_zones"].Deprecated = "Use `preferred_availability_zones` instead"
 
 	resourceSchema["configuration_endpoint"] = &schema.Schema{
