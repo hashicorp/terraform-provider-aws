@@ -98,6 +98,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", "HEADER"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
