@@ -662,6 +662,11 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		coreGroup := findGroup(instanceGroups, "CORE")
 		if coreGroup != nil {
 			d.Set("core_instance_type", coreGroup.InstanceType)
+			d.Set("core_instance_count", coreGroup.RequestedInstanceCount)
+		}
+		masterGroup := findGroup(instanceGroups, "MASTER")
+		if masterGroup != nil {
+			d.Set("master_instance_type", masterGroup.InstanceType)
 		}
 		if err := d.Set("instance_group", flattenInstanceGroups(instanceGroups)); err != nil {
 			log.Printf("[ERR] Error setting EMR instance groups: %s", err)
@@ -680,6 +685,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tags", tagsToMapEMR(cluster.Tags))
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
 	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
+	d.Set("termination_protection", cluster.TerminationProtected)
 
 	if cluster.CustomAmiId != nil {
 		d.Set("custom_ami_id", cluster.CustomAmiId)

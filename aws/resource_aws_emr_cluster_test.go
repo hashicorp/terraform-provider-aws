@@ -32,9 +32,10 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_emr_cluster.tf-test-cluster",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "core_instance_type", "core_instance_count"},
 			},
 		},
 	})
