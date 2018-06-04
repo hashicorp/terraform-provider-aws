@@ -205,6 +205,36 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
+	expectedAPIKeySource := "HEADER"
+	expectedUpdateAPIKeySource := "AUTHORIZER"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedUpdateAPIKeySource),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
 	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
@@ -427,6 +457,19 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 `, rName)
 }
+
+const testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+	api_key_source = "HEADER"
+}
+`
+const testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+	api_key_source = "AUTHORIZER"
+}
+`
 
 const testAccAWSAPIGatewayRestAPIConfigWithPolicy = `
 resource "aws_api_gateway_rest_api" "test" {
