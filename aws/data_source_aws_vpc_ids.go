@@ -13,6 +13,7 @@ func dataSourceAwsVpcIDs() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsVpcIDsRead,
 		Schema: map[string]*schema.Schema{
+			"filter": dataSourceFiltersSchema(),
 
 			"tags": tagsSchemaComputed(),
 
@@ -44,7 +45,7 @@ func dataSourceAwsVpcIDsRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] show vpcs %s\n", resp)
+
 	if resp == nil || len(resp.Vpcs) == 0 {
 		return fmt.Errorf("no matching VPC found")
 	}
