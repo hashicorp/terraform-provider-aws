@@ -9,6 +9,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * provider: Support custom endpoint for EFS [GH-4716]
+* resource/aws_api_gateway_rest_api: Add `api_key_source` argument [GH-4717]
 * resource/aws_cloudfront_distribution: Allow create and update retries on InvalidViewerCertificate for eventual consistency with ACM/IAM services [GH-4698]
 * resource/aws_cognito_identity_pool: Add `arn` attribute [GH-4719]
 * resource/aws_cognito_user_pool: Add `endpoint` attribute [GH-4718]
