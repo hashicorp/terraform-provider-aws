@@ -275,7 +275,7 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 	if d.HasChange("api_key_source") {
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
-			Path:  aws.String("/api_key_source"),
+			Path:  aws.String("/apiKeySource"),
 			Value: aws.String(d.Get("api_key_source").(string)),
 		})
 	}
