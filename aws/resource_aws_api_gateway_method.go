@@ -52,9 +52,10 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 			},
 
 			"authorization_scopes": &schema.Schema{
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+				Optional: true,
 			},
 
 			"api_key_required": &schema.Schema{
@@ -133,7 +134,7 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("authorization_scopes"); ok {
-		input.AuthorizationScopes = expandStringList(v.([]interface{}))
+		input.AuthorizationScopes = expandStringList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("request_validator_id"); ok {
@@ -175,9 +176,12 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("api_key_required", out.ApiKeyRequired)
 	d.Set("authorization", out.AuthorizationType)
 	d.Set("authorizer_id", out.AuthorizerId)
-	d.Set("authorization_scopes", out.AuthorizationScopes)
 	d.Set("request_models", aws.StringValueMap(out.RequestModels))
 	d.Set("request_validator_id", out.RequestValidatorId)
+
+	if err := d.Set("authorization_scopes", flattenStringList(out.AuthorizationScopes)); err != nil {
+		return fmt.Errorf("error setting authorization_scopes: %s", err)
+	}
 
 	return nil
 }
@@ -241,31 +245,28 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("authorization_scopes") {
-		o, n := d.GetChange("authorization_scopes")
+		old, new := d.GetChange("authorization_scopes")
 		path := "/authorizationScopes"
 
-		old := o.([]interface{})
-		new := n.([]interface{})
+		os := old.(*schema.Set)
+		ns := new.(*schema.Set)
 
-		// Remove every authorization scope. Simpler to remove and add new ones,
-		// since there are no replacings.
-		for _, v := range old {
+		additionList := ns.Difference(os)
+		for _, v := range additionList.List() {
 			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("remove"),
+				Op:    aws.String("add"),
 				Path:  aws.String(path),
 				Value: aws.String(v.(string)),
 			})
 		}
 
-		// Handle additions
-		if len(new) > 0 {
-			for _, v := range new {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String("add"),
-					Path:  aws.String(path),
-					Value: aws.String(v.(string)),
-				})
-			}
+		removalList := os.Difference(ns)
+		for _, v := range removalList.List() {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("remove"),
+				Path:  aws.String(path),
+				Value: aws.String(v.(string)),
+			})
 		}
 	}
 

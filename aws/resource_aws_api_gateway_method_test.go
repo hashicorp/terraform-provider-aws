@@ -109,18 +109,24 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 						"aws_api_gateway_method.test", "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
 					resource.TestCheckResourceAttr(
 						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "authorization_scopes.#", "2"),
 				),
 			},
 
 			{
-				Config: testAccAWSAPIGatewayMethodConfigUpdate(rInt),
+				Config: testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizerUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
 					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "NONE"),
+						"aws_api_gateway_method.test", "authorization", "COGNITO_USER_POOLS"),
+					resource.TestMatchResourceAttr(
+						"aws_api_gateway_method.test", "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorizer_id", ""),
+						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "authorization_scopes.#", "3"),
 				),
 			},
 		},
@@ -422,17 +428,16 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
-resource "aws_cognito_user_pool" "test" {
-  name = "tf-acc-test-cognito-pool"
+resource "aws_cognito_user_pool" "pool" {
+  name = "tf-acc-test-cognito-pool-%d"
 }
 
 
 resource "aws_api_gateway_authorizer" "test" {
   name = "tf-acc-test-cognito-authorizer"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri = "${aws_cognito_user_pool.test.arn}"
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"  
 	identity_source = "method.request.header.Authorization"
-	provider_arns = ["${aws_cognito_user_pool.test.arn}"]
+	provider_arns = ["${aws_cognito_user_pool.pool.arn}"]
 	type = "COGNITO_USER_POOLS"
 }
 
@@ -458,7 +463,89 @@ resource "aws_api_gateway_method" "test" {
     "method.request.header.Content-Type" = false
 	  "method.request.querystring.page" = true
   }
-}`, rInt, rInt, rInt)
+}`, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizerUpdate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = "tf-acc-test-cognito-auth-%d"
+}
+
+resource "aws_iam_role" "invocation_role" {
+  name = "tf_acc_api_gateway_auth_invocation_role-%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "apigateway.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name = "tf_acc_iam_for_lambda_api_gateway_authorizer-%d"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cognito_user_pool" "pool" {
+  name = "tf-acc-test-cognito-pool-%d"
+}
+
+
+resource "aws_api_gateway_authorizer" "test" {
+  name = "tf-acc-test-cognito-authorizer"
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"  
+	identity_source = "method.request.header.Authorization"
+	provider_arns = ["${aws_cognito_user_pool.pool.arn}"]
+	type = "COGNITO_USER_POOLS"
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  resource_id = "${aws_api_gateway_resource.test.id}"
+  http_method = "GET"
+  authorization = "COGNITO_USER_POOLS"
+	authorizer_id = "${aws_api_gateway_authorizer.test.id}"
+	authorization_scopes = ["test.read", "test.write", "test.delete"]
+
+  request_models = {
+    "application/json" = "Error"
+  }
+
+  request_parameters = {
+	  "method.request.querystring.page" = false
+  }
+}`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSAPIGatewayMethodConfig(rInt int) string {
