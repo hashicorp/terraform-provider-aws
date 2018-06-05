@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,18 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.
+// In order for that resource to work the Terraform AWS user must have done a GitHub
+// OAuth dance. Additionally, the GitHub user that the Terraform AWS user logs in as
+// must have access to the GitHub repository.
+func testAccAWSCodeBuildGitHubSourceLocationFromEnv() string {
+	sourceLocation := os.Getenv("AWS_CODEBUILD_GITHUB_SOURCE_LOCATION")
+	if sourceLocation == "" {
+		return "https://github.com/hashibot-test/aws-test.git"
+	}
+	return sourceLocation
+}
 
 func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	var project codebuild.Project
@@ -47,11 +60,11 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.type", "LINUX_CONTAINER"),
 					resource.TestMatchResourceAttr(resourceName, "service_role", regexp.MustCompile(`^arn:[^:]+:iam::[^:]+:role/tf-acc-test-[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.auth.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.git_clone_depth", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.insecure_ssl", "false"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.location", "https://github.com/hashicorp/packer.git"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.type", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "source.3661695266.auth.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.3661695266.git_clone_depth", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.3661695266.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.3661695266.location", "https://github.com/hashibot-test/aws-test.git"),
+					resource.TestCheckResourceAttr(resourceName, "source.3661695266.type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -567,11 +580,11 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    location = "https://github.com/hashicorp/packer.git"
+    location = "%s"
     type     = "GITHUB"
   }
 }
-`, rName)
+`, rName, testAccAWSCodeBuildGitHubSourceLocationFromEnv())
 }
 
 func testAccAWSCodebuildProjectConfig_BadgeEnabled(rName string, badgeEnabled bool) string {

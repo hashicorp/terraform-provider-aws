@@ -26899,6 +26899,9 @@ const (
 
 	// JobStatusCompleted is a JobStatus enum value
 	JobStatusCompleted = "COMPLETED"
+
+	// JobStatusDeletionInProgress is a JobStatus enum value
+	JobStatusDeletionInProgress = "DELETION_IN_PROGRESS"
 )
 
 const (

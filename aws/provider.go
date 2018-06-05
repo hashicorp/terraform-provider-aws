@@ -229,6 +229,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_cluster":                 dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":         dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                           dataSourceAwsRegion(),
+			"aws_route":                            dataSourceAwsRoute(),
 			"aws_route_table":                      dataSourceAwsRouteTable(),
 			"aws_route53_zone":                     dataSourceAwsRoute53Zone(),
 			"aws_s3_bucket":                        dataSourceAwsS3Bucket(),
@@ -323,10 +324,12 @@ func Provider() terraform.ResourceProvider {
 			"aws_config_delivery_channel":                  resourceAwsConfigDeliveryChannel(),
 			"aws_cognito_identity_pool":                    resourceAwsCognitoIdentityPool(),
 			"aws_cognito_identity_pool_roles_attachment":   resourceAwsCognitoIdentityPoolRolesAttachment(),
+			"aws_cognito_identity_provider":                resourceAwsCognitoIdentityProvider(),
 			"aws_cognito_user_group":                       resourceAwsCognitoUserGroup(),
 			"aws_cognito_user_pool":                        resourceAwsCognitoUserPool(),
 			"aws_cognito_user_pool_client":                 resourceAwsCognitoUserPoolClient(),
 			"aws_cognito_user_pool_domain":                 resourceAwsCognitoUserPoolDomain(),
+			"aws_cognito_resource_server":                  resourceAwsCognitoResourceServer(),
 			"aws_cloudwatch_metric_alarm":                  resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                     resourceAwsCloudWatchDashboard(),
 			"aws_codedeploy_app":                           resourceAwsCodeDeployApp(),
@@ -335,6 +338,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codecommit_repository":                    resourceAwsCodeCommitRepository(),
 			"aws_codecommit_trigger":                       resourceAwsCodeCommitTrigger(),
 			"aws_codebuild_project":                        resourceAwsCodeBuildProject(),
+			"aws_codebuild_webhook":                        resourceAwsCodeBuildWebhook(),
 			"aws_codepipeline":                             resourceAwsCodePipeline(),
 			"aws_customer_gateway":                         resourceAwsCustomerGateway(),
 			"aws_dax_cluster":                              resourceAwsDaxCluster(),
@@ -399,6 +403,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
 			"aws_glue_catalog_database":                    resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                       resourceAwsGlueCatalogTable(),
+			"aws_glue_classifier":                          resourceAwsGlueClassifier(),
 			"aws_glue_connection":                          resourceAwsGlueConnection(),
 			"aws_glue_job":                                 resourceAwsGlueJob(),
 			"aws_glue_trigger":                             resourceAwsGlueTrigger(),
@@ -697,6 +702,8 @@ func init() {
 
 		"sqs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"ssm_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
 			"default value is `false`",
 
@@ -802,6 +809,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
 		config.StsEndpoint = endpoints["sts"].(string)
+		config.SsmEndpoint = endpoints["ssm"].(string)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -1000,6 +1008,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["sts_endpoint"],
+				},
+				"ssm": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ssm_endpoint"],
 				},
 			},
 		},

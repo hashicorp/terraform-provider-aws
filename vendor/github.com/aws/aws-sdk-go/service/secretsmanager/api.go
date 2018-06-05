@@ -2166,6 +2166,9 @@ type CreateSecretInput struct {
 
 	// Specifies the friendly name of the new secret.
 	//
+	// The secret name must be ASCII letters, digits, or the following characters
+	// : /_+=,.@-
+	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 

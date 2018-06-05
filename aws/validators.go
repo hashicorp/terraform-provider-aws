@@ -1386,6 +1386,21 @@ func validateCognitoUserPoolClientURL(v interface{}, k string) (ws []string, es 
 	return
 }
 
+func validateCognitoResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
+	}
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 character", k))
+	}
+	if !regexp.MustCompile(`[\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q must satisfy regular expression pattern: [\\x21\\x23-\\x2E\\x30-\\x5B\\x5D-\\x7E]+", k))
+	}
+	return
+}
+
 func validateWafMetricName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {

@@ -29,6 +29,7 @@ func init() {
 			"aws_elasticsearch_domain",
 			"aws_elb",
 			"aws_lambda_function",
+			"aws_lb",
 			"aws_mq_broker",
 			"aws_redshift_cluster",
 			"aws_spot_fleet_request",
