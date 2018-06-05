@@ -551,7 +551,7 @@ to join the cluster via AWS IAM role authentication.
 
 While managing the underlying Kubernetes cluster configuration is beyond the
 scope of this guide, we provide an example of how to apply the required
-Kubernetes [`ConfigMap`](https://cloud.google.com/kubernetes-engine/docs/concepts/configmap)
+Kubernetes [`ConfigMap`](http://kubernetes.io/docs/user-guide/configmap/)
 via `kubectl` below for completeness.
 
 To output an example IAM Role authentication `ConfigMap` from your
