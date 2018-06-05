@@ -46,6 +46,7 @@ type Request struct {
 	Handlers   Handlers
 
 	Retryer
+	AttemptTime            time.Time
 	Time                   time.Time
 	Operation              *Operation
 	HTTPRequest            *http.Request
@@ -121,6 +122,7 @@ func New(cfg aws.Config, clientInfo metadata.ClientInfo, handlers Handlers,
 		Handlers:   handlers.Copy(),
 
 		Retryer:     retryer,
+		AttemptTime: time.Now(),
 		Time:        time.Now(),
 		ExpireTime:  0,
 		Operation:   operation,
@@ -461,6 +463,7 @@ func (r *Request) Send() error {
 	}()
 
 	for {
+		r.AttemptTime = time.Now()
 		if aws.BoolValue(r.Retryable) {
 			if r.Config.LogLevel.Matches(aws.LogDebugWithRequestRetries) {
 				r.Config.Logger.Log(fmt.Sprintf("DEBUG: Retrying Request %s/%s, attempt %d",
