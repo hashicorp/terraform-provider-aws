@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSEksClusterDataSource_Basic(t *testing.T) {
+func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	dataSourceResourceName := "data.aws_eks_cluster.test"
 	resourceName := "aws_eks_cluster.test"

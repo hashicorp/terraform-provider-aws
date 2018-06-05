@@ -12,11 +12,12 @@ The Amazon Web Services EKS service allows for simplified management of
 [Kubernetes](https://kubernetes.io/) servers. While the service itself is
 quite simple from an operator perspective, understanding how it interconnects
 with other pieces of the AWS service universe and how to configure local
-Kubernetes clients to managed clusters can be daunting at first.
+Kubernetes clients to managed clusters can be helpful.
 
-While the EKS User Guide provides much of the up-to-date information about
-getting started with the service from a generic standpoint, this guide provides
-a Terraform configuration based introduction.
+While the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/)
+provides much of the up-to-date information about getting started with the service
+from a generic standpoint, this guide provides a Terraform configuration based
+introduction.
 
 This guide will show how to deploy a sample architecture using Terraform. The
 guide assumes some basic familiarity with Kubernetes but does not
@@ -187,7 +188,7 @@ The below is an example IAM role and policy to allow the EKS service to
 manage or retrieve data from other AWS services. It is also possible to create
 these policies with the [`aws_iam_policy_document` data source](/docs/providers/aws/d/iam_policy_document.html)
 
-For the latest required policy, see the EKS User Guide.
+For the latest required policy, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/).
 
 ```hcl
 resource "aws_iam_role" "demo-cluster" {
@@ -340,7 +341,7 @@ manage or retrieve data from other AWS services. It is used by Kubernetes
 to allow worker nodes to join the cluster. It is also possible to create
 these policies with the [`aws_iam_policy_document` data source](/docs/providers/aws/d/iam_policy_document.html)
 
-For the latest required policy, see the EKS User Guide.
+For the latest required policy, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/).
 
 ```hcl
 resource "aws_iam_role" "demo-node" {
@@ -550,7 +551,8 @@ to join the cluster via AWS IAM role authentication.
 
 While managing the underlying Kubernetes cluster configuration is beyond the
 scope of this guide, we provide an example of how to apply the required
-Kubernetes `ConfigMap` via `kubectl` below for completeness.
+Kubernetes [`ConfigMap`](https://cloud.google.com/kubernetes-engine/docs/concepts/configmap)
+via `kubectl` below for completeness.
 
 To output an example IAM Role authentication `ConfigMap` from your
 Terraform configuration:

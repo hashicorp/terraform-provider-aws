@@ -71,7 +71,7 @@ func testSweepEksClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSEksCluster_Basic(t *testing.T) {
+func TestAccAWSEksCluster_basic(t *testing.T) {
 	var cluster eks.Cluster
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
