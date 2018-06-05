@@ -48,6 +48,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -168,6 +169,7 @@ type AWSClient struct {
 	ecrconn               *ecr.ECR
 	ecsconn               *ecs.ECS
 	efsconn               *efs.EFS
+	eksconn               *eks.EKS
 	elbconn               *elb.ELB
 	elbv2conn             *elbv2.ELBV2
 	emrconn               *emr.EMR
@@ -476,6 +478,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.ecrconn = ecr.New(awsEcrSess)
 	client.ecsconn = ecs.New(awsEcsSess)
 	client.efsconn = efs.New(awsEfsSess)
+	client.eksconn = eks.New(sess)
 	client.elasticacheconn = elasticache.New(sess)
 	client.elasticbeanstalkconn = elasticbeanstalk.New(sess)
 	client.elastictranscoderconn = elastictranscoder.New(sess)
