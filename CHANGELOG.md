@@ -3,8 +3,11 @@
 FEATURES:
 
 * **New Data Source:** `aws_ecs_service` [GH-3617]
+* **New Data Source:** `aws_eks_cluster` [GH-4749]
+* **New Guide:** EKS Getting Started
 * **New Resource:** `aws_config_aggregate_authorization` [GH-4263]
 * **New Resource:** `aws_config_configuration_aggregator` [GH-4262]
+* **New Resource:** `aws_eks_cluster` [GH-4749]
 
 ENHANCEMENTS:
 
