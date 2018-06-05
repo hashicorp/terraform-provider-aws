@@ -10,7 +10,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: aws-auth
-  namespace: default
+  namespace: kube-system
 data:
   mapRoles: |
     - rolearn: ${aws_iam_role.demo-node.arn}
@@ -18,7 +18,6 @@ data:
       groups:
         - system:bootstrappers
         - system:nodes
-        - system:node-proxier
 CONFIGMAPAWSAUTH
 
   kubeconfig = <<KUBECONFIG
