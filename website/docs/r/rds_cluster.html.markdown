@@ -116,10 +116,11 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: aurora,aurora-mysql,aurora-postgresql
 * `engine_version` - (Optional) The database engine version.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
+* `tags` - (Optional) A mapping of tags to assign to the DB cluster.
 
 ### S3 Import Options
 
-Full details on the core parameters and impacts are in the API Docs: [RestoreDBClusterFromS3](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterFromS3.html).  Requires that the S3 bucket be in the same region as the RDS cluster you're trying to create.  Sample 
+Full details on the core parameters and impacts are in the API Docs: [RestoreDBClusterFromS3](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterFromS3.html). Requires that the S3 bucket be in the same region as the RDS cluster you're trying to create. Sample:
 
 ```hcl
 resource "aws_rds_cluster" "db" {
@@ -141,7 +142,7 @@ resource "aws_rds_cluster" "db" {
 * `source_engine` - (Required) Source engine for the backup
 * `source_engine_version` - (Required) Version of the source engine used to make the backup
 
-This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.  This only works currently with the aurora engine.  See AWS for currently supported engines and options.  [Aurora S3 Migration Docs](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Migrating.ExtMySQL.html#AuroraMySQL.Migrating.ExtMySQL.S3)
+This will not recreate the resource if the S3 object changes in some way. It's only used to initialize the database. This only works currently with the aurora engine. See AWS for currently supported engines and options. See [Aurora S3 Migration Docs](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Migrating.ExtMySQL.html#AuroraMySQL.Migrating.ExtMySQL.S3).
 
 ## Attributes Reference
 
