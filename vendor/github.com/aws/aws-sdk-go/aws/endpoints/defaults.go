@@ -48,6 +48,7 @@ const (
 	A4bServiceID                          = "a4b"                          // A4b.
 	AcmServiceID                          = "acm"                          // Acm.
 	AcmPcaServiceID                       = "acm-pca"                      // AcmPca.
+	ApiMediatailorServiceID               = "api.mediatailor"              // ApiMediatailor.
 	ApiPricingServiceID                   = "api.pricing"                  // ApiPricing.
 	ApigatewayServiceID                   = "apigateway"                   // Apigateway.
 	ApplicationAutoscalingServiceID       = "application-autoscaling"      // ApplicationAutoscaling.
@@ -306,6 +307,16 @@ var awsPartition = partition{
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-2":      endpoint{},
+			},
+		},
+		"api.mediatailor": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
 			},
 		},
 		"api.pricing": service{
@@ -1048,6 +1059,7 @@ var awsPartition = partition{
 		"elasticfilesystem": service{
 
 			Endpoints: endpoints{
+				"ap-northeast-2": endpoint{},
 				"ap-southeast-2": endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
@@ -1839,10 +1851,11 @@ var awsPartition = partition{
 		"runtime.sagemaker": service{
 
 			Endpoints: endpoints{
-				"eu-west-1": endpoint{},
-				"us-east-1": endpoint{},
-				"us-east-2": endpoint{},
-				"us-west-2": endpoint{},
+				"ap-northeast-1": endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"s3": service{
@@ -1878,22 +1891,6 @@ var awsPartition = partition{
 				},
 				"eu-west-2": endpoint{},
 				"eu-west-3": endpoint{},
-				"fips-us-east-1": endpoint{
-					Hostname:          "s3-fips.us-east-1.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
-				},
-				"fips-us-east-2": endpoint{
-					Hostname:          "s3-fips.us-east-2.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
-				},
-				"fips-us-west-1": endpoint{
-					Hostname:          "s3-fips.us-west-1.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
-				},
-				"fips-us-west-2": endpoint{
-					Hostname:          "s3-fips.us-west-2.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
-				},
 				"s3-external-1": endpoint{
 					Hostname:          "s3-external-1.amazonaws.com",
 					SignatureVersions: []string{"s3", "s3v4"},
@@ -1923,10 +1920,11 @@ var awsPartition = partition{
 		"sagemaker": service{
 
 			Endpoints: endpoints{
-				"eu-west-1": endpoint{},
-				"us-east-1": endpoint{},
-				"us-east-2": endpoint{},
-				"us-west-2": endpoint{},
+				"ap-northeast-1": endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"sdb": service{
@@ -3053,8 +3051,7 @@ var awsusgovPartition = partition{
 			},
 			Endpoints: endpoints{
 				"fips-us-gov-west-1": endpoint{
-					Hostname:          "s3-fips.us-gov-west-1.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
+					Hostname: "s3-fips-us-gov-west-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "us-gov-west-1",
 					},
