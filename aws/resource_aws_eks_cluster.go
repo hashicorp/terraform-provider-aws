@@ -128,6 +128,10 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
 				return resource.RetryableError(err)
 			}
+			// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
+			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "IAM role's policy must include") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
