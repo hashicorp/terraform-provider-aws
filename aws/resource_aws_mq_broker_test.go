@@ -81,6 +81,10 @@ func testSweepMqBrokers(region string) error {
 		MaxResults: aws.Int64(100),
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error listing MQ brokers: %s", err)
 	}
 
@@ -256,8 +260,8 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "engine_version", "5.15.0"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.#", "1"),
-					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week", "MONDAY"),
-					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day", "01:00"),
+					resource.TestCheckResourceAttrSet("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week"),
+					resource.TestCheckResourceAttrSet("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
@@ -678,7 +682,7 @@ resource "aws_subnet" "private" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
   tags {
-    Name = "TfAccTest-MqBroker"
+    Name = "tf-acc-mq-broker-all-fields-custom-vpc-${count.index}"
   }
 }
 

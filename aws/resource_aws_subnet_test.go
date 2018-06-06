@@ -17,6 +17,24 @@ func init() {
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
 		F:    testSweepSubnets,
+		// When implemented, these should be moved to aws_network_interface
+		// and aws_network_interface set as dependency here.
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_batch_compute_environment",
+			"aws_beanstalk_environment",
+			"aws_db_instance",
+			"aws_eks_cluster",
+			"aws_elasticache_cluster",
+			"aws_elasticache_replication_group",
+			"aws_elasticsearch_domain",
+			"aws_elb",
+			"aws_lambda_function",
+			"aws_lb",
+			"aws_mq_broker",
+			"aws_redshift_cluster",
+			"aws_spot_fleet_request",
+		},
 	})
 }
 
@@ -32,14 +50,17 @@ func testSweepSubnets(region string) error {
 			{
 				Name: aws.String("tag-value"),
 				Values: []*string{
-					aws.String("tf-acc-revoke*"),
-					aws.String("terraform-testacc-subnet-data-source*"),
+					aws.String("tf-acc-*"),
 				},
 			},
 		},
 	}
 	resp, err := conn.DescribeSubnets(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing subnets: %s", err)
 	}
 
@@ -269,7 +290,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet"
 	}
 }
 `
@@ -288,7 +309,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-ipv6"
 	}
 }
 `
@@ -309,7 +330,7 @@ resource "aws_subnet" "foo" {
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = true
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-ipv6"
 	}
 }
 `
@@ -330,7 +351,7 @@ resource "aws_subnet" "foo" {
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-assign-ipv6-on-creation"
 	}
 }
 `
@@ -340,7 +361,7 @@ resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags {
-		Name = "terraform-testacc-ipv6-update-cidr"
+		Name = "terraform-testacc-subnet-ipv6-update-cidr"
 	}
 }
 
@@ -351,7 +372,7 @@ resource "aws_subnet" "foo" {
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-ipv6-update-cidr"
 	}
 }
 `

@@ -351,6 +351,10 @@ func expandOptionConfiguration(configured []interface{}) ([]*rds.OptionConfigura
 			o.OptionSettings = expandOptionSetting(raw.(*schema.Set).List())
 		}
 
+		if raw, ok := data["version"]; ok && raw.(string) != "" {
+			o.OptionVersion = aws.String(raw.(string))
+		}
+
 		option = append(option, o)
 	}
 
@@ -644,6 +648,10 @@ func flattenOptions(list []*rds.Option) []map[string]interface{} {
 			r["port"] = ""
 			if i.Port != nil {
 				r["port"] = int(*i.Port)
+			}
+			r["version"] = ""
+			if i.OptionVersion != nil {
+				r["version"] = strings.ToLower(*i.OptionVersion)
 			}
 			if i.VpcSecurityGroupMemberships != nil {
 				vpcs := make([]string, 0, len(i.VpcSecurityGroupMemberships))
@@ -1900,6 +1908,80 @@ func flattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface
 	return attributes
 }
 
+func expandConfigAccountAggregationSources(configured []interface{}) []*configservice.AccountAggregationSource {
+	var results []*configservice.AccountAggregationSource
+	for _, item := range configured {
+		detail := item.(map[string]interface{})
+		source := configservice.AccountAggregationSource{
+			AllAwsRegions: aws.Bool(detail["all_regions"].(bool)),
+		}
+
+		if v, ok := detail["account_ids"]; ok {
+			accountIDs := v.([]interface{})
+			if len(accountIDs) > 0 {
+				source.AccountIds = expandStringList(accountIDs)
+			}
+		}
+
+		if v, ok := detail["regions"]; ok {
+			regions := v.([]interface{})
+			if len(regions) > 0 {
+				source.AwsRegions = expandStringList(regions)
+			}
+		}
+
+		results = append(results, &source)
+	}
+	return results
+}
+
+func expandConfigOrganizationAggregationSource(configured map[string]interface{}) *configservice.OrganizationAggregationSource {
+	source := configservice.OrganizationAggregationSource{
+		AllAwsRegions: aws.Bool(configured["all_regions"].(bool)),
+		RoleArn:       aws.String(configured["role_arn"].(string)),
+	}
+
+	if v, ok := configured["regions"]; ok {
+		regions := v.([]interface{})
+		if len(regions) > 0 {
+			source.AwsRegions = expandStringList(regions)
+		}
+	}
+
+	return &source
+}
+
+func flattenConfigAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
+	var result []interface{}
+
+	if len(sources) == 0 {
+		return result
+	}
+
+	source := sources[0]
+	m := make(map[string]interface{})
+	m["account_ids"] = flattenStringList(source.AccountIds)
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
+	m["regions"] = flattenStringList(source.AwsRegions)
+	result = append(result, m)
+	return result
+}
+
+func flattenConfigOrganizationAggregationSource(source *configservice.OrganizationAggregationSource) []interface{} {
+	var result []interface{}
+
+	if source == nil {
+		return result
+	}
+
+	m := make(map[string]interface{})
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
+	m["regions"] = flattenStringList(source.AwsRegions)
+	m["role_arn"] = aws.StringValue(source.RoleArn)
+	result = append(result, m)
+	return result
+}
+
 func flattenConfigRuleSource(source *configservice.Source) []interface{} {
 	var result []interface{}
 	m := make(map[string]interface{})
@@ -2109,15 +2191,6 @@ func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]i
 func buildApiGatewayInvokeURL(restApiId, region, stageName string) string {
 	return fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s",
 		restApiId, region, stageName)
-}
-
-func buildApiGatewayExecutionARN(restApiId, region, accountId string) (string, error) {
-	if accountId == "" {
-		return "", fmt.Errorf("Unable to build execution ARN for %s as account ID is missing",
-			restApiId)
-	}
-	return fmt.Sprintf("arn:aws:execute-api:%s:%s:%s",
-		region, accountId, restApiId), nil
 }
 
 func expandCognitoSupportedLoginProviders(config map[string]interface{}) map[string]*string {
@@ -2354,6 +2427,10 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 		configs.PreTokenGeneration = aws.String(v.(string))
 	}
 
+	if v, ok := config["user_migration"]; ok && v.(string) != "" {
+		configs.UserMigration = aws.String(v.(string))
+	}
+
 	if v, ok := config["verify_auth_challenge_response"]; ok && v.(string) != "" {
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
@@ -2398,6 +2475,10 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 
 	if s.PreTokenGeneration != nil {
 		m["pre_token_generation"] = *s.PreTokenGeneration
+	}
+
+	if s.UserMigration != nil {
+		m["user_migration"] = *s.UserMigration
 	}
 
 	if s.VerifyAuthChallengeResponse != nil {
@@ -2692,6 +2773,42 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 	return []map[string]interface{}{}
 }
 
+func expandCognitoResourceServerScope(inputs []interface{}) []*cognitoidentityprovider.ResourceServerScopeType {
+	configs := make([]*cognitoidentityprovider.ResourceServerScopeType, len(inputs), len(inputs))
+	for i, input := range inputs {
+		param := input.(map[string]interface{})
+		config := &cognitoidentityprovider.ResourceServerScopeType{}
+
+		if v, ok := param["scope_description"]; ok {
+			config.ScopeDescription = aws.String(v.(string))
+		}
+
+		if v, ok := param["scope_name"]; ok {
+			config.ScopeName = aws.String(v.(string))
+		}
+
+		configs[i] = config
+	}
+
+	return configs
+}
+
+func flattenCognitoResourceServerScope(inputs []*cognitoidentityprovider.ResourceServerScopeType) []map[string]interface{} {
+	values := make([]map[string]interface{}, 0)
+
+	for _, input := range inputs {
+		if input == nil {
+			continue
+		}
+		var value = map[string]interface{}{
+			"scope_name":        aws.StringValue(input.ScopeName),
+			"scope_description": aws.StringValue(input.ScopeDescription),
+		}
+		values = append(values, value)
+	}
+	return values
+}
+
 func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.SchemaAttributeType {
 	configs := make([]*cognitoidentityprovider.SchemaAttributeType, len(inputs), len(inputs))
 
@@ -2767,65 +2884,308 @@ func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovide
 	return configs
 }
 
-func flattenCognitoUserPoolSchema(inputs []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
-	values := make([]map[string]interface{}, len(inputs), len(inputs))
+func cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovider.SchemaAttributeType) bool {
+	if input == nil {
+		return false
+	}
 
-	for i, input := range inputs {
-		value := make(map[string]interface{})
+	// All standard attributes always returned by API
+	// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
+	var standardAttributes = []cognitoidentityprovider.SchemaAttributeType{
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("address"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("birthdate"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("10"),
+				MinLength: aws.String("10"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("email"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeBoolean),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("email_verified"),
+			Required:               aws.Bool(false),
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("gender"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("given_name"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("family_name"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("locale"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("middle_name"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("name"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("nickname"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("phone_number"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeBoolean),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("phone_number_verified"),
+			Required:               aws.Bool(false),
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("picture"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("preferred_username"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("profile"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(false),
+			Name:                   aws.String("sub"),
+			Required:               aws.Bool(true),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("1"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeNumber),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("updated_at"),
+			NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
+				MinValue: aws.String("0"),
+			},
+			Required: aws.Bool(false),
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("website"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+		{
+			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			DeveloperOnlyAttribute: aws.Bool(false),
+			Mutable:                aws.Bool(true),
+			Name:                   aws.String("zoneinfo"),
+			Required:               aws.Bool(false),
+			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+				MaxLength: aws.String("2048"),
+				MinLength: aws.String("0"),
+			},
+		},
+	}
+	for _, standardAttribute := range standardAttributes {
+		if reflect.DeepEqual(*input, standardAttribute) {
+			return true
+		}
+	}
+	return false
+}
 
+func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
+	values := make([]map[string]interface{}, 0)
+
+	for _, input := range inputs {
 		if input == nil {
-			return nil
+			continue
 		}
 
-		if input.AttributeDataType != nil {
-			value["attribute_data_type"] = *input.AttributeDataType
+		// The API returns all standard attributes
+		// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
+		// Ignore setting them in state if they are unconfigured to prevent a huge and unexpected diff
+		configured := false
+		if configuredAttributes != nil {
+			for _, configuredAttribute := range configuredAttributes {
+				if reflect.DeepEqual(input, configuredAttribute) {
+					configured = true
+				}
+			}
+		}
+		if !configured {
+			if cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
+				continue
+			}
+			// When adding a Cognito Identity Provider, the API will automatically add an "identities" attribute
+			identitiesAttribute := cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:          aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute:     aws.Bool(false),
+				Mutable:                    aws.Bool(true),
+				Name:                       aws.String("identities"),
+				Required:                   aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{},
+			}
+			if reflect.DeepEqual(*input, identitiesAttribute) {
+				continue
+			}
 		}
 
-		if input.DeveloperOnlyAttribute != nil {
-			value["developer_only_attribute"] = *input.DeveloperOnlyAttribute
-		}
-
-		if input.Mutable != nil {
-			value["mutable"] = *input.Mutable
-		}
-
-		if input.Name != nil {
-			value["name"] = *input.Name
+		var value = map[string]interface{}{
+			"attribute_data_type":      aws.StringValue(input.AttributeDataType),
+			"developer_only_attribute": aws.BoolValue(input.DeveloperOnlyAttribute),
+			"mutable":                  aws.BoolValue(input.Mutable),
+			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
+			"required":                 aws.BoolValue(input.Required),
 		}
 
 		if input.NumberAttributeConstraints != nil {
 			subvalue := make(map[string]interface{})
 
 			if input.NumberAttributeConstraints.MinValue != nil {
-				subvalue["min_value"] = input.NumberAttributeConstraints.MinValue
+				subvalue["min_value"] = aws.StringValue(input.NumberAttributeConstraints.MinValue)
 			}
 
 			if input.NumberAttributeConstraints.MaxValue != nil {
-				subvalue["max_value"] = input.NumberAttributeConstraints.MaxValue
+				subvalue["max_value"] = aws.StringValue(input.NumberAttributeConstraints.MaxValue)
 			}
 
-			value["number_attribute_constraints"] = subvalue
-		}
-
-		if input.Required != nil {
-			value["required"] = *input.Required
+			value["number_attribute_constraints"] = []map[string]interface{}{subvalue}
 		}
 
 		if input.StringAttributeConstraints != nil {
 			subvalue := make(map[string]interface{})
 
 			if input.StringAttributeConstraints.MinLength != nil {
-				subvalue["min_length"] = input.StringAttributeConstraints.MinLength
+				subvalue["min_length"] = aws.StringValue(input.StringAttributeConstraints.MinLength)
 			}
 
 			if input.StringAttributeConstraints.MaxLength != nil {
-				subvalue["max_length"] = input.StringAttributeConstraints.MaxLength
+				subvalue["max_length"] = aws.StringValue(input.StringAttributeConstraints.MaxLength)
 			}
 
-			value["string_attribute_constraints"] = subvalue
+			value["string_attribute_constraints"] = []map[string]interface{}{subvalue}
 		}
 
-		values[i] = value
+		values = append(values, value)
 	}
 
 	return values
@@ -2926,12 +3286,6 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 	return []map[string]interface{}{}
 }
 
-func buildLambdaInvokeArn(lambdaArn, region string) string {
-	apiVersion := "2015-03-31"
-	return fmt.Sprintf("arn:aws:apigateway:%s:lambda:path/%s/functions/%s/invocations",
-		region, apiVersion, lambdaArn)
-}
-
 func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	for i, t := range l {
 		if reflect.DeepEqual(m, t.(map[string]interface{})) {
@@ -2942,12 +3296,10 @@ func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	return -1, false
 }
 
-func expandAwsSsmTargets(d *schema.ResourceData) []*ssm.Target {
+func expandAwsSsmTargets(in []interface{}) []*ssm.Target {
 	targets := make([]*ssm.Target, 0)
 
-	targetConfig := d.Get("targets").([]interface{})
-
-	for _, tConfig := range targetConfig {
+	for _, tConfig := range in {
 		config := tConfig.(map[string]interface{})
 
 		target := &ssm.Target{
@@ -3213,13 +3565,15 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 
 	out := make([]interface{}, 0)
 	for _, u := range users {
+		m := map[string]interface{}{
+			"username": *u.Username,
+		}
 		password := ""
 		if p, ok := existingPairs[*u.Username]; ok {
 			password = p
 		}
-		m := map[string]interface{}{
-			"username": *u.Username,
-			"password": password,
+		if password != "" {
+			m["password"] = password
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = *u.ConsoleAccess
@@ -3309,6 +3663,36 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	}
 
 	return l
+}
+
+func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLifecycleConfig) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, 1)
+
+	anything_enabled := false
+	appversion_lifecycle := make(map[string]interface{})
+
+	if rlc.ServiceRole != nil {
+		appversion_lifecycle["service_role"] = *rlc.ServiceRole
+	}
+
+	if vlc := rlc.VersionLifecycleConfig; vlc != nil {
+		if mar := vlc.MaxAgeRule; mar != nil && *mar.Enabled {
+			anything_enabled = true
+			appversion_lifecycle["max_age_in_days"] = *mar.MaxAgeInDays
+			appversion_lifecycle["delete_source_from_s3"] = *mar.DeleteSourceFromS3
+		}
+		if mcr := vlc.MaxCountRule; mcr != nil && *mcr.Enabled {
+			anything_enabled = true
+			appversion_lifecycle["max_count"] = *mcr.MaxCount
+			appversion_lifecycle["delete_source_from_s3"] = *mcr.DeleteSourceFromS3
+		}
+	}
+
+	if anything_enabled {
+		result = append(result, appversion_lifecycle)
+	}
+
+	return result
 }
 
 func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
@@ -3436,6 +3820,25 @@ func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
 	return []interface{}{}
 }
 
+func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
+	}
+
+	if pitrDesc == nil {
+		return []interface{}{m}
+	}
+
+	if pitrDesc.ContinuousBackupsDescription != nil {
+		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
+		if pitr != nil {
+			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
+		}
+	}
+
+	return []interface{}{m}
+}
+
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
 	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
 	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
@@ -3534,6 +3937,17 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		return err
 	}
 
+	sseOptions := []map[string]interface{}{}
+	if table.SSEDescription != nil {
+		m := map[string]interface{}{}
+		m["enabled"] = aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled
+		sseOptions = []map[string]interface{}{m}
+	}
+	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
 	d.Set("arn", table.TableArn)
 
 	return nil
@@ -3622,6 +4036,16 @@ func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaE
 	return keySchema
 }
 
+func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSESpecification {
+	options := dynamodb.SSESpecification{}
+
+	if v, ok := m["enabled"]; ok {
+		options.Enabled = aws.Bool(v.(bool))
+	}
+
+	return &options
+}
+
 func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {
 	result := make([]string, 0, len(allowedPrincipals))
 	for _, allowedPrincipal := range allowedPrincipals {
@@ -3704,4 +4128,91 @@ func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]inte
 	m["searchable_attributes"] = flattenStringList(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
+}
+
+func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.LaunchTemplateSpecification, error) {
+	if len(specs) < 1 {
+		return nil, nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	if idValue == "" && nameValue == "" {
+		return nil, fmt.Errorf("One of `id` or `name` must be set for `launch_template`")
+	}
+
+	result := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result, nil
+}
+
+func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// id and name are always returned by DescribeAutoscalingGroups
+	attrs["id"] = *lt.LaunchTemplateId
+	attrs["name"] = *lt.LaunchTemplateName
+
+	// version is returned only if it was previosly set
+	if lt.Version != nil {
+		attrs["version"] = *lt.Version
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
+}
+
+func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if options.AllowDnsResolutionFromRemoteVpc != nil {
+		m["allow_remote_vpc_dns_resolution"] = *options.AllowDnsResolutionFromRemoteVpc
+	}
+
+	if options.AllowEgressFromLocalClassicLinkToRemoteVpc != nil {
+		m["allow_classic_link_to_remote_vpc"] = *options.AllowEgressFromLocalClassicLinkToRemoteVpc
+	}
+
+	if options.AllowEgressFromLocalVpcToRemoteClassicLink != nil {
+		m["allow_vpc_to_remote_classic_link"] = *options.AllowEgressFromLocalVpcToRemoteClassicLink
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
+	options := &ec2.PeeringConnectionOptionsRequest{}
+
+	if v, ok := m["allow_remote_vpc_dns_resolution"]; ok {
+		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["allow_classic_link_to_remote_vpc"]; ok {
+		options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["allow_vpc_to_remote_classic_link"]; ok {
+		options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v.(bool))
+	}
+
+	return options
 }

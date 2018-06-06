@@ -2,6 +2,8 @@
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_parameter_group"
 sidebar_current: "docs-aws-resource-rds-cluster-parameter-group"
+description: |-
+  Provides an RDS DB cluster parameter group resource.
 ---
 
 # aws_rds_cluster_parameter_group
@@ -49,7 +51,7 @@ Parameter blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db cluster parameter group name.
 * `arn` - The ARN of the db cluster parameter group.

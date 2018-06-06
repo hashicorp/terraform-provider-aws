@@ -10,6 +10,8 @@ description: |-
 
 Provides an IoT policy.
 
+## Example Usage
+
 ```hcl
 resource "aws_iot_policy" "pubsub" {
   name        = "PubSubToAnyTopic"
@@ -41,7 +43,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN assigned by AWS to this policy.
 * `name` - The name of this policy.

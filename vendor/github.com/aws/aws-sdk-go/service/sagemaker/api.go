@@ -17,7 +17,7 @@ const opAddTags = "AddTags"
 
 // AddTagsRequest generates a "aws/request.Request" representing the
 // client's request for the AddTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -98,7 +98,7 @@ const opCreateEndpoint = "CreateEndpoint"
 
 // CreateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -197,7 +197,7 @@ const opCreateEndpointConfig = "CreateEndpointConfig"
 
 // CreateEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEndpointConfig operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -291,11 +291,94 @@ func (c *SageMaker) CreateEndpointConfigWithContext(ctx aws.Context, input *Crea
 	return out, req.Send()
 }
 
+const opCreateHyperParameterTuningJob = "CreateHyperParameterTuningJob"
+
+// CreateHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
+// client's request for the CreateHyperParameterTuningJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateHyperParameterTuningJob for more information on using the CreateHyperParameterTuningJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateHyperParameterTuningJobRequest method.
+//    req, resp := client.CreateHyperParameterTuningJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateHyperParameterTuningJob
+func (c *SageMaker) CreateHyperParameterTuningJobRequest(input *CreateHyperParameterTuningJobInput) (req *request.Request, output *CreateHyperParameterTuningJobOutput) {
+	op := &request.Operation{
+		Name:       opCreateHyperParameterTuningJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateHyperParameterTuningJobInput{}
+	}
+
+	output = &CreateHyperParameterTuningJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateHyperParameterTuningJob API operation for Amazon SageMaker Service.
+//
+// Starts a hyperparameter tuning job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation CreateHyperParameterTuningJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceInUse "ResourceInUse"
+//   Resource being accessed is in use.
+//
+//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   You have exceeded an Amazon SageMaker resource limit. For example, you might
+//   have too many training jobs created.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateHyperParameterTuningJob
+func (c *SageMaker) CreateHyperParameterTuningJob(input *CreateHyperParameterTuningJobInput) (*CreateHyperParameterTuningJobOutput, error) {
+	req, out := c.CreateHyperParameterTuningJobRequest(input)
+	return out, req.Send()
+}
+
+// CreateHyperParameterTuningJobWithContext is the same as CreateHyperParameterTuningJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateHyperParameterTuningJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) CreateHyperParameterTuningJobWithContext(ctx aws.Context, input *CreateHyperParameterTuningJobInput, opts ...request.Option) (*CreateHyperParameterTuningJobOutput, error) {
+	req, out := c.CreateHyperParameterTuningJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateModel = "CreateModel"
 
 // CreateModelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateModel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -396,7 +479,7 @@ const opCreateNotebookInstance = "CreateNotebookInstance"
 
 // CreateNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateNotebookInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -436,27 +519,27 @@ func (c *SageMaker) CreateNotebookInstanceRequest(input *CreateNotebookInstanceI
 
 // CreateNotebookInstance API operation for Amazon SageMaker Service.
 //
-// Creates an Amazon SageMaker notebook instance. A notebook instance is an
-// ML compute instance running on a Jupyter notebook.
+// Creates an Amazon SageMaker notebook instance. A notebook instance is a machine
+// learning (ML) compute instance running on a Jupyter notebook.
 //
-// In a CreateNotebookInstance request, you specify the type of ML compute instance
+// In a CreateNotebookInstance request, specify the type of ML compute instance
 // that you want to run. Amazon SageMaker launches the instance, installs common
 // libraries that you can use to explore datasets for model training, and attaches
 // an ML storage volume to the notebook instance.
 //
 // Amazon SageMaker also provides a set of example notebooks. Each notebook
-// demonstrates how to use Amazon SageMaker with a specific an algorithm or
-// with a machine learning framework.
+// demonstrates how to use Amazon SageMaker with a specific algorithm or with
+// a machine learning framework.
 //
 // After receiving the request, Amazon SageMaker does the following:
 //
 // Creates a network interface in the Amazon SageMaker VPC.
 //
-// (Option) If you specified SubnetId, creates a network interface in your own
-// VPC, which is inferred from the subnet ID that you provide in the input.
-// When creating this network interface, Amazon SageMaker attaches the security
-// group that you specified in the request to the network interface that it
-// creates in your VPC.
+// (Option) If you specified SubnetId, Amazon SageMaker creates a network interface
+// in your own VPC, which is inferred from the subnet ID that you provide in
+// the input. When creating this network interface, Amazon SageMaker attaches
+// the security group that you specified in the request to the network interface
+// that it creates in your VPC.
 //
 // Launches an EC2 instance of the type specified in the request in the Amazon
 // SageMaker VPC. If you specified SubnetId of your VPC, Amazon SageMaker specifies
@@ -508,11 +591,107 @@ func (c *SageMaker) CreateNotebookInstanceWithContext(ctx aws.Context, input *Cr
 	return out, req.Send()
 }
 
+const opCreateNotebookInstanceLifecycleConfig = "CreateNotebookInstanceLifecycleConfig"
+
+// CreateNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
+// client's request for the CreateNotebookInstanceLifecycleConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateNotebookInstanceLifecycleConfig for more information on using the CreateNotebookInstanceLifecycleConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateNotebookInstanceLifecycleConfigRequest method.
+//    req, resp := client.CreateNotebookInstanceLifecycleConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateNotebookInstanceLifecycleConfig
+func (c *SageMaker) CreateNotebookInstanceLifecycleConfigRequest(input *CreateNotebookInstanceLifecycleConfigInput) (req *request.Request, output *CreateNotebookInstanceLifecycleConfigOutput) {
+	op := &request.Operation{
+		Name:       opCreateNotebookInstanceLifecycleConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateNotebookInstanceLifecycleConfigInput{}
+	}
+
+	output = &CreateNotebookInstanceLifecycleConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateNotebookInstanceLifecycleConfig API operation for Amazon SageMaker Service.
+//
+// Creates a lifecycle configuration that you can associate with a notebook
+// instance. A lifecycle configuration is a collection of shell scripts that
+// run when you create or start a notebook instance.
+//
+// Each lifecycle configuration script has a limit of 16384 characters.
+//
+// The value of the $PATH environment variable that is available to both scripts
+// is /sbin:bin:/usr/sbin:/usr/bin.
+//
+// View CloudWatch Logs for notebook instance lifecycle configurations in log
+// group /aws/sagemaker/NotebookInstances in log stream [notebook-instance-name]/[LifecycleConfigHook].
+//
+// Lifecycle configuration scripts cannot run for longer than 5 minutes. If
+// a script runs for longer than 5 minutes, it fails and the notebook instance
+// is not created or started.
+//
+// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation CreateNotebookInstanceLifecycleConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   You have exceeded an Amazon SageMaker resource limit. For example, you might
+//   have too many training jobs created.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateNotebookInstanceLifecycleConfig
+func (c *SageMaker) CreateNotebookInstanceLifecycleConfig(input *CreateNotebookInstanceLifecycleConfigInput) (*CreateNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.CreateNotebookInstanceLifecycleConfigRequest(input)
+	return out, req.Send()
+}
+
+// CreateNotebookInstanceLifecycleConfigWithContext is the same as CreateNotebookInstanceLifecycleConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateNotebookInstanceLifecycleConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) CreateNotebookInstanceLifecycleConfigWithContext(ctx aws.Context, input *CreateNotebookInstanceLifecycleConfigInput, opts ...request.Option) (*CreateNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.CreateNotebookInstanceLifecycleConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreatePresignedNotebookInstanceUrl = "CreatePresignedNotebookInstanceUrl"
 
 // CreatePresignedNotebookInstanceUrlRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePresignedNotebookInstanceUrl operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -552,7 +731,7 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 
 // CreatePresignedNotebookInstanceUrl API operation for Amazon SageMaker Service.
 //
-// Returns a URL that you can use to connect to the Juypter server from a notebook
+// Returns a URL that you can use to connect to the Jupyter server from a notebook
 // instance. In the Amazon SageMaker console, when you choose Open next to a
 // notebook instance, Amazon SageMaker opens a new tab showing the Jupyter server
 // home page from the notebook instance. The console uses this API to get the
@@ -590,7 +769,7 @@ const opCreateTrainingJob = "CreateTrainingJob"
 
 // CreateTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrainingJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -708,7 +887,7 @@ const opDeleteEndpoint = "DeleteEndpoint"
 
 // DeleteEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -785,7 +964,7 @@ const opDeleteEndpointConfig = "DeleteEndpointConfig"
 
 // DeleteEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpointConfig operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -827,7 +1006,7 @@ func (c *SageMaker) DeleteEndpointConfigRequest(input *DeleteEndpointConfigInput
 
 // DeleteEndpointConfig API operation for Amazon SageMaker Service.
 //
-// Deletes an endpoint configuration. The DeleteEndpoingConfig API deletes only
+// Deletes an endpoint configuration. The DeleteEndpointConfig API deletes only
 // the specified configuration. It does not delete endpoints created using the
 // configuration.
 //
@@ -863,7 +1042,7 @@ const opDeleteModel = "DeleteModel"
 
 // DeleteModelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteModel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -942,7 +1121,7 @@ const opDeleteNotebookInstance = "DeleteNotebookInstance"
 
 // DeleteNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteNotebookInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1019,11 +1198,87 @@ func (c *SageMaker) DeleteNotebookInstanceWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+const opDeleteNotebookInstanceLifecycleConfig = "DeleteNotebookInstanceLifecycleConfig"
+
+// DeleteNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteNotebookInstanceLifecycleConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteNotebookInstanceLifecycleConfig for more information on using the DeleteNotebookInstanceLifecycleConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteNotebookInstanceLifecycleConfigRequest method.
+//    req, resp := client.DeleteNotebookInstanceLifecycleConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteNotebookInstanceLifecycleConfig
+func (c *SageMaker) DeleteNotebookInstanceLifecycleConfigRequest(input *DeleteNotebookInstanceLifecycleConfigInput) (req *request.Request, output *DeleteNotebookInstanceLifecycleConfigOutput) {
+	op := &request.Operation{
+		Name:       opDeleteNotebookInstanceLifecycleConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteNotebookInstanceLifecycleConfigInput{}
+	}
+
+	output = &DeleteNotebookInstanceLifecycleConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteNotebookInstanceLifecycleConfig API operation for Amazon SageMaker Service.
+//
+// Deletes a notebook instance lifecycle configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DeleteNotebookInstanceLifecycleConfig for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteNotebookInstanceLifecycleConfig
+func (c *SageMaker) DeleteNotebookInstanceLifecycleConfig(input *DeleteNotebookInstanceLifecycleConfigInput) (*DeleteNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.DeleteNotebookInstanceLifecycleConfigRequest(input)
+	return out, req.Send()
+}
+
+// DeleteNotebookInstanceLifecycleConfigWithContext is the same as DeleteNotebookInstanceLifecycleConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteNotebookInstanceLifecycleConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DeleteNotebookInstanceLifecycleConfigWithContext(ctx aws.Context, input *DeleteNotebookInstanceLifecycleConfigInput, opts ...request.Option) (*DeleteNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.DeleteNotebookInstanceLifecycleConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteTags = "DeleteTags"
 
 // DeleteTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1099,7 +1354,7 @@ const opDescribeEndpoint = "DescribeEndpoint"
 
 // DescribeEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1173,7 +1428,7 @@ const opDescribeEndpointConfig = "DescribeEndpointConfig"
 
 // DescribeEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpointConfig operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1244,11 +1499,90 @@ func (c *SageMaker) DescribeEndpointConfigWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+const opDescribeHyperParameterTuningJob = "DescribeHyperParameterTuningJob"
+
+// DescribeHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeHyperParameterTuningJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeHyperParameterTuningJob for more information on using the DescribeHyperParameterTuningJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeHyperParameterTuningJobRequest method.
+//    req, resp := client.DescribeHyperParameterTuningJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeHyperParameterTuningJob
+func (c *SageMaker) DescribeHyperParameterTuningJobRequest(input *DescribeHyperParameterTuningJobInput) (req *request.Request, output *DescribeHyperParameterTuningJobOutput) {
+	op := &request.Operation{
+		Name:       opDescribeHyperParameterTuningJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeHyperParameterTuningJobInput{}
+	}
+
+	output = &DescribeHyperParameterTuningJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeHyperParameterTuningJob API operation for Amazon SageMaker Service.
+//
+// Gets a description of a hyperparameter tuning job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DescribeHyperParameterTuningJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   Resource being access is not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeHyperParameterTuningJob
+func (c *SageMaker) DescribeHyperParameterTuningJob(input *DescribeHyperParameterTuningJobInput) (*DescribeHyperParameterTuningJobOutput, error) {
+	req, out := c.DescribeHyperParameterTuningJobRequest(input)
+	return out, req.Send()
+}
+
+// DescribeHyperParameterTuningJobWithContext is the same as DescribeHyperParameterTuningJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeHyperParameterTuningJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DescribeHyperParameterTuningJobWithContext(ctx aws.Context, input *DescribeHyperParameterTuningJobInput, opts ...request.Option) (*DescribeHyperParameterTuningJobOutput, error) {
+	req, out := c.DescribeHyperParameterTuningJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeModel = "DescribeModel"
 
 // DescribeModelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeModel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1322,7 +1656,7 @@ const opDescribeNotebookInstance = "DescribeNotebookInstance"
 
 // DescribeNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeNotebookInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1392,11 +1726,87 @@ func (c *SageMaker) DescribeNotebookInstanceWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opDescribeNotebookInstanceLifecycleConfig = "DescribeNotebookInstanceLifecycleConfig"
+
+// DescribeNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeNotebookInstanceLifecycleConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeNotebookInstanceLifecycleConfig for more information on using the DescribeNotebookInstanceLifecycleConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeNotebookInstanceLifecycleConfigRequest method.
+//    req, resp := client.DescribeNotebookInstanceLifecycleConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeNotebookInstanceLifecycleConfig
+func (c *SageMaker) DescribeNotebookInstanceLifecycleConfigRequest(input *DescribeNotebookInstanceLifecycleConfigInput) (req *request.Request, output *DescribeNotebookInstanceLifecycleConfigOutput) {
+	op := &request.Operation{
+		Name:       opDescribeNotebookInstanceLifecycleConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeNotebookInstanceLifecycleConfigInput{}
+	}
+
+	output = &DescribeNotebookInstanceLifecycleConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeNotebookInstanceLifecycleConfig API operation for Amazon SageMaker Service.
+//
+// Returns a description of a notebook instance lifecycle configuration.
+//
+// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DescribeNotebookInstanceLifecycleConfig for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeNotebookInstanceLifecycleConfig
+func (c *SageMaker) DescribeNotebookInstanceLifecycleConfig(input *DescribeNotebookInstanceLifecycleConfigInput) (*DescribeNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.DescribeNotebookInstanceLifecycleConfigRequest(input)
+	return out, req.Send()
+}
+
+// DescribeNotebookInstanceLifecycleConfigWithContext is the same as DescribeNotebookInstanceLifecycleConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeNotebookInstanceLifecycleConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DescribeNotebookInstanceLifecycleConfigWithContext(ctx aws.Context, input *DescribeNotebookInstanceLifecycleConfigInput, opts ...request.Option) (*DescribeNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.DescribeNotebookInstanceLifecycleConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeTrainingJob = "DescribeTrainingJob"
 
 // DescribeTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTrainingJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1475,7 +1885,7 @@ const opListEndpointConfigs = "ListEndpointConfigs"
 
 // ListEndpointConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEndpointConfigs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1605,7 +2015,7 @@ const opListEndpoints = "ListEndpoints"
 
 // ListEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEndpoints operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1731,11 +2141,142 @@ func (c *SageMaker) ListEndpointsPagesWithContext(ctx aws.Context, input *ListEn
 	return p.Err()
 }
 
+const opListHyperParameterTuningJobs = "ListHyperParameterTuningJobs"
+
+// ListHyperParameterTuningJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListHyperParameterTuningJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListHyperParameterTuningJobs for more information on using the ListHyperParameterTuningJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListHyperParameterTuningJobsRequest method.
+//    req, resp := client.ListHyperParameterTuningJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListHyperParameterTuningJobs
+func (c *SageMaker) ListHyperParameterTuningJobsRequest(input *ListHyperParameterTuningJobsInput) (req *request.Request, output *ListHyperParameterTuningJobsOutput) {
+	op := &request.Operation{
+		Name:       opListHyperParameterTuningJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListHyperParameterTuningJobsInput{}
+	}
+
+	output = &ListHyperParameterTuningJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListHyperParameterTuningJobs API operation for Amazon SageMaker Service.
+//
+// Gets a list of objects that describe the hyperparameter tuning jobs launched
+// in your account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation ListHyperParameterTuningJobs for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListHyperParameterTuningJobs
+func (c *SageMaker) ListHyperParameterTuningJobs(input *ListHyperParameterTuningJobsInput) (*ListHyperParameterTuningJobsOutput, error) {
+	req, out := c.ListHyperParameterTuningJobsRequest(input)
+	return out, req.Send()
+}
+
+// ListHyperParameterTuningJobsWithContext is the same as ListHyperParameterTuningJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListHyperParameterTuningJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListHyperParameterTuningJobsWithContext(ctx aws.Context, input *ListHyperParameterTuningJobsInput, opts ...request.Option) (*ListHyperParameterTuningJobsOutput, error) {
+	req, out := c.ListHyperParameterTuningJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListHyperParameterTuningJobsPages iterates over the pages of a ListHyperParameterTuningJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListHyperParameterTuningJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListHyperParameterTuningJobs operation.
+//    pageNum := 0
+//    err := client.ListHyperParameterTuningJobsPages(params,
+//        func(page *ListHyperParameterTuningJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SageMaker) ListHyperParameterTuningJobsPages(input *ListHyperParameterTuningJobsInput, fn func(*ListHyperParameterTuningJobsOutput, bool) bool) error {
+	return c.ListHyperParameterTuningJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListHyperParameterTuningJobsPagesWithContext same as ListHyperParameterTuningJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListHyperParameterTuningJobsPagesWithContext(ctx aws.Context, input *ListHyperParameterTuningJobsInput, fn func(*ListHyperParameterTuningJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListHyperParameterTuningJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListHyperParameterTuningJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListHyperParameterTuningJobsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListModels = "ListModels"
 
 // ListModelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListModels operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1862,11 +2403,141 @@ func (c *SageMaker) ListModelsPagesWithContext(ctx aws.Context, input *ListModel
 	return p.Err()
 }
 
+const opListNotebookInstanceLifecycleConfigs = "ListNotebookInstanceLifecycleConfigs"
+
+// ListNotebookInstanceLifecycleConfigsRequest generates a "aws/request.Request" representing the
+// client's request for the ListNotebookInstanceLifecycleConfigs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListNotebookInstanceLifecycleConfigs for more information on using the ListNotebookInstanceLifecycleConfigs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListNotebookInstanceLifecycleConfigsRequest method.
+//    req, resp := client.ListNotebookInstanceLifecycleConfigsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListNotebookInstanceLifecycleConfigs
+func (c *SageMaker) ListNotebookInstanceLifecycleConfigsRequest(input *ListNotebookInstanceLifecycleConfigsInput) (req *request.Request, output *ListNotebookInstanceLifecycleConfigsOutput) {
+	op := &request.Operation{
+		Name:       opListNotebookInstanceLifecycleConfigs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListNotebookInstanceLifecycleConfigsInput{}
+	}
+
+	output = &ListNotebookInstanceLifecycleConfigsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListNotebookInstanceLifecycleConfigs API operation for Amazon SageMaker Service.
+//
+// Lists notebook instance lifestyle configurations created with the API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation ListNotebookInstanceLifecycleConfigs for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListNotebookInstanceLifecycleConfigs
+func (c *SageMaker) ListNotebookInstanceLifecycleConfigs(input *ListNotebookInstanceLifecycleConfigsInput) (*ListNotebookInstanceLifecycleConfigsOutput, error) {
+	req, out := c.ListNotebookInstanceLifecycleConfigsRequest(input)
+	return out, req.Send()
+}
+
+// ListNotebookInstanceLifecycleConfigsWithContext is the same as ListNotebookInstanceLifecycleConfigs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListNotebookInstanceLifecycleConfigs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListNotebookInstanceLifecycleConfigsWithContext(ctx aws.Context, input *ListNotebookInstanceLifecycleConfigsInput, opts ...request.Option) (*ListNotebookInstanceLifecycleConfigsOutput, error) {
+	req, out := c.ListNotebookInstanceLifecycleConfigsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListNotebookInstanceLifecycleConfigsPages iterates over the pages of a ListNotebookInstanceLifecycleConfigs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListNotebookInstanceLifecycleConfigs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListNotebookInstanceLifecycleConfigs operation.
+//    pageNum := 0
+//    err := client.ListNotebookInstanceLifecycleConfigsPages(params,
+//        func(page *ListNotebookInstanceLifecycleConfigsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SageMaker) ListNotebookInstanceLifecycleConfigsPages(input *ListNotebookInstanceLifecycleConfigsInput, fn func(*ListNotebookInstanceLifecycleConfigsOutput, bool) bool) error {
+	return c.ListNotebookInstanceLifecycleConfigsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListNotebookInstanceLifecycleConfigsPagesWithContext same as ListNotebookInstanceLifecycleConfigsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListNotebookInstanceLifecycleConfigsPagesWithContext(ctx aws.Context, input *ListNotebookInstanceLifecycleConfigsInput, fn func(*ListNotebookInstanceLifecycleConfigsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListNotebookInstanceLifecycleConfigsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListNotebookInstanceLifecycleConfigsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListNotebookInstanceLifecycleConfigsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListNotebookInstances = "ListNotebookInstances"
 
 // ListNotebookInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListNotebookInstances operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1997,7 +2668,7 @@ const opListTags = "ListTags"
 
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2127,7 +2798,7 @@ const opListTrainingJobs = "ListTrainingJobs"
 
 // ListTrainingJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTrainingJobs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2253,11 +2924,147 @@ func (c *SageMaker) ListTrainingJobsPagesWithContext(ctx aws.Context, input *Lis
 	return p.Err()
 }
 
+const opListTrainingJobsForHyperParameterTuningJob = "ListTrainingJobsForHyperParameterTuningJob"
+
+// ListTrainingJobsForHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
+// client's request for the ListTrainingJobsForHyperParameterTuningJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTrainingJobsForHyperParameterTuningJob for more information on using the ListTrainingJobsForHyperParameterTuningJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTrainingJobsForHyperParameterTuningJobRequest method.
+//    req, resp := client.ListTrainingJobsForHyperParameterTuningJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTrainingJobsForHyperParameterTuningJob
+func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobRequest(input *ListTrainingJobsForHyperParameterTuningJobInput) (req *request.Request, output *ListTrainingJobsForHyperParameterTuningJobOutput) {
+	op := &request.Operation{
+		Name:       opListTrainingJobsForHyperParameterTuningJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListTrainingJobsForHyperParameterTuningJobInput{}
+	}
+
+	output = &ListTrainingJobsForHyperParameterTuningJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTrainingJobsForHyperParameterTuningJob API operation for Amazon SageMaker Service.
+//
+// Gets a list of objects that describe the training jobs that a hyperparameter
+// tuning job launched.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation ListTrainingJobsForHyperParameterTuningJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   Resource being access is not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTrainingJobsForHyperParameterTuningJob
+func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJob(input *ListTrainingJobsForHyperParameterTuningJobInput) (*ListTrainingJobsForHyperParameterTuningJobOutput, error) {
+	req, out := c.ListTrainingJobsForHyperParameterTuningJobRequest(input)
+	return out, req.Send()
+}
+
+// ListTrainingJobsForHyperParameterTuningJobWithContext is the same as ListTrainingJobsForHyperParameterTuningJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTrainingJobsForHyperParameterTuningJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobWithContext(ctx aws.Context, input *ListTrainingJobsForHyperParameterTuningJobInput, opts ...request.Option) (*ListTrainingJobsForHyperParameterTuningJobOutput, error) {
+	req, out := c.ListTrainingJobsForHyperParameterTuningJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListTrainingJobsForHyperParameterTuningJobPages iterates over the pages of a ListTrainingJobsForHyperParameterTuningJob operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTrainingJobsForHyperParameterTuningJob method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTrainingJobsForHyperParameterTuningJob operation.
+//    pageNum := 0
+//    err := client.ListTrainingJobsForHyperParameterTuningJobPages(params,
+//        func(page *ListTrainingJobsForHyperParameterTuningJobOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobPages(input *ListTrainingJobsForHyperParameterTuningJobInput, fn func(*ListTrainingJobsForHyperParameterTuningJobOutput, bool) bool) error {
+	return c.ListTrainingJobsForHyperParameterTuningJobPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTrainingJobsForHyperParameterTuningJobPagesWithContext same as ListTrainingJobsForHyperParameterTuningJobPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobPagesWithContext(ctx aws.Context, input *ListTrainingJobsForHyperParameterTuningJobInput, fn func(*ListTrainingJobsForHyperParameterTuningJobOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTrainingJobsForHyperParameterTuningJobInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTrainingJobsForHyperParameterTuningJobRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTrainingJobsForHyperParameterTuningJobOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opStartNotebookInstance = "StartNotebookInstance"
 
 // StartNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StartNotebookInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2339,11 +3146,98 @@ func (c *SageMaker) StartNotebookInstanceWithContext(ctx aws.Context, input *Sta
 	return out, req.Send()
 }
 
+const opStopHyperParameterTuningJob = "StopHyperParameterTuningJob"
+
+// StopHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
+// client's request for the StopHyperParameterTuningJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopHyperParameterTuningJob for more information on using the StopHyperParameterTuningJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopHyperParameterTuningJobRequest method.
+//    req, resp := client.StopHyperParameterTuningJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopHyperParameterTuningJob
+func (c *SageMaker) StopHyperParameterTuningJobRequest(input *StopHyperParameterTuningJobInput) (req *request.Request, output *StopHyperParameterTuningJobOutput) {
+	op := &request.Operation{
+		Name:       opStopHyperParameterTuningJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopHyperParameterTuningJobInput{}
+	}
+
+	output = &StopHyperParameterTuningJobOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopHyperParameterTuningJob API operation for Amazon SageMaker Service.
+//
+// Stops a running hyperparameter tuning job and all running training jobs that
+// the tuning job launched.
+//
+// All model artifacts output from the training jobs are stored in Amazon Simple
+// Storage Service (Amazon S3). All data that the training jobs write toAmazon
+// CloudWatch Logs are still available in CloudWatch. After the tuning job moves
+// to the Stopped state, it releases all reserved resources for the tuning job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation StopHyperParameterTuningJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   Resource being access is not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopHyperParameterTuningJob
+func (c *SageMaker) StopHyperParameterTuningJob(input *StopHyperParameterTuningJobInput) (*StopHyperParameterTuningJobOutput, error) {
+	req, out := c.StopHyperParameterTuningJobRequest(input)
+	return out, req.Send()
+}
+
+// StopHyperParameterTuningJobWithContext is the same as StopHyperParameterTuningJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopHyperParameterTuningJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) StopHyperParameterTuningJobWithContext(ctx aws.Context, input *StopHyperParameterTuningJobInput, opts ...request.Option) (*StopHyperParameterTuningJobOutput, error) {
+	req, out := c.StopHyperParameterTuningJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopNotebookInstance = "StopNotebookInstance"
 
 // StopNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StopNotebookInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2426,7 +3320,7 @@ const opStopTrainingJob = "StopTrainingJob"
 
 // StopTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopTrainingJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2519,7 +3413,7 @@ const opUpdateEndpoint = "UpdateEndpoint"
 
 // UpdateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2606,7 +3500,7 @@ const opUpdateEndpointWeightsAndCapacities = "UpdateEndpointWeightsAndCapacities
 
 // UpdateEndpointWeightsAndCapacitiesRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpointWeightsAndCapacities operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2691,7 +3585,7 @@ const opUpdateNotebookInstance = "UpdateNotebookInstance"
 
 // UpdateNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateNotebookInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2765,6 +3659,86 @@ func (c *SageMaker) UpdateNotebookInstance(input *UpdateNotebookInstanceInput) (
 // for more information on using Contexts.
 func (c *SageMaker) UpdateNotebookInstanceWithContext(ctx aws.Context, input *UpdateNotebookInstanceInput, opts ...request.Option) (*UpdateNotebookInstanceOutput, error) {
 	req, out := c.UpdateNotebookInstanceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateNotebookInstanceLifecycleConfig = "UpdateNotebookInstanceLifecycleConfig"
+
+// UpdateNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateNotebookInstanceLifecycleConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateNotebookInstanceLifecycleConfig for more information on using the UpdateNotebookInstanceLifecycleConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateNotebookInstanceLifecycleConfigRequest method.
+//    req, resp := client.UpdateNotebookInstanceLifecycleConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateNotebookInstanceLifecycleConfig
+func (c *SageMaker) UpdateNotebookInstanceLifecycleConfigRequest(input *UpdateNotebookInstanceLifecycleConfigInput) (req *request.Request, output *UpdateNotebookInstanceLifecycleConfigOutput) {
+	op := &request.Operation{
+		Name:       opUpdateNotebookInstanceLifecycleConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateNotebookInstanceLifecycleConfigInput{}
+	}
+
+	output = &UpdateNotebookInstanceLifecycleConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateNotebookInstanceLifecycleConfig API operation for Amazon SageMaker Service.
+//
+// Updates a notebook instance lifecycle configuration created with the API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation UpdateNotebookInstanceLifecycleConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   You have exceeded an Amazon SageMaker resource limit. For example, you might
+//   have too many training jobs created.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateNotebookInstanceLifecycleConfig
+func (c *SageMaker) UpdateNotebookInstanceLifecycleConfig(input *UpdateNotebookInstanceLifecycleConfigInput) (*UpdateNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.UpdateNotebookInstanceLifecycleConfigRequest(input)
+	return out, req.Send()
+}
+
+// UpdateNotebookInstanceLifecycleConfigWithContext is the same as UpdateNotebookInstanceLifecycleConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateNotebookInstanceLifecycleConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) UpdateNotebookInstanceLifecycleConfigWithContext(ctx aws.Context, input *UpdateNotebookInstanceLifecycleConfigInput, opts ...request.Option) (*UpdateNotebookInstanceLifecycleConfigOutput, error) {
+	req, out := c.UpdateNotebookInstanceLifecycleConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2862,13 +3836,13 @@ func (s *AddTagsOutput) SetTags(v []*Tag) *AddTagsOutput {
 //
 // For more information about algorithms provided by Amazon SageMaker, see Algorithms
 // (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). For information
-// about using your own algorithms, see Bring Your Own Algorithms  (http://docs.aws.amazon.com/sagemaker/latest/dg/adv-topics-own-algo.html).
+// about using your own algorithms, see your-algorithms.
 type AlgorithmSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The registry path of the Docker image that contains the training algorithm.
-	// For information about using your own algorithms, see Docker Registry Paths
-	// for Algorithms Provided by Amazon SageMaker  (http://docs.aws.amazon.com/sagemaker/latest/dg/algos-docker-registry-paths.html).
+	// For information about docker registry paths for built-in algorithms, see
+	// sagemaker-algo-docker-registry-paths.
 	//
 	// TrainingImage is a required field
 	TrainingImage *string `type:"string" required:"true"`
@@ -2882,7 +3856,7 @@ type AlgorithmSpecification struct {
 	// container.
 	//
 	// In File mode, make sure you provision ML storage volume with sufficient capacity
-	// to accomodate the data download from S3. In addition to the training data,
+	// to accommodate the data download from S3. In addition to the training data,
 	// the ML storage volume also stores the output model. The algorithm container
 	// use ML storage volume to also store intermediate information, if any.
 	//
@@ -2935,6 +3909,62 @@ func (s *AlgorithmSpecification) SetTrainingInputMode(v string) *AlgorithmSpecif
 	return s
 }
 
+// A list of categorical hyperparameters to tune.
+type CategoricalParameterRange struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the categorical hyperparameter to tune.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// A list of the categories for the hyperparameter.
+	//
+	// Values is a required field
+	Values []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s CategoricalParameterRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CategoricalParameterRange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CategoricalParameterRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CategoricalParameterRange"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+	if s.Values != nil && len(s.Values) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Values", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *CategoricalParameterRange) SetName(v string) *CategoricalParameterRange {
+	s.Name = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *CategoricalParameterRange) SetValues(v []*string) *CategoricalParameterRange {
+	s.Values = v
+	return s
+}
+
 // A channel is a named input source that training algorithms can consume.
 type Channel struct {
 	_ struct{} `type:"structure"`
@@ -2945,7 +3975,7 @@ type Channel struct {
 	ChannelName *string `min:"1" type:"string" required:"true"`
 
 	// If training data is compressed, the compression type. The default value is
-	// None. CompressionType is used only in PIPE input mode. In FILE mode, leave
+	// None. CompressionType is used only in Pipe input mode. In File mode, leave
 	// this field unset or set it to None.
 	CompressionType *string `type:"string" enum:"CompressionType"`
 
@@ -2958,7 +3988,7 @@ type Channel struct {
 	DataSource *DataSource `type:"structure" required:"true"`
 
 	// Specify RecordIO as the value when input data is in raw format but the training
-	// algorithm requires the RecordIO format, in which caseAmazon SageMaker wraps
+	// algorithm requires the RecordIO format, in which case, Amazon SageMaker wraps
 	// each individual S3 object in a RecordIO record. If the input data is already
 	// in RecordIO format, you don't need to set this attribute. For more information,
 	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/how_to/recordio.html?highlight=im2rec)
@@ -3100,6 +4130,75 @@ func (s *ContainerDefinition) SetImage(v string) *ContainerDefinition {
 // SetModelDataUrl sets the ModelDataUrl field's value.
 func (s *ContainerDefinition) SetModelDataUrl(v string) *ContainerDefinition {
 	s.ModelDataUrl = &v
+	return s
+}
+
+// A list of continuous hyperparameters to tune.
+type ContinuousParameterRange struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum value for the hyperparameter. The tuning job uses floating-point
+	// values between MinValue value and this value for tuning.
+	//
+	// MaxValue is a required field
+	MaxValue *string `type:"string" required:"true"`
+
+	// The minimum value for the hyperparameter. The tuning job uses floating-point
+	// values between this value and MaxValuefor tuning.
+	//
+	// MinValue is a required field
+	MinValue *string `type:"string" required:"true"`
+
+	// The name of the continuous hyperparameter to tune.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ContinuousParameterRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContinuousParameterRange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ContinuousParameterRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ContinuousParameterRange"}
+	if s.MaxValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxValue"))
+	}
+	if s.MinValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinValue"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxValue sets the MaxValue field's value.
+func (s *ContinuousParameterRange) SetMaxValue(v string) *ContinuousParameterRange {
+	s.MaxValue = &v
+	return s
+}
+
+// SetMinValue sets the MinValue field's value.
+func (s *ContinuousParameterRange) SetMinValue(v string) *ContinuousParameterRange {
+	s.MinValue = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ContinuousParameterRange) SetName(v string) *ContinuousParameterRange {
+	s.Name = &v
 	return s
 }
 
@@ -3328,6 +4427,139 @@ func (s *CreateEndpointOutput) SetEndpointArn(v string) *CreateEndpointOutput {
 	return s
 }
 
+type CreateHyperParameterTuningJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The object that describes the tuning job, including the search strategy,
+	// metric used to evaluate training jobs, ranges of parameters to search, and
+	// resource limits for the tuning job.
+	//
+	// HyperParameterTuningJobConfig is a required field
+	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
+
+	// The name of the tuning job. This name is the prefix for the names of all
+	// training jobs that this tuning job launches. The name must be unique within
+	// the same AWS account and AWS Region. Names are not case sensitive, and must
+	// be between 1-32 characters.
+	//
+	// HyperParameterTuningJobName is a required field
+	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
+
+	// An array of key-value pairs. You can use tags to categorize your AWS resources
+	// in different ways, for example, by purpose, owner, or environment. For more
+	// information, see Using Cost Allocation Tags (http://docs.aws.amazon.com//awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
+	// in the AWS Billing and Cost Management User Guide.
+	Tags []*Tag `type:"list"`
+
+	// The object that describes the training jobs that this tuning job launches,
+	// including static hyperparameters, input data configuration, output data configuration,
+	// resource configuration, and stopping condition.
+	//
+	// TrainingJobDefinition is a required field
+	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateHyperParameterTuningJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateHyperParameterTuningJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateHyperParameterTuningJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateHyperParameterTuningJobInput"}
+	if s.HyperParameterTuningJobConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobConfig"))
+	}
+	if s.HyperParameterTuningJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobName"))
+	}
+	if s.HyperParameterTuningJobName != nil && len(*s.HyperParameterTuningJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HyperParameterTuningJobName", 1))
+	}
+	if s.TrainingJobDefinition == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrainingJobDefinition"))
+	}
+	if s.HyperParameterTuningJobConfig != nil {
+		if err := s.HyperParameterTuningJobConfig.Validate(); err != nil {
+			invalidParams.AddNested("HyperParameterTuningJobConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.TrainingJobDefinition != nil {
+		if err := s.TrainingJobDefinition.Validate(); err != nil {
+			invalidParams.AddNested("TrainingJobDefinition", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHyperParameterTuningJobConfig sets the HyperParameterTuningJobConfig field's value.
+func (s *CreateHyperParameterTuningJobInput) SetHyperParameterTuningJobConfig(v *HyperParameterTuningJobConfig) *CreateHyperParameterTuningJobInput {
+	s.HyperParameterTuningJobConfig = v
+	return s
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *CreateHyperParameterTuningJobInput) SetHyperParameterTuningJobName(v string) *CreateHyperParameterTuningJobInput {
+	s.HyperParameterTuningJobName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateHyperParameterTuningJobInput) SetTags(v []*Tag) *CreateHyperParameterTuningJobInput {
+	s.Tags = v
+	return s
+}
+
+// SetTrainingJobDefinition sets the TrainingJobDefinition field's value.
+func (s *CreateHyperParameterTuningJobInput) SetTrainingJobDefinition(v *HyperParameterTrainingJobDefinition) *CreateHyperParameterTuningJobInput {
+	s.TrainingJobDefinition = v
+	return s
+}
+
+type CreateHyperParameterTuningJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the tuning job.
+	//
+	// HyperParameterTuningJobArn is a required field
+	HyperParameterTuningJobArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateHyperParameterTuningJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateHyperParameterTuningJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetHyperParameterTuningJobArn sets the HyperParameterTuningJobArn field's value.
+func (s *CreateHyperParameterTuningJobOutput) SetHyperParameterTuningJobArn(v string) *CreateHyperParameterTuningJobOutput {
+	s.HyperParameterTuningJobArn = &v
+	return s
+}
+
 type CreateModelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3335,6 +4567,9 @@ type CreateModelInput struct {
 	// assume to access model artifacts and docker image for deployment on ML compute
 	// instances. Deploying on ML compute instances is part of model hosting. For
 	// more information, see Amazon SageMaker Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	//
+	// To be able to pass this role to Amazon SageMaker, the caller of this API
+	// must have the iam:PassRole permission.
 	//
 	// ExecutionRoleArn is a required field
 	ExecutionRoleArn *string `min:"20" type:"string" required:"true"`
@@ -3355,6 +4590,11 @@ type CreateModelInput struct {
 	// Tags (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
+
+	// A object that specifies the VPC that you want your model to connect to. Control
+	// access to and from your model container by configuring the VPC. For more
+	// information, see host-vpc.
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -3397,6 +4637,11 @@ func (s *CreateModelInput) Validate() error {
 			}
 		}
 	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3428,6 +4673,12 @@ func (s *CreateModelInput) SetTags(v []*Tag) *CreateModelInput {
 	return s
 }
 
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *CreateModelInput) SetVpcConfig(v *VpcConfig) *CreateModelInput {
+	s.VpcConfig = v
+	return s
+}
+
 type CreateModelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3456,6 +4707,17 @@ func (s *CreateModelOutput) SetModelArn(v string) *CreateModelOutput {
 type CreateNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
+	// Sets whether Amazon SageMaker provides internet access to the notebook instance.
+	// If you set this to Disabled this notebook instance will be able to access
+	// resources only in your VPC, and will not be able to connect to Amazon SageMaker
+	// training and endpoint services unless your configure a NAT Gateway in your
+	// VPC.
+	//
+	// For more information, see appendix-notebook-and-internet-access. You can
+	// set the value of this parameter to Disabled only if you set a value for the
+	// SubnetId parameter.
+	DirectInternetAccess *string `type:"string" enum:"DirectInternetAccess"`
+
 	// The type of ML compute instance to launch for the notebook instance.
 	//
 	// InstanceType is a required field
@@ -3464,6 +4726,10 @@ type CreateNotebookInstanceInput struct {
 	// If you provide a AWS KMS key ID, Amazon SageMaker uses it to encrypt data
 	// at rest on the ML storage volume that is attached to your notebook instance.
 	KmsKeyId *string `type:"string"`
+
+	// The name of a lifecycle configuration to associate with the notebook instance.
+	// For information about lifestyle configurations, see notebook-lifecycle-config.
+	LifecycleConfigName *string `type:"string"`
 
 	// The name of the new notebook instance.
 	//
@@ -3476,6 +4742,9 @@ type CreateNotebookInstanceInput struct {
 	// The policy must allow the Amazon SageMaker service principal (sagemaker.amazonaws.com)
 	// permissions to assume this role. For more information, see Amazon SageMaker
 	// Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	//
+	// To be able to pass this role to Amazon SageMaker, the caller of this API
+	// must have the iam:PassRole permission.
 	//
 	// RoleArn is a required field
 	RoleArn *string `min:"20" type:"string" required:"true"`
@@ -3535,6 +4804,12 @@ func (s *CreateNotebookInstanceInput) Validate() error {
 	return nil
 }
 
+// SetDirectInternetAccess sets the DirectInternetAccess field's value.
+func (s *CreateNotebookInstanceInput) SetDirectInternetAccess(v string) *CreateNotebookInstanceInput {
+	s.DirectInternetAccess = &v
+	return s
+}
+
 // SetInstanceType sets the InstanceType field's value.
 func (s *CreateNotebookInstanceInput) SetInstanceType(v string) *CreateNotebookInstanceInput {
 	s.InstanceType = &v
@@ -3544,6 +4819,12 @@ func (s *CreateNotebookInstanceInput) SetInstanceType(v string) *CreateNotebookI
 // SetKmsKeyId sets the KmsKeyId field's value.
 func (s *CreateNotebookInstanceInput) SetKmsKeyId(v string) *CreateNotebookInstanceInput {
 	s.KmsKeyId = &v
+	return s
+}
+
+// SetLifecycleConfigName sets the LifecycleConfigName field's value.
+func (s *CreateNotebookInstanceInput) SetLifecycleConfigName(v string) *CreateNotebookInstanceInput {
+	s.LifecycleConfigName = &v
 	return s
 }
 
@@ -3574,6 +4855,106 @@ func (s *CreateNotebookInstanceInput) SetSubnetId(v string) *CreateNotebookInsta
 // SetTags sets the Tags field's value.
 func (s *CreateNotebookInstanceInput) SetTags(v []*Tag) *CreateNotebookInstanceInput {
 	s.Tags = v
+	return s
+}
+
+type CreateNotebookInstanceLifecycleConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the lifecycle configuration.
+	//
+	// NotebookInstanceLifecycleConfigName is a required field
+	NotebookInstanceLifecycleConfigName *string `type:"string" required:"true"`
+
+	// A shell script that runs only once, when you create a notebook instance.
+	OnCreate []*NotebookInstanceLifecycleHook `type:"list"`
+
+	// A shell script that runs every time you start a notebook instance, including
+	// when you create the notebook instance.
+	OnStart []*NotebookInstanceLifecycleHook `type:"list"`
+}
+
+// String returns the string representation
+func (s CreateNotebookInstanceLifecycleConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateNotebookInstanceLifecycleConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateNotebookInstanceLifecycleConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateNotebookInstanceLifecycleConfigInput"}
+	if s.NotebookInstanceLifecycleConfigName == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookInstanceLifecycleConfigName"))
+	}
+	if s.OnCreate != nil {
+		for i, v := range s.OnCreate {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OnCreate", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.OnStart != nil {
+		for i, v := range s.OnStart {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OnStart", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *CreateNotebookInstanceLifecycleConfigInput) SetNotebookInstanceLifecycleConfigName(v string) *CreateNotebookInstanceLifecycleConfigInput {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
+// SetOnCreate sets the OnCreate field's value.
+func (s *CreateNotebookInstanceLifecycleConfigInput) SetOnCreate(v []*NotebookInstanceLifecycleHook) *CreateNotebookInstanceLifecycleConfigInput {
+	s.OnCreate = v
+	return s
+}
+
+// SetOnStart sets the OnStart field's value.
+func (s *CreateNotebookInstanceLifecycleConfigInput) SetOnStart(v []*NotebookInstanceLifecycleHook) *CreateNotebookInstanceLifecycleConfigInput {
+	s.OnStart = v
+	return s
+}
+
+type CreateNotebookInstanceLifecycleConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the lifecycle configuration.
+	NotebookInstanceLifecycleConfigArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateNotebookInstanceLifecycleConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateNotebookInstanceLifecycleConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetNotebookInstanceLifecycleConfigArn sets the NotebookInstanceLifecycleConfigArn field's value.
+func (s *CreateNotebookInstanceLifecycleConfigOutput) SetNotebookInstanceLifecycleConfigArn(v string) *CreateNotebookInstanceLifecycleConfigOutput {
+	s.NotebookInstanceLifecycleConfigArn = &v
 	return s
 }
 
@@ -3679,16 +5060,15 @@ type CreateTrainingJobInput struct {
 	// The registry path of the Docker image that contains the training algorithm
 	// and algorithm-specific metadata, including the input mode. For more information
 	// about algorithms provided by Amazon SageMaker, see Algorithms (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html).
-	// For information about providing your own algorithms, see Bring Your Own Algorithms
-	//  (http://docs.aws.amazon.com/sagemaker/latest/dg/adv-topics-own-algo.html).
+	// For information about providing your own algorithms, see your-algorithms.
 	//
 	// AlgorithmSpecification is a required field
 	AlgorithmSpecification *AlgorithmSpecification `type:"structure" required:"true"`
 
-	// Algorithm-specific parameters. You set hyperparameters before you start the
-	// learning process. Hyperparameters influence the quality of the model. For
-	// a list of hyperparameters for each training algorithm provided by Amazon
-	// SageMaker, see Algorithms (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html).
+	// Algorithm-specific parameters that influence the quality of the model. You
+	// set hyperparameters before you start the learning process. For a list of
+	// hyperparameters for each training algorithm provided by Amazon SageMaker,
+	// see Algorithms (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html).
 	//
 	// You can specify a maximum of 100 hyperparameters. Each hyperparameter is
 	// a key-value pair. Each key and value is limited to 256 characters, as specified
@@ -3739,6 +5119,9 @@ type CreateTrainingJobInput struct {
 	// these tasks to an IAM role. For more information, see Amazon SageMaker Roles
 	// (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
 	//
+	// To be able to pass this role to Amazon SageMaker, the caller of this API
+	// must have the iam:PassRole permission.
+	//
 	// RoleArn is a required field
 	RoleArn *string `min:"20" type:"string" required:"true"`
 
@@ -3765,6 +5148,11 @@ type CreateTrainingJobInput struct {
 	//
 	// TrainingJobName is a required field
 	TrainingJobName *string `min:"1" type:"string" required:"true"`
+
+	// A object that specifies the VPC that you want your training job to connect
+	// to. Control access to and from your training container by configuring the
+	// VPC. For more information, see train-vpc
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -3850,6 +5238,11 @@ func (s *CreateTrainingJobInput) Validate() error {
 			}
 		}
 	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3908,6 +5301,12 @@ func (s *CreateTrainingJobInput) SetTags(v []*Tag) *CreateTrainingJobInput {
 // SetTrainingJobName sets the TrainingJobName field's value.
 func (s *CreateTrainingJobInput) SetTrainingJobName(v string) *CreateTrainingJobInput {
 	s.TrainingJobName = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *CreateTrainingJobInput) SetVpcConfig(v *VpcConfig) *CreateTrainingJobInput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -4172,6 +5571,58 @@ func (s *DeleteNotebookInstanceInput) Validate() error {
 func (s *DeleteNotebookInstanceInput) SetNotebookInstanceName(v string) *DeleteNotebookInstanceInput {
 	s.NotebookInstanceName = &v
 	return s
+}
+
+type DeleteNotebookInstanceLifecycleConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the lifecycle configuration to delete.
+	//
+	// NotebookInstanceLifecycleConfigName is a required field
+	NotebookInstanceLifecycleConfigName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteNotebookInstanceLifecycleConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteNotebookInstanceLifecycleConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteNotebookInstanceLifecycleConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteNotebookInstanceLifecycleConfigInput"}
+	if s.NotebookInstanceLifecycleConfigName == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookInstanceLifecycleConfigName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *DeleteNotebookInstanceLifecycleConfigInput) SetNotebookInstanceLifecycleConfigName(v string) *DeleteNotebookInstanceLifecycleConfigInput {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
+type DeleteNotebookInstanceLifecycleConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteNotebookInstanceLifecycleConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteNotebookInstanceLifecycleConfigOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteNotebookInstanceOutput struct {
@@ -4501,6 +5952,190 @@ func (s *DescribeEndpointOutput) SetProductionVariants(v []*ProductionVariantSum
 	return s
 }
 
+type DescribeHyperParameterTuningJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the tuning job to describe.
+	//
+	// HyperParameterTuningJobName is a required field
+	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeHyperParameterTuningJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeHyperParameterTuningJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeHyperParameterTuningJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeHyperParameterTuningJobInput"}
+	if s.HyperParameterTuningJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobName"))
+	}
+	if s.HyperParameterTuningJobName != nil && len(*s.HyperParameterTuningJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HyperParameterTuningJobName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *DescribeHyperParameterTuningJobInput) SetHyperParameterTuningJobName(v string) *DescribeHyperParameterTuningJobInput {
+	s.HyperParameterTuningJobName = &v
+	return s
+}
+
+type DescribeHyperParameterTuningJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A object that describes the training job that completed with the best current
+	// .
+	BestTrainingJob *HyperParameterTrainingJobSummary `type:"structure"`
+
+	// The date and time that the tuning job started.
+	//
+	// CreationTime is a required field
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// If the tuning job failed, the reason it failed.
+	FailureReason *string `type:"string"`
+
+	// The date and time that the tuning job ended.
+	HyperParameterTuningEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The Amazon Resource Name (ARN) of the tuning job.
+	//
+	// HyperParameterTuningJobArn is a required field
+	HyperParameterTuningJobArn *string `type:"string" required:"true"`
+
+	// The object that specifies the configuration of the tuning job.
+	//
+	// HyperParameterTuningJobConfig is a required field
+	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
+
+	// The name of the tuning job.
+	//
+	// HyperParameterTuningJobName is a required field
+	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the tuning job: InProgress, Completed, Failed, Stopping, or
+	// Stopped.
+	//
+	// HyperParameterTuningJobStatus is a required field
+	HyperParameterTuningJobStatus *string `type:"string" required:"true" enum:"HyperParameterTuningJobStatus"`
+
+	// The date and time that the status of the tuning job was modified.
+	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The object that specifies the number of training jobs, categorized by the
+	// status of their final objective metric, that this tuning job launched.
+	//
+	// ObjectiveStatusCounters is a required field
+	ObjectiveStatusCounters *ObjectiveStatusCounters `type:"structure" required:"true"`
+
+	// The object that specifies the definition of the training jobs that this tuning
+	// job launches.
+	//
+	// TrainingJobDefinition is a required field
+	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
+
+	// The object that specifies the number of training jobs, categorized by status,
+	// that this tuning job launched.
+	//
+	// TrainingJobStatusCounters is a required field
+	TrainingJobStatusCounters *TrainingJobStatusCounters `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeHyperParameterTuningJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeHyperParameterTuningJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetBestTrainingJob sets the BestTrainingJob field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetBestTrainingJob(v *HyperParameterTrainingJobSummary) *DescribeHyperParameterTuningJobOutput {
+	s.BestTrainingJob = v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetCreationTime(v time.Time) *DescribeHyperParameterTuningJobOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetFailureReason(v string) *DescribeHyperParameterTuningJobOutput {
+	s.FailureReason = &v
+	return s
+}
+
+// SetHyperParameterTuningEndTime sets the HyperParameterTuningEndTime field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetHyperParameterTuningEndTime(v time.Time) *DescribeHyperParameterTuningJobOutput {
+	s.HyperParameterTuningEndTime = &v
+	return s
+}
+
+// SetHyperParameterTuningJobArn sets the HyperParameterTuningJobArn field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetHyperParameterTuningJobArn(v string) *DescribeHyperParameterTuningJobOutput {
+	s.HyperParameterTuningJobArn = &v
+	return s
+}
+
+// SetHyperParameterTuningJobConfig sets the HyperParameterTuningJobConfig field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetHyperParameterTuningJobConfig(v *HyperParameterTuningJobConfig) *DescribeHyperParameterTuningJobOutput {
+	s.HyperParameterTuningJobConfig = v
+	return s
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetHyperParameterTuningJobName(v string) *DescribeHyperParameterTuningJobOutput {
+	s.HyperParameterTuningJobName = &v
+	return s
+}
+
+// SetHyperParameterTuningJobStatus sets the HyperParameterTuningJobStatus field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetHyperParameterTuningJobStatus(v string) *DescribeHyperParameterTuningJobOutput {
+	s.HyperParameterTuningJobStatus = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetLastModifiedTime(v time.Time) *DescribeHyperParameterTuningJobOutput {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetObjectiveStatusCounters sets the ObjectiveStatusCounters field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetObjectiveStatusCounters(v *ObjectiveStatusCounters) *DescribeHyperParameterTuningJobOutput {
+	s.ObjectiveStatusCounters = v
+	return s
+}
+
+// SetTrainingJobDefinition sets the TrainingJobDefinition field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetTrainingJobDefinition(v *HyperParameterTrainingJobDefinition) *DescribeHyperParameterTuningJobOutput {
+	s.TrainingJobDefinition = v
+	return s
+}
+
+// SetTrainingJobStatusCounters sets the TrainingJobStatusCounters field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetTrainingJobStatusCounters(v *TrainingJobStatusCounters) *DescribeHyperParameterTuningJobOutput {
+	s.TrainingJobStatusCounters = v
+	return s
+}
+
 type DescribeModelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4568,6 +6203,10 @@ type DescribeModelOutput struct {
 	//
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
+
+	// A object that specifies the VPC that this model has access to. For more information,
+	// see host-vpc
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -4610,6 +6249,12 @@ func (s *DescribeModelOutput) SetPrimaryContainer(v *ContainerDefinition) *Descr
 	return s
 }
 
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *DescribeModelOutput) SetVpcConfig(v *VpcConfig) *DescribeModelOutput {
+	s.VpcConfig = v
+	return s
+}
+
 type DescribeNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4648,6 +6293,113 @@ func (s *DescribeNotebookInstanceInput) SetNotebookInstanceName(v string) *Descr
 	return s
 }
 
+type DescribeNotebookInstanceLifecycleConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the lifecycle configuration to describe.
+	//
+	// NotebookInstanceLifecycleConfigName is a required field
+	NotebookInstanceLifecycleConfigName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeNotebookInstanceLifecycleConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNotebookInstanceLifecycleConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNotebookInstanceLifecycleConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNotebookInstanceLifecycleConfigInput"}
+	if s.NotebookInstanceLifecycleConfigName == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookInstanceLifecycleConfigName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigInput) SetNotebookInstanceLifecycleConfigName(v string) *DescribeNotebookInstanceLifecycleConfigInput {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
+type DescribeNotebookInstanceLifecycleConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A timestamp that tells when the lifecycle configuration was created.
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A timestamp that tells when the lifecycle configuration was last modified.
+	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The Amazon Resource Name (ARN) of the lifecycle configuration.
+	NotebookInstanceLifecycleConfigArn *string `type:"string"`
+
+	// The name of the lifecycle configuration.
+	NotebookInstanceLifecycleConfigName *string `type:"string"`
+
+	// The shell script that runs only once, when you create a notebook instance.
+	OnCreate []*NotebookInstanceLifecycleHook `type:"list"`
+
+	// The shell script that runs every time you start a notebook instance, including
+	// when you create the notebook instance.
+	OnStart []*NotebookInstanceLifecycleHook `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeNotebookInstanceLifecycleConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNotebookInstanceLifecycleConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigOutput) SetCreationTime(v time.Time) *DescribeNotebookInstanceLifecycleConfigOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigOutput) SetLastModifiedTime(v time.Time) *DescribeNotebookInstanceLifecycleConfigOutput {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigArn sets the NotebookInstanceLifecycleConfigArn field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigOutput) SetNotebookInstanceLifecycleConfigArn(v string) *DescribeNotebookInstanceLifecycleConfigOutput {
+	s.NotebookInstanceLifecycleConfigArn = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigOutput) SetNotebookInstanceLifecycleConfigName(v string) *DescribeNotebookInstanceLifecycleConfigOutput {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
+// SetOnCreate sets the OnCreate field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigOutput) SetOnCreate(v []*NotebookInstanceLifecycleHook) *DescribeNotebookInstanceLifecycleConfigOutput {
+	s.OnCreate = v
+	return s
+}
+
+// SetOnStart sets the OnStart field's value.
+func (s *DescribeNotebookInstanceLifecycleConfigOutput) SetOnStart(v []*NotebookInstanceLifecycleHook) *DescribeNotebookInstanceLifecycleConfigOutput {
+	s.OnStart = v
+	return s
+}
+
 type DescribeNotebookInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4655,7 +6407,15 @@ type DescribeNotebookInstanceOutput struct {
 	// was created
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// If staus is failed, the reason it failed.
+	// Describes whether Amazon SageMaker provides internet access to the notebook
+	// instance. If this value is set to Disabled, he notebook instance does not
+	// have internet access, and cannot connect to Amazon SageMaker training and
+	// endpoint services.
+	//
+	// For more information, see appendix-notebook-and-internet-access.
+	DirectInternetAccess *string `type:"string" enum:"DirectInternetAccess"`
+
+	// If status is failed, the reason it failed.
 	FailureReason *string `type:"string"`
 
 	// The type of ML compute instance running on the notebook instance.
@@ -4675,6 +6435,11 @@ type DescribeNotebookInstanceOutput struct {
 
 	// The Amazon Resource Name (ARN) of the notebook instance.
 	NotebookInstanceArn *string `type:"string"`
+
+	// Returns the name of a notebook instance lifecycle configuration.
+	//
+	// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+	NotebookInstanceLifecycleConfigName *string `type:"string"`
 
 	// Name of the Amazon SageMaker notebook instance.
 	NotebookInstanceName *string `type:"string"`
@@ -4712,6 +6477,12 @@ func (s *DescribeNotebookInstanceOutput) SetCreationTime(v time.Time) *DescribeN
 	return s
 }
 
+// SetDirectInternetAccess sets the DirectInternetAccess field's value.
+func (s *DescribeNotebookInstanceOutput) SetDirectInternetAccess(v string) *DescribeNotebookInstanceOutput {
+	s.DirectInternetAccess = &v
+	return s
+}
+
 // SetFailureReason sets the FailureReason field's value.
 func (s *DescribeNotebookInstanceOutput) SetFailureReason(v string) *DescribeNotebookInstanceOutput {
 	s.FailureReason = &v
@@ -4745,6 +6516,12 @@ func (s *DescribeNotebookInstanceOutput) SetNetworkInterfaceId(v string) *Descri
 // SetNotebookInstanceArn sets the NotebookInstanceArn field's value.
 func (s *DescribeNotebookInstanceOutput) SetNotebookInstanceArn(v string) *DescribeNotebookInstanceOutput {
 	s.NotebookInstanceArn = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *DescribeNotebookInstanceOutput) SetNotebookInstanceLifecycleConfigName(v string) *DescribeNotebookInstanceOutput {
+	s.NotebookInstanceLifecycleConfigName = &v
 	return s
 }
 
@@ -4883,7 +6660,11 @@ type DescribeTrainingJobOutput struct {
 	// StoppingCondition is a required field
 	StoppingCondition *StoppingCondition `type:"structure" required:"true"`
 
-	// A timestamp that indicates when model training ended.
+	// Indicates the time when the training job ends on training instances. You
+	// are billed for the time interval between the value of TrainingStartTime and
+	// this time. For successful jobs and stopped jobs, this is the time after model
+	// artifacts are uploaded. For failed jobs, this is the time when Amazon SageMaker
+	// detects a job failure.
 	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The Amazon Resource Name (ARN) of the training job.
@@ -4918,8 +6699,20 @@ type DescribeTrainingJobOutput struct {
 	// TrainingJobStatus is a required field
 	TrainingJobStatus *string `type:"string" required:"true" enum:"TrainingJobStatus"`
 
-	// A timestamp that indicates when training started.
+	// Indicates the time when the training job starts on training instances. You
+	// are billed for the time interval between this time and the value of TrainingEndTime.
+	// The start time in CloudWatch Logs might be later than this time. The difference
+	// is due to the time it takes to download the training data and to the size
+	// of the training container.
 	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The Amazon Resource Name (ARN) of the associated hyperparameter tuning job
+	// if the training job was launched by a hyperparameter tuning job.
+	TuningJobArn *string `type:"string"`
+
+	// A object that specifies the VPC that this training job has access to. For
+	// more information, see train-vpc.
+	VpcConfig *VpcConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -5031,6 +6824,18 @@ func (s *DescribeTrainingJobOutput) SetTrainingJobStatus(v string) *DescribeTrai
 // SetTrainingStartTime sets the TrainingStartTime field's value.
 func (s *DescribeTrainingJobOutput) SetTrainingStartTime(v time.Time) *DescribeTrainingJobOutput {
 	s.TrainingStartTime = &v
+	return s
+}
+
+// SetTuningJobArn sets the TuningJobArn field's value.
+func (s *DescribeTrainingJobOutput) SetTuningJobArn(v string) *DescribeTrainingJobOutput {
+	s.TuningJobArn = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *DescribeTrainingJobOutput) SetVpcConfig(v *VpcConfig) *DescribeTrainingJobOutput {
+	s.VpcConfig = v
 	return s
 }
 
@@ -5209,6 +7014,810 @@ func (s *EndpointSummary) SetEndpointStatus(v string) *EndpointSummary {
 // SetLastModifiedTime sets the LastModifiedTime field's value.
 func (s *EndpointSummary) SetLastModifiedTime(v time.Time) *EndpointSummary {
 	s.LastModifiedTime = &v
+	return s
+}
+
+// Shows the final value for the objective metric for a training job that was
+// launched by a hyperparameter tuning job. You define the objective metric
+// in the HyperParameterTuningJobObjective parameter of HyperParameterTuningJobConfig.
+type FinalHyperParameterTuningJobObjectiveMetric struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the objective metric.
+	//
+	// MetricName is a required field
+	MetricName *string `min:"1" type:"string" required:"true"`
+
+	// Whether to minimize or maximize the objective metric. Valid values are Minimize
+	// and Maximize.
+	Type *string `type:"string" enum:"HyperParameterTuningJobObjectiveType"`
+
+	// The value of the objective metric.
+	//
+	// Value is a required field
+	Value *float64 `type:"float" required:"true"`
+}
+
+// String returns the string representation
+func (s FinalHyperParameterTuningJobObjectiveMetric) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FinalHyperParameterTuningJobObjectiveMetric) GoString() string {
+	return s.String()
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *FinalHyperParameterTuningJobObjectiveMetric) SetMetricName(v string) *FinalHyperParameterTuningJobObjectiveMetric {
+	s.MetricName = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *FinalHyperParameterTuningJobObjectiveMetric) SetType(v string) *FinalHyperParameterTuningJobObjectiveMetric {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *FinalHyperParameterTuningJobObjectiveMetric) SetValue(v float64) *FinalHyperParameterTuningJobObjectiveMetric {
+	s.Value = &v
+	return s
+}
+
+// Specifies which training algorithm to use for training jobs that a hyperparameter
+// tuning job launches and the metrics to monitor.
+type HyperParameterAlgorithmSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// An array of objects that specify the metrics that the algorithm emits.
+	MetricDefinitions []*MetricDefinition `type:"list"`
+
+	// The registry path of the Docker image that contains the training algorithm.
+	// For information about Docker registry paths for built-in algorithms, see
+	// sagemaker-algo-docker-registry-paths.
+	//
+	// TrainingImage is a required field
+	TrainingImage *string `type:"string" required:"true"`
+
+	// The input mode that the algorithm supports: File or Pipe. In File input mode,
+	// Amazon SageMaker downloads the training data from Amazon S3 to the storage
+	// volume that is attached to the training instance and mounts the directory
+	// to the Docker volume for the training container. In Pipe input mode, Amazon
+	// SageMaker streams data directly from Amazon S3 to the container.
+	//
+	// If you specify File mode, make sure that you provision the storage volume
+	// that is attached to the training instance with enough capacity to accommodate
+	// the training data downloaded from Amazon S3, the model artifacts, and intermediate
+	// information.
+	//
+	// For more information about input modes, see Algorithms (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html)
+	//
+	// TrainingInputMode is a required field
+	TrainingInputMode *string `type:"string" required:"true" enum:"TrainingInputMode"`
+}
+
+// String returns the string representation
+func (s HyperParameterAlgorithmSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterAlgorithmSpecification) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HyperParameterAlgorithmSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HyperParameterAlgorithmSpecification"}
+	if s.TrainingImage == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrainingImage"))
+	}
+	if s.TrainingInputMode == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrainingInputMode"))
+	}
+	if s.MetricDefinitions != nil {
+		for i, v := range s.MetricDefinitions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "MetricDefinitions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMetricDefinitions sets the MetricDefinitions field's value.
+func (s *HyperParameterAlgorithmSpecification) SetMetricDefinitions(v []*MetricDefinition) *HyperParameterAlgorithmSpecification {
+	s.MetricDefinitions = v
+	return s
+}
+
+// SetTrainingImage sets the TrainingImage field's value.
+func (s *HyperParameterAlgorithmSpecification) SetTrainingImage(v string) *HyperParameterAlgorithmSpecification {
+	s.TrainingImage = &v
+	return s
+}
+
+// SetTrainingInputMode sets the TrainingInputMode field's value.
+func (s *HyperParameterAlgorithmSpecification) SetTrainingInputMode(v string) *HyperParameterAlgorithmSpecification {
+	s.TrainingInputMode = &v
+	return s
+}
+
+// Defines the training jobs launched by a hyperparameter tuning job.
+type HyperParameterTrainingJobDefinition struct {
+	_ struct{} `type:"structure"`
+
+	// The object that specifies the algorithm to use for the training jobs that
+	// the tuning job launches.
+	//
+	// AlgorithmSpecification is a required field
+	AlgorithmSpecification *HyperParameterAlgorithmSpecification `type:"structure" required:"true"`
+
+	// An array of objects that specify the input for the training jobs that the
+	// tuning job launches.
+	//
+	// InputDataConfig is a required field
+	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
+
+	// Specifies the path to the Amazon S3 bucket where you store model artifacts
+	// from the training jobs that the tuning job launches.
+	//
+	// OutputDataConfig is a required field
+	OutputDataConfig *OutputDataConfig `type:"structure" required:"true"`
+
+	// The resources, including the compute instances and storage volumes, to use
+	// for the training jobs that the tuning job launches.
+	//
+	// Storage volumes store model artifacts and incremental states. Training algorithms
+	// might also use storage volumes for scratch space. If you want Amazon SageMaker
+	// to use the storage volume to store the training data, choose File as the
+	// TrainingInputMode in the algorithm specification. For distributed training
+	// algorithms, specify an instance count greater than 1.
+	//
+	// ResourceConfig is a required field
+	ResourceConfig *ResourceConfig `type:"structure" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the IAM role associated with the training
+	// jobs that the tuning job launches.
+	//
+	// RoleArn is a required field
+	RoleArn *string `min:"20" type:"string" required:"true"`
+
+	// Specifies the values of hyperparameters that do not change for the tuning
+	// job.
+	StaticHyperParameters map[string]*string `type:"map"`
+
+	// Sets a maximum duration for the training jobs that the tuning job launches.
+	// Use this parameter to limit model training costs.
+	//
+	// To stop a job, Amazon SageMaker sends the algorithm the SIGTERM signal. This
+	// delays job termination for 120 seconds. Algorithms might use this 120-second
+	// window to save the model artifacts.
+	//
+	// When Amazon SageMaker terminates a job because the stopping condition has
+	// been met, training algorithms provided by Amazon SageMaker save the intermediate
+	// results of the job.
+	//
+	// StoppingCondition is a required field
+	StoppingCondition *StoppingCondition `type:"structure" required:"true"`
+
+	// The object that specifies the VPC that you want the training jobs that this
+	// hyperparameter tuning job launches to connect to. Control access to and from
+	// your training container by configuring the VPC. For more information, see
+	// train-vpc.
+	VpcConfig *VpcConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s HyperParameterTrainingJobDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterTrainingJobDefinition) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HyperParameterTrainingJobDefinition) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HyperParameterTrainingJobDefinition"}
+	if s.AlgorithmSpecification == nil {
+		invalidParams.Add(request.NewErrParamRequired("AlgorithmSpecification"))
+	}
+	if s.InputDataConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputDataConfig"))
+	}
+	if s.InputDataConfig != nil && len(s.InputDataConfig) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputDataConfig", 1))
+	}
+	if s.OutputDataConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputDataConfig"))
+	}
+	if s.ResourceConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceConfig"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.StoppingCondition == nil {
+		invalidParams.Add(request.NewErrParamRequired("StoppingCondition"))
+	}
+	if s.AlgorithmSpecification != nil {
+		if err := s.AlgorithmSpecification.Validate(); err != nil {
+			invalidParams.AddNested("AlgorithmSpecification", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.InputDataConfig != nil {
+		for i, v := range s.InputDataConfig {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "InputDataConfig", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.OutputDataConfig != nil {
+		if err := s.OutputDataConfig.Validate(); err != nil {
+			invalidParams.AddNested("OutputDataConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ResourceConfig != nil {
+		if err := s.ResourceConfig.Validate(); err != nil {
+			invalidParams.AddNested("ResourceConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StoppingCondition != nil {
+		if err := s.StoppingCondition.Validate(); err != nil {
+			invalidParams.AddNested("StoppingCondition", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.VpcConfig != nil {
+		if err := s.VpcConfig.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAlgorithmSpecification sets the AlgorithmSpecification field's value.
+func (s *HyperParameterTrainingJobDefinition) SetAlgorithmSpecification(v *HyperParameterAlgorithmSpecification) *HyperParameterTrainingJobDefinition {
+	s.AlgorithmSpecification = v
+	return s
+}
+
+// SetInputDataConfig sets the InputDataConfig field's value.
+func (s *HyperParameterTrainingJobDefinition) SetInputDataConfig(v []*Channel) *HyperParameterTrainingJobDefinition {
+	s.InputDataConfig = v
+	return s
+}
+
+// SetOutputDataConfig sets the OutputDataConfig field's value.
+func (s *HyperParameterTrainingJobDefinition) SetOutputDataConfig(v *OutputDataConfig) *HyperParameterTrainingJobDefinition {
+	s.OutputDataConfig = v
+	return s
+}
+
+// SetResourceConfig sets the ResourceConfig field's value.
+func (s *HyperParameterTrainingJobDefinition) SetResourceConfig(v *ResourceConfig) *HyperParameterTrainingJobDefinition {
+	s.ResourceConfig = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *HyperParameterTrainingJobDefinition) SetRoleArn(v string) *HyperParameterTrainingJobDefinition {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStaticHyperParameters sets the StaticHyperParameters field's value.
+func (s *HyperParameterTrainingJobDefinition) SetStaticHyperParameters(v map[string]*string) *HyperParameterTrainingJobDefinition {
+	s.StaticHyperParameters = v
+	return s
+}
+
+// SetStoppingCondition sets the StoppingCondition field's value.
+func (s *HyperParameterTrainingJobDefinition) SetStoppingCondition(v *StoppingCondition) *HyperParameterTrainingJobDefinition {
+	s.StoppingCondition = v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *HyperParameterTrainingJobDefinition) SetVpcConfig(v *VpcConfig) *HyperParameterTrainingJobDefinition {
+	s.VpcConfig = v
+	return s
+}
+
+// Specifies summary information about a training job.
+type HyperParameterTrainingJobSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time that the training job was created.
+	//
+	// CreationTime is a required field
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The reason that the
+	FailureReason *string `type:"string"`
+
+	// The object that specifies the value of the objective metric of the tuning
+	// job that launched this training job.
+	FinalHyperParameterTuningJobObjectiveMetric *FinalHyperParameterTuningJobObjectiveMetric `type:"structure"`
+
+	// The status of the objective metric for the training job:
+	//
+	//    * Succeeded: The final objective metric for the training job was evaluated
+	//    by the hyperparameter tuning job and used in the hyperparameter tuning
+	//    process.
+	//
+	//    * Pending: The training job is in progress and evaluation of its final
+	//    objective metric is pending.
+	//
+	//    * Failed: The final objective metric for the training job was not evaluated,
+	//    and was not used in the hyperparameter tuning process. This typically
+	//    occurs when the training job failed or did not emit an objective metric.
+	ObjectiveStatus *string `type:"string" enum:"ObjectiveStatus"`
+
+	// The date and time that the training job ended.
+	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The Amazon Resource Name (ARN) of the training job.
+	//
+	// TrainingJobArn is a required field
+	TrainingJobArn *string `type:"string" required:"true"`
+
+	// The name of the training job.
+	//
+	// TrainingJobName is a required field
+	TrainingJobName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the training job.
+	//
+	// TrainingJobStatus is a required field
+	TrainingJobStatus *string `type:"string" required:"true" enum:"TrainingJobStatus"`
+
+	// The date and time that the training job started.
+	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A list of the hyperparameters for which you specified ranges to search.
+	//
+	// TunedHyperParameters is a required field
+	TunedHyperParameters map[string]*string `type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s HyperParameterTrainingJobSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterTrainingJobSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *HyperParameterTrainingJobSummary) SetCreationTime(v time.Time) *HyperParameterTrainingJobSummary {
+	s.CreationTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *HyperParameterTrainingJobSummary) SetFailureReason(v string) *HyperParameterTrainingJobSummary {
+	s.FailureReason = &v
+	return s
+}
+
+// SetFinalHyperParameterTuningJobObjectiveMetric sets the FinalHyperParameterTuningJobObjectiveMetric field's value.
+func (s *HyperParameterTrainingJobSummary) SetFinalHyperParameterTuningJobObjectiveMetric(v *FinalHyperParameterTuningJobObjectiveMetric) *HyperParameterTrainingJobSummary {
+	s.FinalHyperParameterTuningJobObjectiveMetric = v
+	return s
+}
+
+// SetObjectiveStatus sets the ObjectiveStatus field's value.
+func (s *HyperParameterTrainingJobSummary) SetObjectiveStatus(v string) *HyperParameterTrainingJobSummary {
+	s.ObjectiveStatus = &v
+	return s
+}
+
+// SetTrainingEndTime sets the TrainingEndTime field's value.
+func (s *HyperParameterTrainingJobSummary) SetTrainingEndTime(v time.Time) *HyperParameterTrainingJobSummary {
+	s.TrainingEndTime = &v
+	return s
+}
+
+// SetTrainingJobArn sets the TrainingJobArn field's value.
+func (s *HyperParameterTrainingJobSummary) SetTrainingJobArn(v string) *HyperParameterTrainingJobSummary {
+	s.TrainingJobArn = &v
+	return s
+}
+
+// SetTrainingJobName sets the TrainingJobName field's value.
+func (s *HyperParameterTrainingJobSummary) SetTrainingJobName(v string) *HyperParameterTrainingJobSummary {
+	s.TrainingJobName = &v
+	return s
+}
+
+// SetTrainingJobStatus sets the TrainingJobStatus field's value.
+func (s *HyperParameterTrainingJobSummary) SetTrainingJobStatus(v string) *HyperParameterTrainingJobSummary {
+	s.TrainingJobStatus = &v
+	return s
+}
+
+// SetTrainingStartTime sets the TrainingStartTime field's value.
+func (s *HyperParameterTrainingJobSummary) SetTrainingStartTime(v time.Time) *HyperParameterTrainingJobSummary {
+	s.TrainingStartTime = &v
+	return s
+}
+
+// SetTunedHyperParameters sets the TunedHyperParameters field's value.
+func (s *HyperParameterTrainingJobSummary) SetTunedHyperParameters(v map[string]*string) *HyperParameterTrainingJobSummary {
+	s.TunedHyperParameters = v
+	return s
+}
+
+// Configures a hyperparameter tuning job.
+type HyperParameterTuningJobConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The object that specifies the objective metric for this tuning job.
+	//
+	// HyperParameterTuningJobObjective is a required field
+	HyperParameterTuningJobObjective *HyperParameterTuningJobObjective `type:"structure" required:"true"`
+
+	// The object that specifies the ranges of hyperparameters that this tuning
+	// job searches.
+	//
+	// ParameterRanges is a required field
+	ParameterRanges *ParameterRanges `type:"structure" required:"true"`
+
+	// The object that specifies the maximum number of training jobs and parallel
+	// training jobs for this tuning job.
+	//
+	// ResourceLimits is a required field
+	ResourceLimits *ResourceLimits `type:"structure" required:"true"`
+
+	// Specifies the search strategy for hyperparameters. Currently, the only valid
+	// value is Bayesian.
+	//
+	// Strategy is a required field
+	Strategy *string `type:"string" required:"true" enum:"HyperParameterTuningJobStrategyType"`
+}
+
+// String returns the string representation
+func (s HyperParameterTuningJobConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterTuningJobConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HyperParameterTuningJobConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HyperParameterTuningJobConfig"}
+	if s.HyperParameterTuningJobObjective == nil {
+		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobObjective"))
+	}
+	if s.ParameterRanges == nil {
+		invalidParams.Add(request.NewErrParamRequired("ParameterRanges"))
+	}
+	if s.ResourceLimits == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceLimits"))
+	}
+	if s.Strategy == nil {
+		invalidParams.Add(request.NewErrParamRequired("Strategy"))
+	}
+	if s.HyperParameterTuningJobObjective != nil {
+		if err := s.HyperParameterTuningJobObjective.Validate(); err != nil {
+			invalidParams.AddNested("HyperParameterTuningJobObjective", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ParameterRanges != nil {
+		if err := s.ParameterRanges.Validate(); err != nil {
+			invalidParams.AddNested("ParameterRanges", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ResourceLimits != nil {
+		if err := s.ResourceLimits.Validate(); err != nil {
+			invalidParams.AddNested("ResourceLimits", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHyperParameterTuningJobObjective sets the HyperParameterTuningJobObjective field's value.
+func (s *HyperParameterTuningJobConfig) SetHyperParameterTuningJobObjective(v *HyperParameterTuningJobObjective) *HyperParameterTuningJobConfig {
+	s.HyperParameterTuningJobObjective = v
+	return s
+}
+
+// SetParameterRanges sets the ParameterRanges field's value.
+func (s *HyperParameterTuningJobConfig) SetParameterRanges(v *ParameterRanges) *HyperParameterTuningJobConfig {
+	s.ParameterRanges = v
+	return s
+}
+
+// SetResourceLimits sets the ResourceLimits field's value.
+func (s *HyperParameterTuningJobConfig) SetResourceLimits(v *ResourceLimits) *HyperParameterTuningJobConfig {
+	s.ResourceLimits = v
+	return s
+}
+
+// SetStrategy sets the Strategy field's value.
+func (s *HyperParameterTuningJobConfig) SetStrategy(v string) *HyperParameterTuningJobConfig {
+	s.Strategy = &v
+	return s
+}
+
+// Defines the objective metric for a hyperparameter tuning job. Hyperparameter
+// tuning uses the value of this metric to evaluate the training jobs it launches,
+// and returns the training job that results in either the highest or lowest
+// value for this metric, depending on the value you specify for the Type parameter.
+type HyperParameterTuningJobObjective struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the metric to use for the objective metric.
+	//
+	// MetricName is a required field
+	MetricName *string `min:"1" type:"string" required:"true"`
+
+	// Whether to minimize or maximize the objective metric.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"HyperParameterTuningJobObjectiveType"`
+}
+
+// String returns the string representation
+func (s HyperParameterTuningJobObjective) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterTuningJobObjective) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HyperParameterTuningJobObjective) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HyperParameterTuningJobObjective"}
+	if s.MetricName == nil {
+		invalidParams.Add(request.NewErrParamRequired("MetricName"))
+	}
+	if s.MetricName != nil && len(*s.MetricName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MetricName", 1))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *HyperParameterTuningJobObjective) SetMetricName(v string) *HyperParameterTuningJobObjective {
+	s.MetricName = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *HyperParameterTuningJobObjective) SetType(v string) *HyperParameterTuningJobObjective {
+	s.Type = &v
+	return s
+}
+
+// Provides summary information about a hyperparameter tuning job.
+type HyperParameterTuningJobSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time that the tuning job was created.
+	//
+	// CreationTime is a required field
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The date and time that the tuning job ended.
+	HyperParameterTuningEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The Amazon Resource Name (ARN) of the tuning job.
+	//
+	// HyperParameterTuningJobArn is a required field
+	HyperParameterTuningJobArn *string `type:"string" required:"true"`
+
+	// The name of the tuning job.
+	//
+	// HyperParameterTuningJobName is a required field
+	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the tuning job.
+	//
+	// HyperParameterTuningJobStatus is a required field
+	HyperParameterTuningJobStatus *string `type:"string" required:"true" enum:"HyperParameterTuningJobStatus"`
+
+	// The date and time that the tuning job was modified.
+	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The object that specifies the numbers of training jobs, categorized by objective
+	// metric status, that this tuning job launched.
+	//
+	// ObjectiveStatusCounters is a required field
+	ObjectiveStatusCounters *ObjectiveStatusCounters `type:"structure" required:"true"`
+
+	// The object that specifies the maximum number of training jobs and parallel
+	// training jobs allowed for this tuning job.
+	ResourceLimits *ResourceLimits `type:"structure"`
+
+	// Specifies the search strategy hyperparameter tuning uses to choose which
+	// hyperparameters to use for each iteration. Currently, the only valid value
+	// is Bayesian.
+	//
+	// Strategy is a required field
+	Strategy *string `type:"string" required:"true" enum:"HyperParameterTuningJobStrategyType"`
+
+	// The object that specifies the numbers of training jobs, categorized by status,
+	// that this tuning job launched.
+	//
+	// TrainingJobStatusCounters is a required field
+	TrainingJobStatusCounters *TrainingJobStatusCounters `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s HyperParameterTuningJobSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterTuningJobSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *HyperParameterTuningJobSummary) SetCreationTime(v time.Time) *HyperParameterTuningJobSummary {
+	s.CreationTime = &v
+	return s
+}
+
+// SetHyperParameterTuningEndTime sets the HyperParameterTuningEndTime field's value.
+func (s *HyperParameterTuningJobSummary) SetHyperParameterTuningEndTime(v time.Time) *HyperParameterTuningJobSummary {
+	s.HyperParameterTuningEndTime = &v
+	return s
+}
+
+// SetHyperParameterTuningJobArn sets the HyperParameterTuningJobArn field's value.
+func (s *HyperParameterTuningJobSummary) SetHyperParameterTuningJobArn(v string) *HyperParameterTuningJobSummary {
+	s.HyperParameterTuningJobArn = &v
+	return s
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *HyperParameterTuningJobSummary) SetHyperParameterTuningJobName(v string) *HyperParameterTuningJobSummary {
+	s.HyperParameterTuningJobName = &v
+	return s
+}
+
+// SetHyperParameterTuningJobStatus sets the HyperParameterTuningJobStatus field's value.
+func (s *HyperParameterTuningJobSummary) SetHyperParameterTuningJobStatus(v string) *HyperParameterTuningJobSummary {
+	s.HyperParameterTuningJobStatus = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *HyperParameterTuningJobSummary) SetLastModifiedTime(v time.Time) *HyperParameterTuningJobSummary {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetObjectiveStatusCounters sets the ObjectiveStatusCounters field's value.
+func (s *HyperParameterTuningJobSummary) SetObjectiveStatusCounters(v *ObjectiveStatusCounters) *HyperParameterTuningJobSummary {
+	s.ObjectiveStatusCounters = v
+	return s
+}
+
+// SetResourceLimits sets the ResourceLimits field's value.
+func (s *HyperParameterTuningJobSummary) SetResourceLimits(v *ResourceLimits) *HyperParameterTuningJobSummary {
+	s.ResourceLimits = v
+	return s
+}
+
+// SetStrategy sets the Strategy field's value.
+func (s *HyperParameterTuningJobSummary) SetStrategy(v string) *HyperParameterTuningJobSummary {
+	s.Strategy = &v
+	return s
+}
+
+// SetTrainingJobStatusCounters sets the TrainingJobStatusCounters field's value.
+func (s *HyperParameterTuningJobSummary) SetTrainingJobStatusCounters(v *TrainingJobStatusCounters) *HyperParameterTuningJobSummary {
+	s.TrainingJobStatusCounters = v
+	return s
+}
+
+// For a hyperparameter of the integer type, specifies the range that a hyperparameter
+// tuning job searches.
+type IntegerParameterRange struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum value of the hyperparameter to search.
+	//
+	// MaxValue is a required field
+	MaxValue *string `type:"string" required:"true"`
+
+	// The minimum value of the hyperparameter to search.
+	//
+	// MinValue is a required field
+	MinValue *string `type:"string" required:"true"`
+
+	// The name of the hyperparameter to search.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s IntegerParameterRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IntegerParameterRange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *IntegerParameterRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "IntegerParameterRange"}
+	if s.MaxValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxValue"))
+	}
+	if s.MinValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinValue"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxValue sets the MaxValue field's value.
+func (s *IntegerParameterRange) SetMaxValue(v string) *IntegerParameterRange {
+	s.MaxValue = &v
+	return s
+}
+
+// SetMinValue sets the MinValue field's value.
+func (s *IntegerParameterRange) SetMinValue(v string) *IntegerParameterRange {
+	s.MinValue = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *IntegerParameterRange) SetName(v string) *IntegerParameterRange {
+	s.Name = &v
 	return s
 }
 
@@ -5501,6 +8110,167 @@ func (s *ListEndpointsOutput) SetNextToken(v string) *ListEndpointsOutput {
 	return s
 }
 
+type ListHyperParameterTuningJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A filter that returns only tuning jobs that were created after the specified
+	// time.
+	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A filter that returns only tuning jobs that were created before the specified
+	// time.
+	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A filter that returns only tuning jobs that were modified after the specified
+	// time.
+	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A filter that returns only tuning jobs that were modified before the specified
+	// time.
+	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The maximum number of tuning jobs to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A string in the tuning job name. This filter returns only tuning jobs whose
+	// name contains the specified string.
+	NameContains *string `type:"string"`
+
+	// If the result of the previous ListHyperParameterTuningJobs request was truncated,
+	// the response includes a NextToken. To retrieve the next set of tuning jobs,
+	// use the token in the next request.
+	NextToken *string `type:"string"`
+
+	// The field to sort results by. The default is Name.
+	SortBy *string `type:"string" enum:"HyperParameterTuningJobSortByOptions"`
+
+	// The sort order for results. The default is Ascending.
+	SortOrder *string `type:"string" enum:"SortOrder"`
+
+	// A filter that returns only tuning jobs with the specified status.
+	StatusEquals *string `type:"string" enum:"HyperParameterTuningJobStatus"`
+}
+
+// String returns the string representation
+func (s ListHyperParameterTuningJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListHyperParameterTuningJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListHyperParameterTuningJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListHyperParameterTuningJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCreationTimeAfter sets the CreationTimeAfter field's value.
+func (s *ListHyperParameterTuningJobsInput) SetCreationTimeAfter(v time.Time) *ListHyperParameterTuningJobsInput {
+	s.CreationTimeAfter = &v
+	return s
+}
+
+// SetCreationTimeBefore sets the CreationTimeBefore field's value.
+func (s *ListHyperParameterTuningJobsInput) SetCreationTimeBefore(v time.Time) *ListHyperParameterTuningJobsInput {
+	s.CreationTimeBefore = &v
+	return s
+}
+
+// SetLastModifiedTimeAfter sets the LastModifiedTimeAfter field's value.
+func (s *ListHyperParameterTuningJobsInput) SetLastModifiedTimeAfter(v time.Time) *ListHyperParameterTuningJobsInput {
+	s.LastModifiedTimeAfter = &v
+	return s
+}
+
+// SetLastModifiedTimeBefore sets the LastModifiedTimeBefore field's value.
+func (s *ListHyperParameterTuningJobsInput) SetLastModifiedTimeBefore(v time.Time) *ListHyperParameterTuningJobsInput {
+	s.LastModifiedTimeBefore = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListHyperParameterTuningJobsInput) SetMaxResults(v int64) *ListHyperParameterTuningJobsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNameContains sets the NameContains field's value.
+func (s *ListHyperParameterTuningJobsInput) SetNameContains(v string) *ListHyperParameterTuningJobsInput {
+	s.NameContains = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListHyperParameterTuningJobsInput) SetNextToken(v string) *ListHyperParameterTuningJobsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListHyperParameterTuningJobsInput) SetSortBy(v string) *ListHyperParameterTuningJobsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListHyperParameterTuningJobsInput) SetSortOrder(v string) *ListHyperParameterTuningJobsInput {
+	s.SortOrder = &v
+	return s
+}
+
+// SetStatusEquals sets the StatusEquals field's value.
+func (s *ListHyperParameterTuningJobsInput) SetStatusEquals(v string) *ListHyperParameterTuningJobsInput {
+	s.StatusEquals = &v
+	return s
+}
+
+type ListHyperParameterTuningJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of objects that describe the tuning jobs that the ListHyperParameterTuningJobs
+	// request returned.
+	//
+	// HyperParameterTuningJobSummaries is a required field
+	HyperParameterTuningJobSummaries []*HyperParameterTuningJobSummary `type:"list" required:"true"`
+
+	// If the result of this ListHyperParameterTuningJobs request was truncated,
+	// the response includes a NextToken. To retrieve the next set of tuning jobs,
+	// use the token in the next request.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListHyperParameterTuningJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListHyperParameterTuningJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetHyperParameterTuningJobSummaries sets the HyperParameterTuningJobSummaries field's value.
+func (s *ListHyperParameterTuningJobsOutput) SetHyperParameterTuningJobSummaries(v []*HyperParameterTuningJobSummary) *ListHyperParameterTuningJobsOutput {
+	s.HyperParameterTuningJobSummaries = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListHyperParameterTuningJobsOutput) SetNextToken(v string) *ListHyperParameterTuningJobsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListModelsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5629,6 +8399,155 @@ func (s *ListModelsOutput) SetNextToken(v string) *ListModelsOutput {
 	return s
 }
 
+type ListNotebookInstanceLifecycleConfigsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A filter that returns only lifecycle configurations that were created after
+	// the specified time (timestamp).
+	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A filter that returns only lifecycle configurations that were created before
+	// the specified time (timestamp).
+	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A filter that returns only lifecycle configurations that were modified after
+	// the specified time (timestamp).
+	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A filter that returns only lifecycle configurations that were modified before
+	// the specified time (timestamp).
+	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The maximum number of lifecycle configurations to return in the response.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A string in the lifecycle configuration name. This filter returns only lifecycle
+	// configurations whose name contains the specified string.
+	NameContains *string `type:"string"`
+
+	// If the result of a ListNotebookInstanceLifecycleConfigs request was truncated,
+	// the response includes a NextToken. To get the next set of lifecycle configurations,
+	// use the token in the next request.
+	NextToken *string `type:"string"`
+
+	// Sorts the list of results. The default is CreationTime.
+	SortBy *string `type:"string" enum:"NotebookInstanceLifecycleConfigSortKey"`
+
+	// The sort order for results.
+	SortOrder *string `type:"string" enum:"NotebookInstanceLifecycleConfigSortOrder"`
+}
+
+// String returns the string representation
+func (s ListNotebookInstanceLifecycleConfigsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNotebookInstanceLifecycleConfigsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListNotebookInstanceLifecycleConfigsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListNotebookInstanceLifecycleConfigsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCreationTimeAfter sets the CreationTimeAfter field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetCreationTimeAfter(v time.Time) *ListNotebookInstanceLifecycleConfigsInput {
+	s.CreationTimeAfter = &v
+	return s
+}
+
+// SetCreationTimeBefore sets the CreationTimeBefore field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetCreationTimeBefore(v time.Time) *ListNotebookInstanceLifecycleConfigsInput {
+	s.CreationTimeBefore = &v
+	return s
+}
+
+// SetLastModifiedTimeAfter sets the LastModifiedTimeAfter field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetLastModifiedTimeAfter(v time.Time) *ListNotebookInstanceLifecycleConfigsInput {
+	s.LastModifiedTimeAfter = &v
+	return s
+}
+
+// SetLastModifiedTimeBefore sets the LastModifiedTimeBefore field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetLastModifiedTimeBefore(v time.Time) *ListNotebookInstanceLifecycleConfigsInput {
+	s.LastModifiedTimeBefore = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetMaxResults(v int64) *ListNotebookInstanceLifecycleConfigsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNameContains sets the NameContains field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetNameContains(v string) *ListNotebookInstanceLifecycleConfigsInput {
+	s.NameContains = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetNextToken(v string) *ListNotebookInstanceLifecycleConfigsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetSortBy(v string) *ListNotebookInstanceLifecycleConfigsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListNotebookInstanceLifecycleConfigsInput) SetSortOrder(v string) *ListNotebookInstanceLifecycleConfigsInput {
+	s.SortOrder = &v
+	return s
+}
+
+type ListNotebookInstanceLifecycleConfigsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// If the response is truncated, Amazon SageMaker returns this token. To get
+	// the next set of lifecycle configurations, use it in the next request.
+	NextToken *string `type:"string"`
+
+	// An array of NotebookInstanceLifecycleConfiguration objects, each listing
+	// a lifecycle configuration.
+	NotebookInstanceLifecycleConfigs []*NotebookInstanceLifecycleConfigSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListNotebookInstanceLifecycleConfigsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNotebookInstanceLifecycleConfigsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListNotebookInstanceLifecycleConfigsOutput) SetNextToken(v string) *ListNotebookInstanceLifecycleConfigsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigs sets the NotebookInstanceLifecycleConfigs field's value.
+func (s *ListNotebookInstanceLifecycleConfigsOutput) SetNotebookInstanceLifecycleConfigs(v []*NotebookInstanceLifecycleConfigSummary) *ListNotebookInstanceLifecycleConfigsOutput {
+	s.NotebookInstanceLifecycleConfigs = v
+	return s
+}
+
 type ListNotebookInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5663,6 +8582,12 @@ type ListNotebookInstancesInput struct {
 	// is truncated, you must use the same values for the filer and sort order in
 	// the next request.
 	NextToken *string `type:"string"`
+
+	// A string in the name of a notebook instances lifecycle configuration associated
+	// with this notebook instance. This filter returns only notebook instances
+	// associated with a lifecycle configuration with a name that contains the specified
+	// string.
+	NotebookInstanceLifecycleConfigNameContains *string `type:"string"`
 
 	// The field to sort results by. The default is Name.
 	SortBy *string `type:"string" enum:"NotebookInstanceSortKey"`
@@ -5736,6 +8661,12 @@ func (s *ListNotebookInstancesInput) SetNameContains(v string) *ListNotebookInst
 // SetNextToken sets the NextToken field's value.
 func (s *ListNotebookInstancesInput) SetNextToken(v string) *ListNotebookInstancesInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigNameContains sets the NotebookInstanceLifecycleConfigNameContains field's value.
+func (s *ListNotebookInstancesInput) SetNotebookInstanceLifecycleConfigNameContains(v string) *ListNotebookInstancesInput {
+	s.NotebookInstanceLifecycleConfigNameContains = &v
 	return s
 }
 
@@ -5885,6 +8816,134 @@ func (s *ListTagsOutput) SetTags(v []*Tag) *ListTagsOutput {
 	return s
 }
 
+type ListTrainingJobsForHyperParameterTuningJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the tuning job whose training jobs you want to list.
+	//
+	// HyperParameterTuningJobName is a required field
+	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
+
+	// The maximum number of training jobs to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// If the result of the previous ListTrainingJobsForHyperParameterTuningJob
+	// request was truncated, the response includes a NextToken. To retrieve the
+	// next set of training jobs, use the token in the next request.
+	NextToken *string `type:"string"`
+
+	// The field to sort results by. The default is Name.
+	SortBy *string `type:"string" enum:"TrainingJobSortByOptions"`
+
+	// The sort order for results. The default is Ascending.
+	SortOrder *string `type:"string" enum:"SortOrder"`
+
+	// A filter that returns only training jobs with the specified status.
+	StatusEquals *string `type:"string" enum:"TrainingJobStatus"`
+}
+
+// String returns the string representation
+func (s ListTrainingJobsForHyperParameterTuningJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTrainingJobsForHyperParameterTuningJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTrainingJobsForHyperParameterTuningJobInput"}
+	if s.HyperParameterTuningJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobName"))
+	}
+	if s.HyperParameterTuningJobName != nil && len(*s.HyperParameterTuningJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HyperParameterTuningJobName", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) SetHyperParameterTuningJobName(v string) *ListTrainingJobsForHyperParameterTuningJobInput {
+	s.HyperParameterTuningJobName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) SetMaxResults(v int64) *ListTrainingJobsForHyperParameterTuningJobInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) SetNextToken(v string) *ListTrainingJobsForHyperParameterTuningJobInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) SetSortBy(v string) *ListTrainingJobsForHyperParameterTuningJobInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) SetSortOrder(v string) *ListTrainingJobsForHyperParameterTuningJobInput {
+	s.SortOrder = &v
+	return s
+}
+
+// SetStatusEquals sets the StatusEquals field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobInput) SetStatusEquals(v string) *ListTrainingJobsForHyperParameterTuningJobInput {
+	s.StatusEquals = &v
+	return s
+}
+
+type ListTrainingJobsForHyperParameterTuningJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// If the result of this ListTrainingJobsForHyperParameterTuningJob request
+	// was truncated, the response includes a NextToken. To retrieve the next set
+	// of training jobs, use the token in the next request.
+	NextToken *string `type:"string"`
+
+	// A list of objects that describe the training jobs that the ListTrainingJobsForHyperParameterTuningJob
+	// request returned.
+	//
+	// TrainingJobSummaries is a required field
+	TrainingJobSummaries []*HyperParameterTrainingJobSummary `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTrainingJobsForHyperParameterTuningJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTrainingJobsForHyperParameterTuningJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobOutput) SetNextToken(v string) *ListTrainingJobsForHyperParameterTuningJobOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrainingJobSummaries sets the TrainingJobSummaries field's value.
+func (s *ListTrainingJobsForHyperParameterTuningJobOutput) SetTrainingJobSummaries(v []*HyperParameterTrainingJobSummary) *ListTrainingJobsForHyperParameterTuningJobOutput {
+	s.TrainingJobSummaries = v
+	return s
+}
+
 type ListTrainingJobsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5906,8 +8965,8 @@ type ListTrainingJobsInput struct {
 	// The maximum number of training jobs to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// A string in the training job name. This filter returns only models whose
-	// name contains the specified string.
+	// A string in the training job name. This filter returns only training jobs
+	// whose name contains the specified string.
 	NameContains *string `type:"string"`
 
 	// If the result of the previous ListTrainingJobs request was truncated, the
@@ -6043,6 +9102,70 @@ func (s *ListTrainingJobsOutput) SetTrainingJobSummaries(v []*TrainingJobSummary
 	return s
 }
 
+// Specifies a metric that the training algorithm writes to stderr or stdout.
+// Amazon SageMakerHyperparamter tuning captures all defined metrics. You specify
+// one metric that a hyperparameter tuning job uses as its objective metric
+// to choose the best training job.
+type MetricDefinition struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the metric.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A regular expression that searches the output of a training job and gets
+	// the value of the metric. For more information about using regular expressions
+	// to define metrics, see hpo-define-metrics.
+	//
+	// Regex is a required field
+	Regex *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s MetricDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricDefinition) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MetricDefinition) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MetricDefinition"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Regex == nil {
+		invalidParams.Add(request.NewErrParamRequired("Regex"))
+	}
+	if s.Regex != nil && len(*s.Regex) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Regex", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *MetricDefinition) SetName(v string) *MetricDefinition {
+	s.Name = &v
+	return s
+}
+
+// SetRegex sets the Regex field's value.
+func (s *MetricDefinition) SetRegex(v string) *MetricDefinition {
+	s.Regex = &v
+	return s
+}
+
 // Provides information about the location that is configured for storing model
 // artifacts.
 type ModelArtifacts struct {
@@ -6119,6 +9242,113 @@ func (s *ModelSummary) SetModelName(v string) *ModelSummary {
 	return s
 }
 
+// Provides a summary of a notebook instance lifecycle configuration.
+type NotebookInstanceLifecycleConfigSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A timestamp that tells when the lifecycle configuration was created.
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// A timestamp that tells when the lifecycle configuration was last modified.
+	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The Amazon Resource Name (ARN) of the lifecycle configuration.
+	//
+	// NotebookInstanceLifecycleConfigArn is a required field
+	NotebookInstanceLifecycleConfigArn *string `type:"string" required:"true"`
+
+	// The name of the lifecycle configuration.
+	//
+	// NotebookInstanceLifecycleConfigName is a required field
+	NotebookInstanceLifecycleConfigName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s NotebookInstanceLifecycleConfigSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotebookInstanceLifecycleConfigSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *NotebookInstanceLifecycleConfigSummary) SetCreationTime(v time.Time) *NotebookInstanceLifecycleConfigSummary {
+	s.CreationTime = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *NotebookInstanceLifecycleConfigSummary) SetLastModifiedTime(v time.Time) *NotebookInstanceLifecycleConfigSummary {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigArn sets the NotebookInstanceLifecycleConfigArn field's value.
+func (s *NotebookInstanceLifecycleConfigSummary) SetNotebookInstanceLifecycleConfigArn(v string) *NotebookInstanceLifecycleConfigSummary {
+	s.NotebookInstanceLifecycleConfigArn = &v
+	return s
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *NotebookInstanceLifecycleConfigSummary) SetNotebookInstanceLifecycleConfigName(v string) *NotebookInstanceLifecycleConfigSummary {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
+// Contains the notebook instance lifecycle configuration script.
+//
+// Each lifecycle configuration script has a limit of 16384 characters.
+//
+// The value of the $PATH environment variable that is available to both scripts
+// is /sbin:bin:/usr/sbin:/usr/bin.
+//
+// View CloudWatch Logs for notebook instance lifecycle configurations in log
+// group /aws/sagemaker/NotebookInstances in log stream [notebook-instance-name]/[LifecycleConfigHook].
+//
+// Lifecycle configuration scripts cannot run for longer than 5 minutes. If
+// a script runs for longer than 5 minutes, it fails and the notebook instance
+// is not created or started.
+//
+// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+type NotebookInstanceLifecycleHook struct {
+	_ struct{} `type:"structure"`
+
+	// A base64-encoded string that contains a shell script for a notebook instance
+	// lifecycle configuration.
+	Content *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s NotebookInstanceLifecycleHook) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotebookInstanceLifecycleHook) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NotebookInstanceLifecycleHook) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NotebookInstanceLifecycleHook"}
+	if s.Content != nil && len(*s.Content) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Content", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContent sets the Content field's value.
+func (s *NotebookInstanceLifecycleHook) SetContent(v string) *NotebookInstanceLifecycleHook {
+	s.Content = &v
+	return s
+}
+
 // Provides summary information for an Amazon SageMaker notebook instance.
 type NotebookInstanceSummary struct {
 	_ struct{} `type:"structure"`
@@ -6136,6 +9366,12 @@ type NotebookInstanceSummary struct {
 	//
 	// NotebookInstanceArn is a required field
 	NotebookInstanceArn *string `type:"string" required:"true"`
+
+	// The name of a notebook instance lifecycle configuration associated with this
+	// notebook instance.
+	//
+	// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+	NotebookInstanceLifecycleConfigName *string `type:"string"`
 
 	// The name of the notebook instance that you want a summary for.
 	//
@@ -6184,6 +9420,12 @@ func (s *NotebookInstanceSummary) SetNotebookInstanceArn(v string) *NotebookInst
 	return s
 }
 
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *NotebookInstanceSummary) SetNotebookInstanceLifecycleConfigName(v string) *NotebookInstanceSummary {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
 // SetNotebookInstanceName sets the NotebookInstanceName field's value.
 func (s *NotebookInstanceSummary) SetNotebookInstanceName(v string) *NotebookInstanceSummary {
 	s.NotebookInstanceName = &v
@@ -6202,6 +9444,56 @@ func (s *NotebookInstanceSummary) SetUrl(v string) *NotebookInstanceSummary {
 	return s
 }
 
+// Specifies the number of training jobs that this hyperparameter tuning job
+// launched, categorized by the status of their objective metric. The objective
+// metric status shows whether the final objective metric for the training job
+// has been evaluated by the tuning job and used in the hyperparameter tuning
+// process.
+type ObjectiveStatusCounters struct {
+	_ struct{} `type:"structure"`
+
+	// The number of training jobs whose final objective metric was not evaluated
+	// and used in the hyperparameter tuning process. This typically occurs when
+	// the training job failed or did not emit an objective metric.
+	Failed *int64 `type:"integer"`
+
+	// The number of training jobs that are in progress and pending evaluation of
+	// their final objective metric.
+	Pending *int64 `type:"integer"`
+
+	// The number of training jobs whose final objective metric was evaluated by
+	// the hyperparameter tuning job and used in the hyperparameter tuning process.
+	Succeeded *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ObjectiveStatusCounters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ObjectiveStatusCounters) GoString() string {
+	return s.String()
+}
+
+// SetFailed sets the Failed field's value.
+func (s *ObjectiveStatusCounters) SetFailed(v int64) *ObjectiveStatusCounters {
+	s.Failed = &v
+	return s
+}
+
+// SetPending sets the Pending field's value.
+func (s *ObjectiveStatusCounters) SetPending(v int64) *ObjectiveStatusCounters {
+	s.Pending = &v
+	return s
+}
+
+// SetSucceeded sets the Succeeded field's value.
+func (s *ObjectiveStatusCounters) SetSucceeded(v int64) *ObjectiveStatusCounters {
+	s.Succeeded = &v
+	return s
+}
+
 // Provides information about how to store model training results (model artifacts).
 type OutputDataConfig struct {
 	_ struct{} `type:"structure"`
@@ -6209,10 +9501,9 @@ type OutputDataConfig struct {
 	// The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to
 	// encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 	//
-	// If the configuration of the output S3 bucket requires server-side encryption
-	// for objects, and you don't provide the KMS key ID, Amazon SageMaker uses
-	// the default service key. For more information, see KMS-Managed Encryption
-	// Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
+	// If you don't provide the KMS key ID, Amazon SageMaker uses the default KMS
+	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
+	// Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
 	// in Amazon Simple Storage Service developer guide.
 	//
 	// The KMS key policy must grant permission to the IAM role you specify in your
@@ -6259,6 +9550,92 @@ func (s *OutputDataConfig) SetKmsKeyId(v string) *OutputDataConfig {
 // SetS3OutputPath sets the S3OutputPath field's value.
 func (s *OutputDataConfig) SetS3OutputPath(v string) *OutputDataConfig {
 	s.S3OutputPath = &v
+	return s
+}
+
+// Specifies ranges of integer, continuous, and categorical hyperparameters
+// that a hyperparameter tuning job searches.
+type ParameterRanges struct {
+	_ struct{} `type:"structure"`
+
+	// The array of CategoricalParameterRange objects that specify ranges of categorical
+	// hyperparameters that a hyperparameter tuning job searches.
+	CategoricalParameterRanges []*CategoricalParameterRange `type:"list"`
+
+	// The array of ContinuousParameterRange objects that specify ranges of continuous
+	// hyperparameters that a hyperparameter tuning job searches.
+	ContinuousParameterRanges []*ContinuousParameterRange `type:"list"`
+
+	// The array of IntegerParameterRange objects that specify ranges of integer
+	// hyperparameters that a hyperparameter tuning job searches.
+	IntegerParameterRanges []*IntegerParameterRange `type:"list"`
+}
+
+// String returns the string representation
+func (s ParameterRanges) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParameterRanges) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ParameterRanges) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ParameterRanges"}
+	if s.CategoricalParameterRanges != nil {
+		for i, v := range s.CategoricalParameterRanges {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CategoricalParameterRanges", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ContinuousParameterRanges != nil {
+		for i, v := range s.ContinuousParameterRanges {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ContinuousParameterRanges", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.IntegerParameterRanges != nil {
+		for i, v := range s.IntegerParameterRanges {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "IntegerParameterRanges", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCategoricalParameterRanges sets the CategoricalParameterRanges field's value.
+func (s *ParameterRanges) SetCategoricalParameterRanges(v []*CategoricalParameterRange) *ParameterRanges {
+	s.CategoricalParameterRanges = v
+	return s
+}
+
+// SetContinuousParameterRanges sets the ContinuousParameterRanges field's value.
+func (s *ParameterRanges) SetContinuousParameterRanges(v []*ContinuousParameterRange) *ParameterRanges {
+	s.ContinuousParameterRanges = v
+	return s
+}
+
+// SetIntegerParameterRanges sets the IntegerParameterRanges field's value.
+func (s *ParameterRanges) SetIntegerParameterRanges(v []*IntegerParameterRange) *ParameterRanges {
+	s.IntegerParameterRanges = v
 	return s
 }
 
@@ -6362,8 +9739,9 @@ func (s *ProductionVariant) SetVariantName(v string) *ProductionVariant {
 }
 
 // Describes weight and capacities for a production variant associated with
-// an endpoint. If you sent a request to the UpdateWeightAndCapacities API and
-// the endpoint status is Updating, you get different desired and current values.
+// an endpoint. If you sent a request to the UpdateEndpointWeightsAndCapacities
+// API and the endpoint status is Updating, you get different desired and current
+// values.
 type ProductionVariantSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -6373,10 +9751,12 @@ type ProductionVariantSummary struct {
 	// The weight associated with the variant.
 	CurrentWeight *float64 `type:"float"`
 
-	// The number of instances requested in the UpdateWeightAndCapacities request.
+	// The number of instances requested in the UpdateEndpointWeightsAndCapacities
+	// request.
 	DesiredInstanceCount *int64 `min:"1" type:"integer"`
 
-	// The requested weight, as specified in the UpdateWeightAndCapacities request.
+	// The requested weight, as specified in the UpdateEndpointWeightsAndCapacities
+	// request.
 	DesiredWeight *float64 `type:"float"`
 
 	// The name of the variant.
@@ -6518,6 +9898,68 @@ func (s *ResourceConfig) SetVolumeKmsKeyId(v string) *ResourceConfig {
 // SetVolumeSizeInGB sets the VolumeSizeInGB field's value.
 func (s *ResourceConfig) SetVolumeSizeInGB(v int64) *ResourceConfig {
 	s.VolumeSizeInGB = &v
+	return s
+}
+
+// Specifies the maximum number of training jobs and parallel training jobs
+// that a hyperparameter tuning job can launch.
+type ResourceLimits struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of training jobs that a hyperparameter tuning job can
+	// launch.
+	//
+	// MaxNumberOfTrainingJobs is a required field
+	MaxNumberOfTrainingJobs *int64 `min:"1" type:"integer" required:"true"`
+
+	// The maximum number of concurrent training jobs that a hyperparameter tuning
+	// job can launch.
+	//
+	// MaxParallelTrainingJobs is a required field
+	MaxParallelTrainingJobs *int64 `min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceLimits) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceLimits) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceLimits) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceLimits"}
+	if s.MaxNumberOfTrainingJobs == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxNumberOfTrainingJobs"))
+	}
+	if s.MaxNumberOfTrainingJobs != nil && *s.MaxNumberOfTrainingJobs < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxNumberOfTrainingJobs", 1))
+	}
+	if s.MaxParallelTrainingJobs == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxParallelTrainingJobs"))
+	}
+	if s.MaxParallelTrainingJobs != nil && *s.MaxParallelTrainingJobs < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxParallelTrainingJobs", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxNumberOfTrainingJobs sets the MaxNumberOfTrainingJobs field's value.
+func (s *ResourceLimits) SetMaxNumberOfTrainingJobs(v int64) *ResourceLimits {
+	s.MaxNumberOfTrainingJobs = &v
+	return s
+}
+
+// SetMaxParallelTrainingJobs sets the MaxParallelTrainingJobs field's value.
+func (s *ResourceLimits) SetMaxParallelTrainingJobs(v int64) *ResourceLimits {
+	s.MaxParallelTrainingJobs = &v
 	return s
 }
 
@@ -6688,6 +10130,61 @@ func (s StartNotebookInstanceOutput) String() string {
 
 // GoString returns the string representation
 func (s StartNotebookInstanceOutput) GoString() string {
+	return s.String()
+}
+
+type StopHyperParameterTuningJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the tuning job to stop.
+	//
+	// HyperParameterTuningJobName is a required field
+	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopHyperParameterTuningJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopHyperParameterTuningJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopHyperParameterTuningJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopHyperParameterTuningJobInput"}
+	if s.HyperParameterTuningJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobName"))
+	}
+	if s.HyperParameterTuningJobName != nil && len(*s.HyperParameterTuningJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HyperParameterTuningJobName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *StopHyperParameterTuningJobInput) SetHyperParameterTuningJobName(v string) *StopHyperParameterTuningJobInput {
+	s.HyperParameterTuningJobName = &v
+	return s
+}
+
+type StopHyperParameterTuningJobOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopHyperParameterTuningJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopHyperParameterTuningJobOutput) GoString() string {
 	return s.String()
 }
 
@@ -6903,6 +10400,72 @@ func (s *Tag) SetKey(v string) *Tag {
 // SetValue sets the Value field's value.
 func (s *Tag) SetValue(v string) *Tag {
 	s.Value = &v
+	return s
+}
+
+// The numbers of training jobs launched by a hyperparameter tuning job, categorized
+// by status.
+type TrainingJobStatusCounters struct {
+	_ struct{} `type:"structure"`
+
+	// The number of completed training jobs launched by a hyperparameter tuning
+	// job.
+	Completed *int64 `type:"integer"`
+
+	// The number of in-progress training jobs launched by a hyperparameter tuning
+	// job.
+	InProgress *int64 `type:"integer"`
+
+	// The number of training jobs that failed and can't be retried. A failed training
+	// job can't be retried if it failed because a client error occurred.
+	NonRetryableError *int64 `type:"integer"`
+
+	// The number of training jobs that failed, but can be retried. A failed training
+	// job can be retried only if it failed because an internal service error occurred.
+	RetryableError *int64 `type:"integer"`
+
+	// The number of training jobs launched by a hyperparameter tuning job that
+	// were manually stopped.
+	Stopped *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s TrainingJobStatusCounters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrainingJobStatusCounters) GoString() string {
+	return s.String()
+}
+
+// SetCompleted sets the Completed field's value.
+func (s *TrainingJobStatusCounters) SetCompleted(v int64) *TrainingJobStatusCounters {
+	s.Completed = &v
+	return s
+}
+
+// SetInProgress sets the InProgress field's value.
+func (s *TrainingJobStatusCounters) SetInProgress(v int64) *TrainingJobStatusCounters {
+	s.InProgress = &v
+	return s
+}
+
+// SetNonRetryableError sets the NonRetryableError field's value.
+func (s *TrainingJobStatusCounters) SetNonRetryableError(v int64) *TrainingJobStatusCounters {
+	s.NonRetryableError = &v
+	return s
+}
+
+// SetRetryableError sets the RetryableError field's value.
+func (s *TrainingJobStatusCounters) SetRetryableError(v int64) *TrainingJobStatusCounters {
+	s.RetryableError = &v
+	return s
+}
+
+// SetStopped sets the Stopped field's value.
+func (s *TrainingJobStatusCounters) SetStopped(v int64) *TrainingJobStatusCounters {
+	s.Stopped = &v
 	return s
 }
 
@@ -7163,7 +10726,12 @@ type UpdateNotebookInstanceInput struct {
 	// NotebookInstanceName is a required field
 	NotebookInstanceName *string `type:"string" required:"true"`
 
-	// Amazon Resource Name (ARN) of the IAM role to associate with the instance.
+	// The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker can
+	// assume to access the notebook instance. For more information, see Amazon
+	// SageMaker Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	//
+	// To be able to pass this role to Amazon SageMaker, the caller of this API
+	// must have the iam:PassRole permission.
 	RoleArn *string `min:"20" type:"string"`
 }
 
@@ -7211,6 +10779,97 @@ func (s *UpdateNotebookInstanceInput) SetRoleArn(v string) *UpdateNotebookInstan
 	return s
 }
 
+type UpdateNotebookInstanceLifecycleConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the lifecycle configuration.
+	//
+	// NotebookInstanceLifecycleConfigName is a required field
+	NotebookInstanceLifecycleConfigName *string `type:"string" required:"true"`
+
+	// The shell script that runs only once, when you create a notebook instance
+	OnCreate []*NotebookInstanceLifecycleHook `type:"list"`
+
+	// The shell script that runs every time you start a notebook instance, including
+	// when you create the notebook instance.
+	OnStart []*NotebookInstanceLifecycleHook `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateNotebookInstanceLifecycleConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateNotebookInstanceLifecycleConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateNotebookInstanceLifecycleConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateNotebookInstanceLifecycleConfigInput"}
+	if s.NotebookInstanceLifecycleConfigName == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookInstanceLifecycleConfigName"))
+	}
+	if s.OnCreate != nil {
+		for i, v := range s.OnCreate {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OnCreate", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.OnStart != nil {
+		for i, v := range s.OnStart {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OnStart", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookInstanceLifecycleConfigName sets the NotebookInstanceLifecycleConfigName field's value.
+func (s *UpdateNotebookInstanceLifecycleConfigInput) SetNotebookInstanceLifecycleConfigName(v string) *UpdateNotebookInstanceLifecycleConfigInput {
+	s.NotebookInstanceLifecycleConfigName = &v
+	return s
+}
+
+// SetOnCreate sets the OnCreate field's value.
+func (s *UpdateNotebookInstanceLifecycleConfigInput) SetOnCreate(v []*NotebookInstanceLifecycleHook) *UpdateNotebookInstanceLifecycleConfigInput {
+	s.OnCreate = v
+	return s
+}
+
+// SetOnStart sets the OnStart field's value.
+func (s *UpdateNotebookInstanceLifecycleConfigInput) SetOnStart(v []*NotebookInstanceLifecycleHook) *UpdateNotebookInstanceLifecycleConfigInput {
+	s.OnStart = v
+	return s
+}
+
+type UpdateNotebookInstanceLifecycleConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateNotebookInstanceLifecycleConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateNotebookInstanceLifecycleConfigOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateNotebookInstanceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7225,12 +10884,83 @@ func (s UpdateNotebookInstanceOutput) GoString() string {
 	return s.String()
 }
 
+// Specifies a VPC that your training jobs and hosted models have access to.
+// Control access to and from your training and model containers by configuring
+// the VPC. For more information, see host-vpc and train-vpc.
+type VpcConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The VPC security group IDs, in the form sg-xxxxxxxx. Specify the security
+	// groups for the VPC that is specified in the Subnets field.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
+
+	// The ID of the subnets in the VPC to which you want to connect your training
+	// job or model.
+	//
+	// Subnets is a required field
+	Subnets []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfig"}
+	if s.SecurityGroupIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecurityGroupIds"))
+	}
+	if s.SecurityGroupIds != nil && len(s.SecurityGroupIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupIds", 1))
+	}
+	if s.Subnets == nil {
+		invalidParams.Add(request.NewErrParamRequired("Subnets"))
+	}
+	if s.Subnets != nil && len(s.Subnets) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Subnets", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfig) SetSecurityGroupIds(v []*string) *VpcConfig {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
+	s.Subnets = v
+	return s
+}
+
 const (
 	// CompressionTypeNone is a CompressionType enum value
 	CompressionTypeNone = "None"
 
 	// CompressionTypeGzip is a CompressionType enum value
 	CompressionTypeGzip = "Gzip"
+)
+
+const (
+	// DirectInternetAccessEnabled is a DirectInternetAccess enum value
+	DirectInternetAccessEnabled = "Enabled"
+
+	// DirectInternetAccessDisabled is a DirectInternetAccess enum value
+	DirectInternetAccessDisabled = "Disabled"
 )
 
 const (
@@ -7276,14 +11006,93 @@ const (
 )
 
 const (
+	// HyperParameterTuningJobObjectiveTypeMaximize is a HyperParameterTuningJobObjectiveType enum value
+	HyperParameterTuningJobObjectiveTypeMaximize = "Maximize"
+
+	// HyperParameterTuningJobObjectiveTypeMinimize is a HyperParameterTuningJobObjectiveType enum value
+	HyperParameterTuningJobObjectiveTypeMinimize = "Minimize"
+)
+
+const (
+	// HyperParameterTuningJobSortByOptionsName is a HyperParameterTuningJobSortByOptions enum value
+	HyperParameterTuningJobSortByOptionsName = "Name"
+
+	// HyperParameterTuningJobSortByOptionsStatus is a HyperParameterTuningJobSortByOptions enum value
+	HyperParameterTuningJobSortByOptionsStatus = "Status"
+
+	// HyperParameterTuningJobSortByOptionsCreationTime is a HyperParameterTuningJobSortByOptions enum value
+	HyperParameterTuningJobSortByOptionsCreationTime = "CreationTime"
+)
+
+const (
+	// HyperParameterTuningJobStatusCompleted is a HyperParameterTuningJobStatus enum value
+	HyperParameterTuningJobStatusCompleted = "Completed"
+
+	// HyperParameterTuningJobStatusInProgress is a HyperParameterTuningJobStatus enum value
+	HyperParameterTuningJobStatusInProgress = "InProgress"
+
+	// HyperParameterTuningJobStatusFailed is a HyperParameterTuningJobStatus enum value
+	HyperParameterTuningJobStatusFailed = "Failed"
+
+	// HyperParameterTuningJobStatusStopped is a HyperParameterTuningJobStatus enum value
+	HyperParameterTuningJobStatusStopped = "Stopped"
+
+	// HyperParameterTuningJobStatusStopping is a HyperParameterTuningJobStatus enum value
+	HyperParameterTuningJobStatusStopping = "Stopping"
+)
+
+// The strategy hyperparameter tuning uses to find the best combination of hyperparameters
+// for your model. Currently, the only supported value is Bayesian.
+const (
+	// HyperParameterTuningJobStrategyTypeBayesian is a HyperParameterTuningJobStrategyType enum value
+	HyperParameterTuningJobStrategyTypeBayesian = "Bayesian"
+)
+
+const (
 	// InstanceTypeMlT2Medium is a InstanceType enum value
 	InstanceTypeMlT2Medium = "ml.t2.medium"
+
+	// InstanceTypeMlT2Large is a InstanceType enum value
+	InstanceTypeMlT2Large = "ml.t2.large"
+
+	// InstanceTypeMlT2Xlarge is a InstanceType enum value
+	InstanceTypeMlT2Xlarge = "ml.t2.xlarge"
+
+	// InstanceTypeMlT22xlarge is a InstanceType enum value
+	InstanceTypeMlT22xlarge = "ml.t2.2xlarge"
 
 	// InstanceTypeMlM4Xlarge is a InstanceType enum value
 	InstanceTypeMlM4Xlarge = "ml.m4.xlarge"
 
+	// InstanceTypeMlM42xlarge is a InstanceType enum value
+	InstanceTypeMlM42xlarge = "ml.m4.2xlarge"
+
+	// InstanceTypeMlM44xlarge is a InstanceType enum value
+	InstanceTypeMlM44xlarge = "ml.m4.4xlarge"
+
+	// InstanceTypeMlM410xlarge is a InstanceType enum value
+	InstanceTypeMlM410xlarge = "ml.m4.10xlarge"
+
+	// InstanceTypeMlM416xlarge is a InstanceType enum value
+	InstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
 	// InstanceTypeMlP2Xlarge is a InstanceType enum value
 	InstanceTypeMlP2Xlarge = "ml.p2.xlarge"
+
+	// InstanceTypeMlP28xlarge is a InstanceType enum value
+	InstanceTypeMlP28xlarge = "ml.p2.8xlarge"
+
+	// InstanceTypeMlP216xlarge is a InstanceType enum value
+	InstanceTypeMlP216xlarge = "ml.p2.16xlarge"
+
+	// InstanceTypeMlP32xlarge is a InstanceType enum value
+	InstanceTypeMlP32xlarge = "ml.p3.2xlarge"
+
+	// InstanceTypeMlP38xlarge is a InstanceType enum value
+	InstanceTypeMlP38xlarge = "ml.p3.8xlarge"
+
+	// InstanceTypeMlP316xlarge is a InstanceType enum value
+	InstanceTypeMlP316xlarge = "ml.p3.16xlarge"
 )
 
 const (
@@ -7292,6 +11101,25 @@ const (
 
 	// ModelSortKeyCreationTime is a ModelSortKey enum value
 	ModelSortKeyCreationTime = "CreationTime"
+)
+
+const (
+	// NotebookInstanceLifecycleConfigSortKeyName is a NotebookInstanceLifecycleConfigSortKey enum value
+	NotebookInstanceLifecycleConfigSortKeyName = "Name"
+
+	// NotebookInstanceLifecycleConfigSortKeyCreationTime is a NotebookInstanceLifecycleConfigSortKey enum value
+	NotebookInstanceLifecycleConfigSortKeyCreationTime = "CreationTime"
+
+	// NotebookInstanceLifecycleConfigSortKeyLastModifiedTime is a NotebookInstanceLifecycleConfigSortKey enum value
+	NotebookInstanceLifecycleConfigSortKeyLastModifiedTime = "LastModifiedTime"
+)
+
+const (
+	// NotebookInstanceLifecycleConfigSortOrderAscending is a NotebookInstanceLifecycleConfigSortOrder enum value
+	NotebookInstanceLifecycleConfigSortOrderAscending = "Ascending"
+
+	// NotebookInstanceLifecycleConfigSortOrderDescending is a NotebookInstanceLifecycleConfigSortOrder enum value
+	NotebookInstanceLifecycleConfigSortOrderDescending = "Descending"
 )
 
 const (
@@ -7334,6 +11162,17 @@ const (
 )
 
 const (
+	// ObjectiveStatusSucceeded is a ObjectiveStatus enum value
+	ObjectiveStatusSucceeded = "Succeeded"
+
+	// ObjectiveStatusPending is a ObjectiveStatus enum value
+	ObjectiveStatusPending = "Pending"
+
+	// ObjectiveStatusFailed is a ObjectiveStatus enum value
+	ObjectiveStatusFailed = "Failed"
+)
+
+const (
 	// OrderKeyAscending is a OrderKey enum value
 	OrderKeyAscending = "Ascending"
 
@@ -7342,35 +11181,101 @@ const (
 )
 
 const (
-	// ProductionVariantInstanceTypeMlC42xlarge is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlC42xlarge = "ml.c4.2xlarge"
+	// ProductionVariantInstanceTypeMlT2Medium is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlT2Medium = "ml.t2.medium"
 
-	// ProductionVariantInstanceTypeMlC48xlarge is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlC48xlarge = "ml.c4.8xlarge"
+	// ProductionVariantInstanceTypeMlT2Large is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlT2Large = "ml.t2.large"
 
-	// ProductionVariantInstanceTypeMlC4Xlarge is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlC4Xlarge = "ml.c4.xlarge"
+	// ProductionVariantInstanceTypeMlT2Xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlT2Xlarge = "ml.t2.xlarge"
 
-	// ProductionVariantInstanceTypeMlC52xlarge is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlC52xlarge = "ml.c5.2xlarge"
-
-	// ProductionVariantInstanceTypeMlC59xlarge is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlC59xlarge = "ml.c5.9xlarge"
-
-	// ProductionVariantInstanceTypeMlC5Xlarge is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlC5Xlarge = "ml.c5.xlarge"
+	// ProductionVariantInstanceTypeMlT22xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlT22xlarge = "ml.t2.2xlarge"
 
 	// ProductionVariantInstanceTypeMlM4Xlarge is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlM4Xlarge = "ml.m4.xlarge"
 
+	// ProductionVariantInstanceTypeMlM42xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM42xlarge = "ml.m4.2xlarge"
+
+	// ProductionVariantInstanceTypeMlM44xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM44xlarge = "ml.m4.4xlarge"
+
+	// ProductionVariantInstanceTypeMlM410xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM410xlarge = "ml.m4.10xlarge"
+
+	// ProductionVariantInstanceTypeMlM416xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
+	// ProductionVariantInstanceTypeMlM5Large is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5Large = "ml.m5.large"
+
+	// ProductionVariantInstanceTypeMlM5Xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5Xlarge = "ml.m5.xlarge"
+
+	// ProductionVariantInstanceTypeMlM52xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM52xlarge = "ml.m5.2xlarge"
+
+	// ProductionVariantInstanceTypeMlM54xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM54xlarge = "ml.m5.4xlarge"
+
+	// ProductionVariantInstanceTypeMlM512xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM512xlarge = "ml.m5.12xlarge"
+
+	// ProductionVariantInstanceTypeMlM524xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM524xlarge = "ml.m5.24xlarge"
+
+	// ProductionVariantInstanceTypeMlC4Large is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC4Large = "ml.c4.large"
+
+	// ProductionVariantInstanceTypeMlC4Xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC4Xlarge = "ml.c4.xlarge"
+
+	// ProductionVariantInstanceTypeMlC42xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC42xlarge = "ml.c4.2xlarge"
+
+	// ProductionVariantInstanceTypeMlC44xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC44xlarge = "ml.c4.4xlarge"
+
+	// ProductionVariantInstanceTypeMlC48xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC48xlarge = "ml.c4.8xlarge"
+
 	// ProductionVariantInstanceTypeMlP2Xlarge is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlP2Xlarge = "ml.p2.xlarge"
+
+	// ProductionVariantInstanceTypeMlP28xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlP28xlarge = "ml.p2.8xlarge"
+
+	// ProductionVariantInstanceTypeMlP216xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlP216xlarge = "ml.p2.16xlarge"
 
 	// ProductionVariantInstanceTypeMlP32xlarge is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlP32xlarge = "ml.p3.2xlarge"
 
-	// ProductionVariantInstanceTypeMlT2Medium is a ProductionVariantInstanceType enum value
-	ProductionVariantInstanceTypeMlT2Medium = "ml.t2.medium"
+	// ProductionVariantInstanceTypeMlP38xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlP38xlarge = "ml.p3.8xlarge"
+
+	// ProductionVariantInstanceTypeMlP316xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlP316xlarge = "ml.p3.16xlarge"
+
+	// ProductionVariantInstanceTypeMlC5Large is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5Large = "ml.c5.large"
+
+	// ProductionVariantInstanceTypeMlC5Xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5Xlarge = "ml.c5.xlarge"
+
+	// ProductionVariantInstanceTypeMlC52xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC52xlarge = "ml.c5.2xlarge"
+
+	// ProductionVariantInstanceTypeMlC54xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC54xlarge = "ml.c5.4xlarge"
+
+	// ProductionVariantInstanceTypeMlC59xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC59xlarge = "ml.c5.9xlarge"
+
+	// ProductionVariantInstanceTypeMlC518xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
 )
 
 const (
@@ -7457,17 +11362,44 @@ const (
 	// TrainingInstanceTypeMlM4Xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM4Xlarge = "ml.m4.xlarge"
 
+	// TrainingInstanceTypeMlM42xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM42xlarge = "ml.m4.2xlarge"
+
 	// TrainingInstanceTypeMlM44xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM44xlarge = "ml.m4.4xlarge"
 
 	// TrainingInstanceTypeMlM410xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM410xlarge = "ml.m4.10xlarge"
 
+	// TrainingInstanceTypeMlM416xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
+	// TrainingInstanceTypeMlM5Large is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM5Large = "ml.m5.large"
+
+	// TrainingInstanceTypeMlM5Xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM5Xlarge = "ml.m5.xlarge"
+
+	// TrainingInstanceTypeMlM52xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM52xlarge = "ml.m5.2xlarge"
+
+	// TrainingInstanceTypeMlM54xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM54xlarge = "ml.m5.4xlarge"
+
+	// TrainingInstanceTypeMlM512xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM512xlarge = "ml.m5.12xlarge"
+
+	// TrainingInstanceTypeMlM524xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlM524xlarge = "ml.m5.24xlarge"
+
 	// TrainingInstanceTypeMlC4Xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC4Xlarge = "ml.c4.xlarge"
 
 	// TrainingInstanceTypeMlC42xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC42xlarge = "ml.c4.2xlarge"
+
+	// TrainingInstanceTypeMlC44xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC44xlarge = "ml.c4.4xlarge"
 
 	// TrainingInstanceTypeMlC48xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC48xlarge = "ml.c4.8xlarge"
@@ -7504,6 +11436,20 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+)
+
+const (
+	// TrainingJobSortByOptionsName is a TrainingJobSortByOptions enum value
+	TrainingJobSortByOptionsName = "Name"
+
+	// TrainingJobSortByOptionsCreationTime is a TrainingJobSortByOptions enum value
+	TrainingJobSortByOptionsCreationTime = "CreationTime"
+
+	// TrainingJobSortByOptionsStatus is a TrainingJobSortByOptions enum value
+	TrainingJobSortByOptionsStatus = "Status"
+
+	// TrainingJobSortByOptionsFinalObjectiveMetricValue is a TrainingJobSortByOptions enum value
+	TrainingJobSortByOptionsFinalObjectiveMetricValue = "FinalObjectiveMetricValue"
 )
 
 const (

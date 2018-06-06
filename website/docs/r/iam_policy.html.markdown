@@ -10,6 +10,8 @@ description: |-
 
 Provides an IAM policy.
 
+## Example Usage
+
 ```hcl
 resource "aws_iam_policy" "policy" {
   name        = "test_policy"
@@ -49,7 +51,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The policy's ID.
 * `arn` - The ARN assigned by AWS to this policy.

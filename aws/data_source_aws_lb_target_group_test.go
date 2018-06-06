@@ -27,6 +27,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_arn", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "stickiness.#", "1"),
@@ -46,6 +47,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_name", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "stickiness.#", "1"),
@@ -82,6 +84,7 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_arn", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "stickiness.#", "1"),
@@ -101,6 +104,7 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_name", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "stickiness.#", "1"),
@@ -189,7 +193,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
+    Name = "tf-acc-lb-data-source-target-group-basic"
   }
 }
 
@@ -297,7 +301,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
+    Name = "tf-acc-lb-data-source-target-group-bc"
   }
 }
 

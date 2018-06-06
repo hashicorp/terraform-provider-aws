@@ -38,7 +38,15 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - API ID
 * `arn` - The ARN
+
+## Import
+
+AppSync GraphQL API can be imported using the GraphQL API ID, e.g.
+
+```
+$ terraform import aws_appsync_graphql_api.example 0123456789
+```
