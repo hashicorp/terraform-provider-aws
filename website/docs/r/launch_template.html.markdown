@@ -232,11 +232,11 @@ The `placement` block supports the following:
 
 ### Tags
 
-The tags to apply to the resources during launch. You can tag instances and volumes.
+The tags to apply to the resources during launch. You can tag instances and volumes. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag.
+* `resource_type` - The type of resource to tag. Valid values are `instance` and `volume`.
 * `tags` - A mapping of tags to assign to the resource.
 
 
