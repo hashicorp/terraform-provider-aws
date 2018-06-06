@@ -90,6 +90,8 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
 					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(
+						"^arn:aws:eks:[^:]+:[0-9]+:cluster/"+rName+"$")),
 					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(fmt.Sprintf("%s$", rName))),
 					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),

@@ -49,6 +49,10 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -191,6 +195,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 	d.Set("endpoint", cluster.Endpoint)
 	d.Set("name", cluster.Name)
+	d.Set("arn", cluster.Arn)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("version", cluster.Version)
 
