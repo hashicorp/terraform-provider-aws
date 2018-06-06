@@ -1,4 +1,9 @@
 ## 1.23.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) [GH-4763]
+
 ## 1.22.0 (June 05, 2018)
 
 FEATURES:
