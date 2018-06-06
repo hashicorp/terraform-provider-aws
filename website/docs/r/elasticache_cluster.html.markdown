@@ -135,7 +135,7 @@ SNS topic to send ElastiCache notifications to. Example:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
    Referenceable e.g. as `${aws_elasticache_cluster.bar.cache_nodes.0.address}`

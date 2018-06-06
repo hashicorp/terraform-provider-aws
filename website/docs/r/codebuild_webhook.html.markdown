@@ -55,7 +55,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the build project.
 * `payload_url` - The CodeBuild endpoint where webhook events are sent.

@@ -164,8 +164,8 @@ const (
 	// ErrCodeVersionConflictException for service response error code
 	// "VersionConflictException".
 	//
-	// An exception thrown when the version of a thing passed to a command is different
-	// than the version specified with the --version parameter.
+	// An exception thrown when the version of an entity specified with the expectedVersion
+	// parameter does not match the latest version in the system.
 	ErrCodeVersionConflictException = "VersionConflictException"
 
 	// ErrCodeVersionsLimitExceededException for service response error code

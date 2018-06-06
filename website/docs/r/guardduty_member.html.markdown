@@ -56,7 +56,7 @@ configuration options:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the GuardDuty member
 * `relationship_status` - The status of the relationship between the member account and its master account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).

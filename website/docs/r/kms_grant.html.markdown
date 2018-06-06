@@ -69,7 +69,7 @@ The `constraints` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `grant_id` - The unique identifier for the grant.
 * `grant_token` - The grant token for the created grant. For more information, see [Grant Tokens](http://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#grant_token).

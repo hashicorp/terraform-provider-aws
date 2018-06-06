@@ -1,3 +1,28 @@
+## 1.22.0 (June 05, 2018)
+
+FEATURES:
+
+* **New Data Source:** `aws_ecs_service` ([#3617](https://github.com/terraform-providers/terraform-provider-aws/issues/3617))
+* **New Data Source:** `aws_eks_cluster` ([#4749](https://github.com/terraform-providers/terraform-provider-aws/issues/4749))
+* **New Guide:** EKS Getting Started
+* **New Resource:** `aws_config_aggregate_authorization` ([#4263](https://github.com/terraform-providers/terraform-provider-aws/issues/4263))
+* **New Resource:** `aws_config_configuration_aggregator` ([#4262](https://github.com/terraform-providers/terraform-provider-aws/issues/4262))
+* **New Resource:** `aws_eks_cluster` ([#4749](https://github.com/terraform-providers/terraform-provider-aws/issues/4749))
+
+ENHANCEMENTS:
+
+* provider: Support custom endpoint for EFS ([#4716](https://github.com/terraform-providers/terraform-provider-aws/issues/4716))
+* resource/aws_api_gateway_method: Add `authorization_scopes` argument ([#4533](https://github.com/terraform-providers/terraform-provider-aws/issues/4533))
+* resource/aws_api_gateway_rest_api: Add `api_key_source` argument ([#4717](https://github.com/terraform-providers/terraform-provider-aws/issues/4717))
+* resource/aws_cloudfront_distribution: Allow create and update retries on InvalidViewerCertificate for eventual consistency with ACM/IAM services ([#4698](https://github.com/terraform-providers/terraform-provider-aws/issues/4698))
+* resource/aws_cognito_identity_pool: Add `arn` attribute ([#4719](https://github.com/terraform-providers/terraform-provider-aws/issues/4719))
+* resource/aws_cognito_user_pool: Add `endpoint` attribute ([#4718](https://github.com/terraform-providers/terraform-provider-aws/issues/4718))
+
+BUG FIXES:
+
+* resource/aws_service_discovery_private_dns_namespace: Prevent creation error with names longer than 34 characters ([#4702](https://github.com/terraform-providers/terraform-provider-aws/issues/4702))
+* resource/aws_vpn_connection: Allow period in `tunnel[1-2]_preshared_key` validation ([#4731](https://github.com/terraform-providers/terraform-provider-aws/issues/4731))
+
 ## 1.21.0 (May 31, 2018)
 
 FEATURES:

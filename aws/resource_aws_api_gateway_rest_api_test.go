@@ -98,6 +98,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "name", "bar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "description", ""),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", "HEADER"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
@@ -198,6 +199,36 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "EDGE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
+	expectedAPIKeySource := "HEADER"
+	expectedUpdateAPIKeySource := "AUTHORIZER"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedUpdateAPIKeySource),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
 				),
 			},
 		},
@@ -426,6 +457,19 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 `, rName)
 }
+
+const testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+	api_key_source = "HEADER"
+}
+`
+const testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource = `
+resource "aws_api_gateway_rest_api" "test" {
+  name = "bar"
+	api_key_source = "AUTHORIZER"
+}
+`
 
 const testAccAWSAPIGatewayRestAPIConfigWithPolicy = `
 resource "aws_api_gateway_rest_api" "test" {
