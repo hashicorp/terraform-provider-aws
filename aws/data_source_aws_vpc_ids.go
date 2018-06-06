@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -13,7 +14,7 @@ func dataSourceAwsVpcIDs() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsVpcIDsRead,
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": ec2CustomFiltersSchema(),
 
 			"tags": tagsSchemaComputed(),
 
@@ -35,6 +36,9 @@ func dataSourceAwsVpcIDsRead(d *schema.ResourceData, meta interface{}) error {
 	req.Filters = buildEC2TagFilterList(
 		tagsFromMap(d.Get("tags").(map[string]interface{})),
 	)
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filters = nil
@@ -53,11 +57,13 @@ func dataSourceAwsVpcIDsRead(d *schema.ResourceData, meta interface{}) error {
 	vpcs := make([]string, 0)
 
 	for _, vpc := range resp.Vpcs {
-		vpcs = append(vpcs, *vpc.VpcId)
+		vpcs = append(vpcs, aws.StringValue(vpc.VpcId))
 	}
 
 	d.SetId(time.Now().UTC().String())
-	d.Set("ids", vpcs)
+	if err := d.Set("ids", vpcs); err != nil {
+		return fmt.Errorf("Error setting vpc ids: %s", err)
+	}
 
 	return nil
 }
