@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) [GH-4763]
+* resource/aws_launch_template: Add plan time validation for tag_specifications `resource_type` [GH-4765]
 
 BUG FIXES:
 
