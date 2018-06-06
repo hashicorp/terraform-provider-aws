@@ -208,23 +208,24 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
 // or SecretBinary for a secret in the same account as the calling user and
-// that secret doesn't specify a KMS encryption key, Secrets Manager uses the
-// account's default AWS managed customer master key (CMK) with the alias aws/secretsmanager.
-// If this key doesn't already exist in your account then Secrets Manager creates
-// it for you automatically. All users in the same AWS account automatically
-// have access to use the default CMK. Note that if an Secrets Manager API call
-// results in AWS having to create the account's AWS-managed CMK, it can result
-// in a one-time significant delay in returning the result.
+// that secret doesn't specify a AWS KMS encryption key, Secrets Manager uses
+// the account's default AWS managed customer master key (CMK) with the alias
+// aws/secretsmanager. If this key doesn't already exist in your account then
+// Secrets Manager creates it for you automatically. All users in the same AWS
+// account automatically have access to use the default CMK. Note that if an
+// Secrets Manager API call results in AWS having to create the account's AWS-managed
+// CMK, it can result in a one-time significant delay in returning the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
-// must create and use a custom KMS CMK because you can't access the default
+// must create and use a custom AWS KMS CMK because you can't access the default
 // CMK for the account using credentials from a different AWS account. Store
 // the ARN of the CMK in the secret when you create the secret or when you update
 // it by including it in the KMSKeyId. If you call an API that must encrypt
 // or decrypt SecretString or SecretBinary using credentials from a different
-// account then the KMS key policy must grant cross-account access to that other
-// account's user or role for both the kms:GenerateDataKey and kms:Decrypt operations.
+// account then the AWS KMS key policy must grant cross-account access to that
+// other account's user or role for both the kms:GenerateDataKey and kms:Decrypt
+// operations.
 //
 // Minimum permissions
 //
@@ -232,13 +233,13 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 //
 //    * secretsmanager:CreateSecret
 //
-//    * kms:GenerateDataKey - needed only if you use a customer-created KMS
-//    key to encrypt the secret. You do not need this permission to use the
-//    account's default AWS managed CMK for Secrets Manager.
+//    * kms:GenerateDataKey - needed only if you use a customer-managed AWS
+//    KMS key to encrypt the secret. You do not need this permission to use
+//    the account's default AWS managed CMK for Secrets Manager.
 //
-//    * kms:Decrypt - needed only if you use a customer-created KMS key to encrypt
-//    the secret. You do not need this permission to use the account's default
-//    AWS managed CMK for Secrets Manager.
+//    * kms:Decrypt - needed only if you use a customer-managed AWS KMS key
+//    to encrypt the secret. You do not need this permission to use the account's
+//    default AWS managed CMK for Secrets Manager.
 //
 // Related operations
 //
@@ -695,8 +696,8 @@ func (c *SecretsManager) GetSecretValueRequest(input *GetSecretValueInput) (req 
 //
 //    * secretsmanager:GetSecretValue
 //
-//    * kms:Decrypt - required only if you use a customer-created KMS key to
-//    encrypt the secret. You do not need this permission to use the account's
+//    * kms:Decrypt - required only if you use a customer-managed AWS KMS key
+//    to encrypt the secret. You do not need this permission to use the account's
 //    default AWS managed CMK for Secrets Manager.
 //
 // Related operations
@@ -1149,23 +1150,24 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
 // or SecretBinary for a secret in the same account as the calling user and
-// that secret doesn't specify a KMS encryption key, Secrets Manager uses the
-// account's default AWS managed customer master key (CMK) with the alias aws/secretsmanager.
-// If this key doesn't already exist in your account then Secrets Manager creates
-// it for you automatically. All users in the same AWS account automatically
-// have access to use the default CMK. Note that if an Secrets Manager API call
-// results in AWS having to create the account's AWS-managed CMK, it can result
-// in a one-time significant delay in returning the result.
+// that secret doesn't specify a AWS KMS encryption key, Secrets Manager uses
+// the account's default AWS managed customer master key (CMK) with the alias
+// aws/secretsmanager. If this key doesn't already exist in your account then
+// Secrets Manager creates it for you automatically. All users in the same AWS
+// account automatically have access to use the default CMK. Note that if an
+// Secrets Manager API call results in AWS having to create the account's AWS-managed
+// CMK, it can result in a one-time significant delay in returning the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
-// must create and use a custom KMS CMK because you can't access the default
+// must create and use a custom AWS KMS CMK because you can't access the default
 // CMK for the account using credentials from a different AWS account. Store
 // the ARN of the CMK in the secret when you create the secret or when you update
 // it by including it in the KMSKeyId. If you call an API that must encrypt
 // or decrypt SecretString or SecretBinary using credentials from a different
-// account then the KMS key policy must grant cross-account access to that other
-// account's user or role for both the kms:GenerateDataKey and kms:Decrypt operations.
+// account then the AWS KMS key policy must grant cross-account access to that
+// other account's user or role for both the kms:GenerateDataKey and kms:Decrypt
+// operations.
 //
 // Minimum permissions
 //
@@ -1173,13 +1175,9 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //
 //    * secretsmanager:PutSecretValue
 //
-//    * kms:GenerateDataKey - needed only if you use a customer-created KMS
-//    key to encrypt the secret. You do not need this permission to use the
-//    account's AWS managed CMK for Secrets Manager.
-//
-//    * kms:Encrypt - needed only if you use a customer-created KMS key to encrypt
-//    the secret. You do not need this permission to use the account's AWS managed
-//    CMK for Secrets Manager.
+//    * kms:GenerateDataKey - needed only if you use a customer-managed AWS
+//    KMS key to encrypt the secret. You do not need this permission to use
+//    the account's default AWS managed CMK for Secrets Manager.
 //
 // Related operations
 //
@@ -1793,23 +1791,24 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
 // or SecretBinary for a secret in the same account as the calling user and
-// that secret doesn't specify a KMS encryption key, Secrets Manager uses the
-// account's default AWS managed customer master key (CMK) with the alias aws/secretsmanager.
-// If this key doesn't already exist in your account then Secrets Manager creates
-// it for you automatically. All users in the same AWS account automatically
-// have access to use the default CMK. Note that if an Secrets Manager API call
-// results in AWS having to create the account's AWS-managed CMK, it can result
-// in a one-time significant delay in returning the result.
+// that secret doesn't specify a AWS KMS encryption key, Secrets Manager uses
+// the account's default AWS managed customer master key (CMK) with the alias
+// aws/secretsmanager. If this key doesn't already exist in your account then
+// Secrets Manager creates it for you automatically. All users in the same AWS
+// account automatically have access to use the default CMK. Note that if an
+// Secrets Manager API call results in AWS having to create the account's AWS-managed
+// CMK, it can result in a one-time significant delay in returning the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
-// must create and use a custom KMS CMK because you can't access the default
+// must create and use a custom AWS KMS CMK because you can't access the default
 // CMK for the account using credentials from a different AWS account. Store
 // the ARN of the CMK in the secret when you create the secret or when you update
 // it by including it in the KMSKeyId. If you call an API that must encrypt
 // or decrypt SecretString or SecretBinary using credentials from a different
-// account then the KMS key policy must grant cross-account access to that other
-// account's user or role for both the kms:GenerateDataKey and kms:Decrypt operations.
+// account then the AWS KMS key policy must grant cross-account access to that
+// other account's user or role for both the kms:GenerateDataKey and kms:Decrypt
+// operations.
 //
 // Minimum permissions
 //
@@ -1817,12 +1816,12 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 //
 //    * secretsmanager:UpdateSecret
 //
-//    * kms:GenerateDataKey - needed only if you use a custom KMS key to encrypt
-//    the secret. You do not need this permission to use the account's AWS managed
-//    CMK for Secrets Manager.
+//    * kms:GenerateDataKey - needed only if you use a custom AWS KMS key to
+//    encrypt the secret. You do not need this permission to use the account's
+//    AWS managed CMK for Secrets Manager.
 //
-//    * kms:Decrypt - needed only if you use a custom KMS key to encrypt the
-//    secret. You do not need this permission to use the account's AWS managed
+//    * kms:Decrypt - needed only if you use a custom AWS KMS key to encrypt
+//    the secret. You do not need this permission to use the account's AWS managed
 //    CMK for Secrets Manager.
 //
 // Related operations
@@ -2120,8 +2119,8 @@ type CreateSecretInput struct {
 	//
 	// If you use the AWS CLI or one of the AWS SDK to call this operation, then
 	// you can leave this parameter empty. The CLI or SDK generates a random UUID
-	// for you and includes as the value for this parameter in the request. If you
-	// don't use the SDK and instead generate a raw HTTP request to the Secrets
+	// for you and includes it as the value for this parameter in the request. If
+	// you don't use the SDK and instead generate a raw HTTP request to the Secrets
 	// Manager service endpoint, then you must generate a ClientRequestToken yourself
 	// for the new version and include that value in the request.
 	//
@@ -2148,14 +2147,18 @@ type CreateSecretInput struct {
 	// (Optional) Specifies a user-provided description of the secret.
 	Description *string `type:"string"`
 
-	// (Optional) Specifies the ARN or alias of the AWS KMS customer master key
-	// (CMK) to be used to encrypt the SecretString or SecretBinary values in the
-	// versions stored in this secret.
+	// (Optional) Specifies the ARN, Key ID, or alias of the AWS KMS customer master
+	// key (CMK) to be used to encrypt the SecretString or SecretBinary values in
+	// the versions stored in this secret.
+	//
+	// You can specify any of the supported ways to identify a AWS KMS key ID. If
+	// you need to reference a CMK in a different account, you can use only the
+	// key ARN or the alias ARN.
 	//
 	// If you don't specify this value, then Secrets Manager defaults to using the
-	// AWS account's default CMK (the one named aws/secretsmanager). If a KMS CMK
-	// with that name doesn't yet exist, then Secrets Manager creates it for you
-	// automatically the first time it needs to encrypt a version's SecretString
+	// AWS account's default CMK (the one named aws/secretsmanager). If a AWS KMS
+	// CMK with that name doesn't yet exist, then Secrets Manager creates it for
+	// you automatically the first time it needs to encrypt a version's SecretString
 	// or SecretBinary fields.
 	//
 	// You can use the account's default CMK to encrypt and decrypt only if you
@@ -2547,7 +2550,7 @@ type DescribeSecretOutput struct {
 	// The ARN or alias of the AWS KMS customer master key (CMK) that's used to
 	// encrypt the SecretString or SecretBinary fields in each version of the secret.
 	// If you don't provide a key, then Secrets Manager defaults to encrypting the
-	// secret fields with the default KMS CMK (the one named awssecretsmanager)
+	// secret fields with the default AWS KMS CMK (the one named awssecretsmanager)
 	// for this account.
 	KmsKeyId *string `type:"string"`
 
@@ -3723,7 +3726,7 @@ type SecretListEntry struct {
 	// The Amazon Resource Name (ARN) of the secret.
 	//
 	// For more information about ARNs in Secrets Manager, see Policy Resources
-	// (http://docs.aws.amazon.com/http:/docs.aws.amazon.com/secretsmanager/latest/userguide/reference_iam-permissions.html#iam-resources)
+	// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_iam-permissions.html#iam-resources)
 	// in the AWS Secrets Manager User Guide.
 	ARN *string `min:"20" type:"string"`
 
@@ -4173,14 +4176,14 @@ type UpdateSecretInput struct {
 	// (Optional) Specifies a user-provided description of the secret.
 	Description *string `type:"string"`
 
-	// (Optional) Specifies the ARN or alias of the KMS customer master key (CMK)
-	// to be used to encrypt the protected text in the versions of this secret.
+	// (Optional) Specifies the ARN or alias of the AWS KMS customer master key
+	// (CMK) to be used to encrypt the protected text in the versions of this secret.
 	//
 	// If you don't specify this value, then Secrets Manager defaults to using the
-	// default CMK in the account (the one named aws/secretsmanager). If a KMS CMK
-	// with that name doesn't exist, then Secrets Manager creates it for you automatically
-	// the first time it needs to encrypt a version's Plaintext or PlaintextString
-	// fields.
+	// default CMK in the account (the one named aws/secretsmanager). If a AWS KMS
+	// CMK with that name doesn't exist, then Secrets Manager creates it for you
+	// automatically the first time it needs to encrypt a version's Plaintext or
+	// PlaintextString fields.
 	//
 	// You can only use the account's default CMK to encrypt and decrypt if you
 	// call this operation using credentials from the same account that owns the
