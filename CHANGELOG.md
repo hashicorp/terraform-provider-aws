@@ -8,6 +8,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read [GH-4761]
+* resource/aws_eks_cluster: Properly export `arn` attribute [GH-4766] / [GH-4767]
 
 ## 1.22.0 (June 05, 2018)
 
