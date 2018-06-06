@@ -28,6 +28,10 @@ func resourceAwsEksCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"certificate_authority": {
 				Type:     schema.TypeList,
 				MaxItems: 1,

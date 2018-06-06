@@ -21,6 +21,7 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAWSEksClusterDataSourceConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority.0.data", dataSourceResourceName, "certificate_authority.0.data"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
