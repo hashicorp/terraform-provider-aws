@@ -398,6 +398,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -470,6 +472,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("tags", tagsToMap(lt.Tags))
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
@@ -555,6 +558,16 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			return createErr
 		}
 	}
+
+	d.Partial(true)
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
 
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
