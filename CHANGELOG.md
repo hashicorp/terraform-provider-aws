@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) [GH-4763]
 
+BUG FIXES:
+
+* resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read [GH-4761]
+
 ## 1.22.0 (June 05, 2018)
 
 FEATURES:
