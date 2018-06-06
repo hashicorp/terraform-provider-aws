@@ -388,6 +388,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"resource_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"instance",
+								"volume",
+							}, false),
 						},
 						"tags": tagsSchema(),
 					},
