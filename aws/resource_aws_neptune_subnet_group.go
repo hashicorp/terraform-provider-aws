@@ -97,7 +97,7 @@ func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error creating Neptune Subnet Group: %s", err)
 	}
 
-	d.SetId(*createOpts.DBSubnetGroupName)
+	d.SetId(aws.StringValue(createOpts.DBSubnetGroupName))
 	log.Printf("[INFO] Neptune Subnet Group ID: %s", d.Id())
 	return resourceAwsNeptuneSubnetGroupRead(d, meta)
 }
@@ -109,8 +109,14 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 		DBSubnetGroupName: aws.String(d.Id()),
 	}
 
-	describeResp, err := conn.DescribeDBSubnetGroups(&describeOpts)
-	if err != nil {
+	var subnetGroups []*neptune.DBSubnetGroup
+	//describeResp, err := conn.DescribeDBSubnetGroups(&describeOpts)
+	if err := conn.DescribeDBSubnetGroupsPages(&describeOpts, func(resp *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		for _, v := range resp.DBSubnetGroups {
+			subnetGroups = append(subnetGroups, v)
+		}
+		return !lastPage
+	}); err != nil {
 		if neptuneerr, ok := err.(awserr.Error); ok && neptuneerr.Code() == "DBSubnetGroupNotFoundFault" {
 			// Update state to indicate the neptune subnet no longer exists.
 			d.SetId("")
@@ -119,22 +125,22 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	if len(describeResp.DBSubnetGroups) == 0 {
-		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", describeResp.DBSubnetGroups)
+	if len(subnetGroups) == 0 {
+		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)
 	}
 
 	var subnetGroup *neptune.DBSubnetGroup
-	for _, s := range describeResp.DBSubnetGroups {
+	for _, s := range subnetGroups {
 		// AWS is down casing the name provided, so we compare lower case versions
 		// of the names. We lower case both our name and their name in the check,
 		// incase they change that someday.
-		if strings.ToLower(d.Id()) == strings.ToLower(*s.DBSubnetGroupName) {
-			subnetGroup = describeResp.DBSubnetGroups[0]
+		if strings.ToLower(d.Id()) == strings.ToLower(aws.StringValue(s.DBSubnetGroupName)) {
+			subnetGroup = subnetGroups[0]
 		}
 	}
 
 	if subnetGroup.DBSubnetGroupName == nil {
-		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", describeResp.DBSubnetGroups)
+		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)
 	}
 
 	d.Set("name", subnetGroup.DBSubnetGroupName)
@@ -142,7 +148,7 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 
 	subnets := make([]string, 0, len(subnetGroup.Subnets))
 	for _, s := range subnetGroup.Subnets {
-		subnets = append(subnets, *s.SubnetIdentifier)
+		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
 	}
 	d.Set("subnet_ids", subnets)
 
