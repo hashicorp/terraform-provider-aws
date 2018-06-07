@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -22,6 +23,10 @@ func resourceAwsWafIPSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"arn": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ip_set_descriptors": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -93,6 +98,15 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ip_set_descriptors", descriptors)
 
 	d.Set("name", resp.IPSet.Name)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 
 	return nil
 }
