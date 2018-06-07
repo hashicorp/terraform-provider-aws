@@ -34,8 +34,9 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				Computed: true,
 			},
 			"secret": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
