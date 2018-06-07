@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 * `secret` - The secret token of the associated repository. Not returned for all source types.
 * `url` - The URL to the webhook.
 
-~> **Note:** The `secret` and `url` attributes are only set on resource creation, so if the secret is manually rotated, terraform will not pick up the change on subsequent runs.  In that case, the webhook resource should be tainted and re-created to get the secret back in sync.
+~> **Note:** The `secret` attribute is only set on resource creation, so if the secret is manually rotated, terraform will not pick up the change on subsequent runs.  In that case, the webhook resource should be tainted and re-created to get the secret back in sync.
 
 ## Import
 

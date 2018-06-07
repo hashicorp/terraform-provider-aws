@@ -29,15 +29,15 @@ func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
-					// Checking secret value can be flakey, we may need to wait for its generation
-					// resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, "url", regexp.MustCompile(`^https://`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
@@ -60,15 +60,15 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
-					// Checking secret value can be flakey, we may need to wait for its generation
-					// resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, "url", ""),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
@@ -99,9 +99,10 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
