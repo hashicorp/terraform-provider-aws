@@ -22,15 +22,14 @@ resource "aws_neptune_parameter_group" "bar" {
 
 ```hcl
 resource "aws_neptune_parameter_group" "bar" {
-	name = "my_group"
-	family = "neptune1"
-	description = "Test parameter group for terraform"
-	
-	parameter {
-	  name = "neptune_query_timeout"
+    name = "my_group"
+    family = "neptune1"
+    description = "Test parameter group for terraform"
+    parameter {
+      name = "neptune_query_timeout"
       apply_method = "pending-reboot"
-	  value = "25"
-	}
+      value = "25"
+    }
 }
 ```
 
