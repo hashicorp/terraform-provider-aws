@@ -40,7 +40,7 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				ResourceName:      resourceName,
+				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
