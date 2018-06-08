@@ -126,6 +126,10 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	if describeResp == nil {
+		return fmt.Errorf("Unable to get Describe Response for Neptune Parameter Group (%s)", d.Id())
+	}
+
 	if len(describeResp.DBParameterGroups) != 1 ||
 		*describeResp.DBParameterGroups[0].DBParameterGroupName != d.Id() {
 		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.DBParameterGroups)
