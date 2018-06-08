@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
 )
 
@@ -249,11 +248,10 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 		}
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "DBParameterGroupNotFound" {
+			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 				return nil
 			}
-			if ok && awsErr.Code() == "InvalidDBParameterGroupState" {
+			if isAWSErr(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
