@@ -32,7 +32,7 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 						"aws_neptune_parameter_group.bar", "family", "neptune1"),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_parameter_group.bar", "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr("aws_neptune_parameter_group.bar", "parameter.562386247", "1"),
+					resource.TestCheckResourceAttr("aws_neptune_parameter_group.bar", "parameter.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_parameter_group.bar", "parameter.562386247.name", "neptune_query_timeout"),
 					resource.TestCheckResourceAttr(
@@ -40,7 +40,7 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				ResourceName:      rName,
+				ResourceName:      "aws_neptune_parameter_group.bar",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
