@@ -769,9 +769,9 @@ func flattenNeptuneParameters(list []*neptune.Parameter) []map[string]interface{
 	for _, i := range list {
 		if i.ParameterValue != nil {
 			result = append(result, map[string]interface{}{
-				"name":         strings.ToLower(*i.ParameterName),
-				"value":        *i.ParameterValue,
-				"apply_method": strings.ToLower(*i.ApplyMethod),
+				"name":         strings.ToLower(aws.StringValue(i.ParameterName)),
+				"value":        aws.StringValue(i.ParameterValue),
+				"apply_method": strings.ToLower(aws.StringValue(i.ParameterName)),
 			})
 		}
 	}

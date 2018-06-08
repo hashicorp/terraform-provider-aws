@@ -115,6 +115,11 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 
 	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
 	if err != nil {
+		if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -138,7 +143,9 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.Set("parameter", flattenNeptuneParameters(describeParametersResp.Parameters))
+	if err := d.Set("parameter", flattenNeptuneParameters(describeParametersResp.Parameters)); err != nil {
+		return fmt.Errorf("error setting parameter: %s", err)
+	}
 
 	return nil
 }
