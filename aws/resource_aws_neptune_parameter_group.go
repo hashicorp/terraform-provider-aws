@@ -15,6 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 )
 
+// We can only modify 20 parameters at a time, so walk them until
+// we've got them all.
+const maxParams = 20
+
 func resourceAwsNeptuneParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsNeptuneParameterGroupCreate,
@@ -179,10 +183,6 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 		}
 
 		log.Printf("[DEBUG] Parameters to add: %#v", toAdd)
-
-		// We can only modify 20 parameters at a time, so walk them until
-		// we've got them all.
-		maxParams := 20
 
 		for len(toRemove) > 0 {
 			paramsToModify := make([]*neptune.Parameter, 0)
