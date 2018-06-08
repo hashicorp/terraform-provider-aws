@@ -216,6 +216,212 @@ func TestProtocolForValue(t *testing.T) {
 	}
 }
 
+func calcSecurityGroupChecksum(rules []interface{}) int {
+	var sum int = 0
+	for _, rule := range rules {
+		sum += resourceAwsSecurityGroupRuleHash(rule)
+	}
+	return sum
+}
+
+func TestResourceAwsSecurityGroupExpandCollapseRules(t *testing.T) {
+	expected_compact_list := []interface{}{
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        true,
+			"cidr_blocks": []interface{}{
+				"10.0.0.1/32",
+				"10.0.0.2/32",
+				"10.0.0.3/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with another description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"192.168.0.1/32",
+				"192.168.0.2/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"ipv6_cidr_blocks": []interface{}{
+				"fd00::1/128",
+				"fd00::2/128",
+			},
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-11111",
+				"sg-22222",
+				"sg-33333",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "udp",
+			"from_port":   int(10000),
+			"to_port":     int(10000),
+			"description": "",
+			"self":        false,
+			"prefix_list_ids": []interface{}{
+				"pl-111111",
+				"pl-222222",
+			},
+		},
+	}
+
+	expected_expanded_list := []interface{}{
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        true,
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"10.0.0.1/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"10.0.0.2/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"10.0.0.3/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with another description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"192.168.0.1/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with another description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"192.168.0.2/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"ipv6_cidr_blocks": []interface{}{
+				"fd00::1/128",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"ipv6_cidr_blocks": []interface{}{
+				"fd00::2/128",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-11111",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-22222",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-33333",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "udp",
+			"from_port":   int(10000),
+			"to_port":     int(10000),
+			"description": "",
+			"self":        false,
+			"prefix_list_ids": []interface{}{
+				"pl-111111",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "udp",
+			"from_port":   int(10000),
+			"to_port":     int(10000),
+			"description": "",
+			"self":        false,
+			"prefix_list_ids": []interface{}{
+				"pl-222222",
+			},
+		},
+	}
+
+	expected_compact_set := schema.NewSet(resourceAwsSecurityGroupRuleHash, expected_compact_list)
+	actual_expanded_list := resourceAwsSecurityGroupExpandRules(expected_compact_set).List()
+
+	if calcSecurityGroupChecksum(expected_expanded_list) != calcSecurityGroupChecksum(actual_expanded_list) {
+		t.Fatalf("error matching expanded set for resourceAwsSecurityGroupExpandRules()")
+	}
+
+	actual_collapsed_list := resourceAwsSecurityGroupCollapseRules("ingress", expected_expanded_list)
+
+	if calcSecurityGroupChecksum(expected_compact_list) != calcSecurityGroupChecksum(actual_collapsed_list) {
+		t.Fatalf("error matching collapsed set for resourceAwsSecurityGroupCollapseRules()")
+	}
+}
+
 func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 	raw := []*ec2.IpPermission{
 		{
@@ -1957,6 +2163,35 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	})
 }
 
+func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
+	var group ec2.SecurityGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// Create a valid security group with some rules and make sure it exists
+			{
+				Config: testAccAWSSecurityGroupConfig_rulesDropOnError_Init,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+				),
+			},
+			// Add a bad rule to trigger API error
+			{
+				Config:      testAccAWSSecurityGroupConfig_rulesDropOnError_AddBadRule,
+				ExpectError: regexp.MustCompile("InvalidGroupId.Malformed"),
+			},
+			// All originally added rules must survive. This will return non-empty plan if anything changed.
+			{
+				Config:   testAccAWSSecurityGroupConfig_rulesDropOnError_Init,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		id := *group.GroupId
@@ -3300,3 +3535,82 @@ resource "aws_security_group" "test" {
 }
 `, sgName)
 }
+
+const testAccAWSSecurityGroupConfig_rulesDropOnError_Init = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-drop-rules-test"
+  }
+}
+
+resource "aws_security_group" "test_ref0" {
+  name = "terraform_acceptance_test_drop_rules_ref0"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test_ref1" {
+  name = "terraform_acceptance_test_drop_rules_ref1"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform_acceptance_test_drop_rules"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-test"
+  }
+
+  ingress {
+    protocol = "tcp"
+    from_port = "80"
+    to_port = "80"
+    security_groups = [
+      "${aws_security_group.test_ref0.id}",
+      "${aws_security_group.test_ref1.id}",
+    ]
+  }
+}
+`
+
+const testAccAWSSecurityGroupConfig_rulesDropOnError_AddBadRule = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-drop-rules-test"
+  }
+}
+
+resource "aws_security_group" "test_ref0" {
+  name = "terraform_acceptance_test_drop_rules_ref0"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test_ref1" {
+  name = "terraform_acceptance_test_drop_rules_ref1"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform_acceptance_test_drop_rules"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-test"
+  }
+
+  ingress {
+    protocol = "tcp"
+    from_port = "80"
+    to_port = "80"
+    security_groups = [
+      "${aws_security_group.test_ref0.id}",
+      "${aws_security_group.test_ref1.id}",
+      "sg-malformed", # non-existent rule to trigger API error
+    ]
+  }
+}
+`
