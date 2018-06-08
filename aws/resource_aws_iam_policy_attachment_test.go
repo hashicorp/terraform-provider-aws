@@ -77,6 +77,29 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMPolicyWithAttachment(t *testing.T) {
+	var out iam.GetPolicyOutput
+
+	rString := acctest.RandString(8)
+	userNamePrefix := fmt.Sprintf("tf-acc-user-pa-pe-%s-", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-pa-pe-%s-", rString)
+	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-pe-%s-", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPolicyWithAttachmentConfig(userNamePrefix, policyName, attachmentName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyExists("aws_iam_policy_with_attachment.policy", &out),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
@@ -354,5 +377,33 @@ resource "aws_iam_policy_attachment" "test-paginated-attach" {
 	name = "%s"
 	users = ["${aws_iam_user.user.*.name}"]
 	policy_arn = "${aws_iam_policy.policy.arn}"
+}`, userNamePrefix, policyName, attachmentName)
+}
+
+func testAccAWSPolicyWithAttachmentConfig(userNamePrefix, policyName, attachmentName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "user" {
+	count = 2
+	name = "${format("%s%%d", count.index + 1)}"
+}
+resource "aws_iam_policy_with_attachment" "policy" {
+	name = "%s"
+	description = "A test policy with attachment"
+	policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+	{
+		"Action": [
+			"iam:ChangePassword"
+		],
+		"Resource": "*",
+		"Effect": "Allow"
+	}
+]
+}
+EOF
+	attachment_name = "%s"
+	users = ["${aws_iam_user.user.*.name}"]
 }`, userNamePrefix, policyName, attachmentName)
 }
