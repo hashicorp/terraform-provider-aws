@@ -141,12 +141,17 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 		Source:               aws.String("user"),
 	}
 
-	describeParametersResp, err := conn.DescribeDBParameters(&describeParametersOpts)
+	var parameters []*neptune.Parameter
+	err = conn.DescribeDBParametersPages(&describeParametersOpts,
+		func(describeParametersResp *neptune.DescribeDBParametersOutput, lastPage bool) bool {
+			parameters = append(parameters, describeParametersResp.Parameters...)
+			return !lastPage
+		})
 	if err != nil {
 		return err
 	}
 
-	if err := d.Set("parameter", flattenNeptuneParameters(describeParametersResp.Parameters)); err != nil {
+	if err := d.Set("parameter", flattenNeptuneParameters(parameters)); err != nil {
 		return fmt.Errorf("error setting parameter: %s", err)
 	}
 
