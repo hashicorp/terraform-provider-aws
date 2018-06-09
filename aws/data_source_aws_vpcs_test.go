@@ -9,47 +9,47 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccDataSourceAwsVpcIDs_basic(t *testing.T) {
+func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcIDsConfig(),
+				Config: testAccDataSourceAwsVpcsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue("data.aws_vpc_ids.all", "ids.#", "0"),
+					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.all", "ids.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAwsVpcIDs_tags(t *testing.T) {
+func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcIDsConfig_tags(rName),
+				Config: testAccDataSourceAwsVpcsConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_ids.selected", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_vpcs.selected", "ids.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAwsVpcIDs_filters(t *testing.T) {
+func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcIDsConfig_filters(rName),
+				Config: testAccDataSourceAwsVpcsConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_ids.selected", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_vpcs.selected", "ids.#", "1"),
 				),
 			},
 		},
@@ -86,19 +86,19 @@ func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.Tes
 	}
 }
 
-func testAccDataSourceAwsVpcIDsConfig() string {
+func testAccDataSourceAwsVpcsConfig() string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "10.0.0.0/24"
 	}
 
-	data "aws_vpc_ids" "all" {
+	data "aws_vpcs" "all" {
 		depends_on = ["aws_vpc.test-vpc"]
 	}
 	`)
 }
 
-func testAccDataSourceAwsVpcIDsConfig_tags(rName string) string {
+func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "10.0.0.0/24"
@@ -109,7 +109,7 @@ func testAccDataSourceAwsVpcIDsConfig_tags(rName string) string {
   		}
 	}
 
-	data "aws_vpc_ids" "selected" {
+	data "aws_vpcs" "selected" {
 		tags {
 			Name = "testacc-vpc-%s"
 			Service = "testacc-test"
@@ -119,7 +119,7 @@ func testAccDataSourceAwsVpcIDsConfig_tags(rName string) string {
 	`, rName, rName)
 }
 
-func testAccDataSourceAwsVpcIDsConfig_filters(rName string) string {
+func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "192.168.0.0/25"
@@ -128,7 +128,7 @@ func testAccDataSourceAwsVpcIDsConfig_filters(rName string) string {
   		}
 	}
 
-	data "aws_vpc_ids" "selected" {
+	data "aws_vpcs" "selected" {
 		filter {
 			name = "cidr-block-association.cidr-block"
     		values = ["192.168.0.0/25"]

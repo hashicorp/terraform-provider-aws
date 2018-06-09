@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_vpc_ids"
-sidebar_current: "docs-aws-datasource-vpc-ids"
+page_title: "AWS: aws_vpcs"
+sidebar_current: "docs-aws-datasource-vpcs"
 description: |-
     Provides a list of VPC Ids in a region
 ---
 
-# Data Source: aws_vpc_ids
+# Data Source: aws_vpcs
 
 This resource can be useful for getting back a list of VPC Ids for a region.
 
@@ -17,31 +17,31 @@ The following example retrieves a list of VPC Ids with a custom tag of `service`
 The following shows outputing all VPC Ids.
 
 ```hcl
-data "aws_vpc_ids" "foo" {
+data "aws_vpcs" "foo" {
   tags {
     service = "production"
   }
 }
 
 output "foo" {
-  value = "${data.aws_vpc_ids.foo.ids}"
+  value = "${data.aws_vpcs.foo.ids}"
 }
 ```
 
-An example use case would be interpolate the vpc_ids output into `count` of an aws_flow_log resource.
+An example use case would be interpolate the `aws_vpcs` output into `count` of an aws_flow_log resource.
 
 ```hcl
-data "aws_vpc_ids" "foo" {}
+data "aws_vpcs" "foo" {}
 
 resource "aws_flow_log" "test_flow_log" {
-  count = "${length(data.aws_vpc_ids.foo.ids)}"
+  count = "${length(data.aws_vpcs.foo.ids)}"
   ...
-  vpc_id = "${element(data.aws_vpc_ids.foo.ids, count.index)}"
+  vpc_id = "${element(data.aws_vpcs.foo.ids, count.index)}"
   ...
 }
 
 output "foo" {
-  value = "${data.aws_vpc_ids.foo.ids}"
+  value = "${data.aws_vpcs.foo.ids}"
 }
 ```
 

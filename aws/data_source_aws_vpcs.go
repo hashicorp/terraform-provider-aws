@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsVpcIDs() *schema.Resource {
+func dataSourceAwsVpcs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcIDsRead,
+		Read: dataSourceAwsVpcsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -28,7 +28,7 @@ func dataSourceAwsVpcIDs() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcIDsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsVpcsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeVpcsInput{}
