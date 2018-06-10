@@ -49,7 +49,7 @@ func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcsConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpcs.selected", "ids.#", "1"),
+					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.selected", "ids.#", "0"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.Tes
 			return fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
 		}
 
-		if v, ok := is.Attributes[key]; !ok || v == value {
+		if v, ok := is.Attributes[key]; !ok || !(v > value) {
 			if !ok {
 				return fmt.Errorf("%s: Attribute '%s' not found", name, key)
 			}
@@ -112,9 +112,8 @@ func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 	data "aws_vpcs" "selected" {
 		tags {
 			Name = "testacc-vpc-%s"
-			Service = "testacc-test"
+			Service = "${aws_vpc.test-vpc.tags["Service"]}"
 		}
-		depends_on = ["aws_vpc.test-vpc"]
 	}
 	`, rName, rName)
 }
@@ -130,14 +129,9 @@ func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
 
 	data "aws_vpcs" "selected" {
 		filter {
-			name = "cidr-block-association.cidr-block"
-    		values = ["192.168.0.0/25"]
+			name = "cidr"
+    		values = ["${aws_vpc.test-vpc.cidr_block}"]
 		}
-		filter {
-   			name = "tag:Name"
-    		values = ["testacc-vpc-%s"]
-  		}
-		depends_on = ["aws_vpc.test-vpc"]
 	}
-	`, rName, rName)
+	`, rName)
 }

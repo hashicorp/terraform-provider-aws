@@ -31,14 +31,22 @@ func dataSourceAwsVpcs() *schema.Resource {
 func dataSourceAwsVpcsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	filters, filtersOk := d.GetOk("filter")
+	tags, tagsOk := d.GetOk("tags")
+
 	req := &ec2.DescribeVpcsInput{}
 
-	req.Filters = buildEC2TagFilterList(
-		tagsFromMap(d.Get("tags").(map[string]interface{})),
-	)
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
-		d.Get("filter").(*schema.Set),
-	)...)
+	if tagsOk {
+		req.Filters = buildEC2TagFilterList(
+			tagsFromMap(tags.(map[string]interface{})),
+		)
+	}
+
+	if filtersOk {
+		req.Filters = append(req.Filters, buildEC2CustomFilterList(
+			filters.(*schema.Set),
+		)...)
+	}
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filters = nil
