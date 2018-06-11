@@ -23,7 +23,7 @@ resource "aws_codedeploy_app" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the application.
-* `compute_platform` - (Optional) The compute platform can either be `SERVER` or `LAMBDA`.
+* `compute_platform` - (Optional) The compute platform can either be `Server` or `Lambda`.
 
 ## Attribute Reference
 
