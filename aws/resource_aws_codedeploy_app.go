@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCodeDeployApp() *schema.Resource {
@@ -26,6 +27,16 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"compute_platform": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					codedeploy.ComputePlatformServer,
+					codedeploy.ComputePlatformLambda,
+				}, false),
+				Default: codedeploy.ComputePlatformServer,
+			},
+
 			// The unique ID is set by AWS on create.
 			"unique_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -40,10 +51,12 @@ func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).codedeployconn
 
 	application := d.Get("name").(string)
+	computePlatform := d.Get("compute_platform").(string)
 	log.Printf("[DEBUG] Creating CodeDeploy application %s", application)
 
 	resp, err := conn.CreateApplication(&codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
+		ComputePlatform: aws.String(computePlatform),
 	})
 	if err != nil {
 		return err

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -27,6 +28,34 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployAppModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSCodeDeployAppConfigComputePlatform(rName, "Server"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_app.foo", "compute_platform", "Server"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccAWSCodeDeployAppConfigComputePlatform(rName, "Lambda"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_app.foo", "compute_platform", "Lambda"),
 				),
 			},
 		},
@@ -68,6 +97,14 @@ func testAccCheckAWSCodeDeployAppExists(name string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func testAccAWSCodeDeployAppConfigComputePlatform(rName string, value string) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_app" "foo" {
+	name = "test-codedeploy-app-%s"
+	compute_platform = "%s"
+}`, rName, value)
 }
 
 var testAccAWSCodeDeployApp = `
