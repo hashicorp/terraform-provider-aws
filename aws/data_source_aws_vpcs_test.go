@@ -17,7 +17,7 @@ func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.all", "ids.#", "0"),
+					testAccCheckAwsVpcsDataSourceID("data.aws_vpcs.all"),
 				),
 			},
 		},
@@ -86,15 +86,27 @@ func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.Tes
 	}
 }
 
+func testAccCheckAwsVpcsDataSourceID(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Can't find aws_vpcs data source: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("aws_vpcs data source ID not set")
+		}
+		return nil
+	}
+}
+
 func testAccDataSourceAwsVpcsConfig() string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "10.0.0.0/24"
 	}
 
-	data "aws_vpcs" "all" {
-		depends_on = ["aws_vpc.test-vpc"]
-	}
+	data "aws_vpcs" "all" {}
 	`)
 }
 
