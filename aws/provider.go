@@ -551,6 +551,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ssm_activation":                           resourceAwsSsmActivation(),
 			"aws_ssm_association":                          resourceAwsSsmAssociation(),
 			"aws_ssm_document":                             resourceAwsSsmDocument(),
+			"aws_ssm_document_list":                        resourceAwsSsmDocumentList(),
 			"aws_ssm_maintenance_window":                   resourceAwsSsmMaintenanceWindow(),
 			"aws_ssm_maintenance_window_target":            resourceAwsSsmMaintenanceWindowTarget(),
 			"aws_ssm_maintenance_window_task":              resourceAwsSsmMaintenanceWindowTask(),
