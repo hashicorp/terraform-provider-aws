@@ -772,11 +772,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 	config.CredsFilename = credsPath
 
-	log.Printf("[INFO] Derek is GREAT.")
-
 	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
-
-	log.Printf("[INFO] %s", assumeRoleList)
 	if len(assumeRoleList) > 0 {
 		config.AssumeRoleConfigs = make([]AssumeRoleConfig, len(assumeRoleList))
 
