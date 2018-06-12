@@ -101,7 +101,6 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
 		Service:   "waf",
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
