@@ -11,6 +11,7 @@ BUG FIXES:
 * resource/aws_codebuild_webhook: Properly export `secret` (the CodeBuild API only provides its value during resource creation) [GH-4775]
 * resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read [GH-4761]
 * resource/aws_eks_cluster: Properly export `arn` attribute [GH-4766] / [GH-4767]
+* resource/aws_elasticsearch_domain: Skip EBS options update/refresh if EBS is not enabled [GH-4802]
 
 ## 1.22.0 (June 05, 2018)
 
