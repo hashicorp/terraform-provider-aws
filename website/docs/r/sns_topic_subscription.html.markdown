@@ -276,7 +276,7 @@ Endpoints have different format requirements according to the protocol that is c
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the subscription
 * `topic_arn` - The ARN of the topic the subscription belongs to

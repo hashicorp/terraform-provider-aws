@@ -49,7 +49,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
 * `automated_snapshot_retention_period` - The backup retention period

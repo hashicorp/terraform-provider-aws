@@ -62,6 +62,21 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 ```
 
+Notes: `attribute` can be lists
+
+```
+  attribute = [{
+    name = "UserId"
+    type = "S"
+  }, {
+    name = "GameTitle"
+    type = "S"
+  }, {
+    name = "TopScore"
+    type = "N"
+  }]
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -74,7 +89,7 @@ The following arguments are supported:
   also be defined)
 * `write_capacity` - (Required) The number of write units for this table
 * `read_capacity` - (Required) The number of read units for this table
-* `attribute` - (Required) Define an attribute, has two properties:
+* `attribute` - (Required) Define an attribute (can be lists), has two properties:
   * `name` - The name of the attribute
   * `type` - One of: S, N, or B for (S)tring, (N)umber or (B)inary data
 * `ttl` - (Optional) Defines ttl, has two properties, and can only be specified once:
@@ -159,7 +174,7 @@ infinite loop in planning.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The arn of the table
 * `id` - The name of the table

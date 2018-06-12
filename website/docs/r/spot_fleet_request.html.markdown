@@ -133,7 +133,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.

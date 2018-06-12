@@ -92,7 +92,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `cluster_identifier` - The RDS Cluster Identifier
 * `identifier` - The Instance identifier

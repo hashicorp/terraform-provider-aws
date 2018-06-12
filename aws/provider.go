@@ -187,10 +187,12 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecr_repository":                   dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                      dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":         dataSourceAwsEcsContainerDefinition(),
+			"aws_ecs_service":                      dataSourceAwsEcsService(),
 			"aws_ecs_task_definition":              dataSourceAwsEcsTaskDefinition(),
 			"aws_efs_file_system":                  dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                 dataSourceAwsEfsMountTarget(),
 			"aws_eip":                              dataSourceAwsEip(),
+			"aws_eks_cluster":                      dataSourceAwsEksCluster(),
 			"aws_elastic_beanstalk_hosted_zone":    dataSourceAwsElasticBeanstalkHostedZone(),
 			"aws_elastic_beanstalk_solution_stack": dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":              dataSourceAwsElastiCacheCluster(),
@@ -198,6 +200,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elasticache_replication_group":    dataSourceAwsElasticacheReplicationGroup(),
 			"aws_elb_hosted_zone_id":               dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":              dataSourceAwsElbServiceAccount(),
+			"aws_glue_script":                      dataSourceAwsGlueScript(),
 			"aws_iam_account_alias":                dataSourceAwsIamAccountAlias(),
 			"aws_iam_group":                        dataSourceAwsIAMGroup(),
 			"aws_iam_instance_profile":             dataSourceAwsIAMInstanceProfile(),
@@ -228,6 +231,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_cluster":                 dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":         dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                           dataSourceAwsRegion(),
+			"aws_route":                            dataSourceAwsRoute(),
 			"aws_route_table":                      dataSourceAwsRouteTable(),
 			"aws_route53_zone":                     dataSourceAwsRoute53Zone(),
 			"aws_s3_bucket":                        dataSourceAwsS3Bucket(),
@@ -316,16 +320,20 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudwatch_log_resource_policy":           resourceAwsCloudWatchLogResourcePolicy(),
 			"aws_cloudwatch_log_stream":                    resourceAwsCloudWatchLogStream(),
 			"aws_cloudwatch_log_subscription_filter":       resourceAwsCloudwatchLogSubscriptionFilter(),
+			"aws_config_aggregate_authorization":           resourceAwsConfigAggregateAuthorization(),
 			"aws_config_config_rule":                       resourceAwsConfigConfigRule(),
+			"aws_config_configuration_aggregator":          resourceAwsConfigConfigurationAggregator(),
 			"aws_config_configuration_recorder":            resourceAwsConfigConfigurationRecorder(),
 			"aws_config_configuration_recorder_status":     resourceAwsConfigConfigurationRecorderStatus(),
 			"aws_config_delivery_channel":                  resourceAwsConfigDeliveryChannel(),
 			"aws_cognito_identity_pool":                    resourceAwsCognitoIdentityPool(),
 			"aws_cognito_identity_pool_roles_attachment":   resourceAwsCognitoIdentityPoolRolesAttachment(),
+			"aws_cognito_identity_provider":                resourceAwsCognitoIdentityProvider(),
 			"aws_cognito_user_group":                       resourceAwsCognitoUserGroup(),
 			"aws_cognito_user_pool":                        resourceAwsCognitoUserPool(),
 			"aws_cognito_user_pool_client":                 resourceAwsCognitoUserPoolClient(),
 			"aws_cognito_user_pool_domain":                 resourceAwsCognitoUserPoolDomain(),
+			"aws_cognito_resource_server":                  resourceAwsCognitoResourceServer(),
 			"aws_cloudwatch_metric_alarm":                  resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                     resourceAwsCloudWatchDashboard(),
 			"aws_codedeploy_app":                           resourceAwsCodeDeployApp(),
@@ -334,6 +342,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codecommit_repository":                    resourceAwsCodeCommitRepository(),
 			"aws_codecommit_trigger":                       resourceAwsCodeCommitTrigger(),
 			"aws_codebuild_project":                        resourceAwsCodeBuildProject(),
+			"aws_codebuild_webhook":                        resourceAwsCodeBuildWebhook(),
 			"aws_codepipeline":                             resourceAwsCodePipeline(),
 			"aws_customer_gateway":                         resourceAwsCustomerGateway(),
 			"aws_dax_cluster":                              resourceAwsDaxCluster(),
@@ -373,6 +382,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_egress_only_internet_gateway":             resourceAwsEgressOnlyInternetGateway(),
 			"aws_eip":                                      resourceAwsEip(),
 			"aws_eip_association":                          resourceAwsEipAssociation(),
+			"aws_eks_cluster":                              resourceAwsEksCluster(),
 			"aws_elasticache_cluster":                      resourceAwsElasticacheCluster(),
 			"aws_elasticache_parameter_group":              resourceAwsElasticacheParameterGroup(),
 			"aws_elasticache_replication_group":            resourceAwsElasticacheReplicationGroup(),
@@ -398,8 +408,10 @@ func Provider() terraform.ResourceProvider {
 			"aws_glacier_vault":                            resourceAwsGlacierVault(),
 			"aws_glue_catalog_database":                    resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                       resourceAwsGlueCatalogTable(),
+			"aws_glue_classifier":                          resourceAwsGlueClassifier(),
 			"aws_glue_connection":                          resourceAwsGlueConnection(),
 			"aws_glue_job":                                 resourceAwsGlueJob(),
+			"aws_glue_trigger":                             resourceAwsGlueTrigger(),
 			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
 			"aws_guardduty_ipset":                          resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                         resourceAwsGuardDutyMember(),
@@ -685,6 +697,8 @@ func init() {
 
 		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"efs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"elb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -696,6 +710,8 @@ func init() {
 		"sns_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"sqs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"ssm_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
 			"default value is `false`",
@@ -790,6 +806,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.Ec2Endpoint = endpoints["ec2"].(string)
 		config.EcrEndpoint = endpoints["ecr"].(string)
 		config.EcsEndpoint = endpoints["ecs"].(string)
+		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
@@ -802,6 +819,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
 		config.StsEndpoint = endpoints["sts"].(string)
+		config.SsmEndpoint = endpoints["ssm"].(string)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -935,6 +953,13 @@ func endpointsSchema() *schema.Schema {
 					Description: descriptions["ecs_endpoint"],
 				},
 
+				"efs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["efs_endpoint"],
+				},
+
 				"elb": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1001,6 +1026,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["sts_endpoint"],
 				},
+				"ssm": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ssm_endpoint"],
+				},
 			},
 		},
 		Set: endpointsToHash,
@@ -1019,6 +1050,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["dynamodb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["iam"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["ec2"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))

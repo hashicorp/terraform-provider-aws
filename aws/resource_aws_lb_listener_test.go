@@ -3,9 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -488,5 +486,5 @@ resource "tls_self_signed_cert" "example" {
     "server_auth",
   ]
 }
-`, lbName, targetGroupName, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+`, lbName, targetGroupName, acctest.RandInt())
 }

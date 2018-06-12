@@ -147,7 +147,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(statementId)
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		// IAM is eventually cosistent :/
+		// IAM is eventually consistent :/
 		err := resourceAwsLambdaPermissionRead(d, meta)
 		if err != nil {
 			if strings.HasPrefix(err.Error(), "Error reading Lambda policy: ResourceNotFoundException") {
@@ -184,7 +184,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 	var out *lambda.GetPolicyOutput
 	var statement *LambdaPolicyStatement
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		// IAM is eventually cosistent :/
+		// IAM is eventually consistent :/
 		var err error
 		out, err = conn.GetPolicy(&input)
 		if err != nil {

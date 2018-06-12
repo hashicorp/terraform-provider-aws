@@ -36,7 +36,7 @@ resource "aws_s3_bucket" "b" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = "${aws_s3_bucket.b.bucket_domain_name}"
+    domain_name = "${aws_s3_bucket.b.bucket_regional_domain_name}"
     origin_id   = "myS3Origin"
 
     s3_origin_config {
@@ -314,7 +314,7 @@ for more information
 #### Default Cache Behavior Arguments
 
 The arguments for `default_cache_behavior` are the same as for
-[`cache_behavior`](#cache-behavior-arguments), except for the `path_pattern`
+[`ordered_cache_behavior`](#cache-behavior-arguments), except for the `path_pattern`
 argument is not required.
 
 #### Logging Config Arguments
@@ -420,7 +420,7 @@ The arguments of `geo_restriction` are:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
   * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 

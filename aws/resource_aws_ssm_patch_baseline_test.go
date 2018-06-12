@@ -84,6 +84,8 @@ func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
 					resource.TestCheckResourceAttr(
+						"aws_ssm_patch_baseline.foo", "approval_rule.0.enable_non_security", "true"),
+					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "operating_system", "AMAZON_LINUX"),
 				),
 			},
@@ -220,6 +222,7 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems"
   approval_rule {
   	approve_after_days = 7
+	enable_non_security = true
   	compliance_level = "CRITICAL"
 
   	patch_filter {

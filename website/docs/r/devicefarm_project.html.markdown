@@ -30,7 +30,7 @@ resource "aws_devicefarm_project" "awesome_devices" {
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of this project
 

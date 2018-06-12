@@ -1908,6 +1908,80 @@ func flattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface
 	return attributes
 }
 
+func expandConfigAccountAggregationSources(configured []interface{}) []*configservice.AccountAggregationSource {
+	var results []*configservice.AccountAggregationSource
+	for _, item := range configured {
+		detail := item.(map[string]interface{})
+		source := configservice.AccountAggregationSource{
+			AllAwsRegions: aws.Bool(detail["all_regions"].(bool)),
+		}
+
+		if v, ok := detail["account_ids"]; ok {
+			accountIDs := v.([]interface{})
+			if len(accountIDs) > 0 {
+				source.AccountIds = expandStringList(accountIDs)
+			}
+		}
+
+		if v, ok := detail["regions"]; ok {
+			regions := v.([]interface{})
+			if len(regions) > 0 {
+				source.AwsRegions = expandStringList(regions)
+			}
+		}
+
+		results = append(results, &source)
+	}
+	return results
+}
+
+func expandConfigOrganizationAggregationSource(configured map[string]interface{}) *configservice.OrganizationAggregationSource {
+	source := configservice.OrganizationAggregationSource{
+		AllAwsRegions: aws.Bool(configured["all_regions"].(bool)),
+		RoleArn:       aws.String(configured["role_arn"].(string)),
+	}
+
+	if v, ok := configured["regions"]; ok {
+		regions := v.([]interface{})
+		if len(regions) > 0 {
+			source.AwsRegions = expandStringList(regions)
+		}
+	}
+
+	return &source
+}
+
+func flattenConfigAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
+	var result []interface{}
+
+	if len(sources) == 0 {
+		return result
+	}
+
+	source := sources[0]
+	m := make(map[string]interface{})
+	m["account_ids"] = flattenStringList(source.AccountIds)
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
+	m["regions"] = flattenStringList(source.AwsRegions)
+	result = append(result, m)
+	return result
+}
+
+func flattenConfigOrganizationAggregationSource(source *configservice.OrganizationAggregationSource) []interface{} {
+	var result []interface{}
+
+	if source == nil {
+		return result
+	}
+
+	m := make(map[string]interface{})
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
+	m["regions"] = flattenStringList(source.AwsRegions)
+	m["role_arn"] = aws.StringValue(source.RoleArn)
+	result = append(result, m)
+	return result
+}
+
 func flattenConfigRuleSource(source *configservice.Source) []interface{} {
 	var result []interface{}
 	m := make(map[string]interface{})
@@ -2699,6 +2773,42 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 	return []map[string]interface{}{}
 }
 
+func expandCognitoResourceServerScope(inputs []interface{}) []*cognitoidentityprovider.ResourceServerScopeType {
+	configs := make([]*cognitoidentityprovider.ResourceServerScopeType, len(inputs), len(inputs))
+	for i, input := range inputs {
+		param := input.(map[string]interface{})
+		config := &cognitoidentityprovider.ResourceServerScopeType{}
+
+		if v, ok := param["scope_description"]; ok {
+			config.ScopeDescription = aws.String(v.(string))
+		}
+
+		if v, ok := param["scope_name"]; ok {
+			config.ScopeName = aws.String(v.(string))
+		}
+
+		configs[i] = config
+	}
+
+	return configs
+}
+
+func flattenCognitoResourceServerScope(inputs []*cognitoidentityprovider.ResourceServerScopeType) []map[string]interface{} {
+	values := make([]map[string]interface{}, 0)
+
+	for _, input := range inputs {
+		if input == nil {
+			continue
+		}
+		var value = map[string]interface{}{
+			"scope_name":        aws.StringValue(input.ScopeName),
+			"scope_description": aws.StringValue(input.ScopeDescription),
+		}
+		values = append(values, value)
+	}
+	return values
+}
+
 func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.SchemaAttributeType {
 	configs := make([]*cognitoidentityprovider.SchemaAttributeType, len(inputs), len(inputs))
 
@@ -3021,8 +3131,22 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 				}
 			}
 		}
-		if !configured && cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
-			continue
+		if !configured {
+			if cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
+				continue
+			}
+			// When adding a Cognito Identity Provider, the API will automatically add an "identities" attribute
+			identitiesAttribute := cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:          aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute:     aws.Bool(false),
+				Mutable:                    aws.Bool(true),
+				Name:                       aws.String("identities"),
+				Required:                   aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{},
+			}
+			if reflect.DeepEqual(*input, identitiesAttribute) {
+				continue
+			}
 		}
 
 		var value = map[string]interface{}{
@@ -3697,15 +3821,19 @@ func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
 }
 
 func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
-	m := map[string]interface{}{}
+	m := map[string]interface{}{
+		"enabled": false,
+	}
+
+	if pitrDesc == nil {
+		return []interface{}{m}
+	}
+
 	if pitrDesc.ContinuousBackupsDescription != nil {
 		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
 		if pitr != nil {
 			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
 		}
-	}
-	if len(m) > 0 {
-		return []interface{}{m}
 	}
 
 	return []interface{}{m}

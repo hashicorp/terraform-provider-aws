@@ -14,10 +14,18 @@ import (
 
 func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	partition := testAccGetPartition()
 
-	expectedPolicyText := fmt.Sprintf(
-		`{"Version":"2012-10-17","Statement":[{"Sid": "", "Effect":"Allow","Principal":"*","Action":"s3:*","Resource":["arn:aws:s3:::%s/*","arn:aws:s3:::%s"]}]}`,
-		name, name)
+	expectedPolicyText := fmt.Sprintf(`{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Sid": "",
+		"Effect": "Allow",
+		"Principal": {"AWS":"*"},
+		"Action": "s3:*",
+		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
+	}]
+}`, partition, name, partition, name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -37,14 +45,29 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 
 func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	partition := testAccGetPartition()
 
-	expectedPolicyText1 := fmt.Sprintf(
-		`{"Version":"2012-10-17","Statement":[{"Sid": "", "Effect":"Allow","Principal":"*","Action":"s3:*","Resource":["arn:aws:s3:::%s/*","arn:aws:s3:::%s"]}]}`,
-		name, name)
+	expectedPolicyText1 := fmt.Sprintf(`{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Sid": "",
+		"Effect": "Allow",
+		"Principal": {"AWS":"*"},
+		"Action": "s3:*",
+		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
+	}]
+}`, partition, name, partition, name)
 
-	expectedPolicyText2 := fmt.Sprintf(
-		`{"Version":"2012-10-17","Statement":[{"Sid": "", "Effect":"Allow","Principal":"*","Action":["s3:DeleteBucket", "s3:ListBucket", "s3:ListBucketVersions"], "Resource":["arn:aws:s3:::%s/*","arn:aws:s3:::%s"]}]}`,
-		name, name)
+	expectedPolicyText2 := fmt.Sprintf(`{
+	"Version":"2012-10-17",
+	"Statement":[{
+		"Sid": "",
+		"Effect": "Allow",
+		"Principal": {"AWS":"*"},
+		"Action": ["s3:DeleteBucket", "s3:ListBucket", "s3:ListBucketVersions"],
+		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
+	}]
+}`, partition, name, partition, name)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -527,7 +527,7 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
-	if err != nil {
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
 		return err
 	}
 	d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut))

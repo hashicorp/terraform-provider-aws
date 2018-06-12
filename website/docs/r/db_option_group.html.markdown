@@ -64,7 +64,7 @@ Option Settings blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.

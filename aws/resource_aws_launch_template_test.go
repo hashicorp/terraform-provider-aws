@@ -132,6 +132,35 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_tags(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					testAccCheckTags(&template.Tags, "foo", "bar"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_tagsUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					testAccCheckTags(&template.Tags, "foo", ""),
+					testAccCheckTags(&template.Tags, "bar", "baz"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -194,6 +223,10 @@ func testAccAWSLaunchTemplateConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
+
+  tags {
+    foo = "bar"
+  }
 }
 `, rInt)
 }
@@ -292,6 +325,18 @@ resource "aws_launch_template" "foo" {
     tags {
       Name = "test"
     }
+  }
+}
+`, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_tagsUpdate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+  name = "foo_%d"
+
+  tags {
+    bar = "baz"
   }
 }
 `, rInt)

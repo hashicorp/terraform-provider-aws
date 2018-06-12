@@ -132,7 +132,7 @@ Contains information about the certificate subject. Identifies the entity that o
 
 ## Attribute Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Amazon Resource Name (ARN) of the certificate authority.
 * `arn` - Amazon Resource Name (ARN) of the certificate authority.

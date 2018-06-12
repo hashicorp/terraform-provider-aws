@@ -31,7 +31,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) identifying your Lambda Function.
 * `dead_letter_config` - Configure the function's *dead letter queue*.

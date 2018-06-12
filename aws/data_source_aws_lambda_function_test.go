@@ -166,6 +166,8 @@ resource "aws_iam_role" "lambda" {
 EOF
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role_policy" "lambda" {
   name = "%s"
   role = "${aws_iam_role.lambda.id}"
@@ -181,7 +183,7 @@ resource "aws_iam_role_policy" "lambda" {
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
             ],
-            "Resource": "arn:aws:logs:*:*:*"
+            "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
         },
     {
       "Effect": "Allow",
