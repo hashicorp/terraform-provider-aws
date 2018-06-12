@@ -155,7 +155,7 @@ const testAccGlueCrawlerConfigCustomClassifiers = `
 	}
 
 	resource "aws_glue_classifier" "test" {
-  	  name = "tf-example"
+  	  name = "tf-example-123"
 
   	  grok_classifier {
         classification = "example"
