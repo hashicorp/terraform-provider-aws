@@ -31,7 +31,7 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"role",
-						"AWSGlueServiceRoleDefault",
+						"tf-glue-service-role",
 					),
 				),
 			},
@@ -62,7 +62,7 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"role",
-						"AWSGlueServiceRoleDefault",
+						"tf-glue-service-role",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -121,7 +121,7 @@ const testAccGlueCrawlerConfigBasic = `
 	}
 	
 	resource "aws_iam_role" "glue" {
-  		name = "AWSGlueServiceRoleDefault"
+  		name = "tf-glue-service-role"
   		assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -169,7 +169,7 @@ const testAccGlueCrawlerConfigCustomClassifiers = `
 	}
 	
 	resource "aws_iam_role" "glue" {
-  		name = "AWSGlueServiceRoleDefault"
+  		name = "tf-glue-service-role"
   		assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
