@@ -1037,14 +1037,17 @@ func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	if o.EBSEnabled != nil {
 		m["ebs_enabled"] = *o.EBSEnabled
 	}
-	if o.Iops != nil {
-		m["iops"] = *o.Iops
-	}
-	if o.VolumeSize != nil {
-		m["volume_size"] = *o.VolumeSize
-	}
-	if o.VolumeType != nil {
-		m["volume_type"] = *o.VolumeType
+
+	if aws.BoolValue(o.EBSEnabled) {
+		if o.Iops != nil {
+			m["iops"] = *o.Iops
+		}
+		if o.VolumeSize != nil {
+			m["volume_size"] = *o.VolumeSize
+		}
+		if o.VolumeType != nil {
+			m["volume_type"] = *o.VolumeType
+		}
 	}
 
 	return []map[string]interface{}{m}
@@ -1053,17 +1056,20 @@ func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	options := elasticsearch.EBSOptions{}
 
-	if v, ok := m["ebs_enabled"]; ok {
-		options.EBSEnabled = aws.Bool(v.(bool))
-	}
-	if v, ok := m["iops"]; ok && v.(int) > 0 {
-		options.Iops = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["volume_size"]; ok && v.(int) > 0 {
-		options.VolumeSize = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["volume_type"]; ok && v.(string) != "" {
-		options.VolumeType = aws.String(v.(string))
+	if ebsEnabled, ok := m["ebs_enabled"]; ok {
+		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
+
+		if ebsEnabled.(bool) {
+			if v, ok := m["iops"]; ok && v.(int) > 0 {
+				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
+				options.VolumeSize = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["volume_type"]; ok && v.(string) != "" {
+				options.VolumeType = aws.String(v.(string))
+			}
+		}
 	}
 
 	return &options
