@@ -39,7 +39,7 @@ resource "github_repository_webhook" "example" {
 
   configuration {
     url          = "${aws_codebuild_webhook.example.payload_url}"
-    secret       = "${aws_codebulld_webhook.example.secret}"
+    secret       = "${aws_codebuild_webhook.example.secret}"
     content_type = "json"
     insecure_ssl = false
   }
