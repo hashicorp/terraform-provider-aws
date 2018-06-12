@@ -35,7 +35,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_waf_ipset.ipset", "ip_set_descriptors.4037960608.value", "192.0.7.0/24"),
 					resource.TestMatchResourceAttr("aws_waf_ipset.ipset", "arn",
-						regexp.MustCompile(`^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`)),
+						regexp.MustCompile(`^arn:[\w-]+:waf:[^:]+:\d{12}:ipset/.+$`)),
 				),
 			},
 		},
