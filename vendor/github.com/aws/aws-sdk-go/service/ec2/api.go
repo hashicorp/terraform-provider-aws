@@ -37607,7 +37607,7 @@ type DescribeInstancesInput struct {
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value. This
 	// value can be between 5 and 1000. You cannot specify this parameter and the
-	// instance IDs parameter or tag filters in the same call.
+	// instance IDs parameter in the same call.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// The token to request the next page of results.
@@ -66450,19 +66450,23 @@ type StateReason struct {
 
 	// The message for the state change.
 	//
-	//    * Server.InsufficientInstanceCapacity: There was insufficient instance
-	//    capacity to satisfy the launch request.
+	//    * Server.InsufficientInstanceCapacity: There was insufficient capacity
+	//    available to satisfy the launch request.
 	//
-	//    * Server.InternalError: An internal error occurred during instance launch,
-	//    resulting in termination.
+	//    * Server.InternalError: An internal error caused the instance to terminate
+	//    during launch.
 	//
 	//    * Server.ScheduledStop: The instance was stopped due to a scheduled retirement.
 	//
-	//    * Server.SpotInstanceTermination: A Spot Instance was terminated due to
-	//    an increase in the Spot price.
+	//    * Server.SpotInstanceShutdown: The instance was stopped because the number
+	//    of Spot requests with a maximum price equal to or higher than the Spot
+	//    price exceeded available capacity or because of an increase in the Spot
+	//    price.
 	//
-	//    * Client.InternalError: A client error caused the instance to terminate
-	//    on launch.
+	//    * Server.SpotInstanceTermination: The instance was terminated because
+	//    the number of Spot requests with a maximum price equal to or higher than
+	//    the Spot price exceeded available capacity or because of an increase in
+	//    the Spot price.
 	//
 	//    * Client.InstanceInitiatedShutdown: The instance was shut down using the
 	//    shutdown -h command from the instance.
@@ -66470,14 +66474,17 @@ type StateReason struct {
 	//    * Client.InstanceTerminated: The instance was terminated or rebooted during
 	//    AMI creation.
 	//
+	//    * Client.InternalError: A client error caused the instance to terminate
+	//    during launch.
+	//
+	//    * Client.InvalidSnapshot.NotFound: The specified snapshot was not found.
+	//
 	//    * Client.UserInitiatedShutdown: The instance was shut down using the Amazon
 	//    EC2 API.
 	//
 	//    * Client.VolumeLimitExceeded: The limit on the number of EBS volumes or
 	//    total storage was exceeded. Decrease usage or request an increase in your
-	//    limits.
-	//
-	//    * Client.InvalidSnapshot.NotFound: The specified snapshot was not found.
+	//    account limits.
 	Message *string `locationName:"message" type:"string"`
 }
 
@@ -70844,6 +70851,24 @@ const (
 
 	// InstanceTypeM524xlarge is a InstanceType enum value
 	InstanceTypeM524xlarge = "m5.24xlarge"
+
+	// InstanceTypeM5dLarge is a InstanceType enum value
+	InstanceTypeM5dLarge = "m5d.large"
+
+	// InstanceTypeM5dXlarge is a InstanceType enum value
+	InstanceTypeM5dXlarge = "m5d.xlarge"
+
+	// InstanceTypeM5d2xlarge is a InstanceType enum value
+	InstanceTypeM5d2xlarge = "m5d.2xlarge"
+
+	// InstanceTypeM5d4xlarge is a InstanceType enum value
+	InstanceTypeM5d4xlarge = "m5d.4xlarge"
+
+	// InstanceTypeM5d12xlarge is a InstanceType enum value
+	InstanceTypeM5d12xlarge = "m5d.12xlarge"
+
+	// InstanceTypeM5d24xlarge is a InstanceType enum value
+	InstanceTypeM5d24xlarge = "m5d.24xlarge"
 
 	// InstanceTypeH12xlarge is a InstanceType enum value
 	InstanceTypeH12xlarge = "h1.2xlarge"

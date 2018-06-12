@@ -314,7 +314,7 @@ for more information
 #### Default Cache Behavior Arguments
 
 The arguments for `default_cache_behavior` are the same as for
-[`cache_behavior`](#cache-behavior-arguments), except for the `path_pattern`
+[`ordered_cache_behavior`](#cache-behavior-arguments), except for the `path_pattern`
 argument is not required.
 
 #### Logging Config Arguments
@@ -420,7 +420,7 @@ The arguments of `geo_restriction` are:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
   * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 

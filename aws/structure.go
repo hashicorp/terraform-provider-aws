@@ -1908,6 +1908,80 @@ func flattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface
 	return attributes
 }
 
+func expandConfigAccountAggregationSources(configured []interface{}) []*configservice.AccountAggregationSource {
+	var results []*configservice.AccountAggregationSource
+	for _, item := range configured {
+		detail := item.(map[string]interface{})
+		source := configservice.AccountAggregationSource{
+			AllAwsRegions: aws.Bool(detail["all_regions"].(bool)),
+		}
+
+		if v, ok := detail["account_ids"]; ok {
+			accountIDs := v.([]interface{})
+			if len(accountIDs) > 0 {
+				source.AccountIds = expandStringList(accountIDs)
+			}
+		}
+
+		if v, ok := detail["regions"]; ok {
+			regions := v.([]interface{})
+			if len(regions) > 0 {
+				source.AwsRegions = expandStringList(regions)
+			}
+		}
+
+		results = append(results, &source)
+	}
+	return results
+}
+
+func expandConfigOrganizationAggregationSource(configured map[string]interface{}) *configservice.OrganizationAggregationSource {
+	source := configservice.OrganizationAggregationSource{
+		AllAwsRegions: aws.Bool(configured["all_regions"].(bool)),
+		RoleArn:       aws.String(configured["role_arn"].(string)),
+	}
+
+	if v, ok := configured["regions"]; ok {
+		regions := v.([]interface{})
+		if len(regions) > 0 {
+			source.AwsRegions = expandStringList(regions)
+		}
+	}
+
+	return &source
+}
+
+func flattenConfigAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
+	var result []interface{}
+
+	if len(sources) == 0 {
+		return result
+	}
+
+	source := sources[0]
+	m := make(map[string]interface{})
+	m["account_ids"] = flattenStringList(source.AccountIds)
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
+	m["regions"] = flattenStringList(source.AwsRegions)
+	result = append(result, m)
+	return result
+}
+
+func flattenConfigOrganizationAggregationSource(source *configservice.OrganizationAggregationSource) []interface{} {
+	var result []interface{}
+
+	if source == nil {
+		return result
+	}
+
+	m := make(map[string]interface{})
+	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
+	m["regions"] = flattenStringList(source.AwsRegions)
+	m["role_arn"] = aws.StringValue(source.RoleArn)
+	result = append(result, m)
+	return result
+}
+
 func flattenConfigRuleSource(source *configservice.Source) []interface{} {
 	var result []interface{}
 	m := make(map[string]interface{})

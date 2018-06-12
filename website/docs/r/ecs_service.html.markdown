@@ -135,7 +135,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the service
 * `name` - The name of the service

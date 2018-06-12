@@ -220,7 +220,7 @@ configuration, resource recreation can be manually triggered by using the
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the launch configuration.
 * `name` - The name of the launch configuration.

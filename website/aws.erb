@@ -10,9 +10,24 @@
                     <a href="/docs/providers/aws/index.html">AWS Provider</a>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-community-events") %>>
+                <a href="#">Upcoming Community Events</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-community-events-gardening-summer-2018") %>>
+                            <a href="/docs/providers/aws/events/gardening-summer-2018.html">Community Gardening - Summer 2018</a>
+                        </li>
+
+                    </ul>
+                </li>
+
                 <li<%= sidebar_current("docs-aws-guide") %>>
                 <a href="#">Guides</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-guide-eks-getting-started") %>>
+                            <a href="/docs/providers/aws/guides/eks-getting-started.html">AWS EKS Getting Started</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-guide-serverless") %>>
                             <a href="/docs/providers/aws/guides/serverless-with-aws-lambda-and-api-gateway.html">AWS Lambda with API Gateway</a>
@@ -129,6 +144,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-eip") %>>
                             <a href="/docs/providers/aws/d/eip.html">aws_eip</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-eks-cluster") %>>
+                            <a href="/docs/providers/aws/d/eks_cluster.html">aws_eks_cluster</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-elastic-beanstalk-hosted-zone") %>>
                             <a href="/docs/providers/aws/d/elastic_beanstalk_hosted_zone.html">aws_elastic_beanstalk_hosted_zone</a>
@@ -653,6 +671,13 @@
                 <li<%= sidebar_current("docs-aws-resource-config") %>>
                     <a href="#">Config Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-config-aggregate-authorization") %>>
+                            <a href="/docs/providers/aws/r/config_aggregate_authorization.html">aws_config_aggregate_authorization</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-config-configuration-aggregator") %>>
+                            <a href="/docs/providers/aws/r/config_configuration_aggregator.html">aws_config_configuration_aggregator</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-config-config-rule") %>>
                             <a href="/docs/providers/aws/r/config_config_rule.html">aws_config_config_rule</a>
@@ -1012,6 +1037,18 @@
 
                         <li<%= sidebar_current("docs-aws-resource-efs-mount-target") %>>
                             <a href="/docs/providers/aws/r/efs_mount_target.html">aws_efs_mount_target</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+
+                <li<%= sidebar_current("docs-aws-resource-eks") %>>
+                    <a href="#">EKS Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-eks-cluster") %>>
+                            <a href="/docs/providers/aws/r/eks_cluster.html">aws_eks_cluster</a>
                         </li>
 
                     </ul>

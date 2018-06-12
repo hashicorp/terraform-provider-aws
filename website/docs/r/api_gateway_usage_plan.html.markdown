@@ -88,7 +88,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the API resource
 * `name` - The name of the usage plan.

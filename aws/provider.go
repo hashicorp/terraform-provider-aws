@@ -192,6 +192,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_efs_file_system":                  dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                 dataSourceAwsEfsMountTarget(),
 			"aws_eip":                              dataSourceAwsEip(),
+			"aws_eks_cluster":                      dataSourceAwsEksCluster(),
 			"aws_elastic_beanstalk_hosted_zone":    dataSourceAwsElasticBeanstalkHostedZone(),
 			"aws_elastic_beanstalk_solution_stack": dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":              dataSourceAwsElastiCacheCluster(),
@@ -319,7 +320,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudwatch_log_resource_policy":           resourceAwsCloudWatchLogResourcePolicy(),
 			"aws_cloudwatch_log_stream":                    resourceAwsCloudWatchLogStream(),
 			"aws_cloudwatch_log_subscription_filter":       resourceAwsCloudwatchLogSubscriptionFilter(),
+			"aws_config_aggregate_authorization":           resourceAwsConfigAggregateAuthorization(),
 			"aws_config_config_rule":                       resourceAwsConfigConfigRule(),
+			"aws_config_configuration_aggregator":          resourceAwsConfigConfigurationAggregator(),
 			"aws_config_configuration_recorder":            resourceAwsConfigConfigurationRecorder(),
 			"aws_config_configuration_recorder_status":     resourceAwsConfigConfigurationRecorderStatus(),
 			"aws_config_delivery_channel":                  resourceAwsConfigDeliveryChannel(),
@@ -379,6 +382,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_egress_only_internet_gateway":             resourceAwsEgressOnlyInternetGateway(),
 			"aws_eip":                                      resourceAwsEip(),
 			"aws_eip_association":                          resourceAwsEipAssociation(),
+			"aws_eks_cluster":                              resourceAwsEksCluster(),
 			"aws_elasticache_cluster":                      resourceAwsElasticacheCluster(),
 			"aws_elasticache_parameter_group":              resourceAwsElasticacheParameterGroup(),
 			"aws_elasticache_replication_group":            resourceAwsElasticacheReplicationGroup(),
@@ -692,6 +696,8 @@ func init() {
 
 		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"efs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"elb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -799,6 +805,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.Ec2Endpoint = endpoints["ec2"].(string)
 		config.EcrEndpoint = endpoints["ecr"].(string)
 		config.EcsEndpoint = endpoints["ecs"].(string)
+		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
@@ -945,6 +952,13 @@ func endpointsSchema() *schema.Schema {
 					Description: descriptions["ecs_endpoint"],
 				},
 
+				"efs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["efs_endpoint"],
+				},
+
 				"elb": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1035,6 +1049,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["dynamodb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["iam"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["ec2"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
