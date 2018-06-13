@@ -772,7 +772,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 	config.CredsFilename = credsPath
 
-	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
+	assumeRoleList := d.Get("assume_role").([]interface{})
 	if len(assumeRoleList) > 0 {
 		config.AssumeRoleConfigs = make([]AssumeRoleConfig, len(assumeRoleList))
 
@@ -841,7 +841,7 @@ var awsMutexKV = mutexkv.NewMutexKV()
 
 func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
