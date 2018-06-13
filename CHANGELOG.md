@@ -1,5 +1,9 @@
 ## 1.23.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_vpcs` [GH-4736]
+
 ENHANCEMENTS:
 
 * resource/aws_db_instance: Display input arguments when receiving InvalidParameterValue error on resource creation [GH-4803]
