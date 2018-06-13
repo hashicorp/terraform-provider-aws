@@ -329,7 +329,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("scheduling_strategy"); ok {
-		input.SchedulingStrategy = aws.String(v.(string))
+		schedulingStrategy := v.(string)
+		input.SchedulingStrategy = aws.String(schedulingStrategy)
+		if schedulingStrategy == "DAEMON" {
+			// unset desired count if DAEMON
+			input.DesiredCount = nil
+		}
 	}
 
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
@@ -500,10 +505,13 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("task_definition", taskDefinition)
 	}
 
-	d.Set("desired_count", service.DesiredCount)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
+	// Automatically ignore desired count if DAEMON
+	if *service.SchedulingStrategy != "DAEMON" {
+		d.Set("desired_count", service.DesiredCount)
+	}
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
-	d.Set("scheduling_strategy", service.SchedulingStrategy)
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {

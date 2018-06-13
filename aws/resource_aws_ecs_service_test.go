@@ -2051,6 +2051,7 @@ resource "aws_ecs_service" "ghost" {
   name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+  desired_count = 10 // this should be ignored
 }
 `, clusterName, tdName, svcName)
 }
