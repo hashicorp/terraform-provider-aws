@@ -17,7 +17,7 @@ func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcsDataSourceID("data.aws_vpcs.all"),
+					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.all"),
 				),
 			},
 		},
@@ -33,6 +33,7 @@ func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcsConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.selected"),
 					resource.TestCheckResourceAttr("data.aws_vpcs.selected", "ids.#", "1"),
 				),
 			},
@@ -49,6 +50,7 @@ func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcsConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.selected"),
 					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.selected", "ids.#", "0"),
 				),
 			},
@@ -86,7 +88,7 @@ func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.Tes
 	}
 }
 
-func testAccCheckAwsVpcsDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckAwsVpcsDataSourceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
