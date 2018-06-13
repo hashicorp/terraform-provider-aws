@@ -48,22 +48,51 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			//"schema_change_policy": {
-			//	Type:     schema.TypeSet,
-			//	Optional: true,
+			"schema_change_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delete_behavior": {
+							Type:     schema.TypeString,
+							Optional: true,
+							//ValidateFunc: validateDeletion,
+							//TODO: Write a validate function to ensure value matches enum
+						},
+						"update_behavior": {
+							Type:     schema.TypeString,
+							Optional: true,
+							//ValidateFunc: validateUpdate,
+							//TODO: Write a validate function to ensure value matches enum
+						},
+					},
+				},
+			},
+			//"vpc_config": {
+			//	Type:     schema.TypeList,
+			//	MinItems: 1,
+			//	MaxItems: 1,
+			//	Required: true,
+			//	ForceNew: true,
 			//	Elem: &schema.Resource{
 			//		Schema: map[string]*schema.Schema{
-			//			"delete_behavior": {
-			//				Type:     schema.TypeString,
+			//			"security_group_ids": {
+			//				Type:     schema.TypeSet,
 			//				Optional: true,
-			//				//ValidateFunc: validateDeletion,
-			//				//TODO: Write a validate function to ensure value matches enum
+			//				ForceNew: true,
+			//				Elem:     &schema.Schema{Type: schema.TypeString},
 			//			},
-			//			"update_behavior": {
+			//			"subnet_ids": {
+			//				Type:     schema.TypeSet,
+			//				Required: true,
+			//				ForceNew: true,
+			//				MinItems: 1,
+			//				Elem:     &schema.Schema{Type: schema.TypeString},
+			//			},
+			//			"vpc_id": {
 			//				Type:     schema.TypeString,
-			//				Optional: true,
-			//				//ValidateFunc: validateUpdate,
-			//				//TODO: Write a validate function to ensure value matches enum
+			//				Computed: true,
 			//			},
 			//		},
 			//	},
@@ -161,9 +190,9 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 	if classifiers, ok := d.GetOk("classifiers"); ok {
 		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
 	}
-	//if v, ok := d.GetOk("schema_change_policy"); ok {
-	//	crawlerInput.SchemaChangePolicy = createSchemaPolicy(v)
-	//}
+
+	crawlerInput.SchemaChangePolicy = expandSchemaPolicy(d.Get("schema_change_policy").([]interface{}))
+
 	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
 	}
@@ -176,15 +205,20 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 	return crawlerInput
 }
 
-func createSchemaPolicy(v interface{}) *glue.SchemaChangePolicy {
-	schemaAttributes := v.(map[string]interface{})
+func expandSchemaPolicy(v []interface{}) *glue.SchemaChangePolicy {
+	if len(v) == 0 {
+		return nil
+	}
+
 	schemaPolicy := &glue.SchemaChangePolicy{}
 
-	if updateBehavior, ok := schemaAttributes["update_behavior"]; ok {
+	member := v[0].(map[string]interface{})
+
+	if updateBehavior, ok := member["update_behavior"]; ok {
 		schemaPolicy.UpdateBehavior = aws.String(updateBehavior.(string))
 	}
 
-	if deleteBehavior, ok := schemaAttributes["delete_behavior"]; ok {
+	if deleteBehavior, ok := member["delete_behavior"]; ok {
 		schemaPolicy.DeleteBehavior = aws.String(deleteBehavior.(string))
 	}
 	return schemaPolicy
@@ -305,16 +339,13 @@ func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{})
 	d.Set("classifiers", flattenStringList(crawlerOutput.Crawler.Classifiers))
 	d.Set("table_prefix", crawlerOutput.Crawler.TablePrefix)
 
-	//if crawlerOutput.Crawler.SchemaChangePolicy != nil {
-	//	schemaPolicy := map[string]string{
-	//		"delete_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.DeleteBehavior,
-	//		"update_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.UpdateBehavior,
-	//	}
-	//	d.Set("schema_change_policy", schemaPolicy)
-	//}
-	//
-	//d.Set("table_prefix", crawlerOutput.Crawler.TablePrefix)
-
+	if crawlerOutput.Crawler.SchemaChangePolicy != nil {
+		schemaPolicy := map[string]string{
+			"delete_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.DeleteBehavior,
+			"update_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.UpdateBehavior,
+		}
+		d.Set("schema_change_policy", schemaPolicy)
+	}
 	return nil
 }
 

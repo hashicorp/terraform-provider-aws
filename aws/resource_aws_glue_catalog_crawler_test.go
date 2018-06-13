@@ -49,26 +49,12 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 				Config: testAccGlueCrawlerConfigCustomClassifiers,
 				Check: resource.ComposeTestCheckFunc(
 					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test"),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"name",
-						"test",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"database_name",
-						"db_name",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"role",
-						"tf-glue-service-role",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"table_prefix",
-						"table_prefix",
-					),
+					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "db_name"),
+					resource.TestCheckResourceAttr(resourceName, "role", "tf-glue-service-role"),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", "table_prefix"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DELETE_FROM_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 				),
 			},
 		},
@@ -140,29 +126,32 @@ EOF
 	}
 `
 
+//classifiers = [
+//"${aws_glue_classifier.test.id}"
+//]
+//resource "aws_glue_classifier" "test" {
+//name = "tf-example-123"
+//
+//grok_classifier {
+//classification = "example"
+//grok_pattern   = "example"
+//}
+//}
 const testAccGlueCrawlerConfigCustomClassifiers = `
 	resource "aws_glue_catalog_crawler" "test" {
 	  name = "test"
 	  database_name = "db_name"
 	  role = "${aws_iam_role.glue.name}"
-	  classifiers = [
-		"${aws_glue_classifier.test.name}"
-      ]
 	  s3_target {
 		path = "s3://bucket"
 	  }
       table_prefix = "table_prefix"
+	  schema_change_policy {
+		delete_behavior = "DELETE_FROM_DATABASE"
+		update_behavior = "UPDATE_IN_DATABASE"
+      }
 	}
 
-	resource "aws_glue_classifier" "test" {
-  	  name = "tf-example-123"
-
-  	  grok_classifier {
-        classification = "example"
-        grok_pattern   = "example"
-      }
-    }
-	
 	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-default-policy-attachment" {
   		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
   		role = "${aws_iam_role.glue.name}"
