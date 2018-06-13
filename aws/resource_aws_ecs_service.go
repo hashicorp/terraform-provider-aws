@@ -66,6 +66,13 @@ func resourceAwsEcsService() *schema.Resource {
 				Default:  "EC2",
 			},
 
+			"scheduling_strategy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "REPLICA",
+			},
+
 			"iam_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -321,6 +328,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.LaunchType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("scheduling_strategy"); ok {
+		input.SchedulingStrategy = aws.String(v.(string))
+	}
+
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
@@ -492,6 +503,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {

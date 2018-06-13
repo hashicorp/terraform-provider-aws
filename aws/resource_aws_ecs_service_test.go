@@ -626,6 +626,78 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 	})
 }
 
+func TestAccAWSEcsService_withDefaultSchedulingStrategy(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ss-default-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ss-default-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ss-default-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithDefaultSchedulingStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "REPLICA"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ss-daemon-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ss-daemon-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ss-daemon-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, "DAEMON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "DAEMON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ss-replica-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ss-replica-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ss-replica-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, "REPLICA"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "REPLICA"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1954,4 +2026,59 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithDefaultSchedulingStrategy(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+resource "aws_ecs_task_definition" "ghost" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 128,
+    "name": "ghost"
+  }
+]
+DEFINITION
+}
+resource "aws_ecs_service" "ghost" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+}
+`, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName string, schedulingStrategy string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+resource "aws_ecs_task_definition" "ghost" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 128,
+    "name": "ghost"
+  }
+]
+DEFINITION
+}
+resource "aws_ecs_service" "ghost" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+  scheduling_strategy = "%s"
+}
+`, clusterName, tdName, svcName, schedulingStrategy)
 }
