@@ -184,13 +184,10 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	// Otherwise we need to construct and STS client with the main credentials, and verify
 	// that we can assume the defined role.
 	creds := awsCredentials.NewChainCredentials(providers)
-
-	AssumeConfigs := c.AssumeRoleConfigs
-	log.Printf("[INFO] Length AssumeRoleConfig: %d", len(AssumeConfigs))
-	for i := 0; i < len(AssumeConfigs); i++ {
+	for _, assumeConfig := range c.AssumeRoleConfigs {
 		log.Printf("[INFO] Attempting to AssumeRole %s (SessionName: %q, ExternalId: %q, Policy: %q)",
-			AssumeConfigs[i].AssumeRoleARN, AssumeConfigs[i].AssumeRoleSessionName,
-			AssumeConfigs[i].AssumeRoleExternalID, c.AssumeRoleConfigs[i].AssumeRolePolicy)
+			assumeConfig.AssumeRoleARN, assumeConfig.AssumeRoleSessionName,
+			assumeConfig.AssumeRoleExternalID, assumeConfig.AssumeRolePolicy)
 
 		cp, err := creds.Get()
 		if err != nil {
@@ -215,16 +212,16 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		stsclient := sts.New(session.New(awsConfig))
 		assumeRoleProvider := &stscreds.AssumeRoleProvider{
 			Client:  stsclient,
-			RoleARN: c.AssumeRoleConfigs[i].AssumeRoleARN,
+			RoleARN: assumeConfig.AssumeRoleARN,
 		}
-		if c.AssumeRoleConfigs[i].AssumeRoleSessionName != "" {
-			assumeRoleProvider.RoleSessionName = c.AssumeRoleConfigs[i].AssumeRoleSessionName
+		if assumeConfig.AssumeRoleSessionName != "" {
+			assumeRoleProvider.RoleSessionName = assumeConfig.AssumeRoleSessionName
 		}
-		if c.AssumeRoleConfigs[i].AssumeRoleExternalID != "" {
-			assumeRoleProvider.ExternalID = aws.String(c.AssumeRoleConfigs[i].AssumeRoleExternalID)
+		if assumeConfig.AssumeRoleExternalID != "" {
+			assumeRoleProvider.ExternalID = aws.String(assumeConfig.AssumeRoleExternalID)
 		}
-		if c.AssumeRoleConfigs[i].AssumeRolePolicy != "" {
-			assumeRoleProvider.Policy = aws.String(c.AssumeRoleConfigs[i].AssumeRolePolicy)
+		if assumeConfig.AssumeRolePolicy != "" {
+			assumeRoleProvider.Policy = aws.String(assumeConfig.AssumeRolePolicy)
 		}
 
 		providers = []awsCredentials.Provider{assumeRoleProvider}
@@ -238,7 +235,7 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 					"    * The credentials used in order to assume the role are invalid\n"+
 					"    * The credentials do not have appropriate permission to assume the role\n"+
 					"    * The role ARN is not valid",
-					c.AssumeRoleConfigs[i].AssumeRoleARN)
+					assumeConfig.AssumeRoleARN)
 			}
 
 			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)

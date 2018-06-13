@@ -776,14 +776,14 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	if len(assumeRoleList) > 0 {
 		config.AssumeRoleConfigs = make([]AssumeRoleConfig, len(assumeRoleList))
 
-		for i := 0; i < len(assumeRoleList); i++ {
-			assumeRole := assumeRoleList[i].(map[string]interface{})
-			config.AssumeRoleConfigs[i].AssumeRoleARN = assumeRole["role_arn"].(string)
-			config.AssumeRoleConfigs[i].AssumeRoleSessionName = assumeRole["session_name"].(string)
-			config.AssumeRoleConfigs[i].AssumeRoleSessionName = assumeRole["session_name"].(string)
-			config.AssumeRoleConfigs[i].AssumeRoleExternalID = assumeRole["external_id"].(string)
+		for i, assumeRole := range assumeRoleList {
+			assumeRoleMap := assumeRole.(map[string]interface{})
+			config.AssumeRoleConfigs[i].AssumeRoleARN = assumeRoleMap["role_arn"].(string)
+			config.AssumeRoleConfigs[i].AssumeRoleSessionName = assumeRoleMap["session_name"].(string)
+			config.AssumeRoleConfigs[i].AssumeRoleSessionName = assumeRoleMap["session_name"].(string)
+			config.AssumeRoleConfigs[i].AssumeRoleExternalID = assumeRoleMap["external_id"].(string)
 
-			if v := assumeRole["policy"].(string); v != "" {
+			if v := assumeRoleMap["policy"].(string); v != "" {
 				config.AssumeRoleConfigs[i].AssumeRolePolicy = v
 			}
 
