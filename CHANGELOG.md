@@ -1,5 +1,9 @@
 ## 1.23.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_elasticache_cluster: The `availability_zones` argument has been deprecated in favor of a new `preferred_availability_zones` argument to allow specifying the same Availability Zone more than once in larger Memcached clusters that also need to specifically set Availability Zones. The argument is still optional and the API will continue to automatically choose Availability Zones for nodes if not specified. The new argument will also continue to match the APIs required behavior that the length of the list must be the same as `num_cache_nodes`. See the resource documentation for additional details.
+
 FEATURES:
 
 * **New Data Source:** `aws_vpcs` [GH-4736]
