@@ -1,15 +1,14 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -64,19 +63,14 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 						"apply_method": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "immediate",
-							// this parameter is not actually state, but a
-							// meta-parameter describing how the RDS API call
-							// to modify the parameter group should be made.
-							// Future reads of the resource from AWS don't tell
-							// us what we used for apply_method previously, so
-							// by squashing state to an empty string we avoid
-							// needing to do an update for every future run.
-							StateFunc: func(interface{}) string { return "" },
+							Default:  neptune.ApplyMethodPendingReboot,
+							ValidateFunc: validation.StringInSlice([]string{
+								neptune.ApplyMethodImmediate,
+								neptune.ApplyMethodPendingReboot,
+							}, false),
 						},
 					},
 				},
-				Set: resourceAwsNeptuneParameterHash,
 			},
 		},
 	}
@@ -267,14 +261,4 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 		}
 		return nil
 	})
-}
-
-func resourceAwsNeptuneParameterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-	// Store the value as a lower case string, to match how we store them in flattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["value"].(string))))
-
-	return hashcode.String(buf.String())
 }

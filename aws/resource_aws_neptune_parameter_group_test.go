@@ -2,10 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -14,33 +14,27 @@ import (
 
 func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 	var v neptune.DBParameterGroup
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSNeptuneParameterGroupConfig(rName),
+			{
+				Config: testAccAWSNeptuneParameterGroupConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneParameterGroupExists("aws_neptune_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "family", "neptune1"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr("aws_neptune_parameter_group.bar", "parameter.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "parameter.562386247.name", "neptune_query_timeout"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "parameter.562386247.value", "25"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
-			resource.TestStep{
-				ResourceName:      "aws_neptune_parameter_group.bar",
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -48,34 +42,37 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneParameterGroup_only(t *testing.T) {
+func TestAccAWSNeptuneParameterGroup_Description(t *testing.T) {
 	var v neptune.DBParameterGroup
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSNeptuneParameterGroupOnlyConfig(rName),
+			{
+				Config: testAccAWSNeptuneParameterGroupConfig_Description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneParameterGroupExists("aws_neptune_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "family", "neptune1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/116
-func TestAccAWSNeptuneParameterGroup_removeParam(t *testing.T) {
+func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 	var v neptune.DBParameterGroup
-	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,34 +80,33 @@ func TestAccAWSNeptuneParameterGroup_removeParam(t *testing.T) {
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneParameterGroupConfig(rName),
+				Config: testAccAWSNeptuneParameterGroupConfig_Parameter(rName, "neptune_query_timeout", "25", "pending-reboot"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneParameterGroupExists("aws_neptune_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "family", "neptune1"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "parameter.562386247.name", "neptune_query_timeout"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "parameter.562386247.value", "25"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2423897584.apply_method", "pending-reboot"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2423897584.name", "neptune_query_timeout"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2423897584.value", "25"),
 				),
 			},
 			{
-				Config: testAccAWSNeptuneParameterGroupOnlyConfig(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// This test should be updated with a dynamic parameter when available
+			{
+				Config:      testAccAWSNeptuneParameterGroupConfig_Parameter(rName, "neptune_query_timeout", "25", "immediate"),
+				ExpectError: regexp.MustCompile(`cannot use immediate apply method for static parameter`),
+			},
+			// Test removing the configuration
+			{
+				Config: testAccAWSNeptuneParameterGroupConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneParameterGroupExists("aws_neptune_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_parameter_group.bar", "family", "neptune1"),
-
-					resource.TestCheckNoResourceAttr(
-						"aws_neptune_parameter_group.bar", "parameter.562386247.name"),
-					resource.TestCheckNoResourceAttr(
-						"aws_neptune_parameter_group.bar", "parameter.562386247.value"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
 		},
@@ -131,20 +127,15 @@ func testAccCheckAWSNeptuneParameterGroupDestroy(s *terraform.State) error {
 				DBParameterGroupName: aws.String(rs.Primary.ID),
 			})
 
-		if err == nil {
-			if len(resp.DBParameterGroups) != 0 &&
-				*resp.DBParameterGroups[0].DBParameterGroupName == rs.Primary.ID {
-				return fmt.Errorf("DB Parameter Group still exists")
+		if err != nil {
+			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+				return nil
 			}
+			return err
 		}
 
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "DBParameterGroupNotFound" {
-			return err
+		if len(resp.DBParameterGroups) != 0 && aws.StringValue(resp.DBParameterGroups[0].DBParameterGroupName) == rs.Primary.ID {
+			return fmt.Errorf("DB Parameter Group still exists")
 		}
 	}
 
@@ -200,25 +191,33 @@ func testAccCheckAWSNeptuneParameterGroupExists(n string, v *neptune.DBParameter
 	}
 }
 
-func testAccAWSNeptuneParameterGroupConfig(rName string) string {
+func testAccAWSNeptuneParameterGroupConfig_Parameter(rName, pName, pValue, pApplyMethod string) string {
 	return fmt.Sprintf(`
-resource "aws_neptune_parameter_group" "bar" {
-	name = "%s"
-	family = "neptune1"
-	parameter {
-	  name = "neptune_query_timeout"
-	  value = "25"
-          apply_method = "pending-reboot"
+resource "aws_neptune_parameter_group" "test" {
+  family = "neptune1"
+  name   = "%s"
 
-	}
-}`, rName)
+  parameter {
+    apply_method = "%s"
+    name         = "%s"
+    value        = "%s"
+  }
+}`, rName, pApplyMethod, pName, pValue)
 }
 
-func testAccAWSNeptuneParameterGroupOnlyConfig(rName string) string {
+func testAccAWSNeptuneParameterGroupConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_neptune_parameter_group" "bar" {
-	name = "%s"
-	family = "neptune1"
-	description = "Test parameter group for terraform"
+resource "aws_neptune_parameter_group" "test" {
+  description = "%s"
+  family      = "neptune1"
+  name        = "%s"
+}`, description, rName)
+}
+
+func testAccAWSNeptuneParameterGroupConfig_Required(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_parameter_group" "test" {
+  family = "neptune1"
+  name   = "%s"
 }`, rName)
 }
