@@ -106,10 +106,7 @@ type Config struct {
 	Region        string
 	MaxRetries    int
 
-	AssumeRoleARN         string
-	AssumeRoleExternalID  string
-	AssumeRoleSessionName string
-	AssumeRolePolicy      string
+	AssumeRoleConfigs []AssumeRoleConfig
 
 	AllowedAccountIds   []interface{}
 	ForbiddenAccountIds []interface{}
@@ -147,6 +144,13 @@ type Config struct {
 	SkipRequestingAccountId bool
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
+}
+
+type AssumeRoleConfig struct {
+	AssumeRoleARN         string
+	AssumeRoleExternalID  string
+	AssumeRoleSessionName string
+	AssumeRolePolicy      string
 }
 
 type AWSClient struct {

@@ -177,70 +177,73 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	}
 
 	// This is the "normal" flow (i.e. not assuming a role)
-	if c.AssumeRoleARN == "" {
+	if c.AssumeRoleConfigs == nil {
 		return awsCredentials.NewChainCredentials(providers), nil
 	}
 
 	// Otherwise we need to construct and STS client with the main credentials, and verify
 	// that we can assume the defined role.
-	log.Printf("[INFO] Attempting to AssumeRole %s (SessionName: %q, ExternalId: %q, Policy: %q)",
-		c.AssumeRoleARN, c.AssumeRoleSessionName, c.AssumeRoleExternalID, c.AssumeRolePolicy)
-
 	creds := awsCredentials.NewChainCredentials(providers)
-	cp, err := creds.Get()
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			return nil, errors.New(`No valid credential sources found for AWS Provider.
-  Please see https://terraform.io/docs/providers/aws/index.html for more information on
-  providing credentials for the AWS Provider`)
+	for _, assumeConfig := range c.AssumeRoleConfigs {
+		log.Printf("[INFO] Attempting to AssumeRole %s (SessionName: %q, ExternalId: %q, Policy: %q)",
+			assumeConfig.AssumeRoleARN, assumeConfig.AssumeRoleSessionName,
+			assumeConfig.AssumeRoleExternalID, assumeConfig.AssumeRolePolicy)
+
+		cp, err := creds.Get()
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
+				return nil, errors.New(`No valid credential sources found for AWS Provider.
+	Please see https://terraform.io/docs/providers/aws/index.html for more information on
+	providing credentials for the AWS Provider`)
+			}
+
+			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
+		}
+		log.Printf("[INFO] AWS Auth provider used: %q", cp.ProviderName)
+
+		awsConfig := &aws.Config{
+			Credentials:      creds,
+			Region:           aws.String(c.Region),
+			MaxRetries:       aws.Int(c.MaxRetries),
+			HTTPClient:       cleanhttp.DefaultClient(),
+			S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
 		}
 
-		return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
-	}
-
-	log.Printf("[INFO] AWS Auth provider used: %q", cp.ProviderName)
-
-	awsConfig := &aws.Config{
-		Credentials:      creds,
-		Region:           aws.String(c.Region),
-		MaxRetries:       aws.Int(c.MaxRetries),
-		HTTPClient:       cleanhttp.DefaultClient(),
-		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
-	}
-
-	stsclient := sts.New(session.New(awsConfig))
-	assumeRoleProvider := &stscreds.AssumeRoleProvider{
-		Client:  stsclient,
-		RoleARN: c.AssumeRoleARN,
-	}
-	if c.AssumeRoleSessionName != "" {
-		assumeRoleProvider.RoleSessionName = c.AssumeRoleSessionName
-	}
-	if c.AssumeRoleExternalID != "" {
-		assumeRoleProvider.ExternalID = aws.String(c.AssumeRoleExternalID)
-	}
-	if c.AssumeRolePolicy != "" {
-		assumeRoleProvider.Policy = aws.String(c.AssumeRolePolicy)
-	}
-
-	providers = []awsCredentials.Provider{assumeRoleProvider}
-
-	assumeRoleCreds := awsCredentials.NewChainCredentials(providers)
-	_, err = assumeRoleCreds.Get()
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			return nil, fmt.Errorf("The role %q cannot be assumed.\n\n"+
-				"  There are a number of possible causes of this - the most common are:\n"+
-				"    * The credentials used in order to assume the role are invalid\n"+
-				"    * The credentials do not have appropriate permission to assume the role\n"+
-				"    * The role ARN is not valid",
-				c.AssumeRoleARN)
+		stsclient := sts.New(session.New(awsConfig))
+		assumeRoleProvider := &stscreds.AssumeRoleProvider{
+			Client:  stsclient,
+			RoleARN: assumeConfig.AssumeRoleARN,
+		}
+		if assumeConfig.AssumeRoleSessionName != "" {
+			assumeRoleProvider.RoleSessionName = assumeConfig.AssumeRoleSessionName
+		}
+		if assumeConfig.AssumeRoleExternalID != "" {
+			assumeRoleProvider.ExternalID = aws.String(assumeConfig.AssumeRoleExternalID)
+		}
+		if assumeConfig.AssumeRolePolicy != "" {
+			assumeRoleProvider.Policy = aws.String(assumeConfig.AssumeRolePolicy)
 		}
 
-		return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
-	}
+		providers = []awsCredentials.Provider{assumeRoleProvider}
 
-	return assumeRoleCreds, nil
+		assumeRoleCreds := awsCredentials.NewChainCredentials(providers)
+		_, err = assumeRoleCreds.Get()
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
+				return nil, fmt.Errorf("The role %q cannot be assumed.\n\n"+
+					"  There are a number of possible causes of this - the most common are:\n"+
+					"    * The credentials used in order to assume the role are invalid\n"+
+					"    * The credentials do not have appropriate permission to assume the role\n"+
+					"    * The role ARN is not valid",
+					assumeConfig.AssumeRoleARN)
+			}
+
+			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
+		}
+
+		creds = assumeRoleCreds
+	}
+	return creds, nil
 }
 
 func setOptionalEndpoint(cfg *aws.Config) string {
