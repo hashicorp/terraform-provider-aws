@@ -640,7 +640,7 @@ func TestAccAWSEcsService_withDefaultSchedulingStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithDefaultSchedulingStrategy(clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, nil, aws.Int(1)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "REPLICA"),
@@ -664,7 +664,7 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, "DAEMON"),
+				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, aws.String("DAEMON"), nil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "DAEMON"),
@@ -688,7 +688,7 @@ func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, "REPLICA"),
+				Config: testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName, aws.String("REPLICA"), aws.Int(1)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "REPLICA"),
@@ -2028,35 +2028,16 @@ resource "aws_ecs_service" "test" {
 `, rName, rName, rName, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithDefaultSchedulingStrategy(clusterName, tdName, svcName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
-  name = "%s"
-}
-resource "aws_ecs_task_definition" "ghost" {
-  family = "%s"
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "ghost:latest",
-    "memory": 128,
-    "name": "ghost"
-  }
-]
-DEFINITION
-}
-resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
-  desired_count = 1
-}
-`, clusterName, tdName, svcName)
-}
+func testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName string, schedulingStrategy *string, desiredCount *int) string {
+	schedulingStrategySnippet := ""
+	if schedulingStrategy != nil {
+		schedulingStrategySnippet += fmt.Sprintf(`scheduling_strategy = "%s"`, *schedulingStrategy)
+	}
+	desiredCountSnippet := ""
+	if desiredCount != nil {
+		desiredCountSnippet += fmt.Sprintf(`desired_count = %d`, *desiredCount)
+	}
 
-func testAccAWSEcsServiceWithSchedulingStrategy(clusterName, tdName, svcName string, schedulingStrategy string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = "%s"
@@ -2079,8 +2060,8 @@ resource "aws_ecs_service" "ghost" {
   name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
-  desired_count = 1
-  scheduling_strategy = "%s"
+  %s
+  %s
 }
-`, clusterName, tdName, svcName, schedulingStrategy)
+`, clusterName, tdName, svcName, schedulingStrategySnippet, desiredCountSnippet)
 }

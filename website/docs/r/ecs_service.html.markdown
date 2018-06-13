@@ -67,7 +67,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the service (up to 255 letters, numbers, hyphens, and underscores)
 * `task_definition` - (Required) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service.
-* `desired_count` - (Required) The number of instances of the task definition to place and keep running
+* `desired_count` - (Optional) The number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the `DAEMON` scheduling strategy.
 * `launch_type` - (Optional) The launch type on which to run your service. The valid values are `EC2` and `FARGATE`. Defaults to `EC2`.
 * `scheduling_strategry` - (Optional) The scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`.
 * `cluster` - (Optional) ARN of an ECS cluster

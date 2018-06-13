@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+const schedulingStrategyDaemon = "DAEMON"
+
 var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
 
 func resourceAwsEcsService() *schema.Resource {
@@ -331,7 +333,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("scheduling_strategy"); ok {
 		schedulingStrategy := v.(string)
 		input.SchedulingStrategy = aws.String(schedulingStrategy)
-		if schedulingStrategy == "DAEMON" {
+		if schedulingStrategy == schedulingStrategyDaemon {
 			// unset desired count if DAEMON
 			input.DesiredCount = nil
 		}
@@ -507,7 +509,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	// Automatically ignore desired count if DAEMON
-	if *service.SchedulingStrategy != "DAEMON" {
+	if *service.SchedulingStrategy != schedulingStrategyDaemon {
 		d.Set("desired_count", service.DesiredCount)
 	}
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
@@ -729,7 +731,9 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
 
-	if d.HasChange("desired_count") {
+	schedulingStrategy := d.Get("scheduling_strategy").(string)
+	// Automatically ignore desired count if DAEMON
+	if schedulingStrategy != schedulingStrategyDaemon && d.HasChange("desired_count") {
 		_, n := d.GetChange("desired_count")
 		input.DesiredCount = aws.Int64(int64(n.(int)))
 	}
