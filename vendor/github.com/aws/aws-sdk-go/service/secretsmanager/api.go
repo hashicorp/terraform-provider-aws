@@ -189,9 +189,8 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 
 // CreateSecret API operation for AWS Secrets Manager.
 //
-// Creates a new secret. A secret in AWS Secrets Manager consists of both the
-// protected secret data and the important information needed to manage the
-// secret.
+// Creates a new secret. A secret in Secrets Manager consists of both the protected
+// secret data and the important information needed to manage the secret.
 //
 // Secrets Manager stores the encrypted secret data in one of a collection of
 // "versions" associated with the secret. Each version contains a copy of the
@@ -201,22 +200,21 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 // versions of the secret. Versions without a staging label are considered deprecated
 // and are not included in the list.
 //
-// You provide the secret data to be encrypted by putting text in the SecretString
-// parameter or binary data in the SecretBinary parameter. If you include SecretString
-// or SecretBinary then Secrets Manager also creates an initial secret version
-// and, if you don't supply a staging label, automatically maps the new version's
-// ID to the staging label AWSCURRENT.
+// You provide the secret data to be encrypted by putting text in either the
+// SecretString parameter or binary data in the SecretBinary parameter, but
+// not both. If you include SecretString or SecretBinary then Secrets Manager
+// also creates an initial secret version and automatically attaches the staging
+// label AWSCURRENT to the new version.
 //
 // If you call an operation that needs to encrypt or decrypt the SecretString
-// and SecretBinary for a secret in the same account as the calling user and
-// that secret doesn't specify a KMS encryption key, AWS Secrets Manager uses
-// the account's default AWS managed customer master key (CMK) with the alias
-// aws/secretsmanager. If this key doesn't already exist in your account then
-// AWS Secrets Manager creates it for you automatically. All users in the same
-// AWS account automatically have access to use the default CMK. Note that if
-// an AWS Secrets Manager API call results in AWS having to create the account's
-// AWS-managed CMK, it can result in a one-time significant delay in returning
-// the result.
+// or SecretBinary for a secret in the same account as the calling user and
+// that secret doesn't specify a KMS encryption key, Secrets Manager uses the
+// account's default AWS managed customer master key (CMK) with the alias aws/secretsmanager.
+// If this key doesn't already exist in your account then Secrets Manager creates
+// it for you automatically. All users in the same AWS account automatically
+// have access to use the default CMK. Note that if an Secrets Manager API call
+// results in AWS having to create the account's AWS-managed CMK, it can result
+// in a one-time significant delay in returning the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
@@ -226,7 +224,7 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 // it by including it in the KMSKeyId. If you call an API that must encrypt
 // or decrypt SecretString or SecretBinary using credentials from a different
 // account then the KMS key policy must grant cross-account access to that other
-// account's user or role.
+// account's user or role for both the kms:GenerateDataKey and kms:Decrypt operations.
 //
 // Minimum permissions
 //
@@ -238,7 +236,7 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 //    key to encrypt the secret. You do not need this permission to use the
 //    account's default AWS managed CMK for Secrets Manager.
 //
-//    * kms:Encrypt - needed only if you use a customer-created KMS key to encrypt
+//    * kms:Decrypt - needed only if you use a customer-created KMS key to encrypt
 //    the secret. You do not need this permission to use the account's default
 //    AWS managed CMK for Secrets Manager.
 //
@@ -278,11 +276,11 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 //   in this call.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The request failed because it would exceed one of the AWS Secrets Manager
-//   internal limits.
+//   The request failed because it would exceed one of the Secrets Manager internal
+//   limits.
 //
 //   * ErrCodeEncryptionFailure "EncryptionFailure"
-//   AWS Secrets Manager can't encrypt the protected secret text using the provided
+//   Secrets Manager can't encrypt the protected secret text using the provided
 //   KMS key. Check that the customer master key (CMK) is available, enabled,
 //   and not in an invalid state. For more information, see How Key State Affects
 //   Use of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html).
@@ -366,24 +364,24 @@ func (c *SecretsManager) DeleteSecretRequest(input *DeleteSecretInput) (req *req
 // DeleteSecret API operation for AWS Secrets Manager.
 //
 // Deletes an entire secret and all of its versions. You can optionally include
-// a recovery window during which you can restore the secret. If you don't provide
+// a recovery window during which you can restore the secret. If you don't specify
 // a recovery window value, the operation defaults to 30 days. Secrets Manager
 // attaches a DeletionDate stamp to the secret that specifies the end of the
 // recovery window. At the end of the recovery window, Secrets Manager deletes
 // the secret permanently.
 //
-// At any time before recovery period ends, you can use RestoreSecret to remove
+// At any time before recovery window ends, you can use RestoreSecret to remove
 // the DeletionDate and cancel the deletion of the secret.
 //
 // You cannot access the encrypted secret information in any secret that is
-// scheduled for deletion. If you need to access that information, you can cancel
-// the deletion with RestoreSecret and then retrieve the information.
+// scheduled for deletion. If you need to access that information, you must
+// cancel the deletion with RestoreSecret and then retrieve the information.
 //
 // There is no explicit operation to delete a version of a secret. Instead,
 // remove all staging labels from the VersionStage field of a version. That
-// marks the version as deprecated and allows AWS Secrets Manager to delete
-// it as needed. Versions that do not have any staging labels do not show up
-// in ListSecretVersionIds unless you specify IncludeDeprecated.
+// marks the version as deprecated and allows Secrets Manager to delete it as
+// needed. Versions that do not have any staging labels do not show up in ListSecretVersionIds
+// unless you specify IncludeDeprecated.
 //
 // The permanent secret deletion at the end of the waiting period is performed
 // as a background task with low priority. There is no guarantee of a specific
@@ -399,7 +397,7 @@ func (c *SecretsManager) DeleteSecretRequest(input *DeleteSecretInput) (req *req
 //
 //    * To create a secret, use CreateSecret.
 //
-//    * To cancel deletion of a version of a secret before the recovery period
+//    * To cancel deletion of a version of a secret before the recovery window
 //    has expired, use RestoreSecret.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -688,8 +686,8 @@ func (c *SecretsManager) GetSecretValueRequest(input *GetSecretValueInput) (req 
 
 // GetSecretValue API operation for AWS Secrets Manager.
 //
-// Retrieves the contents of the encrypted fields SecretString and SecretBinary
-// from the specified version of a secret.
+// Retrieves the contents of the encrypted fields SecretString or SecretBinary
+// from the specified version of a secret, whichever contains content.
 //
 // Minimum permissions
 //
@@ -729,7 +727,7 @@ func (c *SecretsManager) GetSecretValueRequest(input *GetSecretValueInput) (req 
 //   in this call.
 //
 //   * ErrCodeDecryptionFailure "DecryptionFailure"
-//   AWS Secrets Manager can't decrypt the protected secret text using the provided
+//   Secrets Manager can't decrypt the protected secret text using the provided
 //   KMS key.
 //
 //   * ErrCodeInternalServiceError "InternalServiceError"
@@ -967,11 +965,10 @@ func (c *SecretsManager) ListSecretsRequest(input *ListSecretsInput) (req *reque
 
 // ListSecrets API operation for AWS Secrets Manager.
 //
-// Lists all of the secrets that are stored by AWS Secrets Manager in the AWS
-// account. To list the versions currently stored for a specific secret, use
-// ListSecretVersionIds. The encrypted fields SecretString and SecretBinary
-// are not included in the output. To get that information, call the GetSecretValue
-// operation.
+// Lists all of the secrets that are stored by Secrets Manager in the AWS account.
+// To list the versions currently stored for a specific secret, use ListSecretVersionIds.
+// The encrypted fields SecretString and SecretBinary are not included in the
+// output. To get that information, call the GetSecretValue operation.
 //
 // Always check the NextToken response parameter when calling any of the List*
 // operations. These operations can occasionally return an empty or shorter
@@ -1124,11 +1121,12 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //
 // Stores a new encrypted secret value in the specified secret. To do this,
 // the operation creates a new version and attaches it to the secret. The version
-// can contain a new SecretString value or a new SecretBinary value.
+// can contain a new SecretString value or a new SecretBinary value. You can
+// also specify the staging labels that are initially attached to the new version.
 //
-// The AWS Secrets Manager console uses only the SecretString field. To add
-// binary data to a secret with the SecretBinary field you must use the AWS
-// CLI or one of the AWS SDKs.
+// The Secrets Manager console uses only the SecretString field. To add binary
+// data to a secret with the SecretBinary field you must use the AWS CLI or
+// one of the AWS SDKs.
 //
 //    * If this operation creates the first version for the secret then Secrets
 //    Manager automatically attaches the staging label AWSCURRENT to the new
@@ -1136,7 +1134,12 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //
 //    * If another version of this secret already exists, then this operation
 //    does not automatically move any staging labels other than those that you
-//    specify in the VersionStages parameter.
+//    explicitly specify in the VersionStages parameter.
+//
+//    * If this operation moves the staging label AWSCURRENT from another version
+//    to this version (because you included it in the StagingLabels parameter)
+//    then Secrets Manager also automatically moves the staging label AWSPREVIOUS
+//    to the version that AWSCURRENT was removed from.
 //
 //    * This operation is idempotent. If a version with a SecretVersionId with
 //    the same value as the ClientRequestToken parameter already exists and
@@ -1144,21 +1147,15 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //    However, if the secret data is different, then the operation fails because
 //    you cannot modify an existing version; you can only create new ones.
 //
-//    * If this operation moves the staging label AWSCURRENT to this version
-//    (because you included it in the StagingLabels parameter) then Secrets
-//    Manager also automatically moves the staging label AWSPREVIOUS to the
-//    version that AWSCURRENT was removed from.
-//
 // If you call an operation that needs to encrypt or decrypt the SecretString
-// and SecretBinary for a secret in the same account as the calling user and
-// that secret doesn't specify a KMS encryption key, AWS Secrets Manager uses
-// the account's default AWS managed customer master key (CMK) with the alias
-// aws/secretsmanager. If this key doesn't already exist in your account then
-// AWS Secrets Manager creates it for you automatically. All users in the same
-// AWS account automatically have access to use the default CMK. Note that if
-// an AWS Secrets Manager API call results in AWS having to create the account's
-// AWS-managed CMK, it can result in a one-time significant delay in returning
-// the result.
+// or SecretBinary for a secret in the same account as the calling user and
+// that secret doesn't specify a KMS encryption key, Secrets Manager uses the
+// account's default AWS managed customer master key (CMK) with the alias aws/secretsmanager.
+// If this key doesn't already exist in your account then Secrets Manager creates
+// it for you automatically. All users in the same AWS account automatically
+// have access to use the default CMK. Note that if an Secrets Manager API call
+// results in AWS having to create the account's AWS-managed CMK, it can result
+// in a one-time significant delay in returning the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
@@ -1168,7 +1165,7 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 // it by including it in the KMSKeyId. If you call an API that must encrypt
 // or decrypt SecretString or SecretBinary using credentials from a different
 // account then the KMS key policy must grant cross-account access to that other
-// account's user or role.
+// account's user or role for both the kms:GenerateDataKey and kms:Decrypt operations.
 //
 // Minimum permissions
 //
@@ -1213,11 +1210,11 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 //   in this call.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The request failed because it would exceed one of the AWS Secrets Manager
-//   internal limits.
+//   The request failed because it would exceed one of the Secrets Manager internal
+//   limits.
 //
 //   * ErrCodeEncryptionFailure "EncryptionFailure"
-//   AWS Secrets Manager can't encrypt the protected secret text using the provided
+//   Secrets Manager can't encrypt the protected secret text using the provided
 //   KMS key. Check that the customer master key (CMK) is available, enabled,
 //   and not in an invalid state. For more information, see How Key State Affects
 //   Use of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html).
@@ -1414,7 +1411,7 @@ func (c *SecretsManager) RotateSecretRequest(input *RotateSecretInput) (req *req
 // clients all immediately begin to use the new version. For more information
 // about rotating secrets and how to configure a Lambda function to rotate the
 // secrets for your protected service, see Rotating Secrets in AWS Secrets Manager
-// (http://docs.aws.amazon.com/http:/docs.aws.amazon.com/;asm-service-name;/latest/userguide/rotating-secrets.html)
+// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html)
 // in the AWS Secrets Manager User Guide.
 //
 // The rotation function must end with the versions of the secret in one of
@@ -1781,31 +1778,28 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 //
 // To modify the rotation configuration of a secret, use RotateSecret instead.
 //
-// The AWS Secrets Manager console uses only the SecretString parameter and
-// therefore limits you to encrypting and storing only a text string. To encrypt
-// and store binary data as part of the version of a secret, you must use either
-// the AWS CLI or one of the AWS SDKs.
-//
-//    * If this update creates the first version of the secret or if you did
-//    not include the VersionStages parameter then Secrets Manager automatically
-//    attaches the staging label AWSCURRENT to the new version and removes it
-//    from any version that had it previously. The previous version (if any)
-//    is then given the staging label AWSPREVIOUS.
+// The Secrets Manager console uses only the SecretString parameter and therefore
+// limits you to encrypting and storing only a text string. To encrypt and store
+// binary data as part of the version of a secret, you must use either the AWS
+// CLI or one of the AWS SDKs.
 //
 //    * If a version with a SecretVersionId with the same value as the ClientRequestToken
 //    parameter already exists, the operation generates an error. You cannot
 //    modify an existing version, you can only create new ones.
 //
+//    * If you include SecretString or SecretBinary to create a new secret version,
+//    Secrets Manager automatically attaches the staging label AWSCURRENT to
+//    the new version.
+//
 // If you call an operation that needs to encrypt or decrypt the SecretString
-// and SecretBinary for a secret in the same account as the calling user and
-// that secret doesn't specify a KMS encryption key, AWS Secrets Manager uses
-// the account's default AWS managed customer master key (CMK) with the alias
-// aws/secretsmanager. If this key doesn't already exist in your account then
-// AWS Secrets Manager creates it for you automatically. All users in the same
-// AWS account automatically have access to use the default CMK. Note that if
-// an AWS Secrets Manager API call results in AWS having to create the account's
-// AWS-managed CMK, it can result in a one-time significant delay in returning
-// the result.
+// or SecretBinary for a secret in the same account as the calling user and
+// that secret doesn't specify a KMS encryption key, Secrets Manager uses the
+// account's default AWS managed customer master key (CMK) with the alias aws/secretsmanager.
+// If this key doesn't already exist in your account then Secrets Manager creates
+// it for you automatically. All users in the same AWS account automatically
+// have access to use the default CMK. Note that if an Secrets Manager API call
+// results in AWS having to create the account's AWS-managed CMK, it can result
+// in a one-time significant delay in returning the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
@@ -1815,7 +1809,7 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 // it by including it in the KMSKeyId. If you call an API that must encrypt
 // or decrypt SecretString or SecretBinary using credentials from a different
 // account then the KMS key policy must grant cross-account access to that other
-// account's user or role.
+// account's user or role for both the kms:GenerateDataKey and kms:Decrypt operations.
 //
 // Minimum permissions
 //
@@ -1859,11 +1853,11 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 //   in this call.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The request failed because it would exceed one of the AWS Secrets Manager
-//   internal limits.
+//   The request failed because it would exceed one of the Secrets Manager internal
+//   limits.
 //
 //   * ErrCodeEncryptionFailure "EncryptionFailure"
-//   AWS Secrets Manager can't encrypt the protected secret text using the provided
+//   Secrets Manager can't encrypt the protected secret text using the provided
 //   KMS key. Check that the customer master key (CMK) is available, enabled,
 //   and not in an invalid state. For more information, see How Key State Affects
 //   Use of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html).
@@ -1952,7 +1946,7 @@ func (c *SecretsManager) UpdateSecretVersionStageRequest(input *UpdateSecretVers
 // a time. If a staging label to be added is already attached to another version,
 // then it is moved--removed from the other version first and then attached
 // to this one. For more information about staging labels, see Staging Labels
-// (http://docs.aws.amazon.com/http:/docs.aws.amazon.com/;asm-service-name;/latest/userguide/terms-concepts.html#term_label)
+// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/terms-concepts.html#term_staging-label)
 // in the AWS Secrets Manager User Guide.
 //
 // The staging labels that you specify in the VersionStage parameter are added
@@ -2001,8 +1995,8 @@ func (c *SecretsManager) UpdateSecretVersionStageRequest(input *UpdateSecretVers
 //   in this call.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The request failed because it would exceed one of the AWS Secrets Manager
-//   internal limits.
+//   The request failed because it would exceed one of the Secrets Manager internal
+//   limits.
 //
 //   * ErrCodeInternalServiceError "InternalServiceError"
 //   An error occurred on the server side.
@@ -2127,7 +2121,7 @@ type CreateSecretInput struct {
 	// If you use the AWS CLI or one of the AWS SDK to call this operation, then
 	// you can leave this parameter empty. The CLI or SDK generates a random UUID
 	// for you and includes as the value for this parameter in the request. If you
-	// don't use the SDK and instead generate a raw HTTP request to the AWS Secrets
+	// don't use the SDK and instead generate a raw HTTP request to the Secrets
 	// Manager service endpoint, then you must generate a ClientRequestToken yourself
 	// for the new version and include that value in the request.
 	//
@@ -2155,13 +2149,13 @@ type CreateSecretInput struct {
 	Description *string `type:"string"`
 
 	// (Optional) Specifies the ARN or alias of the AWS KMS customer master key
-	// (CMK) to be used to encrypt the SecretString and SecretBinary values in the
+	// (CMK) to be used to encrypt the SecretString or SecretBinary values in the
 	// versions stored in this secret.
 	//
 	// If you don't specify this value, then Secrets Manager defaults to using the
 	// AWS account's default CMK (the one named aws/secretsmanager). If a KMS CMK
-	// with that name doesn't yet exist, then AWS Secrets Manager creates it for
-	// you automatically the first time it needs to encrypt a version's SecretString
+	// with that name doesn't yet exist, then Secrets Manager creates it for you
+	// automatically the first time it needs to encrypt a version's SecretString
 	// or SecretBinary fields.
 	//
 	// You can use the account's default CMK to encrypt and decrypt only if you
@@ -2170,9 +2164,10 @@ type CreateSecretInput struct {
 	// CMK and specify the ARN in this field.
 	KmsKeyId *string `type:"string"`
 
-	// Specifies the friendly name of the new secret. The secret name can consist
-	// of uppercase letters, lowercase letters, digits, and any of the following
-	// characters: /_+=.@-    Spaces are not permitted.
+	// Specifies the friendly name of the new secret.
+	//
+	// The secret name must be ASCII letters, digits, or the following characters
+	// : /_+=,.@-
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -2182,11 +2177,8 @@ type CreateSecretInput struct {
 	// we recommend that you store your binary data in a file and then use the appropriate
 	// technique for your tool to pass the contents of the file as a parameter.
 	//
-	// Either SecretString, SecretBinary, or both must have a value. They cannot
-	// both be empty.
-	//
-	// This SecretBinary value is stored separately from the SecretString, but the
-	// two parameters jointly share a maximum size limit.
+	// Either SecretString or SecretBinary must have a value, but not both. They
+	// cannot both be empty.
 	//
 	// This parameter is not available using the Secrets Manager console. It can
 	// be accessed only by using the AWS CLI or one of the AWS SDKs.
@@ -2197,11 +2189,8 @@ type CreateSecretInput struct {
 	// (Optional) Specifies text data that you want to encrypt and store in this
 	// new version of the secret.
 	//
-	// Either SecretString, SecretBinary, or both must have a value. They cannot
-	// both be empty.
-	//
-	// This string value is stored separately from the SecretBinary, but the two
-	// parameters jointly share a maximum size limit.
+	// Either SecretString or SecretBinary must have a value, but not both. They
+	// cannot both be empty.
 	//
 	// If you create a secret by using the Secrets Manager console then Secrets
 	// Manager puts the protected secret text in only the SecretString parameter.
@@ -2214,7 +2203,7 @@ type CreateSecretInput struct {
 	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide. For example:
 	//
-	// [{"Key":"username","Value":"bob"},{"Key":"password","Value":"abc123xyz456"}]
+	// [{"username":"bob"},{"password":"abc123xyz456"}]
 	//
 	// If your command-line tool or SDK requires quotation marks around the parameter,
 	// you should use single quotes to avoid confusion with the double quotes required
@@ -2225,8 +2214,8 @@ type CreateSecretInput struct {
 	// secret. Each tag is a "Key" and "Value" pair of strings. This operation only
 	// appends tags to the existing list of tags. To remove tags, you must use UntagResource.
 	//
-	// AWS Secrets Manager tag key names are case sensitive. A tag with the key
-	// "ABC" is a different tag from one with key "abc".
+	// Secrets Manager tag key names are case sensitive. A tag with the key "ABC"
+	// is a different tag from one with key "abc".
 	//
 	// If you check tags in IAM policy Condition elements as part of your security
 	// strategy, then adding or removing a tag can change permissions. If the successful
@@ -2353,7 +2342,7 @@ type CreateSecretOutput struct {
 
 	// The Amazon Resource Name (ARN) of the secret that you just created.
 	//
-	// AWS Secrets Manager automatically adds several random characters to the name
+	// Secrets Manager automatically adds several random characters to the name
 	// at the end of the ARN when you initially create a secret. This affects only
 	// the ARN and not the actual friendly name. This ensures that if you create
 	// a new secret with the same name as an old secret that you previously deleted,
@@ -2400,7 +2389,7 @@ func (s *CreateSecretOutput) SetVersionId(v string) *CreateSecretOutput {
 type DeleteSecretInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) Specifies the number of days that AWS Secrets Manager waits before
+	// (Optional) Specifies the number of days that Secrets Manager waits before
 	// it can delete the secret.
 	//
 	// This value can range from 7 to 30 days. The default value is 30.
@@ -2457,9 +2446,9 @@ type DeleteSecretOutput struct {
 	// The ARN of the secret that is now scheduled for deletion.
 	ARN *string `min:"20" type:"string"`
 
-	// The date and time after which this secret will be deleted by AWS Secrets
-	// Manager and is no longer recoverable. This value is the date and time of
-	// the delete request plus the number of days specified in RecoveryWindowInDays.
+	// The date and time after which this secret can be deleted by Secrets Manager
+	// and can no longer be restored. This value is the date and time of the delete
+	// request plus the number of days specified in RecoveryWindowInDays.
 	DeletionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The friendly name of the secret that is now scheduled for deletion.
@@ -2556,9 +2545,9 @@ type DescribeSecretOutput struct {
 	Description *string `type:"string"`
 
 	// The ARN or alias of the AWS KMS customer master key (CMK) that's used to
-	// encrypt the SecretString and SecretBinary fields in each version of the secret.
-	// If you don't provide a key, then AWS Secrets Manager defaults to encrypting
-	// the secret fields with the default KMS CMK (the one named awssecretsmanager)
+	// encrypt the SecretString or SecretBinary fields in each version of the secret.
+	// If you don't provide a key, then Secrets Manager defaults to encrypting the
+	// secret fields with the default KMS CMK (the one named awssecretsmanager)
 	// for this account.
 	KmsKeyId *string `type:"string"`
 
@@ -2582,7 +2571,7 @@ type DescribeSecretOutput struct {
 	// to a value greater than 0. To disable rotation, use CancelRotateSecret.
 	RotationEnabled *bool `type:"boolean"`
 
-	// The ARN of a Lambda function that's invoked by AWS Secrets Manager to rotate
+	// The ARN of a Lambda function that's invoked by Secrets Manager to rotate
 	// the secret either automatically per the schedule or manually by a call to
 	// RotateSecret.
 	RotationLambdaARN *string `type:"string"`
@@ -2944,9 +2933,9 @@ type GetSecretValueOutput struct {
 	// knows how to parse.
 	//
 	// If you store custom information in the secret by using the CreateSecret,
-	// UpdateSecret, or PutSecretValue API operations instead of the AWS Secrets
-	// Manager console, or by using the Other secret type in the console, then you
-	// must code your Lambda rotation function to parse and interpret those values.
+	// UpdateSecret, or PutSecretValue API operations instead of the Secrets Manager
+	// console, or by using the Other secret type in the console, then you must
+	// code your Lambda rotation function to parse and interpret those values.
 	SecretString *string `type:"string"`
 
 	// The unique identifier of this version of the secret.
@@ -3022,8 +3011,8 @@ type ListSecretVersionIdsInput struct {
 	// to the operation. If additional items exist beyond the maximum you specify,
 	// the NextToken response element is present and has a value (isn't null). Include
 	// that value as the NextToken request parameter in the next call to the operation
-	// to get the next part of the results. Note that AWS Secrets Manager might
-	// return fewer results than the maximum even when there are more results available.
+	// to get the next part of the results. Note that Secrets Manager might return
+	// fewer results than the maximum even when there are more results available.
 	// You should check NextToken after every operation to ensure that you receive
 	// all of the results.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -3103,7 +3092,7 @@ type ListSecretVersionIdsOutput struct {
 
 	// The Amazon Resource Name (ARN) for the secret.
 	//
-	// AWS Secrets Manager automatically adds several random characters to the name
+	// Secrets Manager automatically adds several random characters to the name
 	// at the end of the ARN when you initially create a secret. This affects only
 	// the ARN and not the actual friendly name. This ensures that if you create
 	// a new secret with the same name as an old secret that you previously deleted,
@@ -3169,8 +3158,8 @@ type ListSecretsInput struct {
 	// to the operation. If additional items exist beyond the maximum you specify,
 	// the NextToken response element is present and has a value (isn't null). Include
 	// that value as the NextToken request parameter in the next call to the operation
-	// to get the next part of the results. Note that AWS Secrets Manager might
-	// return fewer results than the maximum even when there are more results available.
+	// to get the next part of the results. Note that Secrets Manager might return
+	// fewer results than the maximum even when there are more results available.
 	// You should check NextToken after every operation to ensure that you receive
 	// all of the results.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -3266,9 +3255,9 @@ type PutSecretValueInput struct {
 	// If you use the AWS CLI or one of the AWS SDK to call this operation, then
 	// you can leave this parameter empty. The CLI or SDK generates a random UUID
 	// for you and includes that in the request. If you don't use the SDK and instead
-	// generate a raw HTTP request to the AWS Secrets Manager service endpoint,
-	// then you must generate a ClientRequestToken yourself for new versions and
-	// include that value in the request.
+	// generate a raw HTTP request to the Secrets Manager service endpoint, then
+	// you must generate a ClientRequestToken yourself for new versions and include
+	// that value in the request.
 	//
 	// This value helps ensure idempotency. Secrets Manager uses this value to prevent
 	// the accidental creation of duplicate versions if there are failures and retries
@@ -3295,8 +3284,8 @@ type PutSecretValueInput struct {
 	// new version of the secret. To use this parameter in the command-line tools,
 	// we recommend that you store your binary data in a file and then use the appropriate
 	// technique for your tool to pass the contents of the file as a parameter.
-	// Either SecretBinary or SecretString must have a value. They cannot both be
-	// empty.
+	// Either SecretBinary or SecretString must have a value, but not both. They
+	// cannot both be empty.
 	//
 	// This parameter is not accessible if the secret using the Secrets Manager
 	// console.
@@ -3308,15 +3297,12 @@ type PutSecretValueInput struct {
 	// either the Amazon Resource Name (ARN) or the friendly name of the secret.
 	// The secret must already exist.
 	//
-	// The secret name can consist of uppercase letters, lowercase letters, digits,
-	// and any of the following characters: /_+=.@-    Spaces are not permitted.
-	//
 	// SecretId is a required field
 	SecretId *string `min:"1" type:"string" required:"true"`
 
 	// (Optional) Specifies text data that you want to encrypt and store in this
 	// new version of the secret. Either SecretString or SecretBinary must have
-	// a value. They cannot both be empty.
+	// a value, but not both. They cannot both be empty.
 	//
 	// If you create this secret by using the Secrets Manager console then Secrets
 	// Manager puts the protected secret text in only the SecretString parameter.
@@ -3328,6 +3314,14 @@ type PutSecretValueInput struct {
 	// JSON parameter for the various command line tool environments, see Using
 	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide.
+	//
+	// For example:
+	//
+	// [{"username":"bob"},{"password":"abc123xyz456"}]
+	//
+	// If your command-line tool or SDK requires quotation marks around the parameter,
+	// you should use single quotes to avoid confusion with the double quotes required
+	// in the JSON text.
 	SecretString *string `type:"string"`
 
 	// (Optional) Specifies a list of staging labels that are attached to this version
@@ -3339,8 +3333,8 @@ type PutSecretValueInput struct {
 	// of the same secret then that staging label is automatically removed from
 	// the other version and attached to this version.
 	//
-	// If you do not specify a value for VersionStages then AWS Secrets Manager
-	// automatically moves the staging label AWSCURRENT to this new version.
+	// If you do not specify a value for VersionStages then Secrets Manager automatically
+	// moves the staging label AWSCURRENT to this new version.
 	VersionStages []*string `min:"1" type:"list"`
 }
 
@@ -3543,7 +3537,7 @@ type RotateSecretInput struct {
 	// If you use the AWS CLI or one of the AWS SDK to call this operation, then
 	// you can leave this parameter empty. The CLI or SDK generates a random UUID
 	// for you and includes that in the request for this parameter. If you don't
-	// use the SDK and instead generate a raw HTTP request to the AWS Secrets Manager
+	// use the SDK and instead generate a raw HTTP request to the Secrets Manager
 	// service endpoint, then you must generate a ClientRequestToken yourself for
 	// new versions and include that value in the request.
 	//
@@ -3728,7 +3722,7 @@ type SecretListEntry struct {
 
 	// The Amazon Resource Name (ARN) of the secret.
 	//
-	// For more information about ARNs in AWS Secrets Manager, see Policy Resources
+	// For more information about ARNs in Secrets Manager, see Policy Resources
 	// (http://docs.aws.amazon.com/http:/docs.aws.amazon.com/secretsmanager/latest/userguide/reference_iam-permissions.html#iam-resources)
 	// in the AWS Secrets Manager User Guide.
 	ARN *string `min:"20" type:"string"`
@@ -3744,8 +3738,8 @@ type SecretListEntry struct {
 
 	// The ARN or alias of the AWS KMS customer master key (CMK) that's used to
 	// encrypt the SecretString and SecretBinary fields in each version of the secret.
-	// If you don't provide a key, then AWS Secrets Manager defaults to encrypting
-	// the secret fields with the default KMS CMK (the one named awssecretsmanager)
+	// If you don't provide a key, then Secrets Manager defaults to encrypting the
+	// secret fields with the default KMS CMK (the one named awssecretsmanager)
 	// for this account.
 	KmsKeyId *string `type:"string"`
 
@@ -3768,9 +3762,9 @@ type SecretListEntry struct {
 	// Indicated whether automatic, scheduled rotation is enabled for this secret.
 	RotationEnabled *bool `type:"boolean"`
 
-	// The ARN of an AWS Lambda function that's invoked by AWS Secrets Manager to
-	// rotate and expire the secret either automatically per the schedule or manually
-	// by a call to RotateSecret.
+	// The ARN of an AWS Lambda function that's invoked by Secrets Manager to rotate
+	// and expire the secret either automatically per the schedule or manually by
+	// a call to RotateSecret.
 	RotationLambdaARN *string `type:"string"`
 
 	// A structure that defines the rotation configuration for the secret.
@@ -4149,9 +4143,9 @@ type UpdateSecretInput struct {
 	// If you use the AWS CLI or one of the AWS SDK to call this operation, then
 	// you can leave this parameter empty. The CLI or SDK generates a random UUID
 	// for you and includes that in the request. If you don't use the SDK and instead
-	// generate a raw HTTP request to the AWS Secrets Manager service endpoint,
-	// then you must generate a ClientRequestToken yourself for new versions and
-	// include that value in the request.
+	// generate a raw HTTP request to the Secrets Manager service endpoint, then
+	// you must generate a ClientRequestToken yourself for new versions and include
+	// that value in the request.
 	//
 	// You typically only need to interact with this value if you implement your
 	// own retry logic and want to ensure that a given secret is not created twice.
@@ -4184,9 +4178,9 @@ type UpdateSecretInput struct {
 	//
 	// If you don't specify this value, then Secrets Manager defaults to using the
 	// default CMK in the account (the one named aws/secretsmanager). If a KMS CMK
-	// with that name doesn't exist, then AWS Secrets Manager creates it for you
-	// automatically the first time it needs to encrypt a version's Plaintext or
-	// PlaintextString fields.
+	// with that name doesn't exist, then Secrets Manager creates it for you automatically
+	// the first time it needs to encrypt a version's Plaintext or PlaintextString
+	// fields.
 	//
 	// You can only use the account's default CMK to encrypt and decrypt if you
 	// call this operation using credentials from the same account that owns the
@@ -4198,8 +4192,8 @@ type UpdateSecretInput struct {
 	// new version of the secret. To use this parameter in the command-line tools,
 	// we recommend that you store your binary data in a file and then use the appropriate
 	// technique for your tool to pass the contents of the file as a parameter.
-	// Either SecretBinary or SecretString must have a value. They cannot both be
-	// empty.
+	// Either SecretBinary or SecretString must have a value, but not both. They
+	// cannot both be empty.
 	//
 	// This parameter is not accessible using the Secrets Manager console.
 	//
@@ -4215,7 +4209,7 @@ type UpdateSecretInput struct {
 
 	// (Optional) Specifies text data that you want to encrypt and store in this
 	// new version of the secret. Either SecretBinary or SecretString must have
-	// a value. They cannot both be empty.
+	// a value, but not both. They cannot both be empty.
 	//
 	// If you create this secret by using the Secrets Manager console then Secrets
 	// Manager puts the protected secret text in only the SecretString parameter.
@@ -4226,7 +4220,13 @@ type UpdateSecretInput struct {
 	// argument and specify key/value pairs. For information on how to format a
 	// JSON parameter for the various command line tool environments, see Using
 	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
-	// in the AWS CLI User Guide.
+	// in the AWS CLI User Guide. For example:
+	//
+	// [{"username":"bob"},{"password":"abc123xyz456"}]
+	//
+	// If your command-line tool or SDK requires quotation marks around the parameter,
+	// you should use single quotes to avoid confusion with the double quotes required
+	// in the JSON text.
 	SecretString *string `type:"string"`
 }
 
@@ -4300,7 +4300,7 @@ type UpdateSecretOutput struct {
 
 	// The ARN of this secret.
 	//
-	// AWS Secrets Manager automatically adds several random characters to the name
+	// Secrets Manager automatically adds several random characters to the name
 	// at the end of the ARN when you initially create a secret. This affects only
 	// the ARN and not the actual friendly name. This ensures that if you create
 	// a new secret with the same name as an old secret that you previously deleted,

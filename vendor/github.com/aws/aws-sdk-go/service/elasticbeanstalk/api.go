@@ -152,7 +152,7 @@ func (c *ElasticBeanstalk) ApplyEnvironmentManagedActionRequest(input *ApplyEnvi
 // API operation ApplyEnvironmentManagedAction for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 //   * ErrCodeManagedActionInvalidStateException "ManagedActionInvalidStateException"
@@ -776,7 +776,7 @@ func (c *ElasticBeanstalk) CreatePlatformVersionRequest(input *CreatePlatformVer
 //   The specified account does not have sufficient privileges for one or more
 //   AWS services.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 //   * ErrCodeTooManyPlatformsException "TooManyPlatformsException"
@@ -1315,7 +1315,7 @@ func (c *ElasticBeanstalk) DeletePlatformVersionRequest(input *DeletePlatformVer
 //   The specified account does not have sufficient privileges for one or more
 //   AWS services.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 //   * ErrCodePlatformVersionStillReferencedException "PlatformVersionStillReferencedException"
@@ -1809,7 +1809,7 @@ func (c *ElasticBeanstalk) DescribeEnvironmentHealthRequest(input *DescribeEnvir
 //   One or more input parameters is not valid. Please correct the input parameters
 //   and try the operation again.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01/DescribeEnvironmentHealth
@@ -1888,7 +1888,7 @@ func (c *ElasticBeanstalk) DescribeEnvironmentManagedActionHistoryRequest(input 
 // API operation DescribeEnvironmentManagedActionHistory for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01/DescribeEnvironmentManagedActionHistory
@@ -1967,7 +1967,7 @@ func (c *ElasticBeanstalk) DescribeEnvironmentManagedActionsRequest(input *Descr
 // API operation DescribeEnvironmentManagedActions for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01/DescribeEnvironmentManagedActions
@@ -2337,7 +2337,7 @@ func (c *ElasticBeanstalk) DescribeInstancesHealthRequest(input *DescribeInstanc
 //   One or more input parameters is not valid. Please correct the input parameters
 //   and try the operation again.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01/DescribeInstancesHealth
@@ -2420,7 +2420,7 @@ func (c *ElasticBeanstalk) DescribePlatformVersionRequest(input *DescribePlatfor
 //   The specified account does not have sufficient privileges for one or more
 //   AWS services.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01/DescribePlatformVersion
@@ -2578,7 +2578,7 @@ func (c *ElasticBeanstalk) ListPlatformVersionsRequest(input *ListPlatformVersio
 //   The specified account does not have sufficient privileges for one or more
 //   AWS services.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ErrCodeServiceException "ElasticBeanstalkServiceException"
 //   A generic service exception has occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01/ListPlatformVersions
@@ -3867,6 +3867,9 @@ func (s AbortEnvironmentUpdateOutput) GoString() string {
 type ApplicationDescription struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the application.
+	ApplicationArn *string `type:"string"`
+
 	// The name of the application.
 	ApplicationName *string `min:"1" type:"string"`
 
@@ -3897,6 +3900,12 @@ func (s ApplicationDescription) String() string {
 // GoString returns the string representation
 func (s ApplicationDescription) GoString() string {
 	return s.String()
+}
+
+// SetApplicationArn sets the ApplicationArn field's value.
+func (s *ApplicationDescription) SetApplicationArn(v string) *ApplicationDescription {
+	s.ApplicationArn = &v
+	return s
 }
 
 // SetApplicationName sets the ApplicationName field's value.
@@ -4080,6 +4089,9 @@ type ApplicationVersionDescription struct {
 	// The name of the application to which the application version belongs.
 	ApplicationName *string `min:"1" type:"string"`
 
+	// The Amazon Resource Name (ARN) of the application version.
+	ApplicationVersionArn *string `type:"string"`
+
 	// Reference to the artifact from the AWS CodeBuild build.
 	BuildArn *string `type:"string"`
 
@@ -4120,6 +4132,12 @@ func (s ApplicationVersionDescription) GoString() string {
 // SetApplicationName sets the ApplicationName field's value.
 func (s *ApplicationVersionDescription) SetApplicationName(v string) *ApplicationVersionDescription {
 	s.ApplicationName = &v
+	return s
+}
+
+// SetApplicationVersionArn sets the ApplicationVersionArn field's value.
+func (s *ApplicationVersionDescription) SetApplicationVersionArn(v string) *ApplicationVersionDescription {
+	s.ApplicationVersionArn = &v
 	return s
 }
 
@@ -7612,7 +7630,7 @@ type EnvironmentDescription struct {
 	EndpointURL *string `type:"string"`
 
 	// The environment's Amazon Resource Name (ARN), which can be used in other
-	// API reuqests that require an ARN.
+	// API requests that require an ARN.
 	EnvironmentArn *string `type:"string"`
 
 	// The ID of this environment.

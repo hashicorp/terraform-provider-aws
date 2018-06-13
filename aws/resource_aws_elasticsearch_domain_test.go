@@ -36,6 +36,10 @@ func testSweepElasticSearchDomains(region string) error {
 
 	out, err := conn.ListDomainNames(&elasticsearch.ListDomainNamesInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
 	}
 	for _, domain := range out.DomainNames {

@@ -119,6 +119,11 @@ resource "aws_s3_bucket" "bucket" {
     }
 
     transition {
+      days = 15
+      storage_class = "ONEZONE_IA"
+    }
+
+    transition {
       days          = 30
       storage_class = "STANDARD_IA"
     }
@@ -385,7 +390,7 @@ The `transition` object supports the following
 
 * `date` (Optional) Specifies the date after which you want the corresponding action to take effect.
 * `days` (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the object to transition. Can be `STANDARD_IA` or `GLACIER`.
+* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, or `GLACIER`.
 
 The `noncurrent_version_expiration` object supports the following
 
@@ -394,7 +399,7 @@ The `noncurrent_version_expiration` object supports the following
 The `noncurrent_version_transition` object supports the following
 
 * `days` (Required) Specifies the number of days an object is noncurrent object versions expire.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent versions object to transition. Can be `STANDARD_IA` or `GLACIER`.
+* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent versions object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, or `GLACIER`.
 
 The `replication_configuration` object supports the following:
 
@@ -413,7 +418,7 @@ The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
 * `storage_class` - (Optional) The class of storage used to store the object.
-* `replica_kms_key_id` - (Optional) Destination KMS encryption key ID for SSE-KMS replication. Must be used in conjunction with
+* `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
 
 The `source_selection_criteria` object supports the following:
@@ -440,11 +445,12 @@ The `apply_server_side_encryption_by_default` object supports the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the bucket.
 * `arn` - The ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
+* `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.

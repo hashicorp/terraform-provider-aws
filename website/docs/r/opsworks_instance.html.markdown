@@ -115,7 +115,7 @@ using the [`taint` command](/docs/commands/taint.html).
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the OpsWorks instance.
 * `agent_version` - The AWS OpsWorks agent version.

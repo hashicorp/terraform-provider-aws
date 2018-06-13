@@ -62,6 +62,21 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 ```
 
+Notes: `attribute` can be lists
+
+```
+  attribute = [{
+    name = "UserId"
+    type = "S"
+  }, {
+    name = "GameTitle"
+    type = "S"
+  }, {
+    name = "TopScore"
+    type = "N"
+  }]
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -74,7 +89,7 @@ The following arguments are supported:
   also be defined)
 * `write_capacity` - (Required) The number of write units for this table
 * `read_capacity` - (Required) The number of read units for this table
-* `attribute` - (Required) Define an attribute, has two properties:
+* `attribute` - (Required) Define an attribute (can be lists), has two properties:
   * `name` - The name of the attribute
   * `type` - One of: S, N, or B for (S)tring, (N)umber or (B)inary data
 * `ttl` - (Optional) Defines ttl, has two properties, and can only be specified once:
@@ -90,6 +105,7 @@ attributes, etc.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 * `tags` - (Optional) A map of tags to populate on the created table.
+* `point_in_time_recovery` - (Optional) Point-in-time recovery options.
 
 ### Timeouts
 
@@ -135,6 +151,10 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 * `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`.
 
+#### `point_in_time_recovery`
+
+* `enabled` - (Required) Whether to enable point-in-time recovery - note that it can take up to 10 minutes to enable for new tables. If the `point_in_time_recovery` block is not provided then this defaults to `false`.
+
 ### A note about attributes
 
 Only define attributes on the table object that are going to be used as:
@@ -154,7 +174,7 @@ infinite loop in planning.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The arn of the table
 * `id` - The name of the table

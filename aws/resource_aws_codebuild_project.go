@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -135,6 +136,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.EnvironmentVariableTypePlaintext,
+											codebuild.EnvironmentVariableTypeParameterStore,
+										}, false),
+										Default: codebuild.EnvironmentVariableTypePlaintext,
+									},
 								},
 							},
 						},
@@ -178,8 +188,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:      schema.TypeString,
+										Sensitive: true,
+										Optional:  true,
 									},
 									"type": {
 										Type:     schema.TypeString,
@@ -213,6 +224,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.SourceTypeGithubEnterprise,
 							}, false),
 						},
+						"git_clone_depth": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"insecure_ssl": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 				Required: true,
@@ -230,6 +250,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Optional:     true,
 				Default:      "60",
 				ValidateFunc: validation.IntBetween(5, 480),
+			},
+			"badge_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"badge_url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags": tagsSchema(),
 			"vpc_config": {
@@ -313,6 +342,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("vpc_config"); ok {
 		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("badge_enabled"); ok {
+		params.BadgeEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -436,6 +469,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 					projectEnvironmentVar.Value = &v
 				}
 
+				if v := config["type"].(string); v != "" {
+					projectEnvironmentVar.Type = &v
+				}
+
 				projectEnvironmentVariables = append(projectEnvironmentVariables, projectEnvironmentVar)
 			}
 
@@ -471,11 +508,15 @@ func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
 		sourceType := data["type"].(string)
 		location := data["location"].(string)
 		buildspec := data["buildspec"].(string)
+		gitCloneDepth := aws.Int64(int64(data["git_clone_depth"].(int)))
+		insecureSsl := aws.Bool(data["insecure_ssl"].(bool))
 
 		projectSource = codebuild.ProjectSource{
-			Type:      &sourceType,
-			Location:  &location,
-			Buildspec: &buildspec,
+			Type:          &sourceType,
+			Location:      &location,
+			Buildspec:     &buildspec,
+			GitCloneDepth: gitCloneDepth,
+			InsecureSsl:   insecureSsl,
 		}
 
 		if v, ok := data["auth"]; ok {
@@ -540,6 +581,13 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
 	d.Set("build_timeout", project.TimeoutInMinutes)
+	if project.Badge != nil {
+		d.Set("badge_enabled", project.Badge.BadgeEnabled)
+		d.Set("badge_url", project.Badge.BadgeRequestUrl)
+	} else {
+		d.Set("badge_enabled", false)
+		d.Set("badge_url", "")
+	}
 
 	if err := d.Set("tags", tagsToMapCodeBuild(project.Tags)); err != nil {
 		return err
@@ -600,11 +648,30 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		params.TimeoutInMinutes = aws.Int64(int64(d.Get("build_timeout").(int)))
 	}
 
+	if d.HasChange("badge_enabled") {
+		params.BadgeEnabled = aws.Bool(d.Get("badge_enabled").(bool))
+	}
+
 	// The documentation clearly says "The replacement set of tags for this build project."
 	// But its a slice of pointers so if not set for every update, they get removed.
 	params.Tags = tagsFromMapCodeBuild(d.Get("tags").(map[string]interface{}))
 
-	_, err := conn.UpdateProject(params)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+
+		_, err = conn.UpdateProject(params)
+		if err != nil {
+			// Work around eventual consistency of IAM
+			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+
+	})
 
 	if err != nil {
 		return fmt.Errorf(
@@ -625,8 +692,6 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -713,6 +778,14 @@ func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interfa
 		m["location"] = *source.Location
 	}
 
+	if source.GitCloneDepth != nil {
+		m["git_clone_depth"] = *source.GitCloneDepth
+	}
+
+	if source.InsecureSsl != nil {
+		m["insecure_ssl"] = *source.InsecureSsl
+	}
+
 	l[0] = m
 
 	return l
@@ -758,7 +831,7 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them
 			ev := e.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s:%s-", ev["name"].(string), ev["value"].(string)))
+			buf.WriteString(fmt.Sprintf("%s:%s:%s-", ev["name"].(string), ev["type"].(string), ev["value"].(string)))
 		}
 	}
 
@@ -775,6 +848,12 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 	}
 	if v, ok := m["location"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["git_clone_depth"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
+	}
+	if v, ok := m["insecure_ssl"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
 	}
 
 	return hashcode.String(buf.String())
@@ -801,6 +880,9 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 			item := map[string]interface{}{}
 			item["name"] = *env.Name
 			item["value"] = *env.Value
+			if env.Type != nil {
+				item["type"] = *env.Type
+			}
 			envVariables = append(envVariables, item)
 		}
 	}

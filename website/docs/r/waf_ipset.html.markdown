@@ -20,6 +20,11 @@ resource "aws_waf_ipset" "ipset" {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
+
+  ip_set_descriptors {
+    type  = "IPV4"
+    value = "10.16.16.0/16"
+  }
 }
 ```
 
@@ -28,8 +33,7 @@ resource "aws_waf_ipset" "ipset" {
 The following arguments are supported:
 
 * `name` - (Required) The name or description of the IPSet.
-* `ip_set_descriptors` - (Optional) Specifies the IP address type (IPV4 or IPV6)
-	and the IP address range (in CIDR format) that web requests originate from.
+* `ip_set_descriptors` - (Optional) One or more pairs specifying the IP address type (IPV4 or IPV6) and the IP address range (in CIDR format) from which web requests originate.
 
 ## Nested Blocks
 
@@ -45,6 +49,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF IPSet.

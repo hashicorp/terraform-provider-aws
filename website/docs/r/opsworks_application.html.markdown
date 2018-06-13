@@ -95,6 +95,6 @@ A `ssl_configuration` block supports the following arguments (can only be define
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the application.

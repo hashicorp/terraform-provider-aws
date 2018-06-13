@@ -3,11 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -40,6 +38,10 @@ func testSweepCloudFrontDistributions(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error listing CloudFront Distributions: %s", err)
 	}
 
@@ -174,6 +176,7 @@ func TestAccAWSCloudFrontDistribution_customOrigin(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccAWSCloudFrontDistribution_multiOrigin(t *testing.T) {
+	resourceName := "aws_cloudfront_distribution.multi_origin_distribution"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -182,9 +185,38 @@ func TestAccAWSCloudFrontDistribution_multiOrigin(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontDistributionMultiOriginConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExistence(
-						"aws_cloudfront_distribution.multi_origin_distribution",
-					),
+					testAccCheckCloudFrontDistributionExistence(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.2106187217.default_ttl", "50"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.2106187217.path_pattern", "images1/*.jpg"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/terraform-providers/terraform-provider-aws/issues/188
+// TestAccAWSCloudFrontDistribution_orderedCacheBehavior runs an
+// aws_cloudfront_distribution acceptance test with multiple and ordered cache behaviors.
+//
+// If you are testing manually and can't wait for deletion, set the
+// TF_TEST_CLOUDFRONT_RETAIN environment variable.
+func TestAccAWSCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
+	resourceName := "aws_cloudfront_distribution.main"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionOrderedCacheBehavior,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExistence(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.default_ttl", "51"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.path_pattern", "images2/*.jpg"),
 				),
 			},
 		},
@@ -651,7 +683,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 	}
 	%s
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), logBucket, testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), logBucket, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionMultiOriginConfig = fmt.Sprintf(`
 variable rand_id {
@@ -755,7 +787,7 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 	}
 	%s
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionNoCustomErroResponseInfo = fmt.Sprintf(`
 variable rand_id {
@@ -806,7 +838,7 @@ resource "aws_cloudfront_distribution" "no_custom_error_responses" {
 	}
 	%s
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionNoOptionalItemsConfig = fmt.Sprintf(`
 variable rand_id {
@@ -849,7 +881,7 @@ resource "aws_cloudfront_distribution" "no_optional_items" {
 	}
 	%s
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionConfig_Origin_EmptyDomainName = fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "Origin_EmptyDomainName" {
@@ -975,7 +1007,7 @@ resource "aws_cloudfront_distribution" "http_1_1" {
 	}
 	%s
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionIsIPV6EnabledConfig = fmt.Sprintf(`
 variable rand_id {
@@ -1024,4 +1056,85 @@ resource "aws_cloudfront_distribution" "is_ipv6_enabled" {
 	}
 	%s
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
+
+var testAccAWSCloudFrontDistributionOrderedCacheBehavior = fmt.Sprintf(`
+variable rand_id {
+	default = %d
+}
+
+resource "aws_cloudfront_distribution" "main" {
+	origin {
+		domain_name = "www.hashicorp.com"
+		origin_id = "myCustomOrigin"
+		custom_origin_config {
+			http_port = 80
+			https_port = 443
+			origin_protocol_policy = "http-only"
+			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
+		}
+	}
+	enabled = true
+	comment = "Some comment"
+	aliases = []
+	default_cache_behavior {
+		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+		cached_methods = [ "GET", "HEAD" ]
+		target_origin_id = "myCustomOrigin"
+		smooth_streaming = true
+		forwarded_values {
+			query_string = false
+			cookies {
+				forward = "all"
+			}
+		}
+		min_ttl = 100
+		default_ttl = 100
+		max_ttl = 100
+		viewer_protocol_policy = "allow-all"
+	}
+	ordered_cache_behavior {
+		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+		cached_methods = [ "GET", "HEAD" ]
+		target_origin_id = "myCustomOrigin"
+		forwarded_values {
+			query_string = true
+			cookies {
+				forward = "none"
+			}
+		}
+		min_ttl = 50
+		default_ttl = 50
+		max_ttl = 50
+		viewer_protocol_policy = "allow-all"
+		path_pattern = "images1/*.jpg"
+	}
+	ordered_cache_behavior {
+		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+		cached_methods = [ "GET", "HEAD" ]
+		target_origin_id = "myCustomOrigin"
+		forwarded_values {
+			query_string = true
+			cookies {
+				forward = "none"
+			}
+		}
+		min_ttl = 51
+		default_ttl = 51
+		max_ttl = 51
+		viewer_protocol_policy = "allow-all"
+		path_pattern = "images2/*.jpg"
+	}
+
+	price_class = "PriceClass_All"
+	restrictions {
+		geo_restriction {
+			restriction_type = "none"
+		}
+	}
+	viewer_certificate {
+		cloudfront_default_certificate = true
+	}
+	%s
+}
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())

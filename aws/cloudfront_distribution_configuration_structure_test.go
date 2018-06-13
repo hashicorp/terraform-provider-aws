@@ -290,10 +290,10 @@ func TestCloudFrontStructure_expandDefaultCacheBehavior(t *testing.T) {
 		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *dcb.LambdaFunctionAssociations.Quantity)
 	}
 	if reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringList(allowedMethodsConf())) != true {
-		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", allowedMethodsConf(), dcb.AllowedMethods.Items)
+		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf(), dcb.AllowedMethods.Items)
 	}
 	if reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf())) != true {
-		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", cachedMethodsConf(), dcb.AllowedMethods.CachedMethods.Items)
+		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf(), dcb.AllowedMethods.CachedMethods.Items)
 	}
 }
 
@@ -310,7 +310,7 @@ func TestCloudFrontStructure_flattenDefaultCacheBehavior(t *testing.T) {
 
 func TestCloudFrontStructure_expandCacheBehavior(t *testing.T) {
 	data := cacheBehaviorConf1()
-	cb := expandCacheBehavior(data)
+	cb := expandCacheBehaviorDeprecated(data)
 	if *cb.Compress != true {
 		t.Fatalf("Expected Compress to be true, got %v", *cb.Compress)
 	}
@@ -354,8 +354,8 @@ func TestCloudFrontStructure_expandCacheBehavior(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCacheBehavior(t *testing.T) {
 	in := cacheBehaviorConf1()
-	cb := expandCacheBehavior(in)
-	out := flattenCacheBehavior(cb)
+	cb := expandCacheBehaviorDeprecated(in)
+	out := flattenCacheBehaviorDeprecated(cb)
 	var diff *schema.Set
 	if out["compress"] != true {
 		t.Fatalf("Expected out[compress] to be true, got %v", out["compress"])
@@ -413,7 +413,7 @@ func TestCloudFrontStructure_flattenCacheBehavior(t *testing.T) {
 
 func TestCloudFrontStructure_expandCacheBehaviors(t *testing.T) {
 	data := cacheBehaviorsConf()
-	cbs := expandCacheBehaviors(data)
+	cbs := expandCacheBehaviorsDeprecated(data)
 	if *cbs.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *cbs.Quantity)
 	}
@@ -424,8 +424,8 @@ func TestCloudFrontStructure_expandCacheBehaviors(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCacheBehaviors(t *testing.T) {
 	in := cacheBehaviorsConf()
-	cbs := expandCacheBehaviors(in)
-	out := flattenCacheBehaviors(cbs)
+	cbs := expandCacheBehaviorsDeprecated(in)
+	out := flattenCacheBehaviorsDeprecated(cbs)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
@@ -628,7 +628,7 @@ func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
 
 func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 	data := allowedMethodsConf()
-	am := expandAllowedMethods(data)
+	am := expandAllowedMethodsDeprecated(data)
 	if *am.Quantity != 7 {
 		t.Fatalf("Expected Quantity to be 7, got %v", *am.Quantity)
 	}
@@ -639,8 +639,8 @@ func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
 	in := allowedMethodsConf()
-	am := expandAllowedMethods(in)
-	out := flattenAllowedMethods(am)
+	am := expandAllowedMethodsDeprecated(in)
+	out := flattenAllowedMethodsDeprecated(am)
 
 	if reflect.DeepEqual(in, out) != true {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -649,7 +649,7 @@ func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 	data := cachedMethodsConf()
-	cm := expandCachedMethods(data)
+	cm := expandCachedMethodsDeprecated(data)
 	if *cm.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *cm.Quantity)
 	}
@@ -660,8 +660,8 @@ func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCachedMethods(t *testing.T) {
 	in := cachedMethodsConf()
-	cm := expandCachedMethods(in)
-	out := flattenCachedMethods(cm)
+	cm := expandCachedMethodsDeprecated(in)
+	out := flattenCachedMethodsDeprecated(cm)
 
 	if reflect.DeepEqual(in, out) != true {
 		t.Fatalf("Expected out to be %v, got %v", in, out)

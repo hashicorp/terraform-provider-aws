@@ -16,12 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -46,6 +48,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -54,6 +57,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -74,6 +78,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -120,6 +125,7 @@ type Config struct {
 	Ec2Endpoint              string
 	EcsEndpoint              string
 	EcrEndpoint              string
+	EfsEndpoint              string
 	EsEndpoint               string
 	ElbEndpoint              string
 	IamEndpoint              string
@@ -132,6 +138,7 @@ type Config struct {
 	SnsEndpoint              string
 	SqsEndpoint              string
 	StsEndpoint              string
+	SsmEndpoint              string
 	Insecure                 bool
 
 	SkipCredsValidation     bool
@@ -162,15 +169,18 @@ type AWSClient struct {
 	ecrconn               *ecr.ECR
 	ecsconn               *ecs.ECS
 	efsconn               *efs.EFS
+	eksconn               *eks.EKS
 	elbconn               *elb.ELB
 	elbv2conn             *elbv2.ELBV2
 	emrconn               *emr.EMR
 	esconn                *elasticsearch.ElasticsearchService
 	acmconn               *acm.ACM
+	acmpcaconn            *acmpca.ACMPCA
 	apigateway            *apigateway.APIGateway
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	secretsmanagerconn    *secretsmanager.SecretsManager
 	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
@@ -189,6 +199,7 @@ type AWSClient struct {
 	kmsconn               *kms.KMS
 	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
+	fmsconn               *fms.FMS
 	inspectorconn         *inspector.Inspector
 	elasticacheconn       *elasticache.ElastiCache
 	elasticbeanstalkconn  *elasticbeanstalk.ElasticBeanstalk
@@ -217,6 +228,7 @@ type AWSClient struct {
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
+	budgetconn            *budgets.Budgets
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -343,6 +355,26 @@ func (c *Config) Client() (interface{}, error) {
 		sess = sess.Copy(&aws.Config{MaxRetries: aws.Int(c.MaxRetries)})
 	}
 
+	// Generally, we want to configure a lower retry theshold for networking issues
+	// as the session retry threshold is very high by default and can mask permanent
+	// networking failures, such as a non-existent service endpoint.
+	// MaxRetries will override this logic if it has a lower retry threshold.
+	// NOTE: This logic can be fooled by other request errors raising the retry count
+	//       before any networking error occurs
+	sess.Handlers.Retry.PushBack(func(r *request.Request) {
+		// We currently depend on the DefaultRetryer exponential backoff here.
+		// ~10 retries gives a fair backoff of a few seconds.
+		if r.RetryCount < 9 {
+			return
+		}
+		// RequestError: send request failed
+		// caused by: Post https://FQDN/: dial tcp: lookup FQDN: no such host
+		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
+			log.Printf("[WARN] Disabling retries after next request due to networking issue")
+			r.Retryable = aws.Bool(false)
+		}
+	})
+
 	// This restriction should only be used for Route53 sessions.
 	// Other resources that have restrictions should allow the API to fail, rather
 	// than Terraform abstracting the region for the user. This can lead to breaking
@@ -360,6 +392,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
+	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
 	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
 	awsEsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
@@ -372,6 +405,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
 	awsStsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})
 	awsDeviceFarmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DeviceFarmEndpoint)})
+	awsSsmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SsmEndpoint)})
 
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
@@ -417,7 +451,9 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	client.budgetconn = budgets.New(sess)
 	client.acmconn = acm.New(awsAcmSess)
+	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
 	client.autoscalingconn = autoscaling.New(sess)
@@ -441,7 +477,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(awsEcrSess)
 	client.ecsconn = ecs.New(awsEcsSess)
-	client.efsconn = efs.New(sess)
+	client.efsconn = efs.New(awsEfsSess)
+	client.eksconn = eks.New(sess)
 	client.elasticacheconn = elasticache.New(sess)
 	client.elasticbeanstalkconn = elasticbeanstalk.New(sess)
 	client.elastictranscoderconn = elastictranscoder.New(sess)
@@ -450,6 +487,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.emrconn = emr.New(sess)
 	client.esconn = elasticsearch.New(awsEsSess)
 	client.firehoseconn = firehose.New(sess)
+	client.fmsconn = fms.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
@@ -471,10 +509,11 @@ func (c *Config) Client() (interface{}, error) {
 	client.scconn = servicecatalog.New(sess)
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
+	client.secretsmanagerconn = secretsmanager.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
-	client.ssmconn = ssm.New(sess)
+	client.ssmconn = ssm.New(awsSsmSess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)

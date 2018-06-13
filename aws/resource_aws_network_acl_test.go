@@ -38,6 +38,10 @@ func testSweepNetworkAcls(region string) error {
 	}
 	resp, err := conn.DescribeNetworkAcls(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing Network ACLs: %s", err)
 	}
 
@@ -275,6 +279,7 @@ func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 }
 
 func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -285,12 +290,14 @@ func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
 			{
 				Config: testAccAWSNetworkAclSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
 					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.old"),
 				),
 			},
 			{
 				Config: testAccAWSNetworkAclSubnetConfigChange,
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
 					testAccCheckSubnetIsNotAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.old"),
 					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.new"),
 				),
@@ -500,7 +507,7 @@ func testAccCheckAWSNetworkAclExists(n string, networkAcl *ec2.NetworkAcl) resou
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Group is set")
+			return fmt.Errorf("No ID is set: %s", n)
 		}
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 

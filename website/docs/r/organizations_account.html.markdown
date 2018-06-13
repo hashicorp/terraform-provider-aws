@@ -32,10 +32,16 @@ The following arguments are supported:
 * `iam_user_access_to_billing` - (Optional) If set to `ALLOW`, the new account enables IAM users to access account billing information if they have the required permissions. If set to `DENY`, then only the root user of the new account can access account billing information.
 * `role_name` - (Optional) The name of an IAM role that Organizations automatically preconfigures in the new member account. This role trusts the master account, allowing users in the master account to assume the role, as permitted by the master account administrator. The role has administrator permissions in the new member account.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - The ARN for this account.
+
 ## Import
 
 The AWS member account can be imported by using the `account_id`, e.g.
 
 ```
-$ terraform import aws_organization_account.my_org 111111111111
+$ terraform import aws_organizations_account.my_org 111111111111
 ```

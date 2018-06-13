@@ -54,6 +54,10 @@ func testSweepDynamoDbTables(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping DynamoDB Table sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving DynamoDB Tables: %s", err)
 	}
 
@@ -373,6 +377,35 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigAddSecondaryGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbTableWasUpdated("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigInitialState(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbConfig_backup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasPointInTimeRecoveryEnabled("aws_dynamodb_table.basic-dynamodb-table"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "point_in_time_recovery.0.enabled", "true"),
 				),
 			},
 		},
@@ -937,6 +970,37 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckDynamoDbTableHasPointInTimeRecoveryEnabled(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DynamoDB table name specified!")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+
+		resp, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+			TableName: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		pitr := resp.ContinuousBackupsDescription.PointInTimeRecoveryDescription
+		status := *pitr.PointInTimeRecoveryStatus
+		if status != dynamodb.PointInTimeRecoveryStatusEnabled {
+			return fmt.Errorf("Point in time backup had a status of %s rather than enabled", status)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckDynamoDbTableWasUpdated(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1033,6 +1097,25 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   attribute {
     name = "TestTableHashKey"
     type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbConfig_backup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+  point_in_time_recovery {
+    enabled = true
   }
 }
 `, rName)

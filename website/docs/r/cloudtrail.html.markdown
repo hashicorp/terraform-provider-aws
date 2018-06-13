@@ -18,15 +18,6 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```hcl
-resource "aws_cloudtrail" "example" {
-  name                          = "basic-example"
-  include_global_service_events = false
-}
-```
-
-### Logging to S3
-
-```hcl
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
@@ -127,7 +118,9 @@ resource "aws_cloudtrail" "example" {
 
     data_resource {
       type   = "AWS::S3::Object"
-      values = ["${data.aws_s3_bucket.important-bucket.arn}"]
+      # Make sure to append a trailing '/' to your ARN if you want
+      # to monitor all objects in a bucket.
+      values = ["${data.aws_s3_bucket.important-bucket.arn}/"]
     }
   }
 }
@@ -169,12 +162,12 @@ For **event_selector** the following attributes are supported.
 #### Data Resource Arguments
 For **data_resource** the following attributes are supported.
 
-* `type` (Required) - The resource type in witch you want to log data events. You can specify only the follwing value: "AWS::S3::Object", "AWS::Lambda::Function"
+* `type` (Required) - The resource type in which you want to log data events. You can specify only the follwing value: "AWS::S3::Object", "AWS::Lambda::Function"
 * `values` (Required) - A list of ARN for the specified S3 buckets and object prefixes..
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the trail.
 * `home_region` - The region in which the trail was created.

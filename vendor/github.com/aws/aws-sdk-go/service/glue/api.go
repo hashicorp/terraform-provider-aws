@@ -583,7 +583,7 @@ func (c *Glue) BatchStopJobRunRequest(input *BatchStopJobRunInput) (req *request
 
 // BatchStopJobRun API operation for AWS Glue.
 //
-// Stops one or more job runs for a specified Job.
+// Stops one or more job runs for a specified job definition.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1124,7 +1124,7 @@ func (c *Glue) CreateJobRequest(input *CreateJobInput) (req *request.Request, ou
 
 // CreateJob API operation for AWS Glue.
 //
-// Creates a new job.
+// Creates a new job definition.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2114,7 +2114,8 @@ func (c *Glue) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, ou
 
 // DeleteJob API operation for AWS Glue.
 //
-// Deletes a specified job. If the job is not found, no exception is thrown.
+// Deletes a specified job definition. If the job definition is not found, no
+// exception is thrown.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4239,7 +4240,7 @@ func (c *Glue) GetJobRunsRequest(input *GetJobRunsInput) (req *request.Request, 
 
 // GetJobRuns API operation for AWS Glue.
 //
-// Retrieves metadata for all runs of a given job.
+// Retrieves metadata for all runs of a given job definition.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4383,7 +4384,7 @@ func (c *Glue) GetJobsRequest(input *GetJobsInput) (req *request.Request, output
 
 // GetJobs API operation for AWS Glue.
 //
-// Retrieves all current jobs.
+// Retrieves all current job definitions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6203,7 +6204,7 @@ func (c *Glue) StartJobRunRequest(input *StartJobRunInput) (req *request.Request
 
 // StartJobRun API operation for AWS Glue.
 //
-// Runs a job.
+// Starts a job run using a job definition.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7618,12 +7619,18 @@ type Action struct {
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	Arguments map[string]*string `type:"map"`
 
 	// The name of a job to be executed.
 	JobName *string `min:"1" type:"string"`
+
+	// Specifies configuration properties of a job run notification.
+	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The job run timeout in minutes. It overrides the timeout value of the job.
+	Timeout *int64 `min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -7642,6 +7649,14 @@ func (s *Action) Validate() error {
 	if s.JobName != nil && len(*s.JobName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("JobName", 1))
 	}
+	if s.Timeout != nil && *s.Timeout < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
+	}
+	if s.NotificationProperty != nil {
+		if err := s.NotificationProperty.Validate(); err != nil {
+			invalidParams.AddNested("NotificationProperty", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7658,6 +7673,18 @@ func (s *Action) SetArguments(v map[string]*string) *Action {
 // SetJobName sets the JobName field's value.
 func (s *Action) SetJobName(v string) *Action {
 	s.JobName = &v
+	return s
+}
+
+// SetNotificationProperty sets the NotificationProperty field's value.
+func (s *Action) SetNotificationProperty(v *NotificationProperty) *Action {
+	s.NotificationProperty = v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *Action) SetTimeout(v int64) *Action {
+	s.Timeout = &v
 	return s
 }
 
@@ -8310,17 +8337,17 @@ func (s *BatchGetPartitionOutput) SetUnprocessedKeys(v []*PartitionValueList) *B
 	return s
 }
 
-// Records an error that occurred when attempting to stop a specified JobRun.
+// Records an error that occurred when attempting to stop a specified job run.
 type BatchStopJobRunError struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies details about the error that was encountered.
 	ErrorDetail *ErrorDetail `type:"structure"`
 
-	// The name of the Job in question.
+	// The name of the job definition used in the job run in question.
 	JobName *string `min:"1" type:"string"`
 
-	// The JobRunId of the JobRun in question.
+	// The JobRunId of the job run in question.
 	JobRunId *string `min:"1" type:"string"`
 }
 
@@ -8355,12 +8382,12 @@ func (s *BatchStopJobRunError) SetJobRunId(v string) *BatchStopJobRunError {
 type BatchStopJobRunInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Job in question.
+	// The name of the job definition for which to stop job runs.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
 
-	// A list of the JobRunIds that should be stopped for that Job.
+	// A list of the JobRunIds that should be stopped for that job definition.
 	//
 	// JobRunIds is a required field
 	JobRunIds []*string `min:"1" type:"list" required:"true"`
@@ -8447,10 +8474,10 @@ func (s *BatchStopJobRunOutput) SetSuccessfulSubmissions(v []*BatchStopJobRunSuc
 type BatchStopJobRunSuccessfulSubmission struct {
 	_ struct{} `type:"structure"`
 
-	// The Name of the Job in question.
+	// The name of the job definition used in the job run that was stopped.
 	JobName *string `min:"1" type:"string"`
 
-	// The JobRunId of the JobRun in question.
+	// The JobRunId of the job run that was stopped.
 	JobRunId *string `min:"1" type:"string"`
 }
 
@@ -8916,8 +8943,8 @@ type Condition struct {
 	// A logical operator.
 	LogicalOperator *string `type:"string" enum:"LogicalOperator"`
 
-	// The condition state. Currently, the values supported are SUCCEEDED, STOPPED
-	// and FAILED.
+	// The condition state. Currently, the values supported are SUCCEEDED, STOPPED,
+	// TIMEOUT and FAILED.
 	State *string `type:"string" enum:"JobRunState"`
 }
 
@@ -10234,11 +10261,11 @@ type CreateJobInput struct {
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	DefaultArguments map[string]*string `type:"map"`
 
-	// Description of the job.
+	// Description of the job being defined.
 	Description *string `type:"string"`
 
 	// An ExecutionProperty specifying the maximum number of concurrent runs allowed
@@ -10251,15 +10278,21 @@ type CreateJobInput struct {
 	// The maximum number of times to retry this job if it fails.
 	MaxRetries *int64 `type:"integer"`
 
-	// The name you assign to this job. It must be unique in your account.
+	// The name you assign to this job definition. It must be unique in your account.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// The name of the IAM role associated with this job.
+	// Specifies configuration properties of a job notification.
+	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The name or ARN of the IAM role associated with this job.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
+
+	// The job timeout in minutes. The default is 2880 minutes (48 hours).
+	Timeout *int64 `min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -10286,6 +10319,14 @@ func (s *CreateJobInput) Validate() error {
 	}
 	if s.Role == nil {
 		invalidParams.Add(request.NewErrParamRequired("Role"))
+	}
+	if s.Timeout != nil && *s.Timeout < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
+	}
+	if s.NotificationProperty != nil {
+		if err := s.NotificationProperty.Validate(); err != nil {
+			invalidParams.AddNested("NotificationProperty", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10348,16 +10389,28 @@ func (s *CreateJobInput) SetName(v string) *CreateJobInput {
 	return s
 }
 
+// SetNotificationProperty sets the NotificationProperty field's value.
+func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *CreateJobInput {
+	s.NotificationProperty = v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	s.Role = &v
 	return s
 }
 
+// SetTimeout sets the Timeout field's value.
+func (s *CreateJobInput) SetTimeout(v int64) *CreateJobInput {
+	s.Timeout = &v
+	return s
+}
+
 type CreateJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The unique name that was provided.
+	// The unique name that was provided for this job definition.
 	Name *string `min:"1" type:"string"`
 }
 
@@ -10759,6 +10812,10 @@ type CreateTriggerInput struct {
 	// This field is required when the trigger type is SCHEDULED.
 	Schedule *string `type:"string"`
 
+	// Set to true to start SCHEDULED and CONDITIONAL triggers when created. True
+	// not supported for ON_DEMAND triggers.
+	StartOnCreation *bool `type:"boolean"`
+
 	// The type of the new trigger.
 	//
 	// Type is a required field
@@ -10839,6 +10896,12 @@ func (s *CreateTriggerInput) SetPredicate(v *Predicate) *CreateTriggerInput {
 // SetSchedule sets the Schedule field's value.
 func (s *CreateTriggerInput) SetSchedule(v string) *CreateTriggerInput {
 	s.Schedule = &v
+	return s
+}
+
+// SetStartOnCreation sets the StartOnCreation field's value.
+func (s *CreateTriggerInput) SetStartOnCreation(v bool) *CreateTriggerInput {
+	s.StartOnCreation = &v
 	return s
 }
 
@@ -11466,7 +11529,7 @@ func (s DeleteDevEndpointOutput) GoString() string {
 type DeleteJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the job to delete.
+	// The name of the job definition to delete.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
@@ -11507,7 +11570,7 @@ func (s *DeleteJobInput) SetJobName(v string) *DeleteJobInput {
 type DeleteJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the job that was deleted.
+	// The name of the job definition that was deleted.
 	JobName *string `min:"1" type:"string"`
 }
 
@@ -12241,9 +12304,9 @@ func (s *ErrorDetail) SetErrorMessage(v string) *ErrorDetail {
 type ExecutionProperty struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of concurrent runs allowed for a job. The default is 1.
-	// An error is returned when this threshold is reached. The maximum value you
-	// can specify is controlled by a service limit.
+	// The maximum number of concurrent runs allowed for the job. The default is
+	// 1. An error is returned when this threshold is reached. The maximum value
+	// you can specify is controlled by a service limit.
 	MaxConcurrentRuns *int64 `type:"integer"`
 }
 
@@ -13272,7 +13335,7 @@ func (s *GetDevEndpointsOutput) SetNextToken(v string) *GetDevEndpointsOutput {
 type GetJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the job to retrieve.
+	// The name of the job definition to retrieve.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
@@ -13336,7 +13399,7 @@ func (s *GetJobOutput) SetJob(v *Job) *GetJobOutput {
 type GetJobRunInput struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the job being run.
+	// Name of the job definition being run.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
@@ -13426,7 +13489,7 @@ func (s *GetJobRunOutput) SetJobRun(v *JobRun) *GetJobRunOutput {
 type GetJobRunsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the job for which to retrieve all job runs.
+	// The name of the job definition for which to retrieve all job runs.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
@@ -13565,10 +13628,10 @@ func (s *GetJobsInput) SetNextToken(v string) *GetJobsInput {
 type GetJobsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of jobs.
+	// A list of job definitions.
 	Jobs []*Job `type:"list"`
 
-	// A continuation token, if not all jobs have yet been returned.
+	// A continuation token, if not all job definitions have yet been returned.
 	NextToken *string `type:"string"`
 }
 
@@ -15085,15 +15148,15 @@ func (s *JdbcTarget) SetPath(v string) *JdbcTarget {
 	return s
 }
 
-// Specifies a job.
+// Specifies a job definition.
 type Job struct {
 	_ struct{} `type:"structure"`
 
-	// The number of AWS Glue data processing units (DPUs) allocated to this Job.
-	// From 2 to 100 DPUs can be allocated; the default is 10. A DPU is a relative
-	// measure of processing power that consists of 4 vCPUs of compute capacity
-	// and 16 GB of memory. For more information, see the AWS Glue pricing page
-	// (https://aws.amazon.com/glue/pricing/).
+	// The number of AWS Glue data processing units (DPUs) allocated to runs of
+	// this job. From 2 to 100 DPUs can be allocated; the default is 10. A DPU is
+	// a relative measure of processing power that consists of 4 vCPUs of compute
+	// capacity and 16 GB of memory. For more information, see the AWS Glue pricing
+	// page (https://aws.amazon.com/glue/pricing/).
 	AllocatedCapacity *int64 `type:"integer"`
 
 	// The JobCommand that executes this job.
@@ -15102,7 +15165,7 @@ type Job struct {
 	// The connections used for this job.
 	Connections *ConnectionsList `type:"structure"`
 
-	// The time and date that this job specification was created.
+	// The time and date that this job definition was created.
 	CreatedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The default arguments for this job, specified as name-value pairs.
@@ -15115,31 +15178,37 @@ type Job struct {
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	DefaultArguments map[string]*string `type:"map"`
 
-	// Description of this job.
+	// Description of the job being defined.
 	Description *string `type:"string"`
 
 	// An ExecutionProperty specifying the maximum number of concurrent runs allowed
 	// for this job.
 	ExecutionProperty *ExecutionProperty `type:"structure"`
 
-	// The last point in time when this job specification was modified.
+	// The last point in time when this job definition was modified.
 	LastModifiedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
 
-	// The maximum number of times to retry this job if it fails.
+	// The maximum number of times to retry this job after a JobRun fails.
 	MaxRetries *int64 `type:"integer"`
 
-	// The name you assign to this job.
+	// The name you assign to this job definition.
 	Name *string `min:"1" type:"string"`
 
-	// The name of the IAM role associated with this job.
+	// Specifies configuration properties of a job notification.
+	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The name or ARN of the IAM role associated with this job.
 	Role *string `type:"string"`
+
+	// The job timeout in minutes.
+	Timeout *int64 `min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -15218,9 +15287,21 @@ func (s *Job) SetName(v string) *Job {
 	return s
 }
 
+// SetNotificationProperty sets the NotificationProperty field's value.
+func (s *Job) SetNotificationProperty(v *NotificationProperty) *Job {
+	s.NotificationProperty = v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *Job) SetTimeout(v int64) *Job {
+	s.Timeout = &v
 	return s
 }
 
@@ -15284,7 +15365,7 @@ func (s *JobBookmarkEntry) SetVersion(v int64) *JobBookmarkEntry {
 	return s
 }
 
-// Specifies code that executes a job.
+// Specifies code executed when a job is run.
 type JobCommand struct {
 	_ struct{} `type:"structure"`
 
@@ -15339,7 +15420,7 @@ type JobRun struct {
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	Arguments map[string]*string `type:"map"`
 
@@ -15352,10 +15433,13 @@ type JobRun struct {
 	// An error message associated with this job run.
 	ErrorMessage *string `type:"string"`
 
+	// The amount of time (in seconds) that the job run consumed resources.
+	ExecutionTime *int64 `type:"integer"`
+
 	// The ID of this job run.
 	Id *string `min:"1" type:"string"`
 
-	// The name of the job being run.
+	// The name of the job definition being used in this run.
 	JobName *string `min:"1" type:"string"`
 
 	// The current state of the job run.
@@ -15363,6 +15447,9 @@ type JobRun struct {
 
 	// The last time this job run was modified.
 	LastModifiedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// Specifies configuration properties of a job run notification.
+	NotificationProperty *NotificationProperty `type:"structure"`
 
 	// A list of predecessors to this job run.
 	PredecessorRuns []*Predecessor `type:"list"`
@@ -15373,6 +15460,9 @@ type JobRun struct {
 
 	// The date and time at which this job run was started.
 	StartedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The job run timeout in minutes.
+	Timeout *int64 `min:"1" type:"integer"`
 
 	// The name of the trigger that started this job run.
 	TriggerName *string `min:"1" type:"string"`
@@ -15418,6 +15508,12 @@ func (s *JobRun) SetErrorMessage(v string) *JobRun {
 	return s
 }
 
+// SetExecutionTime sets the ExecutionTime field's value.
+func (s *JobRun) SetExecutionTime(v int64) *JobRun {
+	s.ExecutionTime = &v
+	return s
+}
+
 // SetId sets the Id field's value.
 func (s *JobRun) SetId(v string) *JobRun {
 	s.Id = &v
@@ -15442,6 +15538,12 @@ func (s *JobRun) SetLastModifiedOn(v time.Time) *JobRun {
 	return s
 }
 
+// SetNotificationProperty sets the NotificationProperty field's value.
+func (s *JobRun) SetNotificationProperty(v *NotificationProperty) *JobRun {
+	s.NotificationProperty = v
+	return s
+}
+
 // SetPredecessorRuns sets the PredecessorRuns field's value.
 func (s *JobRun) SetPredecessorRuns(v []*Predecessor) *JobRun {
 	s.PredecessorRuns = v
@@ -15460,14 +15562,20 @@ func (s *JobRun) SetStartedOn(v time.Time) *JobRun {
 	return s
 }
 
+// SetTimeout sets the Timeout field's value.
+func (s *JobRun) SetTimeout(v int64) *JobRun {
+	s.Timeout = &v
+	return s
+}
+
 // SetTriggerName sets the TriggerName field's value.
 func (s *JobRun) SetTriggerName(v string) *JobRun {
 	s.TriggerName = &v
 	return s
 }
 
-// Specifies information used to update an existing job. Note that the previous
-// job definition will be completely overwritten by this information.
+// Specifies information used to update an existing job definition. Note that
+// the previous job definition will be completely overwritten by this information.
 type JobUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -15494,11 +15602,11 @@ type JobUpdate struct {
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	DefaultArguments map[string]*string `type:"map"`
 
-	// Description of the job.
+	// Description of the job being defined.
 	Description *string `type:"string"`
 
 	// An ExecutionProperty specifying the maximum number of concurrent runs allowed
@@ -15511,8 +15619,14 @@ type JobUpdate struct {
 	// The maximum number of times to retry this job if it fails.
 	MaxRetries *int64 `type:"integer"`
 
-	// The name of the IAM role associated with this job (required).
+	// Specifies configuration properties of a job notification.
+	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The name or ARN of the IAM role associated with this job (required).
 	Role *string `type:"string"`
+
+	// The job timeout in minutes. The default is 2880 minutes (48 hours).
+	Timeout *int64 `min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -15523,6 +15637,24 @@ func (s JobUpdate) String() string {
 // GoString returns the string representation
 func (s JobUpdate) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *JobUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "JobUpdate"}
+	if s.Timeout != nil && *s.Timeout < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
+	}
+	if s.NotificationProperty != nil {
+		if err := s.NotificationProperty.Validate(); err != nil {
+			invalidParams.AddNested("NotificationProperty", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAllocatedCapacity sets the AllocatedCapacity field's value.
@@ -15573,9 +15705,21 @@ func (s *JobUpdate) SetMaxRetries(v int64) *JobUpdate {
 	return s
 }
 
+// SetNotificationProperty sets the NotificationProperty field's value.
+func (s *JobUpdate) SetNotificationProperty(v *NotificationProperty) *JobUpdate {
+	s.NotificationProperty = v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *JobUpdate) SetRole(v string) *JobUpdate {
 	s.Role = &v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *JobUpdate) SetTimeout(v int64) *JobUpdate {
+	s.Timeout = &v
 	return s
 }
 
@@ -15843,6 +15987,44 @@ func (s *MappingEntry) SetTargetTable(v string) *MappingEntry {
 // SetTargetType sets the TargetType field's value.
 func (s *MappingEntry) SetTargetType(v string) *MappingEntry {
 	s.TargetType = &v
+	return s
+}
+
+// Specifies configuration properties of a notification.
+type NotificationProperty struct {
+	_ struct{} `type:"structure"`
+
+	// After a job run starts, the number of minutes to wait before sending a job
+	// run delay notification.
+	NotifyDelayAfter *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s NotificationProperty) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotificationProperty) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NotificationProperty) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NotificationProperty"}
+	if s.NotifyDelayAfter != nil && *s.NotifyDelayAfter < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NotifyDelayAfter", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotifyDelayAfter sets the NotifyDelayAfter field's value.
+func (s *NotificationProperty) SetNotifyDelayAfter(v int64) *NotificationProperty {
+	s.NotifyDelayAfter = &v
 	return s
 }
 
@@ -16200,7 +16382,7 @@ func (s *PhysicalConnectionRequirements) SetSubnetId(v string) *PhysicalConnecti
 type Predecessor struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the predecessor job.
+	// The name of the job definition used by the predecessor job run.
 	JobName *string `min:"1" type:"string"`
 
 	// The job-run ID of the predecessor job run.
@@ -16236,7 +16418,8 @@ type Predicate struct {
 	// A list of the conditions that determine when the trigger will fire.
 	Conditions []*Condition `type:"list"`
 
-	// Currently "OR" is not supported.
+	// Optional field if only one condition is listed. If multiple conditions are
+	// listed, then this field is required.
 	Logical *string `type:"string" enum:"Logical"`
 }
 
@@ -16774,7 +16957,7 @@ type StartJobRunInput struct {
 	AllocatedCapacity *int64 `type:"integer"`
 
 	// The job arguments specifically for this run. They override the equivalent
-	// default arguments set for the job itself.
+	// default arguments set for in the job definition itself.
 	//
 	// You can specify arguments here that your own job-execution script consumes,
 	// as well as arguments that AWS Glue itself consumes.
@@ -16784,17 +16967,23 @@ type StartJobRunInput struct {
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	Arguments map[string]*string `type:"map"`
 
-	// The name of the job to start.
+	// The name of the job definition to use.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
 
 	// The ID of a previous JobRun to retry.
 	JobRunId *string `min:"1" type:"string"`
+
+	// Specifies configuration properties of a job run notification.
+	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The job run timeout in minutes. It overrides the timeout value of the job.
+	Timeout *int64 `min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -16818,6 +17007,14 @@ func (s *StartJobRunInput) Validate() error {
 	}
 	if s.JobRunId != nil && len(*s.JobRunId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("JobRunId", 1))
+	}
+	if s.Timeout != nil && *s.Timeout < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
+	}
+	if s.NotificationProperty != nil {
+		if err := s.NotificationProperty.Validate(); err != nil {
+			invalidParams.AddNested("NotificationProperty", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16847,6 +17044,18 @@ func (s *StartJobRunInput) SetJobName(v string) *StartJobRunInput {
 // SetJobRunId sets the JobRunId field's value.
 func (s *StartJobRunInput) SetJobRunId(v string) *StartJobRunInput {
 	s.JobRunId = &v
+	return s
+}
+
+// SetNotificationProperty sets the NotificationProperty field's value.
+func (s *StartJobRunInput) SetNotificationProperty(v *NotificationProperty) *StartJobRunInput {
+	s.NotificationProperty = v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *StartJobRunInput) SetTimeout(v int64) *StartJobRunInput {
+	s.Timeout = &v
 	return s
 }
 
@@ -18527,7 +18736,7 @@ type UpdateJobInput struct {
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
 
-	// Specifies the values with which to update the job.
+	// Specifies the values with which to update the job definition.
 	//
 	// JobUpdate is a required field
 	JobUpdate *JobUpdate `type:"structure" required:"true"`
@@ -18555,6 +18764,11 @@ func (s *UpdateJobInput) Validate() error {
 	if s.JobUpdate == nil {
 		invalidParams.Add(request.NewErrParamRequired("JobUpdate"))
 	}
+	if s.JobUpdate != nil {
+		if err := s.JobUpdate.Validate(); err != nil {
+			invalidParams.AddNested("JobUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -18577,7 +18791,7 @@ func (s *UpdateJobInput) SetJobUpdate(v *JobUpdate) *UpdateJobInput {
 type UpdateJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Returns the name of the updated job.
+	// Returns the name of the updated job definition.
 	JobName *string `min:"1" type:"string"`
 }
 
@@ -19436,6 +19650,9 @@ const (
 
 	// JobRunStateFailed is a JobRunState enum value
 	JobRunStateFailed = "FAILED"
+
+	// JobRunStateTimeout is a JobRunState enum value
+	JobRunStateTimeout = "TIMEOUT"
 )
 
 const (

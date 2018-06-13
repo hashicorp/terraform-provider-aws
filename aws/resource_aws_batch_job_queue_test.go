@@ -34,6 +34,10 @@ func testSweepBatchJobQueues(region string) error {
 
 	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Batch Job Queue sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Batch Job Queues: %s", err)
 	}
 	for _, jobQueue := range out.JobQueues {

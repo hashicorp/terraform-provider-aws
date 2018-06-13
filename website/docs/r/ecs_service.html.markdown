@@ -25,20 +25,38 @@ resource "aws_ecs_service" "mongo" {
   iam_role        = "${aws_iam_role.foo.arn}"
   depends_on      = ["aws_iam_role_policy.foo"]
 
-  placement_strategy {
+  ordered_placement_strategy {
     type  = "binpack"
     field = "cpu"
   }
 
   load_balancer {
-    elb_name       = "${aws_elb.foo.name}"
-    container_name = "mongo"
-    container_port = 8080
+    target_group_arn = "${aws_lb_target_group.foo.arn}"
+    container_name   = "mongo"
+    container_port   = 8080
   }
 
   placement_constraints {
     type       = "memberOf"
     expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
+  }
+}
+```
+
+### Ignoring Changes to Desired Count
+
+You can utilize the generic Terraform resource [lifecycle configuration block](/docs/configuration/resources.html#lifecycle) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g. Application Autoscaling).
+
+```hcl
+resource "aws_ecs_service" "example" {
+  # ... other configurations ...
+
+  # Example: Create service with 2 instances to start
+  desired_count = 2
+
+  # Optional: Allow external changes without Terraform plan difference
+  lifecycle {
+    ignore_changes = ["desired_count"]
   }
 }
 ```
@@ -52,30 +70,30 @@ The following arguments are supported:
 * `desired_count` - (Required) The number of instances of the task definition to place and keep running
 * `launch_type` - (Optional) The launch type on which to run your service. The valid values are `EC2` and `FARGATE`. Defaults to `EC2`.
 * `cluster` - (Optional) ARN of an ECS cluster
-* `iam_role` - (Optional) The ARN of IAM role that allows your Amazon ECS container agent to make calls to your load balancer on your behalf. This parameter is only required if you are using a load balancer with your service.
+* `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `deployment_maximum_percent` - (Optional) The upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment.
 * `deployment_minimum_healthy_percent` - (Optional) The lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
-* `placement_strategy` - (Optional) Service level strategy rules that are taken
-into consideration during task placement. The maximum number of
-`placement_strategy` blocks is `5`. Defined below.
-* `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 1800. Only valid for services configured to use load balancers.
+* `placement_strategy` - (Optional) **Deprecated**, use `ordered_placement_strategy` instead.
+* `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. The maximum number of `ordered_placement_strategy` blocks is `5`. Defined below.
+* `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 7200. Only valid for services configured to use load balancers.
 * `load_balancer` - (Optional) A load balancer block. Load balancers documented below.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
 `placement_constraints` is `10`. Defined below.
-* `network_configuration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, and it is not supported for other network modes.
+* `network_configuration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes.
+* `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`.
 
 -> **Note:** As a result of an AWS limitation, a single `load_balancer` can be attached to the ECS service at most. See [related docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html#load-balancing-concepts).
 
 Load balancers support the following:
 
 * `elb_name` - (Required for ELB Classic) The name of the ELB (Classic) to associate with the service.
-* `target_group_arn` - (Required for ALB) The ARN of the ALB target group to associate with the service.
+* `target_group_arn` - (Required for ALB/NLB) The ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
 
-## placement_strategy
+## ordered_placement_strategy
 
-`placement_strategy` supports the following:
+`ordered_placement_strategy` supports the following:
 
 * `type` - (Required) The type of placement strategy. Must be one of: `binpack`, `random`, or `spread`
 * `field` - (Optional) For the `spread` placement strategy, valid values are instanceId (or host,
@@ -106,9 +124,18 @@ Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query
 
 For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 
+## service_registries
+
+`service_registries` support the following:
+
+* `registry_arn` - (Required) The ARN of the Service Registry. The currently supported service registry is Amazon Route 53 Auto Naming Service(`aws_service_discovery_service`). For more information, see [Service](https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html)
+* `port` - (Optional) The port value used if your Service Discovery service specified an SRV record.
+* `container_port` - (Optional) The port value, already specified in the task definition, to be used for your service discovery service.
+* `container_name` - (Optional) The container name value, already specified in the task definition, to be used for your service discovery service.
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the service
 * `name` - The name of the service
