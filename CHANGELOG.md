@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_vpcs` [GH-4736]
+* **New Resource:** `aws_neptune_parameter_group` [GH-4724]
 
 ENHANCEMENTS:
 
