@@ -180,17 +180,21 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // balancer are considered healthy if they are in the RUNNING state. Tasks for
 // services that do use a load balancer are considered healthy if they are in
 // the RUNNING state and the container instance they are hosted on is reported
-// as healthy by the load balancer. The default value for minimumHealthyPercent
-// is 50% in the console and 100% for the AWS CLI, the AWS SDKs, and the APIs.
+// as healthy by the load balancer. The default value for a replica service
+// for minimumHealthyPercent is 50% in the console and 100% for the AWS CLI,
+// the AWS SDKs, and the APIs. The default value for a daemon service for minimumHealthyPercent
+// is 0% for the AWS CLI, the AWS SDKs, and the APIs and 50% for the console.
 //
 // The maximumPercent parameter represents an upper limit on the number of your
 // service's tasks that are allowed in the RUNNING or PENDING state during a
 // deployment, as a percentage of the desiredCount (rounded down to the nearest
 // integer). This parameter enables you to define the deployment batch size.
-// For example, if your service has a desiredCount of four tasks and a maximumPercent
-// value of 200%, the scheduler can start four new tasks before stopping the
-// four older tasks (provided that the cluster resources required to do this
-// are available). The default value for maximumPercent is 200%.
+// For example, if your replica service has a desiredCount of four tasks and
+// a maximumPercent value of 200%, the scheduler can start four new tasks before
+// stopping the four older tasks (provided that the cluster resources required
+// to do this are available). The default value for a replica service for maximumPercent
+// is 200%. If you are using a daemon service type, the maximumPercent should
+// remain at 100%, which is the default value.
 //
 // When the service scheduler launches new tasks, it determines task placement
 // in your cluster using the following logic:
@@ -5044,9 +5048,7 @@ type CreateServiceInput struct {
 
 	// The number of instantiations of the specified task definition to place and
 	// keep running on your cluster.
-	//
-	// DesiredCount is a required field
-	DesiredCount *int64 `locationName:"desiredCount" type:"integer" required:"true"`
+	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
 
 	// The period of time, in seconds, that the Amazon ECS service scheduler should
 	// ignore unhealthy Elastic Load Balancing target health checks after a task
@@ -5130,6 +5132,25 @@ type CreateServiceInput struct {
 	// in the IAM User Guide.
 	Role *string `locationName:"role" type:"string"`
 
+	// The scheduling strategy to use for the service. For more information, see
+	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguideecs_services.html).
+	//
+	// There are two service scheduler strategies available:
+	//
+	//    * REPLICA-The replica scheduling strategy places and maintains the desired
+	//    number of tasks across your cluster. By default, the service scheduler
+	//    spreads tasks across Availability Zones. You can use task placement strategies
+	//    and constraints to customize task placement decisions.
+	//
+	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
+	//    active container instance that meets all of the task placement constraints
+	//    that you specify in your cluster. When using this strategy, there is no
+	//    need to specify a desired number of tasks, a task placement strategy,
+	//    or use Service Auto Scaling policies.
+	//
+	// Fargate tasks do not support the DAEMON scheduling strategy.
+	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
+
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
 	// hyphens, and underscores are allowed. Service names must be unique within
 	// a cluster, but you can have similarly named services in multiple clusters
@@ -5167,9 +5188,6 @@ func (s CreateServiceInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateServiceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateServiceInput"}
-	if s.DesiredCount == nil {
-		invalidParams.Add(request.NewErrParamRequired("DesiredCount"))
-	}
 	if s.ServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceName"))
 	}
@@ -5257,6 +5275,12 @@ func (s *CreateServiceInput) SetPlatformVersion(v string) *CreateServiceInput {
 // SetRole sets the Role field's value.
 func (s *CreateServiceInput) SetRole(v string) *CreateServiceInput {
 	s.Role = &v
+	return s
+}
+
+// SetSchedulingStrategy sets the SchedulingStrategy field's value.
+func (s *CreateServiceInput) SetSchedulingStrategy(v string) *CreateServiceInput {
+	s.SchedulingStrategy = &v
 	return s
 }
 
@@ -5455,6 +5479,11 @@ type DeleteServiceInput struct {
 	// is assumed.
 	Cluster *string `locationName:"cluster" type:"string"`
 
+	// If true, allows you to delete a service even if it has not been scaled down
+	// to zero tasks. It is only necessary to use this if the service is using the
+	// REPLICA scheduling strategy.
+	Force *bool `locationName:"force" type:"boolean"`
+
 	// The name of the service to delete.
 	//
 	// Service is a required field
@@ -5487,6 +5516,12 @@ func (s *DeleteServiceInput) Validate() error {
 // SetCluster sets the Cluster field's value.
 func (s *DeleteServiceInput) SetCluster(v string) *DeleteServiceInput {
 	s.Cluster = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteServiceInput) SetForce(v bool) *DeleteServiceInput {
+	s.Force = &v
 	return s
 }
 
@@ -7145,6 +7180,9 @@ type ListServicesInput struct {
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
 	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The scheduling strategy for services to list.
+	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 }
 
 // String returns the string representation
@@ -7178,6 +7216,12 @@ func (s *ListServicesInput) SetMaxResults(v int64) *ListServicesInput {
 // SetNextToken sets the NextToken field's value.
 func (s *ListServicesInput) SetNextToken(v string) *ListServicesInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetSchedulingStrategy sets the SchedulingStrategy field's value.
+func (s *ListServicesInput) SetSchedulingStrategy(v string) *ListServicesInput {
+	s.SchedulingStrategy = &v
 	return s
 }
 
@@ -8900,6 +8944,23 @@ type Service struct {
 	// The number of tasks in the cluster that are in the RUNNING state.
 	RunningCount *int64 `locationName:"runningCount" type:"integer"`
 
+	// The scheduling strategy to use for the service. For more information, see
+	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguideecs_services.html).
+	//
+	// There are two service scheduler strategies available:
+	//
+	//    * REPLICA-The replica scheduling strategy places and maintains the desired
+	//    number of tasks across your cluster. By default, the service scheduler
+	//    spreads tasks across Availability Zones. You can use task placement strategies
+	//    and constraints to customize task placement decisions.
+	//
+	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
+	//    container instance in your cluster. When using this strategy, do not specify
+	//    a desired number of tasks or any task placement strategies.
+	//
+	// Fargate tasks do not support the DAEMON scheduling strategy.
+	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
+
 	// The ARN that identifies the service. The ARN contains the arn:aws:ecs namespace,
 	// followed by the region of the service, the AWS account ID of the service
 	// owner, the service namespace, and then the service name. For example, arn:aws:ecs:region:012345678910:service/my-service.
@@ -9025,6 +9086,12 @@ func (s *Service) SetRoleArn(v string) *Service {
 // SetRunningCount sets the RunningCount field's value.
 func (s *Service) SetRunningCount(v int64) *Service {
 	s.RunningCount = &v
+	return s
+}
+
+// SetSchedulingStrategy sets the SchedulingStrategy field's value.
+func (s *Service) SetSchedulingStrategy(v string) *Service {
+	s.SchedulingStrategy = &v
 	return s
 }
 
@@ -11061,6 +11128,14 @@ const (
 
 	// PlacementStrategyTypeBinpack is a PlacementStrategyType enum value
 	PlacementStrategyTypeBinpack = "binpack"
+)
+
+const (
+	// SchedulingStrategyReplica is a SchedulingStrategy enum value
+	SchedulingStrategyReplica = "REPLICA"
+
+	// SchedulingStrategyDaemon is a SchedulingStrategy enum value
+	SchedulingStrategyDaemon = "DAEMON"
 )
 
 const (
