@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_db_instance: Display input arguments when receiving InvalidParameterValue error on resource creation [GH-4803]
+* resource/aws_elasticache_cluster: Migrate from `availability_zones` TypeSet attribute to `preferred_availability_zones` TypeList attribute (allow duplicate Availability Zone elements) [GH-4741]
 * resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) [GH-4763]
 * resource/aws_launch_template: Add plan time validation for tag_specifications `resource_type` [GH-4765]
 * resource/aws_waf_ipset: Add `arn` attribute [GH-4784]
