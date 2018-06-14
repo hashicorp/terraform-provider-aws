@@ -56,14 +56,14 @@ func diffTagsNeptune(oldTags, newTags []*neptune.Tag) ([]*neptune.Tag, []*neptun
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+		create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	// Build the list of what to remove
 	var remove []*neptune.Tag
 	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			// Delete it!
 			remove = append(remove, t)
 		}
@@ -93,7 +93,7 @@ func tagsToMapNeptune(ts []*neptune.Tag) map[string]string {
 	result := make(map[string]string)
 	for _, t := range ts {
 		if !tagIgnoredNeptune(t) {
-			result[*t.Key] = *t.Value
+			result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 		}
 	}
 
@@ -105,9 +105,9 @@ func tagsToMapNeptune(ts []*neptune.Tag) map[string]string {
 func tagIgnoredNeptune(t *neptune.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
-		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
-			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
+		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))
+		if r, _ := regexp.MatchString(v, aws.StringValue(t.Key)); r == true {
+			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", aws.StringValue(t.Key), aws.StringValue(t.Value))
 			return true
 		}
 	}

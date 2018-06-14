@@ -3,12 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -56,6 +52,7 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
+				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -110,15 +107,14 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 	}
 
 	var subnetGroups []*neptune.DBSubnetGroup
-	//describeResp, err := conn.DescribeDBSubnetGroups(&describeOpts)
 	if err := conn.DescribeDBSubnetGroupsPages(&describeOpts, func(resp *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 		for _, v := range resp.DBSubnetGroups {
 			subnetGroups = append(subnetGroups, v)
 		}
 		return !lastPage
 	}); err != nil {
-		if neptuneerr, ok := err.(awserr.Error); ok && neptuneerr.Code() == "DBSubnetGroupNotFoundFault" {
-			// Update state to indicate the neptune subnet no longer exists.
+		if isAWSErr(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			log.Printf("[WARN] Neptune Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -126,18 +122,13 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(subnetGroups) == 0 {
-		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)
+		log.Printf("[WARN] Unable to find Neptune Subnet Group: %#v, removing from state", subnetGroups)
+		d.SetId("")
+		return nil
 	}
 
 	var subnetGroup *neptune.DBSubnetGroup
-	for _, s := range subnetGroups {
-		// AWS is down casing the name provided, so we compare lower case versions
-		// of the names. We lower case both our name and their name in the check,
-		// incase they change that someday.
-		if strings.ToLower(d.Id()) == strings.ToLower(aws.StringValue(s.DBSubnetGroupName)) {
-			subnetGroup = subnetGroups[0]
-		}
-	}
+	subnetGroup = subnetGroups[0]
 
 	if subnetGroup.DBSubnetGroupName == nil {
 		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)
@@ -150,34 +141,25 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 	for _, s := range subnetGroup.Subnets {
 		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
 	}
-	d.Set("subnet_ids", subnets)
+	if err := d.Set("subnet_ids", subnets); err != nil {
+		return fmt.Errorf("error setting subnet_ids: %s", err)
+	}
 
 	// list tags for resource
 	// set tags
 
 	//Amazon Neptune shares the format of Amazon RDS ARNs. Neptune ARNs contain rds and not neptune.
 	//https://docs.aws.amazon.com/neptune/latest/userguide/tagging.ARN.html
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", subnetGroup.DBSubnetGroupArn)
 	resp, err := conn.ListTagsForResource(&neptune.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
+		ResourceName: subnetGroup.DBSubnetGroupArn,
 	})
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retreiving tags for ARN: %s", arn)
+		log.Printf("[DEBUG] Error retreiving tags for ARN: %s", aws.StringValue(subnetGroup.DBSubnetGroupArn))
 	}
 
-	var dt []*neptune.Tag
-	if len(resp.TagList) > 0 {
-		dt = resp.TagList
-	}
-	d.Set("tags", tagsToMapNeptune(dt))
+	d.Set("tags", tagsToMapNeptune(resp.TagList))
 
 	return nil
 }
@@ -207,15 +189,8 @@ func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	//Amazon Neptune shares the format of Amazon RDS ARNs. Neptune ARNs contain rds and not neptune.
 	//https://docs.aws.amazon.com/neptune/latest/userguide/tagging.ARN.html
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
-	}.String()
+	arn := d.Get("arn").(string)
 	if err := setTagsNeptune(conn, d, arn); err != nil {
 		return err
 	} else {
@@ -226,39 +201,20 @@ func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsNeptuneSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsNeptuneSubnetGroupDeleteRefreshFunc(d, meta),
-		Timeout:    3 * time.Minute,
-		MinTimeout: 1 * time.Second,
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func resourceAwsNeptuneSubnetGroupDeleteRefreshFunc(
-	d *schema.ResourceData,
-	meta interface{}) resource.StateRefreshFunc {
 	conn := meta.(*AWSClient).neptuneconn
 
-	return func() (interface{}, string, error) {
-
-		deleteOpts := neptune.DeleteDBSubnetGroupInput{
-			DBSubnetGroupName: aws.String(d.Id()),
-		}
-
-		if _, err := conn.DeleteDBSubnetGroup(&deleteOpts); err != nil {
-			neptuneerr, ok := err.(awserr.Error)
-			if !ok {
-				return d, "error", err
-			}
-
-			if neptuneerr.Code() != "DBSubnetGroupNotFoundFault" {
-				return d, "error", err
-			}
-		}
-
-		return d, "destroyed", nil
+	input := neptune.DeleteDBSubnetGroupInput{
+		DBSubnetGroupName: aws.String(d.Id()),
 	}
+
+	log.Printf("[DEBUG] Deleting Neptune Subnet Group: %s", d.Id())
+	_, err := conn.DeleteDBSubnetGroup(&input)
+	if err != nil {
+		if isAWSErr(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			return nil
+		}
+		return fmt.Errorf("error deleting Neptune Subnet Group (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

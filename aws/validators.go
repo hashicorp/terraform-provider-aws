@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -958,7 +959,7 @@ func validateNeptuneSubnetGroupName(v interface{}, k string) (ws []string, error
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 255 characters", k))
 	}
-	if regexp.MustCompile(`(?i)^default$`).MatchString(value) {
+	if value == "default" {
 		errors = append(errors, fmt.Errorf(
 			"%q is not allowed as %q", "Default", k))
 	}
@@ -984,9 +985,10 @@ func validateNeptuneSubnetGroupNamePrefix(v interface{}, k string) (ws []string,
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
-	if len(value) > 229 {
+	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 229 characters", k))
+			"%q cannot be longer than %d characters", k, prefixMaxLength))
 	}
 	return
 }

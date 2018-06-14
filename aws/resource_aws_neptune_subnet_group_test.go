@@ -17,10 +17,6 @@ import (
 func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	testCheck := func(*terraform.State) error {
-		return nil
-	}
-
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
@@ -37,7 +33,6 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 						"aws_neptune_subnet_group.foo", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_subnet_group.foo", "description", "Managed by Terraform"),
-					testCheck,
 				),
 			},
 		},
@@ -89,10 +84,6 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	testCheck := func(*terraform.State) error {
-		return nil
-	}
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -107,7 +98,6 @@ func TestAccAWSNeptuneSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 						"aws_neptune_subnet_group.periods", &v),
 					testAccCheckNeptuneSubnetGroupExists(
 						"aws_neptune_subnet_group.spaces", &v),
-					testCheck,
 				),
 			},
 		},
