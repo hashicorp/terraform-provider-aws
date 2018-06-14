@@ -30,6 +30,7 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 			"compute_platform": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					codedeploy.ComputePlatformServer,
 					codedeploy.ComputePlatformLambda,
@@ -91,6 +92,7 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	d.Set("compute_platform", resp.Application.ComputePlatform)
 	d.Set("name", resp.Application.ApplicationName)
 
 	return nil
