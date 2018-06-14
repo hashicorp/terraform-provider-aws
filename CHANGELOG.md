@@ -1,4 +1,4 @@
-## 1.23.0 (Unreleased)
+## 1.23.0 (June 14, 2018)
 
 NOTES:
 
@@ -6,24 +6,24 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_vpcs` [GH-4736]
-* **New Resource:** `aws_neptune_parameter_group` [GH-4724]
+* **New Data Source:** `aws_vpcs` ([#4736](https://github.com/terraform-providers/terraform-provider-aws/issues/4736))
+* **New Resource:** `aws_neptune_parameter_group` ([#4724](https://github.com/terraform-providers/terraform-provider-aws/issues/4724))
 
 ENHANCEMENTS:
 
-* resource/aws_db_instance: Display input arguments when receiving InvalidParameterValue error on resource creation [GH-4803]
-* resource/aws_elasticache_cluster: Migrate from `availability_zones` TypeSet attribute to `preferred_availability_zones` TypeList attribute (allow duplicate Availability Zone elements) [GH-4741]
-* resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) [GH-4763]
-* resource/aws_launch_template: Add plan time validation for tag_specifications `resource_type` [GH-4765]
-* resource/aws_waf_ipset: Add `arn` attribute [GH-4784]
-* resource/aws_wafregional_ipset: Add `arn` attribute [GH-4816]
+* resource/aws_db_instance: Display input arguments when receiving InvalidParameterValue error on resource creation ([#4803](https://github.com/terraform-providers/terraform-provider-aws/issues/4803))
+* resource/aws_elasticache_cluster: Migrate from `availability_zones` TypeSet attribute to `preferred_availability_zones` TypeList attribute (allow duplicate Availability Zone elements) ([#4741](https://github.com/terraform-providers/terraform-provider-aws/issues/4741))
+* resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) ([#4763](https://github.com/terraform-providers/terraform-provider-aws/issues/4763))
+* resource/aws_launch_template: Add plan time validation for tag_specifications `resource_type` ([#4765](https://github.com/terraform-providers/terraform-provider-aws/issues/4765))
+* resource/aws_waf_ipset: Add `arn` attribute ([#4784](https://github.com/terraform-providers/terraform-provider-aws/issues/4784))
+* resource/aws_wafregional_ipset: Add `arn` attribute ([#4816](https://github.com/terraform-providers/terraform-provider-aws/issues/4816))
 
 BUG FIXES:
 
-* resource/aws_codebuild_webhook: Properly export `secret` (the CodeBuild API only provides its value during resource creation) [GH-4775]
-* resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read [GH-4761]
-* resource/aws_eks_cluster: Properly export `arn` attribute [GH-4766] / [GH-4767]
-* resource/aws_elasticsearch_domain: Skip EBS options update/refresh if EBS is not enabled [GH-4802]
+* resource/aws_codebuild_webhook: Properly export `secret` (the CodeBuild API only provides its value during resource creation) ([#4775](https://github.com/terraform-providers/terraform-provider-aws/issues/4775))
+* resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read ([#4761](https://github.com/terraform-providers/terraform-provider-aws/issues/4761))
+* resource/aws_eks_cluster: Properly export `arn` attribute ([#4766](https://github.com/terraform-providers/terraform-provider-aws/issues/4766)] / [[#4767](https://github.com/terraform-providers/terraform-provider-aws/issues/4767))
+* resource/aws_elasticsearch_domain: Skip EBS options update/refresh if EBS is not enabled ([#4802](https://github.com/terraform-providers/terraform-provider-aws/issues/4802))
 
 ## 1.22.0 (June 05, 2018)
 
