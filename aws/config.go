@@ -71,7 +71,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -228,7 +227,6 @@ type AWSClient struct {
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
 	budgetconn            *budgets.Budgets
-	neptuneconn           *neptune.Neptune
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -521,7 +519,6 @@ func (c *Config) Client() (interface{}, error) {
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
-	client.neptuneconn = neptune.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
