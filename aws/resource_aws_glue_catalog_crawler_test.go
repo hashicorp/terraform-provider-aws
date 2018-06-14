@@ -21,12 +21,12 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"name",
-						"test",
+						"test-basic",
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"database_name",
-						"db_name",
+						"test_db",
 					),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
@@ -48,9 +48,9 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 			{
 				Config: testAccGlueCrawlerConfigCustomClassifiers,
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "database_name", "db_name"),
+					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test1"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test1"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "test_db"),
 					resource.TestCheckResourceAttr(resourceName, "role", "tf-glue-service-role"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", "table_prefix"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DELETE_FROM_DATABASE"),
@@ -90,9 +90,13 @@ func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.Tes
 }
 
 const testAccGlueCrawlerConfigBasic = `
+	resource "aws_glue_catalog_database" "test_db" {
+  		name = "test_db"
+	}
+
 	resource "aws_glue_catalog_crawler" "test" {
-	  name = "test"
-	  database_name = "db_name"
+	  name = "test-basic"
+	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
 	  description = "TF-test-crawler"
 	  schedule="cron(0 1 * * ? *)"
@@ -138,9 +142,14 @@ EOF
 //}
 //}
 const testAccGlueCrawlerConfigCustomClassifiers = `
+	resource "aws_glue_catalog_database" "test_db" {
+  		name = "test_db"
+	}
+	
+
 	resource "aws_glue_catalog_crawler" "test" {
-	  name = "test"
-	  database_name = "db_name"
+	  name = "test1"
+	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
 	  s3_target {
 		path = "s3://bucket"
