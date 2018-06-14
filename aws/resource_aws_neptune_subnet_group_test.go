@@ -79,31 +79,6 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	})
 }
 
-// Regression test for https://github.com/hashicorp/terraform/issues/2603 and
-// https://github.com/hashicorp/terraform/issues/2664
-func TestAccAWSNeptuneSubnetGroup_withUndocumentedCharacters(t *testing.T) {
-	var v neptune.DBSubnetGroup
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccNeptuneSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.underscores", &v),
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.periods", &v),
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.spaces", &v),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
@@ -328,48 +303,3 @@ resource "aws_subnet" "b" {
 resource "aws_neptune_subnet_group" "test" {
 	subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }`
-
-const testAccNeptuneSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
-resource "aws_vpc" "main" {
-    cidr_block = "192.168.0.0/16"
-		tags {
-			Name = "terraform-testacc-neptune-subnet-group-w-underscores-etc"
-		}
-}
-
-resource "aws_subnet" "frontend" {
-    vpc_id = "${aws_vpc.main.id}"
-    availability_zone = "us-west-2b"
-    cidr_block = "192.168.1.0/24"
-    tags {
-        Name = "tf-acc-neptune-subnet-group-w-underscores-etc-front"
-    }
-}
-
-resource "aws_subnet" "backend" {
-    vpc_id = "${aws_vpc.main.id}"
-    availability_zone = "us-west-2c"
-    cidr_block = "192.168.2.0/24"
-    tags {
-        Name = "tf-acc-neptune-subnet-group-w-underscores-etc-back"
-    }
-}
-
-resource "aws_neptune_subnet_group" "underscores" {
-    name = "with_underscores"
-    description = "Our main group of subnets"
-    subnet_ids = ["${aws_subnet.frontend.id}", "${aws_subnet.backend.id}"]
-}
-
-resource "aws_neptune_subnet_group" "periods" {
-    name = "with.periods"
-    description = "Our main group of subnets"
-    subnet_ids = ["${aws_subnet.frontend.id}", "${aws_subnet.backend.id}"]
-}
-
-resource "aws_neptune_subnet_group" "spaces" {
-    name = "with spaces"
-    description = "Our main group of subnets"
-    subnet_ids = ["${aws_subnet.frontend.id}", "${aws_subnet.backend.id}"]
-}
-`
