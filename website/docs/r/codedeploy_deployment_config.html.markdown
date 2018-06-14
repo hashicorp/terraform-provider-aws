@@ -57,7 +57,9 @@ resource "aws_codedeploy_deployment_group" "foo" {
 The following arguments are supported:
 
 * `deployment_config_name` - (Required) The name of the deployment config.
+* `compute_platform` - (Optional) The compute platform can either be `Server` or `Lambda`. Default is `Server`.
 * `minimum_healthy_hosts` - (Optional) A minimum_healthy_hosts block. Minimum Healthy Hosts are documented below.
+* `traffic_routing_config` - (Optional) The configuration that specifies how the deployment traffic will be routed.
 
 A `minimum_healthy_hosts` block support the following:
 
@@ -66,6 +68,15 @@ A `minimum_healthy_hosts` block support the following:
 a percentage of the total number of instances in the deployment. If you specify FLEET_PERCENT, at the start of the
 deployment, AWS CodeDeploy converts the percentage to the equivalent number of instance and rounds up fractional instances.
 When the type is `HOST_COUNT`, the value represents the minimum number of healthy instances as an absolute value.
+
+A `traffic_routing_config` block support the following:
+
+* `type` - (Requested) The type can either be `TimeBasedCanary` or `TimeBasedLinear`
+* `interval` - (Required) When type is `TimeBasedCanary`, the value represents the minutes between the first and second
+traffic shifts. When type is `TimeBasedLinear`, the value represents the minutes between each incremental traffic shift.
+* `percentage` - (Required) When type is `TimeBasedCanary`, the value represents the percentage of traffic to shift in
+the first increment.  When the type is `TimeBasedLinear`, the value represents the percentage of traffic that is shifted
+at the start of each increment.
 
 ## Attributes Reference
 
