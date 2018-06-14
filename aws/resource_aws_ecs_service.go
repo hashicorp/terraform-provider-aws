@@ -17,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-const schedulingStrategyDaemon = "DAEMON"
-
 var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
 
 func resourceAwsEcsService() *schema.Resource {
@@ -72,7 +70,11 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "REPLICA",
+				Default:  ecs.SchedulingStrategyReplica,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.SchedulingStrategyDaemon,
+					ecs.SchedulingStrategyReplica,
+				}, false),
 			},
 
 			"iam_role": {
@@ -330,13 +332,11 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.LaunchType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("scheduling_strategy"); ok {
-		schedulingStrategy := v.(string)
-		input.SchedulingStrategy = aws.String(schedulingStrategy)
-		if schedulingStrategy == schedulingStrategyDaemon {
-			// unset desired count if DAEMON
-			input.DesiredCount = nil
-		}
+	schedulingStrategy := d.Get("scheduling_strategy").(string)
+	input.SchedulingStrategy = aws.String(schedulingStrategy)
+	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
+		// unset desired count if DAEMON
+		input.DesiredCount = nil
 	}
 
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
@@ -509,7 +509,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	// Automatically ignore desired count if DAEMON
-	if *service.SchedulingStrategy != schedulingStrategyDaemon {
+	if *service.SchedulingStrategy != ecs.SchedulingStrategyDaemon {
 		d.Set("desired_count", service.DesiredCount)
 	}
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
@@ -733,7 +733,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 	// Automatically ignore desired count if DAEMON
-	if schedulingStrategy != schedulingStrategyDaemon && d.HasChange("desired_count") {
+	if schedulingStrategy != ecs.SchedulingStrategyDaemon && d.HasChange("desired_count") {
 		_, n := d.GetChange("desired_count")
 		input.DesiredCount = aws.Int64(int64(n.(int)))
 	}
