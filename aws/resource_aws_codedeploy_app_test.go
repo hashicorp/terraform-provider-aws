@@ -21,6 +21,7 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSCodeDeployApp,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_codedeploy_app.foo", "compute_platform", "Server"),
 					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
 				),
 			},
