@@ -233,6 +233,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_region":                           dataSourceAwsRegion(),
 			"aws_route":                            dataSourceAwsRoute(),
 			"aws_route_table":                      dataSourceAwsRouteTable(),
+			"aws_route_table_ids":                  dataSourceAwsRouteTableIDs(),
 			"aws_route53_zone":                     dataSourceAwsRoute53Zone(),
 			"aws_s3_bucket":                        dataSourceAwsS3Bucket(),
 			"aws_s3_bucket_object":                 dataSourceAwsS3BucketObject(),
