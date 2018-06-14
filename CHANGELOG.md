@@ -1,4 +1,9 @@
 ## 1.24.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
+
 ## 1.23.0 (June 14, 2018)
 
 NOTES:
