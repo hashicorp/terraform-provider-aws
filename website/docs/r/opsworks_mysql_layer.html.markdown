@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks MySQL layer resource.
 ---
 
-# aws\_opsworks\_mysql\_layer
+# aws_opsworks_mysql_layer
 
 Provides an OpsWorks MySQL layer resource.
 
@@ -64,6 +64,6 @@ An `ebs_volume` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the layer.

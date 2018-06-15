@@ -6,7 +6,7 @@ description: |-
   Attaches a load balancer policy to an ELB backend server.
 ---
 
-# aws\_elb\_load\_balancer\_backend\_server\_policy
+# aws_elb_load_balancer_backend_server_policy
 
 Attaches a load balancer policy to an ELB backend server.
 
@@ -81,7 +81,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the policy.
 * `load_balancer_name` - The load balancer on which the policy is defined.

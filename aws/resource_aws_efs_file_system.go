@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -42,11 +43,14 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 			},
 
 			"performance_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validatePerformanceModeType,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					efs.PerformanceModeGeneralPurpose,
+					efs.PerformanceModeMaxIo,
+				}, false),
 			},
 
 			"encrypted": {
@@ -62,6 +66,11 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"tags": tagsSchema(),
@@ -230,6 +239,12 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
 
+	region := meta.(*AWSClient).region
+	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -289,19 +304,13 @@ func validateReferenceName(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validatePerformanceModeType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != efs.PerformanceModeGeneralPurpose && value != efs.PerformanceModeMaxIo {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Performance Mode %q. Valid modes are either %q or %q.",
-			k, value, efs.PerformanceModeGeneralPurpose, efs.PerformanceModeMaxIo))
-	}
-	return
-}
-
 func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
 	if fs != nil && len(fs.FileSystems) > 0 {
 		return false
 	}
 	return true
+}
+
+func resourceAwsEfsDnsName(fileSystemId, region string) string {
+	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
 }

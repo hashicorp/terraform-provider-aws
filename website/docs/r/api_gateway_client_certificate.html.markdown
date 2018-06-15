@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Client Certificate.
 ---
 
-# aws\_api\_gateway\_client\_certificate
+# aws_api_gateway_client_certificate
 
 Provides an API Gateway Client Certificate.
 
@@ -27,7 +27,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the client certificate.
 * `created_date` - The date when the client certificate was created.

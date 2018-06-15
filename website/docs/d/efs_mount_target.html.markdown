@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System Mount Target (EFS) data source.
 ---
 
-# aws_efs_mount_target
+# Data Source: aws_efs_mount_target
 
 Provides information about an Elastic File System Mount Target (EFS).
 
@@ -31,7 +31,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `file_system_id` - ID of the file system for which the mount target is intended.
 * `subnet_id` - ID of the mount target's subnet.

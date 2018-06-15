@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway API Key.
 ---
 
-# aws\_api\_gateway\_api\_key
+# aws_api_gateway_api_key
 
 Provides an API Gateway API Key.
 
@@ -51,7 +51,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the API key
 * `created_date` - The creation date of the API key

@@ -6,7 +6,7 @@ description: |-
     Provides metadata of a CloudFormation stack (e.g. outputs)
 ---
 
-# aws\_cloudformation\_stack
+# Data Source: aws_cloudformation_stack
 
 The CloudFormation Stack data source allows access to stack
 outputs and other useful data including the template body.
@@ -37,7 +37,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `capabilities` - A list of capabilities
 * `description` - Description of the stack

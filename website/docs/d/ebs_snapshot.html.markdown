@@ -6,7 +6,7 @@ description: |-
   Get information on an EBS Snapshot.
 ---
 
-# aws\_ebs\_snapshot
+# Data Source: aws_ebs_snapshot
 
 Use this data source to get information about an EBS Snapshot for use when provisioning EBS Volumes
 
@@ -48,7 +48,7 @@ several valid keys, for a full reference, check out
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The snapshot ID (e.g. snap-59fcb34e).
 * `snapshot_id` - The snapshot ID (e.g. snap-59fcb34e).

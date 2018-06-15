@@ -6,7 +6,7 @@ description: |-
   Provides a Inspector assessment target.
 ---
 
-# aws\_inspector\_assessment\_target
+# aws_inspector_assessment_target
 
 Provides a Inspector assessment target
 
@@ -35,6 +35,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The target assessment ARN.

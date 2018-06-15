@@ -6,7 +6,7 @@ description: |-
   Provides a Step Function Activity resource.
 ---
 
-# sfn\_activity
+# sfn_activity
 
 Provides a Step Function Activity resource
 
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the created activity.
 * `name` - The name of the activity.

@@ -6,7 +6,7 @@ description: |-
   Creates an Amazon Machine Image (AMI) from an EBS-backed EC2 instance
 ---
 
-# aws\_ami\_from\_instance
+# aws_ami_from_instance
 
 The "AMI from instance" resource allows the creation of an Amazon Machine
 Image (AMI) modelled after an existing EBS-backed EC2 instance.
@@ -46,9 +46,17 @@ The following arguments are supported:
   inconsistent filesystem state, but can be used to avoid downtime if the user otherwise
   guarantees that no filesystem writes will be underway at the time of snapshot.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the AMI
+* `update` - (Defaults to 40 mins) Used when updating the AMI
+* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the created AMI.
 

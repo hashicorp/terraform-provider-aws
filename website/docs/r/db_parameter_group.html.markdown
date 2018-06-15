@@ -2,9 +2,11 @@
 layout: "aws"
 page_title: "AWS: aws_db_parameter_group"
 sidebar_current: "docs-aws-resource-db-parameter-group"
+description: |-
+  Provides an RDS DB parameter group resource.
 ---
 
-# aws\_db\_parameter\_group
+# aws_db_parameter_group
 
 Provides an RDS DB parameter group resource.
 
@@ -48,7 +50,7 @@ Parameter blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db parameter group name.
 * `arn` - The ARN of the db parameter group.

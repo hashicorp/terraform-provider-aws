@@ -6,11 +6,13 @@ description: |-
   Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 ---
 
-# aws\_iam\_policy\_attachment
+# aws_iam_policy_attachment
 
 Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
-!> **WARNING:** The aws_iam_policy_attachment resource creates **exclusive** attachments of IAM policies. Across the entire AWS account, all of the users/roles/groups to which a single policy is attached must be declared by a single aws_iam_policy_attachment resource. This means that even any users/roles/groups that have the attached policy via some mechanism other than Terraform will have that attached policy revoked by Terraform. Consider `aws_iam_role_policy_attachment`, `iam_user_policy_attachment`, or `iam_group_policy_attachment` instead. These resources do not enforce exclusive attachment of an IAM policy. 
+!> **WARNING:** The aws_iam_policy_attachment resource creates **exclusive** attachments of IAM policies. Across the entire AWS account, all of the users/roles/groups to which a single policy is attached must be declared by a single aws_iam_policy_attachment resource. This means that even any users/roles/groups that have the attached policy via some mechanism other than Terraform will have that attached policy revoked by Terraform. Consider `aws_iam_role_policy_attachment`, `aws_iam_user_policy_attachment`, or `aws_iam_group_policy_attachment` instead. These resources do not enforce exclusive attachment of an IAM policy. 
+
+## Example Usage
 
 ```hcl
 resource "aws_iam_user" "user" {
@@ -44,7 +46,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
 
 The following arguments are supported:
 
-* `name` 		(Required) - The name of the policy. This cannot be an empty string.
+* `name` 		(Required) - The name of the attachment. This cannot be an empty string.
 * `users`		(Optional) - The user(s) the policy should be applied to
 * `roles`		(Optional) - The role(s) the policy should be applied to
 * `groups`		(Optional) - The group(s) the policy should be applied to
@@ -52,7 +54,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The policy's ID.
-* `name` - The name of the policy.
+* `name` - The name of the attachment.

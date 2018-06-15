@@ -6,7 +6,7 @@ description: |-
   Provides an VPC subnet resource.
 ---
 
-# aws\_subnet
+# aws_subnet
 
 Provides an VPC subnet resource.
 
@@ -42,7 +42,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
 * `availability_zone`- The AZ for the subnet.

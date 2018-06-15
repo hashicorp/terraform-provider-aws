@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
 
-# aws\_autoscaling\_policy
+# aws_autoscaling_policy
 
 Provides an AutoScaling Scaling Policy resource.
 
@@ -45,8 +45,9 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
 * `autoscaling_group_name` - (Required) The name of the autoscaling group.
-* `adjustment_type` - (Required) Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
-* `policy_type` - (Optional) The policy type, either "SimpleScaling" or "StepScaling". If this value isn't provided, AWS will default to "SimpleScaling."
+* `adjustment_type` - (Optional) Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
+* `policy_type` - (Optional) The policy type, either "SimpleScaling", "StepScaling" or "TargetTrackingScaling". If this value isn't provided, AWS will default to "SimpleScaling."
+* `estimated_instance_warmup` - (Optional) The estimated time, in seconds, until a newly launched instance will contribute CloudWatch metrics. Without a value, AWS will default to the group's specified cooldown period.
 
 The following arguments are only available to "SimpleScaling" type policies:
 
@@ -56,7 +57,6 @@ The following arguments are only available to "SimpleScaling" type policies:
 The following arguments are only available to "StepScaling" type policies:
 
 * `metric_aggregation_type` - (Optional) The aggregation type for the policy's metrics. Valid values are "Minimum", "Maximum", and "Average". Without a value, AWS will treat the aggregation type as "Average".
-* `estimated_instance_warmup` - (Optional) The estimated time, in seconds, until a newly launched instance will contribute CloudWatch metrics. Without a value, AWS will default to the group's specified cooldown period.
 * `step_adjustments` - (Optional) A set of adjustments that manage
 group scaling. These have the following structure:
 
@@ -85,6 +85,62 @@ Without a value, AWS will treat this bound as infinity.
 difference between the alarm threshold and the CloudWatch metric.
 Without a value, AWS will treat this bound as infinity. The upper bound
 must be greater than the lower bound.
+
+The following arguments are only available to "TargetTrackingScaling" type policies:
+
+* `target_tracking_configuration` - (Optional) A target tracking policy. These have the following structure:
+
+```hcl
+target_tracking_configuration {
+  predefined_metric_specification {
+    predefined_metric_type = "ASGAverageCPUUtilization"
+  }
+  target_value = 40.0
+}
+target_tracking_configuration {
+  customized_metric_specification {
+    metric_dimension {
+      name = "fuga"
+      value = "fuga"
+    }
+    metric_name = "hoge"
+    namespace = "hoge"
+    statistic = "Average"
+  }
+  target_value = 40.0
+}
+```
+
+The following fields are available in target tracking configuration:
+
+* `predefined_metric_specification` - (Optional) A predefined metric. Conflicts with `customized_metric_specification`.
+* `customized_metric_specification` - (Optional) A customized metric. Conflicts with `predefined_metric_specification`.
+* `target_value` - (Required) The target value for the metric.
+* `disable_scale_in` - (Optional, Default: false) Indicates whether scale in by the target tracking policy is disabled.
+
+### predefined_metric_specification
+
+The following arguments are supported:
+
+* `predefined_metric_type` - (Required) The metric type.
+* `resource_label` - (Optional) Identifies the resource associated with the metric type.
+
+### customized_metric_specification
+
+The following arguments are supported:
+
+* `metric_dimension` - (Optional) The dimensions of the metric.
+* `metric_name` - (Required) The name of the metric.
+* `namespace` - (Required) The namespace of the metric.
+* `statistic` - (Required) The statistic of the metric.
+* `unit` - (Optional) The unit of the metric.
+
+#### metric_dimension
+
+The following arguments are supported:
+
+* `name` - (Required) The name of the dimension.
+* `value` - (Required) The value of the dimension.
 
 The following arguments are supported for backwards compatibility but should not be used:
 

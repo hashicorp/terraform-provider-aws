@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -39,6 +39,40 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_tags(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithTags(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccAWSSQSConfigWithTagsChanged(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "changed"),
+				),
+			},
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					resource.TestCheckNoResourceAttr("aws_sqs_queue.queue", "tags"),
 				),
 			},
 		},
@@ -80,6 +114,33 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQSHasPolicy("aws_sqs_queue.test-email-events", expectedPolicyText),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+			{
+				Config: "# delete queue to quickly recreate",
+				Check:  testAccCheckAWSSQSQueueDestroy,
+			},
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
 				),
 			},
 		},
@@ -197,14 +258,17 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 		params := &sqs.GetQueueAttributesInput{
 			QueueUrl: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.GetQueueAttributes(params)
-		if err == nil {
-			return fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID)
-		}
-
-		// Verify the error is what we want
-		_, ok := err.(awserr.Error)
-		if !ok {
+		err := resource.Retry(15*time.Second, func() *resource.RetryError {
+			_, err := conn.GetQueueAttributes(params)
+			if err != nil {
+				if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
+					return nil
+				}
+				return resource.NonRetryableError(err)
+			}
+			return resource.RetryableError(fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID))
+		})
+		if err != nil {
 			return err
 		}
 	}
@@ -407,7 +471,7 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 func testAccAWSSQSConfigWithDefaults(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
-    name = "%s"
+  name = "%s"
 }
 `, r)
 }
@@ -415,7 +479,7 @@ resource "aws_sqs_queue" "queue" {
 func testAccAWSSQSConfigWithNamePrefix(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
-    name_prefix = "%s"
+  name_prefix = "%s"
 }
 `, r)
 }
@@ -423,8 +487,8 @@ resource "aws_sqs_queue" "queue" {
 func testAccAWSSQSFifoConfigWithDefaults(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
-    name = "%s.fifo"
-    fifo_queue = true
+  name = "%s.fifo"
+  fifo_queue = true
 }
 `, r)
 }
@@ -450,8 +514,8 @@ resource "aws_sqs_queue" "my_queue" {
 
   redrive_policy = <<EOF
 {
-    "maxReceiveCount": 3,
-    "deadLetterTargetArn": "${aws_sqs_queue.my_dead_letter_queue.arn}"
+  "maxReceiveCount": 3,
+  "deadLetterTargetArn": "${aws_sqs_queue.my_dead_letter_queue.arn}"
 }
 EOF
 }
@@ -557,7 +621,32 @@ func testAccAWSSQSConfigWithEncryption(queue string) string {
 resource "aws_sqs_queue" "queue" {
   name                              = "%s"
   kms_master_key_id                 = "alias/aws/sqs"
-	kms_data_key_reuse_period_seconds = 300
+  kms_data_key_reuse_period_seconds = 300
 }
 `, queue)
+}
+
+func testAccAWSSQSConfigWithTags(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name = "%s"
+
+  tags {
+    Environment = "production"
+    Usage = "original"
+  }
+}
+`, r)
+}
+
+func testAccAWSSQSConfigWithTagsChanged(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name = "%s"
+
+  tags {
+    Usage = "changed"
+  }
+}
+`, r)
 }

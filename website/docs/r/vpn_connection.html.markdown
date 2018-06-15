@@ -6,10 +6,16 @@ description: |-
   Provides a VPN connection connected to a VPC. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and the VPC.
 ---
 
-# aws\_vpn\_connection
+# aws_vpn_connection
 
 
 Provides a VPN connection connected to a VPC. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and the VPC.
+
+~> **Note:** All arguments including `tunnel1_preshared_key` and `tunnel2_preshared_key` will be stored in the raw state as plain-text.
+[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+
+~> **Note:** The CIDR blocks in the arguments `tunnel1_inside_cidr` and `tunnel2_inside_cidr` must have a prefix of /30 and be a part of a specific range.
+[Read more about this in the AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpnTunnelOptionsSpecification.html).
 
 ## Example Usage
 
@@ -45,10 +51,15 @@ The following arguments are supported:
 * `tags` - (Optional) Tags to apply to the connection.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
 * `vpn_gateway_id` - (Required) The ID of the virtual private gateway.
+* `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel.
+* `tunnel2_inside_cidr` - (Optional) The CIDR block of the second IP addresses for the first VPN tunnel.
+* `tunnel1_preshared_key` - (Optional) The preshared key of the first VPN tunnel.
+* `tunnel2_preshared_key` - (Optional) The preshared key of the second VPN tunnel.
+~> **Note:** The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_).
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The amazon-assigned ID of the VPN connection.
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).

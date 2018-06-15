@@ -6,7 +6,7 @@ description: |-
   Get information on an ElastiCache Cluster resource.
 ---
 
-# aws_elasticache_cluster
+# Data Source: aws_elasticache_cluster
 
 Use this data source to get information about an Elasticache Cluster
 
@@ -27,7 +27,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `node_type` – The cluster node type.
 * `num_cache_nodes` – The number of cache nodes that the cache cluster has.
@@ -38,14 +38,14 @@ The following attributes are exported:
 * `security_group_ids` – List VPC security groups associated with the cache cluster.
 * `parameter_group_name` – Name of the parameter group associated with this cache cluster.
 * `replication_group_id` - The replication group to which this cache cluster belongs.
-* `maintenance_window` – Specifies the weekly time range for when maintenance
+* `maintenance_window` – Specifies the weekly time range for when maintenance
 on the cache cluster is performed.
 * `snapshot_window` - The daily time range (in UTC) during which ElastiCache will
 begin taking a daily snapshot of the cache cluster.
 * `snapshot_retention_limit` - The number of days for which ElastiCache will
 retain automatic cache cluster snapshots before deleting them.
 * `availability_zone` - The Availability Zone for the cache cluster.
-* `notification_topic_arn` – An Amazon Resource Name (ARN) of an
+* `notification_topic_arn` – An Amazon Resource Name (ARN) of an
 SNS topic that ElastiCache notifications get sent to.
 * `port` – The port number on which each of the cache nodes will
 accept connections.

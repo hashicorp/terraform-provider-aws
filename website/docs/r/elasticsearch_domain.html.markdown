@@ -6,7 +6,7 @@ description: |-
   Provides an ElasticSearch Domain.
 ---
 
-# aws\_elasticsearch\_domain
+# aws_elasticsearch_domain
 
 
 ## Example Usage
@@ -57,8 +57,11 @@ The following arguments are supported:
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options.
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
+* `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
+* `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
+* `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of ElasticSearch to deploy. Defaults to `1.5`
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
@@ -71,6 +74,11 @@ The following arguments are supported:
 * `iops` - (Optional) The baseline input/output (I/O) performance of EBS volumes
 	attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
 
+**encrypt_at_rest** supports the following attributes:
+
+* `enabled` - (Required) Whether to enable encryption at rest. If the `encrypt_at_rest` block is not provided then this defaults to `false`.
+* `kms_key_id` - (Optional) The KMS key id to encrypt the Elasticsearch domain with. If not specified then it defaults to using the `aws/es` service KMS key.
+
 **cluster_config** supports the following attributes:
 
 * `instance_type` - (Optional) Instance type of data nodes in the cluster.
@@ -80,19 +88,36 @@ The following arguments are supported:
 * `dedicated_master_count` - (Optional) Number of dedicated master nodes in the cluster
 * `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled.
 
+**vpc_options** supports the following attributes:
+
+AWS documentation: [VPC Support for Amazon Elasticsearch Service Domains](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html)
+
+* `security_group_ids` - (Optional) List of VPC Security Group IDs to be applied to the Elasticsearch domain endpoints. If omitted, the default Security Group for the VPC will be used.
+* `subnet_ids` - (Required) List of VPC Subnet IDs for the Elasticsearch domain endpoints to be created in.
+
+Security Groups and Subnets referenced in these attributes must all be within the same VPC; this determines what VPC the endpoints are created in.
+
 **snapshot_options** supports the following attribute:
 
 * `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily
 	snapshot of the indices in the domain.
 
+**log_publishing_options** supports the following attribute:
+
+* `log_type` - (Required) A type of Elasticsearch log. Valid values: INDEX_SLOW_LOGS, SEARCH_SLOW_LOGS
+* `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
+* `enabled` - (Optional, Default: true) Specifies whether given log publishing option is enabled or not.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the domain.
 * `domain_id` - Unique identifier for the domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
+* `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
+* `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
+* `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
 
 ## Import
 

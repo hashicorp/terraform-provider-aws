@@ -6,7 +6,7 @@ description: |-
   Provides a SSM Parameter datasource
 ---
 
-# aws\_ssm\_parameter
+# Data Source: aws_ssm_parameter
 
 Provides an SSM Parameter data source.
 
@@ -28,10 +28,12 @@ data "aws_ssm_parameter" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the parameter.
+* `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the parameter.
 * `name` - (Required) The name of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.

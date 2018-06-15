@@ -6,7 +6,7 @@ description: |-
   Provides a SimpleDB domain resource.
 ---
 
-# aws\_simpledb\_domain
+# aws_simpledb_domain
 
 Provides a SimpleDB domain resource
 
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the SimpleDB domain
 

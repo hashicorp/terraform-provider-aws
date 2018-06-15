@@ -49,3 +49,25 @@ func TestAccAWSDynamoDbTable_importTags(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSDynamoDbTable_importTimeToLive(t *testing.T) {
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}

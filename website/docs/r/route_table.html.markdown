@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC routing table.
 ---
 
-# aws\_route\_table
+# aws_route_table
 
 Provides a resource to create a VPC routing table.
 
@@ -77,7 +77,7 @@ the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 ~> **NOTE:** Only the target that is entered is exported as a readable
 attribute once the route resource is created.
 

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsAmi() *schema.Resource {
@@ -27,7 +28,7 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateNameRegex,
+				ValidateFunc: validation.ValidateRegexp,
 			},
 			"most_recent": {
 				Type:     schema.TypeBool,
@@ -106,6 +107,10 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"root_snapshot_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"sriov_net_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -165,7 +170,7 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"tags": dataSourceTagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -198,6 +203,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	log.Printf("[DEBUG] Reading AMI: %s", params)
 	resp, err := conn.DescribeImages(params)
 	if err != nil {
 		return err
@@ -284,6 +290,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
 		d.Set("root_device_name", image.RootDeviceName)
 	}
 	d.Set("root_device_type", image.RootDeviceType)
+	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	if image.SriovNetSupport != nil {
 		d.Set("sriov_net_support", image.SriovNetSupport)
 	}
@@ -299,7 +306,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
 	if err := d.Set("state_reason", amiStateReason(image.StateReason)); err != nil {
 		return err
 	}
-	if err := d.Set("tags", dataSourceTags(image.Tags)); err != nil {
+	if err := d.Set("tags", tagsToMap(image.Tags)); err != nil {
 		return err
 	}
 	return nil
@@ -358,6 +365,22 @@ func amiProductCodes(m []*ec2.ProductCode) *schema.Set {
 	return s
 }
 
+// Returns the root snapshot ID for an image, if it has one
+func amiRootSnapshotId(image *ec2.Image) string {
+	if image.RootDeviceName == nil {
+		return ""
+	}
+	for _, bdm := range image.BlockDeviceMappings {
+		if bdm.DeviceName == nil || *bdm.DeviceName != *image.RootDeviceName {
+			continue
+		}
+		if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
+			return *bdm.Ebs.SnapshotId
+		}
+	}
+	return ""
+}
+
 // Returns the state reason.
 func amiStateReason(m *ec2.StateReason) map[string]interface{} {
 	s := make(map[string]interface{})
@@ -409,15 +432,4 @@ func amiProductCodesHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["product_code_id"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["product_code_type"].(string)))
 	return hashcode.String(buf.String())
-}
-
-func validateNameRegex(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if _, err := regexp.Compile(value); err != nil {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid regular expression: %s",
-			k, err))
-	}
-	return
 }

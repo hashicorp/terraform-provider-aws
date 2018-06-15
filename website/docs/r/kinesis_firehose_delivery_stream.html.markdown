@@ -6,7 +6,7 @@ description: |-
   Provides a AWS Kinesis Firehose Delivery Stream
 ---
 
-# aws\_kinesis\_firehose\_delivery\_stream
+# aws_kinesis_firehose_delivery_stream
 
 Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 and Amazon Redshift.
 
@@ -167,6 +167,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     data_table_name    = "test-table"
     copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "test-col"
+    s3_backup_mode     = "Enabled"
+    s3_backup_configuration {
+      role_arn           = "${aws_iam_role.firehose_role.arn}"
+      bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+      buffer_size        = 15
+      buffer_interval    = 300
+      compression_format = "GZIP"
+    }
   }
 }
 ```
@@ -195,10 +203,52 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     index_name = "test"
     type_name  = "test"
+
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
+
+### Splunk Destination
+
+```hcl
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "splunk"
+
+  s3_configuration {
+    role_arn           = "${aws_iam_role.firehose.arn}"
+    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    buffer_size        = 10
+    buffer_interval    = 400
+    compression_format = "GZIP"
+  }
+
+  splunk_configuration {
+    hec_endpoint               = "https://http-inputs-mydomain.splunkcloud.com:443"
+    hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+    hec_acknowledgment_timeout = 600
+    hec_endpoint_type          = "Event"
+    s3_backup_mode             = "FailedEventsOnly"
+  }
+}
+```
 ~> **NOTE:** Kinesis Firehose is currently only supported in us-east-1, us-west-2 and eu-west-1.
 
 ## Argument Reference
@@ -207,13 +257,18 @@ The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, and `elasticsearch`.
+* `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, and `splunk`.
 * `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
 is redshift). More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
+
+The `kinesis_source_configuration` object supports the following:
+* `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
+* `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
 
 The `s3_configuration` object supports the following:
 
@@ -231,6 +286,8 @@ be used.
 The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
 
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+* `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 
 The `redshift_configuration` object supports the following:
 
@@ -239,10 +296,13 @@ The `redshift_configuration` object supports the following:
 * `password` - (Required) The password for the username above.
 * `retry_duration` - (Optional) The length of time during which Firehose retries delivery after a failure, starting from the initial request and including the first attempt. The default value is 3600 seconds (60 minutes). Firehose does not retry if the value of DurationInSeconds is 0 (zero) or if the first delivery attempt takes longer than the current value.
 * `role_arn` - (Required) The arn of the role the stream assumes.
+* `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 * `data_table_name` - (Required) The name of the table in the redshift cluster that the s3 bucket will copy to.
 * `copy_options` - (Optional) Copy options for copying the data from the s3 intermediate bucket into redshift, for example to change the default delimiter. For valid values, see the [AWS documentation](http://docs.aws.amazon.com/firehose/latest/APIReference/API_CopyCommand.html)
 * `data_table_columns` - (Optional) The data table columns that will be targeted by the copy command.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `elasticsearch_configuration` object supports the following:
 
@@ -256,6 +316,17 @@ The `elasticsearch_configuration` object supports the following:
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Required) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+
+The `splunk_configuration` objects supports the following:
+
+* `hec_acknowledgment_timeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
+* `hec_endpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
+* `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
+* `hec_token` - The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
+* `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
 
 The `cloudwatch_logging_options` object supports the following:
 
@@ -275,7 +346,7 @@ The `processors` array objects support the following:
 
 The `parameters` array objects support the following:
 
-* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`
+* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ## Attributes Reference
@@ -283,3 +354,13 @@ The `parameters` array objects support the following:
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
 
 [1]: https://aws.amazon.com/documentation/firehose/
+
+## Import
+
+Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.
+
+```
+$ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+```
+
+Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

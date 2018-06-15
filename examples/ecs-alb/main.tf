@@ -67,7 +67,7 @@ data "aws_ami" "stable_coreos" {
 
   filter {
     name   = "description"
-    values = ["CoreOS stable *"]
+    values = ["CoreOS Container Linux stable *"]
   }
 
   filter {
@@ -248,7 +248,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "app" {
-  name  = "tf-ecs-instprofile"
+  name = "tf-ecs-instprofile"
   role = "${aws_iam_role.app_instance.name}"
 }
 
@@ -291,7 +291,7 @@ resource "aws_iam_role_policy" "instance" {
 
 resource "aws_alb_target_group" "test" {
   name     = "tf-example-ecs-ghost"
-  port     = 80
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.main.id}"
 }

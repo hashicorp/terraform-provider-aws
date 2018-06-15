@@ -6,7 +6,7 @@ description: |-
   Duplicates an existing Amazon Machine Image (AMI)
 ---
 
-# aws\_ami\_copy
+# aws_ami_copy
 
 The "AMI copy" resource allows duplication of an Amazon Machine Image (AMI),
 including cross-region copies.
@@ -49,9 +49,17 @@ The following arguments are supported:
 
 This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the AMI
+* `update` - (Defaults to 40 mins) Used when updating the AMI
+* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the created AMI.
 

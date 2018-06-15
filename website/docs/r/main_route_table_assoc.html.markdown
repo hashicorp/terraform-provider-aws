@@ -6,7 +6,7 @@ description: |-
   Provides a resource for managing the main routing table of a VPC.
 ---
 
-# aws\_main\_route\_table\_<wbr>association
+# aws_main_route_table_association
 
 Provides a resource for managing the main routing table of a VPC.
 
@@ -29,7 +29,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Route Table Association
 * `original_route_table_id` - Used internally, see __Notes__ below

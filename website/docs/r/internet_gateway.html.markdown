@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC Internet Gateway.
 ---
 
-# aws\_internet\_gateway
+# aws_internet_gateway
 
 Provides a resource to create a VPC Internet Gateway.
 
@@ -43,7 +43,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Internet Gateway.
 

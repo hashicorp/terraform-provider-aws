@@ -3,11 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -16,6 +14,54 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_redshift_cluster", &resource.Sweeper{
+		Name: "aws_redshift_cluster",
+		F:    testSweepRedshiftClusters,
+	})
+}
+
+func testSweepRedshiftClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).redshiftconn
+
+	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, isLast bool) bool {
+		if len(resp.Clusters) == 0 {
+			log.Print("[DEBUG] No Redshift clusters to sweep")
+			return false
+		}
+
+		for _, c := range resp.Clusters {
+			id := *c.ClusterIdentifier
+			if !strings.HasPrefix(id, "tf-redshift-cluster-") {
+				continue
+			}
+
+			input := &redshift.DeleteClusterInput{
+				ClusterIdentifier:        c.ClusterIdentifier,
+				SkipFinalClusterSnapshot: aws.Bool(true),
+			}
+			_, err := conn.DeleteCluster(input)
+			if err != nil {
+				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s",
+					*c.ClusterIdentifier, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Redshift Clusters: %s", err)
+	}
+	return nil
+}
 
 func TestValidateRedshiftClusterDbName(t *testing.T) {
 	validNames := []string{
@@ -56,8 +102,8 @@ func TestValidateRedshiftClusterDbName(t *testing.T) {
 func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	config := fmt.Sprintf(testAccAWSRedshiftClusterConfig_basic, ri)
+	ri := acctest.RandInt()
+	config := testAccAWSRedshiftClusterConfig_basic(ri)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -72,6 +118,7 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 						"aws_redshift_cluster.default", "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "publicly_accessible", "true"),
+					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "dns_name", regexp.MustCompile(fmt.Sprintf("^tf-redshift-cluster-%d.*\\.redshift\\..*", ri))),
 				),
 			},
 		},
@@ -101,8 +148,8 @@ func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
 func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	config := fmt.Sprintf(testAccAWSRedshiftClusterConfig_kmsKey, ri, ri)
+	ri := acctest.RandInt()
+	config := testAccAWSRedshiftClusterConfig_kmsKey(ri)
 	keyRegex := regexp.MustCompile("^arn:aws:([a-zA-Z0-9\\-])+:([a-z]{2}-[a-z]+-\\d{1})?:(\\d{12})?:(.*)$")
 
 	resource.Test(t, resource.TestCase{
@@ -128,9 +175,9 @@ func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	preConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled, ri)
-	postConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled, ri)
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(ri)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -157,6 +204,38 @@ func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 	})
 }
 
+func TestAccAWSRedshiftCluster_loggingEnabledDeprecated(t *testing.T) {
+	var v redshift.Cluster
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "enable_logging", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "bucket_name", fmt.Sprintf("tf-redshift-logging-%d", rInt)),
+				),
+			},
+
+			{
+				Config: testAccAWSRedshiftClusterConfig_loggingDisabledDeprecated(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "enable_logging", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 	var v redshift.Cluster
 	rInt := acctest.RandInt()
@@ -171,9 +250,9 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "enable_logging", "true"),
+						"aws_redshift_cluster.default", "logging.0.enable", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "bucket_name", fmt.Sprintf("tf-redshift-logging-%d", rInt)),
+						"aws_redshift_cluster.default", "logging.0.bucket_name", fmt.Sprintf("tf-redshift-logging-%d", rInt)),
 				),
 			},
 
@@ -182,7 +261,38 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "enable_logging", "false"),
+						"aws_redshift_cluster.default", "logging.0.enable", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftCluster_snapshotCopy(t *testing.T) {
+	var v redshift.Cluster
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "snapshot_copy.0.destination_region", "us-east-1"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "snapshot_copy.0.retention_period", "1"),
+				),
+			},
+
+			{
+				Config: testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "snapshot_copy.#", "0"),
 				),
 			},
 		},
@@ -192,9 +302,9 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	preConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_iamRoles, ri, ri, ri)
-	postConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_updateIamRoles, ri, ri, ri)
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_iamRoles(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updateIamRoles(ri)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -255,9 +365,9 @@ func TestAccAWSRedshiftCluster_publiclyAccessible(t *testing.T) {
 func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	preConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_basic, ri)
-	postConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_updateNodeCount, ri)
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updateNodeCount(ri)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -279,6 +389,47 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "number_of_nodes", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "cluster_type", "multi-node"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "node_type", "dc1.large"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
+	var v redshift.Cluster
+
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updateNodeType(ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "node_type", "dc1.large"),
+				),
+			},
+
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "cluster_type", "single-node"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "node_type", "dc2.large"),
 				),
 			},
 		},
@@ -288,9 +439,9 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-	preConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_tags, ri)
-	postConfig := fmt.Sprintf(testAccAWSRedshiftClusterConfig_updatedTags, ri)
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_tags(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updatedTags(ri)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -314,6 +465,39 @@ func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "tags.environment", "Production"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
+	var first, second redshift.Cluster
+
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updatedUsername(ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &first),
+					testAccCheckAWSRedshiftClusterMasterUsername(&first, "foo_test"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "master_username", "foo_test"),
+				),
+			},
+
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &second),
+					testAccCheckAWSRedshiftClusterMasterUsername(&second, "new_username"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "master_username", "new_username"),
 				),
 			},
 		},
@@ -367,11 +551,6 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 			conn := testAccProvider.Meta().(*AWSClient).redshiftconn
 
 			snapshot_identifier := fmt.Sprintf("tf-acctest-snapshot-%d", rInt)
-			arn, err := buildRedshiftARN(snapshot_identifier, testAccProvider.Meta().(*AWSClient).partition, testAccProvider.Meta().(*AWSClient).accountid, testAccProvider.Meta().(*AWSClient).region)
-			tagsARN := strings.Replace(arn, ":cluster:", ":snapshot:", 1)
-			if err != nil {
-				return fmt.Errorf("Error building ARN for tags check with ARN (%s): %s", tagsARN, err)
-			}
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteClusterSnapshot(
@@ -438,6 +617,15 @@ func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resourc
 		}
 
 		return fmt.Errorf("Redshift Cluster (%s) not found", rs.Primary.ID)
+	}
+}
+
+func testAccCheckAWSRedshiftClusterMasterUsername(c *redshift.Cluster, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *c.MasterUsername != value {
+			return fmt.Errorf("Expected cluster's MasterUsername: %q, given: %q", value, *c.MasterUsername)
+		}
+		return nil
 	}
 }
 
@@ -581,7 +769,8 @@ func TestResourceAWSRedshiftClusterMasterPasswordValidation(t *testing.T) {
 	}
 }
 
-var testAccAWSRedshiftClusterConfig_updateNodeCount = `
+func testAccAWSRedshiftClusterConfig_updateNodeCount(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster-%d"
   availability_zone = "us-west-2a"
@@ -594,9 +783,28 @@ resource "aws_redshift_cluster" "default" {
   number_of_nodes = 2
   skip_final_snapshot = true
 }
-`
+`, rInt)
+}
 
-var testAccAWSRedshiftClusterConfig_basic = `
+func testAccAWSRedshiftClusterConfig_updateNodeType(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier = "tf-redshift-cluster-%d"
+  availability_zone = "us-west-2a"
+  database_name = "mydb"
+  master_username = "foo_test"
+  master_password = "Mustbe8characters"
+  node_type = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade = false
+  number_of_nodes = 1
+  skip_final_snapshot = true
+}
+`, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_basic(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster-%d"
   availability_zone = "us-west-2a"
@@ -607,7 +815,8 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade = false
   skip_final_snapshot = true
-}`
+}`, rInt)
+}
 
 func testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt int) string {
 	return fmt.Sprintf(`
@@ -625,7 +834,8 @@ resource "aws_redshift_cluster" "default" {
 }`, rInt, rInt)
 }
 
-var testAccAWSRedshiftClusterConfig_kmsKey = `
+func testAccAWSRedshiftClusterConfig_kmsKey(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %d"
   policy = <<POLICY
@@ -659,9 +869,11 @@ resource "aws_redshift_cluster" "default" {
   kms_key_id = "${aws_kms_key.foo.arn}"
   encrypted = true
   skip_final_snapshot = true
-}`
+}`, rInt, rInt)
+}
 
-var testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled = `
+func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster-%d"
   availability_zone = "us-west-2a"
@@ -674,9 +886,11 @@ resource "aws_redshift_cluster" "default" {
   enhanced_vpc_routing = true
   skip_final_snapshot = true
 }
-`
+`, rInt)
+}
 
-var testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled = `
+func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster-%d"
   availability_zone = "us-west-2a"
@@ -689,9 +903,10 @@ resource "aws_redshift_cluster" "default" {
   enhanced_vpc_routing = false
   skip_final_snapshot = true
 }
-`
+`, rInt)
+}
 
-func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
+func testAccAWSRedshiftClusterConfig_loggingDisabledDeprecated(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_redshift_cluster" "default" {
 		cluster_identifier = "tf-redshift-cluster-%d"
@@ -707,8 +922,10 @@ func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
 	}`, rInt)
 }
 
-func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
+func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_redshift_service_account" "main" {}
+
  resource "aws_s3_bucket" "bucket" {
 	 bucket = "tf-redshift-logging-%d"
 	 force_destroy = true
@@ -720,7 +937,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 		 "Sid": "Stmt1376526643067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
@@ -729,7 +946,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 		 "Sid": "Stmt137652664067",
 		 "Effect": "Allow",
 		 "Principal": {
-			 "AWS": "arn:aws:iam::902366379725:user/logs"
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
 		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
@@ -755,7 +972,112 @@ EOF
  }`, rInt, rInt, rInt, rInt)
 }
 
-var testAccAWSRedshiftClusterConfig_tags = `
+func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_redshift_cluster" "default" {
+		cluster_identifier = "tf-redshift-cluster-%d"
+		availability_zone = "us-west-2a"
+		database_name = "mydb"
+		master_username = "foo_test"
+		master_password = "Mustbe8characters"
+		node_type = "dc1.large"
+		automated_snapshot_retention_period = 0
+		allow_version_upgrade = false
+		logging {
+			enable = false
+		}
+		skip_final_snapshot = true
+	}`, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_redshift_service_account" "main" {}
+
+ resource "aws_s3_bucket" "bucket" {
+	 bucket = "tf-redshift-logging-%d"
+	 force_destroy = true
+	 policy = <<EOF
+{
+ "Version": "2008-10-17",
+ "Statement": [
+	 {
+		 "Sid": "Stmt1376526643067",
+		 "Effect": "Allow",
+		 "Principal": {
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
+		 },
+		 "Action": "s3:PutObject",
+		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
+	 },
+	 {
+		 "Sid": "Stmt137652664067",
+		 "Effect": "Allow",
+		 "Principal": {
+			 "AWS": "${data.aws_redshift_service_account.main.arn}"
+		 },
+		 "Action": "s3:GetBucketAcl",
+		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
+	 }
+ ]
+}
+EOF
+ }
+
+
+ resource "aws_redshift_cluster" "default" {
+	 cluster_identifier = "tf-redshift-cluster-%d"
+	 availability_zone = "us-west-2a"
+	 database_name = "mydb"
+	 master_username = "foo_test"
+	 master_password = "Mustbe8characters"
+	 node_type = "dc1.large"
+	 automated_snapshot_retention_period = 0
+	 allow_version_upgrade = false
+	 logging {
+		enable = true
+		bucket_name = "${aws_s3_bucket.bucket.bucket}"
+	 }
+	 skip_final_snapshot = true
+ }`, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_redshift_cluster" "default" {
+		cluster_identifier = "tf-redshift-cluster-%d"
+		availability_zone = "us-west-2a"
+		database_name = "mydb"
+		master_username = "foo_test"
+		master_password = "Mustbe8characters"
+		node_type = "dc1.large"
+		automated_snapshot_retention_period = 0
+		allow_version_upgrade = false
+		skip_final_snapshot = true
+	}`, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt int) string {
+	return fmt.Sprintf(`
+ resource "aws_redshift_cluster" "default" {
+	 cluster_identifier = "tf-redshift-cluster-%d"
+	 availability_zone = "us-west-2a"
+	 database_name = "mydb"
+	 master_username = "foo_test"
+	 master_password = "Mustbe8characters"
+	 node_type = "dc1.large"
+	 automated_snapshot_retention_period = 0
+	 allow_version_upgrade = false
+	 snapshot_copy {
+		destination_region = "us-east-1"
+		retention_period = 1
+	 }
+	 skip_final_snapshot = true
+ }`, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_tags(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster-%d"
   availability_zone = "us-west-2a"
@@ -771,9 +1093,11 @@ resource "aws_redshift_cluster" "default" {
     cluster = "reader"
     Type = "master"
   }
-}`
+}`, rInt)
+}
 
-var testAccAWSRedshiftClusterConfig_updatedTags = `
+func testAccAWSRedshiftClusterConfig_updatedTags(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster-%d"
   availability_zone = "us-west-2a"
@@ -787,14 +1111,15 @@ resource "aws_redshift_cluster" "default" {
   tags {
     environment = "Production"
   }
-}`
+}`, rInt)
+}
 
 func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
 		tags {
-			Name = "testAccAWSRedshiftClusterConfig_notPubliclyAccessible"
+			Name = "terraform-testacc-redshift-cluster-not-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {
@@ -808,7 +1133,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2a"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-1"
+			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foo"
 		}
 	}
 	resource "aws_subnet" "bar" {
@@ -816,7 +1141,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2b"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-2"
+			Name = "tf-acc-redshift-cluster-not-publicly-accessible-bar"
 		}
 	}
 	resource "aws_subnet" "foobar" {
@@ -824,7 +1149,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2c"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-3"
+			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foobar"
 		}
 	}
 	resource "aws_redshift_subnet_group" "foo" {
@@ -854,7 +1179,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
 		tags {
-			Name = "testAccAWSRedshiftClusterConfig_updatePubliclyAccessible"
+			Name = "terraform-testacc-redshift-cluster-upd-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {
@@ -868,7 +1193,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2a"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-1"
+			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foo"
 		}
 	}
 	resource "aws_subnet" "bar" {
@@ -876,7 +1201,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2b"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-2"
+			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-bar"
 		}
 	}
 	resource "aws_subnet" "foobar" {
@@ -884,7 +1209,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		availability_zone = "us-west-2c"
 		vpc_id = "${aws_vpc.foo.id}"
 		tags {
-			Name = "tf-dbsubnet-test-3"
+			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foobar"
 		}
 	}
 	resource "aws_redshift_subnet_group" "foo" {
@@ -909,7 +1234,8 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 	}`, rInt, rInt)
 }
 
-var testAccAWSRedshiftClusterConfig_iamRoles = `
+func testAccAWSRedshiftClusterConfig_iamRoles(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
 	name   = "test-role-ec2-%d"
 	path = "/"
@@ -933,9 +1259,11 @@ resource "aws_redshift_cluster" "default" {
    allow_version_upgrade = false
    iam_roles = ["${aws_iam_role.ec2-role.arn}", "${aws_iam_role.lambda-role.arn}"]
    skip_final_snapshot = true
-}`
+}`, rInt, rInt, rInt)
+}
 
-var testAccAWSRedshiftClusterConfig_updateIamRoles = `
+func testAccAWSRedshiftClusterConfig_updateIamRoles(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
  	name   = "test-role-ec2-%d"
  	path = "/"
@@ -959,4 +1287,20 @@ resource "aws_iam_role" "ec2-role" {
    allow_version_upgrade = false
    iam_roles = ["${aws_iam_role.ec2-role.arn}"]
    skip_final_snapshot = true
- }`
+ }`, rInt, rInt, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_updatedUsername(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier = "tf-redshift-cluster-%d"
+  availability_zone = "us-west-2a"
+  database_name = "mydb"
+  master_username = "new_username"
+  master_password = "Mustbe8characters"
+  node_type = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade = false
+  skip_final_snapshot = true
+}`, rInt)
+}

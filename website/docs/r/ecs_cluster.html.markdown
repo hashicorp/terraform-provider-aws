@@ -6,7 +6,7 @@ description: |-
   Provides an ECS cluster.
 ---
 
-# aws\_ecs\_cluster
+# aws_ecs_cluster
 
 Provides an ECS cluster.
 
@@ -26,7 +26,15 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
-* `name` - The name of the cluster
 * `id` - The Amazon Resource Name (ARN) that identifies the cluster
+* `arn` - The Amazon Resource Name (ARN) that identifies the cluster
+
+## Import
+
+ECS clusters can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_ecs_cluster.stateless stateless-app
+```

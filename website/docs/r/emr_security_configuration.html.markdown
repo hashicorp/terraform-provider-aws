@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage AWS EMR Security Configurations
 ---
 
-# aws\_emr\_security\_configuration
+# aws_emr_security_configuration
 
 Provides a resource to manage AWS EMR Security Configurations
 
@@ -47,7 +47,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the EMR Security Configuration (Same as the `name`)
 * `name` - The Name of the EMR Security Configuration

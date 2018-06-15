@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFormation Stack resource.
 ---
 
-# aws\_cloudformation\_stack
+# aws_cloudformation_stack
 
 Provides a CloudFormation Stack resource.
 
@@ -70,7 +70,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.

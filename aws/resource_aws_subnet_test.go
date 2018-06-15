@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,78 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// add sweeper to delete known test subnets
+func init() {
+	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
+		Name: "aws_subnet",
+		F:    testSweepSubnets,
+		// When implemented, these should be moved to aws_network_interface
+		// and aws_network_interface set as dependency here.
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_batch_compute_environment",
+			"aws_beanstalk_environment",
+			"aws_db_instance",
+			"aws_eks_cluster",
+			"aws_elasticache_cluster",
+			"aws_elasticache_replication_group",
+			"aws_elasticsearch_domain",
+			"aws_elb",
+			"aws_lambda_function",
+			"aws_lb",
+			"aws_mq_broker",
+			"aws_redshift_cluster",
+			"aws_spot_fleet_request",
+		},
+	})
+}
+
+func testSweepSubnets(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeSubnetsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("tf-acc-*"),
+				},
+			},
+		},
+	}
+	resp, err := conn.DescribeSubnets(req)
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error describing subnets: %s", err)
+	}
+
+	if len(resp.Subnets) == 0 {
+		log.Print("[DEBUG] No aws subnets to sweep")
+		return nil
+	}
+
+	for _, subnet := range resp.Subnets {
+		// delete the subnet
+		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
+			SubnetId: subnet.SubnetId,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting Subnet (%s): %s",
+				*subnet.SubnetId, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
@@ -207,6 +280,9 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 const testAccSubnetConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-subnet"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -214,7 +290,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet"
 	}
 }
 `
@@ -223,6 +299,9 @@ const testAccSubnetConfigPreIpv6 = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-ipv6"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -230,7 +309,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-ipv6"
 	}
 }
 `
@@ -239,6 +318,9 @@ const testAccSubnetConfigIpv6 = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-ipv6"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -248,7 +330,7 @@ resource "aws_subnet" "foo" {
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = true
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-ipv6"
 	}
 }
 `
@@ -257,6 +339,9 @@ const testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-assign-ipv6-on-creation"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -266,7 +351,7 @@ resource "aws_subnet" "foo" {
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-assign-ipv6-on-creation"
 	}
 }
 `
@@ -275,6 +360,9 @@ const testAccSubnetConfigIpv6UpdateIpv6Cidr = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-subnet-ipv6-update-cidr"
+	}
 }
 
 resource "aws_subnet" "foo" {
@@ -284,7 +372,7 @@ resource "aws_subnet" "foo" {
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags {
-		Name = "tf-subnet-acc-test"
+		Name = "tf-acc-subnet-ipv6-update-cidr"
 	}
 }
 `

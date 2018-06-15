@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC VPN Gateway.
 ---
 
-# aws\_vpn\_gateway
+# aws_vpn_gateway
 
 Provides a resource to create a VPC VPN Gateway.
 
@@ -29,10 +29,11 @@ The following arguments are supported:
 * `vpc_id` - (Optional) The VPC ID to create in.
 * `availability_zone` - (Optional) The Availability Zone for the virtual private gateway.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+* `amazon_side_asn` - (Optional) The Autonomous System Number (ASN) for the Amazon side of the gateway. If you don't specify an ASN, the virtual private gateway is created with the default ASN.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPN Gateway.
 

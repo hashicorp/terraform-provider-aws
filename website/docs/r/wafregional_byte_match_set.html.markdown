@@ -6,13 +6,13 @@ description: |-
   Provides a AWS WAF Regional ByteMatchSet resource for use with ALB.
 ---
 
-# aws\_wafregional\_byte\_match\_set
+# aws_wafregional_byte_match_set
 
 Provides a WAF Regional Byte Match Set Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
   byte_match_tuple {
@@ -50,6 +50,6 @@ FieldToMatch(field_to_match) support following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF ByteMatchSet.

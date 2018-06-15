@@ -6,7 +6,7 @@ description: |-
   Provides a KMS customer master key.
 ---
 
-# aws\_kms\_key
+# aws_kms_key
 
 Provides a KMS customer master key.
 
@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key.
-	Defaults to ENCRYPT/DECRYPT, and only symmetric encryption and decryption are supported.
+	Defaults to ENCRYPT_DECRYPT, and only symmetric encryption and decryption are supported.
 * `policy` - (Optional) A valid policy JSON document.
 * `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted
 	after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days.
@@ -36,7 +36,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the key.
 * `key_id` - The globally unique identifier for the key.

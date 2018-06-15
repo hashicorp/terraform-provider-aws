@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF web access control group (ACL) resource.
 ---
 
-# aws\_waf\_web\_acl
+# aws_waf_web_acl
 
 Provides a WAF Web ACL Resource
 
@@ -88,6 +88,6 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF WebACL.
