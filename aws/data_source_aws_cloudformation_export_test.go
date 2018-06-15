@@ -16,10 +16,10 @@ func TestAccAWSCloudformationExports_dataSource(t *testing.T) {
 				Config: testAccCheckAwsCloudformationExportsJson,
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cloudformation_exports.waiter", "value", "waiter"),
-					resource.TestMatchResourceAttr("data.aws_cloudformation_exports.vpc", "value",
-						regexp.MustCompile("^vpc-[a-z0-9]{8}$")),
-					resource.TestMatchResourceAttr("data.aws_cloudformation_exports.vpc", "exporting_stack_id",
+					resource.TestCheckResourceAttr("data.aws_cloudformation_export.waiter", "value", "waiter"),
+					resource.TestMatchResourceAttr("data.aws_cloudformation_export.vpc", "value",
+						regexp.MustCompile("^vpc-[a-z0-9]{8,}$")),
+					resource.TestMatchResourceAttr("data.aws_cloudformation_export.vpc", "exporting_stack_id",
 						regexp.MustCompile("^arn:aws:cloudformation")),
 				),
 			},
@@ -28,7 +28,7 @@ func TestAccAWSCloudformationExports_dataSource(t *testing.T) {
 }
 
 const testAccCheckCfnExport = `
-data "aws_cloudformation_exports" "here" {
+data "aws_cloudformation_export" "here" {
 	name = "Intuit-vpc-1:vpc:id"
 }
 `
@@ -93,10 +93,10 @@ STACK
     Second = "meh"
   }
 }
-data "aws_cloudformation_exports" "vpc" {
+data "aws_cloudformation_export" "vpc" {
 	name = "${aws_cloudformation_stack.yaml.tags["TestExport"]}"
 }
-data "aws_cloudformation_exports" "waiter" {
+data "aws_cloudformation_export" "waiter" {
 	name = "${aws_cloudformation_stack.cfs.tags["TestExport"]}"
 }
 `

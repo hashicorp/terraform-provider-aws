@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsCloudFormationExports() *schema.Resource {
+func dataSourceAwsCloudFormationExport() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFormationExportsRead,
+		Read: dataSourceAwsCloudFormationExportRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -28,7 +28,7 @@ func dataSourceAwsCloudFormationExports() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFormationExportsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsCloudFormationExportRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 	var name, value string
 	if v, ok := d.GetOk("name"); ok {

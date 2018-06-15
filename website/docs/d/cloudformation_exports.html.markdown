@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_cloudformation_exports"
+page_title: "AWS: aws_cloudformation_export"
 sidebar_current: "docs-aws-datasource-cloudformation-exports"
 description: |-
     Provides metadata of a CloudFormation Exports (e.g. Cross Stack References)
@@ -16,14 +16,14 @@ exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/l
 ## Example Usage
 
 ```hcl
-data "aws_cloudformation_exports" "subnet_id" {
+data "aws_cloudformation_export" "subnet_id" {
   name = "my:subnet_id:export"
 }
 
 resource "aws_instance" "web" {
   ami           = "ami-abb07bcb"
   instance_type = "t1.micro"
-  subnet_id     = "${data.aws_cloudformation_exports.subnet_id.value}"
+  subnet_id     = "${data.aws_cloudformation_export.subnet_id.value}"
 }
 ```
 

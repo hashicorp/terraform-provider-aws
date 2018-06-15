@@ -174,7 +174,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_billing_service_account":          dataSourceAwsBillingServiceAccount(),
 			"aws_caller_identity":                  dataSourceAwsCallerIdentity(),
 			"aws_canonical_user_id":                dataSourceAwsCanonicalUserId(),
-			"aws_cloudformation_exports":           dataSourceAwsCloudFormationExports(),
+			"aws_cloudformation_export":            dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":             dataSourceAwsCloudFormationStack(),
 			"aws_cloudtrail_service_account":       dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":             dataSourceAwsCloudwatchLogGroup(),
