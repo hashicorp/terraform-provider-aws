@@ -1,5 +1,9 @@
 ## 1.24.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_cloudformation_export` [GH-2180]
+
 ENHANCEMENTS:
 
 * resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
