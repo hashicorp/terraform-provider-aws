@@ -1,15 +1,15 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudformation_export"
-sidebar_current: "docs-aws-datasource-cloudformation-exports"
+sidebar_current: "docs-aws-datasource-cloudformation-export"
 description: |-
-    Provides metadata of a CloudFormation Exports (e.g. Cross Stack References)
+    Provides metadata of a CloudFormation Export (e.g. Cross Stack References)
 ---
 
-# aws\_cloudformation\_exports
+# Data Source: aws_cloudformation_export
 
-The CloudFormation Exports data source allows access to stack
-exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html) section of the Cloudformation Template using the optional Export Property. 
+The CloudFormation Export data source allows access to stack
+exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html) section of the Cloudformation Template using the optional Export Property.
 
  -> Note: If you are trying to use a value from a Cloudformation Stack in the same Terraform run please use normal interpolation or Cloudformation Outputs. 
 

@@ -1,19 +1,23 @@
 package aws
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSCloudformationExports_dataSource(t *testing.T) {
+func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckAwsCloudformationExportsJson,
+				Config: testAccCheckAwsCloudformationExportConfig(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_export.waiter", "value", "waiter"),
@@ -27,14 +31,10 @@ func TestAccAWSCloudformationExports_dataSource(t *testing.T) {
 	})
 }
 
-const testAccCheckCfnExport = `
-data "aws_cloudformation_export" "here" {
-	name = "Intuit-vpc-1:vpc:id"
-}
-`
-const testAccCheckAwsCloudformationExportsJson = `
+func testAccCheckAwsCloudformationExportConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
-  name = "tf-waiter-stack"
+  name = "%s1"
   timeout_in_minutes = 6
   template_body = <<STACK
 {
@@ -61,7 +61,7 @@ STACK
   }
 }
 resource "aws_cloudformation_stack" "yaml" {
-  name = "tf-acc-ds-yaml-stack"
+  name = "%s2"
   parameters {
     CIDR = "10.10.10.0/24"
   }
@@ -99,4 +99,5 @@ data "aws_cloudformation_export" "vpc" {
 data "aws_cloudformation_export" "waiter" {
 	name = "${aws_cloudformation_stack.cfs.tags["TestExport"]}"
 }
-`
+`, rName, rName)
+}
