@@ -525,6 +525,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
+	client.neptuneconn = neptune.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
