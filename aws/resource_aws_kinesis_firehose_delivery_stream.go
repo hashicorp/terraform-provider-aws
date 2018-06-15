@@ -387,10 +387,9 @@ func flattenFirehoseOpenXJsonSerDe(oxjsd *firehose.OpenXJsonSerDe) []map[string]
 	// API omits default values
 	// Return defaults that are not type zero values to prevent extraneous difference
 
+	m["case_insensitive"] = true
 	if oxjsd.CaseInsensitive != nil {
 		m["case_insensitive"] = aws.BoolValue(oxjsd.CaseInsensitive)
-	} else {
-		m["case_insensitive"] = true
 	}
 
 	return []map[string]interface{}{m}
@@ -435,46 +434,39 @@ func flattenFirehoseOrcSerDe(osd *firehose.OrcSerDe) []map[string]interface{} {
 	// API omits default values
 	// Return defaults that are not type zero values to prevent extraneous difference
 
+	m["block_size_bytes"] = 268435456
 	if osd.BlockSizeBytes != nil {
 		m["block_size_bytes"] = int(aws.Int64Value(osd.BlockSizeBytes))
-	} else {
-		m["block_size_bytes"] = 268435456
 	}
 
+	m["bloom_filter_false_positive_probability"] = 0.05
 	if osd.BloomFilterFalsePositiveProbability != nil {
 		m["bloom_filter_false_positive_probability"] = aws.Float64Value(osd.BloomFilterFalsePositiveProbability)
-	} else {
-		m["bloom_filter_false_positive_probability"] = 0.05
 	}
 
+	m["compression"] = firehose.OrcCompressionSnappy
 	if osd.Compression != nil {
 		m["compression"] = aws.StringValue(osd.Compression)
-	} else {
-		m["compression"] = firehose.OrcCompressionSnappy
 	}
 
+	m["format_version"] = firehose.OrcFormatVersionV012
 	if osd.FormatVersion != nil {
 		m["format_version"] = aws.StringValue(osd.FormatVersion)
-	} else {
-		m["format_version"] = firehose.OrcFormatVersionV012
 	}
 
+	m["padding_tolerance"] = 0.05
 	if osd.PaddingTolerance != nil {
 		m["padding_tolerance"] = aws.Float64Value(osd.PaddingTolerance)
-	} else {
-		m["padding_tolerance"] = 0.05
 	}
 
+	m["row_index_stride"] = 10000
 	if osd.RowIndexStride != nil {
 		m["row_index_stride"] = int(aws.Int64Value(osd.RowIndexStride))
-	} else {
-		m["row_index_stride"] = 10000
 	}
 
+	m["stripe_size_bytes"] = 67108864
 	if osd.StripeSizeBytes != nil {
 		m["stripe_size_bytes"] = int(aws.Int64Value(osd.StripeSizeBytes))
-	} else {
-		m["stripe_size_bytes"] = 67108864
 	}
 
 	return []map[string]interface{}{m}
@@ -493,28 +485,24 @@ func flattenFirehoseParquetSerDe(psd *firehose.ParquetSerDe) []map[string]interf
 	// API omits default values
 	// Return defaults that are not type zero values to prevent extraneous difference
 
+	m["block_size_bytes"] = 268435456
 	if psd.BlockSizeBytes != nil {
 		m["block_size_bytes"] = int(aws.Int64Value(psd.BlockSizeBytes))
-	} else {
-		m["block_size_bytes"] = 268435456
 	}
 
+	m["compression"] = firehose.ParquetCompressionSnappy
 	if psd.Compression != nil {
 		m["compression"] = aws.StringValue(psd.Compression)
-	} else {
-		m["compression"] = firehose.ParquetCompressionSnappy
 	}
 
+	m["page_size_bytes"] = 1048576
 	if psd.PageSizeBytes != nil {
 		m["page_size_bytes"] = int(aws.Int64Value(psd.PageSizeBytes))
-	} else {
-		m["page_size_bytes"] = 1048576
 	}
 
+	m["writer_version"] = firehose.ParquetWriterVersionV1
 	if psd.WriterVersion != nil {
 		m["writer_version"] = aws.StringValue(psd.WriterVersion)
-	} else {
-		m["writer_version"] = firehose.ParquetWriterVersionV1
 	}
 
 	return []map[string]interface{}{m}
