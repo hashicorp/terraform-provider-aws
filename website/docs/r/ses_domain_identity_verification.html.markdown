@@ -32,7 +32,7 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 }
 
 resource "aws_ses_domain_identity_verification" "example_verification" {
-  domain = "${aws_ses_domain_identity.example.id}"
+  domain = "${aws_ses_domain_identity.example.zone_id}"
 
   depends_on = ["aws_route53_record.example_amazonses_verification_record"]
 }
