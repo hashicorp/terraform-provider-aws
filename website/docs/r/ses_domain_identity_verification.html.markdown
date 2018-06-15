@@ -24,7 +24,7 @@ resource "aws_ses_domain_identity" "example" {
 }
 
 resource "aws_route53_record" "example_amazonses_verification_record" {
-  zone_id = "${aws_route53_zone.example.id}"
+  zone_id = "${aws_route53_zone.example.zone_id}"
   name    = "_amazonses.${aws_ses_domain_identity.example.id}"
   type    = "TXT"
   ttl     = "600"
@@ -32,7 +32,7 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 }
 
 resource "aws_ses_domain_identity_verification" "example_verification" {
-  domain = "${aws_ses_domain_identity.example.zone_id}"
+  domain = "${aws_ses_domain_identity.example.id}"
 
   depends_on = ["aws_route53_record.example_amazonses_verification_record"]
 }
