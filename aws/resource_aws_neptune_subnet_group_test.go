@@ -35,6 +35,11 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 						"aws_neptune_subnet_group.foo", "description", "Managed by Terraform"),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_subnet_group.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -56,6 +61,12 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 						"aws_neptune_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
 				),
 			},
+			{
+				ResourceName:            "aws_neptune_subnet_group.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
 		},
 	})
 }
@@ -74,6 +85,11 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 					testAccCheckNeptuneSubnetGroupExists(
 						"aws_neptune_subnet_group.test", &v),
 				),
+			},
+			{
+				ResourceName:      "aws_neptune_subnet_group.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -106,6 +122,11 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_neptune_subnet_group.foo", "description", "foo description updated"),
 				),
+			},
+			{
+				ResourceName:      "aws_neptune_subnet_group.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
