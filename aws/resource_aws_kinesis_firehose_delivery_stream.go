@@ -7,14 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -838,13 +837,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Optional: true,
 																			// 256 MiB
 																			Default: 268435456,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "" && new == "268435456" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
 																			// 64 MiB
 																			ValidateFunc: validation.IntAtLeast(67108864),
 																		},
@@ -857,13 +849,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																			Default:  0.05,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "" && new == "0.05" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
 																		},
 																		"compression": {
 																			Type:     schema.TypeString,
@@ -898,25 +883,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																			Default:  0.05,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "" && new == "0.05" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
 																		},
 																		"row_index_stride": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Default:  10000,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "" && new == "10000" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			Default:      10000,
 																			ValidateFunc: validation.IntAtLeast(1000),
 																		},
 																		"stripe_size_bytes": {
@@ -924,13 +895,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Optional: true,
 																			// 64 MiB
 																			Default: 67108864,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "" && new == "67108864" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
 																			// 8 MiB
 																			ValidateFunc: validation.IntAtLeast(8388608),
 																		},
@@ -948,13 +912,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Optional: true,
 																			// 256 MiB
 																			Default: 268435456,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "268435456" && new == "" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
 																			// 64 MiB
 																			ValidateFunc: validation.IntAtLeast(67108864),
 																		},
@@ -983,13 +940,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Optional: true,
 																			// 1 MiB
 																			Default: 1048576,
-																			// // API sometimes omits default value
-																			// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-																			// 	if old == "1048576" && new == "" {
-																			// 		return true
-																			// 	}
-																			// 	return false
-																			// },
 																			// 64 KiB
 																			ValidateFunc: validation.IntAtLeast(65536),
 																		},
