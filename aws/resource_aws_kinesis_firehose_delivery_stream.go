@@ -759,9 +759,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"hive_json_ser_de": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
+																Type:          schema.TypeList,
+																Optional:      true,
+																MaxItems:      1,
+																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de"},
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"timestamp_formats": {
@@ -773,9 +774,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																},
 															},
 															"open_x_json_ser_de": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
+																Type:          schema.TypeList,
+																Optional:      true,
+																MaxItems:      1,
+																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de"},
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"case_insensitive": {
@@ -815,9 +817,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"orc_ser_de": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
+																Type:          schema.TypeList,
+																Optional:      true,
+																MaxItems:      1,
+																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de"},
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"block_size_bytes": {
@@ -890,9 +893,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																},
 															},
 															"parquet_ser_de": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
+																Type:          schema.TypeList,
+																Optional:      true,
+																MaxItems:      1,
+																ConflictsWith: []string{"extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de"},
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"block_size_bytes": {
