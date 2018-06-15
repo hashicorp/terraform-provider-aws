@@ -40,8 +40,6 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 			"schedule": {
 				Type:     schema.TypeString,
 				Optional: true,
-				//TODO: Write a validate function on cron
-				//ValidateFunc: validateCron,
 			},
 			"classifiers": {
 				Type:     schema.TypeList,
@@ -69,40 +67,12 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 					},
 				},
 			},
-			//"vpc_config": {
-			//	Type:     schema.TypeList,
-			//	MinItems: 1,
-			//	MaxItems: 1,
-			//	Required: true,
-			//	ForceNew: true,
-			//	Elem: &schema.Resource{
-			//		Schema: map[string]*schema.Schema{
-			//			"security_group_ids": {
-			//				Type:     schema.TypeSet,
-			//				Optional: true,
-			//				ForceNew: true,
-			//				Elem:     &schema.Schema{Type: schema.TypeString},
-			//			},
-			//			"subnet_ids": {
-			//				Type:     schema.TypeSet,
-			//				Required: true,
-			//				ForceNew: true,
-			//				MinItems: 1,
-			//				Elem:     &schema.Schema{Type: schema.TypeString},
-			//			},
-			//			"vpc_id": {
-			//				Type:     schema.TypeString,
-			//				Computed: true,
-			//			},
-			//		},
-			//	},
-			//},
 			"table_prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"s3_target": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
@@ -196,9 +166,6 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
 	}
-	//if targets, ok := d.GetOk("targets"); ok {
-	//	crawlerInput.Targets = createCrawlerTargets(targets)
-	//}
 	//if configuration, ok := d.GetOk("configuration"); ok {
 	//	crawlerInput.Configuration = aws.String(configuration.(string))
 	//}
@@ -225,9 +192,38 @@ func expandSchemaPolicy(v []interface{}) *glue.SchemaChangePolicy {
 }
 
 func createCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
-	//attributes := d.(map[string]interface{})
 	crawlerTargets := &glue.CrawlerTargets{}
 
+	//jdbc_targets, jdbc_targets_ok := d.GetOk("jdbc_targets")
+	//s3Targets, s3_targets_ok := d.GetOk("s3Targets")
+	//if !jdbc_targets_ok && !s3_targets_ok {
+	//	return fmt.Errorf("jdbc_targets or s3Targets configuration is required")
+	//}
+
+	if s3Targets, ok := d.GetOk("s3_target"); ok {
+		crawlerTargets.S3Targets = expandS3Targets(s3Targets.(*schema.Set).List())
+	}
+
+	//if jdbcTargets, ok := d.GetOk("jdbc_targets"); ok {
+	//	crawlerTargets.JdbcTargets = expandJdbcTargets(jdbcTargets.([]interface{}))
+	//}
+	return crawlerTargets
+}
+
+func expandS3Targets(targets []interface{}) []*glue.S3Target {
+	if len(targets) < 1 {
+		return []*glue.S3Target{}
+	}
+
+	perms := make([]*glue.S3Target, len(targets), len(targets))
+	for i, rawCfg := range targets {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandS3Target(cfg)
+	}
+	return perms
+}
+
+func expandJdbcTargets(cfgs []interface{}) []*glue.S3Target {
 	//if jdbcTargetsResource, ok := attributes["jdbc_targets"]; ok {
 	//	jdbcTargets := jdbcTargetsResource.(*schema.Set).List()
 	//	var configsOut []*glue.JdbcTarget
@@ -250,34 +246,6 @@ func createCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
 	//	crawlerTargets.JdbcTargets = configsOut
 	//}
 
-	if v, ok := d.GetOk("s3_target"); ok {
-		crawlerTargets.S3Targets = expandS3Targets(v.([]interface{}))
-	}
-
-	//if s3Targets, ok := attributes["s3_target"]; ok {
-	//	targets := s3Targets.(*schema.Set).List()
-	//	var configsOut []*glue.S3Target
-	//
-	//	for _, target := range targets {
-	//		attributes := target.(map[string]interface{})
-	//
-	//		target := &glue.S3Target{
-	//			Path: aws.String(attributes["path"].(string)),
-	//		}
-	//
-	//		if exclusions, ok := attributes["exclusions"]; ok {
-	//			target.Exclusions = expandStringList(exclusions.(*schema.Set).List())
-	//		}
-	//
-	//		configsOut = append(configsOut, target)
-	//	}
-	//	crawlerTargets.S3Targets = configsOut
-	//}
-
-	return crawlerTargets
-}
-
-func expandS3Targets(cfgs []interface{}) []*glue.S3Target {
 	if len(cfgs) < 1 {
 		return []*glue.S3Target{}
 	}
@@ -293,10 +261,6 @@ func expandS3Targets(cfgs []interface{}) []*glue.S3Target {
 func expandS3Target(cfg map[string]interface{}) *glue.S3Target {
 	return &glue.S3Target{
 		Path: aws.String(cfg["path"].(string)),
-		//FromPort: aws.Int64(int64(cfg["from_port"].(int))),
-		//IpRange:  aws.String(cfg["ip_range"].(string)),
-		//Protocol: aws.String(cfg["protocol"].(string)),
-		//ToPort:   aws.Int64(int64(cfg["to_port"].(int))),
 	}
 }
 
@@ -346,7 +310,25 @@ func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{})
 		}
 		d.Set("schema_change_policy", schemaPolicy)
 	}
+
+	var s3Targets = crawlerOutput.Crawler.Targets.S3Targets
+	if crawlerOutput.Crawler.Targets.S3Targets != nil {
+		if err := d.Set("s3_target", flattenS3Targets(s3Targets)); err != nil {
+			log.Printf("[ERR] Error setting EMR instance groups: %s", err)
+		}
+	}
 	return nil
+}
+
+func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, s3Target := range s3Targets {
+		attrs := make(map[string]interface{})
+		attrs["path"] = *s3Target.Path
+		result = append(result, attrs)
+	}
+	return result
 }
 
 func resourceAwsGlueCatalogCrawlerDelete(d *schema.ResourceData, meta interface{}) error {

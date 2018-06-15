@@ -48,13 +48,14 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 			{
 				Config: testAccGlueCrawlerConfigCustomClassifiers,
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test1"),
-					resource.TestCheckResourceAttr(resourceName, "name", "test1"),
+					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test_custom"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_custom"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "test_db"),
 					resource.TestCheckResourceAttr(resourceName, "role", "tf-glue-service-role"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", "table_prefix"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DELETE_FROM_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "2"),
 				),
 			},
 		},
@@ -145,14 +146,16 @@ const testAccGlueCrawlerConfigCustomClassifiers = `
 	resource "aws_glue_catalog_database" "test_db" {
   		name = "test_db"
 	}
-	
 
 	resource "aws_glue_catalog_crawler" "test" {
-	  name = "test1"
+	  name = "test_custom"
 	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
 	  s3_target {
-		path = "s3://bucket"
+		path = "s3://bucket1"
+	  }
+	  s3_target {
+		path = "s3://bucket2"
 	  }
       table_prefix = "table_prefix"
 	  schema_change_policy {
