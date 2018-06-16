@@ -17,7 +17,7 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 			{
 				Config: testAccGlueCrawlerConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test"),
+					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test-basic"),
 					resource.TestCheckResourceAttr(
 						"aws_glue_catalog_crawler.test",
 						"name",
