@@ -30,7 +30,7 @@ The following arguments are supported:
 * `name_prefix` - (Optional) The friendly name for the SNS topic. Conflicts with `name`.
 * `display_name` - (Optional) The display name for the SNS topic
 * `policy` - (Optional) The fully-formed AWS policy as JSON
-* `delivery_policy` - (Optional) The SNS delivery policy
+* `delivery_policy` - (Optional) The SNS delivery policy. More on [AWS documentation](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html)
 * `application_success_feedback_role_arn` - (Optional) The IAM role permitted to receive success feedback for this topic
 * `application_success_feedback_sample_rate` - (Optional) Percentage of success to sample
 * `application_failure_feedback_role_arn` - (Optional) IAM role for failure feedback
@@ -57,4 +57,31 @@ SNS Topics can be imported using the `topic arn`, e.g.
 
 ```
 $ terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+```
+
+## Example with Delivery Policy
+
+``` hcl
+resource "aws_sns_topic" "user_updates" {
+  name = "user-updates-topic"
+  delivery_policy = <<EOF
+{
+  "http": {
+    "defaultHealthyRetryPolicy": {
+      "minDelayTarget": 20,
+      "maxDelayTarget": 20,
+      "numRetries": 3,
+      "numMaxDelayRetries": 0,
+      "numNoDelayRetries": 0,
+      "numMinDelayRetries": 0,
+      "backoffFunction": "linear"
+    },
+    "disableSubscriptionOverrides": false,
+    "defaultThrottlePolicy": {
+      "maxReceivesPerSecond": 1
+    }
+  }
+}
+EOF
+}
 ```
