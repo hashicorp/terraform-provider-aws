@@ -464,6 +464,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_launch_configuration":                     resourceAwsLaunchConfiguration(),
 			"aws_launch_template":                          resourceAwsLaunchTemplate(),
 			"aws_lightsail_domain":                         resourceAwsLightsailDomain(),
+			"aws_lightsail_domain_entry":                   resourceAwsLightsailDomainEntry(),
 			"aws_lightsail_instance":                       resourceAwsLightsailInstance(),
 			"aws_lightsail_key_pair":                       resourceAwsLightsailKeyPair(),
 			"aws_lightsail_static_ip":                      resourceAwsLightsailStaticIp(),
