@@ -81,11 +81,11 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						//"exclusions": {
-						//	Type:     schema.TypeSet,
-						//	Optional: true,
-						//	Elem:     schema.TypeString,
-						//},
+						"exclusions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
@@ -259,9 +259,14 @@ func expandJdbcTargets(cfgs []interface{}) []*glue.S3Target {
 }
 
 func expandS3Target(cfg map[string]interface{}) *glue.S3Target {
-	return &glue.S3Target{
+	target := &glue.S3Target{
 		Path: aws.String(cfg["path"].(string)),
 	}
+
+	if exclusions, ok := cfg["exclusions"]; ok {
+		target.Exclusions = expandStringList(exclusions.([]interface{}))
+	}
+	return target
 }
 
 func resourceAwsGlueCatalogCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -326,6 +331,11 @@ func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 	for _, s3Target := range s3Targets {
 		attrs := make(map[string]interface{})
 		attrs["path"] = *s3Target.Path
+
+		if len(s3Target.Exclusions) > 0 {
+			attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
+		}
+
 		result = append(result, attrs)
 	}
 	return result

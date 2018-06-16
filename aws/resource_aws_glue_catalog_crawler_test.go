@@ -153,6 +153,9 @@ const testAccGlueCrawlerConfigCustomClassifiers = `
 	  role = "${aws_iam_role.glue.name}"
 	  s3_target {
 		path = "s3://bucket1"
+		exclusions = [
+			"s3://bucket1/foo"
+		]
 	  }
 	  s3_target {
 		path = "s3://bucket2"
