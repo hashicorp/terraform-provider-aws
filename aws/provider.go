@@ -626,6 +626,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
 			"aws_neptune_subnet_group":                     resourceAwsNeptuneSubnetGroup(),
+			"aws_neptune_cluster_parameter_group":          resourceAwsNeptuneClusterParameterGroup(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
