@@ -212,7 +212,6 @@ func testAccAWSNeptuneClusterParameterGroupOnlyConfig(name string) string {
 	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
   name        = "%s"
   family      = "neptune1"
-  description = "Managed by Terraform"
 }`, name)
 }
 

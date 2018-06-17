@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/neptune"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -169,7 +170,9 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 	}
 
-	d.Set("tags", tagsToMapNeptune(resp.TagList))
+	if err := d.Set("tags", tagsToMapNeptune(resp.TagList)); err != nil {
+		return fmt.Errorf("error setting neptune tags: %s", err)
+	}
 
 	return nil
 }
@@ -222,7 +225,13 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	arn := d.Get("arn").(string)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "rds",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster-pg:%s", d.Id()),
+	}.String()
 	if err := setTagsNeptune(conn, d, arn); err != nil {
 		return err
 	} else {
