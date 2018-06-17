@@ -163,6 +163,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,

@@ -308,6 +308,12 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -1279,6 +1285,9 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 			if vol.Encrypted != nil {
 				bd["encrypted"] = *vol.Encrypted
 			}
+			if vol.KmsKeyId != nil {
+				bd["kms_key_id"] = *vol.KmsKeyId
+			}
 			if vol.SnapshotId != nil {
 				bd["snapshot_id"] = *vol.SnapshotId
 			}
@@ -1437,6 +1446,10 @@ func readBlockDeviceMappingsFromConfig(
 
 			if v, ok := bd["encrypted"].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
