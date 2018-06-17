@@ -40,7 +40,7 @@ func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
 					checkGlueCatalogCrawlerExists(name, "test-jdbc"),
 					resource.TestCheckResourceAttr(name, "name", "test-jdbc"),
 					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
-					resource.TestCheckResourceAttr(name, "role", "tf-glue-service-role"),
+					resource.TestCheckResourceAttr(name, "role", "AWSGlueServiceRoleDefault"),
 					resource.TestCheckResourceAttr(name, "jdbc_target.#", "1"),
 				),
 			},
@@ -154,13 +154,18 @@ const testAccGlueCrawlerConfigJdbc = `
   		}
 	}
 	
-	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-default-policy-attachment" {
+	resource "aws_iam_role_policy_attachment" "aws-glue-service-full-console-attachment" {
   		policy_arn = "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"
   		role = "${aws_iam_role.glue.name}"
 	}
 
+	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-service-attachment" {
+  		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  		role = "${aws_iam_role.glue.name}"
+	}
+
 	resource "aws_iam_role" "glue" {
-  		name = "tf-glue-service-role"
+  		name = "AWSGlueServiceRoleDefault"
   		assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
