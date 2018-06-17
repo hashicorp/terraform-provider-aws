@@ -159,42 +159,6 @@ const testAccGlueCrawlerConfigJdbc = `
   		role = "${aws_iam_role.glue.name}"
 	}
 
-	data "aws_iam_policy_document" "all-glue-policy-document" {
-  		statement {
-    		actions = [
-      			"glue:*",
-                "s3:GetBucketLocation",
-                "s3:ListBucket",
-                "s3:ListAllMyBuckets",
-                "s3:GetBucketAcl",
-                "ec2:DescribeVpcEndpoints",
-                "ec2:DescribeRouteTables",
-                "ec2:CreateNetworkInterface",
-                "ec2:DeleteNetworkInterface",				
-                "ec2:DescribeNetworkInterfaces",
-                "ec2:DescribeSecurityGroups",
-                "ec2:DescribeSubnets",
-                "ec2:DescribeVpcAttribute",
-                "iam:ListRolePolicies",
-                "iam:GetRole",
-                "iam:GetRolePolicy"
-			]
-			principals = {
-  				type = "service"
-  				identifiers = ["glue.amazonaws.com"]
-			}
-
-    		resources = [
-      			"*",
-    		]
-  		}
-	}
-	
-	resource "aws_iam_role_policy_attachment" "aws-glue-all-glue-policy-attachment" {
-  		policy_arn = "${data.aws_iam_policy_document.all-glue-policy-document.json}"
-  		role = "${aws_iam_role.glue.name}"
-	}
-
 	resource "aws_iam_role" "glue" {
   		name = "tf-glue-service-role"
   		assume_role_policy = <<EOF
