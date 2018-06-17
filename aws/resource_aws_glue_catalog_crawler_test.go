@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccAWSGlueCrawler_basic(t *testing.T) {
+	const name = "aws_glue_catalog_crawler.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -17,22 +18,30 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 			{
 				Config: testAccGlueCrawlerConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test-basic"),
-					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_crawler.test",
-						"name",
-						"test-basic",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_crawler.test",
-						"database_name",
-						"test_db",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_crawler.test",
-						"role",
-						"tf-glue-service-role",
-					),
+					checkGlueCatalogCrawlerExists(name, "test-basic"),
+					resource.TestCheckResourceAttr(name, "name", "test-basic"),
+					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
+					resource.TestCheckResourceAttr(name, "role", "AWSGlueServiceRole-tf"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
+	const name = "aws_glue_catalog_crawler.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfigJdbc,
+				Check: resource.ComposeTestCheckFunc(
+					checkGlueCatalogCrawlerExists(name, "test-jdbc"),
+					resource.TestCheckResourceAttr(name, "name", "test-jdbc"),
+					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
+					resource.TestCheckResourceAttr(name, "role", "tf-glue-service-role"),
+					resource.TestCheckResourceAttr(name, "jdbc_target.#", "1"),
 				),
 			},
 		},
@@ -40,7 +49,7 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 }
 
 func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
-	const resourceName = "aws_glue_catalog_crawler.test"
+	const name = "aws_glue_catalog_crawler.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -48,14 +57,14 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 			{
 				Config: testAccGlueCrawlerConfigCustomClassifiers,
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists("aws_glue_catalog_crawler.test", "test_custom"),
-					resource.TestCheckResourceAttr(resourceName, "name", "test_custom"),
-					resource.TestCheckResourceAttr(resourceName, "database_name", "test_db"),
-					resource.TestCheckResourceAttr(resourceName, "role", "tf-glue-service-role"),
-					resource.TestCheckResourceAttr(resourceName, "table_prefix", "table_prefix"),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DELETE_FROM_DATABASE"),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "2"),
+					checkGlueCatalogCrawlerExists(name, "test_custom"),
+					resource.TestCheckResourceAttr(name, "name", "test_custom"),
+					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
+					resource.TestCheckResourceAttr(name, "role", "tf-glue-service-role"),
+					resource.TestCheckResourceAttr(name, "table_prefix", "table_prefix"),
+					resource.TestCheckResourceAttr(name, "schema_change_policy.0.delete_behavior", "DELETE_FROM_DATABASE"),
+					resource.TestCheckResourceAttr(name, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(name, "s3_target.#", "2"),
 				),
 			},
 		},
@@ -112,6 +121,81 @@ const testAccGlueCrawlerConfigBasic = `
 	}
 	
 	resource "aws_iam_role" "glue" {
+  		name = "AWSGlueServiceRole-tf"
+  		assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+	}
+`
+
+const testAccGlueCrawlerConfigJdbc = `
+	resource "aws_glue_catalog_database" "test_db" {
+  		name = "test_db"
+	}
+
+	resource "aws_glue_connection" "test" {
+  		name = "tf-connection"
+		connection_properties = {
+    		JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
+    		PASSWORD            = "examplepassword"
+    		USERNAME            = "exampleusername"
+  		}
+	}
+	
+	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-default-policy-attachment" {
+  		policy_arn = "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"
+  		role = "${aws_iam_role.glue.name}"
+	}
+
+	data "aws_iam_policy_document" "all-glue-policy-document" {
+  		statement {
+    		actions = [
+      			"glue:*",
+                "s3:GetBucketLocation",
+                "s3:ListBucket",
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketAcl",
+                "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeRouteTables",
+                "ec2:CreateNetworkInterface",
+                "ec2:DeleteNetworkInterface",				
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcAttribute",
+                "iam:ListRolePolicies",
+                "iam:GetRole",
+                "iam:GetRolePolicy"
+			]
+			principals = {
+  				type = "service"
+  				identifiers = ["glue.amazonaws.com"]
+			}
+
+    		resources = [
+      			"*",
+    		]
+  		}
+	}
+	
+	resource "aws_iam_role_policy_attachment" "aws-glue-all-glue-policy-attachment" {
+  		policy_arn = "${data.aws_iam_policy_document.all-glue-policy-document.json}"
+  		role = "${aws_iam_role.glue.name}"
+	}
+
+	resource "aws_iam_role" "glue" {
   		name = "tf-glue-service-role"
   		assume_role_policy = <<EOF
 {
@@ -128,6 +212,18 @@ const testAccGlueCrawlerConfigBasic = `
   ]
 }
 EOF
+	}
+
+	resource "aws_glue_catalog_crawler" "test" {
+	  name = "test-jdbc"
+	  database_name = "${aws_glue_catalog_database.test_db.name}"
+	  role = "${aws_iam_role.glue.name}"
+	  description = "TF-test-crawler"
+	  schedule="cron(0 1 * * ? *)"
+	  jdbc_target {
+		path = "s3://bucket"
+		connection_name = "${aws_glue_connection.test.name}"
+	  }
 	}
 `
 
