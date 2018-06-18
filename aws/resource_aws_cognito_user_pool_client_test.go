@@ -88,6 +88,32 @@ func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "refresh_token_validity", "60"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName, 120),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "refresh_token_validity", "120"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -200,6 +226,20 @@ resource "aws_cognito_user_pool_client" "client" {
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
 `, userPoolName, clientName)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName string, refreshTokenValidity int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool_client" "client" {
+  name                   = "%s"
+  refresh_token_validity = %d
+  user_pool_id           = "${aws_cognito_user_pool.pool.id}"
+}
+`, rName, rName, refreshTokenValidity)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string) string {
