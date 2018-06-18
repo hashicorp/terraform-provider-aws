@@ -13,6 +13,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_batch_job_definition: Force resource recreation on retry_strategy attempts updates [GH-4854]
+* resource/aws_cognito_user_pool_client: Prevent panic with updating `refresh_token_validity` [GH-4868]
 
 ## 1.23.0 (June 14, 2018)
 
