@@ -28,18 +28,22 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
 					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestMatchResourceAttr(
+						"aws_neptune_cluster_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:cluster-pg:%s", parameterGroupName))),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster_parameter_group.bar", "name", parameterGroupName),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster_parameter_group.bar", "family", "neptune1"),
 					resource.TestCheckResourceAttr(
-						"aws_neptune_cluster_parameter_group.bar", "description", "Test cluster parameter group for terraform"),
-					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_cluster_parameter_group.bar", "tags.%", "1"),
-					resource.TestMatchResourceAttr(
-						"aws_neptune_cluster_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:cluster-pg:%s", parameterGroupName))),
+						"aws_neptune_cluster_parameter_group.bar", "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.#", "0"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_neptune_cluster_parameter_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -61,6 +65,12 @@ func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 						"aws_neptune_cluster_parameter_group.test", "name", regexp.MustCompile("^tf-test-")),
 				),
 			},
+			{
+				ResourceName:            "aws_neptune_cluster_parameter_group.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
 		},
 	})
 }
@@ -79,11 +89,43 @@ func TestAccAWSNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.test", &v),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster_parameter_group.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccAWSNeptuneClusterParameterGroup_withoutParameter(t *testing.T) {
+func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
+	var v neptune.DBClusterParameterGroup
+
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_Description(parameterGroupName, "custom description"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "description", "custom description"),
+				),
+			},
+			{
+				ResourceName:      "aws_neptune_cluster_parameter_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", acctest.RandInt())
@@ -94,17 +136,76 @@ func TestAccAWSNeptuneClusterParameterGroup_withoutParameter(t *testing.T) {
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterParameterGroupOnlyConfig(parameterGroupName),
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_Parameter(parameterGroupName, "neptune_enable_audit_log", "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
 					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_cluster_parameter_group.bar", "name", parameterGroupName),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_cluster_parameter_group.bar", "family", "neptune1"),
-					resource.TestCheckResourceAttr(
-						"aws_neptune_cluster_parameter_group.bar", "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.#", "0"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.#", "1"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.709171678.apply_method", "pending-reboot"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.709171678.name", "neptune_enable_audit_log"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.709171678.value", "1"),
+				),
+			},
+			{
+				ResourceName:      "aws_neptune_cluster_parameter_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_Parameter(parameterGroupName, "neptune_enable_audit_log", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.#", "1"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.861808799.apply_method", "pending-reboot"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.861808799.name", "neptune_enable_audit_log"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.861808799.value", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
+	var v neptune.DBClusterParameterGroup
+
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      "aws_neptune_cluster_parameter_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_Tags(parameterGroupName, "key1", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.key1", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_Tags(parameterGroupName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists("aws_neptune_cluster_parameter_group.bar", &v),
+					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "tags.key2", "value2"),
 				),
 			},
 		},
@@ -191,36 +292,52 @@ func testAccCheckAWSNeptuneClusterParameterGroupExists(n string, v *neptune.DBCl
 	}
 }
 
-func testAccAWSNeptuneClusterParameterGroupConfig(name string) string {
+func testAccAWSNeptuneClusterParameterGroupConfig_Description(name, description string) string {
+	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
+  description = "%s"
+  family      = "neptune1"
+  name        = "%s"
+}`, description, name)
+}
+
+func testAccAWSNeptuneClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster_parameter_group" "bar" {
-  name        = "%s"
-  family      = "neptune1"
-  description = "Test cluster parameter group for terraform"
+  family = "neptune1"
+  name   = "%s"
 
   parameter {
-    name  = "neptune_enable_audit_log"
-    value = 1
+    name  = "%s"
+    value = "%s"
   }
+}
+`, name, pName, pValue)
+}
+
+func testAccAWSNeptuneClusterParameterGroupConfig_Tags(name, tKey, tValue string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster_parameter_group" "bar" {
+  family = "neptune1"
+  name   = "%s"
 
   tags {
-    foo = "bar"
+    %s = "%s"
   }
 }
-`, name)
+`, name, tKey, tValue)
 }
 
-func testAccAWSNeptuneClusterParameterGroupOnlyConfig(name string) string {
+func testAccAWSNeptuneClusterParameterGroupConfig(name string) string {
 	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
-  name        = "%s"
-  family      = "neptune1"
+  family = "neptune1"
+  name   = "%s"
 }`, name)
 }
 
 const testAccAWSNeptuneClusterParameterGroupConfig_namePrefix = `
 resource "aws_neptune_cluster_parameter_group" "test" {
+  family      = "neptune1"
   name_prefix = "tf-test-"
-  family = "neptune1"
 }
 `
 const testAccAWSNeptuneClusterParameterGroupConfig_generatedName = `
