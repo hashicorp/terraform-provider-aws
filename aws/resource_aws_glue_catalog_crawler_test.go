@@ -146,12 +146,13 @@ const testAccGlueCrawlerConfigJdbc = `
 	}
 
 	resource "aws_glue_connection" "test" {
-  		name = "tf-connection"
-		connection_properties = {
-    		JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
-    		PASSWORD            = "examplepassword"
-    		USERNAME            = "exampleusername"
+  		connection_properties = {
+    		JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    		PASSWORD            = "testpassword"
+    		USERNAME            = "testusername"
   		}
+  		description = "tf_test_jdbc_connection_description"
+  		name        = "tf_test_jdbc_connection"
 	}
 	
 	resource "aws_iam_role_policy_attachment" "aws-glue-service-full-console-attachment" {
