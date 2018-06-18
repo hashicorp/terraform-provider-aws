@@ -9,6 +9,10 @@ ENHANCEMENTS:
 
 * resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
 
+BUG FIXES:
+
+* resource/aws_batch_job_definition: Force resource recreation on retry_strategy attempts updates [GH-4854]
+
 ## 1.23.0 (June 14, 2018)
 
 NOTES:
