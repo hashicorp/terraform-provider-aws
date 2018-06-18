@@ -197,47 +197,52 @@ EOF
 	}
 `
 
-//classifiers = [
-//"${aws_glue_classifier.test.id}"
-//]
-//resource "aws_glue_classifier" "test" {
-//name = "tf-example-123"
-//
-//grok_classifier {
-//classification = "example"
-//grok_pattern   = "example"
-//}
-//}
 const testAccGlueCrawlerConfigCustomClassifiers = `
 	resource "aws_glue_catalog_database" "test_db" {
-  		name = "test_db"
+  	name = "test_db"
+	}
+
+	resource "aws_glue_classifier" "test" {
+  		name = "tf-example-123"
+  		grok_classifier {
+    		classification = "example"
+    		grok_pattern   = "example"
+  		}
 	}
 
 	resource "aws_glue_catalog_crawler" "test" {
-	  name = "test_custom"
-	  database_name = "${aws_glue_catalog_database.test_db.name}"
-	  role = "${aws_iam_role.glue.name}"
-	  s3_target {
-		path = "s3://bucket1"
-		exclusions = [
-			"s3://bucket1/foo"
-		]
-	  }
-	  s3_target {
-		path = "s3://bucket2"
-	  }
-      table_prefix = "table_prefix"
-	  schema_change_policy {
-		delete_behavior = "DELETE_FROM_DATABASE"
-		update_behavior = "UPDATE_IN_DATABASE"
-      }
+  		name = "test_custom"
+  		database_name = "${aws_glue_catalog_database.test_db.name}"
+  		role = "${aws_iam_role.glue.name}"
+  		classifiers = [
+    		"${aws_glue_classifier.test.id}"
+  		]
+  		s3_target {
+    		path = "s3://bucket1"
+    		exclusions = [
+      		"s3://bucket1/foo"
+    		]
+  		}
+  		s3_target {
+    		path = "s3://bucket2"
+  		}
+  		table_prefix = "table_prefix"
+  		schema_change_policy {
+    		delete_behavior = "DELETE_FROM_DATABASE"
+    		update_behavior = "UPDATE_IN_DATABASE"
+  		}
 	}
 
-	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-default-policy-attachment" {
-  		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+	resource "aws_iam_role_policy_attachment" "aws-glue-service-full-console-attachment" {
+  		policy_arn = "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"
   		role = "${aws_iam_role.glue.name}"
 	}
-	
+
+	resource "aws_iam_role_policy_attachment" "aws-glue-service-role-service-attachment" {
+		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  		role = "${aws_iam_role.glue.name}"
+	}
+
 	resource "aws_iam_role" "glue" {
   		name = "tf-glue-service-role"
   		assume_role_policy = <<EOF
