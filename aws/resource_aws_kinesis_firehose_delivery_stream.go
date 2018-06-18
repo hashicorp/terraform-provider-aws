@@ -966,7 +966,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 												},
 												"database_name": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"region": {
 													Type:     schema.TypeString,
@@ -975,11 +975,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 												},
 												"role_arn": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"table_name": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"version_id": {
 													Type:     schema.TypeString,

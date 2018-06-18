@@ -384,10 +384,10 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 }
 ```
 
-* `enabled` - (Optional) Defaults to `true`. Set it to `false` if you want to disable format conversion while preserving the configuration details.
 * `input_format_configuration` - (Required) Nested argument that specifies the deserializer that you want Kinesis Data Firehose to use to convert the format of your data from JSON. More details below.
 * `output_format_configuration` - (Required) Nested argument that specifies the serializer that you want Kinesis Data Firehose to use to convert the format of your data to the Parquet or ORC format. More details below.
 * `schema_configuration` - (Required) Nested argument that specifies the AWS Glue Data Catalog table that contains the column information. More details below.
+* `enabled` - (Optional) Defaults to `true`. Set it to `false` if you want to disable format conversion while preserving the configuration details.
 
 #### input_format_configuration
 
@@ -445,11 +445,11 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 
 #### schema_configuration
 
+* `database_name` - (Required) Specifies the name of the AWS Glue database that contains the schema for the output data.
+* `role_arn` - (Required) The role that Kinesis Data Firehose can use to access AWS Glue. This role must be in the same account you use for Kinesis Data Firehose. Cross-account roles aren't allowed.
+* `table_name` - (Required) Specifies the AWS Glue table that contains the column information that constitutes your data schema.
 * `catalog_id` - (Optional) The ID of the AWS Glue Data Catalog. If you don't supply this, the AWS account ID is used by default.
-* `database_name` - (Optional) Specifies the name of the AWS Glue database that contains the schema for the output data.
 * `region` - (Optional) If you don't specify an AWS Region, the default is the current region.
-* `role_arn` - (Optional) The role that Kinesis Data Firehose can use to access AWS Glue. This role must be in the same account you use for Kinesis Data Firehose. Cross-account roles aren't allowed.
-* `table_name` - (Optional) Specifies the AWS Glue table that contains the column information that constitutes your data schema.
 * `version_id` - (Optional) Specifies the table version for the output data schema. Defaults to `LATEST`.
 
 ## Attributes Reference
