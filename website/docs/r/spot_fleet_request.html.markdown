@@ -13,6 +13,8 @@ instances to be requested on the Spot market.
 
 ## Example Usage
 
+Using launch specifications:
+
 ```hcl
 # Request a Spot fleet
 resource "aws_spot_fleet_request" "cheap_compute" {
@@ -52,10 +54,41 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 }
 ```
 
+Using launch templates:
+
+```
+resource "aws_launch_template" "foo" {
+  name = "test-launch-template"
+  image_id = "${var.ami}"
+  instance_type = "${var.instance_type}"
+  key_name = "${var.key_name}"
+  spot_price = "0.05"
+}
+
+resource "aws_spot_fleet_request" "foo" {
+  iam_fleet_role  = "arn:aws:iam::12345678:role/spot-fleet"
+  spot_price      = "0.005"
+  target_capacity = 2
+  valid_until     = "2019-11-04T20:44:20Z"
+
+  launch_template_configs {
+      launch_template_specification {
+        id = "${aws_launch_template.foo.id}"
+        version = "${aws_launch_template.foo.latest_version}"
+      }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+```
+
 ~> **NOTE:** Terraform does not support the functionality where multiple `subnet_id` or `availability_zone` parameters can be specified in the same
-launch configuration block. If you want to specify multiple values, then separate launch configuration blocks should be used:
+launch configuration block. If you want to specify multiple values, then separate launch configuration blocks should be used or launch template overrides should be configured, one per subnet:
 
 ```hcl
+#
+# Launch Specification Method
+#
 resource "aws_spot_fleet_request" "foo" {
   iam_fleet_role  = "arn:aws:iam::12345678:role/spot-fleet"
   spot_price      = "0.005"
@@ -76,6 +109,47 @@ resource "aws_spot_fleet_request" "foo" {
     availability_zone = "us-west-2a"
   }
 }
+
+#
+# Launch Template Method
+#
+
+data "aws_subnet_ids" "example" {
+  vpc_id = "${var.vpc_id}"
+}
+
+resource "aws_launch_template" "foo" {
+  name = "test-launch-template"
+  image_id = "${var.ami}"
+  instance_type = "${var.instance_type}"
+  key_name = "${var.key_name}"
+  spot_price = "0.05"
+}
+
+resource "aws_spot_fleet_request" "foo" {
+  iam_fleet_role  = "arn:aws:iam::12345678:role/spot-fleet"
+  spot_price      = "0.005"
+  target_capacity = 2
+  valid_until     = "2019-11-04T20:44:20Z"
+
+  launch_template_configs {
+      launch_template_specification {
+        id = "${aws_launch_template.foo.id}"
+        version = "${aws_launch_template.foo.latest_version}"
+      }
+      overrides {
+        subnet_id = "${data.aws_subnets.example.ids[0]}"
+      }
+      overrides {
+        subnet_id = "${data.aws_subnets.example.ids[1]}"
+      }
+      overrides {
+        subnet_id = "${data.aws_subnets.example.ids[2]}"
+      }
+    }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
 ```
 
 ## Argument Reference
@@ -88,9 +162,9 @@ Most of these arguments directly correspond to the
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set
 terminateInstancesWithExpiration.
 * `replace_unhealthy_instances` - (Optional) Indicates whether Spot fleet should replace unhealthy instances. Default `false`.
-* `launch_specification` - Used to define the launch configuration of the
+* `launch_specification` - (Optional) Used to define the launch configuration of the
   spot-fleet request. Can be specified multiple times to define different bids
-across different markets and instance types.
+across different markets and instance types. Conflicts with `launch_template_configs`. At least one of `launch_specification` or `launch_template_configs` is required.
 
     **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
@@ -98,6 +172,7 @@ across different markets and instance types.
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used and it have
     a additional parameter `iam_instance_profile_arn` takes `aws_iam_instance_profile` attribute `arn` as input.
 
+* `launch_template_configs` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launch_specification`. At least one of `launch_specification` or `launch_template_configs` is required.
 * `spot_price` - (Optional; Default: On-demand price) The maximum bid price per unit hour.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
@@ -105,6 +180,7 @@ across different markets and instance types.
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
   important to your application workload, such as vCPUs, memory, or I/O.
+* `on_demand_target_capacity` - (Optional) Allows specification of a minimum value of the `target_capacity` to be filled by full price on-demand instance to ensure a minimum capacity of the fleet no matter spot instance availability. Not supported by `launch_specification`, must be used with `launch_template_configs`.
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
   `lowestPrice`.
@@ -128,6 +204,33 @@ across different markets and instance types.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
 * `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
 * `tags` - (Optional) A map of tags to assign to the resource.
+
+### Launch Template Configs
+
+The `launch_template_configs` block supports the following:
+
+* `launch_template_specification` - (Required) Launch template specification. See [Launch Template Specification](#launch-template-specification) below for more details.
+* `overrides` - (Optional) One or more overide configurations. See [Overrides](#overrides) below for more details. 
+
+### Launch Template Specification
+
+* `id` - The ID of the launch template. Conflicts with `name`.
+* `name` - The name of the launch template. Conflicts with `id`.
+* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. Wil use default version if omitted.
+
+    **Note:** The specified launch template can specify only a subset of the 
+    inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
+    what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
+
+### Overrides
+
+* `instance_type` - (Optional) The type of instance to request.
+* `availability_zone` - (Optional) The availability zone in which to place the request.
+* `spot_price` - (Optional) The maximum spot bid for this override request.
+* `weighted_capacity` - (Optional) The capacity added to the fleet by a fulfilled request.
+* `subnet_id` - (Optional) The subnet in which to launch the requested instance.
+
+  **Note:** Instead of statically defining these override blocks they can be passed in as a list of maps containing the above keys and their values. This allows dynamic, programmatic generation of overrides based on variable or environment data.
 
 ### Timeouts
 
