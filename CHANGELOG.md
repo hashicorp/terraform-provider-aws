@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
+* resource/aws_kinesis_firehose_delivery_stream: Support extended S3 destination `data_format_conversion_configuration` [GH-4842]
 
 BUG FIXES:
 
