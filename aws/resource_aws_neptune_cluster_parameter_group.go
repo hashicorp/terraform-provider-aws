@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/neptune"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -108,13 +107,15 @@ func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Create Neptune Cluster Parameter Group: %#v", createOpts)
-	_, err := conn.CreateDBClusterParameterGroup(&createOpts)
+	resp, err := conn.CreateDBClusterParameterGroup(&createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating Neptune Cluster Parameter Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
 	log.Printf("[INFO] Neptune Cluster Parameter Group ID: %s", d.Id())
+
+	d.Set("arn", resp.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
 	return resourceAwsNeptuneClusterParameterGroupUpdate(d, meta)
 }
@@ -137,9 +138,10 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 		return err
 	}
 
-	if len(describeResp.DBClusterParameterGroups) != 1 ||
-		aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName) != d.Id() {
-		return fmt.Errorf("Unable to find Cluster Parameter Group: %#v", describeResp.DBClusterParameterGroups)
+	if len(describeResp.DBClusterParameterGroups) == 0 {
+		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("name", describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)
@@ -225,13 +227,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("cluster-pg:%s", d.Id()),
-	}.String()
+	arn := d.Get("arn").(string)
 	if err := setTagsNeptune(conn, d, arn); err != nil {
 		return err
 	} else {

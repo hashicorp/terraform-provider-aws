@@ -37,6 +37,8 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_neptune_cluster_parameter_group.bar", "parameter.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster_parameter_group.bar", "tags.%", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_neptune_cluster_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:cluster-pg:%s", parameterGroupName))),
 				),
 			},
 		},
