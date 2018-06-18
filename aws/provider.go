@@ -174,6 +174,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_billing_service_account":          dataSourceAwsBillingServiceAccount(),
 			"aws_caller_identity":                  dataSourceAwsCallerIdentity(),
 			"aws_canonical_user_id":                dataSourceAwsCanonicalUserId(),
+			"aws_cloudformation_export":            dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":             dataSourceAwsCloudFormationStack(),
 			"aws_cloudtrail_service_account":       dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":             dataSourceAwsCloudwatchLogGroup(),
@@ -243,6 +244,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ssm_parameter":                    dataSourceAwsSsmParameter(),
 			"aws_subnet":                           dataSourceAwsSubnet(),
 			"aws_subnet_ids":                       dataSourceAwsSubnetIDs(),
+			"aws_vpcs":                             dataSourceAwsVpcs(),
 			"aws_security_group":                   dataSourceAwsSecurityGroup(),
 			"aws_vpc":                              dataSourceAwsVpc(),
 			"aws_vpc_endpoint":                     dataSourceAwsVpcEndpoint(),
@@ -479,6 +481,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_nat_gateway":                              resourceAwsNatGateway(),
 			"aws_network_acl":                              resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                      resourceAwsDefaultNetworkAcl(),
+			"aws_neptune_parameter_group":                  resourceAwsNeptuneParameterGroup(),
 			"aws_network_acl_rule":                         resourceAwsNetworkAclRule(),
 			"aws_network_interface":                        resourceAwsNetworkInterface(),
 			"aws_network_interface_attachment":             resourceAwsNetworkInterfaceAttachment(),
@@ -622,6 +625,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_compute_environment":                resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                     resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                          resourceAwsBatchJobQueue(),
+			"aws_neptune_subnet_group":                     resourceAwsNeptuneSubnetGroup(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point

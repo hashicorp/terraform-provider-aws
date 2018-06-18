@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -399,6 +400,28 @@ func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.Param
 	return parameters, nil
 }
 
+// Takes the result of flatmap.Expand for an array of parameters and
+// returns Parameter API compatible objects
+func expandNeptuneParameters(configured []interface{}) ([]*neptune.Parameter, error) {
+	parameters := make([]*neptune.Parameter, 0, len(configured))
+
+	// Loop over our configured parameters and create
+	// an array of aws-sdk-go compatible objects
+	for _, pRaw := range configured {
+		data := pRaw.(map[string]interface{})
+
+		p := &neptune.Parameter{
+			ApplyMethod:    aws.String(data["apply_method"].(string)),
+			ParameterName:  aws.String(data["name"].(string)),
+			ParameterValue: aws.String(data["value"].(string)),
+		}
+
+		parameters = append(parameters, p)
+	}
+
+	return parameters, nil
+}
+
 // Flattens an access log into something that flatmap.Flatten() can handle
 func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
@@ -740,6 +763,21 @@ func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]in
 	return result
 }
 
+// Flattens an array of Parameters into a []map[string]interface{}
+func flattenNeptuneParameters(list []*neptune.Parameter) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		if i.ParameterValue != nil {
+			result = append(result, map[string]interface{}{
+				"apply_method": aws.StringValue(i.ApplyMethod),
+				"name":         aws.StringValue(i.ParameterName),
+				"value":        aws.StringValue(i.ParameterValue),
+			})
+		}
+	}
+	return result
+}
+
 // Takes the result of flatmap.Expand for an array of strings
 // and returns a []*string
 func expandStringList(configured []interface{}) []*string {
@@ -1037,14 +1075,17 @@ func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	if o.EBSEnabled != nil {
 		m["ebs_enabled"] = *o.EBSEnabled
 	}
-	if o.Iops != nil {
-		m["iops"] = *o.Iops
-	}
-	if o.VolumeSize != nil {
-		m["volume_size"] = *o.VolumeSize
-	}
-	if o.VolumeType != nil {
-		m["volume_type"] = *o.VolumeType
+
+	if aws.BoolValue(o.EBSEnabled) {
+		if o.Iops != nil {
+			m["iops"] = *o.Iops
+		}
+		if o.VolumeSize != nil {
+			m["volume_size"] = *o.VolumeSize
+		}
+		if o.VolumeType != nil {
+			m["volume_type"] = *o.VolumeType
+		}
 	}
 
 	return []map[string]interface{}{m}
@@ -1053,17 +1094,20 @@ func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 func expandESEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	options := elasticsearch.EBSOptions{}
 
-	if v, ok := m["ebs_enabled"]; ok {
-		options.EBSEnabled = aws.Bool(v.(bool))
-	}
-	if v, ok := m["iops"]; ok && v.(int) > 0 {
-		options.Iops = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["volume_size"]; ok && v.(int) > 0 {
-		options.VolumeSize = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["volume_type"]; ok && v.(string) != "" {
-		options.VolumeType = aws.String(v.(string))
+	if ebsEnabled, ok := m["ebs_enabled"]; ok {
+		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
+
+		if ebsEnabled.(bool) {
+			if v, ok := m["iops"]; ok && v.(int) > 0 {
+				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
+				options.VolumeSize = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["volume_type"]; ok && v.(string) != "" {
+				options.VolumeType = aws.String(v.(string))
+			}
+		}
 	}
 
 	return &options

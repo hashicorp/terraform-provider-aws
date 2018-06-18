@@ -52,6 +52,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 						"attempts": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
 					},

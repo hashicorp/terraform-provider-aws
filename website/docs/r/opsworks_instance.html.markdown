@@ -14,7 +14,7 @@ Provides an OpsWorks instance resource.
 
 ```hcl
 resource "aws_opsworks_instance" "my-instance" {
-  stack_id = "${aws_opsworks_stack.my-stack.id}"
+  stack_id = "${aws_opsworks_stack.main.id}"
 
   layer_ids = [
     "${aws_opsworks_custom_layer.my-layer.id}",

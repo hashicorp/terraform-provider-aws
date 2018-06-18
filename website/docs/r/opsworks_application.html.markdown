@@ -16,7 +16,7 @@ Provides an OpsWorks application resource.
 resource "aws_opsworks_application" "foo-app" {
   name        = "foobar application"
   short_name  = "foobar"
-  stack_id    = "${aws_opsworks_stack.stack.id}"
+  stack_id    = "${aws_opsworks_stack.main.id}"
   type        = "rails"
   description = "This is a Rails application"
 

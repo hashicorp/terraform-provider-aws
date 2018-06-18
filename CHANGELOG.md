@@ -1,14 +1,44 @@
-## 1.23.0 (Unreleased)
+## 1.24.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudformation_export` [GH-2180]
+* **New Resource:** `aws_neptune_subnet_group` [GH-4782]
 
 ENHANCEMENTS:
 
-* resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) [GH-4763]
-* resource/aws_launch_template: Add plan time validation for tag_specifications `resource_type` [GH-4765]
+* resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
 
 BUG FIXES:
 
-* resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read [GH-4761]
-* resource/aws_eks_cluster: Properly export `arn` attribute [GH-4766] / [GH-4767]
+* resource/aws_batch_job_definition: Force resource recreation on retry_strategy attempts updates [GH-4854]
+
+## 1.23.0 (June 14, 2018)
+
+NOTES:
+
+* resource/aws_elasticache_cluster: The `availability_zones` argument has been deprecated in favor of a new `preferred_availability_zones` argument to allow specifying the same Availability Zone more than once in larger Memcached clusters that also need to specifically set Availability Zones. The argument is still optional and the API will continue to automatically choose Availability Zones for nodes if not specified. The new argument will also continue to match the APIs required behavior that the length of the list must be the same as `num_cache_nodes`. Migration will require recreating the resource or using the resource [lifecycle configuration](https://www.terraform.io/docs/configuration/resources.html#lifecycle) of `ignore_changes = ["availability_zones"]` to prevent recreation. See the resource documentation for additional details.
+
+FEATURES:
+
+* **New Data Source:** `aws_vpcs` ([#4736](https://github.com/terraform-providers/terraform-provider-aws/issues/4736))
+* **New Resource:** `aws_neptune_parameter_group` ([#4724](https://github.com/terraform-providers/terraform-provider-aws/issues/4724))
+
+ENHANCEMENTS:
+
+* resource/aws_db_instance: Display input arguments when receiving InvalidParameterValue error on resource creation ([#4803](https://github.com/terraform-providers/terraform-provider-aws/issues/4803))
+* resource/aws_elasticache_cluster: Migrate from `availability_zones` TypeSet attribute to `preferred_availability_zones` TypeList attribute (allow duplicate Availability Zone elements) ([#4741](https://github.com/terraform-providers/terraform-provider-aws/issues/4741))
+* resource/aws_launch_template: Add `tags` argument (support tagging the resource itself) ([#4763](https://github.com/terraform-providers/terraform-provider-aws/issues/4763))
+* resource/aws_launch_template: Add plan time validation for tag_specifications `resource_type` ([#4765](https://github.com/terraform-providers/terraform-provider-aws/issues/4765))
+* resource/aws_waf_ipset: Add `arn` attribute ([#4784](https://github.com/terraform-providers/terraform-provider-aws/issues/4784))
+* resource/aws_wafregional_ipset: Add `arn` attribute ([#4816](https://github.com/terraform-providers/terraform-provider-aws/issues/4816))
+
+BUG FIXES:
+
+* resource/aws_codebuild_webhook: Properly export `secret` (the CodeBuild API only provides its value during resource creation) ([#4775](https://github.com/terraform-providers/terraform-provider-aws/issues/4775))
+* resource/aws_codecommit_repository: Prevent error and trigger recreation when not found during read ([#4761](https://github.com/terraform-providers/terraform-provider-aws/issues/4761))
+* resource/aws_eks_cluster: Properly export `arn` attribute ([#4766](https://github.com/terraform-providers/terraform-provider-aws/issues/4766)] / [[#4767](https://github.com/terraform-providers/terraform-provider-aws/issues/4767))
+* resource/aws_elasticsearch_domain: Skip EBS options update/refresh if EBS is not enabled ([#4802](https://github.com/terraform-providers/terraform-provider-aws/issues/4802))
 
 ## 1.22.0 (June 05, 2018)
 

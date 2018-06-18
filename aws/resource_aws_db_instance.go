@@ -908,7 +908,13 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return nil
 		})
 		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == "InvalidParameterValue" {
+					return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
+				}
+			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
+
 		}
 	}
 
