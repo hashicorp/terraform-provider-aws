@@ -2686,7 +2686,7 @@ func TestValidateNeptuneParamGroupName(t *testing.T) {
 		_, errors := validateNeptuneParamGroupName(tc.Value, "aws_neptune_cluster_parameter_group_name")
 
 		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error")
+			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
 		}
 	}
 }
@@ -2717,10 +2717,6 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "testing123-",
-			ErrCount: 1,
-		},
-		{
 			Value:    randomString(256),
 			ErrCount: 1,
 		},
@@ -2730,7 +2726,7 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 		_, errors := validateNeptuneParamGroupNamePrefix(tc.Value, "aws_neptune_cluster_parameter_group_name")
 
 		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error")
+			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
 		}
 	}
 }
