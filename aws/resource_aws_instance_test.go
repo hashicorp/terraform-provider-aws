@@ -339,8 +339,12 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", "ebs_block_device.2554893574.iops", "100"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.device_name", "/dev/sdd"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.encrypted", "true"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2634515331.kms_key_id", regexp.MustCompile("^arn:aws[\\w-]*:kms:us-west-2:[0-9]{12}:key/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.volume_size", "12"),
 					resource.TestCheckResourceAttr(
@@ -860,6 +864,8 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 						"aws_instance.foo", "volume_tags.%", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "volume_tags.Name", "acceptance-test-volume-tag"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2634515331.kms_key_id", regexp.MustCompile("^arn:aws[\\w-]*:kms:us-west-2:[0-9]{12}:key/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")),
 				),
 			},
 			{
@@ -1825,6 +1831,11 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigBlockDevices = `
+resource "aws_kms_key" "foo" {
+	description = "Dummy key for terraform test"
+	deletion_window_in_days = 7
+}
+
 resource "aws_instance" "foo" {
 	# us-west-2
 	ami = "ami-55a7ea65"
@@ -1854,6 +1865,7 @@ resource "aws_instance" "foo" {
 		device_name = "/dev/sdd"
 		volume_size = 12
 		encrypted = true
+		kms_key_id = "${aws_kms_key.foo.arn}"
 	}
 
 	ephemeral_block_device {
@@ -2231,6 +2243,16 @@ resource "aws_instance" "foo" {
 `
 
 const testAccCheckInstanceConfigWithVolumeTags = `
+resource "aws_kms_key" "foo" {
+	description = "Dummy key for terraform test"
+	deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "foo" {
+	name          = "alias/acceptance-test-kms-alias"
+	target_key_id = "${aws_kms_key.foo.key_id}"
+}
+
 resource "aws_instance" "foo" {
 	ami = "ami-55a7ea65"
 
@@ -2255,6 +2277,7 @@ resource "aws_instance" "foo" {
 		device_name = "/dev/sdd"
 		volume_size = 12
 		encrypted = true
+		kms_key_id = "alias/acceptance-test-kms-alias"
 	}
 
 	ephemeral_block_device {
