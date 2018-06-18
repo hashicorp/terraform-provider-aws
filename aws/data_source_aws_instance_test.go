@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"regexp"
 	"testing"
 
 	"fmt"
@@ -98,6 +99,7 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_instance.foo", "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr("aws_instance.foo", "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr("aws_instance.foo", "ephemeral_block_device.#", "1"),
+					resource.TestMatchResourceAttr("aws_instance.foo", "ebs_block_device.2634515331.kms_key_id", regexp.MustCompile("^arn:aws[\\w-]*:kms:us-west-2:[0-9]{12}:key/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")),
 				),
 			},
 		},
@@ -380,6 +382,11 @@ data "aws_instance" "foo" {
 
 // Block Device
 const testAccInstanceDataSourceConfig_blockDevices = `
+resource "aws_kms_key" "foo" {
+	description = "Dummy key for terraform test"
+	deletion_window_in_days = 7
+}
+
 resource "aws_instance" "foo" {
   # us-west-2
   ami = "ami-55a7ea65"
@@ -405,6 +412,7 @@ resource "aws_instance" "foo" {
     device_name = "/dev/sdd"
     volume_size = 12
     encrypted = true
+    kms_key_id = "${aws_kms_key.foo.arn}"
   }
 
   ephemeral_block_device {

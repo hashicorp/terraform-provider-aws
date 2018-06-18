@@ -137,6 +137,7 @@ Each `ebs_block_device` supports the following:
 * `encrypted` - (Optional) Enables [EBS
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
+* `kms_key_id` - (Optional) Uses a CMK KMS key for encrypting the EBS block device. Either the      KMS key arn or the alias name can be used.
 
 Modifying any `ebs_block_device` currently requires resource replacement.
 
