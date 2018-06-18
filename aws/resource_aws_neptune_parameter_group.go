@@ -28,6 +28,10 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -72,6 +76,7 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -98,6 +103,7 @@ func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interfa
 	d.Partial(false)
 
 	d.SetId(*resp.DBParameterGroup.DBParameterGroupName)
+	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
 	log.Printf("[INFO] Neptune Parameter Group ID: %s", d.Id())
 
 	return resourceAwsNeptuneParameterGroupUpdate(d, meta)
@@ -129,6 +135,8 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.DBParameterGroups)
 	}
 
+	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
+	d.Set("arn", arn)
 	d.Set("name", describeResp.DBParameterGroups[0].DBParameterGroupName)
 	d.Set("family", describeResp.DBParameterGroups[0].DBParameterGroupFamily)
 	d.Set("description", describeResp.DBParameterGroups[0].Description)
@@ -151,6 +159,17 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 
 	if err := d.Set("parameter", flattenNeptuneParameters(parameters)); err != nil {
 		return fmt.Errorf("error setting parameter: %s", err)
+	}
+
+	resp, err := conn.ListTagsForResource(&neptune.ListTagsForResourceInput{
+		ResourceName: aws.String(arn),
+	})
+	if err != nil {
+		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+	}
+
+	if err := d.Set("tags", tagsToMapNeptune(resp.TagList)); err != nil {
+		return fmt.Errorf("error setting neptune tags: %s", err)
 	}
 
 	return nil
@@ -235,6 +254,14 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 		}
 
 		d.SetPartial("parameter")
+	}
+
+	if d.HasChange("tags") {
+		err := setTagsNeptune(conn, d, d.Get("arn").(string))
+		if err != nil {
+			return fmt.Errorf("error setting Neptune Parameter Group %q tags: %s", d.Id(), err)
+		}
+		d.SetPartial("tags")
 	}
 
 	d.Partial(false)

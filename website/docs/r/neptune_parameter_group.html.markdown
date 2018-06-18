@@ -32,6 +32,7 @@ The following arguments are supported:
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 Parameter blocks support the following:
 
@@ -45,6 +46,7 @@ Parameter blocks support the following:
 The following attributes are exported:
 
 * `id` - The Neptune parameter group name.
+* `arn` - The Neptune parameter group Amazon Resource Name (ARN).
 
 ## Import
 
