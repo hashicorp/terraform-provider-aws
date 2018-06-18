@@ -27,10 +27,12 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneParameterGroupAttributes(&v, rName),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -107,6 +109,51 @@ func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneParameterGroup_Tags(t *testing.T) {
+	var v neptune.DBParameterGroup
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_neptune_parameter_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneParameterGroupConfig_Tags_SingleTag(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNeptuneParameterGroupConfig_Tags_SingleTag(rName, "key1", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneParameterGroupConfig_Tags_MultipleTags(rName, "key2", "value2", "key3", "value3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneParameterGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
 				),
 			},
 		},
@@ -220,4 +267,31 @@ resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
   name   = "%s"
 }`, rName)
+}
+
+func testAccAWSNeptuneParameterGroupConfig_Tags_SingleTag(name, tKey, tValue string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_parameter_group" "test" {
+  family = "neptune1"
+  name   = "%s"
+
+  tags {
+    %s = "%s"
+  }
+}
+`, name, tKey, tValue)
+}
+
+func testAccAWSNeptuneParameterGroupConfig_Tags_MultipleTags(name, tKey1, tValue1, tKey2, tValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_parameter_group" "test" {
+  family = "neptune1"
+  name   = "%s"
+
+  tags {
+    %s = "%s"
+    %s = "%s"
+  }
+}
+`, name, tKey1, tValue1, tKey2, tValue2)
 }
