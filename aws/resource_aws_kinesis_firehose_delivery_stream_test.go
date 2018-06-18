@@ -185,6 +185,43 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Deserializer_Update(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := acctest.RandInt()
@@ -304,6 +341,43 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Serializer_Update(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OrcSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", "1"),
+				),
 			},
 		},
 	})
