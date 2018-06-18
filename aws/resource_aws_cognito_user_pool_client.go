@@ -283,7 +283,7 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("refresh_token_validity") {
-		params.RefreshTokenValidity = aws.Int64(d.Get("refresh_token_validity").(int64))
+		params.RefreshTokenValidity = aws.Int64(int64(d.Get("refresh_token_validity").(int)))
 	}
 
 	if d.HasChange("allowed_oauth_flows") {
