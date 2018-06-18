@@ -853,6 +853,14 @@ func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{}
 	return att
 }
 
+func flattenEc2AttributeValues(l []*ec2.AttributeValue) []string {
+	values := make([]string, 0, len(l))
+	for _, v := range l {
+		values = append(values, aws.StringValue(v.Value))
+	}
+	return values
+}
+
 func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
 	att := make(map[string]interface{})
 	if a.AllocationId != nil {
