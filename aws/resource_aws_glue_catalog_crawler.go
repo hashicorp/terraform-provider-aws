@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 )
 
 func resourceAwsGlueCatalogCrawler() *schema.Resource {
@@ -111,12 +112,12 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 					},
 				},
 			},
-			//"configuration": {
-			//	Type:             schema.TypeString,
-			//	Optional:         true,
-			//	DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-			//	ValidateFunc:     validateJsonString,
-			//},
+			"configuration": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				ValidateFunc:     validateJsonString,
+			},
 		},
 	}
 }
@@ -126,7 +127,12 @@ func resourceAwsGlueCatalogCrawlerCreate(d *schema.ResourceData, meta interface{
 	name := d.Get("name").(string)
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := glueConn.CreateCrawler(createCrawlerInput(name, d))
+		crawlerInput, err := createCrawlerInput(name, d)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		_, err = glueConn.CreateCrawler(crawlerInput)
 		if err != nil {
 			if isAWSErr(err, "InvalidInputException", "Service is unable to assume role") {
 				return resource.RetryableError(err)
@@ -144,12 +150,16 @@ func resourceAwsGlueCatalogCrawlerCreate(d *schema.ResourceData, meta interface{
 	return resourceAwsGlueCatalogCrawlerUpdate(d, meta)
 }
 
-func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.CreateCrawlerInput {
+func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.CreateCrawlerInput, error) {
+	crawlerTargets, err := createCrawlerTargets(d)
+	if err != nil {
+		return nil, err
+	}
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Targets:      createCrawlerTargets(d),
+		Targets:      crawlerTargets,
 	}
 	if description, ok := d.GetOk("description"); ok {
 		crawlerInput.Description = aws.String(description.(string))
@@ -166,10 +176,19 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) *glue.Create
 	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
 	}
-	//if configuration, ok := d.GetOk("configuration"); ok {
-	//	crawlerInput.Configuration = aws.String(configuration.(string))
-	//}
-	return crawlerInput
+	if configuration, ok := d.GetOk("configuration"); ok {
+		crawlerInput.Configuration = aws.String(configuration.(string))
+	}
+
+	if v, ok := d.GetOk("configuration"); ok {
+		configuration, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
+		}
+		crawlerInput.Configuration = aws.String(configuration)
+	}
+
+	return crawlerInput, nil
 }
 
 func expandSchemaPolicy(v []interface{}) *glue.SchemaChangePolicy {
@@ -191,24 +210,20 @@ func expandSchemaPolicy(v []interface{}) *glue.SchemaChangePolicy {
 	return schemaPolicy
 }
 
-func createCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
+func createCrawlerTargets(d *schema.ResourceData) (*glue.CrawlerTargets, error) {
 	crawlerTargets := &glue.CrawlerTargets{}
 
-	//jdbc_targets, jdbc_targets_ok := d.GetOk("jdbc_targets")
-	//s3Targets, s3_targets_ok := d.GetOk("s3Targets")
-	//if !jdbc_targets_ok && !s3_targets_ok {
-	//	return fmt.Errorf("jdbc_targets or s3Targets configuration is required")
-	//}
+	jdbcTargets, jdbcTargetsOk := d.GetOk("jdbc_target")
+	s3Targets, s3TargetsOk := d.GetOk("s3_target")
+	if !jdbcTargetsOk && !s3TargetsOk {
+		return nil, fmt.Errorf("jdbc targets or s3 targets configuration is required")
+	}
 
 	log.Print("[DEBUG] Creating crawler target")
-	if s3Targets, ok := d.GetOk("s3_target"); ok {
-		crawlerTargets.S3Targets = expandS3Targets(s3Targets.(*schema.Set).List())
-	}
+	crawlerTargets.S3Targets = expandS3Targets(s3Targets.(*schema.Set).List())
+	crawlerTargets.JdbcTargets = expandJdbcTargets(jdbcTargets.(*schema.Set).List())
 
-	if jdbcTargets, ok := d.GetOk("jdbc_target"); ok {
-		crawlerTargets.JdbcTargets = expandJdbcTargets(jdbcTargets.(*schema.Set).List())
-	}
-	return crawlerTargets
+	return crawlerTargets, nil
 }
 
 func expandS3Targets(targets []interface{}) []*glue.S3Target {
@@ -264,9 +279,13 @@ func resourceAwsGlueCatalogCrawlerUpdate(d *schema.ResourceData, meta interface{
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
-	crawlerInput := glue.UpdateCrawlerInput(*createCrawlerInput(name, d))
+	crawlerInput, err := createCrawlerInput(name, d)
+	if err != nil {
+		return err
+	}
 
-	if _, err := glueConn.UpdateCrawler(&crawlerInput); err != nil {
+	crawlerUpdateInput := glue.UpdateCrawlerInput(*crawlerInput)
+	if _, err := glueConn.UpdateCrawler(&crawlerUpdateInput); err != nil {
 		return err
 	}
 
@@ -319,6 +338,15 @@ func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{})
 		if err := d.Set("jdbc_target", flattenJdbcTargets(jdbcTargets)); err != nil {
 			log.Printf("[ERR] Error setting Glue JDBC Targets: %s", err)
 		}
+	}
+
+	// AWS provides no other way to read back the additional_info
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		d.Set("additional_info", info)
 	}
 	return nil
 }
