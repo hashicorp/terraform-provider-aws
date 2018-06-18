@@ -2326,6 +2326,13 @@ type AudioDescription struct {
 	// CodecSettings is a required field
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure" required:"true"`
 
+	// Specify the language for this audio output track, using the ISO 639-2 or
+	// ISO 639-3 three-letter language code. The language specified will be used
+	// when 'Follow Input Language Code' is not selected or when 'Follow Input Language
+	// Code' is selected but there is no ISO 639 language code specified by the
+	// input.
+	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+
 	// Indicates the language of the audio output track. The ISO 639 language specified
 	// in the 'Language Code' drop down will be used when 'Follow Input Language
 	// Code' is not selected or when 'Follow Input Language Code' is selected but
@@ -2362,6 +2369,9 @@ func (s *AudioDescription) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AudioDescription"}
 	if s.CodecSettings == nil {
 		invalidParams.Add(request.NewErrParamRequired("CodecSettings"))
+	}
+	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
 	}
 	if s.AudioNormalizationSettings != nil {
 		if err := s.AudioNormalizationSettings.Validate(); err != nil {
@@ -2412,6 +2422,12 @@ func (s *AudioDescription) SetAudioTypeControl(v string) *AudioDescription {
 // SetCodecSettings sets the CodecSettings field's value.
 func (s *AudioDescription) SetCodecSettings(v *AudioCodecSettings) *AudioDescription {
 	s.CodecSettings = v
+	return s
+}
+
+// SetCustomLanguageCode sets the CustomLanguageCode field's value.
+func (s *AudioDescription) SetCustomLanguageCode(v string) *AudioDescription {
+	s.CustomLanguageCode = &v
 	return s
 }
 
@@ -2533,6 +2549,10 @@ func (s *AudioNormalizationSettings) SetTargetLkfs(v float64) *AudioNormalizatio
 type AudioSelector struct {
 	_ struct{} `type:"structure"`
 
+	// Selects a specific language code from within an audio source, using the ISO
+	// 639-2 or ISO 639-3 three-letter language code
+	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+
 	// Enable this setting on one audio selector to set it as the default for the
 	// job. The service uses this default for outputs where it can't find the specified
 	// input audio. If you don't set a default, those outputs have no audio.
@@ -2593,6 +2613,9 @@ func (s AudioSelector) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *AudioSelector) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AudioSelector"}
+	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
+	}
 	if s.Offset != nil && *s.Offset < -2.147483648e+09 {
 		invalidParams.Add(request.NewErrParamMinValue("Offset", -2.147483648e+09))
 	}
@@ -2606,6 +2629,12 @@ func (s *AudioSelector) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomLanguageCode sets the CustomLanguageCode field's value.
+func (s *AudioSelector) SetCustomLanguageCode(v string) *AudioSelector {
+	s.CustomLanguageCode = &v
+	return s
 }
 
 // SetDefaultSelection sets the DefaultSelection field's value.
@@ -3052,6 +3081,10 @@ type CaptionDescription struct {
 	// CaptionSelectorName is a required field
 	CaptionSelectorName *string `locationName:"captionSelectorName" min:"1" type:"string" required:"true"`
 
+	// Indicates the language of the caption output track, using the ISO 639-2 or
+	// ISO 639-3 three-letter language code
+	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+
 	// Specific settings required by destination type. Note that burnin_destination_settings
 	// are not available if the source of the caption data is Embedded or Teletext.
 	//
@@ -3086,6 +3119,9 @@ func (s *CaptionDescription) Validate() error {
 	if s.CaptionSelectorName != nil && len(*s.CaptionSelectorName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("CaptionSelectorName", 1))
 	}
+	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
+	}
 	if s.DestinationSettings == nil {
 		invalidParams.Add(request.NewErrParamRequired("DestinationSettings"))
 	}
@@ -3104,6 +3140,12 @@ func (s *CaptionDescription) Validate() error {
 // SetCaptionSelectorName sets the CaptionSelectorName field's value.
 func (s *CaptionDescription) SetCaptionSelectorName(v string) *CaptionDescription {
 	s.CaptionSelectorName = &v
+	return s
+}
+
+// SetCustomLanguageCode sets the CustomLanguageCode field's value.
+func (s *CaptionDescription) SetCustomLanguageCode(v string) *CaptionDescription {
+	s.CustomLanguageCode = &v
 	return s
 }
 
@@ -3128,6 +3170,10 @@ func (s *CaptionDescription) SetLanguageDescription(v string) *CaptionDescriptio
 // Caption Description for preset
 type CaptionDescriptionPreset struct {
 	_ struct{} `type:"structure"`
+
+	// Indicates the language of the caption output track, using the ISO 639-2 or
+	// ISO 639-3 three-letter language code
+	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
 
 	// Specific settings required by destination type. Note that burnin_destination_settings
 	// are not available if the source of the caption data is Embedded or Teletext.
@@ -3157,6 +3203,9 @@ func (s CaptionDescriptionPreset) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CaptionDescriptionPreset) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CaptionDescriptionPreset"}
+	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
+	}
 	if s.DestinationSettings == nil {
 		invalidParams.Add(request.NewErrParamRequired("DestinationSettings"))
 	}
@@ -3170,6 +3219,12 @@ func (s *CaptionDescriptionPreset) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomLanguageCode sets the CustomLanguageCode field's value.
+func (s *CaptionDescriptionPreset) SetCustomLanguageCode(v string) *CaptionDescriptionPreset {
+	s.CustomLanguageCode = &v
+	return s
 }
 
 // SetDestinationSettings sets the DestinationSettings field's value.
@@ -3296,6 +3351,15 @@ func (s *CaptionDestinationSettings) SetTtmlDestinationSettings(v *TtmlDestinati
 type CaptionSelector struct {
 	_ struct{} `type:"structure"`
 
+	// The specific language to extract from source, using the ISO 639-2 or ISO
+	// 639-3 three-letter language code. If input is SCTE-27, complete this field
+	// and/or PID to select the caption language to extract. If input is DVB-Sub
+	// and output is Burn-in or SMPTE-TT, complete this field and/or PID to select
+	// the caption language to extract. If input is DVB-Sub that is being passed
+	// through, omit this field (and PID field); there is no way to extract a specific
+	// language with pass-through captions.
+	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+
 	// The specific language to extract from source. If input is SCTE-27, complete
 	// this field and/or PID to select the caption language to extract. If input
 	// is DVB-Sub and output is Burn-in or SMPTE-TT, complete this field and/or
@@ -3324,6 +3388,9 @@ func (s CaptionSelector) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CaptionSelector) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CaptionSelector"}
+	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
+	}
 	if s.SourceSettings == nil {
 		invalidParams.Add(request.NewErrParamRequired("SourceSettings"))
 	}
@@ -3337,6 +3404,12 @@ func (s *CaptionSelector) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomLanguageCode sets the CustomLanguageCode field's value.
+func (s *CaptionSelector) SetCustomLanguageCode(v string) *CaptionSelector {
+	s.CustomLanguageCode = &v
+	return s
 }
 
 // SetLanguageCode sets the LanguageCode field's value.
@@ -3533,9 +3606,7 @@ type CmafEncryptionSettings struct {
 	InitializationVectorInManifest *string `locationName:"initializationVectorInManifest" type:"string" enum:"CmafInitializationVectorInManifest"`
 
 	// Settings for use with a SPEKE key provider.
-	//
-	// StaticKeyProvider is a required field
-	StaticKeyProvider *StaticKeyProvider `locationName:"staticKeyProvider" type:"structure" required:"true"`
+	StaticKeyProvider *StaticKeyProvider `locationName:"staticKeyProvider" type:"structure"`
 
 	// Indicates which type of key provider is used for encryption.
 	//
@@ -3558,9 +3629,6 @@ func (s *CmafEncryptionSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CmafEncryptionSettings"}
 	if s.ConstantInitializationVector != nil && len(*s.ConstantInitializationVector) < 32 {
 		invalidParams.Add(request.NewErrParamMinLen("ConstantInitializationVector", 32))
-	}
-	if s.StaticKeyProvider == nil {
-		invalidParams.Add(request.NewErrParamRequired("StaticKeyProvider"))
 	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
@@ -3608,7 +3676,8 @@ func (s *CmafEncryptionSettings) SetType(v string) *CmafEncryptionSettings {
 }
 
 // Required when you set (Type) under (OutputGroups)>(OutputGroupSettings) to
-// CMAF_GROUP_SETTINGS.
+// CMAF_GROUP_SETTINGS. Each output in a CMAF Output Group may only contain
+// a single video, audio, or caption output.
 type CmafGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7234,8 +7303,11 @@ type HlsCaptionLanguageMapping struct {
 	// Caption channel.
 	CaptionChannel *int64 `locationName:"captionChannel" type:"integer"`
 
-	// Code to specify the language, following the specification "ISO 639-2 three-digit
-	// code":http://www.loc.gov/standards/iso639-2/
+	// Specify the language for this caption channel, using the ISO 639-2 or ISO
+	// 639-3 three-letter language code
+	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+
+	// Specify the language, using the ISO 639-2 three-letter code listed at https://www.loc.gov/standards/iso639-2/php/code_list.php.
 	LanguageCode *string `locationName:"languageCode" type:"string" enum:"LanguageCode"`
 
 	// Caption language description.
@@ -7258,6 +7330,9 @@ func (s *HlsCaptionLanguageMapping) Validate() error {
 	if s.CaptionChannel != nil && *s.CaptionChannel < -2.147483648e+09 {
 		invalidParams.Add(request.NewErrParamMinValue("CaptionChannel", -2.147483648e+09))
 	}
+	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7268,6 +7343,12 @@ func (s *HlsCaptionLanguageMapping) Validate() error {
 // SetCaptionChannel sets the CaptionChannel field's value.
 func (s *HlsCaptionLanguageMapping) SetCaptionChannel(v int64) *HlsCaptionLanguageMapping {
 	s.CaptionChannel = &v
+	return s
+}
+
+// SetCustomLanguageCode sets the CustomLanguageCode field's value.
+func (s *HlsCaptionLanguageMapping) SetCustomLanguageCode(v string) *HlsCaptionLanguageMapping {
+	s.CustomLanguageCode = &v
 	return s
 }
 
@@ -11299,7 +11380,8 @@ type OutputGroupSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Required when you set (Type) under (OutputGroups)>(OutputGroupSettings) to
-	// CMAF_GROUP_SETTINGS.
+	// CMAF_GROUP_SETTINGS. Each output in a CMAF Output Group may only contain
+	// a single video, audio, or caption output.
 	CmafGroupSettings *CmafGroupSettings `locationName:"cmafGroupSettings" type:"structure"`
 
 	// Required when you set (Type) under (OutputGroups)>(OutputGroupSettings) to
@@ -12453,6 +12535,8 @@ func (s *TimecodeConfig) SetTimestampOffset(v string) *TimecodeConfig {
 type TimedMetadataInsertion struct {
 	_ struct{} `type:"structure"`
 
+	// Id3Insertions contains the array of Id3Insertion instances.
+	//
 	// Id3Insertions is a required field
 	Id3Insertions []*Id3Insertion `locationName:"id3Insertions" type:"list" required:"true"`
 }
@@ -15580,8 +15664,7 @@ const (
 	JobTemplateListBySystem = "SYSTEM"
 )
 
-// Code to specify the language, following the specification "ISO 639-2 three-digit
-// code":http://www.loc.gov/standards/iso639-2/
+// Specify the language, using the ISO 639-2 three-letter code listed at https://www.loc.gov/standards/iso639-2/php/code_list.php.
 const (
 	// LanguageCodeEng is a LanguageCode enum value
 	LanguageCodeEng = "ENG"
