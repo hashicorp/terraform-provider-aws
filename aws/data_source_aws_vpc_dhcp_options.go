@@ -6,11 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsVpcDhcpOptions() *schema.Resource {
