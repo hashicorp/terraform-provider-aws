@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_cloudformation_export` [GH-2180]
+* **New Data Source:** `aws_vpc_dhcp_options` [GH-4878]
 * **New Resource:** `aws_neptune_cluster_parameter_group` [GH-4860]
 * **New Resource:** `aws_neptune_subnet_group` [GH-4782]
 
