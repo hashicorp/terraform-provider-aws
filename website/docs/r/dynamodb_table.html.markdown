@@ -83,15 +83,13 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the table, this needs to be unique
   within a region.
-* `hash_key` - (Required, Forces new resource) The attribute to use as the hash key (the
-  attribute must also be defined as an attribute record
-* `range_key` - (Optional, Forces new resource) The attribute to use as the range key (must
-  also be defined)
+* `hash_key` - (Required, Forces new resource) The attribute to use as the hash (partition) key. Must also be defined as an `attribute`, see below.
+* `range_key` - (Optional, Forces new resource) The attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `write_capacity` - (Required) The number of write units for this table
 * `read_capacity` - (Required) The number of read units for this table
-* `attribute` - (Required) Define an attribute (can be lists), has two properties:
-  * `name` - The name of the attribute
-  * `type` - One of: S, N, or B for (S)tring, (N)umber or (B)inary data
+* `attribute` - (Required) List of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. Each attribute has two properties:
+  * `name` - (Required) The name of the attribute
+  * `type` - (Required) Attribute type, which must be a scalar type: `S`, `N`, or `B` for (S)tring, (N)umber or (B)inary data
 * `ttl` - (Optional) Defines ttl, has two properties, and can only be specified once:
   * `enabled` - (Required) Indicates whether ttl is enabled (true) or disabled (false).
   * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in.
