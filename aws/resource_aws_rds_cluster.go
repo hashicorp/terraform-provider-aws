@@ -838,8 +838,8 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 
-	if dbc.EnabledCloudwatchLogsExports != nil {
-		d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
+	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(dbc.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
 	var vpcg []string
