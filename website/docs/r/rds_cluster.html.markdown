@@ -116,6 +116,8 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: aurora,aurora-mysql,aurora-postgresql
 * `engine_version` - (Optional) The database engine version.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
+* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
+   The following log types are supported: `audit`, `error`, `general`, `slowquery`.
 * `tags` - (Optional) A mapping of tags to assign to the DB cluster.
 
 ### S3 Import Options
