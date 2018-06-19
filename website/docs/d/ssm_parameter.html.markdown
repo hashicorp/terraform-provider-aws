@@ -31,7 +31,7 @@ The following arguments are supported:
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the parameter.
 * `name` - (Required) The name of the parameter.

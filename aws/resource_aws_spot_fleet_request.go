@@ -383,7 +383,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		}
 	}
 
-	if v, ok := d["iam_instance_profile_arn"]; ok {
+	if v, ok := d["iam_instance_profile_arn"]; ok && v.(string) != "" {
 		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
 			Arn: aws.String(v.(string)),
 		}

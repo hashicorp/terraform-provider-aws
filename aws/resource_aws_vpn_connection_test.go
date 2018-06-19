@@ -122,7 +122,7 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 			},
 			{
 				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn, "1234567!", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`can only contain alphanumeric and underscore characters`),
+				ExpectError: regexp.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
 
 			//Try actual building

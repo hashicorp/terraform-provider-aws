@@ -48,7 +48,7 @@ Targets specify what instance IDs or tags to apply the document to and has these
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `name` - The name of the SSM document to apply.
 * `instance_ids` - The instance id that the SSM document was applied to.

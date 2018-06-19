@@ -55,7 +55,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `created_date` - The date the document was created.
 * `description` - The description of the document.

@@ -83,6 +83,6 @@ See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_Acti
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional WebACL.

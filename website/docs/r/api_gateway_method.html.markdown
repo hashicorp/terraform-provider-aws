@@ -77,8 +77,9 @@ The following arguments are supported:
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `resource_id` - (Required) The API resource ID
 * `http_method` - (Required) The HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
-* `authorization` - (Required) The type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`)
-* `authorizer_id` - (Optional) The authorizer id to be used when the authorization is `CUSTOM`
+* `authorization` - (Required) The type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`, `COGNITO_USER_POOLS`)
+* `authorizer_id` - (Optional) The authorizer id to be used when the authorization is `CUSTOM` or `COGNITO_USER_POOLS`
+* `authorization_scopes` - (Optional) The authorization scopes used when the authorization is `COGNITO_USER_POOLS`
 * `api_key_required` - (Optional) Specify if the method requires an API key
 * `request_models` - (Optional) A map of the API models used for the request's content type
   where key is the content type (e.g. `application/json`)

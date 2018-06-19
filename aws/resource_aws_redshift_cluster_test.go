@@ -3,11 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -104,7 +102,7 @@ func TestValidateRedshiftClusterDbName(t *testing.T) {
 func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	config := testAccAWSRedshiftClusterConfig_basic(ri)
 
 	resource.Test(t, resource.TestCase{
@@ -120,6 +118,7 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 						"aws_redshift_cluster.default", "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "publicly_accessible", "true"),
+					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "dns_name", regexp.MustCompile(fmt.Sprintf("^tf-redshift-cluster-%d.*\\.redshift\\..*", ri))),
 				),
 			},
 		},
@@ -149,7 +148,7 @@ func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
 func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	config := testAccAWSRedshiftClusterConfig_kmsKey(ri)
 	keyRegex := regexp.MustCompile("^arn:aws:([a-zA-Z0-9\\-])+:([a-z]{2}-[a-z]+-\\d{1})?:(\\d{12})?:(.*)$")
 
@@ -176,7 +175,7 @@ func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	preConfig := testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(ri)
 	postConfig := testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(ri)
 
@@ -303,7 +302,7 @@ func TestAccAWSRedshiftCluster_snapshotCopy(t *testing.T) {
 func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	preConfig := testAccAWSRedshiftClusterConfig_iamRoles(ri)
 	postConfig := testAccAWSRedshiftClusterConfig_updateIamRoles(ri)
 
@@ -366,7 +365,7 @@ func TestAccAWSRedshiftCluster_publiclyAccessible(t *testing.T) {
 func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
 	postConfig := testAccAWSRedshiftClusterConfig_updateNodeCount(ri)
 
@@ -403,7 +402,7 @@ func TestAccAWSRedshiftCluster_updateNodeCount(t *testing.T) {
 func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
 	postConfig := testAccAWSRedshiftClusterConfig_updateNodeType(ri)
 
@@ -440,7 +439,7 @@ func TestAccAWSRedshiftCluster_updateNodeType(t *testing.T) {
 func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 	var v redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	preConfig := testAccAWSRedshiftClusterConfig_tags(ri)
 	postConfig := testAccAWSRedshiftClusterConfig_updatedTags(ri)
 
@@ -475,7 +474,7 @@ func TestAccAWSRedshiftCluster_tags(t *testing.T) {
 func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
 	var first, second redshift.Cluster
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
 	postConfig := testAccAWSRedshiftClusterConfig_updatedUsername(ri)
 

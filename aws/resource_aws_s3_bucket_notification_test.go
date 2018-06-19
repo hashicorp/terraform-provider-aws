@@ -354,6 +354,8 @@ func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events [
 
 func testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_sns_topic" "topic" {
     name = "%s"
 	policy = <<POLICY
@@ -364,7 +366,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:%s",
+		"Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}
@@ -405,6 +407,8 @@ resource "aws_s3_bucket_notification" "notification" {
 
 func testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_sqs_queue" "queue" {
     name = "%s"
 	policy = <<POLICY
@@ -414,7 +418,7 @@ resource "aws_sqs_queue" "queue" {
 		"Effect":"Allow",
 		"Principal":"*",
 		"Action":"sqs:SendMessage",
-		"Resource":"arn:aws:sqs:*:*:%s",
+		"Resource":"arn:${data.aws_partition.current.partition}:sqs:*:*:%s",
 		"Condition":{
 			"ArnEquals":{
 				"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"
@@ -506,6 +510,7 @@ resource "aws_s3_bucket_notification" "notification" {
 
 func testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
 resource "aws_sns_topic" "topic" {
     name = "%s"
 	policy = <<POLICY
@@ -516,7 +521,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:%s",
+		"Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}

@@ -47,6 +47,6 @@ to which the underlying AWS account has access, regardless of their state.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `names` - A list of the Availability Zone names available to the account.

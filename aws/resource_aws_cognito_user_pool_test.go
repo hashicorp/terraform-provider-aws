@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,64 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cognito_user_pool", &resource.Sweeper{
+		Name: "aws_cognito_user_pool",
+		F:    testSweepCognitoUserPools,
+	})
+}
+
+func testSweepCognitoUserPools(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).cognitoidpconn
+
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int64(int64(50)),
+	}
+
+	for {
+		output, err := conn.ListUserPools(input)
+		if err != nil {
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping Cognito User Pool sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Cognito User Pools: %s", err)
+		}
+
+		if len(output.UserPools) == 0 {
+			log.Print("[DEBUG] No Cognito User Pools to sweep")
+			return nil
+		}
+
+		for _, userPool := range output.UserPools {
+			name := aws.StringValue(userPool.Name)
+
+			if !strings.HasPrefix(name, "tf_acc_") {
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Cognito User Pool %s", name)
+			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
+				UserPoolId: userPool.Id,
+			})
+			if err != nil {
+				return fmt.Errorf("Error deleting Cognito User Pool %s: %s", name, err)
+			}
+		}
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	name := acctest.RandString(5)
@@ -28,6 +88,8 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
 						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
+					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
+						regexp.MustCompile("^cognito-idp\\.[^.]+\\.amazonaws.com/[\\w-]+_[0-9a-zA-Z]+$")),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
