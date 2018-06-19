@@ -520,11 +520,24 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 }
 
 func decodeKmsGrantId(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+	if strings.HasPrefix(id, "arn:aws:kms") {
+		arn_parts := strings.Split(id, "/")
+		if len(arn_parts) != 2 {
+			return "", "", fmt.Errorf("unexpected format of ARN (%q), expected KeyID:GrantID", id)
+		}
+		arn_prefix := arn_parts[0]
+		parts := strings.Split(arn_parts[1], ":")
+		if len(parts) != 2 {
+			return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+		}
+		return fmt.Sprintf("%s/%s", arn_prefix, parts[0]), parts[1], nil
+	} else {
+		parts := strings.Split(id, ":")
+		if len(parts) != 2 {
+			return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+		}
+		return parts[0], parts[1], nil
 	}
-	return parts[0], parts[1], nil
 }
 
 // Custom error, so we don't have to rely on
