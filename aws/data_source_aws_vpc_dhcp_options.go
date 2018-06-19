@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsVpcDhcpOptions() *schema.Resource {
@@ -18,10 +17,9 @@ func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"dhcp_options_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.NoZeroValues,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
