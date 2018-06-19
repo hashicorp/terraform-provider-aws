@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -19,7 +20,8 @@ func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"dhcp_options_id": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"domain_name": {
@@ -31,6 +33,7 @@ func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"filter": ec2CustomFiltersSchema(),
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -52,26 +55,41 @@ func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 
 func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	dhcpOptionID := d.Get("dhcp_options_id").(string)
 
-	input := &ec2.DescribeDhcpOptionsInput{
-		DhcpOptionsIds: []*string{aws.String(dhcpOptionID)},
+	input := &ec2.DescribeDhcpOptionsInput{}
+
+	if v, ok := d.GetOk("dhcp_options_id"); ok && v.(string) != "" {
+		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
+	}
+
+	input.Filters = append(input.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading EC2 DHCP Options: %s", input)
 	output, err := conn.DescribeDhcpOptions(input)
 	if err != nil {
 		if isNoSuchDhcpOptionIDErr(err) {
-			return fmt.Errorf("EC2 DHCP Options %q not found", dhcpOptionID)
+			return errors.New("No matching EC2 DHCP Options found")
 		}
 		return fmt.Errorf("error reading EC2 DHCP Options: %s", err)
 	}
 
 	if len(output.DhcpOptions) == 0 {
-		return fmt.Errorf("EC2 DHCP Options %q not found", dhcpOptionID)
+		return errors.New("No matching EC2 DHCP Options found")
 	}
 
+	if len(output.DhcpOptions) > 1 {
+		return errors.New("Multiple matching EC2 DHCP Options found")
+	}
+
+	dhcpOptionID := aws.StringValue(output.DhcpOptions[0].DhcpOptionsId)
 	d.SetId(dhcpOptionID)
+	d.Set("dhcp_options_id", dhcpOptionID)
 
 	dhcpConfigurations := output.DhcpOptions[0].DhcpConfigurations
 
