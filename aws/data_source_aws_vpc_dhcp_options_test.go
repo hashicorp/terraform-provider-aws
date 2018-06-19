@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -16,6 +17,10 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Missing,
+				ExpectError: regexp.MustCompile(`No matching EC2 DHCP Options found`),
+			},
 			{
 				Config: testAccDataSourceAwsVpcDhcpOptionsConfig_DhcpOptionsID,
 				Check: resource.ComposeTestCheckFunc(
@@ -47,7 +52,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt),
+				Config: testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
@@ -63,11 +68,25 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 				),
 			},
+			{
+				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 2),
+				ExpectError: regexp.MustCompile(`Multiple matching EC2 DHCP Options found`),
+			},
 		},
 	})
 }
 
+const testAccDataSourceAwsVpcDhcpOptionsConfig_Missing = `
+data "aws_vpc_dhcp_options" "test" {
+  dhcp_options_id = "does-not-exist"
+}
+`
+
 const testAccDataSourceAwsVpcDhcpOptionsConfig_DhcpOptionsID = `
+resource "aws_vpc_dhcp_options" "incorrect" {
+  domain_name = "tf-acc-test-incorrect.example.com"
+}
+
 resource "aws_vpc_dhcp_options" "test" {
   domain_name          = "service.consul"
   domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
@@ -85,9 +104,15 @@ data "aws_vpc_dhcp_options" "test" {
 }
 `
 
-func testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt int) string {
+func testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, count int) string {
 	return fmt.Sprintf(`
+resource "aws_vpc_dhcp_options" "incorrect" {
+  domain_name = "tf-acc-test-incorrect.example.com"
+}
+
 resource "aws_vpc_dhcp_options" "test" {
+  count = %d
+
   domain_name          = "tf-acc-test-%d.example.com"
   domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
   netbios_name_servers = ["127.0.0.1"]
@@ -107,8 +132,8 @@ data "aws_vpc_dhcp_options" "test" {
 
   filter {
     name   = "value"
-    values = ["${aws_vpc_dhcp_options.test.domain_name}"]
+    values = ["${aws_vpc_dhcp_options.test.0.domain_name}"]
   }
 }
-`, rInt, rInt)
+`, count, rInt, rInt)
 }
