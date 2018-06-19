@@ -242,12 +242,12 @@ func testAccAWSNeptuneParameterGroupConfig_Parameter(rName, pName, pValue, pAppl
 	return fmt.Sprintf(`
 resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
-  name   = "%s"
+  name   = %q
 
   parameter {
-    apply_method = "%s"
-    name         = "%s"
-    value        = "%s"
+    apply_method = %q
+    name         = %q
+    value        = %q
   }
 }`, rName, pApplyMethod, pName, pValue)
 }
@@ -255,9 +255,9 @@ resource "aws_neptune_parameter_group" "test" {
 func testAccAWSNeptuneParameterGroupConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_parameter_group" "test" {
-  description = "%s"
+  description = %q
   family      = "neptune1"
-  name        = "%s"
+  name        = %q
 }`, description, rName)
 }
 
@@ -265,7 +265,7 @@ func testAccAWSNeptuneParameterGroupConfig_Required(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
-  name   = "%s"
+  name   = %q
 }`, rName)
 }
 
@@ -273,10 +273,10 @@ func testAccAWSNeptuneParameterGroupConfig_Tags_SingleTag(name, tKey, tValue str
 	return fmt.Sprintf(`
 resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
-  name   = "%s"
+  name   = %q
 
   tags {
-    %s = "%s"
+    %s = %q
   }
 }
 `, name, tKey, tValue)
@@ -286,11 +286,11 @@ func testAccAWSNeptuneParameterGroupConfig_Tags_MultipleTags(name, tKey1, tValue
 	return fmt.Sprintf(`
 resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
-  name   = "%s"
+  name   = %q
 
   tags {
-    %s = "%s"
-    %s = "%s"
+    %s = %q
+    %s = %q
   }
 }
 `, name, tKey1, tValue1, tKey2, tValue2)
