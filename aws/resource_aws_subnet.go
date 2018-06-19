@@ -22,6 +22,11 @@ func resourceAwsSubnet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsSubnetMigrateState,
 
@@ -287,6 +292,11 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	log.Printf("[INFO] Deleting subnet: %s", d.Id())
+
+	if err := deleteLingeringLambdaENIs(conn, d, "subnet-id"); err != nil {
+		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
+	}
+
 	req := &ec2.DeleteSubnetInput{
 		SubnetId: aws.String(d.Id()),
 	}
