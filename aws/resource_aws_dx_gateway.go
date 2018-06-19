@@ -33,6 +33,11 @@ func resourceAwsDxGateway() *schema.Resource {
 				ValidateFunc: validateAmazonSideAsn,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -61,9 +66,9 @@ func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error 
 		Pending:    []string{directconnect.GatewayStatePending},
 		Target:     []string{directconnect.GatewayStateAvailable},
 		Refresh:    dxGatewayRefreshStateFunc(conn, gatewayId),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {
@@ -116,9 +121,9 @@ func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error 
 		Pending:    []string{directconnect.GatewayStatePending, directconnect.GatewayStateAvailable, directconnect.GatewayStateDeleting},
 		Target:     []string{directconnect.GatewayStateDeleted},
 		Refresh:    dxGatewayRefreshStateFunc(conn, d.Id()),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {

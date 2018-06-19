@@ -32,6 +32,14 @@ The following attributes are exported:
 
 * `id` - The ID of the gateway.
 
+## Timeouts
+
+`aws_dx_gateway` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating the gateway
+- `delete` - (Default `10 minutes`) Used for destroying the gateway
+
 ## Import
 
 Direct Connect Gateways can be imported using the `gateway id`, e.g.
