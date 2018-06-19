@@ -18,7 +18,7 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), acctest.RandIntRange(64512, 65534)),
+				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
 			},
 
 			resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDxGatewayConfig_complexImport(acctest.RandString(5), acctest.RandIntRange(64512, 65534)),
+				Config: testAccDxGatewayConfig_complexImport(acctest.RandString(5), randIntRange(64512, 65534)),
 			},
 
 			resource.TestStep{

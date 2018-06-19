@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
@@ -18,7 +20,7 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), acctest.RandIntRange(64512, 65534)),
+				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists("aws_dx_gateway.test"),
 				),
@@ -70,4 +72,13 @@ func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
       amazon_side_asn = "%d"
     }
     `, rName, rBgpAsn)
+}
+
+// Local copy of acctest.RandIntRange until https://github.com/hashicorp/terraform/pull/17438 is merged.
+func randIntRange(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	source := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rangeMax := max - min
+
+	return int(source.Int31n(int32(rangeMax))) + min
 }

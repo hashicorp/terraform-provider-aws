@@ -18,7 +18,7 @@ func TestAccAwsDxGatewayAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig(acctest.RandString(5), acctest.RandIntRange(64512, 65534)),
+				Config: testAccDxGatewayAssociationConfig(acctest.RandString(5), randIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists("aws_dx_gateway_association.test"),
 				),
@@ -34,7 +34,7 @@ func TestAccAwsDxGatewayAssociation_multiVgws(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVgws(acctest.RandString(5), acctest.RandIntRange(64512, 65534)),
+				Config: testAccDxGatewayAssociationConfig_multiVgws(acctest.RandString(5), randIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists("aws_dx_gateway_association.test1"),
 					testAccCheckAwsDxGatewayAssociationExists("aws_dx_gateway_association.test2"),
