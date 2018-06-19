@@ -38,7 +38,7 @@ func resourceAwsDxGatewayImportState(d *schema.ResourceData, meta interface{}) (
 			d := subResource.Data(nil)
 			d.SetType("aws_dx_gateway_association")
 			d.Set("dx_gateway_id", assoc.DirectConnectGatewayId)
-			d.Set("virtual_gateway_id", assoc.VirtualGatewayId)
+			d.Set("vpn_gateway_id", assoc.VirtualGatewayId)
 			d.SetId(dxGatewayIdVgwIdHash(*assoc.DirectConnectGatewayId, *assoc.VirtualGatewayId))
 			results = append(results, d)
 		}

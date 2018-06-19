@@ -21,7 +21,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"virtual_gateway_id": {
+			"vpn_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -34,7 +34,7 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).dxconn
 
 	dxGatewayId := d.Get("dx_gateway_id").(string)
-	vgwId := d.Get("virtual_gateway_id").(string)
+	vgwId := d.Get("vpn_gateway_id").(string)
 
 	_, err := conn.CreateDirectConnectGatewayAssociation(&directconnect.CreateDirectConnectGatewayAssociationInput{
 		DirectConnectGatewayId: aws.String(dxGatewayId),
@@ -52,7 +52,7 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).dxconn
 
 	dxGatewayId := d.Get("dx_gateway_id").(string)
-	vgwId := d.Get("virtual_gateway_id").(string)
+	vgwId := d.Get("vpn_gateway_id").(string)
 
 	resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		DirectConnectGatewayId: aws.String(dxGatewayId),
@@ -69,7 +69,7 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 	if len(resp.DirectConnectGatewayAssociations) != 1 {
 		return fmt.Errorf("Found %d Direct Connect Gateway associations for %s, expected 1", len(resp.DirectConnectGatewayAssociations), d.Id())
 	}
-	if *resp.DirectConnectGatewayAssociations[0].VirtualGatewayId != d.Get("virtual_gateway_id").(string) {
+	if *resp.DirectConnectGatewayAssociations[0].VirtualGatewayId != d.Get("vpn_gateway_id").(string) {
 		log.Printf("[WARN] Direct Connect Gateway Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -82,7 +82,7 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).dxconn
 
 	dxGatewayId := d.Get("dx_gateway_id").(string)
-	vgwId := d.Get("virtual_gateway_id").(string)
+	vgwId := d.Get("vpn_gateway_id").(string)
 
 	_, err := conn.DeleteDirectConnectGatewayAssociation(&directconnect.DeleteDirectConnectGatewayAssociationInput{
 		DirectConnectGatewayId: aws.String(dxGatewayId),

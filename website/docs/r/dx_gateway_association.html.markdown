@@ -28,7 +28,7 @@ resource "aws_vpn_gateway" "example" {
 
 resource "aws_dx_gateway_association" "example" {
   dx_gateway_id = "${aws_dx_gateway.example.id}"
-  virtual_gateway_id = "${aws_vpn_gateway.example.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.example.id}"
 }
 ```
 
@@ -37,4 +37,4 @@ resource "aws_dx_gateway_association" "example" {
 The following arguments are supported:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect Gateway.
-* `virtual_gateway_id` - (Required) The ID of the VGW with which to associate the gateway.
+* `vpn_gateway_id` - (Required) The ID of the VGW with which to associate the gateway.

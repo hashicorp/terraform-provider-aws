@@ -54,11 +54,11 @@ func testAccCheckAwsDxGatewayAssociationDestroy(s *terraform.State) error {
 
 		resp, _ := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
 			DirectConnectGatewayId: aws.String(rs.Primary.Attributes["dx_gateway_id"]),
-			VirtualGatewayId:       aws.String(rs.Primary.Attributes["virtual_gateway_id"]),
+			VirtualGatewayId:       aws.String(rs.Primary.Attributes["vpn_gateway_id"]),
 		})
 
 		if len(resp.DirectConnectGatewayAssociations) > 0 {
-			return fmt.Errorf("Direct Connect Gateway (%s) is not dissociated from VGW %s", rs.Primary.Attributes["dx_gateway_id"], rs.Primary.Attributes["virtual_gateway_id"])
+			return fmt.Errorf("Direct Connect Gateway (%s) is not dissociated from VGW %s", rs.Primary.Attributes["dx_gateway_id"], rs.Primary.Attributes["vpn_gateway_id"])
 		}
 	}
 	return nil
@@ -92,7 +92,7 @@ resource "aws_vpn_gateway" "test" {
 
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id = "${aws_dx_gateway.test.id}"
-  virtual_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
 }
 `, rName, rBgpAsn)
 }
@@ -122,12 +122,12 @@ resource "aws_vpn_gateway" "test2" {
 
 resource "aws_dx_gateway_association" "test1" {
   dx_gateway_id = "${aws_dx_gateway.test.id}"
-  virtual_gateway_id = "${aws_vpn_gateway.test1.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test1.id}"
 }
 
 resource "aws_dx_gateway_association" "test2" {
   dx_gateway_id = "${aws_dx_gateway.test.id}"
-  virtual_gateway_id = "${aws_vpn_gateway.test2.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test2.id}"
 }
 `, rName, rBgpAsn)
 }

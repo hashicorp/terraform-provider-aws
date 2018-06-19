@@ -82,12 +82,12 @@ resource "aws_vpn_gateway" "test2" {
 
 resource "aws_dx_gateway_association" "test1" {
   dx_gateway_id = "${aws_dx_gateway.test.id}"
-  virtual_gateway_id = "${aws_vpn_gateway.test1.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test1.id}"
 }
 
 resource "aws_dx_gateway_association" "test2" {
   dx_gateway_id = "${aws_dx_gateway.test.id}"
-  virtual_gateway_id = "${aws_vpn_gateway.test2.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test2.id}"
 }
 `, rName, rBgpAsn)
 }
