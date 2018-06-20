@@ -72,10 +72,6 @@ var dxVirtualInterfaceSchema = map[string]*schema.Schema{
 	},
 }
 
-func isNoSuchDxVirtualInterfaceErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "does not exist")
-}
-
 func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
 	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
@@ -113,7 +109,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		VirtualInterfaceId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isNoSuchDxVirtualInterfaceErr(err) {
+		if isAWSErr(err, "DirectConnectClientException", "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err)
@@ -151,17 +147,21 @@ func dxVirtualInterfaceStateRefresh(conn *directconnect.DirectConnect, vifId str
 			VirtualInterfaceId: aws.String(vifId),
 		})
 		if err != nil {
-			if isNoSuchDxVirtualInterfaceErr(err) {
-				return nil, directconnect.VirtualInterfaceStateDeleted, nil
-			}
 			return nil, "", err
 		}
 
-		if len(resp.VirtualInterfaces) < 1 {
-			return nil, directconnect.ConnectionStateDeleted, nil
+		n := len(resp.VirtualInterfaces)
+		switch n {
+		case 0:
+			return "", directconnect.VirtualInterfaceStateDeleted, nil
+
+		case 1:
+			vif := resp.VirtualInterfaces[0]
+			return vif, aws.StringValue(vif.VirtualInterfaceState), nil
+
+		default:
+			return nil, "", fmt.Errorf("Found %d Direct Connect virtual interfaces for %s, expected 1", n, vifId)
 		}
-		vif := resp.VirtualInterfaces[0]
-		return vif, aws.StringValue(vif.VirtualInterfaceState), nil
 	}
 }
 
@@ -175,7 +175,7 @@ func dxVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directco
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect virtual interface %s to become available: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to become available: %s", d.Id(), err)
 	}
 
 	return nil
