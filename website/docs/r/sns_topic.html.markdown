@@ -18,6 +18,33 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
+## Example with Delivery Policy
+
+``` hcl
+resource "aws_sns_topic" "user_updates" {
+  name = "user-updates-topic"
+  delivery_policy = <<EOF
+{
+  "http": {
+    "defaultHealthyRetryPolicy": {
+      "minDelayTarget": 20,
+      "maxDelayTarget": 20,
+      "numRetries": 3,
+      "numMaxDelayRetries": 0,
+      "numNoDelayRetries": 0,
+      "numMinDelayRetries": 0,
+      "backoffFunction": "linear"
+    },
+    "disableSubscriptionOverrides": false,
+    "defaultThrottlePolicy": {
+      "maxReceivesPerSecond": 1
+    }
+  }
+}
+EOF
+}
+```
+
 ## Message Delivery Status Arguments
 
 The `<endpoint>_success_feedback_role_arn` and `<endpoint>_failure_feedback_role_arn` arguments are used to give Amazon SNS write access to use CloudWatch Logs on your behalf. The `<endpoint>_success_feedback_sample_rate` argument is for specifying the sample rate percentage (0-100) of successfully delivered messages. After you configure the  `<endpoint>_failure_feedback_role_arn` argument, then all failed message deliveries generate CloudWatch Logs.
@@ -57,31 +84,4 @@ SNS Topics can be imported using the `topic arn`, e.g.
 
 ```
 $ terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
-```
-
-## Example with Delivery Policy
-
-``` hcl
-resource "aws_sns_topic" "user_updates" {
-  name = "user-updates-topic"
-  delivery_policy = <<EOF
-{
-  "http": {
-    "defaultHealthyRetryPolicy": {
-      "minDelayTarget": 20,
-      "maxDelayTarget": 20,
-      "numRetries": 3,
-      "numMaxDelayRetries": 0,
-      "numNoDelayRetries": 0,
-      "numMinDelayRetries": 0,
-      "backoffFunction": "linear"
-    },
-    "disableSubscriptionOverrides": false,
-    "defaultThrottlePolicy": {
-      "maxReceivesPerSecond": 1
-    }
-  }
-}
-EOF
-}
 ```
