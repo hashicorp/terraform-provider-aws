@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"testing"
@@ -11,16 +12,16 @@ import (
 
 func TestAccAWSGlueCrawler_basic(t *testing.T) {
 	const name = "aws_glue_crawler.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfigBasic,
+				Config: testAccGlueCrawlerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists(name, "test-basic"),
-					resource.TestCheckResourceAttr(name, "name", "test-basic"),
+					checkGlueCatalogCrawlerExists(name),
 					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
 					resource.TestCheckResourceAttr(name, "role", "AWSGlueServiceRole-tf"),
 				),
@@ -31,16 +32,16 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 
 func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
 	const name = "aws_glue_crawler.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfigJdbc,
+				Config: testAccGlueCrawlerConfigJdbc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists(name, "test-jdbc"),
-					resource.TestCheckResourceAttr(name, "name", "test-jdbc"),
+					checkGlueCatalogCrawlerExists(name),
 					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
 					resource.TestCheckResourceAttr(name, "role", "AWSGlueServiceRoleDefault"),
 					resource.TestCheckResourceAttr(name, "jdbc_target.#", "1"),
@@ -52,18 +53,18 @@ func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
 
 func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 	const name = "aws_glue_crawler.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfigCustomClassifiers,
+				Config: testAccGlueCrawlerConfigCustomClassifiers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkGlueCatalogCrawlerExists(name, "test_custom"),
-					resource.TestCheckResourceAttr(name, "name", "test_custom"),
+					checkGlueCatalogCrawlerExists(name),
 					resource.TestCheckResourceAttr(name, "database_name", "test_db"),
-					resource.TestCheckResourceAttr(name, "role", "tf-glue-service-role"),
+					resource.TestCheckResourceAttr(name, "role", "AWSGlueServiceRoleDefault"),
 					resource.TestCheckResourceAttr(name, "table_prefix", "table_prefix"),
 					resource.TestCheckResourceAttr(name, "schema_change_policy.0.delete_behavior", "DELETE_FROM_DATABASE"),
 					resource.TestCheckResourceAttr(name, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
@@ -75,7 +76,7 @@ func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 	})
 }
 
-func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.TestCheckFunc {
+func checkGlueCatalogCrawlerExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -88,7 +89,7 @@ func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.Tes
 
 		glueConn := testAccProvider.Meta().(*AWSClient).glueconn
 		out, err := glueConn.GetCrawler(&glue.GetCrawlerInput{
-			Name: aws.String(crawlerName),
+			Name: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
@@ -132,13 +133,14 @@ func testAccCheckAWSGlueCrawlerDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccGlueCrawlerConfigBasic = `
+func testAccGlueCrawlerConfigBasic(rName string) string {
+	return fmt.Sprintf(`
 	resource "aws_glue_catalog_database" "test_db" {
   		name = "test_db"
 	}
 
 	resource "aws_glue_crawler" "test" {
-	  name = "test-basic"
+	  name = "%s"
 	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
 	  description = "TF-test-crawler"
@@ -171,9 +173,11 @@ const testAccGlueCrawlerConfigBasic = `
 }
 EOF
 	}
-`
+`, rName)
+}
 
-const testAccGlueCrawlerConfigJdbc = `
+func testAccGlueCrawlerConfigJdbc(rName string) string {
+	return fmt.Sprintf(`
 	resource "aws_glue_catalog_database" "test_db" {
   		name = "test_db"
 	}
@@ -218,7 +222,7 @@ EOF
 	}
 
 	resource "aws_glue_crawler" "test" {
-	  name = "test-jdbc"
+	  name = "%s"
 	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
 	  description = "TF-test-crawler"
@@ -228,9 +232,11 @@ EOF
 		connection_name = "${aws_glue_connection.test.name}"
 	  }
 	}
-`
+`, rName)
+}
 
-const testAccGlueCrawlerConfigCustomClassifiers = `
+func testAccGlueCrawlerConfigCustomClassifiers(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test_db" {
   name = "test_db"
 }
@@ -244,7 +250,7 @@ resource "aws_glue_classifier" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  name = "test_custom"
+  name = "%s"
   database_name = "${aws_glue_catalog_database.test_db.name}"
   role = "${aws_iam_role.glue.name}"
   classifiers = [
@@ -288,7 +294,7 @@ resource "aws_iam_role_policy_attachment" "aws-glue-service-role-service-attachm
 }
 
 resource "aws_iam_role" "glue" {
-  name = "tf-glue-service-role"
+  name = "AWSGlueServiceRoleDefault"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -305,4 +311,5 @@ resource "aws_iam_role" "glue" {
 }
 EOF
 }
-`
+`, rName)
+}
