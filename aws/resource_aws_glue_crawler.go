@@ -337,9 +337,11 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 			"update_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.UpdateBehavior,
 		}
 
-		if err := d.Set("schema_change_policy", []map[string]string{schemaPolicy}); err != nil {
-			return fmt.Errorf("error setting schema_change_policy: %s", schemaPolicy)
-		}
+		d.Set("schema_change_policy", schemaPolicy)
+
+		//if err := d.Set("schema_change_policy", []map[string]string{schemaPolicy}); err != nil {
+		//	return fmt.Errorf("error setting schema_change_policy: %s", schemaPolicy)
+		//}
 	}
 
 	var s3Targets = crawlerOutput.Crawler.Targets.S3Targets
