@@ -9,6 +9,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_api_gateway_rest_api: Support `PRIVATE` endpoint type [GH-4888]
 * resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
 * resource/aws_kinesis_firehose_delivery_stream: Support extended S3 destination `data_format_conversion_configuration` [GH-4842]
 * resource/aws_neptune_parameter_group: Add `tags` argument and `arn` attribute [GH-4873]
