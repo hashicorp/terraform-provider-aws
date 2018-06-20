@@ -203,6 +203,24 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 			},
 		},
 	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "PRIVATE"),
+				),
+			},
+		},
+	})
+
 }
 
 func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
