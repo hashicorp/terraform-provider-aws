@@ -126,8 +126,6 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return nil
-
-	return nil
 }
 
 func dxGatewayAssociationStateRefresh(conn *directconnect.DirectConnect, dxgwId, vgwId string) resource.StateRefreshFunc {
