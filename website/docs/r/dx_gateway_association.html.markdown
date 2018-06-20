@@ -38,3 +38,11 @@ The following arguments are supported:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect Gateway.
 * `vpn_gateway_id` - (Required) The ID of the VGW with which to associate the gateway.
+
+## Timeouts
+
+`aws_dx_gateway_association` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `15 minutes`) Used for creating the association
+- `delete` - (Default `10 minutes`) Used for destroying the association

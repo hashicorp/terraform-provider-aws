@@ -59,7 +59,7 @@ func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Creating Direct Connect gateway: %#v", req)
 	resp, err := conn.CreateDirectConnectGateway(req)
 	if err != nil {
-		return fmt.Errorf("Error creating Direct Connect gateway: %s", err.Error())
+		return fmt.Errorf("Error creating Direct Connect gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DirectConnectGateway.DirectConnectGatewayId))
@@ -85,9 +85,10 @@ func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
 	dxGwRaw, state, err := dxGatewayStateRefresh(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("Error reading Direct Connect gateway: %s", err.Error())
+		return fmt.Errorf("Error reading Direct Connect gateway: %s", err)
 	}
 	if state == directconnect.GatewayStateDeleted {
+		log.Printf("[WARN] Direct Connect gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -109,7 +110,7 @@ func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error 
 		if isAWSErr(err, "DirectConnectClientException", "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Direct Connect gateway: %s", err.Error())
+		return fmt.Errorf("Error deleting Direct Connect gateway: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
