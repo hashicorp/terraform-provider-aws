@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccAWSGlueCrawler_basic(t *testing.T) {
-	const name = "aws_glue_catalog_crawler.test"
+	const name = "aws_glue_crawler.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -29,7 +29,7 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 }
 
 func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
-	const name = "aws_glue_catalog_crawler.test"
+	const name = "aws_glue_crawler.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -49,7 +49,7 @@ func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
 }
 
 func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
-	const name = "aws_glue_catalog_crawler.test"
+	const name = "aws_glue_crawler.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -105,7 +105,7 @@ const testAccGlueCrawlerConfigBasic = `
   		name = "test_db"
 	}
 
-	resource "aws_glue_catalog_crawler" "test" {
+	resource "aws_glue_crawler" "test" {
 	  name = "test-basic"
 	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
@@ -185,7 +185,7 @@ const testAccGlueCrawlerConfigJdbc = `
 EOF
 	}
 
-	resource "aws_glue_catalog_crawler" "test" {
+	resource "aws_glue_crawler" "test" {
 	  name = "test-jdbc"
 	  database_name = "${aws_glue_catalog_database.test_db.name}"
 	  role = "${aws_iam_role.glue.name}"
@@ -211,7 +211,7 @@ resource "aws_glue_classifier" "test" {
   }
 }
 
-resource "aws_glue_catalog_crawler" "test" {
+resource "aws_glue_crawler" "test" {
   name = "test_custom"
   database_name = "${aws_glue_catalog_database.test_db.name}"
   role = "${aws_iam_role.glue.name}"

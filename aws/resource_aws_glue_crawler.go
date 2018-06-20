@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform/helper/structure"
 )
 
-func resourceAwsGlueCatalogCrawler() *schema.Resource {
+func resourceAwsGlueCrawler() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueCatalogCrawlerCreate,
-		Read:   resourceAwsGlueCatalogCrawlerRead,
-		Update: resourceAwsGlueCatalogCrawlerUpdate,
-		Delete: resourceAwsGlueCatalogCrawlerDelete,
-		Exists: resourceAwsGlueCatalogCrawlerExists,
+		Create: resourceAwsGlueCrawlerCreate,
+		Read:   resourceAwsGlueCrawlerRead,
+		Update: resourceAwsGlueCrawlerUpdate,
+		Delete: resourceAwsGlueCrawlerDelete,
+		Exists: resourceAwsGlueCrawlerExists,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -122,7 +122,7 @@ func resourceAwsGlueCatalogCrawler() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueCatalogCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
@@ -147,7 +147,7 @@ func resourceAwsGlueCatalogCrawlerCreate(d *schema.ResourceData, meta interface{
 	}
 	d.SetId(fmt.Sprintf("%s", name))
 
-	return resourceAwsGlueCatalogCrawlerUpdate(d, meta)
+	return resourceAwsGlueCrawlerUpdate(d, meta)
 }
 
 func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.CreateCrawlerInput, error) {
@@ -275,7 +275,7 @@ func expandJdbcTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 	return target
 }
 
-func resourceAwsGlueCatalogCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
@@ -289,10 +289,10 @@ func resourceAwsGlueCatalogCrawlerUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceAwsGlueCatalogCrawlerRead(d, meta)
+	return resourceAwsGlueCrawlerRead(d, meta)
 }
 
-func resourceAwsGlueCatalogCrawlerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
@@ -384,7 +384,7 @@ func flattenJdbcTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interface{}
 	return result
 }
 
-func resourceAwsGlueCatalogCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGlueCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
@@ -398,7 +398,7 @@ func resourceAwsGlueCatalogCrawlerDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsGlueCatalogCrawlerExists(d *schema.ResourceData, meta interface{}) (bool, error) {
+func resourceAwsGlueCrawlerExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 

@@ -413,7 +413,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glue_catalog_table":                       resourceAwsGlueCatalogTable(),
 			"aws_glue_classifier":                          resourceAwsGlueClassifier(),
 			"aws_glue_connection":                          resourceAwsGlueConnection(),
-			"aws_glue_catalog_crawler":                     resourceAwsGlueCatalogCrawler(),
+			"aws_glue_crawler":                             resourceAwsGlueCrawler(),
 			"aws_glue_job":                                 resourceAwsGlueJob(),
 			"aws_glue_trigger":                             resourceAwsGlueTrigger(),
 			"aws_guardduty_detector":                       resourceAwsGuardDutyDetector(),
