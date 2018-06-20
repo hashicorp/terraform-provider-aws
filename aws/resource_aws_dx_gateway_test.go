@@ -68,7 +68,7 @@ func testAccCheckAwsDxGatewayExists(name string) resource.TestCheckFunc {
 func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
     resource "aws_dx_gateway" "test" {
-      name = "tf-dxg-%s"
+      name = "terraform-testacc-dxgw-%s"
       amazon_side_asn = "%d"
     }
     `, rName, rBgpAsn)
