@@ -12,8 +12,9 @@ import (
 func TestAccAWSGlueCrawler_basic(t *testing.T) {
 	const name = "aws_glue_crawler.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueCrawlerConfigBasic,
@@ -31,8 +32,9 @@ func TestAccAWSGlueCrawler_basic(t *testing.T) {
 func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
 	const name = "aws_glue_crawler.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueCrawlerConfigJdbc,
@@ -51,8 +53,9 @@ func TestAccAWSGlueCrawler_jdbcCrawler(t *testing.T) {
 func TestAccAWSGlueCrawler_customCrawlers(t *testing.T) {
 	const name = "aws_glue_crawler.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueCrawlerConfigCustomClassifiers,
@@ -98,6 +101,35 @@ func checkGlueCatalogCrawlerExists(name string, crawlerName string) resource.Tes
 
 		return nil
 	}
+}
+
+func testAccCheckAWSGlueCrawlerDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_glue_crawler" {
+			continue
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		output, err := conn.GetCrawler(&glue.GetCrawlerInput{
+			Name: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+				return nil
+			}
+
+		}
+
+		crawler := output.Crawler
+		if crawler != nil && aws.StringValue(crawler.Name) == rs.Primary.ID {
+			return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 const testAccGlueCrawlerConfigBasic = `

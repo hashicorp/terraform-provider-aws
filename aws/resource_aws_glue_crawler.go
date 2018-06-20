@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsGlueCrawler() *schema.Resource {
@@ -56,14 +57,19 @@ func resourceAwsGlueCrawler() *schema.Resource {
 						"delete_behavior": {
 							Type:     schema.TypeString,
 							Optional: true,
-							//ValidateFunc: validateDeletion,
-							//TODO: Write a validate function to ensure value matches enum
+							ValidateFunc: validation.StringInSlice([]string{
+								glue.DeleteBehaviorDeleteFromDatabase,
+								glue.DeleteBehaviorDeprecateInDatabase,
+								glue.DeleteBehaviorLog,
+							}, false),
 						},
 						"update_behavior": {
 							Type:     schema.TypeString,
 							Optional: true,
-							//ValidateFunc: validateUpdate,
-							//TODO: Write a validate function to ensure value matches enum
+							ValidateFunc: validation.StringInSlice([]string{
+								glue.UpdateBehaviorLog,
+								glue.UpdateBehaviorUpdateInDatabase,
+							}, false),
 						},
 					},
 				},
@@ -115,7 +121,7 @@ func resourceAwsGlueCrawler() *schema.Resource {
 			"configuration": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				ValidateFunc:     validateJsonString,
 			},
 		},
@@ -305,9 +311,16 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 			d.SetId("")
+			return nil
 		}
 
 		return fmt.Errorf("error reading Glue crawler: %s", err.Error())
+	}
+
+	if crawlerOutput.Crawler == nil {
+		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("name", crawlerOutput.Crawler.Name)
@@ -323,40 +336,46 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 			"delete_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.DeleteBehavior,
 			"update_behavior": *crawlerOutput.Crawler.SchemaChangePolicy.UpdateBehavior,
 		}
-		d.Set("schema_change_policy", schemaPolicy)
-	}
 
-	var s3Targets = crawlerOutput.Crawler.Targets.S3Targets
-	if crawlerOutput.Crawler.Targets.S3Targets != nil {
-		if err := d.Set("s3_target", flattenS3Targets(s3Targets)); err != nil {
-			log.Printf("[ERR] Error setting Glue S3 Targets: %s", err)
+		if err := d.Set("schema_change_policy", []map[string]string{schemaPolicy}); err != nil {
+			return fmt.Errorf("error setting schema_change_policy: %s", schemaPolicy)
 		}
 	}
 
-	var jdbcTargets = crawlerOutput.Crawler.Targets.JdbcTargets
-	if crawlerOutput.Crawler.Targets.JdbcTargets != nil {
-		if err := d.Set("jdbc_target", flattenJdbcTargets(jdbcTargets)); err != nil {
-			log.Printf("[ERR] Error setting Glue JDBC Targets: %s", err)
+	var s3Targets = crawlerOutput.Crawler.Targets.S3Targets
+
+	if crawlerOutput.Crawler.Targets != nil {
+		if crawlerOutput.Crawler.Targets.S3Targets != nil {
+			if err := d.Set("s3_target", flattenGlueS3Targets(s3Targets)); err != nil {
+				log.Printf("[ERR] Error setting Glue S3 Targets: %s", err)
+			}
+		}
+
+		var jdbcTargets = crawlerOutput.Crawler.Targets.JdbcTargets
+		if crawlerOutput.Crawler.Targets.JdbcTargets != nil {
+			if err := d.Set("jdbc_target", flattenGlueJdbcTargets(jdbcTargets)); err != nil {
+				log.Printf("[ERR] Error setting Glue JDBC Targets: %s", err)
+			}
 		}
 	}
 
 	// AWS provides no other way to read back the additional_info
-	if v, ok := d.GetOk("additional_info"); ok {
+	if v, ok := d.GetOk("configuration"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
 		}
-		d.Set("additional_info", info)
+		d.Set("configuration", info)
 	}
 	return nil
 }
 
-func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
+func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, s3Target := range s3Targets {
 		attrs := make(map[string]interface{})
-		attrs["path"] = *s3Target.Path
+		attrs["path"] = aws.StringValue(s3Target.Path)
 
 		if len(s3Target.Exclusions) > 0 {
 			attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
@@ -367,12 +386,12 @@ func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 	return result
 }
 
-func flattenJdbcTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interface{} {
+func flattenGlueJdbcTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, jdbcTarget := range jdbcTargets {
 		attrs := make(map[string]interface{})
-		attrs["path"] = *jdbcTarget.Path
+		attrs["path"] = aws.StringValue(jdbcTarget.Path)
 		attrs["connection_name"] = *jdbcTarget.ConnectionName
 
 		if len(jdbcTarget.Exclusions) > 0 {
