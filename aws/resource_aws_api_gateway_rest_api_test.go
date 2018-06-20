@@ -203,6 +203,11 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
+	var restApi apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -210,6 +215,31 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Ensure region supports PRIVATE endpoint
+					// This can eventually be moved to a PreCheck function
+					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
+						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
+						EndpointConfiguration: &apigateway.EndpointConfiguration{
+							Types: []*string{aws.String("PRIVATE")},
+						},
+					})
+					if err != nil {
+						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
+							t.Skip("Region does not support PRIVATE endpoint type")
+						}
+						t.Fatal(err)
+					}
+
+					// Be kind and rewind. :)
+					_, err = conn.DeleteRestApi(&apigateway.DeleteRestApiInput{
+						RestApiId: output.Id,
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
 				Config: testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, "PRIVATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
@@ -220,7 +250,6 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
