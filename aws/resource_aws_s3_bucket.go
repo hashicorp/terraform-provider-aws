@@ -728,6 +728,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("cors_rule", rules); err != nil {
 			return err
 		}
+	} else {
+		log.Printf("[DEBUG] S3 bucket: %s, read CORS: %v", d.Id(), cors)
+		if err := d.Set("cors_rule", make([]map[string]interface{}, 0)); err != nil {
+			return err
+		}
 	}
 
 	// Read the website configuration
