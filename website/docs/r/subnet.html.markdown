@@ -42,13 +42,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
 * `availability_zone`- The AZ for the subnet.
 * `cidr_block` - The CIDR block for the subnet.
 * `vpc_id` - The VPC ID.
-* `ipv6_association_id` - The association ID for the IPv6 CIDR block.
+* `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
 * `ipv6_cidr_block` - The IPv6 CIDR block.
 
 ## Import

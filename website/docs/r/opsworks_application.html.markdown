@@ -16,7 +16,7 @@ Provides an OpsWorks application resource.
 resource "aws_opsworks_application" "foo-app" {
   name        = "foobar application"
   short_name  = "foobar"
-  stack_id    = "${aws_opsworks_stack.stack.id}"
+  stack_id    = "${aws_opsworks_stack.main.id}"
   type        = "rails"
   description = "This is a Rails application"
 
@@ -95,6 +95,6 @@ A `ssl_configuration` block supports the following arguments (can only be define
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the application.

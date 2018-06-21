@@ -52,6 +52,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 						"attempts": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
 					},
@@ -67,6 +68,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 						"attempt_duration_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.IntAtLeast(60),
 						},
 					},

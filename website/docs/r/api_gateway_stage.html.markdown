@@ -89,7 +89,7 @@ For more information on configuring the log format rules visit the AWS [document
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the stage
 * `invoke_url` - The URL to invoke the API pointing to the stage,

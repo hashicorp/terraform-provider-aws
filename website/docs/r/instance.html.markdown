@@ -54,8 +54,11 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The AZ to start the instance in.
 * `placement_group` - (Optional) The Placement Group to start the instance in.
 * `tenancy` - (Optional) The tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
-* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be
-     EBS-optimized.
+* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
+     Note that if this is not set on an instance type that is optimized by default then
+     this will show as disabled but if the instance type is optimized by default then
+     there is no need to set this and there is no effect to disabling it.
+     See the [EBS Optimized section](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html) of the AWS User Guide for more information.
 * `disable_api_termination` - (Optional) If true, enables [EC2 Instance
      Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the
@@ -175,7 +178,7 @@ Each `network_interface` block supports the following:
 
 * `device_index` - (Required) The integer index of the network interface attachment. Limited by instance type.
 * `network_interface_id` - (Required) The ID of the network interface to attach.
-* `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`.
+* `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 
 ### Credit Specification
 
@@ -224,7 +227,7 @@ resource "aws_instance" "foo" {
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The instance ID.
 * `availability_zone` - The availability zone of the instance.

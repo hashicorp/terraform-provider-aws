@@ -301,6 +301,21 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeList,
+				Computed: false,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"audit",
+						"error",
+						"general",
+						"slowquery",
+					}, false),
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -368,6 +383,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("port"); ok {
 			opts.Port = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
 
 		// Check if any of the parameters that require a cluster modification after creation are set
@@ -489,6 +508,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.SourceRegion = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
 		log.Printf("[DEBUG] Create RDS Cluster as read replica: %s", createOpts)
 		var resp *rds.CreateDBClusterOutput
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
@@ -584,10 +607,20 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
 		log.Printf("[DEBUG] RDS Cluster restore options: %s", createOpts)
+		// Retry for IAM/S3 eventual consistency
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			resp, err := conn.RestoreDBClusterFromS3(createOpts)
 			if err != nil {
+				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded.
+				// Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
+				if isAWSErr(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
+					return resource.RetryableError(err)
+				}
 				if isAWSErr(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
 					return resource.RetryableError(err)
 				}
@@ -675,6 +708,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] RDS Cluster create options: %s", createOpts)
@@ -801,6 +838,10 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 
+	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(dbc.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+	}
+
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
 		vpcg = append(vpcg, *g.VpcSecurityGroupId)
@@ -892,6 +933,12 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("enabled_cloudwatch_logs_exports") && !d.IsNewResource() {
+		d.SetPartial("enabled_cloudwatch_logs_exports")
+		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
 		requestUpdate = true
 	}
 

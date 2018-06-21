@@ -149,7 +149,9 @@ provider "aws" {
 
 ## Argument Reference
 
-The following arguments are supported in the `provider` block:
+In addition to [generic `provider` arguments](https://www.terraform.io/docs/configuration/providers.html)
+(e.g. `alias` and `version`), the following arguments are supported in the AWS
+ `provider` block:
 
 * `access_key` - (Optional) This is the AWS access key. It must be provided, but
   it can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable, or via
@@ -299,6 +301,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom ELB endpoints.
 
+* `efs` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom EFS endpoints.
+
 * `es` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`.  It's typically used to connect to
   custom Elasticsearch endpoints.
@@ -342,6 +348,10 @@ Nested `endpoints` block supports the following:
 * `sts` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom STS endpoints.
+
+* `ssm` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom SSM endpoints.
 
 ## Getting the Account ID
 

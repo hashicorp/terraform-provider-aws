@@ -126,8 +126,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 
-	lbName := fmt.Sprintf("Tf-%d",
-		rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+	lbName := fmt.Sprintf("Tf-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
