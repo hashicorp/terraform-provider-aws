@@ -520,7 +520,7 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 }
 
 func decodeKmsGrantId(id string) (string, string, error) {
-	if strings.HasPrefix(id, "arn:aws:kms") {
+	if strings.HasPrefix(id, "arn:aws") {
 		arn_parts := strings.Split(id, "/")
 		if len(arn_parts) != 2 {
 			return "", "", fmt.Errorf("unexpected format of ARN (%q), expected KeyID:GrantID", id)
