@@ -48,6 +48,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -71,6 +72,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -124,6 +126,7 @@ type Config struct {
 	Ec2Endpoint              string
 	EcsEndpoint              string
 	EcrEndpoint              string
+	EfsEndpoint              string
 	EsEndpoint               string
 	ElbEndpoint              string
 	IamEndpoint              string
@@ -136,6 +139,7 @@ type Config struct {
 	SnsEndpoint              string
 	SqsEndpoint              string
 	StsEndpoint              string
+	SsmEndpoint              string
 	Insecure                 bool
 
 	SkipCredsValidation     bool
@@ -166,6 +170,7 @@ type AWSClient struct {
 	ecrconn               *ecr.ECR
 	ecsconn               *ecs.ECS
 	efsconn               *efs.EFS
+	eksconn               *eks.EKS
 	elbconn               *elb.ELB
 	elbv2conn             *elbv2.ELBV2
 	emrconn               *emr.EMR
@@ -225,6 +230,7 @@ type AWSClient struct {
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
 	budgetconn            *budgets.Budgets
+	neptuneconn           *neptune.Neptune
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -388,6 +394,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
+	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
 	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
 	awsEsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
@@ -400,6 +407,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
 	awsStsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})
 	awsDeviceFarmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DeviceFarmEndpoint)})
+	awsSsmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SsmEndpoint)})
 
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
@@ -471,7 +479,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.dynamodbconn = dynamodb.New(awsDynamoSess)
 	client.ecrconn = ecr.New(awsEcrSess)
 	client.ecsconn = ecs.New(awsEcsSess)
-	client.efsconn = efs.New(sess)
+	client.efsconn = efs.New(awsEfsSess)
+	client.eksconn = eks.New(sess)
 	client.elasticacheconn = elasticache.New(sess)
 	client.elasticbeanstalkconn = elasticbeanstalk.New(sess)
 	client.elastictranscoderconn = elastictranscoder.New(sess)
@@ -492,6 +501,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
+	client.neptuneconn = neptune.New(sess)
 	client.opsworksconn = opsworks.New(sess)
 	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
@@ -506,7 +516,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
-	client.ssmconn = ssm.New(sess)
+	client.ssmconn = ssm.New(awsSsmSess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
@@ -515,6 +525,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
+	client.neptuneconn = neptune.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

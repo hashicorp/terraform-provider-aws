@@ -242,7 +242,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_encrypted_env_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_encrypted_env_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_encrypted_env_%s", rString)
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+	keyRegex := regexp.MustCompile("^arn:aws[\\w-]*:kms:")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -471,6 +471,10 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_tracing_cfg_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_tracing_cfg_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_tracing_cfg_%s", rString)
+
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("Lambda tracing config is not supported in GovCloud partition")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1193,6 +1197,8 @@ func createTempFile(prefix string) (string, *os.File, error) {
 
 func baseAccAWSLambdaConfig(policyName, roleName, sgName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
     name = "%s"
     role = "${aws_iam_role.iam_for_lambda.id}"
@@ -1207,7 +1213,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
             ],
-            "Resource": "arn:aws:logs:*:*:*"
+            "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
         },
     {
       "Effect": "Allow",

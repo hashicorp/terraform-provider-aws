@@ -282,6 +282,35 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisStream_Tags(t *testing.T) {
+	var stream kinesis.StreamDescription
+	resourceName := "aws_kinesis_stream.test"
+
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfig_Tags(rInt, 21),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "21"),
+				),
+			},
+			{
+				Config: testAccKinesisStreamConfig_Tags(rInt, 9),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "9"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKinesisStreamExists(n string, stream *kinesis.StreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -491,4 +520,20 @@ resource "aws_kinesis_stream" "test_stream" {
 		"IncomingBytes"
 	]
 }`, rInt)
+}
+
+func testAccKinesisStreamConfig_Tags(rInt, tagCount int) string {
+	var tagPairs string
+	for i := 1; i <= tagCount; i++ {
+		tagPairs = tagPairs + fmt.Sprintf("tag%d = \"tag%dvalue\"\n", i, i)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+	name = "terraform-kinesis-test-%d"
+	shard_count = 2
+	tags {
+%s
+	}
+}`, rInt, tagPairs)
 }

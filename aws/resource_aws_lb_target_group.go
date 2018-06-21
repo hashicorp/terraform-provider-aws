@@ -83,6 +83,13 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 
+			"slow_start": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validateSlowStart,
+			},
+
 			"proxy_protocol_v2": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -339,6 +346,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		})
 	}
 
+	if d.HasChange("slow_start") {
+		attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			Key:   aws.String("slow_start.duration_seconds"),
+			Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
+		})
+	}
+
 	if d.HasChange("proxy_protocol_v2") {
 		attrs = append(attrs, &elbv2.TargetGroupAttribute{
 			Key:   aws.String("proxy_protocol_v2.enabled"),
@@ -422,6 +436,19 @@ func validateAwsLbTargetGroupHealthCheckPath(v interface{}, k string) (ws []stri
 	return
 }
 
+func validateSlowStart(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(int)
+
+	// Check if the value is between 30-900 or 0 (seconds).
+	if value != 0 && !(value >= 30 && value <= 900) {
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid Slow Start Duration \"%d\". "+
+				"Valid intervals are 30-900 or 0 to disable.",
+			k, value))
+	}
+	return
+}
+
 func validateAwsLbTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -501,6 +528,12 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 				return fmt.Errorf("Error converting proxy_protocol_v2.enabled to bool: %s", *attr.Value)
 			}
 			d.Set("proxy_protocol_v2", enabled)
+		case "slow_start.duration_seconds":
+			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("slow_start", slowStart)
 		}
 	}
 

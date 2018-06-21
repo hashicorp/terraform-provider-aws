@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"regexp"
 	"strings"
@@ -167,7 +166,7 @@ func TestAccAWSDBInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	ri := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAWSDBInstanceConfigKmsKeyId, ri)
 
 	resource.Test(t, resource.TestCase{
@@ -270,7 +269,7 @@ func TestAccAWSDBInstance_replica(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaInstanceConfig(rand.New(rand.NewSource(time.Now().UnixNano())).Int()),
+				Config: testAccReplicaInstanceConfig(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &s),
 					testAccCheckAWSDBInstanceExists("aws_db_instance.replica", &r),

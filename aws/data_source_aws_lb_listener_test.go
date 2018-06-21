@@ -2,9 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -359,6 +357,8 @@ resource "aws_lb" "alb_test" {
   tags {
     TestName = "TestAccAWSALB_basic"
   }
+
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_lb_target_group" "test" {
@@ -474,5 +474,5 @@ data "aws_lb_listener" "front_end" {
 data "aws_lb_listener" "from_lb_and_port" {
   load_balancer_arn = "${aws_lb.alb_test.arn}"
   port              = "${aws_lb_listener.front_end.port}"
-}`, lbName, targetGroupName, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+}`, lbName, targetGroupName, acctest.RandInt())
 }

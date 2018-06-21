@@ -110,7 +110,7 @@ Security Groups and Subnets referenced in these attributes must all be within th
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the domain.
 * `domain_id` - Unique identifier for the domain.

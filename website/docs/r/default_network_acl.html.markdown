@@ -171,7 +171,7 @@ can resume managing them via the AWS Console.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Default Network ACL
 * `vpc_id` -  The ID of the associated VPC

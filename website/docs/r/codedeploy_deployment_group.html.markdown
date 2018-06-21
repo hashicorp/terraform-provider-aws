@@ -274,7 +274,7 @@ You can configure how instances in the original environment are terminated when 
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The deployment group's ID.
 * `app_name` - The group's assigned application.

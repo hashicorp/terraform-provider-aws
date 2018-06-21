@@ -43,7 +43,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.

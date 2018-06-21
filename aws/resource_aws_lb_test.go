@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,66 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
+		Name: "aws_lb",
+		F:    testSweepLBs,
+	})
+}
+
+func testSweepLBs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elbv2conn
+
+	prefixes := []string{
+		"tf-",
+		"tf-test-",
+		"tf-acc-test-",
+		"test-",
+	}
+
+	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
+		if page == nil || len(page.LoadBalancers) == 0 {
+			log.Print("[DEBUG] No LBs to sweep")
+			return false
+		}
+
+		for _, loadBalancer := range page.LoadBalancers {
+			name := aws.StringValue(loadBalancer.LoadBalancerName)
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(name, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping LB: %s", name)
+				continue
+			}
+			log.Printf("[INFO] Deleting LB: %s", name)
+			_, err := conn.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
+				LoadBalancerArn: loadBalancer.LoadBalancerArn,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete LB (%s): %s", name, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving LBs: %s", err)
+	}
+	return nil
+}
 
 func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
