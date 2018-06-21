@@ -1,31 +1,31 @@
-## 1.24.0 (Unreleased)
+## 1.24.0 (June 21, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_cloudformation_export` [GH-2180]
-* **New Data Source:** `aws_vpc_dhcp_options` [GH-4878]
-* **New Resource:** `aws_dx_gateway` [GH-4896]
-* **New Resource:** `aws_dx_gateway_association` [GH-4896]
-* **New Resource:** `aws_glue_crawler` [GH-4484]
-* **New Resource:** `aws_neptune_cluster_parameter_group` [GH-4860]
-* **New Resource:** `aws_neptune_subnet_group` [GH-4782]
+* **New Data Source:** `aws_cloudformation_export` ([#2180](https://github.com/terraform-providers/terraform-provider-aws/issues/2180))
+* **New Data Source:** `aws_vpc_dhcp_options` ([#4878](https://github.com/terraform-providers/terraform-provider-aws/issues/4878))
+* **New Resource:** `aws_dx_gateway` ([#4896](https://github.com/terraform-providers/terraform-provider-aws/issues/4896))
+* **New Resource:** `aws_dx_gateway_association` ([#4896](https://github.com/terraform-providers/terraform-provider-aws/issues/4896))
+* **New Resource:** `aws_glue_crawler` ([#4484](https://github.com/terraform-providers/terraform-provider-aws/issues/4484))
+* **New Resource:** `aws_neptune_cluster_parameter_group` ([#4860](https://github.com/terraform-providers/terraform-provider-aws/issues/4860))
+* **New Resource:** `aws_neptune_subnet_group` ([#4782](https://github.com/terraform-providers/terraform-provider-aws/issues/4782))
 
 ENHANCEMENTS:
 
-* resource/aws_api_gateway_rest_api: Support `PRIVATE` endpoint type [GH-4888]
-* resource/aws_codedeploy_app: Add `compute_platform` argument [GH-4811]
-* resource/aws_kinesis_firehose_delivery_stream: Support extended S3 destination `data_format_conversion_configuration` [GH-4842]
-* resource/aws_kms_grant: Support ARN for `key_id` argument (external CMKs) [GH-4886]
-* resource/aws_neptune_parameter_group: Add `tags` argument and `arn` attribute [GH-4873]
-* resource/aws_rds_cluster: Add `enabled_cloudwatch_logs_exports` argument [GH-4875]
+* resource/aws_api_gateway_rest_api: Support `PRIVATE` endpoint type ([#4888](https://github.com/terraform-providers/terraform-provider-aws/issues/4888))
+* resource/aws_codedeploy_app: Add `compute_platform` argument ([#4811](https://github.com/terraform-providers/terraform-provider-aws/issues/4811))
+* resource/aws_kinesis_firehose_delivery_stream: Support extended S3 destination `data_format_conversion_configuration` ([#4842](https://github.com/terraform-providers/terraform-provider-aws/issues/4842))
+* resource/aws_kms_grant: Support ARN for `key_id` argument (external CMKs) ([#4886](https://github.com/terraform-providers/terraform-provider-aws/issues/4886))
+* resource/aws_neptune_parameter_group: Add `tags` argument and `arn` attribute ([#4873](https://github.com/terraform-providers/terraform-provider-aws/issues/4873))
+* resource/aws_rds_cluster: Add `enabled_cloudwatch_logs_exports` argument ([#4875](https://github.com/terraform-providers/terraform-provider-aws/issues/4875))
 
 BUG FIXES:
 
-* resource/aws_batch_job_definition: Force resource recreation on retry_strategy attempts updates [GH-4854]
-* resource/aws_cognito_user_pool_client: Prevent panic with updating `refresh_token_validity` [GH-4868]
-* resource/aws_instance: Prevent extraneous ModifyInstanceCreditSpecification call on resource creation [GH-4898]
-* resource/aws_s3_bucket: Properly detect `cors_rule` drift when it is deleted outside Terraform [GH-4887]
-* resource/aws_vpn_gateway_attachment: Fix error handling for missing VPN gateway [GH-4895]
+* resource/aws_batch_job_definition: Force resource recreation on retry_strategy attempts updates ([#4854](https://github.com/terraform-providers/terraform-provider-aws/issues/4854))
+* resource/aws_cognito_user_pool_client: Prevent panic with updating `refresh_token_validity` ([#4868](https://github.com/terraform-providers/terraform-provider-aws/issues/4868))
+* resource/aws_instance: Prevent extraneous ModifyInstanceCreditSpecification call on resource creation ([#4898](https://github.com/terraform-providers/terraform-provider-aws/issues/4898))
+* resource/aws_s3_bucket: Properly detect `cors_rule` drift when it is deleted outside Terraform ([#4887](https://github.com/terraform-providers/terraform-provider-aws/issues/4887))
+* resource/aws_vpn_gateway_attachment: Fix error handling for missing VPN gateway ([#4895](https://github.com/terraform-providers/terraform-provider-aws/issues/4895))
 
 ## 1.23.0 (June 14, 2018)
 
