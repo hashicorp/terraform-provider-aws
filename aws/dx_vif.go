@@ -72,14 +72,10 @@ var dxVirtualInterfaceSchema = map[string]*schema.Schema{
 	},
 }
 
-func isNoSuchDxVirtualInterfaceErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "does not exist")
-}
-
 func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
 	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err.Error())
+		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err)
 	}
 	if state == directconnect.VirtualInterfaceStateDeleted {
 		return nil, nil
@@ -113,10 +109,10 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		VirtualInterfaceId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isNoSuchDxVirtualInterfaceErr(err) {
+		if isAWSErr(err, "DirectConnectClientException", "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err.Error())
+		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err)
 	}
 
 	deleteStateConf := &resource.StateChangeConf{
@@ -151,17 +147,21 @@ func dxVirtualInterfaceStateRefresh(conn *directconnect.DirectConnect, vifId str
 			VirtualInterfaceId: aws.String(vifId),
 		})
 		if err != nil {
-			if isNoSuchDxVirtualInterfaceErr(err) {
-				return nil, directconnect.VirtualInterfaceStateDeleted, nil
-			}
 			return nil, "", err
 		}
 
-		if len(resp.VirtualInterfaces) < 1 {
-			return nil, directconnect.ConnectionStateDeleted, nil
+		n := len(resp.VirtualInterfaces)
+		switch n {
+		case 0:
+			return "", directconnect.VirtualInterfaceStateDeleted, nil
+
+		case 1:
+			vif := resp.VirtualInterfaces[0]
+			return vif, aws.StringValue(vif.VirtualInterfaceState), nil
+
+		default:
+			return nil, "", fmt.Errorf("Found %d Direct Connect virtual interfaces for %s, expected 1", n, vifId)
 		}
-		vif := resp.VirtualInterfaces[0]
-		return vif, aws.StringValue(vif.VirtualInterfaceState), nil
 	}
 }
 
@@ -175,7 +175,7 @@ func dxVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directco
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect virtual interface %s to become available: %s", d.Id(), err.Error())
+		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to become available: %s", d.Id(), err)
 	}
 
 	return nil
@@ -225,23 +225,4 @@ func dxVirtualInterfaceArnAttribute(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 
 	return nil
-}
-
-func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
-	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg), len(cfg))
-	for i, p := range cfg {
-		prefix := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(p.(string)),
-		}
-		prefixes[i] = prefix
-	}
-	return prefixes
-}
-
-func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
-	out := make([]interface{}, 0)
-	for _, prefix := range prefixes {
-		out = append(out, aws.StringValue(prefix.Cidr))
-	}
-	return schema.NewSet(schema.HashString, out)
 }
