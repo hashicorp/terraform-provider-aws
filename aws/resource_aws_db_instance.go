@@ -39,6 +39,13 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				StateFunc: func(v interface{}) string {
+					value := v.(string)
+					return strings.ToLower(value)
+				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
 			},
 
 			"arn": {
@@ -954,7 +961,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("name", v.DBName)
+	d.Set("name", strings.ToLower(*v.DBName))
 	d.Set("identifier", v.DBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("username", v.MasterUsername)

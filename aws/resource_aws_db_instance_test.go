@@ -122,6 +122,26 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_nameDiffSuppress(t *testing.T) {
+	var v rds.DBInstance
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_nameDiffSuppress,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.test", &v),
+					resource.TestCheckResourceAttr("aws_db_instance.test", "name", "lower"),
+					resource.TestCheckResourceAttr("aws_db_instance.test", "engine", "oracle-se"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 
@@ -867,7 +887,7 @@ resource "aws_db_instance" "bar" {
 	engine = "MySQL"
 	engine_version = "5.6.35"
 	instance_class = "db.t2.micro"
-	name = "baz"
+	name = "Baz"
 	password = "barbarbarbar"
 	username = "foo"
 
@@ -881,6 +901,23 @@ resource "aws_db_instance" "bar" {
 	backup_retention_period = 0
 
 	parameter_group_name = "default.mysql5.6"
+
+	timeouts {
+		create = "30m"
+	}
+}`
+
+const testAccAWSDBInstanceConfig_nameDiffSuppress = `
+resource "aws_db_instance" "test" {
+	name = "lower"
+	allocated_storage = 10
+	engine = "oracle-se"
+	identifier_prefix = "tf-test-"
+	instance_class = "db.t2.micro"
+	password = "password"
+	username = "root"
+	publicly_accessible = true
+	skip_final_snapshot = true
 
 	timeouts {
 		create = "30m"
