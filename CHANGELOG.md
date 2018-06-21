@@ -1,4 +1,9 @@
 ## 1.25.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
+
 ## 1.24.0 (June 21, 2018)
 
 FEATURES:
