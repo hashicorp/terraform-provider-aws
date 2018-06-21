@@ -50,7 +50,10 @@ The following arguments are supported:
 * `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
-* `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: aurora, aurora-mysql, aurora-postgresql.
+* `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`.
+For information on the difference between the available Aurora MySQL engines
+see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
+in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
 and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
