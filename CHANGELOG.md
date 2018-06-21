@@ -20,6 +20,7 @@ BUG FIXES:
 
 * resource/aws_batch_job_definition: Force resource recreation on retry_strategy attempts updates [GH-4854]
 * resource/aws_cognito_user_pool_client: Prevent panic with updating `refresh_token_validity` [GH-4868]
+* resource/aws_instance: Prevent extraneous ModifyInstanceCreditSpecification call on resource creation [GH-4898]
 * resource/aws_vpn_gateway_attachment: Fix error handling for missing VPN gateway [GH-4895]
 
 ## 1.23.0 (June 14, 2018)
