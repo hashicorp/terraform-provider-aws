@@ -28,7 +28,7 @@ More information creating webhooks with GitHub Enterprise can be found in the [C
 
 ```hcl
 resource "aws_codebuild_webhook" "example" {
-  name = "${aws_codebuild_project.example.name}"
+  project_name = "${aws_codebuild_project.example.name}"
 }
 
 resource "github_repository_webhook" "example" {
@@ -50,7 +50,7 @@ resource "github_repository_webhook" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the build project.
+* `project_name` - (Required) The name of the build project.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built.
 
 ## Attributes Reference
