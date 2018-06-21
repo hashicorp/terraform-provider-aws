@@ -19,7 +19,8 @@ func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsCodeCommitRepositoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_codecommit_repository.default", "repository_name", rName),
+					resource.TestCheckResourceAttrPair("data.aws_codecommit_repository.default", "repository_name",
+						"aws_codecommit_repository.default", "repository_name"),
 					resource.TestMatchResourceAttr("data.aws_codecommit_repository.default", "arn",
 						regexp.MustCompile(fmt.Sprintf("^arn:aws:codecommit:[^:]+:\\d{12}:%s", rName))),
 					resource.TestMatchResourceAttr("data.aws_codecommit_repository.default", "clone_url_http",

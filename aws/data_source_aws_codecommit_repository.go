@@ -57,10 +57,14 @@ func dataSourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interfac
 		if isAWSErr(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
 			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return fmt.Errorf("Resource codecommit repository not found for %s", repositoryName)
 		} else {
 			return fmt.Errorf("Error reading CodeCommit Repository: %s", err.Error())
 		}
+	}
+
+	if out.RepositoryMetadata == nil {
+		return fmt.Errorf("no matches found for repository name: %s", repositoryName)
 	}
 
 	d.SetId(aws.StringValue(out.RepositoryMetadata.RepositoryName))
