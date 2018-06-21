@@ -11,13 +11,17 @@ description: |-
 Provides an EC2 Spot Instance Request resource. This allows instances to be
 requested on the spot market.
 
-Terraform always creates Spot Instance Requests with a `persistent` type, which
-means that for the duration of their lifetime, AWS will launch an instance
-with the configured details if and when the spot market will accept the
-requested price.
+By default Terraform creates Spot Instance Requests with a `persistent` type,
+which means that for the duration of their lifetime, AWS will launch an
+instance with the configured details if and when the spot market will accept
+the requested price.
 
 On destruction, Terraform will make an attempt to terminate the associated Spot
 Instance if there is one present.
+
+Spot Instances requests with a `one-time` type will close the spot request
+when the instance is terminated either by the request being below the current spot
+price availability or by a user.
 
 ~> **NOTE:** Because their behavior depends on the live status of the spot
 market, Spot Instance Requests have a unique lifecycle that makes them behave
@@ -52,9 +56,8 @@ Spot Instance Requests support all the same arguments as
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
   timeout of 10m is reached.
-* `spot_type` - (Optional; Default: "persistent") If set to "one-time", after
-  the instance is terminated, the spot request will be closed. Also, Terraform
-  can't manage one-time spot requests, just launch them.
+* `spot_type` - (Optional; Default: `persistent`) If set to `one-time`, after
+  the instance is terminated, the spot request will be closed.
 * `launch_group` - (Optional) A launch group is a group of spot instances that launch together and terminate together.
   If left empty instances are launched and terminated individually.
 * `block_duration_minutes` - (Optional) The required duration for the Spot instances, in minutes. This value must be a multiple of 60 (60, 120, 180, 240, 300, or 360).
