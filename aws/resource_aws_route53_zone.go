@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/satori/uuid"
-
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -91,7 +89,7 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 	req := &route53.CreateHostedZoneInput{
 		Name:             aws.String(d.Get("name").(string)),
 		HostedZoneConfig: &route53.HostedZoneConfig{Comment: aws.String(d.Get("comment").(string))},
-		CallerReference:  aws.String(uuid.NewV4().String()),
+		CallerReference:  aws.String(resource.UniqueId()),
 	}
 	if v := d.Get("vpc_id"); v != "" {
 		req.VPC = &route53.VPC{
