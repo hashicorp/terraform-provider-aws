@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -19,6 +20,10 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,6 +47,10 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"has_default_path": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"product_type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -61,29 +70,46 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 			},
 			"provisioning_artifact": {
 				Type:     schema.TypeList,
-				MinItems: 1,
+				MaxItems: 1,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"description": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"load_template_from_url": {
-							Type:     schema.TypeString,
+						"info": {
+							Type:     schema.TypeMap,
 							Required: true,
+							Elem:     schema.TypeString,
+							ForceNew: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							Default:  servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate,
+						}, // CLOUD_FORMATION_TEMPLATE  | MARKETPLACE_AMI | MARKETPLACE_CAR
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"active": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"created_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -94,7 +120,6 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	now := time.Now()
 
 	if v, ok := d.GetOk("name"); ok {
-		input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
 		input.Name = aws.String(v.(string))
 	}
 
@@ -130,113 +155,116 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	if pa, ok := d.GetOk("provisioning_artifact"); ok {
-		pvs := pa.([]interface{})
-		v := pvs[0]
-		bd := v.(map[string]interface{})
-		artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
-		artifactProperties.Description = aws.String(bd["description"].(string))
-		artifactProperties.Name = aws.String(bd["name"].(string))
-		artifactProperties.Type = aws.String("CLOUD_FORMATION_TEMPLATE")
-		url := aws.String(bd["load_template_from_url"].(string))
-		info := map[string]*string{
-			"LoadTemplateFromURL": url,
-		}
-		artifactProperties.Info = info
-		input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
-		input.SetProvisioningArtifactParameters(&artifactProperties)
-		log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
-
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = tagsFromMapServiceCatalog(v.(map[string]interface{}))
 	}
+
+	pa := d.Get("provisioning_artifact")
+	paList := pa.([]interface{})
+	paParameters := paList[0].(map[string]interface{})
+	artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
+	artifactProperties.Description = aws.String(paParameters["description"].(string))
+	artifactProperties.Name = aws.String(paParameters["name"].(string))
+	if v, ok := paParameters["type"]; ok && v != "" {
+		artifactProperties.Type = aws.String(v.(string))
+	} else {
+		artifactProperties.Type = aws.String(servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate)
+	}
+	artifactProperties.Info = make(map[string]*string)
+	for k, v := range paParameters["info"].(map[string]interface{}) {
+		artifactProperties.Info[k] = aws.String(v.(string))
+	}
+	input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
+	input.SetProvisioningArtifactParameters(&artifactProperties)
+	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 
 	resp, err := conn.CreateProduct(&input)
 	if err != nil {
-		return fmt.Errorf("Creating ServiceCatalog product failed: %s", err.Error())
+		return fmt.Errorf("creating ServiceCatalog product failed: %s", err)
 	}
-	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
+	productId := aws.StringValue(resp.ProductViewDetail.ProductViewSummary.ProductId)
 
-	if pa, ok := d.GetOk("provisioning_artifact"); ok {
-		pvs := pa.([]interface{})
-		if len(pvs) > 1 {
-			for _, pa := range pvs[1:len(pvs)] {
-				bd := pa.(map[string]interface{})
-				parameters := servicecatalog.ProvisioningArtifactProperties{}
-				parameters.Description = aws.String(bd["description"].(string))
-				parameters.Name = aws.String(bd["name"].(string))
-				parameters.Type = aws.String("CLOUD_FORMATION_TEMPLATE")
-
-				url := aws.String(bd["load_template_from_url"].(string))
-				info := map[string]*string{
-					"LoadTemplateFromURL": url,
-				}
-				parameters.Info = info
-
-				cpai := servicecatalog.CreateProvisioningArtifactInput{}
-				cpai.Parameters = &parameters
-				cpai.ProductId = aws.String(d.Id())
-				cpai.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
-				log.Printf("[DEBUG] Adding Service Catalog Provisioning Artifact : %s", cpai)
-				resp, err := conn.CreateProvisioningArtifact(&cpai)
-				if err != nil {
-					return fmt.Errorf("Creating ServiceCatalog provisioning artifact failed: %s %s", err.Error(), resp)
-				}
+	waitForCreated := &resource.StateChangeConf{
+		Target: []string{"CREATED", servicecatalog.StatusAvailable},
+		Refresh: func() (result interface{}, state string, err error) {
+			resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
+				Id: aws.String(productId),
+			})
+			if err != nil {
+				return nil, "", err
 			}
-		}
+			return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
+		},
+		Timeout:      d.Timeout(schema.TimeoutCreate),
+		PollInterval: 3 * time.Second,
 	}
+	if _, err := waitForCreated.WaitForState(); err != nil {
+		return err
+	}
+
+	d.SetId(productId)
 
 	return resourceAwsServiceCatalogProductRead(d, meta)
 }
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	input := servicecatalog.DescribeProductAsAdminInput{
+	log.Printf("[DEBUG] Reading Service Catalog Product with id %s", d.Id())
+	resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
 		Id: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Reading Service Catalog Product: %s", input)
-	resp, err := conn.DescribeProductAsAdmin(&input)
+	})
 	if err != nil {
 		if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Service Catalog Product %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading ServiceCatalog product '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("reading ServiceCatalog product '%s' failed: %s", d.Id(), err)
 	}
 
 	d.Set("product_arn", resp.ProductViewDetail.ProductARN)
+	d.Set("tags", tagsToMapServiceCatalog(resp.Tags))
 
-	pvs := resp.ProductViewDetail.ProductViewSummary
-	d.Set("description", pvs.ShortDescription)
-	d.Set("distributor", pvs.Distributor)
-	d.Set("name", pvs.Name)
-	d.Set("owner", pvs.Owner)
-	d.Set("product_type", pvs.Type)
-	d.Set("support_description", pvs.SupportDescription)
-	d.Set("support_email", pvs.SupportEmail)
-	d.Set("support_url", pvs.SupportUrl)
+	product := resp.ProductViewDetail.ProductViewSummary
+	d.Set("has_default_path", aws.BoolValue(product.HasDefaultPath))
+	d.Set("description", aws.StringValue(product.ShortDescription))
+	d.Set("distributor", aws.StringValue(product.Distributor))
+	d.Set("name", aws.StringValue(product.Name))
+	d.Set("owner", aws.StringValue(product.Owner))
+	d.Set("product_type", aws.StringValue(product.Type))
+	d.Set("support_description", aws.StringValue(product.SupportDescription))
+	d.Set("support_email", aws.StringValue(product.SupportEmail))
+	d.Set("support_url", aws.StringValue(product.SupportUrl))
 
-	var a []map[string]interface{}
+	provisioningArtifactList := make([]map[string]interface{}, 0)
 	for _, pas := range resp.ProvisioningArtifactSummaries {
 		artifact := make(map[string]interface{})
 		artifact["description"] = *pas.Description
 		artifact["id"] = *pas.Id
 		artifact["name"] = *pas.Name
 
-		i := servicecatalog.DescribeProvisioningArtifactInput{
+		paOutput, err := conn.DescribeProvisioningArtifact(&servicecatalog.DescribeProvisioningArtifactInput{
 			ProductId:              aws.String(d.Id()),
-			ProvisioningArtifactId: aws.String(*pas.Id),
-		}
-		dpao, err := conn.DescribeProvisioningArtifact(&i)
+			ProvisioningArtifactId: pas.Id,
+		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading ProvisioningArtifact '%s' for product '%s' failed: %s", *pas.Id, d.Id(), err)
 		}
-		artifact["load_template_from_url"] = *dpao.Info["TemplateUrl"]
-		a = append(a, artifact)
+		artifact["type"] = aws.StringValue(paOutput.ProvisioningArtifactDetail.Type)
+		artifact["active"] = aws.BoolValue(paOutput.ProvisioningArtifactDetail.Active)
+		artifact["created_time"] = paOutput.ProvisioningArtifactDetail.CreatedTime.Format(time.RFC3339)
+		replaceProvisioningArtifactParametersKeys(paOutput.Info)
+		log.Printf("[DEBUG] Info map coming from READ: %v", paOutput.Info)
+		info := make(map[string]string)
+		for k, v := range paOutput.Info {
+			info[k] = aws.StringValue(v)
+		}
+		artifact["info"] = info
+		provisioningArtifactList = append(provisioningArtifactList, artifact)
 	}
 
-	if err := d.Set("provisioning_artifact", a); err != nil {
-		return err
+	if err := d.Set("provisioning_artifact", provisioningArtifactList); err != nil {
+		return fmt.Errorf("setting ProvisioningArtifact for product '%s' failed: %s", d.Id(), err)
 	}
 	return nil
 }
@@ -281,11 +309,47 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		input.SupportUrl = aws.String(v.(string))
 	}
 
+	// figure out what tags to add and what tags to remove
+	if d.HasChange("tags") {
+		oldTags, newTags := d.GetChange("tags")
+		removeTags := make([]*string, 0)
+		for k := range oldTags.(map[string]interface{}) {
+			if _, ok := (newTags.(map[string]interface{}))[k]; !ok {
+				removeTags = append(removeTags, &k)
+			}
+		}
+		addTags := make(map[string]interface{})
+		for k, v := range newTags.(map[string]interface{}) {
+			if _, ok := (oldTags.(map[string]interface{}))[k]; !ok {
+				addTags[k] = v
+			}
+		}
+		input.AddTags = tagsFromMapServiceCatalog(addTags)
+		input.RemoveTags = removeTags
+	}
+
 	log.Printf("[DEBUG] Update Service Catalog Product: %s", input)
 	_, err := conn.UpdateProduct(&input)
 	if err != nil {
-		return fmt.Errorf("Updating ServiceCatalog product '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("updating ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
+
+	// this change is slightly more complicated as basically we need to update the provisioning artifact
+	if d.HasChange("provisioning_artifact") {
+		_, newProvisioningArtifactList := d.GetChange("provisioning_artifact")
+		newProvisioningArtifact := (newProvisioningArtifactList.([]interface{}))[0].(map[string]interface{})
+		paId := newProvisioningArtifact["id"].(string)
+		_, err := conn.UpdateProvisioningArtifact(&servicecatalog.UpdateProvisioningArtifactInput{
+			ProductId:              aws.String(d.Id()),
+			ProvisioningArtifactId: aws.String(paId),
+			Name:        aws.String(newProvisioningArtifact["name"].(string)),
+			Description: aws.String(newProvisioningArtifact["description"].(string)),
+		})
+		if err != nil {
+			return fmt.Errorf("unable to update provisioning artifact %s for product %s due to %s", d.Id(), paId, err)
+		}
+	}
+
 	return resourceAwsServiceCatalogProductRead(d, meta)
 }
 
@@ -297,7 +361,17 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Delete Service Catalog Product: %s", input)
 	_, err := conn.DeleteProduct(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting ServiceCatalog product '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("deleting ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
 	return nil
+}
+
+// this is to workaround the issue of the `info` map which contains different keys between user-provided and READ operation
+func replaceProvisioningArtifactParametersKeys(m map[string]*string) {
+	replaceProvisioningArtifactParametersKey(m, "TemplateUrl", "LoadTemplateFromURL")
+}
+
+func replaceProvisioningArtifactParametersKey(m map[string]*string, replacedKey, withKey string) {
+	m[withKey] = m[replacedKey]
+	delete(m, replacedKey)
 }
