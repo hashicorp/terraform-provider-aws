@@ -138,7 +138,8 @@ Weighted routing policies support the following:
 
 ## Attributes Reference
 
-* `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`
+* `name` - The name of the record.
+* `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
 
 
 ## Import
