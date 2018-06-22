@@ -98,6 +98,7 @@ func resourceAwsRoute() *schema.Resource {
 			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"vpc_peering_connection_id": {
