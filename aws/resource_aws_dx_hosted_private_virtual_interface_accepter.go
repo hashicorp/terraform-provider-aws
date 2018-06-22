@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -17,7 +18,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 		Update: resourceAwsDxHostedPrivateVirtualInterfaceAccepterUpdate,
 		Delete: resourceAwsDxHostedPrivateVirtualInterfaceAccepterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsDxHostedPrivateVirtualInterfaceAccepterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -66,10 +67,10 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterCreate(d *schema.Resource
 	req := &directconnect.ConfirmPrivateVirtualInterfaceInput{
 		VirtualInterfaceId: aws.String(vifId),
 	}
-	if vgwOk {
+	if vgwOk && vgwIdRaw.(string) != "" {
 		req.VirtualGatewayId = aws.String(vgwIdRaw.(string))
 	}
-	if dxgwOk {
+	if dxgwOk && dxgwIdRaw.(string) != "" {
 		req.DirectConnectGatewayId = aws.String(dxgwIdRaw.(string))
 	}
 
@@ -80,6 +81,14 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterCreate(d *schema.Resource
 	}
 
 	d.SetId(vifId)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	if err := dxHostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(d, conn); err != nil {
 		return err
@@ -101,9 +110,6 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceDa
 		return nil
 	}
 
-	if err := dxVirtualInterfaceArnAttribute(d, meta); err != nil {
-		return err
-	}
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
@@ -124,6 +130,19 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterUpdate(d *schema.Resource
 
 func resourceAwsDxHostedPrivateVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
+}
+
+func resourceAwsDxHostedPrivateVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func dxHostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {

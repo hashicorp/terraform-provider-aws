@@ -23,7 +23,8 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 	if ownerAccountId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	vifName := fmt.Sprintf("tf-dx-vif-%s", acctest.RandString(5))
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
+	bgpAsn := randIntRange(64512, 65534)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +32,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName),
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
@@ -65,7 +66,7 @@ func testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy(s *terraform.State) e
 		}
 		for _, v := range resp.VirtualInterfaces {
 			if *v.VirtualInterfaceId == rs.Primary.ID && !(*v.VirtualInterfaceState == directconnect.VirtualInterfaceStateDeleted) {
-				return fmt.Errorf("[DESTROY ERROR] Dx Public VIF (%s) not deleted", rs.Primary.ID)
+				return fmt.Errorf("[DESTROY ERROR] Dx Private VIF (%s) not deleted", rs.Primary.ID)
 			}
 		}
 	}
@@ -83,7 +84,7 @@ func testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(name string) resource.
 	}
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, ownerAcctId, n string) string {
+func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, ownerAcctId, n string, bgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface" "foo" {
   connection_id    = "%s"
@@ -92,7 +93,7 @@ resource "aws_dx_hosted_private_virtual_interface" "foo" {
   name           = "%s"
   vlan           = 4094
   address_family = "ipv4"
-  bgp_asn        = 65352
+  bgp_asn        = %d
 }
-`, cid, ownerAcctId, n)
+`, cid, ownerAcctId, n, bgpAsn)
 }

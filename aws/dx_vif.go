@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -27,14 +26,7 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
-	}.String()
-	if err := setTagsDX(conn, d, arn); err != nil {
+	if err := setTagsDX(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
 
@@ -117,52 +109,6 @@ func dxVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directco
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to become available: %s", d.Id(), err)
 	}
-
-	return nil
-}
-
-// Attributes common to public VIFs and creator side of hosted public VIFs.
-func dxPublicVirtualInterfaceAttributes(d *schema.ResourceData, meta interface{}, vif *directconnect.VirtualInterface) error {
-	if err := dxVirtualInterfaceAttributes(d, meta, vif); err != nil {
-		return err
-	}
-	d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes))
-
-	return nil
-}
-
-// Attributes common to private VIFs and creator side of hosted private VIFs.
-func dxPrivateVirtualInterfaceAttributes(d *schema.ResourceData, meta interface{}, vif *directconnect.VirtualInterface) error {
-	return dxVirtualInterfaceAttributes(d, meta, vif)
-}
-
-// Attributes common to public/private VIFs and creator side of hosted public/private VIFs.
-func dxVirtualInterfaceAttributes(d *schema.ResourceData, meta interface{}, vif *directconnect.VirtualInterface) error {
-	if err := dxVirtualInterfaceArnAttribute(d, meta); err != nil {
-		return err
-	}
-
-	d.Set("connection_id", vif.ConnectionId)
-	d.Set("name", vif.VirtualInterfaceName)
-	d.Set("vlan", vif.Vlan)
-	d.Set("bgp_asn", vif.Asn)
-	d.Set("bgp_auth_key", vif.AuthKey)
-	d.Set("address_family", vif.AddressFamily)
-	d.Set("customer_address", vif.CustomerAddress)
-	d.Set("amazon_address", vif.AmazonAddress)
-
-	return nil
-}
-
-func dxVirtualInterfaceArnAttribute(d *schema.ResourceData, meta interface{}) error {
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
 
 	return nil
 }
