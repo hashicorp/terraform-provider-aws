@@ -9,6 +9,7 @@ BUG FIXES:
 * data-source/aws_rds_cluster: Prevent panic with new CloudWatch logs support (`enabled_cloudwatch_logs_exports`) introduced in 1.23.0 [GH-4927]
 * resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read [GH-4917]
 * resource/aws_launch_template: Prevent error when using `valid_until` [GH-4952]
+* resource/aws_route: Properly force resource recreation when updating `route_table_id` [GH-4946]
 * resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors [GH-4903]
 
 ## 1.24.0 (June 21, 2018)
