@@ -50,8 +50,14 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
 			&ec2.Filter{
-				Name:   aws.String("instance-state-name"),
-				Values: []*string{aws.String("running")},
+				Name: aws.String("instance-state-name"),
+				Values: []*string{
+					aws.String("running"),
+					aws.String("stopped"),
+					aws.String("stopping"),
+					aws.String("pending"),
+					aws.String("shutting-down"),
+				},
 			},
 		},
 	}
