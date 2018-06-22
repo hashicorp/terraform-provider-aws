@@ -10,67 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
-
-// Schemas common to all (public/private, hosted or not) virtual interfaces.
-var dxVirtualInterfaceSchemaWithTags = mergeSchemas(
-	dxVirtualInterfaceSchema,
-	map[string]*schema.Schema{
-		"tags": tagsSchema(),
-	},
-)
-var dxVirtualInterfaceSchema = map[string]*schema.Schema{
-	"arn": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"connection_id": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"name": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"vlan": {
-		Type:         schema.TypeInt,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.IntBetween(1, 4094),
-	},
-	"bgp_asn": {
-		Type:     schema.TypeInt,
-		Required: true,
-		ForceNew: true,
-	},
-	"bgp_auth_key": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-	"address_family": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{directconnect.AddressFamilyIpv4, directconnect.AddressFamilyIpv6}, false),
-	},
-	"customer_address": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-	"amazon_address": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	},
-}
 
 func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
 	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()

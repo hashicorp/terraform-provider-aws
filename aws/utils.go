@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 // Base64Encode encodes data if the input isn't already encoded using base64.StdEncoding.EncodeToString.
@@ -47,16 +46,4 @@ func jsonBytesEqual(b1, b2 []byte) bool {
 func isResourceNotFoundError(err error) bool {
 	_, ok := err.(*resource.NotFoundError)
 	return ok
-}
-
-func mergeSchemas(schemas ...map[string]*schema.Schema) map[string]*schema.Schema {
-	merged := make(map[string]*schema.Schema)
-
-	for _, schema := range schemas {
-		for k, v := range schema {
-			merged[k] = v
-		}
-	}
-
-	return merged
 }
