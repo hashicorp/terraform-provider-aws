@@ -6,6 +6,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_rds_cluster: Prevent panic with new CloudWatch logs support (`enabled_cloudwatch_logs_exports`) introduced in 1.23.0 [GH-4927]
 * resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read [GH-4917]
 
 ## 1.24.0 (June 21, 2018)
