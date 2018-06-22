@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -18,7 +19,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 		Update: resourceAwsDxPrivateVirtualInterfaceUpdate,
 		Delete: resourceAwsDxPrivateVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsDxPrivateVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -112,19 +113,19 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 		},
 	}
-	if vgwOk {
+	if vgwOk && vgwIdRaw.(string) != "" {
 		req.NewPrivateVirtualInterface.VirtualGatewayId = aws.String(vgwIdRaw.(string))
 	}
-	if dxgwOk {
+	if dxgwOk && dxgwIdRaw.(string) != "" {
 		req.NewPrivateVirtualInterface.DirectConnectGatewayId = aws.String(dxgwIdRaw.(string))
 	}
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
 		req.NewPrivateVirtualInterface.AuthKey = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("customer_address"); ok {
+	if v, ok := d.GetOk("customer_address"); ok && v.(string) != "" {
 		req.NewPrivateVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("amazon_address"); ok {
+	if v, ok := d.GetOk("amazon_address"); ok && v.(string) != "" {
 		req.NewPrivateVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
 
@@ -135,6 +136,14 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
 		return err
@@ -156,9 +165,14 @@ func resourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta inter
 		return nil
 	}
 
-	if err := dxPrivateVirtualInterfaceAttributes(d, meta, vif); err != nil {
-		return err
-	}
+	d.Set("connection_id", vif.ConnectionId)
+	d.Set("name", vif.VirtualInterfaceName)
+	d.Set("vlan", vif.Vlan)
+	d.Set("bgp_asn", vif.Asn)
+	d.Set("bgp_auth_key", vif.AuthKey)
+	d.Set("address_family", vif.AddressFamily)
+	d.Set("customer_address", vif.CustomerAddress)
+	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
@@ -178,6 +192,19 @@ func resourceAwsDxPrivateVirtualInterfaceUpdate(d *schema.ResourceData, meta int
 
 func resourceAwsDxPrivateVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
+}
+
+func resourceAwsDxPrivateVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func dxPrivateVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {

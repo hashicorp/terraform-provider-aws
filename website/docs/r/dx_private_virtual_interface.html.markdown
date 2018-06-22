@@ -27,17 +27,17 @@ resource "aws_dx_private_virtual_interface" "foo" {
 
 The following arguments are supported:
 
+* `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
+* `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 * `connection_id` - (Required) The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
-* `vpn_gateway_id` - (Optional) The ID of the [virtual private gateway](vpn_gateway.html) to which to connect the virtual interface.
-* `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
 * `name` - (Required) The name for the virtual interface.
 * `vlan` - (Required) The VLAN ID.
-* `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
-* `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
-* `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
-* `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
+* `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
+* `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
+* `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+* `vpn_gateway_id` - (Optional) The ID of the [virtual private gateway](vpn_gateway.html) to which to connect the virtual interface.
 
 ## Attributes Reference
 
