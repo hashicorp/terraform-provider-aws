@@ -41,7 +41,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		VirtualInterfaceId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "DirectConnectClientException", "does not exist") {
+		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err)
