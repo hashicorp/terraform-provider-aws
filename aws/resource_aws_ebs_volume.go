@@ -38,8 +38,8 @@ func resourceAwsEbsVolume() *schema.Resource {
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+				Default:  false,
 			},
 			"iops": {
 				Type:     schema.TypeInt,
