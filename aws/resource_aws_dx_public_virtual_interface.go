@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -18,7 +19,7 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 		Update: resourceAwsDxPublicVirtualInterfaceUpdate,
 		Delete: resourceAwsDxPublicVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsDxPublicVirtualInterfaceImport,
 		},
 		CustomizeDiff: resourceAwsDxPublicVirtualInterfaceCustomizeDiff,
 
@@ -101,13 +102,13 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 		},
 	}
-	if v, ok := d.GetOk("bgp_auth_key"); ok {
+	if v, ok := d.GetOk("bgp_auth_key"); ok && v.(string) != "" {
 		req.NewPublicVirtualInterface.AuthKey = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("customer_address"); ok {
+	if v, ok := d.GetOk("customer_address"); ok && v.(string) != "" {
 		req.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("amazon_address"); ok {
+	if v, ok := d.GetOk("amazon_address"); ok && v.(string) != "" {
 		req.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
@@ -121,6 +122,14 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	if err := dxPublicVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
 		return err
@@ -142,9 +151,15 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	if err := dxPublicVirtualInterfaceAttributes(d, meta, vif); err != nil {
-		return err
-	}
+	d.Set("connection_id", vif.ConnectionId)
+	d.Set("name", vif.VirtualInterfaceName)
+	d.Set("vlan", vif.Vlan)
+	d.Set("bgp_asn", vif.Asn)
+	d.Set("bgp_auth_key", vif.AuthKey)
+	d.Set("address_family", vif.AddressFamily)
+	d.Set("customer_address", vif.CustomerAddress)
+	d.Set("amazon_address", vif.AmazonAddress)
+	d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes))
 	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
@@ -162,6 +177,19 @@ func resourceAwsDxPublicVirtualInterfaceUpdate(d *schema.ResourceData, meta inte
 
 func resourceAwsDxPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
+}
+
+func resourceAwsDxPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsDxPublicVirtualInterfaceCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
