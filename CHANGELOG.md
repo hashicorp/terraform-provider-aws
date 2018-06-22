@@ -1,5 +1,9 @@
 ## 1.25.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_codecommit_repository` [GH-4934]
+
 ENHANCEMENTS:
 
 * resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
