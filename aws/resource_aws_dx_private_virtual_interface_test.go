@@ -18,7 +18,7 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 	if connectionId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	vifName := fmt.Sprintf("tf-dx-vif-%s", acctest.RandString(5))
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -47,6 +47,30 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 				ResourceName:      "aws_dx_private_virtual_interface.foo",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsDxPrivateVirtualInterface_dxGateway(t *testing.T) {
+	key := "DX_CONNECTION_ID"
+	connectionId := os.Getenv(key)
+	if connectionId == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_dxGateway(connectionId, vifName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+				),
 			},
 		},
 	})
@@ -92,7 +116,7 @@ func testAccDxPrivateVirtualInterfaceConfig_noTags(cid, n string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "foo" {
   tags {
-    Name = "Testing %s"
+    Name = "%s"
   }
 }
 
@@ -112,7 +136,7 @@ func testAccDxPrivateVirtualInterfaceConfig_tags(cid, n string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "foo" {
   tags {
-    Name = "Testing %s"
+    Name = "%s"
   }
 }
 
@@ -128,6 +152,25 @@ resource "aws_dx_private_virtual_interface" "foo" {
   tags {
     Environment = "test"
   }
+}
+`, n, cid, n)
+}
+
+func testAccDxPrivateVirtualInterfaceConfig_dxGateway(cid, n string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "foo" {
+  name            = "%s"
+  amazon_side_asn = 65351
+}
+
+resource "aws_dx_private_virtual_interface" "foo" {
+  connection_id    = "%s"
+
+  dx_gateway_id  = "${aws_dx_gateway.foo.id}"
+  name           = "%s"
+  vlan           = 4094
+  address_family = "ipv4"
+  bgp_asn        = 65352
 }
 `, n, cid, n)
 }
