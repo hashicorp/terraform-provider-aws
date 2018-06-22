@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -11,6 +10,8 @@ import (
 
 func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acctest-%d", acctest.RandInt())
+	resourceName := "aws_codecommit_repository.default"
+	datasourceName := "data.aws_codecommit_repository.default"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -19,14 +20,10 @@ func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsCodeCommitRepositoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_codecommit_repository.default", "repository_name",
-						"aws_codecommit_repository.default", "repository_name"),
-					resource.TestMatchResourceAttr("data.aws_codecommit_repository.default", "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:codecommit:[^:]+:\\d{12}:%s", rName))),
-					resource.TestMatchResourceAttr("data.aws_codecommit_repository.default", "clone_url_http",
-						regexp.MustCompile(fmt.Sprintf("^https://git-codecommit.[^:]+.amazonaws.com/v1/repos/%s", rName))),
-					resource.TestMatchResourceAttr("data.aws_codecommit_repository.default", "clone_url_ssh",
-						regexp.MustCompile(fmt.Sprintf("^ssh://git-codecommit.[^:]+.amazonaws.com/v1/repos/%s", rName))),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "clone_url_http", resourceName, "clone_url_http"),
+					resource.TestCheckResourceAttrPair(datasourceName, "clone_url_ssh", resourceName, "clone_url_ssh"),
+					resource.TestCheckResourceAttrPair(datasourceName, "repository_name", resourceName, "repository_name"),
 				),
 			},
 		},
