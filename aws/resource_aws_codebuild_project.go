@@ -157,6 +157,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.EnvironmentTypeLinuxContainer,
+								codebuild.EnvironmentTypeWindowsContainer,
 							}, false),
 						},
 						"privileged_mode": {
