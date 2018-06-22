@@ -69,7 +69,7 @@ to the state file. Please supply a `pgp_key` instead, which will prevent the
 secret from being stored in plain text
 * `encrypted_secret` - The encrypted secret, base64 encoded.
 ~> **NOTE:** The encrypted secret may be decrypted using the command line,
-   for example: `terraform output secret | base64 --decode | keybase pgp decrypt`.
+   for example: `terraform output encrypted_secret | base64 --decode | keybase pgp decrypt`.
 * `ses_smtp_password` - The secret access key converted into an SES SMTP
   password by applying [AWS's documented conversion
   algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).
