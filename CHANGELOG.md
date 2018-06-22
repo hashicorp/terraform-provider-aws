@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
 
+BUG FIXES:
+
+* resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read [GH-4917]
+
 ## 1.24.0 (June 21, 2018)
 
 FEATURES:
