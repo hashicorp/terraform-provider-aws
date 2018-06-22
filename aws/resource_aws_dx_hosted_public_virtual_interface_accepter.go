@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -17,7 +18,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 		Update: resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate,
 		Delete: resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsDxHostedPublicVirtualInterfaceAccepterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,6 +56,14 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceD
 	}
 
 	d.SetId(vifId)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	if err := dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(d, conn); err != nil {
 		return err
@@ -76,9 +85,6 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceDat
 		return nil
 	}
 
-	if err := dxVirtualInterfaceArnAttribute(d, meta); err != nil {
-		return err
-	}
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
 		return err
@@ -97,6 +103,19 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceD
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
+}
+
+func resourceAwsDxHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {

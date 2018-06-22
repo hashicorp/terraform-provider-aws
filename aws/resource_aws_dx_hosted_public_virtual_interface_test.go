@@ -23,7 +23,8 @@ func TestAccAwsDxHostedPublicVirtualInterface_basic(t *testing.T) {
 	if ownerAccountId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	vifName := fmt.Sprintf("tf-dx-vif-%s", acctest.RandString(5))
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
+	bgpAsn := randIntRange(64512, 65534)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +32,7 @@ func TestAccAwsDxHostedPublicVirtualInterface_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxHostedPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPublicVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName),
+				Config: testAccDxHostedPublicVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxHostedPublicVirtualInterfaceExists("aws_dx_hosted_public_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_hosted_public_virtual_interface.foo", "name", vifName),
@@ -83,7 +84,7 @@ func testAccCheckAwsDxHostedPublicVirtualInterfaceExists(name string) resource.T
 	}
 }
 
-func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, ownerAcctId, n string) string {
+func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, ownerAcctId, n string, bgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface" "foo" {
   connection_id    = "%s"
@@ -92,7 +93,7 @@ resource "aws_dx_hosted_public_virtual_interface" "foo" {
   name           = "%s"
   vlan           = 4094
   address_family = "ipv4"
-  bgp_asn        = 65352
+  bgp_asn        = %d
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
@@ -101,5 +102,5 @@ resource "aws_dx_hosted_public_virtual_interface" "foo" {
 	"175.45.176.0/22"
   ]
 }
-`, cid, ownerAcctId, n)
+`, cid, ownerAcctId, n, bgpAsn)
 }
