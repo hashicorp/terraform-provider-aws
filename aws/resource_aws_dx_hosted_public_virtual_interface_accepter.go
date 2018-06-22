@@ -84,6 +84,14 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceDat
 		d.SetId("")
 		return nil
 	}
+	vifState := aws.StringValue(vif.VirtualInterfaceState)
+	if vifState != directconnect.VirtualInterfaceStateAvailable &&
+		vifState != directconnect.VirtualInterfaceStateDown &&
+		vifState != directconnect.VirtualInterfaceStateVerifying {
+		log.Printf("[WARN] Direct Connect virtual interface (%s) is '%s', removing from state", vifState, d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
@@ -102,7 +110,8 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceD
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	return dxVirtualInterfaceDelete(d, meta)
+	log.Printf("[WARN] Will not delete Direct Connect virtual interface. Terraform will remove this resource from the state file, however resources may remain.")
+	return nil
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

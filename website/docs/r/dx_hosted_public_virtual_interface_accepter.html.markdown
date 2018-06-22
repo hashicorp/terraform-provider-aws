@@ -64,6 +64,15 @@ The following arguments are supported:
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+### Removing `aws_dx_hosted_public_virtual_interface_accepter` from your configuration
+
+AWS allows a Direct Connect hosted public virtual interface to be deleted from either the allocator's or accepter's side.
+However, Terraform only allows the Direct Connect hosted public virtual interface to be deleted from the allocator's side
+by removing the corresponding `aws_dx_hosted_public_virtual_interface` resource from your configuration.
+Removing a `aws_dx_hosted_public_virtual_interface_accepter` resource from your configuration will remove it
+from your statefile and management, **but will not delete the Direct Connect virtual interface.**
+
+
 ## Attributes Reference
 
 The following attributes are exported:
