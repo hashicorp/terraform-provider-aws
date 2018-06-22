@@ -45,16 +45,23 @@ func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error
 		},
 	}
 
-	resp, err := conn.DescribeVpcs(req)
+	var vpcId string
+	describeResp, err := conn.DescribeVpcs(req)
 	if err != nil {
 		return err
 	}
-
-	if resp.Vpcs == nil || len(resp.Vpcs) == 0 {
-		return fmt.Errorf("No default VPC found in this region.")
+	if describeResp.Vpcs == nil || len(describeResp.Vpcs) == 0 {
+		log.Printf("[INFO] No default VPC found in this region, creating")
+		createResp, err := conn.CreateDefaultVpc(&ec2.CreateDefaultVpcInput{})
+		if err != nil {
+			return fmt.Errorf("Error creating default VPC: %s", err)
+		}
+		vpcId = aws.StringValue(createResp.Vpc.VpcId)
+	} else {
+		vpcId = aws.StringValue(describeResp.Vpcs[0].VpcId)
 	}
 
-	d.SetId(aws.StringValue(resp.Vpcs[0].VpcId))
+	d.SetId(vpcId)
 
 	return resourceAwsVpcUpdate(d, meta)
 }
