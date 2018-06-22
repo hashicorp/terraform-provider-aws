@@ -64,6 +64,14 @@ The following arguments are supported:
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpn_gateway_id` - (Optional) The ID of the [virtual private gateway](vpn_gateway.html) to which to connect the virtual interface.
 
+### Removing `aws_dx_hosted_private_virtual_interface_accepter` from your configuration
+
+AWS allows a Direct Connect hosted private virtual interface to be deleted from either the allocator's or accepter's side.
+However, Terraform only allows the Direct Connect hosted private virtual interface to be deleted from the allocator's side
+by removing the corresponding `aws_dx_hosted_private_virtual_interface` resource from your configuration.
+Removing a `aws_dx_hosted_private_virtual_interface_accepter` resource from your configuration will remove it
+from your statefile and management, **but will not delete the Direct Connect virtual interface.**
+
 ## Attributes Reference
 
 The following attributes are exported:

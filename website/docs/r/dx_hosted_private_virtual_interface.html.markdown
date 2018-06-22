@@ -8,7 +8,7 @@ description: |-
 
 # aws_dx_hosted_private_virtual_interface
 
-Provides a Direct Connect hosted private virtual interface resource.
+Provides a Direct Connect hosted private virtual interface resource. This resource represents the allocator's side of the hosted virtual interface.
 A hosted virtual interface is a virtual interface that is owned by another AWS account.
 
 ## Example Usage
