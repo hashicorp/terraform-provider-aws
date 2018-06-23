@@ -226,6 +226,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_invocation":                dataSourceAwsLambdaInvocation(),
 			"aws_mq_broker":                        dataSourceAwsMqBroker(),
 			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
+			"aws_network_acls":                     dataSourceAwsNetworkAcls(),
 			"aws_network_interface":                dataSourceAwsNetworkInterface(),
 			"aws_partition":                        dataSourceAwsPartition(),
 			"aws_prefix_list":                      dataSourceAwsPrefixList(),
