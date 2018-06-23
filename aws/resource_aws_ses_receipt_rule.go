@@ -683,9 +683,15 @@ func buildReceiptRule(d *schema.ResourceData, meta interface{}) *ses.ReceiptRule
 			elem := element.(map[string]interface{})
 
 			s3Action := &ses.S3Action{
-				BucketName:      aws.String(elem["bucket_name"].(string)),
-				KmsKeyArn:       aws.String(elem["kms_key_arn"].(string)),
-				ObjectKeyPrefix: aws.String(elem["object_key_prefix"].(string)),
+				BucketName: aws.String(elem["bucket_name"].(string)),
+			}
+
+			if elem["kms_key_arn"] != "" {
+				s3Action.KmsKeyArn = aws.String(elem["kms_key_arn"].(string))
+			}
+
+			if elem["object_key_prefix"] != "" {
+				s3Action.ObjectKeyPrefix = aws.String(elem["object_key_prefix"].(string))
 			}
 
 			if elem["topic_arn"] != "" {
