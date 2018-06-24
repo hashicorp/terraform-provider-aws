@@ -33,6 +33,12 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"value_list": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
 			"with_decryption": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -80,6 +86,13 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
+
+	if aws.StringValue(param.Type) == "StringList" {
+		valueList := strings.Split(aws.StringValue(param.Value), ",")
+		if err := d.Set("value_list", valueList); err != nil {
+			return fmt.Errorf("Error setting value_list: %s", err)
+		}
+	}
 
 	return nil
 }
