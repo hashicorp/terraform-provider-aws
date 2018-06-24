@@ -115,10 +115,13 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	return resourceAwsIamPolicyReader(d, d.Id(), meta)
+}
 
+func resourceAwsIamPolicyReader(d *schema.ResourceData, arn string, meta interface{}) error {
+	iamconn := meta.(*AWSClient).iamconn
 	getPolicyRequest := &iam.GetPolicyInput{
-		PolicyArn: aws.String(d.Id()),
+		PolicyArn: aws.String(arn),
 	}
 
 	getPolicyResponse, err := iamconn.GetPolicy(getPolicyRequest)
@@ -131,7 +134,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	getPolicyVersionRequest := &iam.GetPolicyVersionInput{
-		PolicyArn: aws.String(d.Id()),
+		PolicyArn: aws.String(arn),
 		VersionId: getPolicyResponse.Policy.DefaultVersionId,
 	}
 
@@ -141,7 +144,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading IAM policy version %s: %s", d.Id(), err)
+		return fmt.Errorf("Error reading IAM policy version %s: %s", arn, err)
 	}
 
 	policy, err := url.QueryUnescape(*getPolicyVersionResponse.PolicyVersion.Document)
@@ -177,15 +180,28 @@ func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
+func resourceAwsIamPolicyWithAttachmentCascadeDelete(d *schema.ResourceData, meta interface{}) error {
+	for _, v := range d.Get("users").(*schema.Set).List() {
+		if err := resourceAwsIamUserPolicyAttachmentDeleter(d, "arn", v.(string), meta); err != nil {
+			return err
+		}
+	}
+	return resourceAwsIamPolicyDeleter(d, d.Get("arn").(string), meta)
+}
+
 func resourceAwsIamPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsIamPolicyDeleter(d, d.Id(), meta)
+}
+
+func resourceAwsIamPolicyDeleter(d *schema.ResourceData, arn string, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	if err := iamPolicyDeleteNondefaultVersions(d.Id(), iamconn); err != nil {
+	if err := iamPolicyDeleteNondefaultVersions(arn, iamconn); err != nil {
 		return err
 	}
 
 	request := &iam.DeletePolicyInput{
-		PolicyArn: aws.String(d.Id()),
+		PolicyArn: aws.String(arn),
 	}
 
 	_, err := iamconn.DeletePolicy(request)

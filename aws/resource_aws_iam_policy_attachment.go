@@ -14,6 +14,26 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+func resourceAwsIamPolicyWithAttachment() *schema.Resource {
+	policy := resourceAwsIamPolicy()
+	policy.Create = resourceAwsIamPolicyWithAttachmentCreate
+	policy.Read = resourceAwsIamPolicyWithAttachmentRead
+	policy.Delete = resourceAwsIamPolicyWithAttachmentCascadeDelete
+
+	attachment := resourceAwsIamPolicyAttachment()
+	for key, value := range attachment.Schema {
+		switch key {
+		case "policy_arn":
+		case "name":
+			policy.Schema["attachment_name"] = value
+		default:
+			policy.Schema[key] = value
+		}
+	}
+
+	return policy
+}
+
 func resourceAwsIamPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIamPolicyAttachmentCreate,
@@ -55,11 +75,22 @@ func resourceAwsIamPolicyAttachment() *schema.Resource {
 	}
 }
 
+func resourceAwsIamPolicyWithAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+	if err := resourceAwsIamPolicyCreate(d, meta); err != nil {
+		return err
+	}
+	return resourceAwsIamPolicyAttachmentCreator(d, "arn", meta)
+}
+
 func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsIamPolicyAttachmentCreator(d, "policy_arn", meta)
+}
+
+func resourceAwsIamPolicyAttachmentCreator(d *schema.ResourceData, arnKey string, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
 	name := d.Get("name").(string)
-	arn := d.Get("policy_arn").(string)
+	arn := d.Get(arnKey).(string)
 	users := expandStringList(d.Get("users").(*schema.Set).List())
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	groups := expandStringList(d.Get("groups").(*schema.Set).List())
@@ -82,12 +113,23 @@ func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 		}
 	}
 	d.SetId(d.Get("name").(string))
-	return resourceAwsIamPolicyAttachmentRead(d, meta)
+	return resourceAwsIamPolicyAttachmentReader(d, arn, meta)
+}
+
+func resourceAwsIamPolicyWithAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+	s := d.Get("arn").(string)
+	if err := resourceAwsIamPolicyReader(d, s, meta); err != nil {
+		return err
+	}
+	return resourceAwsIamPolicyAttachmentReader(d, s, meta)
 }
 
 func resourceAwsIamPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsIamPolicyAttachmentReader(d, d.Get("policy_arn").(string), meta)
+}
+
+func resourceAwsIamPolicyAttachmentReader(d *schema.ResourceData, arn string, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
-	arn := d.Get("policy_arn").(string)
 	name := d.Get("name").(string)
 
 	_, err := conn.GetPolicy(&iam.GetPolicyInput{
