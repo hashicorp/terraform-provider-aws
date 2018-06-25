@@ -279,6 +279,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"launch_template_configs": {
 				Type:          schema.TypeSet,
 				Optional:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"launch_specification"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -292,6 +293,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Type:          schema.TypeString,
 										Optional:      true,
 										Computed:      true,
+										ForceNew:      true,
 										ConflictsWith: []string{"launch_template_configs.0.launch_template_specification.0.name"},
 										ValidateFunc:  validateLaunchTemplateId,
 									},
@@ -299,12 +301,15 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Type:          schema.TypeString,
 										Optional:      true,
 										Computed:      true,
+										ForceNew:      true,
 										ConflictsWith: []string{"launch_template_configs.0.launch_template_specification.0.id"},
 										ValidateFunc:  validateLaunchTemplateName,
 									},
 									"version": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 								},
@@ -313,35 +318,45 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 						"overrides": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"availability_zone": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										//ValidateFunc:  validateLaunchTemplateId,
 									},
 									"instance_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										//ValidateFunc:  validateLaunchTemplateName,
 									},
 									"spot_price": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
+										ForceNew: true,
 										//ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"subnet_id": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
+										ForceNew: true,
 										//ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"weighted_capacity": {
 										Type:     schema.TypeFloat,
 										Optional: true,
+										Computed: true,
+										ForceNew: true,
 										//ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 								},
 							},
+							Set: hashLaunchTemplateOverrides,
 						},
 					},
 				},
@@ -688,7 +703,6 @@ func buildAwsSpotFleetLaunchSpecifications(
 func buildLaunchTemplateConfigs(d *schema.ResourceData, meta interface{}) ([]*ec2.LaunchTemplateConfig, error) {
 	launch_template_cfgs := d.Get("launch_template_configs").(*schema.Set).List()
 	cfgs := make([]*ec2.LaunchTemplateConfig, len(launch_template_cfgs))
-	log.Printf("[DEBUG] cfgs: %#v", cfgs)
 
 	for _, launch_template_cfg := range launch_template_cfgs {
 
@@ -698,16 +712,11 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData, meta interface{}) ([]*ec
 
 		//launch template spec
 		if v, ok := ltc_map["launch_template_specification"]; ok {
-			//panic: interface conversion: interface {} is []interface {}, not *schema.Set
 			vL := v.([]interface{})
-			//vL := v.(*schema.Set).List()
-			//log.Printf("[DEBUG] vL(672): %#v", vL)
-			//for _, v := range vL {
-			//panic: interface conversion: interface {} is []interface {}, not map[string]interface {}
 			lts := vL[0].(map[string]interface{})
-			log.Printf("[DEBUG] lts(676): %#v", vL)
+
 			flts := &ec2.FleetLaunchTemplateSpecification{}
-			log.Printf("[DEBUG] flts(678): %#v", flts)
+
 			if v, ok := lts["id"].(string); ok && v != "" {
 				flts.LaunchTemplateId = aws.String(v)
 			}
@@ -719,15 +728,13 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData, meta interface{}) ([]*ec
 			if v, ok := lts["version"].(string); ok && v != "" {
 				flts.Version = aws.String(v)
 			}
-			log.Printf("[DEBUG] flts(691): %#v", flts)
 
 			ltc.LaunchTemplateSpecification = flts
-			//}
+
 		}
 
-		//now the overrides
 		overrides := make([]*ec2.LaunchTemplateOverrides, 0)
-		// for each override
+
 		if v, ok := ltc_map["overrides"]; ok {
 			vL := v.(*schema.Set).List()
 			for _, v := range vL {
@@ -1142,12 +1149,46 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 
 	if config.LaunchTemplateConfigs[0] != nil {
-		d.Set("launch_template_configs.0.launch_template_specification.0.id", flattenFleetLaunchTemplateSpecification(config.LaunchTemplateConfigs[0].LaunchTemplateSpecification))
+		d.Set("launch_template_configs.0.launch_template_specification.0", flattenFleetLaunchTemplateSpecification(config.LaunchTemplateConfigs[0].LaunchTemplateSpecification))
+		d.Set("launch_template_configs.0.overrides", setLaunchTemplateOverrides(config.LaunchTemplateConfigs[0].Overrides))
 	} else {
-		d.Set("launch_template_configs.0.launch_template_specification.0.id", nil)
+		d.Set("launch_template_configs.0.launch_template_specification.0", nil)
 	}
 
 	return nil
+}
+
+func setLaunchTemplateOverrides(overrides []*ec2.LaunchTemplateOverrides) *schema.Set {
+	overrideSet := &schema.Set{F: hashLaunchTemplateOverrides}
+	for _, override := range overrides {
+		overrideSet.Add(overrideToMap(override))
+	}
+	return overrideSet
+}
+
+func overrideToMap(override *ec2.LaunchTemplateOverrides) map[string]interface{} {
+	m := make(map[string]interface{})
+
+	if override.AvailabilityZone != nil {
+		m["availability_zone"] = aws.StringValue(override.AvailabilityZone)
+	}
+	if override.InstanceType != nil {
+		m["instance_type"] = aws.StringValue(override.InstanceType)
+	}
+
+	if override.SpotPrice != nil {
+		m["spot_price"] = aws.StringValue(override.SpotPrice)
+	}
+
+	if override.SubnetId != nil {
+		m["subnet_id"] = aws.StringValue(override.SubnetId)
+	}
+
+	if override.WeightedCapacity != nil {
+		m["weighted_capacity"] = aws.Float64Value(override.WeightedCapacity) //strconv.FormatFloat(*override.WeightedCapacity, 'f', 0, 64)
+	}
+
+	return m
 }
 
 func launchSpecsToSet(launchSpecs []*ec2.SpotFleetLaunchSpecification, conn *ec2.EC2) *schema.Set {
@@ -1400,6 +1441,7 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	}
 
+	// On-Demand capacity instances are never delisted as "active" in spot fleet even once terminated, so we now need logic to check that they are gone.
 	return resource.Retry(timeout, func() *resource.RetryError {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(spotFleetRequestID),
@@ -1411,6 +1453,24 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		if len(resp.ActiveInstances) == 0 {
 			log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
 			return nil
+		} else {
+			instances := []*string{}
+			for _, instMap := range resp.ActiveInstances {
+				instances = append(instances, aws.String(*instMap.InstanceId))
+			}
+			iresp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
+				InstanceIds: instances,
+			})
+			if err != nil {
+				return resource.RetryableError(
+					fmt.Errorf("Error while trying to determine fleet status for fleet (%s): %s", spotFleetRequestID, err))
+			}
+			if len(iresp.Reservations) == 0 {
+				log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), but instances have terminated, removing", len(resp.ActiveInstances), spotFleetRequestID)
+				return nil
+			} else {
+				log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and %d instances are still running", len(resp.ActiveInstances), spotFleetRequestID, len(iresp.Reservations))
+			}
 		}
 
 		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, len(resp.ActiveInstances))
@@ -1445,6 +1505,27 @@ func hashLaunchSpecification(v interface{}) int {
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
+	return hashcode.String(buf.String())
+}
+
+func hashLaunchTemplateOverrides(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if m["availability_zone"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
+	}
+	if m["subnet_id"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+	}
+	if m["spot_price"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
+	}
+	if m["instance_type"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
+	}
+	if m["weighted_capacity"] != nil {
+		buf.WriteString(fmt.Sprintf("%f-", m["weighted_capacity"].(float64)))
+	}
 	return hashcode.String(buf.String())
 }
 
