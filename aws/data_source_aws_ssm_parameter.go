@@ -76,7 +76,6 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("parameter/%s", strings.TrimPrefix(d.Id(), "/")),
 	}
 	d.Set("arn", arn.String())
-
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
