@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_network_acl_rule: Add full mapping of protocol names to protocol numbers [GH-4956]
 * resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
 * resource/aws_vpc: Support update of `instance_tenancy` from `dedicated` to `default` [GH-2514]
+* resource/aws_wafregional_web_acl: Add rule `type` argument (support rate limited rules) [GH-4307] / [GH-4978]
 
 BUG FIXES:
 
