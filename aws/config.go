@@ -125,6 +125,7 @@ type Config struct {
 	DeviceFarmEndpoint       string
 	Ec2Endpoint              string
 	EcsEndpoint              string
+	AutoscalingEndpoint      string
 	EcrEndpoint              string
 	EfsEndpoint              string
 	EsEndpoint               string
@@ -392,6 +393,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsCwlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchLogsEndpoint)})
 	awsDynamoSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
+	awsAutoscalingSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.AutoscalingEndpoint)})
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
 	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
@@ -458,7 +460,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
-	client.autoscalingconn = autoscaling.New(sess)
+	client.autoscalingconn = autoscaling.New(awsAutoscalingSess)
 	client.cloud9conn = cloud9.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
 	client.cloudfrontconn = cloudfront.New(sess)

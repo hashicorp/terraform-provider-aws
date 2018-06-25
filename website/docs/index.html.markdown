@@ -289,6 +289,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom EC2 endpoints.
 
+* `autoscaling` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom Autoscaling endpoints.
+
 * `ecr` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom ECR endpoints.
