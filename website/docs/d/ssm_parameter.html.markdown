@@ -19,27 +19,13 @@ data "aws_ssm_parameter" "foo" {
   name  = "foo"
 }
 ```
-To store a StringList parameter:
-
-```hcl
-resource "aws_ssm_parameter" "subnets" {
-  name      = "/my/subnets"
-  type      = "StringList"
-  overwrite = true
-  value     = "1.1.1.1,2.2.2.2"
-}
-
-data "aws_ssm_parameter" "subnets" {
-  name = "/my/subnets"
-}
-
-output "subnets_list" {
-  value = "${data.aws_ssm_parameter.subnets.value_list}"
-}
-```
 
 ~> **Note:** The unencrypted value of a SecureString will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](/docs/state/sensitive-data.html).
+
+
+~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `StringList`, we can use [split()](https://www.terraform.io/docs/configuration/interpolation.html#split-delim-string-) built-in function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
+
 
 ## Argument Reference
 
@@ -55,4 +41,3 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - (Required) The name of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
-* `value_list` - (Optional) It will provide value of the parameter in a list when `type` of the parameter is `StringList`.
