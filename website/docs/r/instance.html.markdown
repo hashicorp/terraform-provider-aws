@@ -66,11 +66,14 @@ instance. Amazon defaults this to `stop` for EBS-backed instances and
 `terminate` for instance-store instances. Cannot be set on instance-store
 instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
 * `instance_type` - (Required) The type of instance to start. Updates to this field will trigger a stop/start of the EC2 instance.
-* `key_name` - (Optional) The key name to use for the instance.
+* `key_name` - (Optional) The key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
+
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `security_groups` - (Optional) A list of security group names to associate with.
-   If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
+
+-> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
+
 * `vpc_security_group_ids` - (Optional) A list of security group IDs to associate with.
 * `subnet_id` - (Optional) The VPC Subnet ID to launch in.
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.  Boolean value.
