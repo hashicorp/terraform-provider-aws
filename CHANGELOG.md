@@ -26,6 +26,7 @@ BUG FIXES:
 * resource/aws_launch_template: Prevent error when using `valid_until` [GH-4952]
 * resource/aws_route: Properly force resource recreation when updating `route_table_id` [GH-4946]
 * resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors [GH-4903]
+* resource/aws_ses_receipt_rule: Prevent error with `s3_action` when `kms_key_arn` is not specified [GH-4965]
 
 ## 1.24.0 (June 21, 2018)
 
