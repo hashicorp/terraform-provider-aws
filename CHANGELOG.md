@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Support custom endpoint for `autoscaling` [GH-4970]
 * resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type [GH-4960]
 * resource/aws_codebuild_project: Support resource import [GH-4976]
 * resource/aws_iam_instance_profile: Add `create_date` attribute [GH-4932]
