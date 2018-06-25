@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAWSCodeBuildProject_importBasic(t *testing.T) {
+func TestAccAWSCodeBuildProject_importBasic(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
