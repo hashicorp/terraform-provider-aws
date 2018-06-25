@@ -3,6 +3,8 @@
 FEATURES:
 
 * **New Data Source:** `aws_codecommit_repository` [GH-4934]
+* **New Resource:** `aws_dx_hosted_private_virtual_interface` [GH-3255]
+* **New Resource:** `aws_dx_hosted_private_virtual_interface_accepter` [GH-3255]
 * **New Resource:** `aws_dx_private_virtual_interface` [GH-3253]
 
 ENHANCEMENTS:
