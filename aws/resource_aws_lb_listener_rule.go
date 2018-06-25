@@ -117,7 +117,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	var resp *elbv2.CreateRuleOutput
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk("priority"); ok && v != 0 {
 		var err error
 		params.Priority = aws.Int64(int64(v.(int)))
 		resp, err = elbconn.CreateRule(params)
@@ -307,7 +307,7 @@ func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) e
 
 func validateAwsLbListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
-	if value < 1 || (value > 50000 && value != 99999) {
+	if value < 0 || (value > 50000 && value != 99999) {
 		errors = append(errors, fmt.Errorf("%q must be in the range 1-50000 for normal rule or 99999 for default rule", k))
 	}
 	return
