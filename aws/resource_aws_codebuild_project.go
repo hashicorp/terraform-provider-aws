@@ -23,6 +23,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		Read:   resourceAwsCodeBuildProjectRead,
 		Update: resourceAwsCodeBuildProjectUpdate,
 		Delete: resourceAwsCodeBuildProjectDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"artifacts": {
