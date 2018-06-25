@@ -27,20 +27,17 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			"certificate_body": {
 				Type:      schema.TypeString,
 				Optional:  true,
-				ForceNew:  true,
 				StateFunc: normalizeCert,
 			},
 
 			"certificate_chain": {
 				Type:      schema.TypeString,
 				Optional:  true,
-				ForceNew:  true,
 				StateFunc: normalizeCert,
 			},
 			"private_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
-				ForceNew:  true,
 				StateFunc: normalizeCert,
 				Sensitive: true,
 			},
@@ -114,15 +111,7 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
-	params := &acm.ImportCertificateInput{
-		PrivateKey:       []byte(d.Get("private_key").(string)),
-		Certificate:      []byte(d.Get("certificate_body").(string)),
-		CertificateChain: []byte(d.Get("certificate_chain").(string)),
-	}
-
-	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
-	resp, err := acmconn.ImportCertificate(params)
-
+	resp, err := resourceAwsAcmCertificateImport(acmconn, d, false)
 	if err != nil {
 		return fmt.Errorf("Error importing certificate: %s", err)
 	}
@@ -243,8 +232,16 @@ func resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions []ma
 }
 
 func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+	acmconn := meta.(*AWSClient).acmconn
+
+	if d.HasChange("private_key") || d.HasChange("certificate_body") || d.HasChange("certificate_chain") {
+		_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
+		if err != nil {
+			return fmt.Errorf("Error updating certificate: %s", err)
+		}
+	}
+
 	if d.HasChange("tags") {
-		acmconn := meta.(*AWSClient).acmconn
 		err := setTagsACM(acmconn, d)
 		if err != nil {
 			return err
@@ -340,4 +337,20 @@ func resourceAwsAcmCertificateCustomizeDiff(diff *schema.ResourceDiff, v interfa
 		return errors.New("certificate must be imported (private_key) or created (domain_name)")
 	}
 	return nil
+}
+
+func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, update bool) (*acm.ImportCertificateOutput, error) {
+	params := &acm.ImportCertificateInput{
+		PrivateKey:  []byte(d.Get("private_key").(string)),
+		Certificate: []byte(d.Get("certificate_body").(string)),
+	}
+	if chain, ok := d.GetOk("certificate_chain"); ok {
+		params.CertificateChain = []byte(chain.(string))
+	}
+	if update {
+		params.CertificateArn = aws.String(d.Get("arn").(string))
+	}
+
+	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
+	return conn.ImportCertificate(params)
 }
