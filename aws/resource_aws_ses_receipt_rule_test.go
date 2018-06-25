@@ -306,10 +306,6 @@ resource "aws_ses_receipt_rule" "first" {
 `, srrsRandomInt)
 
 var testAccAWSSESReceiptRuleActionsConfig = fmt.Sprintf(`
-resource "aws_s3_bucket" "emails" {
-    bucket = "ses-terraform-emails"
-}
-
 resource "aws_ses_receipt_rule_set" "test" {
     rule_set_name = "test-me-%d"
 }
