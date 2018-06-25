@@ -207,7 +207,7 @@ resource "aws_s3_bucket_object" "template1" {
     }
   }
 }
-EOF	
+EOF
 }
 
 resource "aws_servicecatalog_product" "test" {
