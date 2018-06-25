@@ -19,7 +19,7 @@ func dataSourceAwsNetworkAcls() *schema.Resource {
 
 			"vpc_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"ids": {
@@ -37,14 +37,16 @@ func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) erro
 
 	req := &ec2.DescribeNetworkAclsInput{}
 
+	if v, ok := d.GetOk("vpc_id"); ok {
+		req.Filters = buildEC2AttributeFilterList(
+			map[string]string{
+				"vpc-id": v.(string),
+			},
+		)
+	}
+
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("tags")
-
-	req.Filters = buildEC2AttributeFilterList(
-		map[string]string{
-			"vpc-id": d.Get("vpc_id").(string),
-		},
-	)
 
 	if tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
