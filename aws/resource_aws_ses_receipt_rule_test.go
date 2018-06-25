@@ -268,7 +268,7 @@ resource "aws_ses_receipt_rule_set" "test" {
 }
 
 resource "aws_s3_bucket" "emails" {
-    bucket = "ses-terraform-emails"
+    bucket = "ses-terraform-emails-%d"
     acl = "public-read-write"
     force_destroy = "true"
 }
@@ -286,7 +286,7 @@ resource "aws_ses_receipt_rule" "basic" {
     	position = 1
   	}
 }
-`, srrsRandomInt)
+`, srrsRandomInt, srrsRandomInt)
 
 var testAccAWSSESReceiptRuleOrderConfig = fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
