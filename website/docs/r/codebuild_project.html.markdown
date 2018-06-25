@@ -212,3 +212,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the CodeBuild project.
 * `badge_url` - The URL of the build badge when `badge_enabled` is enabled.
+
+## Import
+
+CodeBuild Project can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_codebuild_project.name project-name
+```
