@@ -38,6 +38,11 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 						regexp.MustCompile(`^arn:[\w-]+:waf::\d{12}:ipset/.+$`)),
 				),
 			},
+			{
+				ResourceName:      "aws_waf_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
