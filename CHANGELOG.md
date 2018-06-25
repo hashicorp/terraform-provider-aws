@@ -1,8 +1,31 @@
 ## 1.25.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_codecommit_repository` [GH-4934]
+* **New Resource:** `aws_dx_hosted_private_virtual_interface` [GH-3255]
+* **New Resource:** `aws_dx_hosted_private_virtual_interface_accepter` [GH-3255]
+* **New Resource:** `aws_dx_hosted_public_virtual_interface` [GH-3254]
+* **New Resource:** `aws_dx_hosted_public_virtual_interface_accepter` [GH-3254]
+* **New Resource:** `aws_dx_private_virtual_interface` [GH-3253]
+* **New Resource:** `aws_dx_public_virtual_interface` [GH-3252]
+
 ENHANCEMENTS:
 
+* resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type [GH-4960]
+* resource/aws_iam_instance_profile: Add `create_date` attribute [GH-4932]
 * resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
+* resource/aws_vpc: Support update of `instance_tenancy` from `dedicated` to `default` [GH-2514]
+
+BUG FIXES:
+
+* data-source/aws_rds_cluster: Prevent panic with new CloudWatch logs support (`enabled_cloudwatch_logs_exports`) introduced in 1.23.0 [GH-4927]
+* resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read [GH-4917]
+* resource/aws_db_instance: Properly raise any `ListTagsForResource` error instead of presenting a perpetual difference with `tags` [GH-4943]
+* resource/aws_instance: Prevent extraneous ModifyInstanceAttribute call for `disable_api_termination` on resource creation [GH-4941]
+* resource/aws_launch_template: Prevent error when using `valid_until` [GH-4952]
+* resource/aws_route: Properly force resource recreation when updating `route_table_id` [GH-4946]
+* resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors [GH-4903]
 
 ## 1.24.0 (June 21, 2018)
 
