@@ -375,6 +375,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_hosted_private_virtual_interface":          resourceAwsDxHostedPrivateVirtualInterface(),
 			"aws_dx_hosted_private_virtual_interface_accepter": resourceAwsDxHostedPrivateVirtualInterfaceAccepter(),
 			"aws_dx_private_virtual_interface":                 resourceAwsDxPrivateVirtualInterface(),
+			"aws_dx_public_virtual_interface":                  resourceAwsDxPublicVirtualInterface(),
 			"aws_dynamodb_table":                               resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                          resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                        resourceAwsDynamoDbGlobalTable(),
