@@ -13,6 +13,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type [GH-4960]
+* resource/aws_codebuild_project: Support resource import [GH-4976]
 * resource/aws_iam_instance_profile: Add `create_date` attribute [GH-4932]
 * resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
 * resource/aws_vpc: Support update of `instance_tenancy` from `dedicated` to `default` [GH-2514]
