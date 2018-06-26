@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -851,6 +852,14 @@ func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{}
 	att["device_index"] = *a.DeviceIndex
 	att["attachment_id"] = *a.AttachmentId
 	return att
+}
+
+func flattenEc2AttributeValues(l []*ec2.AttributeValue) []string {
+	values := make([]string, 0, len(l))
+	for _, v := range l {
+		values = append(values, aws.StringValue(v.Value))
+	}
+	return values
 }
 
 func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
@@ -4259,4 +4268,23 @@ func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringCon
 	}
 
 	return options
+}
+
+func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
+	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg), len(cfg))
+	for i, p := range cfg {
+		prefix := &directconnect.RouteFilterPrefix{
+			Cidr: aws.String(p.(string)),
+		}
+		prefixes[i] = prefix
+	}
+	return prefixes
+}
+
+func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
+	out := make([]interface{}, 0)
+	for _, prefix := range prefixes {
+		out = append(out, aws.StringValue(prefix.Cidr))
+	}
+	return schema.NewSet(schema.HashString, out)
 }

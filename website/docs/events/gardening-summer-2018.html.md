@@ -38,7 +38,7 @@ If you are going to be at HashiDays or HashiConf, let us know and we will set th
 
 ### Realtime Communication
 
-We will have a [Gitter](https://gitter.im/) room available (TBD) and a someone from HashiCorp on [Zoom conferencing](https://zoom.us/) through out the time zones.
+We will have a [Gitter](https://gitter.im/) room available at [`hashicorp-terraform/gardening`](https://gitter.im/hashicorp-terraform/gardening) and a someone from HashiCorp on [Zoom conferencing](https://zoom.us/) through out the time zones.
 
 ### Community Issue Selection
 

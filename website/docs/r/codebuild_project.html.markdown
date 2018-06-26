@@ -174,9 +174,9 @@ The following arguments are supported:
 
 `environment` supports the following:
 
-* `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`
+* `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`. `BUILD_GENERAL1_SMALL` is only valid if `type` is set to `LINUX_CONTAINER`
 * `image` - (Required) The *image identifier* of the Docker image to use for this build project ([list of Docker images provided by AWS CodeBuild.](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html)). You can read more about the AWS curated environment images in the [documentation](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListCuratedEnvironmentImages.html).
-* `type` - (Required) The type of build environment to use for related builds. The only valid value is `LINUX_CONTAINER`.
+* `type` - (Required) The type of build environment to use for related builds. Available values are: `LINUX_CONTAINER` or `WINDOWS_CONTAINER`.
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 
@@ -212,3 +212,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the CodeBuild project.
 * `badge_url` - The URL of the build badge when `badge_enabled` is enabled.
+
+## Import
+
+CodeBuild Project can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_codebuild_project.name project-name
+```

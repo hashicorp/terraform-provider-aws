@@ -18,6 +18,33 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
+## Example with Delivery Policy
+
+``` hcl
+resource "aws_sns_topic" "user_updates" {
+  name = "user-updates-topic"
+  delivery_policy = <<EOF
+{
+  "http": {
+    "defaultHealthyRetryPolicy": {
+      "minDelayTarget": 20,
+      "maxDelayTarget": 20,
+      "numRetries": 3,
+      "numMaxDelayRetries": 0,
+      "numNoDelayRetries": 0,
+      "numMinDelayRetries": 0,
+      "backoffFunction": "linear"
+    },
+    "disableSubscriptionOverrides": false,
+    "defaultThrottlePolicy": {
+      "maxReceivesPerSecond": 1
+    }
+  }
+}
+EOF
+}
+```
+
 ## Message Delivery Status Arguments
 
 The `<endpoint>_success_feedback_role_arn` and `<endpoint>_failure_feedback_role_arn` arguments are used to give Amazon SNS write access to use CloudWatch Logs on your behalf. The `<endpoint>_success_feedback_sample_rate` argument is for specifying the sample rate percentage (0-100) of successfully delivered messages. After you configure the  `<endpoint>_failure_feedback_role_arn` argument, then all failed message deliveries generate CloudWatch Logs.
@@ -30,7 +57,7 @@ The following arguments are supported:
 * `name_prefix` - (Optional) The friendly name for the SNS topic. Conflicts with `name`.
 * `display_name` - (Optional) The display name for the SNS topic
 * `policy` - (Optional) The fully-formed AWS policy as JSON
-* `delivery_policy` - (Optional) The SNS delivery policy
+* `delivery_policy` - (Optional) The SNS delivery policy. More on [AWS documentation](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html)
 * `application_success_feedback_role_arn` - (Optional) The IAM role permitted to receive success feedback for this topic
 * `application_success_feedback_sample_rate` - (Optional) Percentage of success to sample
 * `application_failure_feedback_role_arn` - (Optional) IAM role for failure feedback

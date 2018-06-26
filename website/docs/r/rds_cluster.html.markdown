@@ -15,6 +15,10 @@ database engine.
 
 For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amazon RDS User Guide.
 
+For information on the difference between the available Aurora MySQL engines
+see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
+in the Amazon RDS User Guide.
+
 Changes to a RDS Cluster can occur when you manually change a
 parameter, such as `port`, and are reflected in the next maintenance
 window. Because of this, Terraform may report a difference in its planning
@@ -113,9 +117,11 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the RDS Cluster.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
-* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: aurora,aurora-mysql,aurora-postgresql
+* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`
 * `engine_version` - (Optional) The database engine version.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
+* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
+   The following log types are supported: `audit`, `error`, `general`, `slowquery`.
 * `tags` - (Optional) A mapping of tags to assign to the DB cluster.
 
 ### S3 Import Options

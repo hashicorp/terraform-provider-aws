@@ -98,6 +98,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 								ValidateFunc: validation.StringInSlice([]string{
 									apigateway.EndpointTypeEdge,
 									apigateway.EndpointTypeRegional,
+									apigateway.EndpointTypePrivate,
 								}, false),
 							},
 						},

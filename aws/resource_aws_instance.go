@@ -1067,7 +1067,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("disable_api_termination") {
+	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
 		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			DisableApiTermination: &ec2.AttributeBooleanValue{
@@ -1110,7 +1110,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("credit_specification") {
+	if d.HasChange("credit_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("credit_specification"); ok {
 			creditSpecification := v.([]interface{})[0].(map[string]interface{})
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())

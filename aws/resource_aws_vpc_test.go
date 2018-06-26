@@ -89,6 +89,8 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(
 						"aws_vpc.foo", "default_route_table_id"),
 					resource.TestCheckResourceAttr(
@@ -163,9 +165,48 @@ func TestAccAWSVpc_dedicatedTenancy(t *testing.T) {
 			{
 				Config: testAccVpcDedicatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists("aws_vpc.bar", &vpc),
+					testAccCheckVpcExists("aws_vpc.foo", &vpc),
 					resource.TestCheckResourceAttr(
-						"aws_vpc.bar", "instance_tenancy", "dedicated"),
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_modifyTenancy(t *testing.T) {
+	var vpcDedicated ec2.Vpc
+	var vpcDefault ec2.Vpc
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcDedicatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDedicated),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+				),
+			},
+			{
+				Config: testAccVpcConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDefault),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "default"),
+					testAccCheckVpcIdsEqual(&vpcDedicated, &vpcDefault),
+				),
+			},
+			{
+				Config: testAccVpcDedicatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDedicated),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+					testAccCheckVpcIdsNotEqual(&vpcDedicated, &vpcDefault),
 				),
 			},
 		},
@@ -271,6 +312,26 @@ func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 		CIDRBlock := vpc.CidrBlock
 		if *CIDRBlock != expected {
 			return fmt.Errorf("Bad cidr: %s", *vpc.CidrBlock)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *vpc1.VpcId != *vpc2.VpcId {
+			return fmt.Errorf("VPC IDs not equal")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *vpc1.VpcId == *vpc2.VpcId {
+			return fmt.Errorf("VPC IDs are equal")
 		}
 
 		return nil
@@ -438,9 +499,9 @@ resource "aws_vpc" "foo" {
 }
 `
 const testAccVpcDedicatedConfig = `
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "foo" {
 	instance_tenancy = "dedicated"
-	cidr_block = "10.2.0.0/16"
+	cidr_block = "10.1.0.0/16"
 	tags {
 		Name = "terraform-testacc-vpc-dedicated"
 	}
