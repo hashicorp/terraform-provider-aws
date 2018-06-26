@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAwsRouteTableIDs(t *testing.T) {
+func TestAccDataSourceAwsRouteTables(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -16,26 +16,26 @@ func TestAccDataSourceAwsRouteTableIDs(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRouteTableIDsConfig(rInt),
+				Config: testAccDataSourceAwsRouteTablesConfig(rInt),
 			},
 			{
-				Config: testAccDataSourceAwsRouteTableIDsConfigWithDataSource(rInt),
+				Config: testAccDataSourceAwsRouteTablesConfigWithDataSource(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_route_table_ids.selected", "ids.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_route_table_ids.private", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.selected", "ids.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.private", "ids.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsRouteTableIDsConfigWithDataSource(rInt int) string {
+func testAccDataSourceAwsRouteTablesConfigWithDataSource(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
   tags {
-    Name = "terraform-testacc-route-table-ids-data-source"
+    Name = "terraform-testacc-route-tables-data-source"
   }
 }
 
@@ -43,7 +43,7 @@ resource "aws_route_table" "test_public_a" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags {
-    Name = "tf-acc-route-table-ids-data-source-public-a"
+    Name = "tf-acc-route-tables-data-source-public-a"
     Tier = "Public"
   }
 }
@@ -52,7 +52,7 @@ resource "aws_route_table" "test_private_a" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags {
-    Name = "tf-acc-route-table-ids-data-source-private-a"
+    Name = "tf-acc-route-tables-data-source-private-a"
     Tier = "Private"
   }
 }
@@ -61,16 +61,16 @@ resource "aws_route_table" "test_private_b" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags {
-    Name = "tf-acc-route-table-ids-data-source-private-b"
+    Name = "tf-acc-route-tables-data-source-private-b"
     Tier = "Private"
   }
 }
 
-data "aws_route_table_ids" "selected" {
+data "aws_route_tables" "selected" {
   vpc_id = "${aws_vpc.test.id}"
 }
 
-data "aws_route_table_ids" "private" {
+data "aws_route_tables" "private" {
   vpc_id = "${aws_vpc.test.id}"
   tags {
     Tier = "Private"
@@ -79,13 +79,13 @@ data "aws_route_table_ids" "private" {
 `, rInt)
 }
 
-func testAccDataSourceAwsRouteTableIDsConfig(rInt int) string {
+func testAccDataSourceAwsRouteTablesConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
   tags {
-    Name = "terraform-testacc-route-table-ids-data-source"
+    Name = "terraform-testacc-route-tables-data-source"
   }
 }
 
@@ -93,7 +93,7 @@ resource "aws_route_table" "test_public_a" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags {
-    Name = "tf-acc-route-table-ids-data-source-public-a"
+    Name = "tf-acc-route-tables-data-source-public-a"
     Tier = "Public"
   }
 }
@@ -102,7 +102,7 @@ resource "aws_route_table" "test_private_a" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags {
-    Name = "tf-acc-route-table-ids-data-source-private-a"
+    Name = "tf-acc-route-tables-data-source-private-a"
     Tier = "Private"
   }
 }
@@ -111,7 +111,7 @@ resource "aws_route_table" "test_private_b" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags {
-    Name = "tf-acc-route-table-ids-data-source-private-b"
+    Name = "tf-acc-route-tables-data-source-private-b"
     Tier = "Private"
   }
 }
