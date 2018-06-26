@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream"
@@ -6062,6 +6063,7 @@ func (c *S3) SelectObjectContentRequest(input *SelectObjectContentInput) (req *r
 
 	output = &SelectObjectContentOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Send.Swap(client.LogHTTPResponseHandler.Name, client.LogHTTPResponseHeaderHandler)
 	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, rest.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBack(output.runEventStreamLoop)
 	return

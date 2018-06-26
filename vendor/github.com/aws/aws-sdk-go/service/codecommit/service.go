@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "codecommit" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName  // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "CodeCommit" // ServiceID is a unique identifer of a specific service
+	ServiceName = "codecommit" // Name of service.
+	EndpointsID = ServiceName  // ID to lookup a service endpoint with.
+	ServiceID   = "CodeCommit" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the CodeCommit client with a session.

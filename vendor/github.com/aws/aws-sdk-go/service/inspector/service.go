@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "inspector" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "Inspector" // ServiceID is a unique identifer of a specific service
+	ServiceName = "inspector" // Name of service.
+	EndpointsID = ServiceName // ID to lookup a service endpoint with.
+	ServiceID   = "Inspector" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the Inspector client with a session.
