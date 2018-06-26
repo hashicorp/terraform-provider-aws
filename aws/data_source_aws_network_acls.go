@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -72,7 +74,7 @@ func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if resp == nil || len(resp.NetworkAcls) == 0 {
-		return fmt.Errorf("no matching network ACL found for vpc with id %s", d.Get("vpc_id").(string))
+		return errors.New("no matching network ACLs found")
 	}
 
 	networkAcls := make([]string, 0)
@@ -81,7 +83,7 @@ func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) erro
 		networkAcls = append(networkAcls, aws.StringValue(networkAcl.NetworkAclId))
 	}
 
-	d.SetId(d.Get("vpc_id").(string))
+	d.SetId(resource.UniqueId())
 	if err := d.Set("ids", networkAcls); err != nil {
 		return fmt.Errorf("Error setting network ACL ids: %s", err)
 	}

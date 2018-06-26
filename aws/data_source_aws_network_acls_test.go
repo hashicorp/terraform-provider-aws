@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -16,107 +17,125 @@ func TestAccDataSourceAwsNetworkAcls_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkAclsConfig(rName),
+				// Ensure at least 1 network ACL exists. We cannot use depends_on.
+				Config: testAccDataSourceAwsNetworkAclsConfig_Base(rName),
 			},
 			{
-				Config: testAccDataSourceAwsNetworkAclsConfigWithDataSource(rName),
+				Config: testAccDataSourceAwsNetworkAclsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_network_acls.all", "ids.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_network_acls.with_tags", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_network_acls.with_filter", "ids.#", "1"),
+					// At least 1
+					resource.TestMatchResourceAttr("data.aws_network_acls.test", "ids.#", regexp.MustCompile(`^[1-9][0-9]*`)),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsNetworkAclsConfigWithDataSource(rName string) string {
-	return fmt.Sprintf(`
-	resource "aws_vpc" "test-vpc" {
-  		cidr_block = "10.0.0.0/16"
-	}
-
-	resource "aws_network_acl" "acl1" {
-  		vpc_id = "${aws_vpc.test-vpc.id}"
-
-  		tags {
-    		Name = "testacc-acl-%s"
-  		}
-	}
-
-	resource "aws_subnet" "test" {
-  		vpc_id            = "${aws_vpc.test-vpc.id}"
-  		cidr_block        = "10.0.0.0/24"
-  		availability_zone = "us-west-2a"
-
-  		tags {
-    		Name = "tf-acc-subnet"
-  		}
-	}
-
-	resource "aws_network_acl" "acl2" {
-  		vpc_id = "${aws_vpc.test-vpc.id}"
-  		subnet_ids = ["${aws_subnet.test.id}"]
-
-  		tags {
-    		Name = "testacc-acl-%s"
-  		}
-	}
-
-	data "aws_network_acls" "all" {
-		vpc_id = "${aws_vpc.test-vpc.id}"
-	}
-
-	data "aws_network_acls" "with_tags" {
-		vpc_id = "${aws_vpc.test-vpc.id}"
-
-		tags {
-			Name = "testacc-acl-%s"
-		}
-	}
-
-	data "aws_network_acls" "with_filter" {
-		vpc_id = "${aws_vpc.test-vpc.id}"
-
-		filter {
-			name = "association.subnet-id"
-    		values = ["${aws_subnet.test.id}"]
-		}
-	}
-	`, rName, rName, rName)
+func TestAccDataSourceAwsNetworkAcls_Filter(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsNetworkAclsConfig_Filter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_network_acls.test", "ids.#", "1"),
+				),
+			},
+		},
+	})
 }
 
-func testAccDataSourceAwsNetworkAclsConfig(rName string) string {
+func TestAccDataSourceAwsNetworkAcls_Tags(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsNetworkAclsConfig_Tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_network_acls.test", "ids.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsNetworkAcls_VpcID(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsNetworkAclsConfig_VpcID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// The VPC will have a default network ACL
+					resource.TestCheckResourceAttr("data.aws_network_acls.test", "ids.#", "3"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceAwsNetworkAclsConfig_Base(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test-vpc" {
-  		cidr_block = "10.0.0.0/16"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
-	resource "aws_network_acl" "acl1" {
-  		vpc_id = "${aws_vpc.test-vpc.id}"
+  tags {
+    Name = "testacc-acl-%s"
+  }
+}
 
-  		tags {
-    		Name = "testacc-acl-%s"
-  		}
-	}
+resource "aws_network_acl" "acl" {
+  count = 2
 
-	resource "aws_subnet" "test" {
-  		vpc_id            = "${aws_vpc.test-vpc.id}"
-  		cidr_block        = "10.0.0.0/24"
-  		availability_zone = "us-west-2a"
+  vpc_id = "${aws_vpc.test.id}"
 
-  		tags {
-    		Name = "tf-acc-subnet"
-  		}
-	}
+  tags {
+    Name = "testacc-acl-%s"
+  }
+}
+`, rName, rName)
+}
 
-	resource "aws_network_acl" "acl2" {
-  		vpc_id = "${aws_vpc.test-vpc.id}"
-  		subnet_ids = ["${aws_subnet.test.id}"]
+func testAccDataSourceAwsNetworkAclsConfig_basic(rName string) string {
+	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+data "aws_network_acls" "test" {}
+`
+}
 
-  		tags {
-    		Name = "testacc-acl-%s"
-  		}
-	}
-	`, rName, rName)
+func testAccDataSourceAwsNetworkAclsConfig_Filter(rName string) string {
+	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+data "aws_network_acls" "test" {
+  filter {
+    name   = "network-acl-id"
+    values = ["${aws_network_acl.acl.0.id}"]
+  }
+}
+`
+}
+
+func testAccDataSourceAwsNetworkAclsConfig_Tags(rName string) string {
+	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+data "aws_network_acls" "test" {
+  tags {
+    Name = "${aws_network_acl.acl.0.tags.Name}"
+  }
+}
+`
+}
+
+func testAccDataSourceAwsNetworkAclsConfig_VpcID(rName string) string {
+	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+data "aws_network_acls" "test" {
+  vpc_id = "${aws_network_acl.acl.0.vpc_id}"
+}
+`
 }
