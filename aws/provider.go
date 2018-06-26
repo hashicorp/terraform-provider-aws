@@ -182,6 +182,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codecommit_repository":            dataSourceAwsCodeCommitRepository(),
 			"aws_db_instance":                      dataSourceAwsDbInstance(),
 			"aws_db_snapshot":                      dataSourceAwsDbSnapshot(),
+			"aws_dx_gateway":                       dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                   dataSourceAwsDynamoDbTable(),
 			"aws_ebs_snapshot":                     dataSourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_ids":                 dataSourceAwsEbsSnapshotIds(),
