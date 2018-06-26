@@ -38,15 +38,9 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"with_default": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"default": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 		},
 	}
@@ -68,13 +62,13 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
 	}
-
-	if len(resp.InvalidParameters) > 0 && d.Get("with_default").(bool) == true {
+	v, ok := d.GetOkExists("default")
+	if len(resp.InvalidParameters) > 0 && ok {
 		d.SetId(name)
 		d.Set("arn", "")
 		d.Set("name", name)
 		d.Set("type", "String")
-		d.Set("value", d.Get("default").(string))
+		d.Set("value", v)
 		return nil
 	} else if len(resp.InvalidParameters) > 0 {
 		return fmt.Errorf("[ERROR] SSM Parameter %s is invalid", name)

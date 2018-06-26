@@ -55,14 +55,13 @@ func TestAccAWSSsmParameterDataSource_defaultValue(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSsmParameterDataSourceConfigNotExist(name, "false", "true", "foo"),
+				Config: testAccCheckAwsSsmParameterDataSourceConfigNotExist(name, "false", "foo"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "foo"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "with_default", "true"),
 				),
 			},
 		},
@@ -109,13 +108,12 @@ data "aws_ssm_parameter" "test" {
 `, name, withDecryption)
 }
 
-func testAccCheckAwsSsmParameterDataSourceConfigNotExist(name string, withDecryption string, withDefault string, defaultValue string) string {
+func testAccCheckAwsSsmParameterDataSourceConfigNotExist(name string, withDecryption string, defaultValue string) string {
 	return fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
 	name = "%s"
 	with_decryption = %s
-	with_default = %s
 	default = "%s"
 }
-`, name, withDecryption, withDefault, defaultValue)
+`, name, withDecryption, defaultValue)
 }
