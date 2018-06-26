@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * provider: Support custom endpoint for `autoscaling` [GH-4970]
 * resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type [GH-4960]
 * resource/aws_codebuild_project: Support resource import [GH-4976]
+* resource/aws_ecs_service: Add `scheduling_strategy` argument (support `DAEMON` scheduling strategy) [GH-4825]
 * resource/aws_iam_instance_profile: Add `create_date` attribute [GH-4932]
 * resource/aws_network_acl: Add full mapping of protocol names to protocol numbers [GH-4956]
 * resource/aws_network_acl_rule: Add full mapping of protocol names to protocol numbers [GH-4956]
