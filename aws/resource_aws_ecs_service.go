@@ -66,6 +66,17 @@ func resourceAwsEcsService() *schema.Resource {
 				Default:  "EC2",
 			},
 
+			"scheduling_strategy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ecs.SchedulingStrategyReplica,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.SchedulingStrategyDaemon,
+					ecs.SchedulingStrategyReplica,
+				}, false),
+			},
+
 			"iam_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -321,6 +332,13 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.LaunchType = aws.String(v.(string))
 	}
 
+	schedulingStrategy := d.Get("scheduling_strategy").(string)
+	input.SchedulingStrategy = aws.String(schedulingStrategy)
+	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
+		// unset desired count if DAEMON
+		input.DesiredCount = nil
+	}
+
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
@@ -489,7 +507,11 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("task_definition", taskDefinition)
 	}
 
-	d.Set("desired_count", service.DesiredCount)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
+	// Automatically ignore desired count if DAEMON
+	if *service.SchedulingStrategy != ecs.SchedulingStrategyDaemon {
+		d.Set("desired_count", service.DesiredCount)
+	}
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
 
@@ -709,7 +731,9 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
 
-	if d.HasChange("desired_count") {
+	schedulingStrategy := d.Get("scheduling_strategy").(string)
+	// Automatically ignore desired count if DAEMON
+	if schedulingStrategy != ecs.SchedulingStrategyDaemon && d.HasChange("desired_count") {
 		_, n := d.GetChange("desired_count")
 		input.DesiredCount = aws.Int64(int64(n.(int)))
 	}
