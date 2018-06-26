@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsRouteTableIDs() *schema.Resource {
+func dataSourceAwsRouteTables() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsRouteTableIDsRead,
 		Schema: map[string]*schema.Schema{
