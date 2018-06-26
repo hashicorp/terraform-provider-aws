@@ -51,6 +51,12 @@ func resourceAwsEcsService() *schema.Resource {
 			"desired_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
+						return true
+					}
+					return false
+				},
 			},
 
 			"health_check_grace_period_seconds": {
@@ -88,12 +94,24 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  200,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
+						return true
+					}
+					return false
+				},
 			},
 
 			"deployment_minimum_healthy_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  100,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
+						return true
+					}
+					return false
+				},
 			},
 
 			"load_balancer": {
@@ -335,7 +353,8 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 	input.SchedulingStrategy = aws.String(schedulingStrategy)
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
-		// unset desired count if DAEMON
+		// unset these if DAEMON
+		input.DeploymentConfiguration = nil
 		input.DesiredCount = nil
 	}
 
@@ -508,10 +527,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
-	// Automatically ignore desired count if DAEMON
-	if *service.SchedulingStrategy != ecs.SchedulingStrategyDaemon {
-		d.Set("desired_count", service.DesiredCount)
-	}
+	d.Set("desired_count", service.DesiredCount)
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
 
@@ -746,7 +762,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		input.TaskDefinition = aws.String(n.(string))
 	}
 
-	if d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent") {
+	if schedulingStrategy != ecs.SchedulingStrategyDaemon && (d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent")) {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
 			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
 			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
@@ -805,7 +821,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Drain the ECS service
-	if *resp.Services[0].Status != "DRAINING" {
+	if *resp.Services[0].Status != "DRAINING" && aws.StringValue(resp.Services[0].SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
 		log.Printf("[DEBUG] Draining ECS service %s", d.Id())
 		_, err = conn.UpdateService(&ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),

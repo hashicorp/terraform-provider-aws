@@ -2030,7 +2030,6 @@ resource "aws_ecs_service" "ghost" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
   scheduling_strategy = "DAEMON"
-  deployment_maximum_percent = 100
 }
 `, clusterName, tdName, svcName)
 }
