@@ -847,6 +847,14 @@
 			"versionExact": "v1.14.13"
 		},
 		{
+			"checksumSHA1": "32fGeVnRDBhJlp3Oc25r4R2M3oc=",
+			"path": "github.com/aws/aws-sdk-go/service/pinpoint",
+			"revision": "e79e9fd4ec11ccc242a472f980be78830f9eba80",
+			"revisionTime": "2018-06-22T22:18:31Z",
+			"version": "v1.14.13",
+			"versionExact": "v1.14.13"
+		},
+		{
 			"checksumSHA1": "YtPLtWvoM6wD68VUp7dU+qk6hyM=",
 			"path": "github.com/aws/aws-sdk-go/service/rds",
 			"revision": "e79e9fd4ec11ccc242a472f980be78830f9eba80",
