@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_codecommit_repository` [GH-4934]
+* **New Data Source:** `aws_dx_gateway` [GH-4988]
 * **New Data Source:** `aws_network_acls` [GH-4966]
 * **New Data Source:** `aws_route_tables` [GH-4841]
 * **New Resource:** `aws_dx_hosted_private_virtual_interface` [GH-3255]
