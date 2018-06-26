@@ -767,6 +767,14 @@
 			"versionExact": "v1.14.13"
 		},
 		{
+			"checksumSHA1": "+l6bA5aVzmBXH2Isj1xZkd5RKNY=",
+			"path": "github.com/aws/aws-sdk-go/service/macie",
+			"revision": "e79e9fd4ec11ccc242a472f980be78830f9eba80",
+			"revisionTime": "2018-06-22T22:18:31Z",
+			"version": "v1.14.13",
+			"versionExact": "v1.14.13"
+		},
+		{
 			"checksumSHA1": "onhxya8p2Q2wgT2TakO+ZcjwY/I=",
 			"path": "github.com/aws/aws-sdk-go/service/mediaconvert",
 			"revision": "e79e9fd4ec11ccc242a472f980be78830f9eba80",
