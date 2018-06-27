@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,48 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_config_delivery_channel", &resource.Sweeper{
+		Name: "aws_config_delivery_channel",
+		Dependencies: []string{
+			"aws_config_configuration_recorder",
+		},
+		F: testSweepConfigDeliveryChannels,
+	})
+}
+
+func testSweepConfigDeliveryChannels(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).configconn
+
+	req := &configservice.DescribeDeliveryChannelsInput{}
+	resp, err := conn.DescribeDeliveryChannels(req)
+	if err != nil {
+		return fmt.Errorf("Error describing Delivery Channels: %s", err)
+	}
+
+	if len(resp.DeliveryChannels) == 0 {
+		log.Print("[DEBUG] No AWS Config Delivery Channel to sweep")
+		return nil
+	}
+
+	for _, dc := range resp.DeliveryChannels {
+		_, err := conn.DeleteDeliveryChannel(&configservice.DeleteDeliveryChannelInput{
+			DeliveryChannelName: dc.Name,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting Delivery Channel (%s): %s",
+				*dc.Name, err)
+		}
+	}
+
+	return nil
+}
 
 func testAccConfigDeliveryChannel_basic(t *testing.T) {
 	var dc configservice.DeliveryChannel
