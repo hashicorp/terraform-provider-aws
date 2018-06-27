@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func dataSourceAwsSecurityGroups() *schema.Resource {
@@ -55,26 +56,21 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading Security Groups with request: %s", req)
 
 	var ids, vpc_ids []string
-	nextToken := ""
 	for {
-		if nextToken != "" {
-			req.NextToken = aws.String(nextToken)
-		}
-
 		resp, err := conn.DescribeSecurityGroups(req)
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading security groups: %s", err)
 		}
 
 		for _, sg := range resp.SecurityGroups {
-			ids = append(ids, *sg.GroupId)
-			vpc_ids = append(vpc_ids, *sg.VpcId)
+			ids = append(ids, aws.StringValue(sg.GroupId))
+			vpc_ids = append(vpc_ids, aws.StringValue(sg.VpcId))
 		}
 
 		if resp.NextToken == nil {
 			break
 		}
-		nextToken = *resp.NextToken
+		req.NextToken = resp.NextToken
 	}
 
 	if len(ids) < 1 {
