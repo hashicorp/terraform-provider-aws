@@ -1,4 +1,4 @@
-## 1.25.0 (Unreleased)
+## 1.25.0 (June 27, 2018)
 
 NOTES:
 
@@ -6,45 +6,45 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_codecommit_repository` [GH-4934]
-* **New Data Source:** `aws_dx_gateway` [GH-4988]
-* **New Data Source:** `aws_network_acls` [GH-4966]
-* **New Data Source:** `aws_route_tables` [GH-4841]
-* **New Data Source:** `aws_security_groups` [GH-2947]
-* **New Resource:** `aws_dx_hosted_private_virtual_interface` [GH-3255]
-* **New Resource:** `aws_dx_hosted_private_virtual_interface_accepter` [GH-3255]
-* **New Resource:** `aws_dx_hosted_public_virtual_interface` [GH-3254]
-* **New Resource:** `aws_dx_hosted_public_virtual_interface_accepter` [GH-3254]
-* **New Resource:** `aws_dx_private_virtual_interface` [GH-3253]
-* **New Resource:** `aws_dx_public_virtual_interface` [GH-3252]
-* **New Resource:** `aws_media_store_container_policy` [GH-3507]
+* **New Data Source:** `aws_codecommit_repository` ([#4934](https://github.com/terraform-providers/terraform-provider-aws/issues/4934))
+* **New Data Source:** `aws_dx_gateway` ([#4988](https://github.com/terraform-providers/terraform-provider-aws/issues/4988))
+* **New Data Source:** `aws_network_acls` ([#4966](https://github.com/terraform-providers/terraform-provider-aws/issues/4966))
+* **New Data Source:** `aws_route_tables` ([#4841](https://github.com/terraform-providers/terraform-provider-aws/issues/4841))
+* **New Data Source:** `aws_security_groups` ([#2947](https://github.com/terraform-providers/terraform-provider-aws/issues/2947))
+* **New Resource:** `aws_dx_hosted_private_virtual_interface` ([#3255](https://github.com/terraform-providers/terraform-provider-aws/issues/3255))
+* **New Resource:** `aws_dx_hosted_private_virtual_interface_accepter` ([#3255](https://github.com/terraform-providers/terraform-provider-aws/issues/3255))
+* **New Resource:** `aws_dx_hosted_public_virtual_interface` ([#3254](https://github.com/terraform-providers/terraform-provider-aws/issues/3254))
+* **New Resource:** `aws_dx_hosted_public_virtual_interface_accepter` ([#3254](https://github.com/terraform-providers/terraform-provider-aws/issues/3254))
+* **New Resource:** `aws_dx_private_virtual_interface` ([#3253](https://github.com/terraform-providers/terraform-provider-aws/issues/3253))
+* **New Resource:** `aws_dx_public_virtual_interface` ([#3252](https://github.com/terraform-providers/terraform-provider-aws/issues/3252))
+* **New Resource:** `aws_media_store_container_policy` ([#3507](https://github.com/terraform-providers/terraform-provider-aws/issues/3507))
 
 ENHANCEMENTS:
 
-* provider: Support custom endpoint for `autoscaling` [GH-4970]
-* resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type [GH-4960]
-* resource/aws_codebuild_project: Support resource import [GH-4976]
-* resource/aws_ecs_service: Add `scheduling_strategy` argument (support `DAEMON` scheduling strategy) [GH-4825]
-* resource/aws_iam_instance_profile: Add `create_date` attribute [GH-4932]
-* resource/aws_media_store_container: Support resource import [GH-3501]
-* resource/aws_network_acl: Add full mapping of protocol names to protocol numbers [GH-4956]
-* resource/aws_network_acl_rule: Add full mapping of protocol names to protocol numbers [GH-4956]
-* resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
-* resource/aws_vpc: Support update of `instance_tenancy` from `dedicated` to `default` [GH-2514]
-* resource/aws_waf_ipset: Support resource import [GH-4979]
-* resource/aws_wafregional_web_acl: Add rule `type` argument (support rate limited rules) [GH-4307] / [GH-4978]
+* provider: Support custom endpoint for `autoscaling` ([#4970](https://github.com/terraform-providers/terraform-provider-aws/issues/4970))
+* resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type ([#4960](https://github.com/terraform-providers/terraform-provider-aws/issues/4960))
+* resource/aws_codebuild_project: Support resource import ([#4976](https://github.com/terraform-providers/terraform-provider-aws/issues/4976))
+* resource/aws_ecs_service: Add `scheduling_strategy` argument (support `DAEMON` scheduling strategy) ([#4825](https://github.com/terraform-providers/terraform-provider-aws/issues/4825))
+* resource/aws_iam_instance_profile: Add `create_date` attribute ([#4932](https://github.com/terraform-providers/terraform-provider-aws/issues/4932))
+* resource/aws_media_store_container: Support resource import ([#3501](https://github.com/terraform-providers/terraform-provider-aws/issues/3501))
+* resource/aws_network_acl: Add full mapping of protocol names to protocol numbers ([#4956](https://github.com/terraform-providers/terraform-provider-aws/issues/4956))
+* resource/aws_network_acl_rule: Add full mapping of protocol names to protocol numbers ([#4956](https://github.com/terraform-providers/terraform-provider-aws/issues/4956))
+* resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` ([#4929](https://github.com/terraform-providers/terraform-provider-aws/issues/4929))
+* resource/aws_vpc: Support update of `instance_tenancy` from `dedicated` to `default` ([#2514](https://github.com/terraform-providers/terraform-provider-aws/issues/2514))
+* resource/aws_waf_ipset: Support resource import ([#4979](https://github.com/terraform-providers/terraform-provider-aws/issues/4979))
+* resource/aws_wafregional_web_acl: Add rule `type` argument (support rate limited rules) ([#4307](https://github.com/terraform-providers/terraform-provider-aws/issues/4307)] / [[#4978](https://github.com/terraform-providers/terraform-provider-aws/issues/4978))
 
 BUG FIXES:
 
-* data-source/aws_rds_cluster: Prevent panic with new CloudWatch logs support (`enabled_cloudwatch_logs_exports`) introduced in 1.23.0 [GH-4927]
-* resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read [GH-4917]
-* resource/aws_db_instance: Properly raise any `ListTagsForResource` error instead of presenting a perpetual difference with `tags` [GH-4943]
-* resource/aws_instance: Prevent extraneous ModifyInstanceAttribute call for `disable_api_termination` on resource creation [GH-4941]
-* resource/aws_instance: Ignore empty string SHA (`da39a3ee5e6b4b0d3255bfef95601890afd80709`) `user_data` difference due to EC2 API response changes [GH-4991]
-* resource/aws_launch_template: Prevent error when using `valid_until` [GH-4952]
-* resource/aws_route: Properly force resource recreation when updating `route_table_id` [GH-4946]
-* resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors [GH-4903]
-* resource/aws_ses_receipt_rule: Prevent error with `s3_action` when `kms_key_arn` is not specified [GH-4965]
+* data-source/aws_rds_cluster: Prevent panic with new CloudWatch logs support (`enabled_cloudwatch_logs_exports`) introduced in 1.23.0 ([#4927](https://github.com/terraform-providers/terraform-provider-aws/issues/4927))
+* resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read ([#4917](https://github.com/terraform-providers/terraform-provider-aws/issues/4917))
+* resource/aws_db_instance: Properly raise any `ListTagsForResource` error instead of presenting a perpetual difference with `tags` ([#4943](https://github.com/terraform-providers/terraform-provider-aws/issues/4943))
+* resource/aws_instance: Prevent extraneous ModifyInstanceAttribute call for `disable_api_termination` on resource creation ([#4941](https://github.com/terraform-providers/terraform-provider-aws/issues/4941))
+* resource/aws_instance: Ignore empty string SHA (`da39a3ee5e6b4b0d3255bfef95601890afd80709`) `user_data` difference due to EC2 API response changes ([#4991](https://github.com/terraform-providers/terraform-provider-aws/issues/4991))
+* resource/aws_launch_template: Prevent error when using `valid_until` ([#4952](https://github.com/terraform-providers/terraform-provider-aws/issues/4952))
+* resource/aws_route: Properly force resource recreation when updating `route_table_id` ([#4946](https://github.com/terraform-providers/terraform-provider-aws/issues/4946))
+* resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors ([#4903](https://github.com/terraform-providers/terraform-provider-aws/issues/4903))
+* resource/aws_ses_receipt_rule: Prevent error with `s3_action` when `kms_key_arn` is not specified ([#4965](https://github.com/terraform-providers/terraform-provider-aws/issues/4965))
 
 ## 1.24.0 (June 21, 2018)
 
