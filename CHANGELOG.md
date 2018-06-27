@@ -16,6 +16,7 @@ FEATURES:
 * **New Resource:** `aws_dx_hosted_public_virtual_interface_accepter` [GH-3254]
 * **New Resource:** `aws_dx_private_virtual_interface` [GH-3253]
 * **New Resource:** `aws_dx_public_virtual_interface` [GH-3252]
+* **New Resource:** `aws_media_store_container_policy` [GH-3507]
 
 ENHANCEMENTS:
 
