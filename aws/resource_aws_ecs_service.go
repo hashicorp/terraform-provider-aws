@@ -62,7 +62,7 @@ func resourceAwsEcsService() *schema.Resource {
 			"health_check_grace_period_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateAwsEcsServiceHealthCheckGracePeriodSeconds,
+				ValidateFunc: validation.IntBetween(0, 7200),
 			},
 
 			"launch_type": {
@@ -920,12 +920,4 @@ func parseTaskDefinition(taskDefinition string) (string, string, error) {
 	}
 
 	return matches[0][1], matches[0][2], nil
-}
-
-func validateAwsEcsServiceHealthCheckGracePeriodSeconds(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-	if (value < 0) || (value > 7200) {
-		errors = append(errors, fmt.Errorf("%q must be between 0 and 7200", k))
-	}
-	return
 }
