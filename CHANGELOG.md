@@ -1,5 +1,9 @@
 ## 1.25.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_instance: Starting around June 21, 2018, the EC2 API began responding with an empty string value for user data for some instances instead of a completely empty response. In Terraform, it would show as a difference of `user_data: "da39a3ee5e6b4b0d3255bfef95601890afd80709" => "" (forces new resource)` if the `user_data` argument was not defined in the Terraform configuration for the resource. This release ignores that difference as equivalent.
+
 FEATURES:
 
 * **New Data Source:** `aws_codecommit_repository` [GH-4934]
@@ -33,6 +37,7 @@ BUG FIXES:
 * resource/aws_codebuild_webhook: Prevent panic when webhook is missing during read [GH-4917]
 * resource/aws_db_instance: Properly raise any `ListTagsForResource` error instead of presenting a perpetual difference with `tags` [GH-4943]
 * resource/aws_instance: Prevent extraneous ModifyInstanceAttribute call for `disable_api_termination` on resource creation [GH-4941]
+* resource/aws_instance: Ignore empty string SHA (`da39a3ee5e6b4b0d3255bfef95601890afd80709`) `user_data` difference due to EC2 API response changes [GH-4991]
 * resource/aws_launch_template: Prevent error when using `valid_until` [GH-4952]
 * resource/aws_route: Properly force resource recreation when updating `route_table_id` [GH-4946]
 * resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors [GH-4903]
