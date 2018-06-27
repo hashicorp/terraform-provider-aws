@@ -119,6 +119,14 @@ func resourceAwsInstance() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
+					// echo -n "" | shasum
+					if old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "" {
+						return true
+					}
+					return false
+				},
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
