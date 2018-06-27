@@ -381,6 +381,27 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificate_imported(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAcmCertificateConfig_selfSigned("example"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.%", "0"),
+				),
+			},
+			resource.TestStep{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
@@ -426,6 +447,38 @@ resource "aws_acm_certificate" "cert" {
   }
 }
 `, domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccAcmCertificateConfig_selfSigned(certName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "%[1]s" {
+	algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "%[1]s" {
+	key_algorithm   = "RSA"
+	private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
+
+	subject {
+		common_name  = "example.com"
+		organization = "ACME Examples, Inc"
+	}
+
+	validity_period_hours = 12
+
+	allowed_uses = [
+		"key_encipherment",
+		"digital_signature",
+		"server_auth",
+	]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key       = "${tls_private_key.%[1]s.private_key_pem}"
+  certificate_body  = "${tls_self_signed_cert.%[1]s.cert_pem}"
+  depends_on = ["tls_private_key.%[1]s", "tls_self_signed_cert.%[1]s"]
+}
+`, certName)
 }
 
 func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
