@@ -7066,6 +7066,11 @@ func (s *CORSRule) SetMaxAgeSeconds(v int64) *CORSRule {
 type CSVInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specifies that CSV field values may contain quoted record delimiters and
+	// such records should be allowed. Default value is FALSE. Setting this value
+	// to TRUE may lower performance.
+	AllowQuotedRecordDelimiter *bool `type:"boolean"`
+
 	// Single character used to indicate a row should be ignored when present at
 	// the start of a row.
 	Comments *string `type:"string"`
@@ -7095,6 +7100,12 @@ func (s CSVInput) String() string {
 // GoString returns the string representation
 func (s CSVInput) GoString() string {
 	return s.String()
+}
+
+// SetAllowQuotedRecordDelimiter sets the AllowQuotedRecordDelimiter field's value.
+func (s *CSVInput) SetAllowQuotedRecordDelimiter(v bool) *CSVInput {
+	s.AllowQuotedRecordDelimiter = &v
+	return s
 }
 
 // SetComments sets the Comments field's value.
