@@ -277,12 +277,12 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
 					roleName, policyName, tgName, lbName, svcName, -1),
-				ExpectError: regexp.MustCompile(`must be between 0 and 7200`),
+				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
 					roleName, policyName, tgName, lbName, svcName, 7201),
-				ExpectError: regexp.MustCompile(`must be between 0 and 7200`),
+				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
