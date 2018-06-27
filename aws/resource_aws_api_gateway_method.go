@@ -67,12 +67,12 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 			"request_models": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"request_parameters": &schema.Schema{
 				Type:          schema.TypeMap,
-				Elem:          schema.TypeBool,
+				Elem:          &schema.Schema{Type: schema.TypeBool},
 				Optional:      true,
 				ConflictsWith: []string{"request_parameters_in_json"},
 			},
