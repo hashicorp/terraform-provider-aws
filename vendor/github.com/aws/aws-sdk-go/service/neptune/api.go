@@ -7550,23 +7550,8 @@ type CreateDBInstanceInput struct {
 	// Valid Values: 0 - 15
 	PromotionTier *int64 `type:"integer"`
 
-	// Specifies the accessibility options for the DB instance. A value of true
-	// specifies an Internet-facing instance with a publicly resolvable DNS name,
-	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC: true
-	//
-	//    * VPC: false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
-	PubliclyAccessible *bool `type:"boolean"`
+	// This parameter is not supported.
+	PubliclyAccessible *bool `deprecated:"true" type:"boolean"`
 
 	// Specifies whether the DB instance is encrypted.
 	//
@@ -9410,23 +9395,8 @@ type DBInstance struct {
 	// primary instance after a failure of the existing primary instance.
 	PromotionTier *int64 `type:"integer"`
 
-	// Specifies the accessibility options for the DB instance. A value of true
-	// specifies an Internet-facing instance with a publicly resolvable DNS name,
-	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC:true
-	//
-	//    * VPC:false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
-	PubliclyAccessible *bool `type:"boolean"`
+	// This parameter is not supported.
+	PubliclyAccessible *bool `deprecated:"true" type:"boolean"`
 
 	// Contains one or more identifiers of DB clusters that are Read Replicas of
 	// this DB instance.
@@ -14118,20 +14088,8 @@ type ModifyDBInstanceInput struct {
 	// Valid Values: 0 - 15
 	PromotionTier *int64 `type:"integer"`
 
-	// Boolean value that indicates if the DB instance has a publicly resolvable
-	// DNS name. Set to True to make the DB instance Internet-facing with a publicly
-	// resolvable DNS name, which resolves to a public IP address. Set to False
-	// to make the DB instance internal with a DNS name that resolves to a private
-	// IP address.
-	//
-	// The DB instance must be part of a public subnet and PubliclyAccessible must
-	// be true in order for it to be publicly accessible.
-	//
-	// Changes to the PubliclyAccessible parameter are applied immediately regardless
-	// of the value of the ApplyImmediately parameter.
-	//
-	// Default: false
-	PubliclyAccessible *bool `type:"boolean"`
+	// This parameter is not supported.
+	PubliclyAccessible *bool `deprecated:"true" type:"boolean"`
 
 	// Specifies the storage type to be associated with the DB instance.
 	//

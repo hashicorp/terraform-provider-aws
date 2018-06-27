@@ -3,13 +3,29 @@
 FEATURES:
 
 * **New Data Source:** `aws_codecommit_repository` [GH-4934]
+* **New Data Source:** `aws_dx_gateway` [GH-4988]
+* **New Data Source:** `aws_network_acls` [GH-4966]
+* **New Data Source:** `aws_route_tables` [GH-4841]
+* **New Resource:** `aws_dx_hosted_private_virtual_interface` [GH-3255]
+* **New Resource:** `aws_dx_hosted_private_virtual_interface_accepter` [GH-3255]
+* **New Resource:** `aws_dx_hosted_public_virtual_interface` [GH-3254]
+* **New Resource:** `aws_dx_hosted_public_virtual_interface_accepter` [GH-3254]
+* **New Resource:** `aws_dx_private_virtual_interface` [GH-3253]
+* **New Resource:** `aws_dx_public_virtual_interface` [GH-3252]
 
 ENHANCEMENTS:
 
+* provider: Support custom endpoint for `autoscaling` [GH-4970]
 * resource/aws_codebuild_project: Support `WINDOWS_CONTAINER` as valid environment type [GH-4960]
+* resource/aws_codebuild_project: Support resource import [GH-4976]
+* resource/aws_ecs_service: Add `scheduling_strategy` argument (support `DAEMON` scheduling strategy) [GH-4825]
 * resource/aws_iam_instance_profile: Add `create_date` attribute [GH-4932]
+* resource/aws_network_acl: Add full mapping of protocol names to protocol numbers [GH-4956]
+* resource/aws_network_acl_rule: Add full mapping of protocol names to protocol numbers [GH-4956]
 * resource/aws_sqs_queue: Add .fifo suffix for FIFO queues using `name_prefix` [GH-4929]
 * resource/aws_vpc: Support update of `instance_tenancy` from `dedicated` to `default` [GH-2514]
+* resource/aws_waf_ipset: Support resource import [GH-4979]
+* resource/aws_wafregional_web_acl: Add rule `type` argument (support rate limited rules) [GH-4307] / [GH-4978]
 
 BUG FIXES:
 
@@ -20,6 +36,7 @@ BUG FIXES:
 * resource/aws_launch_template: Prevent error when using `valid_until` [GH-4952]
 * resource/aws_route: Properly force resource recreation when updating `route_table_id` [GH-4946]
 * resource/aws_route53_zone: Further prevent HostedZoneAlreadyExists with specified caller reference errors [GH-4903]
+* resource/aws_ses_receipt_rule: Prevent error with `s3_action` when `kms_key_arn` is not specified [GH-4965]
 
 ## 1.24.0 (June 21, 2018)
 

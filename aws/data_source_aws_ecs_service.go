@@ -36,6 +36,10 @@ func dataSourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"scheduling_strategy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"task_definition": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,6 +82,7 @@ func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
 
 	return nil
