@@ -1,5 +1,9 @@
 ## 1.26.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_launch_configuration` [GH-3624]
+
 ENHANCEMENTS:
 
 * resource/aws_eip_association: Support resource import [GH-5006]
