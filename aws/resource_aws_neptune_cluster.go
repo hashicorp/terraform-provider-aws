@@ -30,6 +30,10 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
 			"availability_zones": {
 				Type:     schema.TypeSet,
@@ -546,6 +550,104 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 
 }
 
+func resourceAwsNeptuneClusterRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+
+	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		if isAWSErr(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+			d.SetId("")
+			log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
+			return nil
+		}
+		log.Printf("[DEBUG] Error describing Neptune Cluster (%s) when waiting: %s", d.Id(), err)
+		return err
+	}
+
+	var dbc *neptune.DBCluster
+	for _, v := range resp.DBClusters {
+		if aws.StringValue(v.DBClusterIdentifier) == d.Id() {
+			dbc = v
+		}
+	}
+
+	if dbc == nil {
+		log.Printf("[WARN] Neptune Cluster (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	return flattenAwsNeptuneClusterResource(d, meta, dbc)
+}
+
+func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
+	conn := meta.(*AWSClient).neptuneconn
+
+	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
+		return fmt.Errorf("[DEBUG] Error saving AvailabilityZones to state for Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	if dbc.DatabaseName != nil {
+		d.Set("database_name", dbc.DatabaseName)
+	}
+
+	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
+	d.Set("endpoint", dbc.Endpoint)
+	d.Set("engine", dbc.Engine)
+	d.Set("engine_version", dbc.EngineVersion)
+	d.Set("master_username", dbc.MasterUsername)
+	d.Set("port", dbc.Port)
+	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set("kms_key_arn", dbc.KmsKeyId)
+	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
+	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+	d.Set("hosted_zone_id", dbc.HostedZoneId)
+
+	var sg []string
+	for _, g := range dbc.VpcSecurityGroups {
+		sg = append(sg, aws.StringValue(g.VpcSecurityGroupId))
+	}
+	if err := d.Set("vpc_security_group_ids", sg); err != nil {
+		return fmt.Errorf("[DEBUG] Error saving VPC Security Group IDs to state for Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	var cm []string
+	for _, m := range dbc.DBClusterMembers {
+		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
+	}
+	if err := d.Set("cluster_members", cm); err != nil {
+		return fmt.Errorf("[DEBUG] Error saving Neptune Cluster Members to state for Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	var roles []string
+	for _, r := range dbc.AssociatedRoles {
+		roles = append(roles, aws.StringValue(r.RoleArn))
+	}
+
+	if err := d.Set("iam_roles", roles); err != nil {
+		return fmt.Errorf("[DEBUG] Error saving IAM Roles to state for Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	arn := aws.StringValue(dbc.DBClusterArn)
+	d.Set("arn", arn)
+
+	if err := saveTagsNeptune(conn, d, arn); err != nil {
+		log.Printf("[WARN] Failed to save tags for Neptune Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	}
+
+	return nil
+}
+
 func resourceAwsNeptuneClusterStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -557,10 +659,10 @@ func resourceAwsNeptuneClusterStateRefreshFunc(
 
 		if err != nil {
 			if isAWSErr(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
-				log.Printf("[WARN] Neptune Cluster (%s) not found", d.Id())
+				log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
 				return 42, "destroyed", nil
 			}
-			log.Printf("[WARN] Error on retrieving DB Cluster (%s) when waiting: %s", d.Id(), err)
+			log.Printf("[DEBUG] Error on retrieving DB Cluster (%s) when waiting: %s", d.Id(), err)
 			return nil, "", err
 		}
 
