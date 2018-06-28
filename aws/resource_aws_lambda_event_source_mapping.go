@@ -35,7 +35,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 			},
 			"starting_position": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"batch_size": {
