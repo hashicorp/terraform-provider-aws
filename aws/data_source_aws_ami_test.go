@@ -42,6 +42,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "root_device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "root_device_type", "ebs"),
 					resource.TestMatchResourceAttr("data.aws_ami.nat_ami", "root_snapshot_id", regexp.MustCompile("^snap-")),
+					resource.TestCheckResourceAttrSet("data.aws_ami.nat_ami", "root_volume_size"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "sriov_net_support", "simple"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "state", "available"),
 					resource.TestCheckResourceAttr("data.aws_ami.nat_ami", "state_reason.code", "UNSET"),

@@ -32,6 +32,8 @@ func TestAccAWSAMI_basic(t *testing.T) {
 						"aws_ami.foo", "name", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestMatchResourceAttr(
 						"aws_ami.foo", "root_snapshot_id", regexp.MustCompile("^snap-")),
+					resource.TestCheckResourceAttr(
+						"aws_ami.foo", "root_volume_size", "8"),
 				),
 			},
 		},
@@ -66,6 +68,8 @@ func TestAccAWSAMI_snapshotSize(t *testing.T) {
 						"aws_ami.foo", "name", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestCheckResourceAttr(
 						"aws_ami.foo", "architecture", "x86_64"),
+					resource.TestCheckResourceAttr(
+						"aws_ami.foo", "root_volume_size", "20"),
 				),
 			},
 		},

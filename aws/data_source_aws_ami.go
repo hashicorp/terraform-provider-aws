@@ -111,6 +111,10 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"root_volume_size": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"sriov_net_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -290,7 +294,8 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
 		d.Set("root_device_name", image.RootDeviceName)
 	}
 	d.Set("root_device_type", image.RootDeviceType)
-	d.Set("root_snapshot_id", amiRootSnapshotId(image))
+	d.Set("root_snapshot_id", amiRootVolumeInfo(image).snapshotId)
+	d.Set("root_volume_size", amiRootVolumeInfo(image).volumeSize)
 	if image.SriovNetSupport != nil {
 		d.Set("sriov_net_support", image.SriovNetSupport)
 	}
@@ -365,20 +370,38 @@ func amiProductCodes(m []*ec2.ProductCode) *schema.Set {
 	return s
 }
 
-// Returns the root snapshot ID for an image, if it has one
-func amiRootSnapshotId(image *ec2.Image) string {
+type rootVolumeInfo struct {
+	snapshotId string
+	volumeSize int64
+}
+
+// Returns the root volume info for an image
+func amiRootVolumeInfo(image *ec2.Image) rootVolumeInfo {
+	log.Printf("[DEBUG] aws_ami - rootVolumeInfo: %v", image)
 	if image.RootDeviceName == nil {
-		return ""
+		log.Printf("[DEBUG] aws_ami - image.RootDeviceName == nil")
+		return rootVolumeInfo{
+			snapshotId: "",
+			volumeSize: 0,
+		}
 	}
 	for _, bdm := range image.BlockDeviceMappings {
 		if bdm.DeviceName == nil || *bdm.DeviceName != *image.RootDeviceName {
 			continue
 		}
 		if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-			return *bdm.Ebs.SnapshotId
+			log.Printf("[DEBUG] aws_ami - bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil")
+			return rootVolumeInfo{
+				snapshotId: *bdm.Ebs.SnapshotId,
+				volumeSize: *bdm.Ebs.VolumeSize,
+			}
 		}
 	}
-	return ""
+	log.Printf("[DEBUG] aws_ami - fall through")
+	return rootVolumeInfo{
+		snapshotId: "",
+		volumeSize: 0,
+	}
 }
 
 // Returns the state reason.
