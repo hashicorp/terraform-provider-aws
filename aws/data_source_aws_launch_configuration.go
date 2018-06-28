@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -195,6 +196,14 @@ func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error retrieving launch configuration: %s", err)
 	}
 
+	if describConfs == nil || len(describConfs.LaunchConfigurations) == 0 {
+		return errors.New("No matching Launch Configuration found")
+	}
+
+	if len(describConfs.LaunchConfigurations) > 1 {
+		return errors.New("Multiple matching Launch Configurations found")
+	}
+
 	lc := describConfs.LaunchConfigurations[0]
 
 	d.Set("key_name", lc.KeyName)
@@ -202,16 +211,24 @@ func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("instance_type", lc.InstanceType)
 	d.Set("name", lc.LaunchConfigurationName)
 	d.Set("user_data", lc.UserData)
-
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("ebs_optimized", lc.EbsOptimized)
 	d.Set("spot_price", lc.SpotPrice)
-	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
-	d.Set("security_groups", lc.SecurityGroups)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
-
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("vpc_classic_link_security_groups", lc.ClassicLinkVPCSecurityGroups)
+	d.Set("enable_monitoring", false)
+
+	if lc.InstanceMonitoring != nil {
+		d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
+	}
+
+	if err := d.Set("security_groups", lc.SecurityGroups); err != nil {
+		return fmt.Errorf("error setting security_groups: %s", err)
+	}
+
+	if err := d.Set("vpc_classic_link_security_groups", lc.ClassicLinkVPCSecurityGroups); err != nil {
+		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
+	}
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
 		return err
