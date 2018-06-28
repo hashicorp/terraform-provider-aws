@@ -1220,7 +1220,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	if config.LaunchTemplateConfigs[0] != nil {
+	if len(config.LaunchTemplateConfigs) > 0 {
 		d.Set("launch_template_configs.0.launch_template_specification.0", flattenFleetLaunchTemplateSpecification(config.LaunchTemplateConfigs[0].LaunchTemplateSpecification))
 		d.Set("launch_template_configs.0.overrides", setLaunchTemplateOverrides(config.LaunchTemplateConfigs[0].Overrides))
 	} else {
@@ -1579,7 +1579,7 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), but instances have terminated, removing", n, spotFleetRequestID)
 			return nil
 		} else {
-			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and %d instances are still running", n, spotFleetRequestID, len(iresp.Reservations))
+			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and at least 1 instance is still running", n, spotFleetRequestID)
 		}
 
 		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
