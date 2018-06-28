@@ -17,7 +17,7 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationDataSourceConfig(rInt),
+				Config: testAccLaunchConfigurationDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(rName, "image_id"),
 					resource.TestCheckResourceAttrSet(rName, "instance_type"),
@@ -31,8 +31,25 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
+	rInt := acctest.RandInt()
+	rName := "data.aws_launch_configuration.foo"
 
-func testAccLaunchConfigurationDataSourceConfig(rInt int) string {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(rName, "security_groups.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccLaunchConfigurationDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_configuration" "foo" {
   name = "terraform-test-%d"
@@ -65,4 +82,28 @@ data "aws_launch_configuration" "foo" {
   name = "${aws_launch_configuration.foo.name}"
 }
 `, rInt)
+}
+
+func testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform-test_%d"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_launch_configuration" "test" {
+  name = "terraform-test-%d"
+  image_id = "ami-21f78e11"
+  instance_type = "m1.small"
+  security_groups = ["${aws_security_group.test.id}"]
+}
+
+data "aws_launch_configuration" "foo" {
+  name = "${aws_launch_configuration.test.name}"
+}
+`, rInt, rInt)
 }

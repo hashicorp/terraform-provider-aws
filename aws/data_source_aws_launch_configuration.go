@@ -222,11 +222,19 @@ func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface
 		d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
 	}
 
-	if err := d.Set("security_groups", lc.SecurityGroups); err != nil {
+	vpcSGs := make([]string, 0, len(lc.SecurityGroups))
+	for _, sg := range lc.SecurityGroups {
+		vpcSGs = append(vpcSGs, *sg)
+	}
+	if err := d.Set("security_groups", vpcSGs); err != nil {
 		return fmt.Errorf("error setting security_groups: %s", err)
 	}
 
-	if err := d.Set("vpc_classic_link_security_groups", lc.ClassicLinkVPCSecurityGroups); err != nil {
+	classicSGs := make([]string, 0, len(lc.ClassicLinkVPCSecurityGroups))
+	for _, sg := range lc.ClassicLinkVPCSecurityGroups {
+		classicSGs = append(classicSGs, *sg)
+	}
+	if err := d.Set("vpc_classic_link_security_groups", classicSGs); err != nil {
 		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
 	}
 
