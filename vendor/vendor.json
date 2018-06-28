@@ -855,6 +855,14 @@
 			"versionExact": "v1.14.14"
 		},
 		{
+			"checksumSHA1": "j1i1tZ94/kDvvzgpv5xqxwNvgyY=",
+			"path": "github.com/aws/aws-sdk-go/service/pricing",
+			"revision": "aff39e8473db578a1cec9ac2f829a56813c1d631",
+			"revisionTime": "2018-06-26T20:42:33Z",
+			"version": "v1.14.14",
+			"versionExact": "v1.14.14"
+		},
+		{
 			"checksumSHA1": "YtPLtWvoM6wD68VUp7dU+qk6hyM=",
 			"path": "github.com/aws/aws-sdk-go/service/rds",
 			"revision": "aff39e8473db578a1cec9ac2f829a56813c1d631",
