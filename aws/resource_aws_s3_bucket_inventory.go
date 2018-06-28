@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -325,6 +326,14 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if output.InventoryConfiguration.Destination != nil {
+		// Flag the existence of SSE-S3 encryption because it cannot be marshaled when updating a resource.
+		// Allowing import would risk disabling encryption inadvertently when applying updates.
+		if output.InventoryConfiguration.Destination.S3BucketDestination.Encryption != nil {
+			if output.InventoryConfiguration.Destination.S3BucketDestination.Encryption.SSES3 != nil {
+				return errors.New("sse_s3 encryption is unsupported")
+			}
+		}
+
 		destination := map[string]interface{}{
 			"bucket": flattenS3InventoryS3BucketDestination(output.InventoryConfiguration.Destination.S3BucketDestination),
 		}

@@ -111,6 +111,8 @@ The `bucket` configuration supports the following:
 
 The `encryption` configuration supports the following:
 
+~> **NOTE:** `sse_s3` is currently unsupported.
+
 * `sse_kms` - (Optional) Specifies to use server-side encryption with AWS KMS-managed keys to encrypt the inventory file (documented below).
 * `sse_s3` - (Optional) Specifies to use server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file.
 

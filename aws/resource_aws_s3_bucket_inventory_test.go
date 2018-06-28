@@ -60,6 +60,8 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 }
 
 func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
+	t.Skip("SSE-S3 is not supported by the SDK.")
+
 	var conf s3.InventoryConfiguration
 	rString := acctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
