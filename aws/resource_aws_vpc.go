@@ -674,3 +674,33 @@ func awsVpcDescribeVpcAttribute(attribute string, vpcId string, conn *ec2.EC2) (
 
 	return resp, nil
 }
+
+// vpcDescribe returns EC2 API information about the specified VPC.
+// If the VPC doesn't exist, return nil.
+func vpcDescribe(conn *ec2.EC2, vpcId string) (*ec2.Vpc, error) {
+	resp, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
+		VpcIds: aws.StringSlice([]string{vpcId}),
+	})
+	if err != nil {
+		if !isAWSErr(err, "InvalidVpcID.NotFound", "") {
+			return nil, err
+		}
+		resp = nil
+	}
+
+	if resp == nil {
+		return nil, nil
+	}
+
+	n := len(resp.Vpcs)
+	switch n {
+	case 0:
+		return nil, nil
+
+	case 1:
+		return resp.Vpcs[0], nil
+
+	default:
+		return nil, fmt.Errorf("Found %d VPCs for %s, expected 1", n, vpcId)
+	}
+}
