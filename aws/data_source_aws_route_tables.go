@@ -15,6 +15,8 @@ func dataSourceAwsRouteTables() *schema.Resource {
 		Read: dataSourceAwsRouteTablesRead,
 		Schema: map[string]*schema.Schema{
 
+			"filter": ec2CustomFiltersSchema(),
+
 			"tags": tagsSchemaComputed(),
 
 			"vpc_id": {
@@ -47,6 +49,10 @@ func dataSourceAwsRouteTablesRead(d *schema.ResourceData, meta interface{}) erro
 
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
 		tagsFromMap(d.Get("tags").(map[string]interface{})),
+	)...)
+
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	log.Printf("[DEBUG] DescribeRouteTables %s\n", req)

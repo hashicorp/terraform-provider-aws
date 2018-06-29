@@ -21,9 +21,10 @@ func TestAccDataSourceAwsRouteTables(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsRouteTablesConfigWithDataSource(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_route_tables.test", "ids.#", "4"),
-					resource.TestCheckResourceAttr("data.aws_route_tables.private", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.test", "ids.#", "5"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.private", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_route_tables.test2", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.filter_test", "ids.#", "2"),
 				),
 			},
 		},
@@ -54,6 +55,7 @@ resource "aws_route_table" "test_public_a" {
   tags {
     Name = "tf-acc-route-tables-data-source-public-a"
     Tier = "Public"
+    Component = "Frontend"
   }
 }
 
@@ -63,6 +65,7 @@ resource "aws_route_table" "test_private_a" {
   tags {
     Name = "tf-acc-route-tables-data-source-private-a"
     Tier = "Private"
+    Component = "Database"
   }
 }
 
@@ -72,6 +75,17 @@ resource "aws_route_table" "test_private_b" {
   tags {
     Name = "tf-acc-route-tables-data-source-private-b"
     Tier = "Private"
+    Component = "Backend-1"
+  }
+}
+
+resource "aws_route_table" "test_private_c" {
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-route-tables-data-source-private-c"
+    Tier = "Private"
+    Component = "Backend-2"
   }
 }
 
@@ -87,6 +101,15 @@ data "aws_route_tables" "private" {
   vpc_id = "${aws_vpc.test.id}"
   tags {
     Tier = "Private"
+  }
+}
+
+data "aws_route_tables" "filter_test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  filter {
+    name = "tag:Component"
+    values = ["Backend*"]
   }
 }
 `, rInt, rInt)
@@ -108,6 +131,7 @@ resource "aws_route_table" "test_public_a" {
   tags {
     Name = "tf-acc-route-tables-data-source-public-a"
     Tier = "Public"
+    Component = "Frontend"
   }
 }
 
@@ -117,6 +141,7 @@ resource "aws_route_table" "test_private_a" {
   tags {
     Name = "tf-acc-route-tables-data-source-private-a"
     Tier = "Private"
+    Component = "Database"
   }
 }
 
@@ -126,6 +151,17 @@ resource "aws_route_table" "test_private_b" {
   tags {
     Name = "tf-acc-route-tables-data-source-private-b"
     Tier = "Private"
+    Component = "Backend-1"
+  }
+}
+
+resource "aws_route_table" "test_private_c" {
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-route-tables-data-source-private-c"
+    Tier = "Private"
+    Component = "Backend-2"
   }
 }
 `, rInt)
