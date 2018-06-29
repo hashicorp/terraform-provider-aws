@@ -9,6 +9,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_route_tables: Add `filter` argument [GH-5035]
+* data-source/aws_subnet_ids: Add `filter` argument [GH-5038]
 * resource/aws_eip_association: Support resource import [GH-5006]
 * resource/aws_network_acl_rule: Add plan time conflict validation with `cidr_block` and `ipv6_cidr_block` [GH-3951]
 * resource/aws_spot_fleet_request: Add `fleet_type` argument [GH-5032]
