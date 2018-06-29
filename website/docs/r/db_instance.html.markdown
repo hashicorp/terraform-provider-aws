@@ -58,7 +58,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 The following arguments are supported:
 
 * `allocated_storage` - (Required unless a `snapshot_identifier` or
-`replicate_source_db` is provided) The allocated storage in gigabytes.
+`replicate_source_db` is provided) The allocated storage in gibibytes.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
