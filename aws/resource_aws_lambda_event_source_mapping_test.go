@@ -33,14 +33,14 @@ func TestAccAWSLambdaEventSourceMapping_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaEventSourceMappingConfig(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
 				),
 			},
 			{
-				Config: testAccAWSLambdaEventSourceMappingConfigUpdate(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
 					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
@@ -49,6 +49,52 @@ func TestAccAWSLambdaEventSourceMapping_basic(t *testing.T) {
 						"enabled", strconv.FormatBool(false)),
 					resource.TestMatchResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
 						"function_arn", uFuncArnRe),
+					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"starting_position", "TRIM_HORIZON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_sqsBasic(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_sqs_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_sqs_basic_%s", rString)
+	attName := fmt.Sprintf("tf_acc_att_lambda_sqs_basic_%s", rString)
+	streamName := fmt.Sprintf("tf_acc_stream_lambda_sqs_basic_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_sqs_basic_%s", rString)
+	uFuncName := fmt.Sprintf("tf_acc_lambda_sqs_basic_updated_%s", rString)
+	uFuncArnRe := regexp.MustCompile(":" + uFuncName + "$")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
+					resource.TestCheckNoResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"starting_position"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"batch_size", strconv.Itoa(5)),
+					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"enabled", strconv.FormatBool(false)),
+					resource.TestMatchResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"function_arn", uFuncArnRe),
+					resource.TestCheckNoResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"starting_position"),
 				),
 			},
 		},
@@ -72,7 +118,7 @@ func TestAccAWSLambdaEventSourceMapping_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaEventSourceMappingConfig(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
 			},
 
 			{
@@ -102,7 +148,35 @@ func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaEventSourceMappingConfig(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAWSLambdaEventSourceMappingDisappears(&conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_sqsDisappears(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_sqs_import_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_sqs_import_%s", rString)
+	attName := fmt.Sprintf("tf_acc_att_lambda_sqs_import_%s", rString)
+	streamName := fmt.Sprintf("tf_acc_stream_lambda_sqs_import_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_sqs_import_%s", rString)
+	uFuncName := fmt.Sprintf("tf_acc_lambda_sqs_import_updated_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
 					testAccCheckAWSLambdaEventSourceMappingDisappears(&conf),
@@ -117,32 +191,49 @@ func testAccCheckAWSLambdaEventSourceMappingDisappears(conf *lambda.EventSourceM
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
-		params := &lambda.DeleteEventSourceMappingInput{
-			UUID: conf.UUID,
-		}
-
-		_, err := conn.DeleteEventSourceMapping(params)
-		if err != nil {
-			if err != nil {
-				return err
+		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+			params := &lambda.DeleteEventSourceMappingInput{
+				UUID: conf.UUID,
 			}
+			_, err := conn.DeleteEventSourceMapping(params)
+			if err != nil {
+				cgw, ok := err.(awserr.Error)
+				if ok {
+					if cgw.Code() == "ResourceNotFoundException" {
+						return nil
+					}
+
+					if cgw.Code() == "ResourceInUseException" {
+						return resource.RetryableError(fmt.Errorf(
+							"Waiting for Lambda Event Source Mapping to delete: %v", conf.UUID))
+					}
+				}
+				return resource.NonRetryableError(
+					fmt.Errorf("Error deleting Lambda Event Source Mapping: %s", err))
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
 		}
 
 		return resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.GetEventSourceMappingInput{
 				UUID: conf.UUID,
 			}
-			_, err := conn.GetEventSourceMapping(params)
+			_, err = conn.GetEventSourceMapping(params)
 			if err != nil {
 				cgw, ok := err.(awserr.Error)
 				if ok && cgw.Code() == "ResourceNotFoundException" {
 					return nil
 				}
 				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving Lambda Event Source Mapping: %s", err))
+					fmt.Errorf("Error getting Lambda Event Source Mapping: %s", err))
 			}
 			return resource.RetryableError(fmt.Errorf(
-				"Waiting for Lambda Event Source Mapping: %v", conf.UUID))
+				"Waiting to get Lambda Event Source Mapping: %v", conf.UUID))
 		})
 	}
 }
@@ -209,7 +300,7 @@ func testAccCheckAWSLambdaEventSourceMappingAttributes(mapping *lambda.EventSour
 	}
 }
 
-func testAccAWSLambdaEventSourceMappingConfig(roleName, policyName, attName, streamName,
+func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName,
 	funcName, uFuncName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
@@ -234,7 +325,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
     name = "%s"
     path = "/"
-    description = "IAM policy for for Lamda event mapping testing"
+    description = "IAM policy for for Lambda event mapping testing"
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -288,17 +379,18 @@ resource "aws_lambda_function" "lambda_function_test_update" {
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
-		batch_size = 100
-		event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
-		enabled = true
-		depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-		function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
-		starting_position = "TRIM_HORIZON"
+    batch_size = 100
+    event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
+    enabled = true
+    depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+    function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
+    starting_position = "TRIM_HORIZON"
 }`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
-func testAccAWSLambdaEventSourceMappingConfigUpdate(roleName, policyName, attName, streamName,
+func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName,
 	funcName, uFuncName string) string {
+
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
     name = "%s"
@@ -322,7 +414,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
     name = "%s"
     path = "/"
-    description = "IAM policy for for Lamda event mapping testing"
+    description = "IAM policy for for Lambda event mapping testing"
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -376,11 +468,166 @@ resource "aws_lambda_function" "lambda_function_test_update" {
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
-		batch_size = 200
-		event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
-		enabled = false
-		depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-		function_name = "${aws_lambda_function.lambda_function_test_update.arn}"
-		starting_position = "TRIM_HORIZON"
+    batch_size = 200
+    event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
+    enabled = false
+    depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+    function_name = "${aws_lambda_function.lambda_function_test_update.arn}"
+    starting_position = "TRIM_HORIZON"
+}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName, streamName,
+	funcName, uFuncName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "iam_for_lambda" {
+    name = "%s"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy_for_role" {
+    name = "%s"
+    path = "/"
+    description = "IAM policy for for Lambda event mapping testing"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Effect": "Allow",
+          "Action": [
+            "sqs:*"
+          ],
+          "Resource": "*"
+      }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
+    name = "%s"
+    roles = ["${aws_iam_role.iam_for_lambda.name}"]
+    policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+}
+
+resource "aws_sqs_queue" "sqs_queue_test" {
+    name = "%s"
+}
+
+resource "aws_lambda_function" "lambda_function_test_create" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+}
+
+resource "aws_lambda_function" "lambda_function_test_update" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+}
+
+resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
+    batch_size = 10
+    event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+    enabled = true
+    depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+    function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
+}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName,
+	funcName, uFuncName string) string {
+
+	return fmt.Sprintf(`
+resource "aws_iam_role" "iam_for_lambda" {
+    name = "%s"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy_for_role" {
+    name = "%s"
+    path = "/"
+    description = "IAM policy for for Lambda event mapping testing"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Effect": "Allow",
+          "Action": [
+            "sqs:*"
+          ],
+          "Resource": "*"
+      }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
+    name = "%s"
+    roles = ["${aws_iam_role.iam_for_lambda.name}"]
+    policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+}
+
+resource "aws_sqs_queue" "sqs_queue_test" {
+    name = "%s"
+}
+
+resource "aws_lambda_function" "lambda_function_test_create" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+}
+
+resource "aws_lambda_function" "lambda_function_test_update" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs4.3"
+}
+
+resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
+    batch_size = 5
+    event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+    enabled = false
+    depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+    function_name = "${aws_lambda_function.lambda_function_test_update.arn}"
 }`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }

@@ -87,11 +87,14 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Creating Lambda event source mapping: source %s to function %s", eventSourceArn, functionName)
 
 	params := &lambda.CreateEventSourceMappingInput{
-		EventSourceArn:   aws.String(eventSourceArn),
-		FunctionName:     aws.String(functionName),
-		StartingPosition: aws.String(d.Get("starting_position").(string)),
-		BatchSize:        aws.Int64(int64(d.Get("batch_size").(int))),
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		EventSourceArn: aws.String(eventSourceArn),
+		FunctionName:   aws.String(functionName),
+		BatchSize:      aws.Int64(int64(d.Get("batch_size").(int))),
+		Enabled:        aws.Bool(d.Get("enabled").(bool)),
+	}
+
+	if startingPosition := d.Get("starting_position"); startingPosition != "" {
+		params.StartingPosition = aws.String(startingPosition.(string))
 	}
 
 	// IAM profiles and roles can take some time to propagate in AWS:
@@ -170,7 +173,19 @@ func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta inte
 		UUID: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteEventSourceMapping(params)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteEventSourceMapping(params)
+		if err != nil {
+			if awserr, ok := err.(awserr.Error); ok {
+				if awserr.Code() == "ResourceInUseException" {
+					return resource.RetryableError(awserr)
+				}
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
 	if err != nil {
 		return fmt.Errorf("Error deleting Lambda event source mapping: %s", err)
 	}
@@ -196,7 +211,9 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		_, err := conn.UpdateEventSourceMapping(params)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "InvalidParameterValueException" {
+				if awserr.Code() == "InvalidParameterValueException" ||
+					awserr.Code() == "ResourceInUseException" {
+
 					return resource.RetryableError(awserr)
 				}
 			}
