@@ -33,35 +33,9 @@ resource "aws_iam_role" "example" {
 EOF
 }
 
-resource "aws_iam_role_policy" "example" {
-  name = "example-policy"
-  role = "${aws_iam_role.example.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "autoscaling:CompleteLifecycleAction",
-        "autoscaling:DeleteLifecycleHook",
-        "autoscaling:DescribeAutoScalingGroups",
-        "autoscaling:DescribeLifecycleHooks",
-        "autoscaling:PutLifecycleHook",
-        "autoscaling:RecordLifecycleActionHeartbeat",
-        "codedeploy:*",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
-        "tag:GetTags",
-        "tag:GetResources",
-        "sns:Publish"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+  role       = "${aws_iam_role.example.name}"
 }
 
 resource "aws_codedeploy_app" "example" {
