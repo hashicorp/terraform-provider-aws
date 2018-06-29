@@ -10,6 +10,10 @@ ENHANCEMENTS:
 * resource/aws_eip_association: Support resource import [GH-5006]
 * resource/aws_network_acl_rule: Add plan time conflict validation with `cidr_block` and `ipv6_cidr_block` [GH-3951]
 
+BUG FIXES:
+
+* resource/aws_kms_alias: Fix perpetual plan when `target_key_id` is ARN [GH-4010]
+
 ## 1.25.0 (June 27, 2018)
 
 NOTES:
