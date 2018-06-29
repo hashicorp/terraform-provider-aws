@@ -287,14 +287,26 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
-	output, err := conn.GetBucketInventoryConfiguration(input)
-	if err != nil {
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-			log.Printf("[WARN] %s S3 bucket inventory configuration not found, removing from state.", d.Id())
-			d.SetId("")
-			return nil
+	var output *s3.GetBucketInventoryConfigurationOutput
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.GetBucketInventoryConfiguration(input)
+		if err != nil {
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				if d.IsNewResource() {
+					return resource.RetryableError(err)
+				}
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
+		return nil
+	})
+
+	if output == nil || output.InventoryConfiguration == nil {
+		log.Printf("[WARN] %s S3 bucket inventory configuration not found, removing from state.", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("enabled", aws.BoolValue(output.InventoryConfiguration.IsEnabled))
