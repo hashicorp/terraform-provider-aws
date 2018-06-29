@@ -381,7 +381,7 @@ func (c *SecretsManager) DeleteResourcePolicyRequest(input *DeleteResourcePolicy
 
 // DeleteResourcePolicy API operation for AWS Secrets Manager.
 //
-// Deletes the resource-based policy currently attached to the secret.
+// Deletes the resource-based permission policy that's attached to the secret.
 //
 // Minimum permissions
 //
@@ -393,8 +393,8 @@ func (c *SecretsManager) DeleteResourcePolicyRequest(input *DeleteResourcePolicy
 //
 //    * To attach a resource policy to a secret, use PutResourcePolicy.
 //
-//    * To retrieve the current resource-based policy that is attached to a
-//    secret, use GetResourcePolicy.
+//    * To retrieve the current resource-based policy that's attached to a secret,
+//    use GetResourcePolicy.
 //
 //    * To list all of the currently available secrets, use ListSecrets.
 //
@@ -828,10 +828,10 @@ func (c *SecretsManager) GetResourcePolicyRequest(input *GetResourcePolicyInput)
 
 // GetResourcePolicy API operation for AWS Secrets Manager.
 //
-// Retrieves the JSON text of the resource-based policy attached to the specified
-// secret. The JSON request string input and response output are shown formatted
-// with whitespace and line breaks for better readability. Submit your input
-// as a single line JSON string.
+// Retrieves the JSON text of the resource-based policy document that's attached
+// to the specified secret. The JSON request string input and response output
+// are shown formatted with white space and line breaks for better readability.
+// Submit your input as a single line JSON string.
 //
 // Minimum permissions
 //
@@ -843,7 +843,7 @@ func (c *SecretsManager) GetResourcePolicyRequest(input *GetResourcePolicyInput)
 //
 //    * To attach a resource policy to a secret, use PutResourcePolicy.
 //
-//    * To delete the resource-based policy that is attached to a secret, use
+//    * To delete the resource-based policy that's attached to a secret, use
 //    DeleteResourcePolicy.
 //
 //    * To list all of the currently available secrets, use ListSecrets.
@@ -1381,13 +1381,14 @@ func (c *SecretsManager) PutResourcePolicyRequest(input *PutResourcePolicyInput)
 
 // PutResourcePolicy API operation for AWS Secrets Manager.
 //
-// Attaches the contents of the specified resource-based policy to a secret.
-// A resource-based policy is optional. Alternatively, you can use IAM user-based
-// policies that specify the secret's ARN in the policy statement's Resources
-// element. You can also use a combination of both identity- an resource-based
-// policies. The affected users and roles receive the permissions permitted
-// by all of the relevant policies. For more information, see Using Resource-Based
-// Policies for AWS Secrets Manager (http://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html).
+// Attaches the contents of the specified resource-based permission policy to
+// a secret. A resource-based policy is optional. Alternatively, you can use
+// IAM identity-based policies that specify the secret's Amazon Resource Name
+// (ARN) in the policy statement's Resources element. You can also use a combination
+// of both identity-based and resource-based policies. The affected users and
+// roles receive the permissions that are permitted by all of the relevant policies.
+// For more information, see Using Resource-Based Policies for AWS Secrets Manager
+// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html).
 // For the complete description of the AWS policy syntax and grammar, see IAM
 // JSON Policy Reference (http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies.html)
 // in the IAM User Guide.
@@ -1400,9 +1401,9 @@ func (c *SecretsManager) PutResourcePolicyRequest(input *PutResourcePolicyInput)
 //
 // Related operations
 //
-//    * To retrieve the resource policy attached to a secret, use GetResourcePolicy.
+//    * To retrieve the resource policy that's attached to a secret, use GetResourcePolicy.
 //
-//    * To delete the resource-based policy that is attached to a secret, use
+//    * To delete the resource-based policy that's attached to a secret, use
 //    DeleteResourcePolicy.
 //
 //    * To list all of the currently available secrets, use ListSecrets.
@@ -2620,7 +2621,7 @@ type CreateSecretInput struct {
 	// Specifies the friendly name of the new secret.
 	//
 	// The secret name must be ASCII letters, digits, or the following characters
-	// : /_+=,.@-
+	// : /_+=.@-
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -2842,9 +2843,9 @@ func (s *CreateSecretOutput) SetVersionId(v string) *CreateSecretOutput {
 type DeleteResourcePolicyInput struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the secret for which you want to delete the attached resource-based
-	// policy. You can specify either the Amazon Resource Name (ARN) or the friendly
-	// name of the secret.
+	// Specifies the secret that you want to delete the attached resource-based
+	// policy for. You can specify either the Amazon Resource Name (ARN) or the
+	// friendly name of the secret.
 	//
 	// SecretId is a required field
 	SecretId *string `min:"1" type:"string" required:"true"`
@@ -2885,10 +2886,11 @@ func (s *DeleteResourcePolicyInput) SetSecretId(v string) *DeleteResourcePolicyI
 type DeleteResourcePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the secret for which the resource-based policy was deleted.
+	// The ARN of the secret that the resource-based policy was deleted for.
 	ARN *string `min:"20" type:"string"`
 
-	// The friendly name of the secret for which the resource-based policy was deleted.
+	// The friendly name of the secret that the resource-based policy was deleted
+	// for.
 	Name *string `min:"1" type:"string"`
 }
 
@@ -3347,9 +3349,9 @@ func (s *GetRandomPasswordOutput) SetRandomPassword(v string) *GetRandomPassword
 type GetResourcePolicyInput struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the secret for which you want to retrieve the attached resource-based
-	// policy. You can specify either the Amazon Resource Name (ARN) or the friendly
-	// name of the secret.
+	// Specifies the secret that you want to retrieve the attached resource-based
+	// policy for. You can specify either the Amazon Resource Name (ARN) or the
+	// friendly name of the secret.
 	//
 	// SecretId is a required field
 	SecretId *string `min:"1" type:"string" required:"true"`
@@ -3390,18 +3392,19 @@ func (s *GetResourcePolicyInput) SetSecretId(v string) *GetResourcePolicyInput {
 type GetResourcePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the secret for which the resource-based policy was retrieved.
+	// The ARN of the secret that the resource-based policy was retrieved for.
 	ARN *string `min:"20" type:"string"`
 
-	// The friendly name of the secret for which the resource-based policy was retrieved.
+	// The friendly name of the secret that the resource-based policy was retrieved
+	// for.
 	Name *string `min:"1" type:"string"`
 
-	// A JSON-formatted string that describes the permissions associated with the
-	// attached secret. These permissions are combined with any permissions associated
-	// with the user or role who attempts to access this secret. The combined permissions
-	// specify who can access the secret and what actions they can perform. For
-	// more information, see Authentication and Access Control for AWS Secrets Manager
-	// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access.html)
+	// A JSON-formatted string that describes the permissions that are associated
+	// with the attached secret. These permissions are combined with any permissions
+	// that are associated with the user or role that attempts to access this secret.
+	// The combined permissions specify who can access the secret and what actions
+	// they can perform. For more information, see Authentication and Access Control
+	// for AWS Secrets Manager (http://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access.html)
 	// in the AWS Secrets Manager User Guide.
 	ResourcePolicy *string `min:"1" type:"string"`
 }
@@ -3868,19 +3871,18 @@ func (s *ListSecretsOutput) SetSecretList(v []*SecretListEntry) *ListSecretsOutp
 type PutResourcePolicyInput struct {
 	_ struct{} `type:"structure"`
 
-	// A JSON-formatted string constructed according to the grammar and syntax for
-	// an AWS resource-based policy. The policy in the string identifies who can
-	// access or manage this secret and its versions. For information on how to
-	// format a JSON parameter for the various command line tool environments, see
-	// Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// A JSON-formatted string that's constructed according to the grammar and syntax
+	// for an AWS resource-based policy. The policy in the string identifies who
+	// can access or manage this secret and its versions. For information on how
+	// to format a JSON parameter for the various command line tool environments,
+	// see Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide.
 	//
 	// ResourcePolicy is a required field
 	ResourcePolicy *string `min:"1" type:"string" required:"true"`
 
-	// Specifies the secret to which you want to attach the resource-based policy.
-	// You can specify either the Amazon Resource Name (ARN) or the friendly name
-	// of the secret.
+	// Specifies the secret that you want to attach the resource-based policy to.
+	// You can specify either the ARN or the friendly name of the secret.
 	//
 	// SecretId is a required field
 	SecretId *string `min:"1" type:"string" required:"true"`
@@ -3933,10 +3935,11 @@ func (s *PutResourcePolicyInput) SetSecretId(v string) *PutResourcePolicyInput {
 type PutResourcePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the secret for which the resource-based policy was retrieved.
+	// The ARN of the secret that the resource-based policy was retrieved for.
 	ARN *string `min:"20" type:"string"`
 
-	// The friendly name of the secret for which the resource-based policy was retrieved.
+	// The friendly name of the secret that the resource-based policy was retrieved
+	// for.
 	Name *string `min:"1" type:"string"`
 }
 
