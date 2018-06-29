@@ -108,6 +108,31 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestConfigFleetType(rName, rInt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(
+						"aws_spot_fleet_request.foo", &sfr),
+					resource.TestCheckResourceAttr(
+						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(
+						"aws_spot_fleet_request.foo", "fleet_type", "request"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -828,6 +853,76 @@ resource "aws_spot_fleet_request" "foo" {
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
 `, rName, rInt, rInt, rName)
+}
+
+func testAccAWSSpotFleetRequestConfigFleetType(rName string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test-policy" {
+  name = "test-policy-%d"
+  path = "/"
+  description = "Spot Fleet Request ACCTest Policy"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+       "ec2:DescribeImages",
+       "ec2:DescribeSubnets",
+       "ec2:RequestSpotInstances",
+       "ec2:TerminateInstances",
+       "ec2:DescribeInstanceStatus",
+       "iam:PassRole"
+        ],
+    "Resource": ["*"]
+  }]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "test-attach" {
+    name = "test-attachment-%d"
+    roles = ["${aws_iam_role.test-role.name}"]
+    policy_arn = "${aws_iam_policy.test-policy.arn}"
+}
+
+resource "aws_iam_role" "test-role" {
+    name = "test-role-%s"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "spotfleet.amazonaws.com",
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_spot_fleet_request" "foo" {
+    iam_fleet_role = "${aws_iam_role.test-role.arn}"
+    spot_price = "0.005"
+    target_capacity = 2
+    valid_until = "2019-11-04T20:44:20Z"
+    fleet_type = "request"
+    terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
+    launch_specification {
+        instance_type = "m1.small"
+        ami = "ami-516b9131"
+    }
+    depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, rInt, rInt, rName)
 }
 
 func testAccAWSSpotFleetRequestConfigIamInstanceProfileArn(rName string, rInt int) string {
