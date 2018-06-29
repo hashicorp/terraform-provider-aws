@@ -27,6 +27,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "JSON"),
 					resource.TestMatchResourceAttr("aws_ssm_document.foo", "arn",
 						regexp.MustCompile(`^arn:aws:ssm:[a-z]{2}-[a-z]+-\d{1}:\d{12}:document/.*$`)),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "0"),
 				),
 			},
 		},
@@ -178,6 +179,44 @@ mainSteps:
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "content", content2+"\n"),
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "YAML"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_Tags(t *testing.T) {
+	rName := acctest.RandString(10)
+	resourceName := "aws_ssm_document.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentConfig_Tags_Single(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentConfig_Tags_Multiple(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentConfig_Tags_Single(rName, "key2", "value2updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2updated"),
 				),
 			},
 		},
@@ -517,4 +556,71 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName, content)
+}
+
+func testAccAWSSSMDocumentConfig_Tags_Single(rName, key1, value1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  document_type = "Command"
+  name          = "test_document-%s"
+
+  content = <<DOC
+    {
+      "schemaVersion": "1.2",
+      "description": "Check ip configuration of a Linux instance.",
+      "parameters": {
+
+      },
+      "runtimeConfig": {
+        "aws:runShellScript": {
+          "properties": [
+            {
+              "id": "0.aws:runShellScript",
+              "runCommand": ["ifconfig"]
+            }
+          ]
+        }
+      }
+    }
+DOC
+
+  tags {
+    %s = %q
+  }
+}
+`, rName, key1, value1)
+}
+
+func testAccAWSSSMDocumentConfig_Tags_Multiple(rName, key1, value1, key2, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  document_type = "Command"
+  name          = "test_document-%s"
+
+  content = <<DOC
+    {
+      "schemaVersion": "1.2",
+      "description": "Check ip configuration of a Linux instance.",
+      "parameters": {
+
+      },
+      "runtimeConfig": {
+        "aws:runShellScript": {
+          "properties": [
+            {
+              "id": "0.aws:runShellScript",
+              "runCommand": ["ifconfig"]
+            }
+          ]
+        }
+      }
+    }
+DOC
+
+  tags {
+    %s = %q
+    %s = %q
+  }
+}
+`, rName, key1, value1, key2, value2)
 }
