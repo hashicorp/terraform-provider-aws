@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_launch_configuration` [GH-3624]
+* **New Resource:** `aws_s3_bucket_inventory` [GH-5019]
 
 ENHANCEMENTS:
 
