@@ -50,9 +50,20 @@ resource "aws_iam_role_policy" "example" {
         "autoscaling:DescribeLifecycleHooks",
         "autoscaling:PutLifecycleHook",
         "autoscaling:RecordLifecycleActionHeartbeat",
-        "codedeploy:*",
+
+        "codedeploy:Batch*",
+        "codedeploy:Get*",
+        "codedeploy:List*",
+
         "ec2:DescribeInstances",
         "ec2:DescribeInstanceStatus",
+
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:DeregisterTargets",
+
         "tag:GetTags",
         "tag:GetResources",
         "sns:Publish"
