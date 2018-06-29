@@ -322,8 +322,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"fleet_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "maintain",
+				Default:  ec2.FleetTypeMaintain,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.FleetTypeMaintain,
+					ec2.FleetTypeRequest,
+				}, false),
 			},
 			"spot_request_state": {
 				Type:     schema.TypeString,
