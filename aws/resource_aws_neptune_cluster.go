@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -83,14 +81,14 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"db_subnet_group_name": {
+			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
 
-			"db_cluster_parameter_group_name": {
+			"neptune_cluster_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -289,7 +287,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			opts.AvailabilityZones = expandStringList(attr.List())
 		}
 
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
@@ -308,7 +306,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			opts.VpcSecurityGroupIds = expandStringList(attr.List())
 		}
 
-		if _, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+		if _, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
 			clusterUpdate = true
 		}
 
@@ -332,7 +330,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if clusterUpdate {
-			log.Printf("[INFO] Neptune Cluster is restoring from snapshot with default db_cluster_parameter_group_name, backup_retention_period and vpc_security_group_ids" +
+			log.Printf("[INFO] Neptune Cluster is restoring from snapshot with default neptune_cluster_parameter_group_name, backup_retention_period and vpc_security_group_ids" +
 				"but custom values should be set, will now update after snapshot is restored!")
 
 			d.SetId(d.Get("cluster_identifier").(string))
@@ -374,11 +372,11 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			createOpts.Port = aws.Int64(int64(attr.(int)))
 		}
 
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
 			createOpts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+		if attr, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
 			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
 		}
 
@@ -455,11 +453,11 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			createOpts.Port = aws.Int64(int64(attr.(int)))
 		}
 
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
 			createOpts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+		if attr, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
 			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
 		}
 
@@ -596,8 +594,8 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
-	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
-	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
+	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("neptune_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_version", dbc.EngineVersion)
@@ -686,9 +684,9 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		requestUpdate = true
 	}
 
-	if d.HasChange("db_cluster_parameter_group_name") {
-		d.SetPartial("db_cluster_parameter_group_name")
-		req.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
+	if d.HasChange("neptune_cluster_parameter_group_name") {
+		d.SetPartial("neptune_cluster_parameter_group_name")
+		req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
 		requestUpdate = true
 	}
 
@@ -768,7 +766,63 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsRDSClusterRead(d, meta)
+	return resourceAwsNeptuneClusterRead(d, meta)
+}
+
+func resourceAwsNeptuneClusterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+	log.Printf("[DEBUG] Destroying Neptune Cluster (%s)", d.Id())
+
+	deleteOpts := neptune.DeleteDBClusterInput{
+		DBClusterIdentifier: aws.String(d.Id()),
+	}
+
+	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
+	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+
+	if skipFinalSnapshot == false {
+		if name, present := d.GetOk("final_snapshot_identifier"); present {
+			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
+		} else {
+			return fmt.Errorf("Neptune Cluster FinalSnapshotIdentifier is required when a final snapshot is required")
+		}
+	}
+
+	log.Printf("[DEBUG] Neptune Cluster delete options: %s", deleteOpts)
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteDBCluster(&deleteOpts)
+		if err != nil {
+			if isAWSErr(err, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+				return nil
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Neptune Cluster cannot be deleted: %s", err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceAwsNeptuneClusterDeletePendingStates,
+		Target:     []string{"destroyed"},
+		Refresh:    resourceAwsNeptuneClusterStateRefreshFunc(d, meta),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	// Wait, catching any errors
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("[WARN] Error deleting Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsNeptuneClusterStateRefreshFunc(
@@ -785,7 +839,7 @@ func resourceAwsNeptuneClusterStateRefreshFunc(
 				log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
 				return 42, "destroyed", nil
 			}
-			log.Printf("[DEBUG] Error on retrieving DB Cluster (%s) when waiting: %s", d.Id(), err)
+			log.Printf("[DEBUG] Error on retrieving Neptune Cluster (%s) when waiting: %s", d.Id(), err)
 			return nil, "", err
 		}
 
@@ -848,4 +902,11 @@ var resourceAwsNeptuneClusterUpdatePendingStates = []string{
 	"backing-up",
 	"modifying",
 	"resetting-master-credentials",
+}
+
+var resourceAwsNeptuneClusterDeletePendingStates = []string{
+	"available",
+	"deleting",
+	"backing-up",
+	"modifying",
 }
