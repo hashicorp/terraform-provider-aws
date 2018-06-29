@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsVpcSecondaryIpv4CidrBlock() *schema.Resource {
+func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcSecondaryIpv4CidrBlockCreate,
-		Read:   resourceAwsVpcSecondaryIpv4CidrBlockRead,
-		Delete: resourceAwsVpcSecondaryIpv4CidrBlockDelete,
+		Create: resourceAwsVpcIpv4CidrBlockAssociationCreate,
+		Read:   resourceAwsVpcIpv4CidrBlockAssociationRead,
+		Delete: resourceAwsVpcIpv4CidrBlockAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -33,34 +33,34 @@ func resourceAwsVpcSecondaryIpv4CidrBlock() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcSecondaryIpv4CidrBlockCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.AssociateVpcCidrBlockInput{
 		VpcId:     aws.String(d.Get("vpc_id").(string)),
 		CidrBlock: aws.String(d.Get("cidr_block").(string)),
 	}
-	log.Printf("[DEBUG] Creating VPC secondary IPv4 CIDR block: %#v", req)
+	log.Printf("[DEBUG] Creating VPC IPv4 CIDR block association: %#v", req)
 	resp, err := conn.AssociateVpcCidrBlock(req)
 	if err != nil {
-		return fmt.Errorf("Error creating VPC secondary IPv4 CIDR block: %s", err.Error())
+		return fmt.Errorf("Error creating VPC IPv4 CIDR block association: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.CidrBlockAssociation.AssociationId))
 
-	return resourceAwsVpcSecondaryIpv4CidrBlockRead(d, meta)
+	return resourceAwsVpcIpv4CidrBlockAssociationRead(d, meta)
 }
 
-func resourceAwsVpcSecondaryIpv4CidrBlockRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vpcRaw, _, err := VPCStateRefreshFunc(conn, vpcId)()
 	if err != nil {
-		return fmt.Errorf("Error reading VPC: %s", err.Error())
+		return fmt.Errorf("Error reading VPC: %s", err)
 	}
 	if vpcRaw == nil {
-		log.Printf("[WARN] VPC (%s) not found, removing secondary IPv4 CIDR block from state", vpcId)
+		log.Printf("[WARN] VPC (%s) not found, removing IPv4 CIDR block association from state", vpcId)
 		d.SetId("")
 		return nil
 	}
@@ -74,22 +74,22 @@ func resourceAwsVpcSecondaryIpv4CidrBlockRead(d *schema.ResourceData, meta inter
 		}
 	}
 	if !found {
-		log.Printf("[WARN] VPC secondary IPv4 CIDR block (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VPC IPv4 CIDR block association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 	}
 
 	return nil
 }
 
-func resourceAwsVpcSecondaryIpv4CidrBlockDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsVpcIpv4CidrBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Deleting VPC secondary IPv4 CIDR block: %s", d.Id())
+	log.Printf("[DEBUG] Deleting VPC IPv4 CIDR block association: %s", d.Id())
 	_, err := conn.DisassociateVpcCidrBlock(&ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting VPC secondary IPv4 CIDR block: %s", err.Error())
+		return fmt.Errorf("Error deleting VPC IPv4 CIDR block association: %s", err)
 	}
 
 	return nil

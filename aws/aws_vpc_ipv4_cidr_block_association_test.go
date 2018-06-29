@@ -11,28 +11,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcSecondaryIpv4CidrBlock_basic(t *testing.T) {
+func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsVpcSecondaryIpv4CidrBlockDestroy,
+		CheckDestroy: testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpcSecondaryIpv4CidrBlockConfig,
+				Config: testAccAwsVpcIpv4CidrBlockAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcSecondaryIpv4CidrBlockExists("aws_vpc_secondary_ipv4_cidr_block.secondary_cidr", &associationSecondary),
-					testAccCheckAwsVpcSecondaryIpv4CidrBlock(&associationSecondary, "172.2.0.0/16"),
-					testAccCheckAwsVpcSecondaryIpv4CidrBlockExists("aws_vpc_secondary_ipv4_cidr_block.tertiary_cidr", &associationTertiary),
-					testAccCheckAwsVpcSecondaryIpv4CidrBlock(&associationTertiary, "170.2.0.0/16"),
+					testAccCheckAwsVpcIpv4CidrBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckAdditionalAwsVpcIpv4CidrBlock(&associationSecondary, "172.2.0.0/16"),
+					testAccCheckAwsVpcIpv4CidrBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.tertiary_cidr", &associationTertiary),
+					testAccCheckAdditionalAwsVpcIpv4CidrBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsVpcSecondaryIpv4CidrBlock(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
+func testAccCheckAdditionalAwsVpcIpv4CidrBlock(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		CIDRBlock := association.CidrBlock
 		if *CIDRBlock != expected {
@@ -43,11 +43,11 @@ func testAccCheckAwsVpcSecondaryIpv4CidrBlock(association *ec2.VpcCidrBlockAssoc
 	}
 }
 
-func testAccCheckAwsVpcSecondaryIpv4CidrBlockDestroy(s *terraform.State) error {
+func testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_secondary_ipv4_cidr_block" {
+		if rs.Type != "aws_vpc_ipv4_cidr_block_association" {
 			continue
 		}
 
@@ -61,7 +61,7 @@ func testAccCheckAwsVpcSecondaryIpv4CidrBlockDestroy(s *terraform.State) error {
 
 			for _, ipv4Association := range vpc.CidrBlockAssociationSet {
 				if *ipv4Association.AssociationId == rs.Primary.ID {
-					return fmt.Errorf("VPC secondary CIDR block still exists")
+					return fmt.Errorf("VPC CIDR block association still exists")
 				}
 			}
 
@@ -81,7 +81,7 @@ func testAccCheckAwsVpcSecondaryIpv4CidrBlockDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsVpcSecondaryIpv4CidrBlockExists(n string, association *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckAwsVpcIpv4CidrBlockAssociationExists(n string, association *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -114,24 +114,27 @@ func testAccCheckAwsVpcSecondaryIpv4CidrBlockExists(n string, association *ec2.V
 		}
 
 		if !found {
-			return fmt.Errorf("VPC secondary CIDR block not found")
+			return fmt.Errorf("VPC CIDR block association not found")
 		}
 
 		return nil
 	}
 }
 
-const testAccAwsVpcSecondaryIpv4CidrBlockConfig = `
+const testAccAwsVpcIpv4CidrBlockAssociationConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+  }
 }
 
-resource "aws_vpc_secondary_ipv4_cidr_block" "secondary_cidr" {
+resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "172.2.0.0/16"
 }
 
-resource "aws_vpc_secondary_ipv4_cidr_block" "tertiary_cidr" {
+resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "170.2.0.0/16"
 }
