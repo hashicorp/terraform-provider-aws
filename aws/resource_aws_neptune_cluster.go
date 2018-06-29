@@ -648,6 +648,129 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	return nil
 }
 
+func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+	requestUpdate := false
+
+	req := &neptune.ModifyDBClusterInput{
+		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+		DBClusterIdentifier: aws.String(d.Id()),
+	}
+
+	if d.HasChange("master_password") {
+		req.MasterUserPassword = aws.String(d.Get("master_password").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("vpc_security_group_ids") {
+		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			req.VpcSecurityGroupIds = expandStringList(attr.List())
+		} else {
+			req.VpcSecurityGroupIds = []*string{}
+		}
+		requestUpdate = true
+	}
+
+	if d.HasChange("preferred_backup_window") {
+		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("preferred_maintenance_window") {
+		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("backup_retention_period") {
+		req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("db_cluster_parameter_group_name") {
+		d.SetPartial("db_cluster_parameter_group_name")
+		req.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("iam_database_authentication_enabled") {
+		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if requestUpdate {
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBCluster(req)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, neptune.ErrCodeInvalidDBClusterStateFault, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to modify Neptune Cluster (%s): %s", d.Id(), err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    resourceAwsNeptuneClusterUpdatePendingStates,
+			Target:     []string{"available"},
+			Refresh:    resourceAwsNeptuneClusterStateRefreshFunc(d, meta),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			MinTimeout: 10 * time.Second,
+			Delay:      10 * time.Second,
+		}
+
+		log.Printf("[INFO] Waiting for Neptune Cluster (%s) to modify", d.Id())
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for Neptune Cluster (%s) to modify: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("iam_roles") {
+		oraw, nraw := d.GetChange("iam_roles")
+		if oraw == nil {
+			oraw = new(schema.Set)
+		}
+		if nraw == nil {
+			nraw = new(schema.Set)
+		}
+
+		os := oraw.(*schema.Set)
+		ns := nraw.(*schema.Set)
+		removeRoles := os.Difference(ns)
+		enableRoles := ns.Difference(os)
+
+		for _, role := range enableRoles.List() {
+			err := setIamRoleToNeptuneCluster(d.Id(), role.(string), conn)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, role := range removeRoles.List() {
+			err := removeIamRoleFromNeptuneCluster(d.Id(), role.(string), conn)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if arn, ok := d.GetOk("arn"); ok {
+		if err := setTagsNeptune(conn, d, arn.(string)); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
+	}
+
+	return resourceAwsRDSClusterRead(d, meta)
+}
+
 func resourceAwsNeptuneClusterStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -699,11 +822,30 @@ func setIamRoleToNeptuneCluster(clusterIdentifier string, roleArn string, conn *
 	return nil
 }
 
+func removeIamRoleFromNeptuneCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
+	params := &neptune.RemoveRoleFromDBClusterInput{
+		DBClusterIdentifier: aws.String(clusterIdentifier),
+		RoleArn:             aws.String(roleArn),
+	}
+	_, err := conn.RemoveRoleFromDBCluster(params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 var resourceAwsNeptuneClusterCreatePendingStates = []string{
 	"creating",
 	"backing-up",
 	"modifying",
 	"preparing-data-migration",
 	"migrating",
+	"resetting-master-credentials",
+}
+
+var resourceAwsNeptuneClusterUpdatePendingStates = []string{
+	"backing-up",
+	"modifying",
 	"resetting-master-credentials",
 }
