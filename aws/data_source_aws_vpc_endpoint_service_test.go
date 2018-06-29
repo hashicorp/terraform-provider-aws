@@ -152,7 +152,7 @@ resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_vpc"
+    Name = "terraform-testacc-vpc-endpoint-service-custom"
   }
 }
 
@@ -180,7 +180,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-service-custom"
   }
 }
 
@@ -190,7 +190,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-service-custom"
   }
 }
 

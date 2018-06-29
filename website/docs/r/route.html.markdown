@@ -67,7 +67,7 @@ created implicitly and cannot be specified.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 ~> **NOTE:** Only the target type that is specified (one of the above)
 will be exported as an attribute once the resource is created.
@@ -81,3 +81,11 @@ will be exported as an attribute once the resource is created.
 * `nat_gateway_id` - An ID of a VPC NAT gateway.
 * `instance_id` - An ID of a NAT instance.
 * `network_interface_id` - An ID of a network interface.
+
+## Timeouts
+
+`aws_route` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `delete` - (Default `5 minutes`) Used for route deletion

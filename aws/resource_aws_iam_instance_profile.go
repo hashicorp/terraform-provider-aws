@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -295,7 +296,7 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("Error deleting IAM instance profile %s: %s", d.Id(), err)
 	}
-	d.SetId("")
+
 	return nil
 }
 
@@ -305,6 +306,9 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 		return err
 	}
 	if err := d.Set("arn", result.Arn); err != nil {
+		return err
+	}
+	if err := d.Set("create_date", result.CreateDate.Format(time.RFC3339)); err != nil {
 		return err
 	}
 	if err := d.Set("path", result.Path); err != nil {

@@ -203,11 +203,17 @@ resource "aws_cloud9_environment_ec2" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
+  tags {
+    Name = "terraform-testacc-cloud9-environment-ec2-all-fields"
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/19"
+  tags {
+    Name = "tf-acc-cloud9-environment-ec2-all-fields"
+  }
 }
 
 resource "aws_internet_gateway" "test" {

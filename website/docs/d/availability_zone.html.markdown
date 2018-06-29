@@ -84,7 +84,7 @@ alone would match a single AZ only in a region that itself has only one AZ.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `name` - The name of the selected availability zone.
 

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointSubnetAssociation_basic(t *testing.T) {
+func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -109,6 +109,9 @@ provider "aws" {
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-subnet-association"
+  }
 }
 
 data "aws_security_group" "default" {
@@ -128,6 +131,9 @@ resource "aws_subnet" "sn" {
   vpc_id = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block = "10.0.0.0/17"
+  tags {
+    Name = "tf-acc-vpc-endpoint-subnet-association"
+  }
 }
 
 resource "aws_vpc_endpoint_subnet_association" "a" {

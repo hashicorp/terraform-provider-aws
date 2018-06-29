@@ -11,7 +11,7 @@ description: |-
 Creates a Lambda function alias. Creates an alias that points to the specified Lambda function version.
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1]
-For information about function aliases, see [CreateAlias][2] in the API docs.
+For information about function aliases, see [CreateAlias][2] and [AliasRoutingConfiguration][3] in the API docs.
 
 ## Example Usage
 

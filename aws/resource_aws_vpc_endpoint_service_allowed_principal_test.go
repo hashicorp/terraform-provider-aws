@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
+func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.Test(t, resource.TestCase{
@@ -101,7 +101,7 @@ resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_vpc"
+    Name = "terraform-testacc-vpc-endpoint-service-allowed-principal"
   }
 }
 
@@ -129,7 +129,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-service-allowed-principal-1"
   }
 }
 
@@ -139,7 +139,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-service-allowed-principal-2"
   }
 }
 

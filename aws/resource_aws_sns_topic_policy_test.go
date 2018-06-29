@@ -8,6 +8,8 @@ import (
 )
 
 func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
+	attributes := make(map[string]string)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -16,7 +18,7 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicConfig_withPolicy,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test"),
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
 					resource.TestMatchResourceAttr("aws_sns_topic_policy.custom", "policy",
 						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 				),

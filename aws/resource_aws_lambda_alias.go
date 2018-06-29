@@ -20,23 +20,24 @@ func resourceAwsLambdaAlias() *schema.Resource {
 		Delete: resourceAwsLambdaAliasDelete,
 
 		Schema: map[string]*schema.Schema{
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"function_name": &schema.Schema{
+			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"function_version": &schema.Schema{
+			"function_version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +50,7 @@ func resourceAwsLambdaAlias() *schema.Resource {
 						"additional_version_weights": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							Elem:     schema.TypeFloat,
+							Elem:     &schema.Schema{Type: schema.TypeFloat},
 						},
 					},
 				},
@@ -73,20 +74,10 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 		FunctionName:    aws.String(functionName),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(aliasName),
-		RoutingConfig:   &lambda.AliasRoutingConfiguration{},
 	}
 
 	if v, ok := d.GetOk("routing_config"); ok {
-		routingConfigs := v.([]interface{})
-		routingConfig, ok := routingConfigs[0].(map[string]interface{})
-		if !ok {
-			return errors.New("At least one field is expected inside routing_config")
-		}
-
-		if additionalVersionWeights, ok := routingConfig["additional_version_weights"]; ok {
-			weights := readAdditionalVersionWeights(additionalVersionWeights.(map[string]interface{}))
-			params.RoutingConfig.AdditionalVersionWeights = aws.Float64Map(weights)
-		}
+		params.RoutingConfig = expandLambdaAliasRoutingConfiguration(v.([]interface{}))
 	}
 
 	aliasConfiguration, err := conn.CreateAlias(params)
@@ -126,7 +117,10 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("function_version", aliasConfiguration.FunctionVersion)
 	d.Set("name", aliasConfiguration.Name)
 	d.Set("arn", aliasConfiguration.AliasArn)
-	d.Set("routing_config", aliasConfiguration.RoutingConfig)
+
+	if err := d.Set("routing_config", flattenLambdaAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
+		return fmt.Errorf("error setting routing_config: %s", err)
+	}
 
 	return nil
 }
@@ -147,8 +141,6 @@ func resourceAwsLambdaAliasDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error deleting Lambda alias: %s", err)
 	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -187,6 +179,22 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+func expandLambdaAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfiguration {
+	aliasRoutingConfiguration := &lambda.AliasRoutingConfiguration{}
+
+	if len(l) == 0 || l[0] == nil {
+		return aliasRoutingConfiguration
+	}
+
+	m := l[0].(map[string]interface{})
+
+	if _, ok := m["additional_version_weights"]; ok {
+		aliasRoutingConfiguration.AdditionalVersionWeights = expandFloat64Map(m)
+	}
+
+	return aliasRoutingConfiguration
 }
 
 func readAdditionalVersionWeights(avw map[string]interface{}) map[string]float64 {

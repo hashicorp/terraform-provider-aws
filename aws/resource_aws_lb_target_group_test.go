@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,69 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lb_target_group", &resource.Sweeper{
+		Name: "aws_lb_target_group",
+		F:    testSweepLBTargetGroups,
+		Dependencies: []string{
+			"aws_lb",
+		},
+	})
+}
+
+func testSweepLBTargetGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elbv2conn
+
+	prefixes := []string{
+		"tf-",
+		"tf-test-",
+		"tf-acc-test-",
+		"test",
+	}
+
+	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, isLast bool) bool {
+		if page == nil || len(page.TargetGroups) == 0 {
+			log.Print("[DEBUG] No LB Target Groups to sweep")
+			return false
+		}
+
+		for _, targetGroup := range page.TargetGroups {
+			name := aws.StringValue(targetGroup.TargetGroupName)
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(name, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping LB Target Group: %s", name)
+				continue
+			}
+			log.Printf("[INFO] Deleting LB Target Group: %s", name)
+			_, err := conn.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
+				TargetGroupArn: targetGroup.TargetGroupArn,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete LB Target Group (%s): %s", name, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping LB Target Group sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving LB Target Groups: %s", err)
+	}
+	return nil
+}
 
 func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
@@ -65,6 +130,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -106,6 +172,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "false"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confBefore, 10),
@@ -120,6 +187,10 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAcc_networkLB_TargetGroup"),
 				),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName),
+				ExpectError: regexp.MustCompile("healthy_threshold [0-9]+ and unhealthy_threshold [0-9]+ must be the same for target_groups with TCP protocol"),
 			},
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName),
@@ -151,6 +222,34 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 
 				ExpectNonEmptyPlan: true,
 				ExpectError:        regexp.MustCompile("Health check interval cannot be updated"),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
+	var confBefore, confAfter elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &confBefore),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &confAfter),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "true"),
+				),
 			},
 		},
 	})
@@ -243,6 +342,7 @@ func TestAccAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.type", "lb_cookie"),
@@ -618,6 +718,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
@@ -688,6 +789,7 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "TCP"),
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
@@ -698,6 +800,43 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.Name", "TestAccAWSLBTargetGroup_application_LB_defaults"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
+	var conf elbv2.TargetGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessWithTCP(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "86400"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessWithTCP(true),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers do not support Stickiness"),
 			},
 		},
 	})
@@ -829,6 +968,7 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   # HTTP Only
   stickiness {
@@ -852,7 +992,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name = "terraform-testacc-lb-target-group-alb-defaults"
   }
 }`, name)
 }
@@ -866,6 +1006,7 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   health_check {
                 %s
@@ -880,7 +1021,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name = "terraform-testacc-lb-target-group-nlb-defaults"
   }
 }`, name, healthCheckBlock)
 }
@@ -893,6 +1034,7 @@ func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -919,7 +1061,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -932,6 +1074,7 @@ func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string)
   vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
+  slow_start = 0
 
   stickiness {
     type = "lb_cookie"
@@ -958,7 +1101,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-bc"
   }
 }`, targetGroupName)
 }
@@ -997,7 +1140,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -1036,7 +1179,7 @@ resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic-2"
   }
 }
 
@@ -1044,7 +1187,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -1083,7 +1226,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-updated-vpc"
   }
 }`, targetGroupName)
 }
@@ -1123,7 +1266,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-update-tags"
   }
 }`, targetGroupName)
 }
@@ -1158,7 +1301,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    TestName = "terraform-testacc-lb-target-group-update-health-check"
   }
 }`, targetGroupName)
 }
@@ -1189,7 +1332,70 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
+    Name = "terraform-testacc-lb-target-group-type-tcp"
+  }
+}`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 8082
+  protocol = "TCP"
+  vpc_id = "${aws_vpc.test.id}"
+	
+	proxy_protocol_v2 = "true"    
+	deregistration_delay = 200
+
+  health_check {
+    interval = 10
+    port = "traffic-port"
+    protocol = "TCP"
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+  }
+
+  tags {
     Name = "TestAcc_networkLB_TargetGroup"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-lb-target-group-type-tcp"
+  }
+}`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 8082
+  protocol = "TCP"
+  vpc_id = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+
+  health_check {
+    interval = 10
+    port = "traffic-port"
+    protocol = "TCP"
+    healthy_threshold = 3
+    unhealthy_threshold = 4
+  }
+
+  tags {
+    Name = "TestAcc_networkLB_TargetGroup"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-lb-target-group-type-tcp"
   }
 }`, targetGroupName)
 }
@@ -1220,7 +1426,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAcc_networkLB_TargetGroup"
+    Name = "terraform-testacc-lb-target-group-type-tcp-threshold-updated"
   }
 }`, targetGroupName)
 }
@@ -1251,7 +1457,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAcc_networkLB_TargetGroup"
+    Name = "terraform-testacc-lb-target-group-type-tcp-interval-updated"
   }
 }`, targetGroupName)
 }
@@ -1282,7 +1488,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
   tags {
-    Name = "TestAcc_networkLB_HTTPHealthCheck"
+    Name = "terraform-testacc-lb-target-group-type-tcp-http-health-check"
   }
 }`, targetGroupName, threshold, path)
 }
@@ -1324,7 +1530,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_stickiness"
+    TestName = "terraform-testacc-lb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
 }
@@ -1340,7 +1546,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+		Name = "terraform-testacc-lb-target-group-name-prefix"
 	}
 }
 `
@@ -1355,7 +1561,31 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupConfig_generatedName"
+		Name = "terraform-testacc-lb-target-group-generated-name"
 	}
 }
 `
+
+func testAccAWSLBTargetGroupConfig_stickinessWithTCP(enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = "TCP"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  stickiness {
+    type    = "lb_cookie"
+    enabled = %t
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+  }
+}
+`, enabled)
+}

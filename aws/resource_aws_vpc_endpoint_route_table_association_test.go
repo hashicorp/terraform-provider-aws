@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsVpcEndpointRouteTableAssociation_basic(t *testing.T) {
+func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
 	resource.Test(t, resource.TestCase{
@@ -109,6 +109,9 @@ provider "aws" {
 
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
+    tags {
+        Name = "terraform-testacc-vpc-endpoint-route-table-association"
+    }
 }
 
 resource "aws_vpc_endpoint" "s3" {

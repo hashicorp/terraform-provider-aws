@@ -12,6 +12,8 @@ Provides an Elastic IP resource.
 
 ~> **Note:** EIP may require IGW to exist prior to association. Use `depends_on` to set an explicit dependency on the IGW.
 
+~> **Note:** Do not use `network_interface` to associate the EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocation_id` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
+
 ## Example Usage
 
 Single EIP associated with an instance:
@@ -101,7 +103,7 @@ more information.
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Contains the EIP allocation ID.
 * `private_ip` - Contains the private IP address (if in VPC).
@@ -110,6 +112,13 @@ The following additional attributes are exported:
 * `public_ip` - Contains the public IP address.
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
+
+## Timeouts
+`aws_eip` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `read` - (Default `15 minutes`) How long to wait querying for information about EIPs.
+- `update` - (Default `5 minutes`) How long to wait for an EIP to be updated.
+- `delete` - (Default `3 minutes`) How long to wait for an EIP to be deleted.
 
 ## Import
 

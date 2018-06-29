@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool"
-side_bar_current: "docs-aws-resource-cognito-user-pool"
+sidebar_current: "docs-aws-resource-cognito-user-pool"
 description: |-
   Provides a Cognito User Pool resource.
 ---
@@ -63,7 +63,7 @@ The following arguments are supported:
 #### Email Configuration
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
-  * `sns_caller_arn` (Optional) - The ARN of the email source.
+  * `source_arn` (Optional) - The ARN of the email source.
 
 #### Lambda Configuration
 
@@ -75,6 +75,7 @@ The following arguments are supported:
   * `pre_authentication` (Optional) - A pre-authentication AWS Lambda trigger.
   * `pre_sign_up` (Optional) - A pre-registration AWS Lambda trigger.
   * `pre_token_generation` (Optional) - Allow to customize identity token claims before token generation.
+  * `user_migration` (Optional) - The user migration Lambda config type.
   * `verify_auth_challenge_response` (Optional) - Verifies the authentication challenge response.
 
 #### Password Policy
@@ -114,17 +115,18 @@ The following arguments are supported:
 
   * `default_email_option` (Optional) - The default email option. Must be either `CONFIRM_WITH_CODE` or `CONFIRM_WITH_LINK`. Defaults to `CONFIRM_WITH_CODE`.
   * `email_message` (Optional) - The email message template. Must contain the `{####}` placeholder. **NOTE:** - If `email_verification_message` and `verification_message_template.email_message` are specified and the values are different, either one is prioritized and updated.
-  * `email_message_by_link` (Optional) - The email message template for sending a confirmation link to the user.
+  * `email_message_by_link` (Optional) - The email message template for sending a confirmation link to the user, it must contain the `{##VERIFY EMAIL##}` placeholder.
   * `email_subject` (Optional) - The subject line for the email message template. **NOTE:** - If `email_verification_subject` and `verification_message_template.email_subject` are specified and the values are different, either one is prioritized and updated.
   * `email_subject_by_link` (Optional) - The subject line for the email message template for sending a confirmation link to the user.
   * `sms_message` (Optional) - The SMS message template. Must contain the `{####}` placeholder.
 
 ## Attribute Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the user pool.
 * `arn` - The ARN of the user pool.
+* `endpoint` - The endpoint name of the user pool. Example format: cognito-idp.REGION.amazonaws.com/xxxx_yyyyy
 * `creation_date` - The date the user pool was created.
 * `last_modified_date` - The date the user pool was last modified.
 

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-const testAccGameliftPrefix = "tf_acc_build_"
+const testAccGameliftBuildPrefix = "tf_acc_build_"
 
 func init() {
 	resource.AddTestSweepers("aws_gamelift_build", &resource.Sweeper{
@@ -31,6 +31,10 @@ func testSweepGameliftBuilds(region string) error {
 
 	resp, err := conn.ListBuilds(&gamelift.ListBuildsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error listing Gamelift Builds: %s", err)
 	}
 
@@ -42,7 +46,7 @@ func testSweepGameliftBuilds(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
 
 	for _, build := range resp.Builds {
-		if !strings.HasPrefix(*build.Name, testAccGameliftPrefix) {
+		if !strings.HasPrefix(*build.Name, testAccGameliftBuildPrefix) {
 			continue
 		}
 
@@ -64,15 +68,16 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 
 	rString := acctest.RandString(8)
 
-	buildName := fmt.Sprintf("%s_%s", testAccGameliftPrefix, rString)
-	uBuildName := fmt.Sprintf("%s_updated_%s", testAccGameliftPrefix, rString)
+	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
+	uBuildName := fmt.Sprintf("%s_updated_%s", testAccGameliftBuildPrefix, rString)
 
 	region := testAccGetRegion()
-	loc, err := testAccAWSGameliftSampleGameLocation(region)
+	g, err := testAccAWSGameliftSampleGame(region)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	loc := g.Location
 	bucketName := *loc.Bucket
 	roleArn := *loc.RoleArn
 	key := *loc.Key
@@ -168,51 +173,6 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-// Location found from CloudTrail event after finishing tutorial
-// e.g. https://us-west-2.console.aws.amazon.com/gamelift/home?region=us-west-2#/r/fleets/sample
-func testAccAWSGameliftSampleGameLocation(region string) (*gamelift.S3Location, error) {
-	version := "v1.2.0.0"
-	accId, err := testAccGameliftAccountIdByRegion(region)
-	if err != nil {
-		return nil, err
-	}
-	bucket := fmt.Sprintf("gamelift-sample-builds-prod-%s", region)
-	key := fmt.Sprintf("%s/server/sample_build_%s", version, version)
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/sample-build-upload-role-%s", accId, region)
-
-	return &gamelift.S3Location{
-		Bucket:  aws.String(bucket),
-		Key:     aws.String(key),
-		RoleArn: aws.String(roleArn),
-	}, nil
-}
-
-// Account ID found from CloudTrail event (role ARN) after finishing tutorial in given region
-func testAccGameliftAccountIdByRegion(region string) (string, error) {
-	m := map[string]string{
-		"ap-northeast-1": "120069834884",
-		"ap-northeast-2": "805673136642",
-		"ap-south-1":     "134975661615",
-		"ap-southeast-1": "077577004113",
-		"ap-southeast-2": "112188327105",
-		"ca-central-1":   "800535022691",
-		"eu-central-1":   "797584052317",
-		"eu-west-1":      "319803218673",
-		"eu-west-2":      "937342764187",
-		"sa-east-1":      "028872612690",
-		"us-east-1":      "783764748367",
-		"us-east-2":      "415729564621",
-		"us-west-1":      "715879310420",
-		"us-west-2":      "741061592171",
-	}
-
-	if accId, ok := m[region]; ok {
-		return accId, nil
-	}
-
-	return "", fmt.Errorf("Account ID not found for region %q", region)
 }
 
 func testAccAWSGameliftBuildBasicConfig(buildName, bucketName, key, roleArn string) string {
