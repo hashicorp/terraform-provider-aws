@@ -848,13 +848,12 @@ var resourceAwsNeptuneClusterCreatePendingStates = []string{
 	"modifying",
 	"preparing-data-migration",
 	"migrating",
-	"resetting-master-credentials",
 }
 
 var resourceAwsNeptuneClusterUpdatePendingStates = []string{
 	"backing-up",
 	"modifying",
-	"resetting-master-credentials",
+	"configuring-iam-database-auth",
 }
 
 var resourceAwsNeptuneClusterDeletePendingStates = []string{
