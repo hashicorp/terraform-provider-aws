@@ -74,13 +74,6 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"database_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
 			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -154,19 +147,6 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-			},
-
-			"master_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
 			},
 
 			"snapshot_identifier": {
@@ -289,10 +269,6 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 
 		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("database_name"); ok {
-			opts.DatabaseName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
@@ -428,25 +404,12 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG]: Neptune Cluster create response: %s", resp)
 
 	} else {
-		if _, ok := d.GetOk("master_password"); !ok {
-			return fmt.Errorf(`provider.aws: aws_neptune_cluster: %s: "master_password": required field is not set`, d.Get("database_name").(string))
-		}
-
-		if _, ok := d.GetOk("master_username"); !ok {
-			return fmt.Errorf(`provider.aws: aws_neptune_cluster: %s: "master_username": required field is not set`, d.Get("database_name").(string))
-		}
 
 		createOpts := &neptune.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
-			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
-			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                tags,
-		}
-
-		if v := d.Get("database_name"); v.(string) != "" {
-			createOpts.DatabaseName = aws.String(v.(string))
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
@@ -588,10 +551,6 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		return fmt.Errorf("[DEBUG] Error saving AvailabilityZones to state for Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
-	if dbc.DatabaseName != nil {
-		d.Set("database_name", dbc.DatabaseName)
-	}
-
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
@@ -599,7 +558,6 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_version", dbc.EngineVersion)
-	d.Set("master_username", dbc.MasterUsername)
 	d.Set("port", dbc.Port)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
@@ -653,11 +611,6 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	req := &neptune.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 		DBClusterIdentifier: aws.String(d.Id()),
-	}
-
-	if d.HasChange("master_password") {
-		req.MasterUserPassword = aws.String(d.Get("master_password").(string))
-		requestUpdate = true
 	}
 
 	if d.HasChange("vpc_security_group_ids") {
