@@ -82,6 +82,169 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccAWSNeptuneCluster_updateTags(t *testing.T) {
+	var v neptune.DBCluster
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "tags.%", "1"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfigUpdatedTags(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
+	var v neptune.DBCluster
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfigIncludingIamRoles(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfigAddIamRoles(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "iam_roles.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfigRemoveIamRoles(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "iam_roles.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
+	var v neptune.DBCluster
+	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig_kmsKey(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestMatchResourceAttr(
+						"aws_neptune_cluster.default", "kms_key_arn", keyRegex),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
+	var v neptune.DBCluster
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig_encrypted(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "storage_encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
+	var v neptune.DBCluster
+
+	ri := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig_backups(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "preferred_backup_window", "07:00-09:00"),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "backup_retention_period", "5"),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSNeptuneClusterConfig_backupsUpdate(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "preferred_backup_window", "03:00-09:00"),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "backup_retention_period", "10"),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "preferred_maintenance_window", "wed:01:00-wed:01:30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
+	var v neptune.DBCluster
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig_iamAuth(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster.default", "iam_database_authentication_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSNeptuneClusterDestroy(s *terraform.State) error {
 	return testAccCheckAWSNeptuneClusterDestroyWithProvider(s, testAccProvider)
 }
@@ -243,4 +406,307 @@ resource "aws_neptune_cluster" "default" {
     Environment = "production"
   }
 }`, n, n)
+}
+
+func testAccAWSNeptuneClusterConfigUpdatedTags(n int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  neptune_cluster_parameter_group_name = "default.neptune1"
+  skip_final_snapshot = true
+  tags {
+    Environment = "production"
+    AnotherTag = "test"
+  }
+}`, n)
+}
+
+func testAccAWSNeptuneClusterConfigIncludingIamRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "neptune_sample_role" {
+  name = "neptune_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "neptune_policy" {
+	name = "neptune_sample_role_policy_%d"
+	role = "${aws_iam_role.neptune_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_iam_role" "another_neptune_sample_role" {
+  name = "another_neptune_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "another_neptune_policy" {
+	name = "another_neptune_sample_role_policy_%d"
+	role = "${aws_iam_role.another_neptune_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  neptune_cluster_parameter_group_name = "default.neptune1"
+  skip_final_snapshot = true
+  tags {
+    Environment = "production"
+  }
+  depends_on = ["aws_iam_role.another_neptune_sample_role", "aws_iam_role.neptune_sample_role"]
+
+}`, n, n, n, n, n)
+}
+
+func testAccAWSNeptuneClusterConfigAddIamRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "neptune_sample_role" {
+  name = "neptune_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "neptune_policy" {
+	name = "neptune_sample_role_policy_%d"
+	role = "${aws_iam_role.neptune_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_iam_role" "another_neptune_sample_role" {
+  name = "another_neptune_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "another_neptune_policy" {
+	name = "another_neptune_sample_role_policy_%d"
+	role = "${aws_iam_role.another_neptune_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  skip_final_snapshot = true
+  iam_roles = ["${aws_iam_role.neptune_sample_role.arn}","${aws_iam_role.another_neptune_sample_role.arn}"]
+  tags {
+    Environment = "production"
+  }
+  depends_on = ["aws_iam_role.another_neptune_sample_role", "aws_iam_role.neptune_sample_role"]
+
+}`, n, n, n, n, n)
+}
+
+func testAccAWSNeptuneClusterConfigRemoveIamRoles(n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "another_neptune_sample_role" {
+  name = "another_neptune_sample_role_%d"
+  path = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "another_neptune_policy" {
+	name = "another_neptune_sample_role_policy_%d"
+	role = "${aws_iam_role.another_neptune_sample_role.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  skip_final_snapshot = true
+  iam_roles = ["${aws_iam_role.another_neptune_sample_role.arn}"]
+  tags {
+    Environment = "production"
+  }
+
+  depends_on = ["aws_iam_role.another_neptune_sample_role"]
+}`, n, n, n)
+}
+
+func testAccAWSNeptuneClusterConfig_kmsKey(n int) string {
+	return fmt.Sprintf(`
+
+ resource "aws_kms_key" "foo" {
+     description = "Terraform acc test %d"
+     policy = <<POLICY
+ {
+   "Version": "2012-10-17",
+   "Id": "kms-tf-1",
+   "Statement": [
+     {
+       "Sid": "Enable IAM User Permissions",
+       "Effect": "Allow",
+       "Principal": {
+         "AWS": "*"
+       },
+       "Action": "kms:*",
+       "Resource": "*"
+     }
+   ]
+ }
+ POLICY
+ }
+
+ resource "aws_neptune_cluster" "default" {
+   cluster_identifier = "tf-neptune-cluster-%d"
+   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+   neptune_cluster_parameter_group_name = "default.neptune1"
+   storage_encrypted = true
+   kms_key_arn = "${aws_kms_key.foo.arn}"
+   skip_final_snapshot = true
+ }`, n, n)
+}
+
+func testAccAWSNeptuneClusterConfig_encrypted(n int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  storage_encrypted = true
+  skip_final_snapshot = true
+}`, n)
+}
+
+func testAccAWSNeptuneClusterConfig_backups(n int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  backup_retention_period = 5
+  preferred_backup_window = "07:00-09:00"
+  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  skip_final_snapshot = true
+}`, n)
+}
+
+func testAccAWSNeptuneClusterConfig_backupsUpdate(n int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  backup_retention_period = 10
+  preferred_backup_window = "03:00-09:00"
+  preferred_maintenance_window = "wed:01:00-wed:01:30"
+  apply_immediately = true
+  skip_final_snapshot = true
+}`, n)
+}
+
+func testAccAWSNeptuneClusterConfig_iamAuth(n int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier = "tf-neptune-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  iam_database_authentication_enabled = true
+  skip_final_snapshot = true
+}`, n)
 }
