@@ -71,7 +71,6 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 	streamName := fmt.Sprintf("tf_acc_stream_lambda_esm_basic_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_esm_basic_%s", rString)
 	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_basic_updated_%s", rString)
-	uFuncArnRe := regexp.MustCompile(":" + uFuncName + "$")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

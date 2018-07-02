@@ -48,9 +48,12 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// When AWS repurposed EventSourceMapping for use with SQS they kept
 					// the default for BatchSize at 100 for Kinesis and DynamoDB, but made
-					// the default 10 for SWS.  As such, we had to make batch_size optional.
+					// the default 10 for SQS.  As such, we had to make batch_size optional.
 					// Because of this, we need to ensure that if someone doesn't have
 					// batch_size specified that it is not treated as a diff for those
+					if new != "" && new != "0" {
+						return false
+					}
 
 					eventSourceARN, err := arn.Parse(d.Get("event_source_arn").(string))
 					if err != nil {
@@ -58,11 +61,11 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 					}
 					switch eventSourceARN.Service {
 					case dynamodb.ServiceName, kinesis.ServiceName:
-						if old == "100" && (new == "" || new == "0") {
+						if old == "100" {
 							return true
 						}
 					case sqs.ServiceName:
-						if old == "1" && (new == "" || new == "0") {
+						if old == "10" {
 							return true
 						}
 					default:
