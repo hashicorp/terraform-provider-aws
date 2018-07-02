@@ -295,10 +295,11 @@ func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, ruleType s
 			"type": actionType,
 		}
 		m := map[string]interface{}{
-			"rule_id":  **ruleId,
-			"type":     ruleType,
-			"priority": priority,
-			"action":   []interface{}{actionMap},
+			"rule_id":         **ruleId,
+			"type":            ruleType,
+			"priority":        priority,
+			"action":          []interface{}{actionMap},
+			"override_action": []interface{}{},
 		}
 
 		f := schema.HashResource(ruleResource)
