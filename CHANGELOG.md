@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_codebuild_project: Prevent panic with missing environment variable type [GH-5052]
 * resource/aws_kms_alias: Fix perpetual plan when `target_key_id` is ARN [GH-4010]
 
 ## 1.25.0 (June 27, 2018)
