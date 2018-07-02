@@ -1718,6 +1718,20 @@
 			"versionExact": "v0.1.0"
 		},
 		{
+			"checksumSHA1": "d+4iuDj/qQ+2LiWEbQ+AWjxEJOc=",
+			"path": "github.com/tidwall/gjson",
+			"revision": "f123b340873a0084cb27267eddd8ff615115fbff",
+			"revisionTime": "2018-06-21T18:09:58Z",
+			"version": "v1.1.2",
+			"versionExact": "v1.1.2"
+		},
+		{
+			"checksumSHA1": "Tk+aXpWRuTQhURlO79bd7YogcU0=",
+			"path": "github.com/tidwall/match",
+			"revision": "1731857f09b1f38450e2c12409748407822dc6be",
+			"revisionTime": "2017-10-02T07:59:45Z"
+		},
+		{
 			"checksumSHA1": "qgMa75aMGbkFY0jIqqqgVnCUoNA=",
 			"path": "github.com/ulikunitz/xz",
 			"revision": "0c6b41e72360850ca4f98dc341fd999726ea007f",
