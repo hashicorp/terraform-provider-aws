@@ -792,6 +792,15 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+// Expands a map of string to interface to a map of string to *float
+func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
+	float64Map := make(map[string]*float64, len(m))
+	for k, v := range m {
+		float64Map[k] = aws.Float64(v.(float64))
+	}
+	return float64Map
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List())
@@ -1302,6 +1311,18 @@ func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]in
 	return []map[string]interface{}{settings}
 }
 
+func flattenLambdaAliasRoutingConfiguration(arc *lambda.AliasRoutingConfiguration) []interface{} {
+	if arc == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"additional_version_weights": aws.Float64ValueMap(arc.AdditionalVersionWeights),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenDSConnectSettings(
 	customerDnsIps []*string,
 	s *directoryservice.DirectoryConnectSettingsDescription) []map[string]interface{} {
@@ -1450,7 +1471,7 @@ func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key 
 	oldModelMap := oldModels.(map[string]interface{})
 	newModelMap := newModels.(map[string]interface{})
 
-	for k, _ := range oldModelMap {
+	for k := range oldModelMap {
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
@@ -1468,7 +1489,7 @@ func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key 
 
 	for nK, nV := range newModelMap {
 		exists := false
-		for k, _ := range oldModelMap {
+		for k := range oldModelMap {
 			if k == nK {
 				exists = true
 			}
@@ -1502,7 +1523,7 @@ func deprecatedExpandApiGatewayMethodParametersJSONOperations(d *schema.Resource
 		return operations, err
 	}
 
-	for k, _ := range oldParametersMap {
+	for k := range oldParametersMap {
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
@@ -1520,7 +1541,7 @@ func deprecatedExpandApiGatewayMethodParametersJSONOperations(d *schema.Resource
 
 	for nK, nV := range newParametersMap {
 		exists := false
-		for k, _ := range oldParametersMap {
+		for k := range oldParametersMap {
 			if k == nK {
 				exists = true
 			}
@@ -1545,7 +1566,7 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 	oldParametersMap := oldParameters.(map[string]interface{})
 	newParametersMap := newParameters.(map[string]interface{})
 
-	for k, _ := range oldParametersMap {
+	for k := range oldParametersMap {
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
@@ -1568,7 +1589,7 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 
 	for nK, nV := range newParametersMap {
 		exists := false
-		for k, _ := range oldParametersMap {
+		for k := range oldParametersMap {
 			if k == nK {
 				exists = true
 			}
