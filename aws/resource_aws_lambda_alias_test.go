@@ -95,11 +95,30 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
+					testAccCheckAwsLambdaAttributes(&conf),
+					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
+						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
+				),
+			},
+			{
 				Config: testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
 					testAccCheckAwsLambdaAttributes(&conf),
 					testAccCheckAwsLambdaAliasRoutingConfigExists(&conf),
+					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
+						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
+				),
+			},
+			{
+				Config: testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaAliasExists("aws_lambda_alias.lambda_alias_test", &conf),
+					testAccCheckAwsLambdaAttributes(&conf),
+					testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(&conf),
 					resource.TestMatchResourceAttr("aws_lambda_alias.lambda_alias_test", "arn",
 						regexp.MustCompile(`^arn:aws:lambda:[a-z]+-[a-z]+-[0-9]+:\d{12}:function:`+funcName+`:`+aliasName+`$`)),
 				),

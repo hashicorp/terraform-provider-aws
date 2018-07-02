@@ -190,8 +190,8 @@ func expandLambdaAliasRoutingConfiguration(l []interface{}) *lambda.AliasRouting
 
 	m := l[0].(map[string]interface{})
 
-	if _, ok := m["additional_version_weights"]; ok {
-		aliasRoutingConfiguration.AdditionalVersionWeights = expandFloat64Map(m)
+	if v, ok := m["additional_version_weights"]; ok {
+		aliasRoutingConfiguration.AdditionalVersionWeights = expandFloat64Map(v.(map[string]interface{}))
 	}
 
 	return aliasRoutingConfiguration
