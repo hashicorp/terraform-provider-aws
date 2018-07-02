@@ -835,7 +835,12 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them
 			ev := e.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s:%s:%s-", ev["name"].(string), ev["type"].(string), ev["value"].(string)))
+			buf.WriteString(fmt.Sprintf("%s:", ev["name"].(string)))
+			// type is sometimes not returned by the API
+			if v, ok := ev["type"]; ok {
+				buf.WriteString(fmt.Sprintf("%s:", v.(string)))
+			}
+			buf.WriteString(fmt.Sprintf("%s-", ev["value"].(string)))
 		}
 	}
 
