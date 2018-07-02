@@ -6,8 +6,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/sqs"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -41,6 +45,31 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 			"batch_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// When AWS repurposed EventSourceMapping for use with SQS they kept
+					// the default for BatchSize at 100 for Kinesis and DynamoDB, but made
+					// the default 10 for SWS.  As such, we had to make batch_size optional.
+					// Because of this, we need to ensure that if someone doesn't have
+					// batch_size specified that it is not treated as a diff for those
+
+					eventSourceARN, err := arn.Parse(d.Get("event_source_arn").(string))
+					if err != nil {
+						return false
+					}
+					switch eventSourceARN.Service {
+					case dynamodb.ServiceName, kinesis.ServiceName:
+						if old == "100" && (new == "" || new == "0") {
+							return true
+						}
+					case sqs.ServiceName:
+						if old == "1" && (new == "" || new == "0") {
+							return true
+						}
+					default:
+						panic(eventSourceARN.Service)
+					}
+					return false
+				},
 			},
 			"enabled": {
 				Type:     schema.TypeBool,

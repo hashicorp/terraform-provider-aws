@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSLambdaEventSourceMapping_basic(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 
 	rString := acctest.RandString(8)
@@ -57,7 +57,51 @@ func TestAccAWSLambdaEventSourceMapping_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_sqsBasic(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
+	// batch_size became optional.  Ensure that if the user supplies the default
+	// value, but then moves to not providing the value, that we don't consider this
+	// a diff.
+
+	var conf lambda.EventSourceMappingConfiguration
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_esm_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_esm_basic_%s", rString)
+	attName := fmt.Sprintf("tf_acc_att_lambda_esm_basic_%s", rString)
+	streamName := fmt.Sprintf("tf_acc_stream_lambda_esm_basic_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_esm_basic_%s", rString)
+	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_basic_updated_%s", rString)
+	uFuncArnRe := regexp.MustCompile(":" + uFuncName + "$")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
+				),
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"batch_size", strconv.Itoa(100)),
+					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"enabled", strconv.FormatBool(true)),
+					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+						"starting_position", "TRIM_HORIZON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 
 	rString := acctest.RandString(8)
@@ -101,7 +145,7 @@ func TestAccAWSLambdaEventSourceMapping_sqsBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_importBasic(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_kinesis_import(t *testing.T) {
 	resourceName := "aws_lambda_event_source_mapping.lambda_event_source_mapping_test"
 
 	rString := acctest.RandString(8)
@@ -131,7 +175,7 @@ func TestAccAWSLambdaEventSourceMapping_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_kinesis_disappears(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 
 	rString := acctest.RandString(8)
@@ -385,6 +429,93 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
     function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
     starting_position = "TRIM_HORIZON"
+}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName,
+	funcName, uFuncName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "iam_for_lambda" {
+	name = "%s"
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+	{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		"Service": "lambda.amazonaws.com"
+		},
+		"Effect": "Allow",
+		"Sid": ""
+	}
+	]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy_for_role" {
+	name = "%s"
+	path = "/"
+	description = "IAM policy for Lambda event mapping testing"
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+			"kinesis:GetRecords",
+			"kinesis:GetShardIterator",
+			"kinesis:DescribeStream"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+			"kinesis:ListStreams"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
+	name = "%s"
+	roles = ["${aws_iam_role.iam_for_lambda.name}"]
+	policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+}
+
+resource "aws_kinesis_stream" "kinesis_stream_test" {
+	name = "%s"
+	shard_count = 1
+}
+
+resource "aws_lambda_function" "lambda_function_test_create" {
+	filename = "test-fixtures/lambdatest.zip"
+	function_name = "%s"
+	role = "${aws_iam_role.iam_for_lambda.arn}"
+	handler = "exports.example"
+	runtime = "nodejs4.3"
+}
+
+resource "aws_lambda_function" "lambda_function_test_update" {
+	filename = "test-fixtures/lambdatest.zip"
+	function_name = "%s"
+	role = "${aws_iam_role.iam_for_lambda.arn}"
+	handler = "exports.example"
+	runtime = "nodejs4.3"
+}
+
+resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
+	event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
+	enabled = true
+	depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+	function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
+	starting_position = "TRIM_HORIZON"
 }`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
