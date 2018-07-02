@@ -178,10 +178,8 @@ func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta inte
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteEventSourceMapping(params)
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "ResourceInUseException" {
-					return resource.RetryableError(awserr)
-				}
+			if isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -212,12 +210,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(params)
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "InvalidParameterValueException" ||
-					awserr.Code() == "ResourceInUseException" {
+			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "") ||
+				isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
 
-					return resource.RetryableError(awserr)
-				}
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
