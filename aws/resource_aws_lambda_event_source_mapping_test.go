@@ -325,7 +325,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
     name = "%s"
     path = "/"
-    description = "IAM policy for for Lambda event mapping testing"
+    description = "IAM policy for Lambda event mapping testing"
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -414,7 +414,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
     name = "%s"
     path = "/"
-    description = "IAM policy for for Lambda event mapping testing"
+    description = "IAM policy for Lambda event mapping testing"
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -502,7 +502,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
     name = "%s"
     path = "/"
-    description = "IAM policy for for Lambda event mapping testing"
+    description = "IAM policy for Lambda event mapping testing"
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -580,7 +580,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
     name = "%s"
     path = "/"
-    description = "IAM policy for for Lambda event mapping testing"
+    description = "IAM policy for Lambda event mapping testing"
     policy = <<EOF
 {
   "Version": "2012-10-17",
