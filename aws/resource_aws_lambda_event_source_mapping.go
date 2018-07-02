@@ -41,7 +41,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 			"batch_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  100,
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
@@ -89,11 +88,14 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	params := &lambda.CreateEventSourceMappingInput{
 		EventSourceArn: aws.String(eventSourceArn),
 		FunctionName:   aws.String(functionName),
-		BatchSize:      aws.Int64(int64(d.Get("batch_size").(int))),
 		Enabled:        aws.Bool(d.Get("enabled").(bool)),
 	}
 
-	if startingPosition := d.Get("starting_position"); startingPosition != "" {
+	if batchSize, ok := d.GetOk("batch_size"); ok {
+		params.BatchSize = aws.Int64(int64(batchSize.(int)))
+	}
+
+	if startingPosition, ok := d.GetOk("starting_position"); ok {
 		params.StartingPosition = aws.String(startingPosition.(string))
 	}
 
