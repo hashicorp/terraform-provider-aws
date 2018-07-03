@@ -27,7 +27,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 ## Argument Reference
 
-* `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100`.
+* `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB and Kinesis, `10` for SQS.
 * `event_source_arn` - (Required) The event source ARN - can either be a Kinesis or DynamoDB stream.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.

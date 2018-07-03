@@ -68,8 +68,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 						if old == "10" {
 							return true
 						}
-					default:
-						panic(eventSourceARN.Service)
 					}
 					return false
 				},
