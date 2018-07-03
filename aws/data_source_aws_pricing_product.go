@@ -71,10 +71,10 @@ func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) e
 		})
 	}
 
-	log.Printf("[DEBUG] Reading Pricing of EC2 products: %s", params)
+	log.Printf("[DEBUG] Reading pricing of products: %s", params)
 	resp, err := conn.GetProducts(params)
 	if err != nil {
-		return fmt.Errorf("Error reading Pricing of EC2 products: %s", err)
+		return fmt.Errorf("Error reading pricing of products: %s", err)
 	}
 
 	if err = verifyProductsPriceListLength(resp.PriceList); err != nil {
