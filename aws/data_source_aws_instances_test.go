@@ -160,7 +160,7 @@ resource "aws_instance" "test" {
 
 data "aws_instances" "test" {
   instance_tags {
-    Name = "*"
+    Name = "${aws_instance.test.0.tags["Name"]}"
   }
   
   instance_state_names = [ "pending", "running" ]
