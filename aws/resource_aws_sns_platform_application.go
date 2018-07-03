@@ -157,6 +157,12 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
+	if d.HasChange("platform_principal") {
+		// If the principal has changed we must also send the credential, even if it didn't change,
+		// as they must be specified together in the request.
+		attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
+	}
+
 	// Make API call to update attributes
 	req := &sns.SetPlatformApplicationAttributesInput{
 		PlatformApplicationArn: aws.String(d.Id()),
