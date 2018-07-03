@@ -43,8 +43,6 @@ data "aws_pricing_product" "test1" {
         value = "Shared"
         },
     ]
-    
-    json_query = "terms.OnDemand.*.priceDimensions.*.pricePerUnit.USD"
 }
 
 data "aws_pricing_product" "test2" {
@@ -60,8 +58,6 @@ data "aws_pricing_product" "test2" {
         value = "US East (N. Virginia)"
         },
     ]
-    
-    json_query = "terms.OnDemand.*.priceDimensions.*.pricePerUnit.USD"
 }
 ```
 
@@ -69,8 +65,7 @@ data "aws_pricing_product" "test2" {
 
  * `service_code` - (Required) The code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
  * `filters` - (Required) A list of filters. Passed directly to the API (see GetProducts API reference). These filters must describe a single product, this resource will fail if more than one product is returned by the API.
- * `json_query` - (Required) The JSON query used to fetch the wanted value. In a [GJSON format](https://github.com/tidwall/gjson).
 
 ## Attributes Reference
 
- * `query_result` - Set to the result of the JSON query applied on the product returned from the API.
+ * `result` - Set to the product returned from the API.

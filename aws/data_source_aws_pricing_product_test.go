@@ -1,9 +1,9 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -17,13 +17,10 @@ func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsPricingProductConfigEc2("test1", "c5.large") + testAccDataSourceAwsPricingProductConfigEc2("test2", "c5.xlarge"),
+				Config: testAccDataSourceAwsPricingProductConfigEc2("test", "c5.large"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test1", "query_result"),
-					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test2", "query_result"),
-					testAccPricingCheckValueIsFloat("data.aws_pricing_product.test1"),
-					testAccPricingCheckValueIsFloat("data.aws_pricing_product.test2"),
-					testAccPricingCheckGreaterValue("data.aws_pricing_product.test2", "data.aws_pricing_product.test1"),
+					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
+					testAccPricingCheckValueIsJSON("data.aws_pricing_product.test"),
 				),
 			},
 		},
@@ -39,8 +36,8 @@ func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsPricingProductConfigRedshift(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "query_result"),
-					testAccPricingCheckValueIsFloat("data.aws_pricing_product.test"),
+					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
+					testAccPricingCheckValueIsJSON("data.aws_pricing_product.test"),
 				),
 			},
 		},
@@ -77,8 +74,6 @@ func testAccDataSourceAwsPricingProductConfigEc2(dataName string, instanceType s
 			value = "Shared"
 		  },
 		]
-	  
-		json_query = "terms.OnDemand.*.priceDimensions.*.pricePerUnit.USD"
 }
 `, dataName, instanceType)
 }
@@ -97,13 +92,11 @@ func testAccDataSourceAwsPricingProductConfigRedshift() string {
 			value = "US East (N. Virginia)"
 		  },
 		]
-	  
-		json_query = "terms.OnDemand.*.priceDimensions.*.pricePerUnit.USD"
 }
 `)
 }
 
-func testAccPricingCheckValueIsFloat(data string) resource.TestCheckFunc {
+func testAccPricingCheckValueIsJSON(data string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[data]
 
@@ -111,32 +104,15 @@ func testAccPricingCheckValueIsFloat(data string) resource.TestCheckFunc {
 			return fmt.Errorf("Can't find resource: %s", data)
 		}
 
-		queryResult := rs.Primary.Attributes["query_result"]
-		if _, err := strconv.ParseFloat(queryResult, 32); err != nil {
-			return fmt.Errorf("%s query_result value (%s) is not a float: %s", data, queryResult, err)
+		result := rs.Primary.Attributes["result"]
+		var objmap map[string]*json.RawMessage
+
+		if err := json.Unmarshal([]byte(result), &objmap); err != nil {
+			return fmt.Errorf("%s result value (%s) is not JSON: %s", data, result, err)
 		}
 
-		return nil
-	}
-}
-
-func testAccPricingCheckGreaterValue(dataWithGreaterValue string, otherData string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		greaterResource, ok := s.RootModule().Resources[dataWithGreaterValue]
-		if !ok {
-			return fmt.Errorf("Can't find resource: %s", dataWithGreaterValue)
-		}
-
-		lesserResource, ok := s.RootModule().Resources[otherData]
-		if !ok {
-			return fmt.Errorf("Can't find resource: %s", otherData)
-		}
-
-		greaterValue := greaterResource.Primary.Attributes["query_result"]
-		lesserValue := lesserResource.Primary.Attributes["query_result"]
-
-		if greaterValue <= lesserValue {
-			return fmt.Errorf("%s (%s) has a greater value than %s (%s). Should have been the opposite", otherData, lesserValue, dataWithGreaterValue, greaterValue)
+		if len(objmap) == 0 {
+			return fmt.Errorf("%s result value (%s) unmarshalling resulted in an empty map", data, result)
 		}
 
 		return nil
