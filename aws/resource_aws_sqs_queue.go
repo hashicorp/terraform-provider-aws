@@ -56,9 +56,10 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ValidateFunc:  validateSQSQueueName,
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"delay_seconds": {
 				Type:     schema.TypeInt,

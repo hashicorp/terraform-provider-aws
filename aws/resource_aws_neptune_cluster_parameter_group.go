@@ -38,11 +38,12 @@ func resourceAwsNeptuneClusterParameterGroup() *schema.Resource {
 				ValidateFunc:  validateNeptuneParamGroupName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateNeptuneParamGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateNeptuneParamGroupNamePrefix,
 			},
 			"family": {
 				Type:     schema.TypeString,

@@ -45,11 +45,12 @@ func resourceAwsDbOptionGroup() *schema.Resource {
 				ValidateFunc:  validateDbOptionGroupName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateDbOptionGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateDbOptionGroupNamePrefix,
 			},
 			"engine_name": {
 				Type:     schema.TypeString,

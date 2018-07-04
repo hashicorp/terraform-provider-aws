@@ -42,9 +42,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 				ConflictsWith: []string{"bucket_prefix"},
 			},
 			"bucket_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"bucket"},
 			},
 
 			"bucket_domain_name": {

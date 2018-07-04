@@ -58,11 +58,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ValidateFunc:  validateRdsIdentifier,
 			},
 			"cluster_identifier_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifierPrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"cluster_identifier"},
+				ValidateFunc:  validateRdsIdentifierPrefix,
 			},
 
 			"cluster_members": {

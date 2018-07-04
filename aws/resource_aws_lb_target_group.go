@@ -50,10 +50,11 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc:  validateMaxLength(32),
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateMaxLength(32 - resource.UniqueIDSuffixLength),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateMaxLength(32 - resource.UniqueIDSuffixLength),
 			},
 
 			"port": {
