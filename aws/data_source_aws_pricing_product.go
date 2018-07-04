@@ -5,14 +5,11 @@ import (
 
 	"encoding/json"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
-)
-
-const (
-	awsPricingTermMatch = "TERM_MATCH"
 )
 
 func dataSourceAwsPricingProduct() *schema.Resource {
@@ -62,7 +59,7 @@ func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) e
 		params.Filters = append(params.Filters, &pricing.Filter{
 			Field: aws.String(m["field"].(string)),
 			Value: aws.String(m["value"].(string)),
-			Type:  aws.String(awsPricingTermMatch),
+			Type:  aws.String(pricing.FilterTypeTermMatch),
 		})
 	}
 
@@ -72,8 +69,16 @@ func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error reading pricing of products: %s", err)
 	}
 
-	if err = verifyProductsPriceListLength(resp.PriceList); err != nil {
-		return err
+	numberOfElements := len(resp.PriceList)
+	if numberOfElements == 0 {
+		return fmt.Errorf("Pricing product query did not return any elements")
+	} else if numberOfElements > 1 {
+		priceListBytes, err := json.Marshal(resp.PriceList)
+		priceListString := string(priceListBytes)
+		if err != nil {
+			priceListString = err.Error()
+		}
+		return fmt.Errorf("Pricing product query not precise enough. Returned more than one element: %s", priceListString)
 	}
 
 	pricingResult, err := json.Marshal(resp.PriceList[0])
@@ -83,20 +88,5 @@ func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(fmt.Sprintf("%d", hashcode.String(params.String())))
 	d.Set("result", string(pricingResult))
-	return nil
-}
-
-func verifyProductsPriceListLength(priceList []aws.JSONValue) error {
-	numberOfElements := len(priceList)
-	if numberOfElements == 0 {
-		return fmt.Errorf("Pricing product query did not return any elements")
-	} else if numberOfElements > 1 {
-		priceListBytes, err := json.Marshal(priceList)
-		priceListString := string(priceListBytes)
-		if err != nil {
-			priceListString = err.Error()
-		}
-		return fmt.Errorf("Pricing product query not precise enough. Returned more than one element: %s", priceListString)
-	}
 	return nil
 }
