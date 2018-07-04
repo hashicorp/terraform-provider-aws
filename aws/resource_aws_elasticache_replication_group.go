@@ -320,7 +320,9 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
-	d.Set("member_clusters", flattenStringList(rgp.MemberClusters))
+	if err := d.Set("member_clusters", flattenStringList(rgp.MemberClusters)); err != nil {
+		return fmt.Errorf("error setting member_clusters: %s", err)
+	}
 	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(aws.BoolValue(rgp.ClusterEnabled), rgp.NodeGroups)); err != nil {
 		return fmt.Errorf("error setting cluster_mode attribute: %s", err)
 	}
