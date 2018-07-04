@@ -547,6 +547,29 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_metadata(t *testing.T) {
+	rInt := acctest.RandInt()
+	var obj s3.GetObjectOutput
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_withMetadata(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &obj),
+					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "metadata.%", "2"),
+					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "metadata.test", "Value One"),
+					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "metadata.description", "Very interesting"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSS3BucketObjectConfigSource(randInt int, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
@@ -711,6 +734,24 @@ resource "aws_s3_bucket_object" "object" {
 	tags {
 		Key1 = "Value One"
 		Description = "Very interesting"
+	}
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketObjectConfig_withMetadata(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket_2" {
+	bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "object" {
+	bucket = "${aws_s3_bucket.object_bucket_2.bucket}"
+	key = "test-key"
+	content = "stuff"
+	metadata {
+		test = "Value One"
+		description = "Very interesting"
 	}
 }
 `, randInt)
