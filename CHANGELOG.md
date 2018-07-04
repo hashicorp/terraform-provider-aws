@@ -9,10 +9,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_elasticache_replication_group: Add `member_clusters` attribute [GH-5056]
 * data-source/aws_instances: Add `instance_state_names` argument (support non-`running` instances) [GH-4950]
 * data-source/aws_route_tables: Add `filter` argument [GH-5035]
 * data-source/aws_subnet_ids: Add `filter` argument [GH-5038]
 * resource/aws_eip_association: Support resource import [GH-5006]
+* resource/aws_elasticache_replication_group: Add `member_clusters` attribute [GH-5056]
 * resource/aws_lambda_alias: Add `routing_config` argument (support traffic shifting) [GH-3316]
 * resource/aws_lambda_event_source_mapping: Make `starting_position` optional and allow `batch_size` to support default of 10 for SQS [GH-5024]
 * resource/aws_network_acl_rule: Add plan time conflict validation with `cidr_block` and `ipv6_cidr_block` [GH-3951]
