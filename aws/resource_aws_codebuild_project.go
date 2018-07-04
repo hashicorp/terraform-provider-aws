@@ -489,17 +489,16 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 
 func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 	vpcConfig := codebuild.VpcConfig{}
-	if len(rawVpcConfig) == 0 {
-		return &vpcConfig
-	} else {
-
-		data := rawVpcConfig[0].(map[string]interface{})
-		vpcConfig.VpcId = aws.String(data["vpc_id"].(string))
-		vpcConfig.Subnets = expandStringList(data["subnets"].(*schema.Set).List())
-		vpcConfig.SecurityGroupIds = expandStringList(data["security_group_ids"].(*schema.Set).List())
-
+	if len(rawVpcConfig) == 0 || rawVpcConfig[0] == nil {
 		return &vpcConfig
 	}
+
+	data := rawVpcConfig[0].(map[string]interface{})
+	vpcConfig.VpcId = aws.String(data["vpc_id"].(string))
+	vpcConfig.Subnets = expandStringList(data["subnets"].(*schema.Set).List())
+	vpcConfig.SecurityGroupIds = expandStringList(data["security_group_ids"].(*schema.Set).List())
+
+	return &vpcConfig
 }
 
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
