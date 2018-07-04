@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_launch_configuration` [GH-3624]
+* **New Data Source:** `aws_pricing_product` [GH-5057]
 * **New Resource:** `aws_s3_bucket_inventory` [GH-5019]
 * **New Resource:** `aws_vpc_ipv4_cidr_block_association` [GH-3723]
 
