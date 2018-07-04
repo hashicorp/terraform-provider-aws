@@ -169,7 +169,7 @@ A `action` block supports the following arguments:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The codepipeline ID.
 * `arn` - The codepipeline ARN.

@@ -95,7 +95,7 @@ Defaults to `false`.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint.
 * `state` - The state of the VPC endpoint.

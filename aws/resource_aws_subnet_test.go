@@ -24,11 +24,13 @@ func init() {
 			"aws_batch_compute_environment",
 			"aws_beanstalk_environment",
 			"aws_db_instance",
+			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",
 			"aws_lambda_function",
+			"aws_lb",
 			"aws_mq_broker",
 			"aws_redshift_cluster",
 			"aws_spot_fleet_request",
@@ -55,6 +57,10 @@ func testSweepSubnets(region string) error {
 	}
 	resp, err := conn.DescribeSubnets(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing subnets: %s", err)
 	}
 

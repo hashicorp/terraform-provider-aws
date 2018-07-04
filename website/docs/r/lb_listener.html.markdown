@@ -49,6 +49,8 @@ The following arguments are supported:
 * `certificate_arn` - (Optional) The ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
 * `default_action` - (Required) An Action block. Action blocks are documented below.
 
+~> **NOTE::** Please note that listeners that are attached to Application Load Balancers must use either `HTTP` or `HTTPS` protocols while listeners that are attached to Network Load Balancers must use the `TCP` protocol.
+
 Action Blocks (for `default_action`) support the following:
 
 * `target_group_arn` - (Required) The ARN of the Target Group to which to route traffic.

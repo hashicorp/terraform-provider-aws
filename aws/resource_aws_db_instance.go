@@ -908,7 +908,13 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return nil
 		})
 		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == "InvalidParameterValue" {
+					return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
+				}
+			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
+
 		}
 	}
 
@@ -1029,7 +1035,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+		return fmt.Errorf("Error retrieving tags for ARN: %s", arn)
 	}
 
 	var dt []*rds.Tag

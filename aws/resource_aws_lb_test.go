@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,66 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
+		Name: "aws_lb",
+		F:    testSweepLBs,
+	})
+}
+
+func testSweepLBs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elbv2conn
+
+	prefixes := []string{
+		"tf-",
+		"tf-test-",
+		"tf-acc-test-",
+		"test-",
+	}
+
+	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
+		if page == nil || len(page.LoadBalancers) == 0 {
+			log.Print("[DEBUG] No LBs to sweep")
+			return false
+		}
+
+		for _, loadBalancer := range page.LoadBalancers {
+			name := aws.StringValue(loadBalancer.LoadBalancerName)
+			skip := true
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(name, prefix) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				log.Printf("[INFO] Skipping LB: %s", name)
+				continue
+			}
+			log.Printf("[INFO] Deleting LB: %s", name)
+			_, err := conn.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
+				LoadBalancerArn: loadBalancer.LoadBalancerArn,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete LB (%s): %s", name, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving LBs: %s", err)
+	}
+	return nil
+}
 
 func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
@@ -508,6 +570,7 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	bucketPrefix := "testAccAWSALBConfig_accessLogs"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -537,12 +600,12 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLBConfig_accessLogs(true, lbName, bucketName),
+				Config: testAccAWSLBConfig_accessLogs(true, lbName, bucketName, bucketPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
 					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "true"),
 					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
-					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", bucketPrefix),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -556,18 +619,43 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.bucket", bucketName),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.prefix", "testAccAWSALBConfig_accessLogs"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.prefix", bucketPrefix),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.enabled", "true"),
 					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
 			},
 			{
-				Config: testAccAWSLBConfig_accessLogs(false, lbName, bucketName),
+				Config: testAccAWSLBConfig_accessLogs(true, lbName, bucketName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "true"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "tags.Name", "TestAccAWSALB_basic1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "idle_timeout", "50"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "zone_id"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "dns_name"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.bucket", bucketName),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.prefix", ""),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
+				),
+			},
+			{
+				Config: testAccAWSLBConfig_accessLogs(false, lbName, bucketName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists("aws_lb.lb_test", &conf),
 					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.enabled", "false"),
 					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.bucket", bucketName),
-					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", "testAccAWSALBConfig_accessLogs"),
+					testAccCheckAWSLBAttribute("aws_lb.lb_test", "access_logs.s3.prefix", ""),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "name", lbName),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "internal", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "subnets.#", "2"),
@@ -583,6 +671,11 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "access_logs.0.enabled", "false"),
 					resource.TestCheckResourceAttrSet("aws_lb.lb_test", "arn"),
 				),
+			},
+			{
+				ResourceName:      "aws_lb.lb_test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1727,7 +1820,7 @@ resource "aws_security_group" "alb_test" {
 }`, lbName)
 }
 
-func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName string) string {
+func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName, bucketPrefix string) string {
 	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1739,7 +1832,7 @@ func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName string) stri
 
   access_logs {
   	bucket = "${aws_s3_bucket.logs.bucket}"
-  	prefix = "${var.bucket_prefix}"
+	prefix = "${var.bucket_prefix}"
   	enabled = "%t"
   }
 
@@ -1755,7 +1848,7 @@ variable "bucket_name" {
 
 variable "bucket_prefix" {
   type    = "string"
-  default = "testAccAWSALBConfig_accessLogs"
+  default = "%s"
 }
 
 resource "aws_s3_bucket" "logs" {
@@ -1769,6 +1862,8 @@ resource "aws_s3_bucket" "logs" {
   }
 }
 
+data "aws_partition" "current" {}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_elb_service_account" "current" {}
@@ -1777,11 +1872,11 @@ data "aws_iam_policy_document" "logs_bucket" {
   statement {
     actions   = ["s3:PutObject"]
     effect    = "Allow"
-    resources = ["arn:aws:s3:::${var.bucket_name}/${var.bucket_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:s3:::${var.bucket_name}/${var.bucket_prefix}${var.bucket_prefix == "" ? "" : "/"}AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
     principals = {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_elb_service_account.current.id}:root"]
+      identifiers = ["${data.aws_elb_service_account.current.arn}"]
     }
   }
 }
@@ -1835,7 +1930,7 @@ resource "aws_security_group" "alb_test" {
   tags {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, enabled, bucketName)
+}`, lbName, enabled, bucketName, bucketPrefix)
 }
 
 func testAccAWSLBConfig_nosg(lbName string) string {

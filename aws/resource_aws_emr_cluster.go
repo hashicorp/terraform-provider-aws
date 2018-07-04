@@ -42,6 +42,17 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"additional_info": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 			"core_instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -478,6 +489,14 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 	}
 
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		params.AdditionalInfo = aws.String(info)
+	}
+
 	if v, ok := d.GetOk("log_uri"); ok {
 		params.LogUri = aws.String(v.(string))
 	}
@@ -684,6 +703,15 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting step: %s", err)
 	}
 
+	// AWS provides no other way to read back the additional_info
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		d.Set("additional_info", info)
+	}
+
 	return nil
 }
 
@@ -835,7 +863,6 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[ERR] Error waiting for EMR Cluster (%s) Instances to drain", d.Id())
 	}
 
-	d.SetId("")
 	return nil
 }
 

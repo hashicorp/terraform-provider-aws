@@ -37,7 +37,7 @@ func testSweepELBs(region string) error {
 		"test-elb-",
 	}
 
-	return conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
+	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
 			log.Println("[INFO] No ELBs found for sweeping")
 			return false
@@ -71,6 +71,14 @@ func testSweepELBs(region string) error {
 		}
 		return !isLast
 	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ELB sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving ELBs: %s", err)
+	}
+	return nil
 }
 
 func TestAccAWSELB_basic(t *testing.T) {
@@ -118,8 +126,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 
-	lbName := fmt.Sprintf("Tf-%d",
-		rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+	lbName := fmt.Sprintf("Tf-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -907,57 +914,6 @@ func TestResourceAWSELB_validateAccessLogsInterval(t *testing.T) {
 		}
 	}
 
-}
-
-func TestResourceAWSELB_validateListenerProtocol(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "HTTP:",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "TCP",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ssl",
-			ErrCount: 0,
-		},
-		{
-			Value:    "HTTP",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
 }
 
 func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {

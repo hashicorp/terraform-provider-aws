@@ -45,7 +45,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the state machine.
 * `creation_date` - The date the state machine was created.

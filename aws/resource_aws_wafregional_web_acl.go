@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -62,6 +63,15 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 						"priority": &schema.Schema{
 							Type:     schema.TypeInt,
 							Required: true,
+						},
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  waf.WafRuleTypeRegular,
+							ValidateFunc: validation.StringInSlice([]string{
+								waf.WafRuleTypeRegular,
+								waf.WafRuleTypeRateBased,
+							}, false),
 						},
 						"rule_id": &schema.Schema{
 							Type:     schema.TypeString,
@@ -224,6 +234,7 @@ func flattenWafWebAclRules(ts []*waf.ActivatedRule) []interface{} {
 		m["action"] = []interface{}{actionMap}
 		m["priority"] = *r.Priority
 		m["rule_id"] = *r.RuleId
+		m["type"] = *r.Type
 		out[i] = m
 	}
 	return out
@@ -231,10 +242,12 @@ func flattenWafWebAclRules(ts []*waf.ActivatedRule) []interface{} {
 
 func expandWafWebAclUpdate(updateAction string, aclRule map[string]interface{}) *waf.WebACLUpdate {
 	ruleAction := aclRule["action"].([]interface{})[0].(map[string]interface{})
+
 	rule := &waf.ActivatedRule{
 		Action:   &waf.WafAction{Type: aws.String(ruleAction["type"].(string))},
 		Priority: aws.Int64(int64(aclRule["priority"].(int))),
 		RuleId:   aws.String(aclRule["rule_id"].(string)),
+		Type:     aws.String(aclRule["type"].(string)),
 	}
 
 	update := &waf.WebACLUpdate{

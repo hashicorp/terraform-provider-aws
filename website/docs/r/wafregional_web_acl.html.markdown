@@ -48,6 +48,7 @@ resource "aws_wafregional_web_acl" "wafacl" {
     
     priority = 1
     rule_id  = "${aws_wafregional_rule.wafrule.id}"
+    type     = "REGULAR"
   }
 }
 ```
@@ -73,6 +74,7 @@ See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_Acti
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) ID of the associated [rule](/docs/providers/aws/r/wafregional_rule.html)
+* `type` - (Optional) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), or `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html). The default is REGULAR. If you add a RATE_BASED rule, you need to set `type` as `RATE_BASED`.
 
 ### `default_action` / `action`
 
@@ -83,6 +85,6 @@ See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_Acti
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional WebACL.

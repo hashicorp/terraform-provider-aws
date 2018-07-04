@@ -89,11 +89,13 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Computed: true,
 										Optional: true,
 									},
 									"kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -102,10 +104,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -158,8 +162,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"iam_instance_profile.0.name"},
+							ValidateFunc:  validateArn,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -219,6 +225,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"valid_until": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.ValidateRFC3339TimeString,
 									},
 								},
@@ -362,9 +369,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
 
 			"vpc_security_group_ids": {
@@ -381,6 +389,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"resource_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"instance",
+								"volume",
+							}, false),
 						},
 						"tags": tagsSchema(),
 					},
@@ -391,6 +403,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -463,6 +477,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("tags", tagsToMap(lt.Tags))
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
@@ -548,6 +563,16 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			return createErr
 		}
 	}
+
+	d.Partial(true)
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
 
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
@@ -649,7 +674,7 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
 				"max_price":                      aws.StringValue(so.MaxPrice),
 				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
-				"valid_until":                    aws.TimeValue(so.ValidUntil),
+				"valid_until":                    aws.TimeValue(so.ValidUntil).Format(time.RFC3339),
 			})
 			mo["spot_options"] = spot
 		}
@@ -926,8 +951,8 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v := ebs["iops"]; v != nil {
-		ebsDevice.Iops = aws.Int64(int64(v.(int)))
+	if v := ebs["iops"].(int); v > 0 {
+		ebsDevice.Iops = aws.Int64(int64(v))
 	}
 
 	if v := ebs["kms_key_id"].(string); v != "" {
@@ -962,7 +987,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Description = aws.String(v)
 	}
 
-	if v, ok := ni["device_index"].(int); ok && v != 0 {
+	if v, ok := ni["device_index"].(int); ok {
 		networkInterface.DeviceIndex = aws.Int64(int64(v))
 	}
 
@@ -991,8 +1016,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 			Ipv6Address: aws.String(address.(string)),
 		})
 	}
-	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
 	networkInterface.Ipv6Addresses = ipv6Addresses
+
+	if v := ni["ipv6_address_count"].(int); v > 0 {
+		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
+	}
 
 	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
 	for _, address := range ipv4AddressList {
@@ -1002,8 +1030,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		}
 		ipv4Addresses = append(ipv4Addresses, privateIp)
 	}
-	networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
 	networkInterface.PrivateIpAddresses = ipv4Addresses
+
+	if v := ni["ipv4_address_count"].(int); v > 0 {
+		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	}
 
 	return networkInterface
 }
@@ -1071,11 +1102,13 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 				spotOptions.SpotInstanceType = aws.String(v)
 			}
 
-			t, err := time.Parse(time.RFC3339, so["valid_until"].(string))
-			if err != nil {
-				return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+			if v, ok := so["valid_until"].(string); ok && v != "" {
+				t, err := time.Parse(time.RFC3339, v)
+				if err != nil {
+					return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+				}
+				spotOptions.ValidUntil = aws.Time(t)
 			}
-			spotOptions.ValidUntil = aws.Time(t)
 		}
 		instanceMarketOptions.SpotOptions = spotOptions
 	}

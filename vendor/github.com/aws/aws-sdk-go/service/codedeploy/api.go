@@ -986,6 +986,9 @@ func (c *CodeDeploy) CreateDeploymentRequest(input *CreateDeploymentInput) (req 
 //   The IgnoreApplicationStopFailures value is invalid. For AWS Lambda deployments,
 //   false is expected. For EC2/On-premises deployments, true or false is expected.
 //
+//   * ErrCodeInvalidGitHubAccountTokenException "InvalidGitHubAccountTokenException"
+//   The GitHub token is not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codedeploy-2014-10-06/CreateDeployment
 func (c *CodeDeploy) CreateDeployment(input *CreateDeploymentInput) (*CreateDeploymentOutput, error) {
 	req, out := c.CreateDeploymentRequest(input)
@@ -5102,7 +5105,8 @@ type BlueInstanceTerminationOption struct {
 	Action *string `locationName:"action" type:"string" enum:"InstanceAction"`
 
 	// The number of minutes to wait after a successful blue/green deployment before
-	// terminating instances from the original environment.
+	// terminating instances from the original environment. The maximum setting
+	// is 2880 minutes (2 days).
 	TerminationWaitTimeInMinutes *int64 `locationName:"terminationWaitTimeInMinutes" type:"integer"`
 }
 
@@ -6678,10 +6682,10 @@ type DeploymentReadyOption struct {
 	//    after the new application revision is installed on the instances in the
 	//    replacement environment.
 	//
-	//    * STOP_DEPLOYMENT: Do not register new instances with load balancer unless
-	//    traffic is rerouted manually. If traffic is not rerouted manually before
-	//    the end of the specified wait period, the deployment status is changed
-	//    to Stopped.
+	//    * STOP_DEPLOYMENT: Do not register new instances with a load balancer
+	//    unless traffic rerouting is started using ContinueDeployment. If traffic
+	//    rerouting is not started before the end of the specified wait period,
+	//    the deployment status is changed to Stopped.
 	ActionOnTimeout *string `locationName:"actionOnTimeout" type:"string" enum:"DeploymentReadyAction"`
 
 	// The number of minutes to wait before the status of a blue/green deployment
@@ -8757,11 +8761,15 @@ type LoadBalancerInfo struct {
 	// An array containing information about the load balancer to use for load balancing
 	// in a deployment. In Elastic Load Balancing, load balancers are used with
 	// Classic Load Balancers.
+	//
+	// Adding more than one load balancer to the array is not supported.
 	ElbInfoList []*ELBInfo `locationName:"elbInfoList" type:"list"`
 
 	// An array containing information about the target group to use for load balancing
 	// in a deployment. In Elastic Load Balancing, target groups are used with Application
 	// Load Balancers.
+	//
+	// Adding more than one target group to the array is not supported.
 	TargetGroupInfoList []*TargetGroupInfo `locationName:"targetGroupInfoList" type:"list"`
 }
 
