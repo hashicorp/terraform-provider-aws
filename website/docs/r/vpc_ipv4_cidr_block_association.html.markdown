@@ -46,3 +46,11 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The ID of the VPC CIDR association
+
+## Import
+
+`aws_vpc_ipv4_cidr_block_association` can be imported by using the VPC CIDR Association ID, e.g.
+
+```
+$ terraform import aws_vpc_ipv4_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
+```
