@@ -50,6 +50,13 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		Optional: true,
 	}
 
+	resourceSchema["member_clusters"] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+	}
+
 	resourceSchema["primary_endpoint_address"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -313,6 +320,9 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
+	if err := d.Set("member_clusters", flattenStringList(rgp.MemberClusters)); err != nil {
+		return fmt.Errorf("error setting member_clusters: %s", err)
+	}
 	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(aws.BoolValue(rgp.ClusterEnabled), rgp.NodeGroups)); err != nil {
 		return fmt.Errorf("error setting cluster_mode attribute: %s", err)
 	}
