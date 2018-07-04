@@ -89,6 +89,8 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 						"aws_elasticache_replication_group.bar", "cluster_mode.#", "0"),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttrSet(
+						"aws_elasticache_replication_group.bar", "member_clusters"),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "auto_minor_version_upgrade", "false"),
 				),
