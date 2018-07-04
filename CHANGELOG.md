@@ -1,30 +1,30 @@
-## 1.26.0 (Unreleased)
+## 1.26.0 (July 04, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_launch_configuration` [GH-3624]
-* **New Data Source:** `aws_pricing_product` [GH-5057]
-* **New Resource:** `aws_s3_bucket_inventory` [GH-5019]
-* **New Resource:** `aws_vpc_ipv4_cidr_block_association` [GH-3723]
+* **New Data Source:** `aws_launch_configuration` ([#3624](https://github.com/terraform-providers/terraform-provider-aws/issues/3624))
+* **New Data Source:** `aws_pricing_product` ([#5057](https://github.com/terraform-providers/terraform-provider-aws/issues/5057))
+* **New Resource:** `aws_s3_bucket_inventory` ([#5019](https://github.com/terraform-providers/terraform-provider-aws/issues/5019))
+* **New Resource:** `aws_vpc_ipv4_cidr_block_association` ([#3723](https://github.com/terraform-providers/terraform-provider-aws/issues/3723))
 
 ENHANCEMENTS:
 
-* data-source/aws_elasticache_replication_group: Add `member_clusters` attribute [GH-5056]
-* data-source/aws_instances: Add `instance_state_names` argument (support non-`running` instances) [GH-4950]
-* data-source/aws_route_tables: Add `filter` argument [GH-5035]
-* data-source/aws_subnet_ids: Add `filter` argument [GH-5038]
-* resource/aws_eip_association: Support resource import [GH-5006]
-* resource/aws_elasticache_replication_group: Add `member_clusters` attribute [GH-5056]
-* resource/aws_lambda_alias: Add `routing_config` argument (support traffic shifting) [GH-3316]
-* resource/aws_lambda_event_source_mapping: Make `starting_position` optional and allow `batch_size` to support default of 10 for SQS [GH-5024]
-* resource/aws_network_acl_rule: Add plan time conflict validation with `cidr_block` and `ipv6_cidr_block` [GH-3951]
-* resource/aws_spot_fleet_request: Add `fleet_type` argument [GH-5032]
-* resource/aws_ssm_document: Add `tags` argument (support tagging) [GH-5020]
+* data-source/aws_elasticache_replication_group: Add `member_clusters` attribute ([#5056](https://github.com/terraform-providers/terraform-provider-aws/issues/5056))
+* data-source/aws_instances: Add `instance_state_names` argument (support non-`running` instances) ([#4950](https://github.com/terraform-providers/terraform-provider-aws/issues/4950))
+* data-source/aws_route_tables: Add `filter` argument ([#5035](https://github.com/terraform-providers/terraform-provider-aws/issues/5035))
+* data-source/aws_subnet_ids: Add `filter` argument ([#5038](https://github.com/terraform-providers/terraform-provider-aws/issues/5038))
+* resource/aws_eip_association: Support resource import ([#5006](https://github.com/terraform-providers/terraform-provider-aws/issues/5006))
+* resource/aws_elasticache_replication_group: Add `member_clusters` attribute ([#5056](https://github.com/terraform-providers/terraform-provider-aws/issues/5056))
+* resource/aws_lambda_alias: Add `routing_config` argument (support traffic shifting) ([#3316](https://github.com/terraform-providers/terraform-provider-aws/issues/3316))
+* resource/aws_lambda_event_source_mapping: Make `starting_position` optional and allow `batch_size` to support default of 10 for SQS ([#5024](https://github.com/terraform-providers/terraform-provider-aws/issues/5024))
+* resource/aws_network_acl_rule: Add plan time conflict validation with `cidr_block` and `ipv6_cidr_block` ([#3951](https://github.com/terraform-providers/terraform-provider-aws/issues/3951))
+* resource/aws_spot_fleet_request: Add `fleet_type` argument ([#5032](https://github.com/terraform-providers/terraform-provider-aws/issues/5032))
+* resource/aws_ssm_document: Add `tags` argument (support tagging) ([#5020](https://github.com/terraform-providers/terraform-provider-aws/issues/5020))
 
 BUG FIXES:
 
-* resource/aws_codebuild_project: Prevent panic with missing environment variable type [GH-5052]
-* resource/aws_kms_alias: Fix perpetual plan when `target_key_id` is ARN [GH-4010]
+* resource/aws_codebuild_project: Prevent panic with missing environment variable type ([#5052](https://github.com/terraform-providers/terraform-provider-aws/issues/5052))
+* resource/aws_kms_alias: Fix perpetual plan when `target_key_id` is ARN ([#4010](https://github.com/terraform-providers/terraform-provider-aws/issues/4010))
 
 ## 1.25.0 (June 27, 2018)
 
