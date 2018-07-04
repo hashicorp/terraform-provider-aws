@@ -19,28 +19,28 @@ data "aws_pricing_product" "example" {
     
     filters = [
         {
-        field = "instanceType"
-        value = "c5.xlarge"
+            field = "instanceType"
+            value = "c5.xlarge"
         },
         {
-        field = "operatingSystem"
-        value = "Linux"
+            field = "operatingSystem"
+            value = "Linux"
         },
         {
-        field = "location"
-        value = "US East (N. Virginia)"
+            field = "location"
+            value = "US East (N. Virginia)"
         },
         {
-        field = "preInstalledSw"
-        value = "NA"
+            field = "preInstalledSw"
+            value = "NA"
         },
         {
-        field = "licenseModel"
-        value = "No License required"
+            field = "licenseModel"
+            value = "No License required"
         },
         {
-        field = "tenancy"
-        value = "Shared"
+            field = "tenancy"
+            value = "Shared"
         },
     ]
 }
@@ -52,12 +52,12 @@ data "aws_pricing_product" "example" {
     
     filters = [
         {
-        field = "instanceType"
-        value = "ds1.xlarge"
+            field = "instanceType"
+            value = "ds1.xlarge"
         },
         {
-        field = "location"
-        value = "US East (N. Virginia)"
+            field = "location"
+            value = "US East (N. Virginia)"
         },
     ]
 }
@@ -68,7 +68,7 @@ data "aws_pricing_product" "example" {
  * `service_code` - (Required) The code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
  * `filters` - (Required) A list of filters. Passed directly to the API (see GetProducts API reference). These filters must describe a single product, this resource will fail if more than one product is returned by the API.
 
-### `filters`
+### filters
 
  * `field` (Required) The product attribute name that you want to filter on.
  * `value` (Required) The product attribute value that you want to filter on.
