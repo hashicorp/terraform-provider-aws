@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_instances: Add `instance_state_names` argument (support non-`running` instances) [GH-4950]
 * data-source/aws_route_tables: Add `filter` argument [GH-5035]
 * data-source/aws_subnet_ids: Add `filter` argument [GH-5038]
 * resource/aws_eip_association: Support resource import [GH-5006]
