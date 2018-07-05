@@ -75,8 +75,10 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Optional: true,
 			},
 			"datapoints_to_alarm": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"dimensions": {
 				Type:     schema.TypeMap,
