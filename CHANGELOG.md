@@ -1,4 +1,9 @@
 ## 1.27.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
+
 ## 1.26.0 (July 04, 2018)
 
 FEATURES:
