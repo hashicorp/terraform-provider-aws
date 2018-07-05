@@ -129,23 +129,23 @@ func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []er
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
+			"first character of parameter group %q must be a letter", k))
 	}
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
+			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot end with a hyphen", k))
+			"parameter group %q cannot end with a hyphen", k))
 	}
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 255 characters", k))
+			"parameter group %q cannot be greater than 255 characters", k))
 	}
 	return
 }
@@ -154,19 +154,19 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
+			"first character of parameter group %q must be a letter", k))
 	}
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
+			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 226 characters", k))
+			"parameter group %q cannot be greater than 226 characters", k))
 	}
 	return
 }
