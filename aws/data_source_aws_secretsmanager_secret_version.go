@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -20,7 +21,7 @@ func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
 				ForceNew: true,
 			},
 			"secret_string": {
-				Type:      schema.TypeString,
+				Type:      schema.TypeMap,
 				Computed:  true,
 				Sensitive: true,
 			},
@@ -76,7 +77,11 @@ func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta i
 
 	d.SetId(fmt.Sprintf("%s|%s", secretID, version))
 	d.Set("secret_id", secretID)
-	d.Set("secret_string", output.SecretString)
+	var sec map[string]interface{}
+	if err = json.Unmarshal([]byte(*output.SecretString), &sec); err != nil {
+		return fmt.Errorf("Error getting secret string: %s", err)
+	}
+	d.Set("secret_string", sec)
 	d.Set("version_id", output.VersionId)
 
 	if err := d.Set("version_stages", flattenStringList(output.VersionStages)); err != nil {
