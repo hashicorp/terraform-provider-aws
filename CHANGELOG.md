@@ -1,5 +1,9 @@
 ## 1.27.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
+
 BUG FIXES:
 
 * resource/aws_codebuild_project: Prevent panic when empty `vpc_config` block is configured [GH-5070]
