@@ -2016,13 +2016,6 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
-	t.Skip(
-		"currently AWS does not offer the ability to update the CIDR blocks " +
-			"you must revoke the entire rule per the docs and re-authorize a new " +
-			"rule, if this changes it's worth revisiting this test to avoid all CIDR " +
-			"blocks being revoked and the the authorize failing",
-	)
-
 	var group ec2.SecurityGroup
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
