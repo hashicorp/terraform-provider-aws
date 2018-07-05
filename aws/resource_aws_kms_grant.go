@@ -393,13 +393,16 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("error listing KMS Grants: %s", err)
+	}
 
 	grant = getKmsGrantById(out.Grants, grantId)
 	if grant != nil {
 		return grant, nil
 	}
-	if *out.Truncated {
-		log.Printf("[DEBUG] KMS Grant list truncated, getting next page via marker: %s", *out.NextMarker)
+	if aws.BoolValue(out.Truncated) {
+		log.Printf("[DEBUG] KMS Grant list truncated, getting next page via marker: %s", aws.StringValue(out.NextMarker))
 		return findKmsGrantById(conn, keyId, grantId, out.NextMarker)
 	}
 
