@@ -197,6 +197,9 @@ func diffTags(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 		old, ok := create[*t.Key]
 		if !ok || old != *t.Value {
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, *t.Key)
 		}
 	}
 
