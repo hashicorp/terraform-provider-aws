@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 
@@ -151,13 +150,7 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
-	}.String()
+	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
 	d.Set("arn", arn)
 	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
 		ResourceName: aws.String(arn),
@@ -201,13 +194,7 @@ func resourceAwsDbSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
-	}.String()
+	arn := d.Get("arn").(string)
 	if err := setTagsRDS(conn, d, arn); err != nil {
 		return err
 	} else {

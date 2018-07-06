@@ -37,6 +37,8 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 						"aws_db_subnet_group.foo", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_subnet_group.foo", "description", "Managed by Terraform"),
+					resource.TestMatchResourceAttr(
+						"aws_db_subnet_group.foo", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:subgrp:%s", rName))),
 					testCheck,
 				),
 			},
