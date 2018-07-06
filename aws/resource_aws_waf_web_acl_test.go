@@ -42,6 +42,35 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafWebAcl_group(t *testing.T) {
+	var v waf.WebACL
+	wafAclName := fmt.Sprintf("wafaclgroup%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSWafWebAclGroupConfig(wafAclName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &v),
+					resource.TestCheckResourceAttr(
+						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_waf_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(
+						"aws_waf_web_acl.waf_acl", "name", wafAclName),
+					resource.TestCheckResourceAttr(
+						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_waf_web_acl.waf_acl", "metric_name", wafAclName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 	var before, after waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
@@ -292,6 +321,31 @@ resource "aws_waf_web_acl" "waf_acl" {
     rule_id = "${aws_waf_rule.wafrule.id}"
   }
 }`, name, name, name, name, name)
+}
+
+func testAccAWSWafWebAclGroupConfig(name string) string {
+	return fmt.Sprintf(`
+
+resource "aws_waf_rule_group" "wafrulegroup" {
+  name = "%s"
+  metric_name = "%s"
+}
+resource "aws_waf_web_acl" "waf_acl" {
+  depends_on = ["aws_waf_rule_group.wafrulegroup"]
+  name = "%s"
+  metric_name = "%s"
+  default_action {
+    type = "ALLOW"
+  }
+  rules {
+    override_action {
+       type = "NONE"
+    }
+    type = "GROUP"
+    priority = 1
+    rule_id = "${aws_waf_rule_group.wafrulegroup.id}"
+  }
+}`, name, name, name, name)
 }
 
 func testAccAWSWafWebAclConfigChangeName(name string) string {
