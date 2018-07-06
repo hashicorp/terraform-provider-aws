@@ -28,6 +28,16 @@ func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
 					testAccCheckAdditionalAwsVpcIpv4CidrBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
+			{
+				ResourceName:      "aws_vpc_ipv4_cidr_block_association.secondary_cidr",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_vpc_ipv4_cidr_block_association.tertiary_cidr",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

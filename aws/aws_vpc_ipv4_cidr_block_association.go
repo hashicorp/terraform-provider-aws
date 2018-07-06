@@ -21,6 +21,9 @@ func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
 		Create: resourceAwsVpcIpv4CidrBlockAssociationCreate,
 		Read:   resourceAwsVpcIpv4CidrBlockAssociationRead,
 		Delete: resourceAwsVpcIpv4CidrBlockAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -78,18 +81,44 @@ func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta i
 func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	assocRaw, state, err := vpcIpv4CidrBlockAssociationStateRefresh(conn, d.Get("vpc_id").(string), d.Id())()
-	if err != nil {
-		return fmt.Errorf("Error reading IPv4 CIDR block association: %s", err)
+	input := &ec2.DescribeVpcsInput{
+		Filters: buildEC2AttributeFilterList(
+			map[string]string{
+				"cidr-block-association.association-id": d.Id(),
+			},
+		),
 	}
-	if state == VpcCidrBlockStateCodeDeleted {
+
+	log.Printf("[DEBUG] Describing VPCs: %s", input)
+	output, err := conn.DescribeVpcs(input)
+	if err != nil {
+		return fmt.Errorf("error describing VPCs: %s", err)
+	}
+
+	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
 		log.Printf("[WARN] IPv4 CIDR block association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	assoc := assocRaw.(*ec2.VpcCidrBlockAssociation)
-	d.Set("cidr_block", assoc.CidrBlock)
+	vpc := output.Vpcs[0]
+
+	var vpcCidrBlockAssociation *ec2.VpcCidrBlockAssociation
+	for _, cidrBlockAssociation := range vpc.CidrBlockAssociationSet {
+		if aws.StringValue(cidrBlockAssociation.AssociationId) == d.Id() {
+			vpcCidrBlockAssociation = cidrBlockAssociation
+			break
+		}
+	}
+
+	if vpcCidrBlockAssociation == nil {
+		log.Printf("[WARN] IPv4 CIDR block association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("cidr_block", vpcCidrBlockAssociation.CidrBlock)
+	d.Set("vpc_id", vpc.VpcId)
 
 	return nil
 }
