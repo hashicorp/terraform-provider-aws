@@ -171,7 +171,9 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		cidrAssociations = append(cidrAssociations, association)
 	}
-	d.Set("cidr_block_associations", cidrAssociations)
+	if err := d.Set("cidr_block_associations", cidrAssociations); err != nil {
+		return fmt.Errorf("error setting cidr_block_associations: %s", err)
+	}
 
 	if vpc.Ipv6CidrBlockAssociationSet != nil {
 		d.Set("ipv6_association_id", vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
