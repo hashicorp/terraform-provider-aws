@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_region: Add `description` attribute [GH-5077]
 * data-source/aws_vpc: Add `cidr_block_associations` attribute [GH-5098]
 * resource/aws_db_parameter_group: Clarify naming validation error messages [GH-5090]
+* resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` [GH-5114]
 * resource/aws_route_table: Ignore propagated routes during resource import [GH-5100]
 * resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
 * resource/aws_vpc_ipv4_cidr_block_association: Support resource import [GH-5069]
