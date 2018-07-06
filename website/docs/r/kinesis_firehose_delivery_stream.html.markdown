@@ -266,7 +266,8 @@ is redshift). More details are given below.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
 
-The `kinesis_source_configuration` object supports the following:
+The `kinesis_source_configuration` object supports the following: 
+
 * `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
 * `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
 
