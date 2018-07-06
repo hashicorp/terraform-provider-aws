@@ -35,8 +35,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Required: true,
 			},
 			"evaluation_periods": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"metric_name": {
 				Type:     schema.TypeString,
@@ -77,7 +78,6 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 			"datapoints_to_alarm": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"dimensions": {
