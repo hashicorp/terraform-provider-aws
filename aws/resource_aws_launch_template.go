@@ -34,10 +34,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateLaunchTemplateName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateLaunchTemplateName,
 			},
 
 			"description": {
@@ -376,9 +377,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"security_group_names"},
 			},
 
 			"tag_specifications": {

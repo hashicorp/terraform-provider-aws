@@ -66,10 +66,11 @@ func resourceAwsIAMServerCertificate() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateMaxLength(128 - resource.UniqueIDSuffixLength),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateMaxLength(128 - resource.UniqueIDSuffixLength),
 			},
 
 			"arn": {
