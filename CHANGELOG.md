@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
+* resource/aws_vpc_ipv4_cidr_block_association: Support resource import [GH-5069]
 
 BUG FIXES:
 
