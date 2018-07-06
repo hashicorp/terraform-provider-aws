@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_region: Add `description` attribute [GH-5077]
 * data-source/aws_vpc: Add `cidr_block_associations` attribute [GH-5098]
+* resource/aws_cloudwatch_metric_alarm: Add `datapoints_to_alarm` and `evaluation_period` plan time validation [GH-5095]
 * resource/aws_db_parameter_group: Clarify naming validation error messages [GH-5090]
 * resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` [GH-5114]
 * resource/aws_route_table: Ignore propagated routes during resource import [GH-5100]
