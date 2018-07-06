@@ -133,7 +133,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the pipeline.
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) An artifact_store block. Artifact stores are documented below.
-* `stage` (Required) A stage block. Stages are documented below.
+* `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 
 
 An `artifact_store` block supports the following arguments:
