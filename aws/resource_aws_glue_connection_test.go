@@ -426,6 +426,7 @@ resource "aws_glue_connection" "test" {
   name = "%[1]s"
 
   physical_connection_requirements {
+    availability_zone      = "${aws_availability_zones.available[0].id}"
     security_group_id_list = ["${aws_security_group.test.id}"]
     subnet_id              = "${aws_subnet.test.0.id}"
   }

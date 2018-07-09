@@ -41,6 +41,7 @@ resource "aws_glue_connection" "example" {
   name = "example"
 
   physical_connection_requirements {
+    availability_zone      = "${aws_subnet.example.availability_zone}"
     security_group_id_list = ["${aws_security_group.example.id}"]
     subnet_id              = "${aws_subnet.example.id}"
   }
@@ -61,6 +62,7 @@ The following arguments are supported:
 
 ### physical_connection_requirements
 
+* `availability_zone` - (Optional) The availability zone of the connection. This field is redundant and implied by `subnet_id`, but is currently an api requirement.
 * `security_group_id_list` - (Optional) The security group ID list used by the connection.
 * `subnet_id` - (Optional) The subnet ID used by the connection.
 
