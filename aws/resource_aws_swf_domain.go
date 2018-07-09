@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,17 +28,18 @@ func resourceAwsSwfDomain() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 			},
-			"name_prefix": &schema.Schema{
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+			},
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"workflow_execution_retention_period_in_days": &schema.Schema{
+			"workflow_execution_retention_period_in_days": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,7 +68,6 @@ func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error 
 	} else {
 		name = resource.UniqueId()
 	}
-	d.Set("name", name)
 
 	input := &swf.RegisterDomainInput{
 		Name: aws.String(name),
@@ -96,14 +97,23 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeDomain(input)
 	if err != nil {
-		return err
+		if isAWSErr(err, swf.ErrCodeUnknownResourceFault, "") {
+			log.Printf("[WARN] SWF Domain %q not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error reading SWF Domain: %s", err)
 	}
 
-	info := resp.DomainInfo
-	config := resp.Configuration
-	d.Set("name", info.Name)
-	d.Set("description", info.Description)
-	d.Set("workflow_execution_retention_period_in_days", config.WorkflowExecutionRetentionPeriodInDays)
+	if resp == nil || resp.Configuration == nil || resp.DomainInfo == nil {
+		log.Printf("[WARN] SWF Domain %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("name", resp.DomainInfo.Name)
+	d.Set("description", resp.DomainInfo.Description)
+	d.Set("workflow_execution_retention_period_in_days", resp.Configuration.WorkflowExecutionRetentionPeriodInDays)
 
 	return nil
 }
@@ -117,10 +127,14 @@ func resourceAwsSwfDomainDelete(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := conn.DeprecateDomain(input)
 	if err != nil {
-		return err
+		if isAWSErr(err, swf.ErrCodeDomainDeprecatedFault, "") {
+			return nil
+		}
+		if isAWSErr(err, swf.ErrCodeUnknownResourceFault, "") {
+			return nil
+		}
+		return fmt.Errorf("error deleting SWF Domain: %s", err)
 	}
-
-	d.SetId("")
 
 	return nil
 }

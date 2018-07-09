@@ -33,11 +33,9 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
-* `name` - The name of the parameter.
-* `description` - The domain description.
-* `workflow_execution_retention_period_in_days` - Length of time that SWF will continue to retain information about the workflow execution after the workflow execution is complete.
+* `id` - The name of the domain.
 
 ## Import
 
