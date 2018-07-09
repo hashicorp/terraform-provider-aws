@@ -62,6 +62,10 @@ func resourceAwsGlueConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"security_group_id_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -249,6 +253,10 @@ func expandGlueConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 func expandGluePhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
 	physicalConnectionRequirements := &glue.PhysicalConnectionRequirements{}
 
+	if v, ok := m["availability_zone"]; ok {
+		physicalConnectionRequirements.AvailabilityZone = aws.String(v.(string))
+	}
+
 	if v, ok := m["security_group_id_list"]; ok {
 		physicalConnectionRequirements.SecurityGroupIdList = expandStringList(v.([]interface{}))
 	}
@@ -266,6 +274,7 @@ func flattenGluePhysicalConnectionRequirements(physicalConnectionRequirements *g
 	}
 
 	m := map[string]interface{}{
+		"availability_zone":      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
 		"security_group_id_list": flattenStringList(physicalConnectionRequirements.SecurityGroupIdList),
 		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}

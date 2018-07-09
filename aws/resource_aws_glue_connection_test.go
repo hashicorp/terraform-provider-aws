@@ -210,6 +210,7 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.subnet_id"),
 				),
@@ -426,6 +427,7 @@ resource "aws_glue_connection" "test" {
   name = "%[1]s"
 
   physical_connection_requirements {
+    availability_zone      = "${aws_subnet.test.0.availability_zone}"
     security_group_id_list = ["${aws_security_group.test.id}"]
     subnet_id              = "${aws_subnet.test.0.id}"
   }
