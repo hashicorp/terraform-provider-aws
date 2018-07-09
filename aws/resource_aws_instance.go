@@ -514,35 +514,32 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified")
 	}
 
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
-	if !restricted {
-		tagsSpec := make([]*ec2.TagSpecification, 0)
+	tagsSpec := make([]*ec2.TagSpecification, 0)
 
-		if v, ok := d.GetOk("tags"); ok {
-			tags := tagsFromMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("tags"); ok {
+		tags := tagsFromMap(v.(map[string]interface{}))
 
-			spec := &ec2.TagSpecification{
-				ResourceType: aws.String("instance"),
-				Tags:         tags,
-			}
-
-			tagsSpec = append(tagsSpec, spec)
+		spec := &ec2.TagSpecification{
+			ResourceType: aws.String("instance"),
+			Tags:         tags,
 		}
 
-		if v, ok := d.GetOk("volume_tags"); ok {
-			tags := tagsFromMap(v.(map[string]interface{}))
+		tagsSpec = append(tagsSpec, spec)
+	}
 
-			spec := &ec2.TagSpecification{
-				ResourceType: aws.String("volume"),
-				Tags:         tags,
-			}
+	if v, ok := d.GetOk("volume_tags"); ok {
+		tags := tagsFromMap(v.(map[string]interface{}))
 
-			tagsSpec = append(tagsSpec, spec)
+		spec := &ec2.TagSpecification{
+			ResourceType: aws.String("volume"),
+			Tags:         tags,
 		}
 
-		if len(tagsSpec) > 0 {
-			runOpts.TagSpecifications = tagsSpec
-		}
+		tagsSpec = append(tagsSpec, spec)
+	}
+
+	if len(tagsSpec) > 0 {
+		runOpts.TagSpecifications = tagsSpec
 	}
 
 	// Create the instance
@@ -842,10 +839,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Partial(true)
 
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
-
 	if d.HasChange("tags") {
-		if !d.IsNewResource() || restricted {
+		if !d.IsNewResource() {
 			if err := setTags(conn, d); err != nil {
 				return err
 			} else {
@@ -854,7 +849,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("volume_tags") {
-		if !d.IsNewResource() || restricted {
+		if !d.IsNewResource() {
 			if err := setVolumeTags(conn, d); err != nil {
 				return err
 			} else {
