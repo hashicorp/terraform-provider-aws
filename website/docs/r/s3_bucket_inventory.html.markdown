@@ -56,7 +56,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
   bucket = "${aws_s3_bucket.test.id}"
   name   = "DocumentsWeekly"
 
-  included_object_versions = "Weekly"
+  included_object_versions = "All"
 
   schedule {
     frequency = "Daily"
@@ -69,7 +69,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
   destination {
     bucket {
       format = "ORC"
-      bucket = "${aws_s3_bucket.inventory.arn}"
+      bucket_arn = "${aws_s3_bucket.inventory.arn}"
       prefix = "inventory"
     }
   }
