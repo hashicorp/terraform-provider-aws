@@ -72,6 +72,35 @@ func TestAccAWSWafRegionalWebAcl_createRateBased(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafRegionalWebAcl_createGroup(t *testing.T) {
+	var v waf.WebACL
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSWafRegionalWebAclConfigGroup(wafAclName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalWebAclExists("aws_wafregional_web_acl.waf_acl", &v),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_web_acl.waf_acl", "default_action.0.type", "ALLOW"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_web_acl.waf_acl", "name", wafAclName),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSWafRegionalWebAcl_changeNameForceNew(t *testing.T) {
 	var before, after waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
@@ -266,10 +295,11 @@ func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, ruleType s
 			"type": actionType,
 		}
 		m := map[string]interface{}{
-			"rule_id":  **ruleId,
-			"type":     ruleType,
-			"priority": priority,
-			"action":   []interface{}{actionMap},
+			"rule_id":         **ruleId,
+			"type":            ruleType,
+			"priority":        priority,
+			"action":          []interface{}{actionMap},
+			"override_action": []interface{}{},
 		}
 
 		f := schema.HashResource(ruleResource)
@@ -428,6 +458,31 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     priority = 1
     type = "RATE_BASED"
     rule_id = "${aws_wafregional_rate_based_rule.wafrule.id}"
+  }
+}`, name, name, name, name)
+}
+
+func testAccAWSWafRegionalWebAclConfigGroup(name string) string {
+	return fmt.Sprintf(`
+
+resource "aws_wafregional_rule_group" "wafrulegroup" {
+  name = "%s"
+  metric_name = "%s"
+}
+
+resource "aws_wafregional_web_acl" "waf_acl" {
+  name = "%s"
+  metric_name = "%s"
+  default_action {
+    type = "ALLOW"
+  }
+  rule {
+    override_action {
+       type = "NONE"
+    }
+    priority = 1
+    type = "GROUP"
+    rule_id = "${aws_wafregional_rule_group.wafrulegroup.id}" # todo
   }
 }`, name, name, name, name)
 }
