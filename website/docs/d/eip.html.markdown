@@ -40,9 +40,11 @@ Elastic IP whose data will be exported as attributes.
 
 * `id` - (Optional) The allocation id of the specific EIP to retrieve.
 
-* `public_ip` - (Optional) The public IP of the specific EIP to retrieve.
-
 * `assocation_id` - (Optional) The Association ID of the specific EIP to retrieve.
+
+* `private_ip` - (Optional) The Private IP of the specific EIP to retrieve.
+
+* `public_ip` - (Optional) The public IP of the specific EIP to retrieve.
 
 * `filter` - (Optional) Custom filter block as described below.
 

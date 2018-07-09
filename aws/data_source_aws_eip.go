@@ -24,6 +24,11 @@ func dataSourceAwsEip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"private_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -53,6 +58,14 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 				"association-id": assocId.(string),
 			},
 		)
+	}
+
+	if privateIp, privateIpOk := d.GetOk("private_ip"); privateIpOk {
+		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+			map[string]string{
+				"private-ip-address": privateIp.(string),
+			},
+		)...)
 	}
 
 	if publicIp, publicIpOk := d.GetOk("public_ip"); publicIpOk {
@@ -87,8 +100,9 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	eip := resp.Addresses[0]
 
-	d.SetId(*eip.AllocationId)
-	d.Set("public_ip", eip.PublicIp)
+	d.SetId(aws.StringValue(eip.AllocationId))
+	d.Set("public_ip", aws.StringValue(eip.PublicIp))
+	d.Set("private_ip", aws.StringValue(eip.PrivateIpAddress))
 
 	if eip.AssociationId != nil {
 		d.Set("association_id", aws.StringValue(eip.AssociationId))
