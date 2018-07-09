@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` [GH-5114]
 * resource/aws_route_table: Ignore propagated routes during resource import [GH-5100]
 * resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
+* resource/aws_ses_receipt_rule: Add plan time validation for `s3_action` argument `position` [GH-5092]
 * resource/aws_vpc_ipv4_cidr_block_association: Support resource import [GH-5069]
 
 BUG FIXES:
