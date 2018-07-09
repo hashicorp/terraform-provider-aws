@@ -234,7 +234,7 @@ data "aws_ami" "debian_jessie_latest" {
 
   filter {
     name   = "name"
-    values = ["debian-jessie-*"]
+    values = ["amzn-ami-*"]
   }
 
   filter {
@@ -251,6 +251,8 @@ data "aws_ami" "debian_jessie_latest" {
     name   = "root-device-type"
     values = ["ebs"]
   }
+
+  owners = ["amazon"]
 }
 
 resource "aws_instance" "test" {
@@ -293,7 +295,7 @@ data "aws_ami" "debian_jessie_latest" {
 
   filter {
     name   = "name"
-    values = ["debian-jessie-*"]
+    values = ["amzn-ami-*"]
   }
 
   filter {
@@ -310,6 +312,8 @@ data "aws_ami" "debian_jessie_latest" {
     name   = "root-device-type"
     values = ["ebs"]
   }
+
+  owners = ["amazon"]
 }
 
 resource "aws_instance" "test" {
