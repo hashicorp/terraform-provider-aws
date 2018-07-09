@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * data-source/aws_vpc: Add `cidr_block_associations` attribute [GH-5098]
 * resource/aws_cloudwatch_metric_alarm: Add `datapoints_to_alarm` and `evaluation_period` plan time validation [GH-5095]
 * resource/aws_db_parameter_group: Clarify naming validation error messages [GH-5090]
+* resource/aws_glue_connection: Add `physical_connection_requirements` argument `availability_zone` (currently required by the API) [GH-5039]
 * resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` [GH-5114]
 * resource/aws_route_table: Ignore propagated routes during resource import [GH-5100]
 * resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
