@@ -90,6 +90,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
@@ -221,6 +222,7 @@ type AWSClient struct {
 	sdconn                *servicediscovery.ServiceDiscovery
 	sfnconn               *sfn.SFN
 	ssmconn               *ssm.SSM
+	swfconn               *swf.SWF
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
@@ -521,6 +523,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
 	client.ssmconn = ssm.New(awsSsmSess)
+	client.swfconn = swf.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
