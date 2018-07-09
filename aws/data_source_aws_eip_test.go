@@ -40,6 +40,21 @@ func TestAccDataSourceAwsEip_filter(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsEip_association(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceEipConfig_association,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsEipCheck("data.aws_eip.test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsEipCheck(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -114,5 +129,20 @@ data "aws_eip" "by_assoc_id" {
     name = "association-id"
     values = ["${aws_eip.test.association_id}"]
   }
+}
+`
+
+const testAccDataSourceEipConfig_association = `
+resource "aws_instance" "test" {
+  ami = "ami-55a7ea65"
+  instance_type = "m3.medium"
+}
+
+resource "aws_eip" "test" {
+  instance = "${aws_instance.test.id}"
+}
+
+data "aws_eip" "test" {
+  association_id = "${aws_eip.test.association_id}"
 }
 `

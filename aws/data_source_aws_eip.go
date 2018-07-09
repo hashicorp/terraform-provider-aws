@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -14,6 +15,11 @@ func dataSourceAwsEip() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"association_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -37,6 +43,14 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		req.Filters = buildEC2AttributeFilterList(
 			map[string]string{
 				"allocation-id": id.(string),
+			},
+		)
+	}
+
+	if assocId, assocIdOk := d.GetOk("association_id"); assocIdOk {
+		req.Filters = buildEC2AttributeFilterList(
+			map[string]string{
+				"association-id": assocId.(string),
 			},
 		)
 	}
@@ -75,6 +89,10 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(*eip.AllocationId)
 	d.Set("public_ip", eip.PublicIp)
+
+	if eip.AssociationId != nil {
+		d.Set("association_id", aws.StringValue(eip.AssociationId))
+	}
 
 	return nil
 }
