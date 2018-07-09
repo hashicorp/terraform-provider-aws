@@ -17,6 +17,7 @@ BUG FIXES:
 * resource/aws_glue_catalog_database: Properly return error when missing colon during import [GH-5123]
 * resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
 * resource/aws_rds_cluster_instance: Support `configuring-log-exports` status [GH-5124]
+* resource/aws_s3_bucket: Prevent extraneous ACL update during resource creation [GH-5107]
 
 ## 1.26.0 (July 04, 2018)
 
