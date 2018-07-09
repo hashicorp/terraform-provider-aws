@@ -5,6 +5,10 @@ NOTES:
 * resource/aws_codebuild_project: The `service_role` argument is now required to match the API behavior and provide plan time validation. Additional details from AWS Support can be found in: https://github.com/terraform-providers/terraform-provider-aws/pull/4826
 * resource/aws_wafregional_byte_match_set: The `byte_match_tuple` argument name has been deprecated in preference of a new  `byte_match_tuples` argument name, for consistency with the `aws_waf_byte_match_set` resource to reduce any confusion working between the two resources and to denote its multiple value support. Its behavior is exactly the same as the old argument. Simply changing the argument name (adding the `s`) to configurations should upgrade without other changes.
 
+FEATURES:
+
+* **New Resource:** `aws_swf_domain` [GH-2803]
+
 ENHANCEMENTS:
 
 * data-source/aws_region: Add `description` attribute [GH-5077]
