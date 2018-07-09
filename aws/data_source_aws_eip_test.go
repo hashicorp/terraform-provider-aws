@@ -24,6 +24,22 @@ func TestAccDataSourceAwsEip_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsEip_filter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsEipConfig_filter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_alloc_id"),
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_assoc_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsEipCheck(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -73,5 +89,30 @@ data "aws_eip" "by_id" {
 
 data "aws_eip" "by_public_ip" {
   public_ip = "${aws_eip.test.public_ip}"
+}
+`
+
+const testAccDataSourceAwsEipConfig_filter = `
+resource "aws_instance" "test" {
+  ami = "ami-55a7ea65"
+  instance_type = "m3.medium"
+}
+
+resource "aws_eip" "test" {
+  instance = "${aws_instance.test.id}"
+}
+
+data "aws_eip" "by_alloc_id" {
+  filter {
+    name = "allocation-id"
+    values = ["${aws_eip.test.id}"]
+  }
+}
+
+data "aws_eip" "by_assoc_id" {
+  filter {
+    name = "association-id"
+    values = ["${aws_eip.test.association_id}"]
+  }
 }
 `

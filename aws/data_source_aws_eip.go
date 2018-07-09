@@ -23,6 +23,7 @@ func dataSourceAwsEip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"filter": ec2CustomFiltersSchema(),
 		},
 	}
 }
@@ -46,6 +47,16 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 				"public-ip": publicIp.(string),
 			},
 		)...)
+	}
+
+	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+		req.Filters = append(req.Filters, buildEC2CustomFilterList(
+			filters.(*schema.Set),
+		)...)
+	}
+
+	if len(req.Filters) == 0 {
+		req.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading EIP: %s", req)
