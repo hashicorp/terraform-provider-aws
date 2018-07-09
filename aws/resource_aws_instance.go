@@ -514,8 +514,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified")
 	}
 
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 	if !restricted {
+
 		tagsSpec := make([]*ec2.TagSpecification, 0)
 
 		if v, ok := d.GetOk("tags"); ok {
@@ -841,8 +842,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)
-
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	if d.HasChange("tags") {
 		if !d.IsNewResource() || restricted {
@@ -854,7 +854,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("volume_tags") {
-		if !d.IsNewResource() || !restricted {
+		if !d.IsNewResource() || restricted {
 			if err := setVolumeTags(conn, d); err != nil {
 				return err
 			} else {
