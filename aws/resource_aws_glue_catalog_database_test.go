@@ -121,7 +121,10 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 			continue
 		}
 
-		catalogId, dbName := readAwsGlueCatalogID(rs.Primary.ID)
+		catalogId, dbName, err := readAwsGlueCatalogID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		input := &glue.GetDatabaseInput{
 			CatalogId: aws.String(catalogId),
@@ -174,7 +177,10 @@ func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		catalogId, dbName := readAwsGlueCatalogID(rs.Primary.ID)
+		catalogId, dbName, err := readAwsGlueCatalogID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		glueconn := testAccProvider.Meta().(*AWSClient).glueconn
 		out, err := glueconn.GetDatabase(&glue.GetDatabaseInput{
