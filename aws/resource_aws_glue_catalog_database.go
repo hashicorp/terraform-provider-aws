@@ -76,7 +76,10 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueconn := meta.(*AWSClient).glueconn
 
-	catalogID, name := readAwsGlueCatalogID(d.Id())
+	catalogID, name, err := readAwsGlueCatalogID(d.Id())
+	if err != nil {
+		return err
+	}
 
 	dbUpdateInput := &glue.UpdateDatabaseInput{
 		CatalogId: aws.String(catalogID),
@@ -117,7 +120,10 @@ func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface
 func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	glueconn := meta.(*AWSClient).glueconn
 
-	catalogID, name := readAwsGlueCatalogID(d.Id())
+	catalogID, name, err := readAwsGlueCatalogID(d.Id())
+	if err != nil {
+		return err
+	}
 
 	input := &glue.GetDatabaseInput{
 		CatalogId: aws.String(catalogID),
@@ -153,10 +159,13 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsGlueCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	glueconn := meta.(*AWSClient).glueconn
-	catalogID, name := readAwsGlueCatalogID(d.Id())
+	catalogID, name, err := readAwsGlueCatalogID(d.Id())
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s:%s", catalogID, name)
-	_, err := glueconn.DeleteDatabase(&glue.DeleteDatabaseInput{
+	_, err = glueconn.DeleteDatabase(&glue.DeleteDatabaseInput{
 		Name: aws.String(name),
 	})
 	if err != nil {
@@ -167,20 +176,26 @@ func resourceAwsGlueCatalogDatabaseDelete(d *schema.ResourceData, meta interface
 
 func resourceAwsGlueCatalogDatabaseExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	glueconn := meta.(*AWSClient).glueconn
-	catalogID, name := readAwsGlueCatalogID(d.Id())
+	catalogID, name, err := readAwsGlueCatalogID(d.Id())
+	if err != nil {
+		return false, err
+	}
 
 	input := &glue.GetDatabaseInput{
 		CatalogId: aws.String(catalogID),
 		Name:      aws.String(name),
 	}
 
-	_, err := glueconn.GetDatabase(input)
+	_, err = glueconn.GetDatabase(input)
 	return err == nil, err
 }
 
-func readAwsGlueCatalogID(id string) (catalogID string, name string) {
+func readAwsGlueCatalogID(id string) (catalogID string, name string, err error) {
 	idParts := strings.Split(id, ":")
-	return idParts[0], idParts[1]
+	if len(idParts) != 2 {
+		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected CATALOG-ID:DATABASE-NAME", id)
+	}
+	return idParts[0], idParts[1], nil
 }
 
 func createAwsGlueCatalogID(d *schema.ResourceData, accountid string) (catalogID string) {
