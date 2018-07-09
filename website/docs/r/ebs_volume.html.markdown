@@ -29,7 +29,7 @@ resource "aws_ebs_volume" "example" {
 The following arguments are supported:
 
 * `availability_zone` - (Required) The AZ where the EBS volume will exist.
-* `encrypted` - (Optional) If true, the disk will be encrypted. The Default value is false.
+* `encrypted` - (Optional) If true, the disk will be encrypted.
 * `iops` - (Optional) The amount of IOPS to provision for the disk.
 * `size` - (Optional) The size of the drive in GiBs.
 * `snapshot_id` (Optional) A snapshot to base the EBS volume off of.
