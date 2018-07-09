@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -33,12 +32,20 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribeAddressesInput{}
 
-	if id, ok := d.GetOk("id"); ok {
-		req.AllocationIds = []*string{aws.String(id.(string))}
+	if id, idOk := d.GetOk("id"); idOk {
+		req.Filters = buildEC2AttributeFilterList(
+			map[string]string{
+				"allocation-id": id.(string),
+			},
+		)
 	}
 
-	if public_ip := d.Get("public_ip"); public_ip != "" {
-		req.PublicIps = []*string{aws.String(public_ip.(string))}
+	if publicIp, publicIpOk := d.GetOk("public_ip"); publicIpOk {
+		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+			map[string]string{
+				"public-ip": publicIp.(string),
+			},
+		)...)
 	}
 
 	log.Printf("[DEBUG] Reading EIP: %s", req)
