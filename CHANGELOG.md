@@ -14,6 +14,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codebuild_project: Prevent panic when empty `vpc_config` block is configured [GH-5070]
+* resource/aws_glue_catalog_database: Properly return error when missing colon during import [GH-5123]
 * resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
 
 ## 1.26.0 (July 04, 2018)
