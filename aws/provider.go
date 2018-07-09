@@ -545,6 +545,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_secretsmanager_secret_version":                resourceAwsSecretsManagerSecretVersion(),
 			"aws_ses_active_receipt_rule_set":                  resourceAwsSesActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":                          resourceAwsSesDomainIdentity(),
+			"aws_ses_domain_identity_policy":                   resourceAwsSesDomainIdentityPolicy(),
 			"aws_ses_domain_identity_verification":             resourceAwsSesDomainIdentityVerification(),
 			"aws_ses_domain_dkim":                              resourceAwsSesDomainDkim(),
 			"aws_ses_domain_mail_from":                         resourceAwsSesDomainMailFrom(),
