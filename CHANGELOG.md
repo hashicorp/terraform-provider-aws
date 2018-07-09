@@ -1,5 +1,9 @@
 ## 1.27.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_wafregional_byte_match_set: The `byte_match_tuple` argument name has been deprecated in preference of a new  `byte_match_tuples` argument name, for consistency with the `aws_waf_byte_match_set` resource to reduce any confusion working between the two resources and to denote its multiple value support. Its behavior is exactly the same as the old argument. Simply changing the argument name (adding the `s`) to configurations should upgrade without other changes.
+
 ENHANCEMENTS:
 
 * data-source/aws_region: Add `description` attribute [GH-5077]
@@ -18,6 +22,7 @@ BUG FIXES:
 * resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
 * resource/aws_rds_cluster_instance: Support `configuring-log-exports` status [GH-5124]
 * resource/aws_s3_bucket: Prevent extraneous ACL update during resource creation [GH-5107]
+* resource/aws_wafregional_byte_match_set: Deprecate `byte_match_tuple` argument for `byte_match_tuples` [GH-5043]
 
 ## 1.26.0 (July 04, 2018)
 
