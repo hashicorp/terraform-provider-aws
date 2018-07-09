@@ -2,6 +2,7 @@
 
 NOTES:
 
+* resource/aws_codebuild_project: The `service_role` argument is now required to match the API behavior and provide plan time validation. Additional details from AWS Support can be found in: https://github.com/terraform-providers/terraform-provider-aws/pull/4826
 * resource/aws_wafregional_byte_match_set: The `byte_match_tuple` argument name has been deprecated in preference of a new  `byte_match_tuples` argument name, for consistency with the `aws_waf_byte_match_set` resource to reduce any confusion working between the two resources and to denote its multiple value support. Its behavior is exactly the same as the old argument. Simply changing the argument name (adding the `s`) to configurations should upgrade without other changes.
 
 ENHANCEMENTS:
@@ -18,6 +19,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codebuild_project: Prevent panic when empty `vpc_config` block is configured [GH-5070]
+* resource/aws_codebuild_project: Mark `service_role` as required [GH-4826]
 * resource/aws_glue_catalog_database: Properly return error when missing colon during import [GH-5123]
 * resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
 * resource/aws_rds_cluster_instance: Support `configuring-log-exports` status [GH-5124]
