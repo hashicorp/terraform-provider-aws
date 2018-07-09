@@ -264,10 +264,28 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"tags": {
-							Type:     schema.TypeMap,
+						"tag": {
+							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+							Set: spotFleetTagToHash,
+						},
+						"tags": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeMap},
 						},
 					},
 				},
@@ -357,6 +375,75 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 	}
 }
 
+func spotFleetTagToHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["key"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
+
+	return hashcode.String(buf.String())
+}
+
+func spotFleetTagsFromList(vs []interface{}) ([]*ec2.Tag, error) {
+	tags := make([]*ec2.Tag, len(vs))
+
+	for _, tag := range vs {
+		attr, ok := tag.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		t, err := spotFleetTagFromMap(attr)
+		if err != nil {
+			return nil, err
+		}
+
+		if t != nil {
+			tags = append(tags, t)
+		}
+	}
+	return tags, nil
+}
+
+// tagsFromMap returns the tags for the given map of data.
+func spotFleetTagsFromMap(m map[string]interface{}) ([]*ec2.Tag, error) {
+	tags := make([]*ec2.Tag, len(m))
+	for _, v := range m {
+		attr, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		t, err := spotFleetTagFromMap(attr)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if t != nil {
+			tags = append(tags, t)
+		}
+	}
+	return tags, nil
+}
+
+func spotFleetTagFromMap(attr map[string]interface{}) (*ec2.Tag, error) {
+	if _, ok := attr["key"]; !ok {
+		return nil, fmt.Errorf("invalid tag attributes: key missing")
+	}
+
+	if _, ok := attr["value"]; !ok {
+		return nil, fmt.Errorf("invalid tag attributes: value missing")
+	}
+
+	t := &ec2.Tag{
+		Key:   aws.String(attr["key"].(string)),
+		Value: aws.String(attr["value"].(string)),
+	}
+
+	return t, nil
+}
+
 func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
 	conn := meta.(*AWSClient).ec2conn
 
@@ -413,6 +500,28 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 			return nil, err
 		}
 		opts.WeightedCapacity = aws.Float64(wc)
+	}
+
+	if v, ok := d["tag"]; ok && v != "" {
+		tags, _ := spotFleetTagsFromMap(
+			setToMapByKey(v.(*schema.Set), "key"))
+
+		opts.TagSpecifications = []*ec2.SpotFleetTagSpecification{
+			{
+				ResourceType: aws.String(ec2.ResourceTypeInstance),
+				Tags:         tags,
+			},
+		}
+	}
+
+	if v, ok := d["tags"]; ok && v != "" {
+		tags, _ := spotFleetTagsFromList(v.([]interface{}))
+		opts.TagSpecifications = []*ec2.SpotFleetTagSpecification{
+			{
+				ResourceType: aws.String(ec2.ResourceTypeInstance),
+				Tags:         tags,
+			},
+		}
 	}
 
 	var securityGroupIds []*string
