@@ -180,8 +180,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			},
 			"service_role": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"source": {
 				Type: schema.TypeSet,
