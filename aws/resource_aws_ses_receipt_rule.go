@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSesReceiptRule() *schema.Resource {
@@ -225,8 +226,9 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						},
 
 						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
 				},
