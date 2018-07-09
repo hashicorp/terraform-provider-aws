@@ -7,6 +7,7 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_appsync_api_key` [GH-3827]
 * **New Resource:** `aws_swf_domain` [GH-2803]
 
 ENHANCEMENTS:
