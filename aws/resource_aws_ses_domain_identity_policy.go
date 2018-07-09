@@ -5,10 +5,10 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
@@ -48,9 +48,9 @@ func resourceAwsSesDomainIdentityPolicyCreate(d *schema.ResourceData, meta inter
 	policy := d.Get("policy").(string)
 
 	req := ses.PutIdentityPolicyInput{
-		Identity: aws.String(arn),
+		Identity:   aws.String(arn),
 		PolicyName: aws.String(policyName),
-		Policy: aws.String(policy),
+		Policy:     aws.String(policy),
 	}
 
 	_, err := conn.PutIdentityPolicy(&req)
@@ -92,7 +92,7 @@ func resourceAwsSesDomainIdentityPolicyRead(d *schema.ResourceData, meta interfa
 	policyNames[0] = aws.String(policyName)
 
 	policiesOutput, err := conn.GetIdentityPolicies(&ses.GetIdentityPoliciesInput{
-		Identity: aws.String(arn),
+		Identity:    aws.String(arn),
 		PolicyNames: policyNames,
 	})
 	if err != nil {
@@ -130,7 +130,7 @@ func resourceAwsSesDomainIdentityPolicyDelete(d *schema.ResourceData, meta inter
 	policyName := d.Get("name").(string)
 
 	req := ses.DeleteIdentityPolicyInput{
-		Identity: aws.String(arn),
+		Identity:   aws.String(arn),
 		PolicyName: aws.String(policyName),
 	}
 

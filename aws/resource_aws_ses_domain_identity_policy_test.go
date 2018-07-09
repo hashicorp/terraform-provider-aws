@@ -4,9 +4,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSSESDomainIdentityPolicy_basic(t *testing.T) {
@@ -56,4 +56,3 @@ POLICY
 }
 `, domain)
 }
-
