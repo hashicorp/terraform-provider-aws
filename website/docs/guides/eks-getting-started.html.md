@@ -79,13 +79,13 @@ full administrative access to the target AWS account.
 
 If you are planning to locally use the standard Kubernetes client, `kubectl`,
 it must be at least version 1.10 to support `exec` authentication with usage
-of `heptio-authenticator-aws`. For additional information about installation
+of `aws-iam-authenticator`. For additional information about installation
 and configuration of these applications, see their official documentation.
 
 Relevant Links:
 
 * [Kubernetes Client Downloads](https://kubernetes.io/docs/imported/release/notes/#client-binaries)
-* [Heptio Authenticator](https://github.com/heptio/authenticator)
+* [AWS IAM Authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
 
 ## Create Sample Architecture in AWS
 
@@ -318,7 +318,7 @@ users:
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1alpha1
-      command: heptio-authenticator-aws
+      command: aws-iam-authenticator
       args:
         - "token"
         - "-i"
