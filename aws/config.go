@@ -238,12 +238,220 @@ type AWSClient struct {
 	pricingconn           *pricing.Pricing
 }
 
-func (c *AWSClient) S3() *s3.S3 {
-	return c.s3conn
+func (c *AWSClient) CloudFormation() *cloudformation.CloudFormation {
+	return c.cfconn
+}
+
+func (c *AWSClient) CloudFront() *cloudfront.CloudFront {
+	return c.cloudfrontconn
+}
+
+func (c *AWSClient) CloudTrail() *cloudtrail.CloudTrail {
+	return c.cloudtrailconn
+}
+
+func (c *AWSClient) CloudWatch() *cloudwatch.CloudWatch {
+	return c.cloudwatchconn
+}
+
+func (c *AWSClient) CloudWatchLogs() *cloudwatchlogs.CloudWatchLogs {
+	return c.cloudwatchlogsconn
+}
+
+func (c *AWSClient) CloudWatchEvents() *cloudwatchevents.CloudWatchEvents {
+	return c.cloudwatcheventsconn
+}
+
+func (c *AWSClient) CognitoIdentity() *cognitoidentity.CognitoIdentity {
+	return c.cognitoconn
+}
+
+func (c *AWSClient) ConfigService() *configservice.ConfigService {
+	return c.configconn
+}
+
+func (c *AWSClient) DeviceFarm() *devicefarm.DeviceFarm {
+	return c.devicefarmconn
+}
+
+func (c *AWSClient) DatabaseMigrationService() *databasemigrationservice.DatabaseMigrationService {
+	return c.dmsconn
+}
+
+func (c *AWSClient) DirectoryService() *directoryservice.DirectoryService {
+	return c.dsconn
 }
 
 func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 	return c.dynamodbconn
+}
+
+func (c *AWSClient) EC2() *ec2.EC2 {
+	return c.ec2conn
+}
+
+func (c *AWSClient) ECR() *ecr.ECR {
+	return c.ecrconn
+}
+
+func (c *AWSClient) ECS() *ecs.ECS {
+	return c.ecsconn
+}
+
+func (c *AWSClient) EFS() *efs.EFS {
+	return c.efsconn
+}
+
+func (c *AWSClient) ELB() *elb.ELB {
+	return c.elbconn
+}
+
+func (c *AWSClient) ELBV2() *elbv2.ELBV2 {
+	return c.elbv2conn
+}
+
+func (c *AWSClient) EMR() *emr.EMR {
+	return c.emrconn
+}
+
+func (c *AWSClient) ElasticsearchService() *elasticsearch.ElasticsearchService {
+	return c.esconn
+}
+
+func (c *AWSClient) ACM() *acm.ACM {
+	return c.acmconn
+}
+
+func (c *AWSClient) APIGateway() *apigateway.APIGateway {
+	return c.apigateway
+}
+
+func (c *AWSClient) ApplicationAutoScaling() *applicationautoscaling.ApplicationAutoScaling {
+	return c.appautoscalingconn
+}
+
+func (c *AWSClient) AutoScaling() *autoscaling.AutoScaling {
+	return c.autoscalingconn
+}
+
+func (c *AWSClient) S3() *s3.S3 {
+	return c.s3conn
+}
+
+func (c *AWSClient) SES() *ses.SES {
+	return c.sesConn
+}
+
+func (c *AWSClient) SimpleDB() *simpledb.SimpleDB {
+	return c.simpledbconn
+}
+
+func (c *AWSClient) SQS() *sqs.SQS {
+	return c.sqsconn
+}
+
+func (c *AWSClient) SNS() *sns.SNS {
+	return c.snsconn
+}
+
+func (c *AWSClient) STS() *sts.STS {
+	return c.stsconn
+}
+
+func (c *AWSClient) Redshift() *redshift.Redshift {
+	return c.redshiftconn
+}
+
+func (c *AWSClient) Route53() *route53.Route53 {
+	return c.r53conn
+}
+
+func (c *AWSClient) RDS() *rds.RDS {
+	return c.rdsconn
+}
+
+func (c *AWSClient) IAM() *iam.IAM {
+	return c.iamconn
+}
+
+func (c *AWSClient) Kinesis() *kinesis.Kinesis {
+	return c.kinesisconn
+}
+
+func (c *AWSClient) KMS() *kms.KMS {
+	return c.kmsconn
+}
+
+func (c *AWSClient) Firehose() *firehose.Firehose {
+	return c.firehoseconn
+}
+
+func (c *AWSClient) Inspector() *inspector.Inspector {
+	return c.inspectorconn
+}
+
+func (c *AWSClient) ElastiCache() *elasticache.ElastiCache {
+	return c.elasticacheconn
+}
+
+func (c *AWSClient) ElasticBeanstalk() *elasticbeanstalk.ElasticBeanstalk {
+	return c.elasticbeanstalkconn
+}
+
+func (c *AWSClient) ElasticTranscoder() *elastictranscoder.ElasticTranscoder {
+	return c.elastictranscoderconn
+}
+
+func (c *AWSClient) Lambda() *lambda.Lambda {
+	return c.lambdaconn
+}
+
+func (c *AWSClient) Lightsail() *lightsail.Lightsail {
+	return c.lightsailconn
+}
+
+func (c *AWSClient) OpsWorks() *opsworks.OpsWorks {
+	return c.opsworksconn
+}
+
+func (c *AWSClient) Glacier() *glacier.Glacier {
+	return c.glacierconn
+}
+
+func (c *AWSClient) CodeBuild() *codebuild.CodeBuild {
+	return c.codebuildconn
+}
+
+func (c *AWSClient) CodeDeploy() *codedeploy.CodeDeploy {
+	return c.codedeployconn
+}
+
+func (c *AWSClient) CodeCommit() *codecommit.CodeCommit {
+	return c.codecommitconn
+}
+
+func (c *AWSClient) CodePipeline() *codepipeline.CodePipeline {
+	return c.codepipelineconn
+}
+
+func (c *AWSClient) SFN() *sfn.SFN {
+	return c.sfnconn
+}
+
+func (c *AWSClient) SSM() *ssm.SSM {
+	return c.ssmconn
+}
+
+func (c *AWSClient) WAF() *waf.WAF {
+	return c.wafconn
+}
+
+func (c *AWSClient) WAFRegional() *wafregional.WAFRegional {
+	return c.wafregionalconn
+}
+
+func (c *AWSClient) IoT() *iot.IoT {
+	return c.iotconn
 }
 
 func (c *AWSClient) IsGovCloud() bool {
