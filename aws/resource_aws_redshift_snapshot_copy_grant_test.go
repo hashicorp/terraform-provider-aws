@@ -3,14 +3,12 @@ package aws
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAWSRedshiftSnapshotCopyGrant_Basic(t *testing.T) {
-	timestamp := time.Now().Format(time.RFC1123)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,8 +59,8 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantExists(name string) resource.TestCh
 
 func testAccAWSRedshiftSnapshotCopyGrant_Basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_redshift_snapshot_copy_grant" "tf-acc-test-grant" {
+resource "aws_redshift_snapshot_copy_grant" "%s" {
     snapshot_copy_grant_name = "%s"
 }
-`, rName)
+`, rName, rName)
 }

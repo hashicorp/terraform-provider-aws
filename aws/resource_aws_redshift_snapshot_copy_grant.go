@@ -1,19 +1,14 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
-	"sort"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
@@ -27,16 +22,17 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"snapshot_copy_grant_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsRedshiftSnapshotCopyGrantName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -45,7 +41,6 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).redshiftconn
 
 	grantName := d.Get("snapshot_copy_grant_name").(string)
-	keyId := d.Get("kms_key_id").(string)
 
 	input := redshift.CreateSnapshotCopyGrantInput{
 		SnapshotCopyGrantName: aws.String(grantName),
@@ -75,12 +70,12 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrantName)
+	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrant.SnapshotCopyGrantName)
 	d.SetId(grantName)
-	d.Set("snapshot_copy_grant_name", out.SnapshotCopyGrantName)
-	d.Set("kms_key_id", out.KmsKeyId)
+	d.Set("snapshot_copy_grant_name", out.SnapshotCopyGrant.SnapshotCopyGrantName)
+	d.Set("kms_key_id", out.SnapshotCopyGrant.KmsKeyId)
 
-	return resourceAwsSnapshotCopyGrantRead(d, meta)
+	return resourceAwsRedshiftSnapshotCopyGrantRead(d, meta)
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) error {
@@ -117,10 +112,10 @@ func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting snapshot copy grant: %s", grantName)
-	_, err = conn.DeleteSnapshotCopyGrant(&deleteInput)
+	_, err := conn.DeleteSnapshotCopyGrant(&deleteInput)
 
 	if err != nil {
-		if isAWSErr(err, redshift.SnapshotCopyGrantNotFoundFault, "") {
+		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
 			return nil
 		}
 		return err
@@ -139,7 +134,7 @@ func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta int
 func resourceAwsRedshiftSnapshotCopyGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	conn := meta.(*AWSClient).redshiftconn
 
-	grantName = d.Id()
+	grantName := d.Id()
 
 	log.Printf("[DEBUG] Looking for Grant: %s", grantName)
 	grant, err := findAwsRedshiftSnapshotCopyGrantWithRetry(conn, grantName)
@@ -172,14 +167,14 @@ by the describe grants call when expected.
 
 // NB: This function only retries the grant not being returned and some edge cases, while AWS Errors
 // are handled by the findAwsRedshiftSnapshotCopyGrant function
-func findAwsRedshiftSnapshotGrantWithRetry(conn *redshift.Redshift, grantName string) (*redshift.SnapshotCopyGrant, error) {
+func findAwsRedshiftSnapshotCopyGrantWithRetry(conn *redshift.Redshift, grantName string) (*redshift.SnapshotCopyGrant, error) {
 	var grant *redshift.SnapshotCopyGrant
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error
 		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
 
 		if err != nil {
-			if serr, ok := err.(ErrCodeSnapshotCopyGrantNotFoundFault); ok {
+			if serr, ok := err.(AwsRedshiftSnapshotCopyGrantMissingError); ok {
 				// Force a retry if the grant should exist
 				return resource.RetryableError(serr)
 			}
@@ -198,7 +193,7 @@ func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, gra
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		grant, err := findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
 		if err != nil {
-			if _, ok := err.(ErrCodeSnapshotCopyGrantNotFoundFault); ok {
+			if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
 				return nil
 			}
 		}
@@ -239,16 +234,13 @@ func findAwsRedshiftSnapshotCopyGrant(conn *redshift.Redshift, grantName string,
 		out, err = conn.DescribeSnapshotCopyGrants(&input)
 
 		if err != nil {
-			if isAWSErr(err, redshift.SnapshotCopyGrantNotFoundFault, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error listing snapshot copy grants: %s", err)
+		return nil, err
 	}
 
 	grant = getAwsRedshiftSnapshotCopyGrant(out.SnapshotCopyGrants, grantName)
