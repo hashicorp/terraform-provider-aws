@@ -389,7 +389,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dynamodb_table_item":                          resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                        resourceAwsDynamoDbGlobalTable(),
 			"aws_ebs_snapshot":                                 resourceAwsEbsSnapshot(),
-			"aws_copy_snapshot":                                resourceAwsCopySnapshot(),
+			"aws_ebs_snapshot_copy":                            resourceAwsEbsSnapshotCopy(),
 			"aws_ebs_volume":                                   resourceAwsEbsVolume(),
 			"aws_ecr_lifecycle_policy":                         resourceAwsEcrLifecyclePolicy(),
 			"aws_ecr_repository":                               resourceAwsEcrRepository(),

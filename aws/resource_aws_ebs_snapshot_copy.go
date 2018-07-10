@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsCopySnapshot() *schema.Resource {
+func resourceAwsEbsSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCopySnapshotCreate,
-		Read:   resourceAwsCopySnapshotRead,
-		Delete: resourceAwsCopySnapshotDelete,
+		Create: resourceAwsEbsSnapshotCopyCreate,
+		Read:   resourceAwsEbsSnapshotCopyRead,
+		Delete: resourceAwsEbsSnapshotCopyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"volume_id": {
@@ -73,7 +73,7 @@ func resourceAwsCopySnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsCopySnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	request := &ec2.CopySnapshotInput{
@@ -97,7 +97,7 @@ func resourceAwsCopySnapshotCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(*res.SnapshotId)
 
-	err = resourceAwsCopySnapshotWaitForAvailable(d.Id(), conn)
+	err = resourceAwsEbsSnapshotCopyWaitForAvailable(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -106,10 +106,10 @@ func resourceAwsCopySnapshotCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[WARN] error setting tags: %s", err)
 	}
 
-	return resourceAwsCopySnapshotRead(d, meta)
+	return resourceAwsEbsSnapshotCopyRead(d, meta)
 }
 
-func resourceAwsCopySnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeSnapshotsInput{
@@ -140,7 +140,7 @@ func resourceAwsCopySnapshotRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsCopySnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -165,7 +165,7 @@ func resourceAwsCopySnapshotDelete(d *schema.ResourceData, meta interface{}) err
 	})
 }
 
-func resourceAwsCopySnapshotWaitForAvailable(id string, conn *ec2.EC2) error {
+func resourceAwsEbsSnapshotCopyWaitForAvailable(id string, conn *ec2.EC2) error {
 	log.Printf("Waiting for Snapshot %s to become available...", id)
 
 	req := &ec2.DescribeSnapshotsInput{

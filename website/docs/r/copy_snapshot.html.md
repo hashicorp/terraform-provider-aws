@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_copy_snapshot"
-sidebar_current: "docs-aws-resource-copy-snapshot"
+page_title: "AWS: aws_ebs_snapshot_copy"
+sidebar_current: "docs-aws-resource-ebs-snapshot-copy"
 description: |-
   Duplicates an existing Amazon snapshot
 ---
 
-# aws_copy_snapshot
+# aws_ebs_snapshot_copy
 
 Creates a Snapshot of a snapshot.
 
@@ -29,7 +29,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
   }
 }
 
-resource "aws_copy_snapshot" "example_copy" {
+resource "aws_ebs_snapshot_copy" "example_copy" {
   source_snapshot_id = "${aws_ebs_snapshot.example_snapshot.id}"
   source_region      = "us-west-2"
 
