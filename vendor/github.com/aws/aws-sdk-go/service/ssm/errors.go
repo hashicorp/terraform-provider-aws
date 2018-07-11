@@ -30,6 +30,12 @@ const (
 	// The specified association does not exist.
 	ErrCodeAssociationDoesNotExist = "AssociationDoesNotExist"
 
+	// ErrCodeAssociationExecutionDoesNotExist for service response error code
+	// "AssociationExecutionDoesNotExist".
+	//
+	// The specified execution ID does not exist. Verify the ID number and try again.
+	ErrCodeAssociationExecutionDoesNotExist = "AssociationExecutionDoesNotExist"
+
 	// ErrCodeAssociationLimitExceeded for service response error code
 	// "AssociationLimitExceeded".
 	//
@@ -150,8 +156,8 @@ const (
 	// ErrCodeHierarchyLevelLimitExceededException for service response error code
 	// "HierarchyLevelLimitExceededException".
 	//
-	// A hierarchy can have a maximum of 15 levels. For more information, see Working
-	// with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html)
+	// A hierarchy can have a maximum of 15 levels. For more information, see Requirements
+	// and Constraints for Parameter Names (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
 	// in the AWS Systems Manager User Guide.
 	ErrCodeHierarchyLevelLimitExceededException = "HierarchyLevelLimitExceededException"
 
@@ -195,6 +201,12 @@ const (
 	//
 	// The request does not meet the regular expression requirement.
 	ErrCodeInvalidAllowedPatternException = "InvalidAllowedPatternException"
+
+	// ErrCodeInvalidAssociation for service response error code
+	// "InvalidAssociation".
+	//
+	// The association is not valid or does not exist.
+	ErrCodeInvalidAssociation = "InvalidAssociation"
 
 	// ErrCodeInvalidAssociationVersion for service response error code
 	// "InvalidAssociationVersion".

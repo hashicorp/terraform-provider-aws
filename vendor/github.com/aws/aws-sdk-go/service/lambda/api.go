@@ -7170,6 +7170,9 @@ const (
 	// RuntimeDotnetcore20 is a Runtime enum value
 	RuntimeDotnetcore20 = "dotnetcore2.0"
 
+	// RuntimeDotnetcore21 is a Runtime enum value
+	RuntimeDotnetcore21 = "dotnetcore2.1"
+
 	// RuntimeNodejs43Edge is a Runtime enum value
 	RuntimeNodejs43Edge = "nodejs4.3-edge"
 

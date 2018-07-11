@@ -1522,6 +1522,272 @@ func (c *MediaConvert) ListQueuesWithContext(ctx aws.Context, input *ListQueuesI
 	return out, req.Send()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListTagsForResource
+func (c *MediaConvert) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2017-08-29/tags/{arn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS Elemental MediaConvert.
+//
+// Retrieve the tags for a MediaConvert resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaConvert's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListTagsForResource
+func (c *MediaConvert) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/TagResource
+func (c *MediaConvert) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2017-08-29/tags",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// TagResource API operation for AWS Elemental MediaConvert.
+//
+// Tag a MediaConvert queue, preset, or job template. For information about
+// these resource types, see the User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaConvert's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/TagResource
+func (c *MediaConvert) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/UntagResource
+func (c *MediaConvert) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2017-08-29/tags",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UntagResource API operation for AWS Elemental MediaConvert.
+//
+// Untag a MediaConvert queue, preset, or job template. For information about
+// these resource types, see the User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaConvert's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/UntagResource
+func (c *MediaConvert) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateJobTemplate = "UpdateJobTemplate"
 
 // UpdateJobTemplateRequest generates a "aws/request.Request" representing the
@@ -4226,6 +4492,10 @@ type CreateJobTemplateInput struct {
 	//
 	// Settings is a required field
 	Settings *JobTemplateSettings `locationName:"settings" type:"structure" required:"true"`
+
+	// The tags that you want to add to the resource. You can tag resources with
+	// a key-value pair or with only a key.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -4289,6 +4559,12 @@ func (s *CreateJobTemplateInput) SetSettings(v *JobTemplateSettings) *CreateJobT
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateJobTemplateInput) SetTags(v map[string]*string) *CreateJobTemplateInput {
+	s.Tags = v
+	return s
+}
+
 // Successful create job template requests will return the template JSON.
 type CreateJobTemplateOutput struct {
 	_ struct{} `type:"structure"`
@@ -4334,6 +4610,10 @@ type CreatePresetInput struct {
 	//
 	// Settings is a required field
 	Settings *PresetSettings `locationName:"settings" type:"structure" required:"true"`
+
+	// The tags that you want to add to the resource. You can tag resources with
+	// a key-value pair or with only a key.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -4391,6 +4671,12 @@ func (s *CreatePresetInput) SetSettings(v *PresetSettings) *CreatePresetInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreatePresetInput) SetTags(v map[string]*string) *CreatePresetInput {
+	s.Tags = v
+	return s
+}
+
 // Successful create preset requests will return the preset JSON.
 type CreatePresetOutput struct {
 	_ struct{} `type:"structure"`
@@ -4427,6 +4713,10 @@ type CreateQueueInput struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// The tags that you want to add to the resource. You can tag resources with
+	// a key-value pair or with only a key.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -4461,6 +4751,12 @@ func (s *CreateQueueInput) SetDescription(v string) *CreateQueueInput {
 // SetName sets the Name field's value.
 func (s *CreateQueueInput) SetName(v string) *CreateQueueInput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateQueueInput) SetTags(v map[string]*string) *CreateQueueInput {
+	s.Tags = v
 	return s
 }
 
@@ -9163,7 +9459,7 @@ type ListJobTemplatesInput struct {
 
 	// Optional. Number of job templates, up to twenty, that will be returned at
 	// one time.
-	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
 	// Use this string, provided with the response to a previous request, to request
 	// the next batch of job templates.
@@ -9182,6 +9478,19 @@ func (s ListJobTemplatesInput) String() string {
 // GoString returns the string representation
 func (s ListJobTemplatesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListJobTemplatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListJobTemplatesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCategory sets the Category field's value.
@@ -9257,7 +9566,7 @@ type ListJobsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Optional. Number of jobs, up to twenty, that will be returned at one time.
-	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
 	// Use this string, provided with the response to a previous request, to request
 	// the next batch of jobs.
@@ -9282,6 +9591,19 @@ func (s ListJobsInput) String() string {
 // GoString returns the string representation
 func (s ListJobsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -9366,7 +9688,7 @@ type ListPresetsInput struct {
 	ListBy *string `location:"querystring" locationName:"listBy" type:"string" enum:"PresetListBy"`
 
 	// Optional. Number of presets, up to twenty, that will be returned at one time
-	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
 	// Use this string, provided with the response to a previous request, to request
 	// the next batch of presets.
@@ -9385,6 +9707,19 @@ func (s ListPresetsInput) String() string {
 // GoString returns the string representation
 func (s ListPresetsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListPresetsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListPresetsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCategory sets the Category field's value.
@@ -9463,7 +9798,7 @@ type ListQueuesInput struct {
 	ListBy *string `location:"querystring" locationName:"listBy" type:"string" enum:"QueueListBy"`
 
 	// Optional. Number of queues, up to twenty, that will be returned at one time.
-	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
 	// Use this string, provided with the response to a previous request, to request
 	// the next batch of queues.
@@ -9482,6 +9817,19 @@ func (s ListQueuesInput) String() string {
 // GoString returns the string representation
 func (s ListQueuesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListQueuesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListQueuesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetListBy sets the ListBy field's value.
@@ -9539,6 +9887,73 @@ func (s *ListQueuesOutput) SetNextToken(v string) *ListQueuesOutput {
 // SetQueues sets the Queues field's value.
 func (s *ListQueuesOutput) SetQueues(v []*Queue) *ListQueuesOutput {
 	s.Queues = v
+	return s
+}
+
+// List the tags for your MediaConvert resource by sending a request with the
+// Amazon Resource Name (ARN) of the resource. To get the ARN, send a GET request
+// with the resource name.
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource that you want to list tags
+	// for. To get the ARN, send a GET request with the resource name.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *ListTagsForResourceInput) SetArn(v string) *ListTagsForResourceInput {
+	s.Arn = &v
+	return s
+}
+
+// Successful list tags for resource requests return a JSON map of tags.
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) and tags for an AWS Elemental MediaConvert
+	// resource.
+	ResourceTags *ResourceTags `locationName:"resourceTags" type:"structure"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetResourceTags sets the ResourceTags field's value.
+func (s *ListTagsForResourceOutput) SetResourceTags(v *ResourceTags) *ListTagsForResourceOutput {
+	s.ResourceTags = v
 	return s
 }
 
@@ -11891,10 +12306,16 @@ type Queue struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
+	// Estimated number of jobs in PROGRESSING status.
+	ProgressingJobsCount *int64 `locationName:"progressingJobsCount" type:"integer"`
+
 	// Queues can be ACTIVE or PAUSED. If you pause a queue, jobs in that queue
 	// will not begin. Jobs running when a queue is paused continue to run until
 	// they finish or error out.
 	Status *string `locationName:"status" type:"string" enum:"QueueStatus"`
+
+	// Estimated number of jobs in SUBMITTED status.
+	SubmittedJobsCount *int64 `locationName:"submittedJobsCount" type:"integer"`
 
 	// A queue can be of two types: system or custom. System or built-in queues
 	// can't be modified or deleted by the user.
@@ -11941,9 +12362,21 @@ func (s *Queue) SetName(v string) *Queue {
 	return s
 }
 
+// SetProgressingJobsCount sets the ProgressingJobsCount field's value.
+func (s *Queue) SetProgressingJobsCount(v int64) *Queue {
+	s.ProgressingJobsCount = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *Queue) SetStatus(v string) *Queue {
 	s.Status = &v
+	return s
+}
+
+// SetSubmittedJobsCount sets the SubmittedJobsCount field's value.
+func (s *Queue) SetSubmittedJobsCount(v int64) *Queue {
+	s.SubmittedJobsCount = &v
 	return s
 }
 
@@ -12134,6 +12567,40 @@ func (s *RemixSettings) SetChannelsOut(v int64) *RemixSettings {
 	return s
 }
 
+// The Amazon Resource Name (ARN) and tags for an AWS Elemental MediaConvert
+// resource.
+type ResourceTags struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The tags for the resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s ResourceTags) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceTags) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *ResourceTags) SetArn(v string) *ResourceTags {
+	s.Arn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ResourceTags) SetTags(v map[string]*string) *ResourceTags {
+	s.Tags = v
+	return s
+}
+
 // Settings for SCC caption output.
 type SccDestinationSettings struct {
 	_ struct{} `type:"structure"`
@@ -12305,6 +12772,77 @@ func (s *StaticKeyProvider) SetStaticKeyValue(v string) *StaticKeyProvider {
 func (s *StaticKeyProvider) SetUrl(v string) *StaticKeyProvider {
 	s.Url = &v
 	return s
+}
+
+// To tag a queue, preset, or job template, send a request with the tags and
+// the Amazon Resource Name (ARN) of the resource that you want to tag.
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource that you want to tag. To get
+	// the ARN, send a GET request with the resource name.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" type:"string" required:"true"`
+
+	// The tags that you want to add to the resource. You can tag resources with
+	// a key-value pair or with only a key.
+	//
+	// Tags is a required field
+	Tags map[string]*string `locationName:"tags" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *TagResourceInput) SetArn(v string) *TagResourceInput {
+	s.Arn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v map[string]*string) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+// Successful tag resource requests return an OK message.
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
 }
 
 // Settings for Teletext caption output
@@ -12647,6 +13185,56 @@ func (s TtmlDestinationSettings) GoString() string {
 func (s *TtmlDestinationSettings) SetStylePassthrough(v string) *TtmlDestinationSettings {
 	s.StylePassthrough = &v
 	return s
+}
+
+// To remove tags from a resource, send a request with the Amazon Resource Name
+// (ARN) of the resource and the keys of the tags that you want to remove.
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource that you want to remove tags
+	// from. To get the ARN, send a GET request with the resource name.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The keys of the tags that you want to remove from the resource.
+	TagKeys []*string `locationName:"tagKeys" type:"list"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *UntagResourceInput) SetArn(v string) *UntagResourceInput {
+	s.Arn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+// Successful untag resource requests return an OK message.
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
 }
 
 // Modify a job template by sending a request with the job template name and
