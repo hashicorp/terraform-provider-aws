@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_codebuild_project: Prevent panic when empty `vpc_config` block is configured [GH-5070]
 * resource/aws_codebuild_project: Mark `service_role` as required [GH-4826]
 * resource/aws_glue_catalog_database: Properly return error when missing colon during import [GH-5123]
+* resource/aws_glue_catalog_database: Prevent error when deleted outside Terraform [GH-5141]
 * resource/aws_instance: Allow AWS China to perform volume tagging post-creation on first apply [GH-5106]
 * resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
 * resource/aws_rds_cluster_instance: Support `configuring-log-exports` status [GH-5124]
