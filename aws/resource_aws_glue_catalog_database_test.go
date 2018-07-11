@@ -113,6 +113,41 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCatalogDatabase_recreates(t *testing.T) {
+	resourceName := "aws_glue_catalog_database.test"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogDatabase_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
+				),
+			},
+			{
+				// Simulate deleting the database outside Terraform
+				PreConfig: func() {
+					conn := testAccProvider.Meta().(*AWSClient).glueconn
+					input := &glue.DeleteDatabaseInput{
+						Name: aws.String(fmt.Sprintf("my_test_catalog_database_%d", rInt)),
+					}
+					_, err := conn.DeleteDatabase(input)
+					if err != nil {
+						t.Fatalf("error deleting Glue Catalog Database: %s", err)
+					}
+				},
+				Config:             testAccGlueCatalogDatabase_basic(rInt),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).glueconn
 
