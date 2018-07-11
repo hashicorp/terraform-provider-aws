@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_glue_connection: Add `physical_connection_requirements` argument `availability_zone` (currently required by the API) [GH-5039]
 * resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` [GH-5114]
 * resource/aws_instance: Allow AWS GovCloud (US) to perform tagging on creation [GH-5106]
+* resource/aws_lambda_function: Support `dotnetcore2.1` in `runtime` validation [GH-5150]
 * resource/aws_route_table: Ignore propagated routes during resource import [GH-5100]
 * resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
 * resource/aws_ses_receipt_rule: Add plan time validation for `s3_action` argument `position` [GH-5092]
