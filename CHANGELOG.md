@@ -1,4 +1,4 @@
-## 1.27.0 (Unreleased)
+## 1.27.0 (July 11, 2018)
 
 NOTES:
 
@@ -7,37 +7,37 @@ NOTES:
 
 FEATURES:
 
-* **New Resource:** `aws_appsync_api_key` [GH-3827]
-* **New Resource:** `aws_swf_domain` [GH-2803]
+* **New Resource:** `aws_appsync_api_key` ([#3827](https://github.com/terraform-providers/terraform-provider-aws/issues/3827))
+* **New Resource:** `aws_swf_domain` ([#2803](https://github.com/terraform-providers/terraform-provider-aws/issues/2803))
 
 ENHANCEMENTS:
 
-* data-source/aws_region: Add `description` attribute [GH-5077]
-* data-source/aws_vpc: Add `cidr_block_associations` attribute [GH-5098]
-* resource/aws_cloudwatch_metric_alarm: Add `datapoints_to_alarm` and `evaluation_period` plan time validation [GH-5095]
-* resource/aws_db_parameter_group: Clarify naming validation error messages [GH-5090]
-* resource/aws_glue_connection: Add `physical_connection_requirements` argument `availability_zone` (currently required by the API) [GH-5039]
-* resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` [GH-5114]
-* resource/aws_instance: Allow AWS GovCloud (US) to perform tagging on creation [GH-5106]
-* resource/aws_lambda_function: Support `dotnetcore2.1` in `runtime` validation [GH-5150]
-* resource/aws_route_table: Ignore propagated routes during resource import [GH-5100]
-* resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) [GH-4726]
-* resource/aws_ses_receipt_rule: Add plan time validation for `s3_action` argument `position` [GH-5092]
-* resource/aws_vpc_ipv4_cidr_block_association: Support resource import [GH-5069]
-* resource/aws_waf_web_acl: Add `rules` `override_action` argument and support `GROUP` type [GH-5053]
-* resource/aws_wafregional_web_acl: Add `rules` `override_action` argument and support `GROUP` type [GH-5053]
+* data-source/aws_region: Add `description` attribute ([#5077](https://github.com/terraform-providers/terraform-provider-aws/issues/5077))
+* data-source/aws_vpc: Add `cidr_block_associations` attribute ([#5098](https://github.com/terraform-providers/terraform-provider-aws/issues/5098))
+* resource/aws_cloudwatch_metric_alarm: Add `datapoints_to_alarm` and `evaluation_period` plan time validation ([#5095](https://github.com/terraform-providers/terraform-provider-aws/issues/5095))
+* resource/aws_db_parameter_group: Clarify naming validation error messages ([#5090](https://github.com/terraform-providers/terraform-provider-aws/issues/5090))
+* resource/aws_glue_connection: Add `physical_connection_requirements` argument `availability_zone` (currently required by the API) ([#5039](https://github.com/terraform-providers/terraform-provider-aws/issues/5039))
+* resource/aws_instance: Ignore `credit_specifications` when not using T2 `instance_type` ([#5114](https://github.com/terraform-providers/terraform-provider-aws/issues/5114))
+* resource/aws_instance: Allow AWS GovCloud (US) to perform tagging on creation ([#5106](https://github.com/terraform-providers/terraform-provider-aws/issues/5106))
+* resource/aws_lambda_function: Support `dotnetcore2.1` in `runtime` validation ([#5150](https://github.com/terraform-providers/terraform-provider-aws/issues/5150))
+* resource/aws_route_table: Ignore propagated routes during resource import ([#5100](https://github.com/terraform-providers/terraform-provider-aws/issues/5100))
+* resource/aws_security_group: Authorize and revoke only changed individual `ingress`/`egress` rules despite their configuration grouping (e.g. replacing an individual element in a multiple element `cidr_blocks` list) ([#4726](https://github.com/terraform-providers/terraform-provider-aws/issues/4726))
+* resource/aws_ses_receipt_rule: Add plan time validation for `s3_action` argument `position` ([#5092](https://github.com/terraform-providers/terraform-provider-aws/issues/5092))
+* resource/aws_vpc_ipv4_cidr_block_association: Support resource import ([#5069](https://github.com/terraform-providers/terraform-provider-aws/issues/5069))
+* resource/aws_waf_web_acl: Add `rules` `override_action` argument and support `GROUP` type ([#5053](https://github.com/terraform-providers/terraform-provider-aws/issues/5053))
+* resource/aws_wafregional_web_acl: Add `rules` `override_action` argument and support `GROUP` type ([#5053](https://github.com/terraform-providers/terraform-provider-aws/issues/5053))
 
 BUG FIXES:
 
-* resource/aws_codebuild_project: Prevent panic when empty `vpc_config` block is configured [GH-5070]
-* resource/aws_codebuild_project: Mark `service_role` as required [GH-4826]
-* resource/aws_glue_catalog_database: Properly return error when missing colon during import [GH-5123]
-* resource/aws_glue_catalog_database: Prevent error when deleted outside Terraform [GH-5141]
-* resource/aws_instance: Allow AWS China to perform volume tagging post-creation on first apply [GH-5106]
-* resource/aws_kms_grant: Properly return error when listing KMS grants [GH-5063]
-* resource/aws_rds_cluster_instance: Support `configuring-log-exports` status [GH-5124]
-* resource/aws_s3_bucket: Prevent extraneous ACL update during resource creation [GH-5107]
-* resource/aws_wafregional_byte_match_set: Deprecate `byte_match_tuple` argument for `byte_match_tuples` [GH-5043]
+* resource/aws_codebuild_project: Prevent panic when empty `vpc_config` block is configured ([#5070](https://github.com/terraform-providers/terraform-provider-aws/issues/5070))
+* resource/aws_codebuild_project: Mark `service_role` as required ([#4826](https://github.com/terraform-providers/terraform-provider-aws/issues/4826))
+* resource/aws_glue_catalog_database: Properly return error when missing colon during import ([#5123](https://github.com/terraform-providers/terraform-provider-aws/issues/5123))
+* resource/aws_glue_catalog_database: Prevent error when deleted outside Terraform ([#5141](https://github.com/terraform-providers/terraform-provider-aws/issues/5141))
+* resource/aws_instance: Allow AWS China to perform volume tagging post-creation on first apply ([#5106](https://github.com/terraform-providers/terraform-provider-aws/issues/5106))
+* resource/aws_kms_grant: Properly return error when listing KMS grants ([#5063](https://github.com/terraform-providers/terraform-provider-aws/issues/5063))
+* resource/aws_rds_cluster_instance: Support `configuring-log-exports` status ([#5124](https://github.com/terraform-providers/terraform-provider-aws/issues/5124))
+* resource/aws_s3_bucket: Prevent extraneous ACL update during resource creation ([#5107](https://github.com/terraform-providers/terraform-provider-aws/issues/5107))
+* resource/aws_wafregional_byte_match_set: Deprecate `byte_match_tuple` argument for `byte_match_tuples` ([#5043](https://github.com/terraform-providers/terraform-provider-aws/issues/5043))
 
 ## 1.26.0 (July 04, 2018)
 
