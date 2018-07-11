@@ -369,6 +369,42 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_recreates(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+				),
+			},
+			{
+				// Simulate deleting the crawler outside Terraform
+				PreConfig: func() {
+					conn := testAccProvider.Meta().(*AWSClient).glueconn
+					input := &glue.DeleteCrawlerInput{
+						Name: aws.String(rName),
+					}
+					_, err := conn.DeleteCrawler(input)
+					if err != nil {
+						t.Fatalf("error deleting Glue Crawler: %s", err)
+					}
+				},
+				Config:             testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_Classifiers(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
