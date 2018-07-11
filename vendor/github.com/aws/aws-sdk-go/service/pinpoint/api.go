@@ -63,16 +63,22 @@ func (c *Pinpoint) CreateAppRequest(input *CreateAppInput) (req *request.Request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateApp
 func (c *Pinpoint) CreateApp(input *CreateAppInput) (*CreateAppOutput, error) {
@@ -151,16 +157,22 @@ func (c *Pinpoint) CreateCampaignRequest(input *CreateCampaignInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateCampaign
 func (c *Pinpoint) CreateCampaign(input *CreateCampaignInput) (*CreateCampaignOutput, error) {
@@ -239,16 +251,22 @@ func (c *Pinpoint) CreateExportJobRequest(input *CreateExportJobInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateExportJob
 func (c *Pinpoint) CreateExportJob(input *CreateExportJobInput) (*CreateExportJobOutput, error) {
@@ -327,16 +345,22 @@ func (c *Pinpoint) CreateImportJobRequest(input *CreateImportJobInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateImportJob
 func (c *Pinpoint) CreateImportJob(input *CreateImportJobInput) (*CreateImportJobOutput, error) {
@@ -415,16 +439,22 @@ func (c *Pinpoint) CreateSegmentRequest(input *CreateSegmentInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateSegment
 func (c *Pinpoint) CreateSegment(input *CreateSegmentInput) (*CreateSegmentOutput, error) {
@@ -492,7 +522,7 @@ func (c *Pinpoint) DeleteAdmChannelRequest(input *DeleteAdmChannelInput) (req *r
 
 // DeleteAdmChannel API operation for Amazon Pinpoint.
 //
-// Delete an ADM channel
+// Delete an ADM channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -503,16 +533,22 @@ func (c *Pinpoint) DeleteAdmChannelRequest(input *DeleteAdmChannelInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteAdmChannel
 func (c *Pinpoint) DeleteAdmChannel(input *DeleteAdmChannelInput) (*DeleteAdmChannelOutput, error) {
@@ -591,16 +627,22 @@ func (c *Pinpoint) DeleteApnsChannelRequest(input *DeleteApnsChannelInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsChannel
 func (c *Pinpoint) DeleteApnsChannel(input *DeleteApnsChannelInput) (*DeleteApnsChannelOutput, error) {
@@ -668,7 +710,7 @@ func (c *Pinpoint) DeleteApnsSandboxChannelRequest(input *DeleteApnsSandboxChann
 
 // DeleteApnsSandboxChannel API operation for Amazon Pinpoint.
 //
-// Delete an APNS sandbox channel
+// Delete an APNS sandbox channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -679,16 +721,22 @@ func (c *Pinpoint) DeleteApnsSandboxChannelRequest(input *DeleteApnsSandboxChann
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsSandboxChannel
 func (c *Pinpoint) DeleteApnsSandboxChannel(input *DeleteApnsSandboxChannelInput) (*DeleteApnsSandboxChannelOutput, error) {
@@ -767,16 +815,22 @@ func (c *Pinpoint) DeleteApnsVoipChannelRequest(input *DeleteApnsVoipChannelInpu
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsVoipChannel
 func (c *Pinpoint) DeleteApnsVoipChannel(input *DeleteApnsVoipChannelInput) (*DeleteApnsVoipChannelOutput, error) {
@@ -855,16 +909,22 @@ func (c *Pinpoint) DeleteApnsVoipSandboxChannelRequest(input *DeleteApnsVoipSand
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsVoipSandboxChannel
 func (c *Pinpoint) DeleteApnsVoipSandboxChannel(input *DeleteApnsVoipSandboxChannelInput) (*DeleteApnsVoipSandboxChannelOutput, error) {
@@ -943,16 +1003,22 @@ func (c *Pinpoint) DeleteAppRequest(input *DeleteAppInput) (req *request.Request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApp
 func (c *Pinpoint) DeleteApp(input *DeleteAppInput) (*DeleteAppOutput, error) {
@@ -1031,16 +1097,22 @@ func (c *Pinpoint) DeleteBaiduChannelRequest(input *DeleteBaiduChannelInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteBaiduChannel
 func (c *Pinpoint) DeleteBaiduChannel(input *DeleteBaiduChannelInput) (*DeleteBaiduChannelOutput, error) {
@@ -1119,16 +1191,22 @@ func (c *Pinpoint) DeleteCampaignRequest(input *DeleteCampaignInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteCampaign
 func (c *Pinpoint) DeleteCampaign(input *DeleteCampaignInput) (*DeleteCampaignOutput, error) {
@@ -1196,7 +1274,7 @@ func (c *Pinpoint) DeleteEmailChannelRequest(input *DeleteEmailChannelInput) (re
 
 // DeleteEmailChannel API operation for Amazon Pinpoint.
 //
-// Delete an email channel
+// Delete an email channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1207,16 +1285,22 @@ func (c *Pinpoint) DeleteEmailChannelRequest(input *DeleteEmailChannelInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEmailChannel
 func (c *Pinpoint) DeleteEmailChannel(input *DeleteEmailChannelInput) (*DeleteEmailChannelOutput, error) {
@@ -1295,16 +1379,22 @@ func (c *Pinpoint) DeleteEndpointRequest(input *DeleteEndpointInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEndpoint
 func (c *Pinpoint) DeleteEndpoint(input *DeleteEndpointInput) (*DeleteEndpointOutput, error) {
@@ -1383,16 +1473,22 @@ func (c *Pinpoint) DeleteEventStreamRequest(input *DeleteEventStreamInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEventStream
 func (c *Pinpoint) DeleteEventStream(input *DeleteEventStreamInput) (*DeleteEventStreamOutput, error) {
@@ -1471,16 +1567,22 @@ func (c *Pinpoint) DeleteGcmChannelRequest(input *DeleteGcmChannelInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteGcmChannel
 func (c *Pinpoint) DeleteGcmChannel(input *DeleteGcmChannelInput) (*DeleteGcmChannelOutput, error) {
@@ -1559,16 +1661,22 @@ func (c *Pinpoint) DeleteSegmentRequest(input *DeleteSegmentInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSegment
 func (c *Pinpoint) DeleteSegment(input *DeleteSegmentInput) (*DeleteSegmentOutput, error) {
@@ -1636,7 +1744,7 @@ func (c *Pinpoint) DeleteSmsChannelRequest(input *DeleteSmsChannelInput) (req *r
 
 // DeleteSmsChannel API operation for Amazon Pinpoint.
 //
-// Delete an SMS channel
+// Delete an SMS channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1647,16 +1755,22 @@ func (c *Pinpoint) DeleteSmsChannelRequest(input *DeleteSmsChannelInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSmsChannel
 func (c *Pinpoint) DeleteSmsChannel(input *DeleteSmsChannelInput) (*DeleteSmsChannelOutput, error) {
@@ -1675,6 +1789,100 @@ func (c *Pinpoint) DeleteSmsChannel(input *DeleteSmsChannelInput) (*DeleteSmsCha
 // for more information on using Contexts.
 func (c *Pinpoint) DeleteSmsChannelWithContext(ctx aws.Context, input *DeleteSmsChannelInput, opts ...request.Option) (*DeleteSmsChannelOutput, error) {
 	req, out := c.DeleteSmsChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteUserEndpoints = "DeleteUserEndpoints"
+
+// DeleteUserEndpointsRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteUserEndpoints operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteUserEndpoints for more information on using the DeleteUserEndpoints
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteUserEndpointsRequest method.
+//    req, resp := client.DeleteUserEndpointsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteUserEndpoints
+func (c *Pinpoint) DeleteUserEndpointsRequest(input *DeleteUserEndpointsInput) (req *request.Request, output *DeleteUserEndpointsOutput) {
+	op := &request.Operation{
+		Name:       opDeleteUserEndpoints,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/apps/{application-id}/users/{user-id}",
+	}
+
+	if input == nil {
+		input = &DeleteUserEndpointsInput{}
+	}
+
+	output = &DeleteUserEndpointsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteUserEndpoints API operation for Amazon Pinpoint.
+//
+// Deletes endpoints associated with an user id.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation DeleteUserEndpoints for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteUserEndpoints
+func (c *Pinpoint) DeleteUserEndpoints(input *DeleteUserEndpointsInput) (*DeleteUserEndpointsOutput, error) {
+	req, out := c.DeleteUserEndpointsRequest(input)
+	return out, req.Send()
+}
+
+// DeleteUserEndpointsWithContext is the same as DeleteUserEndpoints with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteUserEndpoints for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) DeleteUserEndpointsWithContext(ctx aws.Context, input *DeleteUserEndpointsInput, opts ...request.Option) (*DeleteUserEndpointsOutput, error) {
+	req, out := c.DeleteUserEndpointsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1724,7 +1932,7 @@ func (c *Pinpoint) GetAdmChannelRequest(input *GetAdmChannelInput) (req *request
 
 // GetAdmChannel API operation for Amazon Pinpoint.
 //
-// Get an ADM channel
+// Get an ADM channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1735,16 +1943,22 @@ func (c *Pinpoint) GetAdmChannelRequest(input *GetAdmChannelInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetAdmChannel
 func (c *Pinpoint) GetAdmChannel(input *GetAdmChannelInput) (*GetAdmChannelOutput, error) {
@@ -1823,16 +2037,22 @@ func (c *Pinpoint) GetApnsChannelRequest(input *GetApnsChannelInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsChannel
 func (c *Pinpoint) GetApnsChannel(input *GetApnsChannelInput) (*GetApnsChannelOutput, error) {
@@ -1900,7 +2120,7 @@ func (c *Pinpoint) GetApnsSandboxChannelRequest(input *GetApnsSandboxChannelInpu
 
 // GetApnsSandboxChannel API operation for Amazon Pinpoint.
 //
-// Get an APNS sandbox channel
+// Get an APNS sandbox channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1911,16 +2131,22 @@ func (c *Pinpoint) GetApnsSandboxChannelRequest(input *GetApnsSandboxChannelInpu
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsSandboxChannel
 func (c *Pinpoint) GetApnsSandboxChannel(input *GetApnsSandboxChannelInput) (*GetApnsSandboxChannelOutput, error) {
@@ -1999,16 +2225,22 @@ func (c *Pinpoint) GetApnsVoipChannelRequest(input *GetApnsVoipChannelInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsVoipChannel
 func (c *Pinpoint) GetApnsVoipChannel(input *GetApnsVoipChannelInput) (*GetApnsVoipChannelOutput, error) {
@@ -2087,16 +2319,22 @@ func (c *Pinpoint) GetApnsVoipSandboxChannelRequest(input *GetApnsVoipSandboxCha
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsVoipSandboxChannel
 func (c *Pinpoint) GetApnsVoipSandboxChannel(input *GetApnsVoipSandboxChannelInput) (*GetApnsVoipSandboxChannelOutput, error) {
@@ -2175,16 +2413,22 @@ func (c *Pinpoint) GetAppRequest(input *GetAppInput) (req *request.Request, outp
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApp
 func (c *Pinpoint) GetApp(input *GetAppInput) (*GetAppOutput, error) {
@@ -2263,16 +2507,22 @@ func (c *Pinpoint) GetApplicationSettingsRequest(input *GetApplicationSettingsIn
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApplicationSettings
 func (c *Pinpoint) GetApplicationSettings(input *GetApplicationSettingsInput) (*GetApplicationSettingsOutput, error) {
@@ -2351,16 +2601,22 @@ func (c *Pinpoint) GetAppsRequest(input *GetAppsInput) (req *request.Request, ou
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApps
 func (c *Pinpoint) GetApps(input *GetAppsInput) (*GetAppsOutput, error) {
@@ -2439,16 +2695,22 @@ func (c *Pinpoint) GetBaiduChannelRequest(input *GetBaiduChannelInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetBaiduChannel
 func (c *Pinpoint) GetBaiduChannel(input *GetBaiduChannelInput) (*GetBaiduChannelOutput, error) {
@@ -2527,16 +2789,22 @@ func (c *Pinpoint) GetCampaignRequest(input *GetCampaignInput) (req *request.Req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaign
 func (c *Pinpoint) GetCampaign(input *GetCampaignInput) (*GetCampaignOutput, error) {
@@ -2615,16 +2883,22 @@ func (c *Pinpoint) GetCampaignActivitiesRequest(input *GetCampaignActivitiesInpu
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignActivities
 func (c *Pinpoint) GetCampaignActivities(input *GetCampaignActivitiesInput) (*GetCampaignActivitiesOutput, error) {
@@ -2703,16 +2977,22 @@ func (c *Pinpoint) GetCampaignVersionRequest(input *GetCampaignVersionInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignVersion
 func (c *Pinpoint) GetCampaignVersion(input *GetCampaignVersionInput) (*GetCampaignVersionOutput, error) {
@@ -2791,16 +3071,22 @@ func (c *Pinpoint) GetCampaignVersionsRequest(input *GetCampaignVersionsInput) (
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignVersions
 func (c *Pinpoint) GetCampaignVersions(input *GetCampaignVersionsInput) (*GetCampaignVersionsOutput, error) {
@@ -2879,16 +3165,22 @@ func (c *Pinpoint) GetCampaignsRequest(input *GetCampaignsInput) (req *request.R
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaigns
 func (c *Pinpoint) GetCampaigns(input *GetCampaignsInput) (*GetCampaignsOutput, error) {
@@ -2907,6 +3199,100 @@ func (c *Pinpoint) GetCampaigns(input *GetCampaignsInput) (*GetCampaignsOutput, 
 // for more information on using Contexts.
 func (c *Pinpoint) GetCampaignsWithContext(ctx aws.Context, input *GetCampaignsInput, opts ...request.Option) (*GetCampaignsOutput, error) {
 	req, out := c.GetCampaignsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetChannels = "GetChannels"
+
+// GetChannelsRequest generates a "aws/request.Request" representing the
+// client's request for the GetChannels operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetChannels for more information on using the GetChannels
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetChannelsRequest method.
+//    req, resp := client.GetChannelsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetChannels
+func (c *Pinpoint) GetChannelsRequest(input *GetChannelsInput) (req *request.Request, output *GetChannelsOutput) {
+	op := &request.Operation{
+		Name:       opGetChannels,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/apps/{application-id}/channels",
+	}
+
+	if input == nil {
+		input = &GetChannelsInput{}
+	}
+
+	output = &GetChannelsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetChannels API operation for Amazon Pinpoint.
+//
+// Get all channels.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetChannels for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetChannels
+func (c *Pinpoint) GetChannels(input *GetChannelsInput) (*GetChannelsOutput, error) {
+	req, out := c.GetChannelsRequest(input)
+	return out, req.Send()
+}
+
+// GetChannelsWithContext is the same as GetChannels with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetChannels for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetChannelsWithContext(ctx aws.Context, input *GetChannelsInput, opts ...request.Option) (*GetChannelsOutput, error) {
+	req, out := c.GetChannelsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2956,7 +3342,7 @@ func (c *Pinpoint) GetEmailChannelRequest(input *GetEmailChannelInput) (req *req
 
 // GetEmailChannel API operation for Amazon Pinpoint.
 //
-// Get an email channel
+// Get an email channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2967,16 +3353,22 @@ func (c *Pinpoint) GetEmailChannelRequest(input *GetEmailChannelInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEmailChannel
 func (c *Pinpoint) GetEmailChannel(input *GetEmailChannelInput) (*GetEmailChannelOutput, error) {
@@ -3055,16 +3447,22 @@ func (c *Pinpoint) GetEndpointRequest(input *GetEndpointInput) (req *request.Req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEndpoint
 func (c *Pinpoint) GetEndpoint(input *GetEndpointInput) (*GetEndpointOutput, error) {
@@ -3143,16 +3541,22 @@ func (c *Pinpoint) GetEventStreamRequest(input *GetEventStreamInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEventStream
 func (c *Pinpoint) GetEventStream(input *GetEventStreamInput) (*GetEventStreamOutput, error) {
@@ -3231,16 +3635,22 @@ func (c *Pinpoint) GetExportJobRequest(input *GetExportJobInput) (req *request.R
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetExportJob
 func (c *Pinpoint) GetExportJob(input *GetExportJobInput) (*GetExportJobOutput, error) {
@@ -3319,16 +3729,22 @@ func (c *Pinpoint) GetExportJobsRequest(input *GetExportJobsInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetExportJobs
 func (c *Pinpoint) GetExportJobs(input *GetExportJobsInput) (*GetExportJobsOutput, error) {
@@ -3407,16 +3823,22 @@ func (c *Pinpoint) GetGcmChannelRequest(input *GetGcmChannelInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetGcmChannel
 func (c *Pinpoint) GetGcmChannel(input *GetGcmChannelInput) (*GetGcmChannelOutput, error) {
@@ -3495,16 +3917,22 @@ func (c *Pinpoint) GetImportJobRequest(input *GetImportJobInput) (req *request.R
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetImportJob
 func (c *Pinpoint) GetImportJob(input *GetImportJobInput) (*GetImportJobOutput, error) {
@@ -3583,16 +4011,22 @@ func (c *Pinpoint) GetImportJobsRequest(input *GetImportJobsInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetImportJobs
 func (c *Pinpoint) GetImportJobs(input *GetImportJobsInput) (*GetImportJobsOutput, error) {
@@ -3671,16 +4105,22 @@ func (c *Pinpoint) GetSegmentRequest(input *GetSegmentInput) (req *request.Reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegment
 func (c *Pinpoint) GetSegment(input *GetSegmentInput) (*GetSegmentOutput, error) {
@@ -3759,16 +4199,22 @@ func (c *Pinpoint) GetSegmentExportJobsRequest(input *GetSegmentExportJobsInput)
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentExportJobs
 func (c *Pinpoint) GetSegmentExportJobs(input *GetSegmentExportJobsInput) (*GetSegmentExportJobsOutput, error) {
@@ -3847,16 +4293,22 @@ func (c *Pinpoint) GetSegmentImportJobsRequest(input *GetSegmentImportJobsInput)
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentImportJobs
 func (c *Pinpoint) GetSegmentImportJobs(input *GetSegmentImportJobsInput) (*GetSegmentImportJobsOutput, error) {
@@ -3935,16 +4387,22 @@ func (c *Pinpoint) GetSegmentVersionRequest(input *GetSegmentVersionInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentVersion
 func (c *Pinpoint) GetSegmentVersion(input *GetSegmentVersionInput) (*GetSegmentVersionOutput, error) {
@@ -4023,16 +4481,22 @@ func (c *Pinpoint) GetSegmentVersionsRequest(input *GetSegmentVersionsInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentVersions
 func (c *Pinpoint) GetSegmentVersions(input *GetSegmentVersionsInput) (*GetSegmentVersionsOutput, error) {
@@ -4111,16 +4575,22 @@ func (c *Pinpoint) GetSegmentsRequest(input *GetSegmentsInput) (req *request.Req
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegments
 func (c *Pinpoint) GetSegments(input *GetSegmentsInput) (*GetSegmentsOutput, error) {
@@ -4188,7 +4658,7 @@ func (c *Pinpoint) GetSmsChannelRequest(input *GetSmsChannelInput) (req *request
 
 // GetSmsChannel API operation for Amazon Pinpoint.
 //
-// Get an SMS channel
+// Get an SMS channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4199,16 +4669,22 @@ func (c *Pinpoint) GetSmsChannelRequest(input *GetSmsChannelInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSmsChannel
 func (c *Pinpoint) GetSmsChannel(input *GetSmsChannelInput) (*GetSmsChannelOutput, error) {
@@ -4227,6 +4703,194 @@ func (c *Pinpoint) GetSmsChannel(input *GetSmsChannelInput) (*GetSmsChannelOutpu
 // for more information on using Contexts.
 func (c *Pinpoint) GetSmsChannelWithContext(ctx aws.Context, input *GetSmsChannelInput, opts ...request.Option) (*GetSmsChannelOutput, error) {
 	req, out := c.GetSmsChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetUserEndpoints = "GetUserEndpoints"
+
+// GetUserEndpointsRequest generates a "aws/request.Request" representing the
+// client's request for the GetUserEndpoints operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetUserEndpoints for more information on using the GetUserEndpoints
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetUserEndpointsRequest method.
+//    req, resp := client.GetUserEndpointsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetUserEndpoints
+func (c *Pinpoint) GetUserEndpointsRequest(input *GetUserEndpointsInput) (req *request.Request, output *GetUserEndpointsOutput) {
+	op := &request.Operation{
+		Name:       opGetUserEndpoints,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/apps/{application-id}/users/{user-id}",
+	}
+
+	if input == nil {
+		input = &GetUserEndpointsInput{}
+	}
+
+	output = &GetUserEndpointsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetUserEndpoints API operation for Amazon Pinpoint.
+//
+// Returns information about the endpoints associated with an user id.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetUserEndpoints for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetUserEndpoints
+func (c *Pinpoint) GetUserEndpoints(input *GetUserEndpointsInput) (*GetUserEndpointsOutput, error) {
+	req, out := c.GetUserEndpointsRequest(input)
+	return out, req.Send()
+}
+
+// GetUserEndpointsWithContext is the same as GetUserEndpoints with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUserEndpoints for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetUserEndpointsWithContext(ctx aws.Context, input *GetUserEndpointsInput, opts ...request.Option) (*GetUserEndpointsOutput, error) {
+	req, out := c.GetUserEndpointsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPhoneNumberValidate = "PhoneNumberValidate"
+
+// PhoneNumberValidateRequest generates a "aws/request.Request" representing the
+// client's request for the PhoneNumberValidate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PhoneNumberValidate for more information on using the PhoneNumberValidate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PhoneNumberValidateRequest method.
+//    req, resp := client.PhoneNumberValidateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/PhoneNumberValidate
+func (c *Pinpoint) PhoneNumberValidateRequest(input *PhoneNumberValidateInput) (req *request.Request, output *PhoneNumberValidateOutput) {
+	op := &request.Operation{
+		Name:       opPhoneNumberValidate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/phone/number/validate",
+	}
+
+	if input == nil {
+		input = &PhoneNumberValidateInput{}
+	}
+
+	output = &PhoneNumberValidateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PhoneNumberValidate API operation for Amazon Pinpoint.
+//
+// Returns information about the specified phone number.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation PhoneNumberValidate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/PhoneNumberValidate
+func (c *Pinpoint) PhoneNumberValidate(input *PhoneNumberValidateInput) (*PhoneNumberValidateOutput, error) {
+	req, out := c.PhoneNumberValidateRequest(input)
+	return out, req.Send()
+}
+
+// PhoneNumberValidateWithContext is the same as PhoneNumberValidate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PhoneNumberValidate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) PhoneNumberValidateWithContext(ctx aws.Context, input *PhoneNumberValidateInput, opts ...request.Option) (*PhoneNumberValidateOutput, error) {
+	req, out := c.PhoneNumberValidateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4287,16 +4951,22 @@ func (c *Pinpoint) PutEventStreamRequest(input *PutEventStreamInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/PutEventStream
 func (c *Pinpoint) PutEventStream(input *PutEventStreamInput) (*PutEventStreamOutput, error) {
@@ -4315,6 +4985,100 @@ func (c *Pinpoint) PutEventStream(input *PutEventStreamInput) (*PutEventStreamOu
 // for more information on using Contexts.
 func (c *Pinpoint) PutEventStreamWithContext(ctx aws.Context, input *PutEventStreamInput, opts ...request.Option) (*PutEventStreamOutput, error) {
 	req, out := c.PutEventStreamRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRemoveAttributes = "RemoveAttributes"
+
+// RemoveAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveAttributes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RemoveAttributes for more information on using the RemoveAttributes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RemoveAttributesRequest method.
+//    req, resp := client.RemoveAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/RemoveAttributes
+func (c *Pinpoint) RemoveAttributesRequest(input *RemoveAttributesInput) (req *request.Request, output *RemoveAttributesOutput) {
+	op := &request.Operation{
+		Name:       opRemoveAttributes,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/apps/{application-id}/attributes/{attribute-type}",
+	}
+
+	if input == nil {
+		input = &RemoveAttributesInput{}
+	}
+
+	output = &RemoveAttributesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RemoveAttributes API operation for Amazon Pinpoint.
+//
+// Used to remove the attributes for an app
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation RemoveAttributes for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/RemoveAttributes
+func (c *Pinpoint) RemoveAttributes(input *RemoveAttributesInput) (*RemoveAttributesOutput, error) {
+	req, out := c.RemoveAttributesRequest(input)
+	return out, req.Send()
+}
+
+// RemoveAttributesWithContext is the same as RemoveAttributes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RemoveAttributes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) RemoveAttributesWithContext(ctx aws.Context, input *RemoveAttributesInput, opts ...request.Option) (*RemoveAttributesOutput, error) {
+	req, out := c.RemoveAttributesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4364,7 +5128,14 @@ func (c *Pinpoint) SendMessagesRequest(input *SendMessagesInput) (req *request.R
 
 // SendMessages API operation for Amazon Pinpoint.
 //
-// Send a batch of messages
+// Use this resource to send a direct message, which is a one time message that
+// you send to a limited audience without creating a campaign. You can send
+// the message to up to 100 recipients. You cannot use the message to engage
+// a segment. When you send the message, Amazon Pinpoint delivers it immediately,
+// and you cannot schedule the delivery. To engage a user segment, and to schedule
+// the message delivery, create a campaign instead of sending a direct message.You
+// can send a direct message as a push notification to your mobile app or as
+// an SMS message to SMS-enabled devices.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4375,16 +5146,22 @@ func (c *Pinpoint) SendMessagesRequest(input *SendMessagesInput) (req *request.R
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/SendMessages
 func (c *Pinpoint) SendMessages(input *SendMessagesInput) (*SendMessagesOutput, error) {
@@ -4452,7 +5229,22 @@ func (c *Pinpoint) SendUsersMessagesRequest(input *SendUsersMessagesInput) (req 
 
 // SendUsersMessages API operation for Amazon Pinpoint.
 //
-// Send a batch of messages to users
+// Use this resource to message a list of users. Amazon Pinpoint sends the message
+// to all of the endpoints that are associated with each user.A user represents
+// an individual who is assigned a unique user ID, and this ID is assigned to
+// one or more endpoints. For example, if an individual uses your app on multiple
+// devices, your app could assign that person's user ID to the endpoint for
+// each device.With the users-messages resource, you specify the message recipients
+// as user IDs. For each user ID, Amazon Pinpoint delivers the message to all
+// of the user's endpoints. Within the body of your request, you can specify
+// a default message, and you can tailor your message for different channels,
+// including those for mobile push and SMS.With this resource, you send a direct
+// message, which is a one time message that you send to a limited audience
+// without creating a campaign. You can send the message to up to 100 users
+// per request. You cannot use the message to engage a segment. When you send
+// the message, Amazon Pinpoint delivers it immediately, and you cannot schedule
+// the delivery. To engage a user segment, and to schedule the message delivery,
+// create a campaign instead of using the users-messages resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4463,16 +5255,22 @@ func (c *Pinpoint) SendUsersMessagesRequest(input *SendUsersMessagesInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/SendUsersMessages
 func (c *Pinpoint) SendUsersMessages(input *SendUsersMessagesInput) (*SendUsersMessagesOutput, error) {
@@ -4540,7 +5338,7 @@ func (c *Pinpoint) UpdateAdmChannelRequest(input *UpdateAdmChannelInput) (req *r
 
 // UpdateAdmChannel API operation for Amazon Pinpoint.
 //
-// Update an ADM channel
+// Update an ADM channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4551,16 +5349,22 @@ func (c *Pinpoint) UpdateAdmChannelRequest(input *UpdateAdmChannelInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateAdmChannel
 func (c *Pinpoint) UpdateAdmChannel(input *UpdateAdmChannelInput) (*UpdateAdmChannelOutput, error) {
@@ -4639,16 +5443,22 @@ func (c *Pinpoint) UpdateApnsChannelRequest(input *UpdateApnsChannelInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsChannel
 func (c *Pinpoint) UpdateApnsChannel(input *UpdateApnsChannelInput) (*UpdateApnsChannelOutput, error) {
@@ -4716,7 +5526,7 @@ func (c *Pinpoint) UpdateApnsSandboxChannelRequest(input *UpdateApnsSandboxChann
 
 // UpdateApnsSandboxChannel API operation for Amazon Pinpoint.
 //
-// Update an APNS sandbox channel
+// Update an APNS sandbox channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4727,16 +5537,22 @@ func (c *Pinpoint) UpdateApnsSandboxChannelRequest(input *UpdateApnsSandboxChann
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsSandboxChannel
 func (c *Pinpoint) UpdateApnsSandboxChannel(input *UpdateApnsSandboxChannelInput) (*UpdateApnsSandboxChannelOutput, error) {
@@ -4815,16 +5631,22 @@ func (c *Pinpoint) UpdateApnsVoipChannelRequest(input *UpdateApnsVoipChannelInpu
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsVoipChannel
 func (c *Pinpoint) UpdateApnsVoipChannel(input *UpdateApnsVoipChannelInput) (*UpdateApnsVoipChannelOutput, error) {
@@ -4903,16 +5725,22 @@ func (c *Pinpoint) UpdateApnsVoipSandboxChannelRequest(input *UpdateApnsVoipSand
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsVoipSandboxChannel
 func (c *Pinpoint) UpdateApnsVoipSandboxChannel(input *UpdateApnsVoipSandboxChannelInput) (*UpdateApnsVoipSandboxChannelOutput, error) {
@@ -4991,16 +5819,22 @@ func (c *Pinpoint) UpdateApplicationSettingsRequest(input *UpdateApplicationSett
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApplicationSettings
 func (c *Pinpoint) UpdateApplicationSettings(input *UpdateApplicationSettingsInput) (*UpdateApplicationSettingsOutput, error) {
@@ -5079,16 +5913,22 @@ func (c *Pinpoint) UpdateBaiduChannelRequest(input *UpdateBaiduChannelInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateBaiduChannel
 func (c *Pinpoint) UpdateBaiduChannel(input *UpdateBaiduChannelInput) (*UpdateBaiduChannelOutput, error) {
@@ -5167,16 +6007,22 @@ func (c *Pinpoint) UpdateCampaignRequest(input *UpdateCampaignInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateCampaign
 func (c *Pinpoint) UpdateCampaign(input *UpdateCampaignInput) (*UpdateCampaignOutput, error) {
@@ -5244,7 +6090,7 @@ func (c *Pinpoint) UpdateEmailChannelRequest(input *UpdateEmailChannelInput) (re
 
 // UpdateEmailChannel API operation for Amazon Pinpoint.
 //
-// Update an email channel
+// Update an email channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5255,16 +6101,22 @@ func (c *Pinpoint) UpdateEmailChannelRequest(input *UpdateEmailChannelInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEmailChannel
 func (c *Pinpoint) UpdateEmailChannel(input *UpdateEmailChannelInput) (*UpdateEmailChannelOutput, error) {
@@ -5332,7 +6184,7 @@ func (c *Pinpoint) UpdateEndpointRequest(input *UpdateEndpointInput) (req *reque
 
 // UpdateEndpoint API operation for Amazon Pinpoint.
 //
-// Use to update an endpoint.
+// Creates or updates an endpoint.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5343,16 +6195,22 @@ func (c *Pinpoint) UpdateEndpointRequest(input *UpdateEndpointInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEndpoint
 func (c *Pinpoint) UpdateEndpoint(input *UpdateEndpointInput) (*UpdateEndpointOutput, error) {
@@ -5431,16 +6289,22 @@ func (c *Pinpoint) UpdateEndpointsBatchRequest(input *UpdateEndpointsBatchInput)
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEndpointsBatch
 func (c *Pinpoint) UpdateEndpointsBatch(input *UpdateEndpointsBatchInput) (*UpdateEndpointsBatchOutput, error) {
@@ -5519,16 +6383,22 @@ func (c *Pinpoint) UpdateGcmChannelRequest(input *UpdateGcmChannelInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateGcmChannel
 func (c *Pinpoint) UpdateGcmChannel(input *UpdateGcmChannelInput) (*UpdateGcmChannelOutput, error) {
@@ -5607,16 +6477,22 @@ func (c *Pinpoint) UpdateSegmentRequest(input *UpdateSegmentInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSegment
 func (c *Pinpoint) UpdateSegment(input *UpdateSegmentInput) (*UpdateSegmentOutput, error) {
@@ -5684,7 +6560,7 @@ func (c *Pinpoint) UpdateSmsChannelRequest(input *UpdateSmsChannelInput) (req *r
 
 // UpdateSmsChannel API operation for Amazon Pinpoint.
 //
-// Update an SMS channel
+// Update an SMS channel.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5695,16 +6571,22 @@ func (c *Pinpoint) UpdateSmsChannelRequest(input *UpdateSmsChannelInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeBadRequestException "BadRequestException"
+//   Simple message object.
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Simple message object.
 //
 //   * ErrCodeForbiddenException "ForbiddenException"
+//   Simple message object.
 //
 //   * ErrCodeNotFoundException "NotFoundException"
+//   Simple message object.
 //
 //   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Simple message object.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Simple message object.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSmsChannel
 func (c *Pinpoint) UpdateSmsChannel(input *UpdateSmsChannelInput) (*UpdateSmsChannelOutput, error) {
@@ -5783,9 +6665,7 @@ type ADMChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// Indicates whether the channel is configured with ADM credentials. Amazon
-	// Pinpoint uses your credentials to authenticate push notifications with ADM.
-	// Provide your credentials by setting the ClientId and ClientSecret attributes.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Channel ID. Not used, only for backwards compatibility.
@@ -5938,6 +6818,7 @@ type ADMMessage struct {
 	// sound files must reside in /res/raw/
 	Sound *string `type:"string"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
 
 	// The message title that displays above the message on the user's device.
@@ -6157,11 +7038,7 @@ type APNSChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// Indicates whether the channel is configured with APNs credentials. Amazon
-	// Pinpoint uses your credentials to authenticate push notifications with APNs.
-	// To use APNs token authentication, set the BundleId, TeamId, TokenKey, and
-	// TokenKeyId attributes. To use certificate authentication, set the Certificate
-	// and PrivateKey attributes.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Indicates whether the channel is configured with a key for APNs token authentication.
@@ -6337,6 +7214,7 @@ type APNSMessage struct {
 	// if you specify defaultfor the value, the system plays the default alert sound.
 	Sound *string `type:"string"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
 
 	// Provide this key with a string value that represents the app-specific identifier
@@ -6573,11 +7451,7 @@ type APNSSandboxChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// Indicates whether the channel is configured with APNs credentials. Amazon
-	// Pinpoint uses your credentials to authenticate push notifications with APNs.
-	// To use APNs token authentication, set the BundleId, TeamId, TokenKey, and
-	// TokenKeyId attributes. To use certificate authentication, set the Certificate
-	// and PrivateKey attributes.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Indicates whether the channel is configured with a key for APNs token authentication.
@@ -6788,7 +7662,7 @@ type APNSVoipChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// If the channel is registered with a credential for authentication.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// If the channel is registered with a token key for authentication.
@@ -6998,7 +7872,7 @@ type APNSVoipSandboxChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// If the channel is registered with a credential for authentication.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// If the channel is registered with a token key for authentication.
@@ -7284,6 +8158,9 @@ type AddressConfiguration struct {
 	// the message.
 	RawContent *string `type:"string"`
 
+	// A map of substitution values for the message to be merged with the DefaultMessage's
+	// substitutions. Substitutions on this map take precedence over the all other
+	// substitutions.
 	Substitutions map[string][]*string `type:"map"`
 
 	// Title override. If specified will override default title if applicable.
@@ -7476,6 +8353,9 @@ type AttributeDimension struct {
 	// from the segment.
 	AttributeType *string `type:"string" enum:"AttributeType"`
 
+	// The criteria values for the segment dimension. Endpoints with matching attribute
+	// values are included or excluded from the segment, depending on the setting
+	// for Type.
 	Values []*string `type:"list"`
 }
 
@@ -7498,6 +8378,48 @@ func (s *AttributeDimension) SetAttributeType(v string) *AttributeDimension {
 // SetValues sets the Values field's value.
 func (s *AttributeDimension) SetValues(v []*string) *AttributeDimension {
 	s.Values = v
+	return s
+}
+
+// Attributes.
+type AttributesResource struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ID for the application.
+	ApplicationId *string `type:"string"`
+
+	// The attribute type for the application.
+	AttributeType *string `type:"string"`
+
+	// The attributes for the application.
+	Attributes []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s AttributesResource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttributesResource) GoString() string {
+	return s.String()
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *AttributesResource) SetApplicationId(v string) *AttributesResource {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetAttributeType sets the AttributeType field's value.
+func (s *AttributesResource) SetAttributeType(v string) *AttributesResource {
+	s.AttributeType = &v
+	return s
+}
+
+// SetAttributes sets the Attributes field's value.
+func (s *AttributesResource) SetAttributes(v []*string) *AttributesResource {
+	s.Attributes = v
 	return s
 }
 
@@ -7559,10 +8481,7 @@ type BaiduChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// Indicates whether the channel is configured with Baidu Cloud Push credentials.
-	// Amazon Pinpoint uses your credentials to authenticate push notifications
-	// with Baidu Cloud Push. Provide your credentials by setting the ApiKey and
-	// SecretKey attributes.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Channel ID. Not used, only for backwards compatibility.
@@ -7708,7 +8627,13 @@ type BaiduMessage struct {
 	// sound files must reside in /res/raw/
 	Sound *string `type:"string"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
+
+	// This parameter specifies how long (in seconds) the message should be kept
+	// in Baidu storage if the device is offline. The and the default value and
+	// the maximum time to live supported is 7 days (604800 seconds)
+	TimeToLive *int64 `type:"integer"`
 
 	// The message title that displays above the message on the user's device.
 	Title *string `type:"string"`
@@ -7794,6 +8719,12 @@ func (s *BaiduMessage) SetSubstitutions(v map[string][]*string) *BaiduMessage {
 	return s
 }
 
+// SetTimeToLive sets the TimeToLive field's value.
+func (s *BaiduMessage) SetTimeToLive(v int64) *BaiduMessage {
+	s.TimeToLive = &v
+	return s
+}
+
 // SetTitle sets the Title field's value.
 func (s *BaiduMessage) SetTitle(v string) *BaiduMessage {
 	s.Title = &v
@@ -7858,6 +8789,7 @@ func (s *CampaignEmailMessage) SetTitle(v string) *CampaignEmailMessage {
 	return s
 }
 
+// Campaign hook information.
 type CampaignHook struct {
 	_ struct{} `type:"structure"`
 
@@ -8256,6 +9188,127 @@ func (s *CampaignsResponse) SetNextToken(v string) *CampaignsResponse {
 	return s
 }
 
+// Base definition for channel response.
+type ChannelResponse struct {
+	_ struct{} `type:"structure"`
+
+	// Application id
+	ApplicationId *string `type:"string"`
+
+	// When was this segment created
+	CreationDate *string `type:"string"`
+
+	// If the channel is enabled for sending messages.
+	Enabled *bool `type:"boolean"`
+
+	// Not used. Retained for backwards compatibility.
+	HasCredential *bool `type:"boolean"`
+
+	// Channel ID. Not used, only for backwards compatibility.
+	Id *string `type:"string"`
+
+	// Is this channel archived
+	IsArchived *bool `type:"boolean"`
+
+	// Who made the last change
+	LastModifiedBy *string `type:"string"`
+
+	// Last date this was updated
+	LastModifiedDate *string `type:"string"`
+
+	// Version of channel
+	Version *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ChannelResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ChannelResponse) GoString() string {
+	return s.String()
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *ChannelResponse) SetApplicationId(v string) *ChannelResponse {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *ChannelResponse) SetCreationDate(v string) *ChannelResponse {
+	s.CreationDate = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *ChannelResponse) SetEnabled(v bool) *ChannelResponse {
+	s.Enabled = &v
+	return s
+}
+
+// SetHasCredential sets the HasCredential field's value.
+func (s *ChannelResponse) SetHasCredential(v bool) *ChannelResponse {
+	s.HasCredential = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *ChannelResponse) SetId(v string) *ChannelResponse {
+	s.Id = &v
+	return s
+}
+
+// SetIsArchived sets the IsArchived field's value.
+func (s *ChannelResponse) SetIsArchived(v bool) *ChannelResponse {
+	s.IsArchived = &v
+	return s
+}
+
+// SetLastModifiedBy sets the LastModifiedBy field's value.
+func (s *ChannelResponse) SetLastModifiedBy(v string) *ChannelResponse {
+	s.LastModifiedBy = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *ChannelResponse) SetLastModifiedDate(v string) *ChannelResponse {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *ChannelResponse) SetVersion(v int64) *ChannelResponse {
+	s.Version = &v
+	return s
+}
+
+// Get channels definition
+type ChannelsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// A map of channels, with the ChannelType as the key and the Channel as the
+	// value.
+	Channels map[string]*ChannelResponse `type:"map"`
+}
+
+// String returns the string representation
+func (s ChannelsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ChannelsResponse) GoString() string {
+	return s.String()
+}
+
+// SetChannels sets the Channels field's value.
+func (s *ChannelsResponse) SetChannels(v map[string]*ChannelResponse) *ChannelsResponse {
+	s.Channels = v
+	return s
+}
+
 type CreateAppInput struct {
 	_ struct{} `type:"structure" payload:"CreateApplicationRequest"`
 
@@ -8424,6 +9477,8 @@ type CreateExportJobInput struct {
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 
+	// Export job request.
+	//
 	// ExportJobRequest is a required field
 	ExportJobRequest *ExportJobRequest `type:"structure" required:"true"`
 }
@@ -8469,6 +9524,8 @@ func (s *CreateExportJobInput) SetExportJobRequest(v *ExportJobRequest) *CreateE
 type CreateExportJobOutput struct {
 	_ struct{} `type:"structure" payload:"ExportJobResponse"`
 
+	// Export job response.
+	//
 	// ExportJobResponse is a required field
 	ExportJobResponse *ExportJobResponse `type:"structure" required:"true"`
 }
@@ -8495,6 +9552,8 @@ type CreateImportJobInput struct {
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 
+	// Import job request.
+	//
 	// ImportJobRequest is a required field
 	ImportJobRequest *ImportJobRequest `type:"structure" required:"true"`
 }
@@ -8540,6 +9599,8 @@ func (s *CreateImportJobInput) SetImportJobRequest(v *ImportJobRequest) *CreateI
 type CreateImportJobOutput struct {
 	_ struct{} `type:"structure" payload:"ImportJobResponse"`
 
+	// Import job response.
+	//
 	// ImportJobResponse is a required field
 	ImportJobResponse *ImportJobResponse `type:"structure" required:"true"`
 }
@@ -8642,6 +9703,7 @@ type DefaultMessage struct {
 	// The message body of the notification, the email body or the text message.
 	Body *string `type:"string"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
 }
 
@@ -8691,6 +9753,7 @@ type DefaultPushNotificationMessage struct {
 	// can be used for Remote Configuration and Phone Home use cases.
 	SilentPush *bool `type:"boolean"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
 
 	// The message title that displays above the message on the user's device.
@@ -9390,8 +10453,6 @@ func (s *DeleteEndpointOutput) SetEndpointResponse(v *EndpointResponse) *DeleteE
 type DeleteEventStreamInput struct {
 	_ struct{} `type:"structure"`
 
-	// Application Id.
-	//
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 }
@@ -9645,7 +10706,81 @@ func (s *DeleteSmsChannelOutput) SetSMSChannelResponse(v *SMSChannelResponse) *D
 	return s
 }
 
-// The message configuration.
+type DeleteUserEndpointsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApplicationId is a required field
+	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
+
+	// UserId is a required field
+	UserId *string `location:"uri" locationName:"user-id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteUserEndpointsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteUserEndpointsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteUserEndpointsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteUserEndpointsInput"}
+	if s.ApplicationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.UserId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *DeleteUserEndpointsInput) SetApplicationId(v string) *DeleteUserEndpointsInput {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetUserId sets the UserId field's value.
+func (s *DeleteUserEndpointsInput) SetUserId(v string) *DeleteUserEndpointsInput {
+	s.UserId = &v
+	return s
+}
+
+type DeleteUserEndpointsOutput struct {
+	_ struct{} `type:"structure" payload:"EndpointsResponse"`
+
+	// List of endpoints
+	//
+	// EndpointsResponse is a required field
+	EndpointsResponse *EndpointsResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteUserEndpointsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteUserEndpointsOutput) GoString() string {
+	return s.String()
+}
+
+// SetEndpointsResponse sets the EndpointsResponse field's value.
+func (s *DeleteUserEndpointsOutput) SetEndpointsResponse(v *EndpointsResponse) *DeleteUserEndpointsOutput {
+	s.EndpointsResponse = v
+	return s
+}
+
+// Message definitions for the default message and any messages that are tailored
+// for specific channels.
 type DirectMessageConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -9792,7 +10927,7 @@ type EmailChannelResponse struct {
 	// The email address used to send emails from.
 	FromAddress *string `type:"string"`
 
-	// If the channel is registered with a credential for authentication.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Channel ID. Not used, only for backwards compatibility.
@@ -9809,6 +10944,9 @@ type EmailChannelResponse struct {
 
 	// Last date this was updated
 	LastModifiedDate *string `type:"string"`
+
+	// Messages per second that can be sent
+	MessagesPerSecond *int64 `type:"integer"`
 
 	// Platform type. Will be "EMAIL"
 	Platform *string `type:"string"`
@@ -9891,6 +11029,12 @@ func (s *EmailChannelResponse) SetLastModifiedDate(v string) *EmailChannelRespon
 	return s
 }
 
+// SetMessagesPerSecond sets the MessagesPerSecond field's value.
+func (s *EmailChannelResponse) SetMessagesPerSecond(v int64) *EmailChannelResponse {
+	s.MessagesPerSecond = &v
+	return s
+}
+
 // SetPlatform sets the Platform field's value.
 func (s *EmailChannelResponse) SetPlatform(v string) *EmailChannelResponse {
 	s.Platform = &v
@@ -9913,10 +11057,21 @@ func (s *EmailChannelResponse) SetVersion(v int64) *EmailChannelResponse {
 type EndpointBatchItem struct {
 	_ struct{} `type:"structure"`
 
-	// The address or token of the endpoint as provided by your push provider (e.g.
-	// DeviceToken or RegistrationId).
+	// The destination for messages that you send to this endpoint. The address
+	// varies by channel. For mobile push channels, use the token provided by the
+	// push notification service, such as the APNs device token or the FCM registration
+	// token. For the SMS channel, use a phone number in E.164 format, such as +1206XXX5550100.
+	// For the email channel, use an email address.
 	Address *string `type:"string"`
 
+	// Custom attributes that describe the endpoint by associating a name with an
+	// array of values. For example, an attribute named "interests" might have the
+	// values ["science", "politics", "travel"]. You can use these attributes as
+	// selection criteria when you create a segment of users to engage with a messaging
+	// campaign.The following characters are not recommended in attribute names:
+	// # : ? \ /. The Amazon Pinpoint console does not display attributes that include
+	// these characters in the name. This limitation does not apply to attribute
+	// values.
 	Attributes map[string][]*string `type:"map"`
 
 	// The channel type.Valid values: GCM | APNS | APNS_SANDBOX | APNS_VOIP | APNS_VOIP_SANDBOX
@@ -9929,8 +11084,7 @@ type EndpointBatchItem struct {
 	// The last time the endpoint was updated. Provided in ISO 8601 format.
 	EffectiveDate *string `type:"string"`
 
-	// The endpoint status. Can be either ACTIVE or INACTIVE. Will be set to INACTIVE
-	// if a delivery fails. Will be set to ACTIVE if the address is updated.
+	// Unused.
 	EndpointStatus *string `type:"string"`
 
 	// The unique Id for the Endpoint in the batch.
@@ -10230,6 +11384,9 @@ type EndpointMessageResult struct {
 	// Delivery status of message.
 	DeliveryStatus *string `type:"string" enum:"DeliveryStatus"`
 
+	// Unique message identifier associated with the message that was sent.
+	MessageId *string `type:"string"`
+
 	// Downstream service status code.
 	StatusCode *int64 `type:"integer"`
 
@@ -10262,6 +11419,12 @@ func (s *EndpointMessageResult) SetDeliveryStatus(v string) *EndpointMessageResu
 	return s
 }
 
+// SetMessageId sets the MessageId field's value.
+func (s *EndpointMessageResult) SetMessageId(v string) *EndpointMessageResult {
+	s.MessageId = &v
+	return s
+}
+
 // SetStatusCode sets the StatusCode field's value.
 func (s *EndpointMessageResult) SetStatusCode(v int64) *EndpointMessageResult {
 	s.StatusCode = &v
@@ -10284,10 +11447,21 @@ func (s *EndpointMessageResult) SetUpdatedToken(v string) *EndpointMessageResult
 type EndpointRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The address or token of the endpoint as provided by your push provider (e.g.
-	// DeviceToken or RegistrationId).
+	// The destination for messages that you send to this endpoint. The address
+	// varies by channel. For mobile push channels, use the token provided by the
+	// push notification service, such as the APNs device token or the FCM registration
+	// token. For the SMS channel, use a phone number in E.164 format, such as +1206XXX5550100.
+	// For the email channel, use an email address.
 	Address *string `type:"string"`
 
+	// Custom attributes that describe the endpoint by associating a name with an
+	// array of values. For example, an attribute named "interests" might have the
+	// values ["science", "politics", "travel"]. You can use these attributes as
+	// selection criteria when you create a segment of users to engage with a messaging
+	// campaign.The following characters are not recommended in attribute names:
+	// # : ? \ /. The Amazon Pinpoint console does not display attributes that include
+	// these characters in the name. This limitation does not apply to attribute
+	// values.
 	Attributes map[string][]*string `type:"map"`
 
 	// The channel type.Valid values: GCM | APNS | APNS_SANDBOX | APNS_VOIP | APNS_VOIP_SANDBOX
@@ -10300,8 +11474,7 @@ type EndpointRequest struct {
 	// The last time the endpoint was updated. Provided in ISO 8601 format.
 	EffectiveDate *string `type:"string"`
 
-	// The endpoint status. Can be either ACTIVE or INACTIVE. Will be set to INACTIVE
-	// if a delivery fails. Will be set to ACTIVE if the address is updated.
+	// Unused.
 	EndpointStatus *string `type:"string"`
 
 	// The endpoint location attributes.
@@ -10409,6 +11582,14 @@ type EndpointResponse struct {
 	// The ID of the application associated with the endpoint.
 	ApplicationId *string `type:"string"`
 
+	// Custom attributes that describe the endpoint by associating a name with an
+	// array of values. For example, an attribute named "interests" might have the
+	// values ["science", "politics", "travel"]. You can use these attributes as
+	// selection criteria when you create a segment of users to engage with a messaging
+	// campaign.The following characters are not recommended in attribute names:
+	// # : ? \ /. The Amazon Pinpoint console does not display attributes that include
+	// these characters in the name. This limitation does not apply to attribute
+	// values.
 	Attributes map[string][]*string `type:"map"`
 
 	// The channel type.Valid values: GCM | APNS | APNS_SANDBOX | APNS_VOIP | APNS_VOIP_SANDBOX
@@ -10430,8 +11611,7 @@ type EndpointResponse struct {
 	// The last time the endpoint was updated. Provided in ISO 8601 format.
 	EffectiveDate *string `type:"string"`
 
-	// The endpoint status. Can be either ACTIVE or INACTIVE. Will be set to INACTIVE
-	// if a delivery fails. Will be set to ACTIVE if the address is updated.
+	// Unused.
 	EndpointStatus *string `type:"string"`
 
 	// The unique ID that you assigned to the endpoint. The ID should be a globally
@@ -10573,6 +11753,9 @@ type EndpointSendConfiguration struct {
 	// the message.
 	RawContent *string `type:"string"`
 
+	// A map of substitution values for the message to be merged with the DefaultMessage's
+	// substitutions. Substitutions on this map take precedence over the all other
+	// substitutions.
 	Substitutions map[string][]*string `type:"map"`
 
 	// Title override. If specified will override default title if applicable.
@@ -10623,6 +11806,14 @@ func (s *EndpointSendConfiguration) SetTitleOverride(v string) *EndpointSendConf
 type EndpointUser struct {
 	_ struct{} `type:"structure"`
 
+	// Custom attributes that describe an end user by associating a name with an
+	// array of values. For example, an attribute named "interests" might have the
+	// values ["science", "politics", "travel"]. You can use these attributes as
+	// selection criteria when you create a segment of users to engage with a messaging
+	// campaign.The following characters are not recommended in attribute names:
+	// # : ? \ /. The Amazon Pinpoint console does not display attributes that include
+	// these characters in the name. This limitation does not apply to attribute
+	// values.
 	UserAttributes map[string][]*string `type:"map"`
 
 	// The unique ID of the user.
@@ -10648,6 +11839,30 @@ func (s *EndpointUser) SetUserAttributes(v map[string][]*string) *EndpointUser {
 // SetUserId sets the UserId field's value.
 func (s *EndpointUser) SetUserId(v string) *EndpointUser {
 	s.UserId = &v
+	return s
+}
+
+// List of endpoints
+type EndpointsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The list of endpoints.
+	Item []*EndpointResponse `type:"list"`
+}
+
+// String returns the string representation
+func (s EndpointsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndpointsResponse) GoString() string {
+	return s.String()
+}
+
+// SetItem sets the Item field's value.
+func (s *EndpointsResponse) SetItem(v []*EndpointResponse) *EndpointsResponse {
+	s.Item = v
 	return s
 }
 
@@ -10726,6 +11941,7 @@ func (s *EventStream) SetRoleArn(v string) *EventStream {
 	return s
 }
 
+// Export job request.
 type ExportJobRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -10739,9 +11955,12 @@ type ExportJobRequest struct {
 	// export endpoints to this location.
 	S3UrlPrefix *string `type:"string"`
 
-	// The ID of the segment to export endpoints from. If not present, all endpoints
-	// will be exported.
+	// The ID of the segment to export endpoints from. If not present, Amazon Pinpoint
+	// exports all of the endpoints that belong to the application.
 	SegmentId *string `type:"string"`
+
+	// The version of the segment to export if specified.
+	SegmentVersion *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -10772,6 +11991,13 @@ func (s *ExportJobRequest) SetSegmentId(v string) *ExportJobRequest {
 	return s
 }
 
+// SetSegmentVersion sets the SegmentVersion field's value.
+func (s *ExportJobRequest) SetSegmentVersion(v int64) *ExportJobRequest {
+	s.SegmentVersion = &v
+	return s
+}
+
+// Export job resource.
 type ExportJobResource struct {
 	_ struct{} `type:"structure"`
 
@@ -10785,9 +12011,12 @@ type ExportJobResource struct {
 	// export endpoints to this location.
 	S3UrlPrefix *string `type:"string"`
 
-	// The ID of the segment to export endpoints from. If not present all endpoints
-	// will be exported.
+	// The ID of the segment to export endpoints from. If not present, Amazon Pinpoint
+	// exports all of the endpoints that belong to the application.
 	SegmentId *string `type:"string"`
+
+	// The version of the segment to export if specified.
+	SegmentVersion *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -10818,6 +12047,13 @@ func (s *ExportJobResource) SetSegmentId(v string) *ExportJobResource {
 	return s
 }
 
+// SetSegmentVersion sets the SegmentVersion field's value.
+func (s *ExportJobResource) SetSegmentVersion(v int64) *ExportJobResource {
+	s.SegmentVersion = &v
+	return s
+}
+
+// Export job response.
 type ExportJobResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -10840,14 +12076,15 @@ type ExportJobResponse struct {
 	// The number of pieces that failed to be processed as of the time of the request.
 	FailedPieces *int64 `type:"integer"`
 
+	// Provides up to 100 of the first failed entries for the job, if any exist.
 	Failures []*string `type:"list"`
 
 	// The unique ID of the job.
 	Id *string `type:"string"`
 
-	// The status of the export job.Valid values: CREATED, INITIALIZING, PROCESSING,
-	// COMPLETING, COMPLETED, FAILING, FAILEDThe job status is FAILED if one or
-	// more pieces failed.
+	// The status of the job.Valid values: CREATED, INITIALIZING, PROCESSING, COMPLETING,
+	// COMPLETED, FAILING, FAILEDThe job status is FAILED if one or more pieces
+	// failed.
 	JobStatus *string `type:"string" enum:"JobStatus"`
 
 	// The number of endpoints that were not processed; for example, because of
@@ -11036,9 +12273,7 @@ type GCMChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// Indicates whether the channel is configured with FCM or GCM credentials.
-	// Amazon Pinpoint uses your credentials to authenticate push notifications
-	// with FCM or GCM. Provide your credentials by setting the ApiKey attribute.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Channel ID. Not used. Present only for backwards compatibility.
@@ -11204,6 +12439,7 @@ type GCMMessage struct {
 	// sound files must reside in /res/raw/
 	Sound *string `type:"string"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
 
 	// The length of time (in seconds) that FCM or GCM stores and attempts to deliver
@@ -11329,6 +12565,72 @@ func (s *GCMMessage) SetTitle(v string) *GCMMessage {
 // SetUrl sets the Url field's value.
 func (s *GCMMessage) SetUrl(v string) *GCMMessage {
 	s.Url = &v
+	return s
+}
+
+// GPS coordinates
+type GPSCoordinates struct {
+	_ struct{} `type:"structure"`
+
+	// Latitude
+	Latitude *float64 `type:"double"`
+
+	// Longitude
+	Longitude *float64 `type:"double"`
+}
+
+// String returns the string representation
+func (s GPSCoordinates) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GPSCoordinates) GoString() string {
+	return s.String()
+}
+
+// SetLatitude sets the Latitude field's value.
+func (s *GPSCoordinates) SetLatitude(v float64) *GPSCoordinates {
+	s.Latitude = &v
+	return s
+}
+
+// SetLongitude sets the Longitude field's value.
+func (s *GPSCoordinates) SetLongitude(v float64) *GPSCoordinates {
+	s.Longitude = &v
+	return s
+}
+
+// GPS point location dimension
+type GPSPointDimension struct {
+	_ struct{} `type:"structure"`
+
+	// Coordinate to measure distance from.
+	Coordinates *GPSCoordinates `type:"structure"`
+
+	// Range in kilometers from the coordinate.
+	RangeInKilometers *float64 `type:"double"`
+}
+
+// String returns the string representation
+func (s GPSPointDimension) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GPSPointDimension) GoString() string {
+	return s.String()
+}
+
+// SetCoordinates sets the Coordinates field's value.
+func (s *GPSPointDimension) SetCoordinates(v *GPSCoordinates) *GPSPointDimension {
+	s.Coordinates = v
+	return s
+}
+
+// SetRangeInKilometers sets the RangeInKilometers field's value.
+func (s *GPSPointDimension) SetRangeInKilometers(v float64) *GPSPointDimension {
+	s.RangeInKilometers = &v
 	return s
 }
 
@@ -12288,6 +13590,67 @@ func (s *GetCampaignsOutput) SetCampaignsResponse(v *CampaignsResponse) *GetCamp
 	return s
 }
 
+type GetChannelsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApplicationId is a required field
+	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetChannelsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetChannelsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetChannelsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetChannelsInput"}
+	if s.ApplicationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *GetChannelsInput) SetApplicationId(v string) *GetChannelsInput {
+	s.ApplicationId = &v
+	return s
+}
+
+type GetChannelsOutput struct {
+	_ struct{} `type:"structure" payload:"ChannelsResponse"`
+
+	// Get channels definition
+	//
+	// ChannelsResponse is a required field
+	ChannelsResponse *ChannelsResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetChannelsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetChannelsOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannelsResponse sets the ChannelsResponse field's value.
+func (s *GetChannelsOutput) SetChannelsResponse(v *ChannelsResponse) *GetChannelsOutput {
+	s.ChannelsResponse = v
+	return s
+}
+
 type GetEmailChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12425,8 +13788,6 @@ func (s *GetEndpointOutput) SetEndpointResponse(v *EndpointResponse) *GetEndpoin
 type GetEventStreamInput struct {
 	_ struct{} `type:"structure"`
 
-	// Application Id.
-	//
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 }
@@ -12536,6 +13897,8 @@ func (s *GetExportJobInput) SetJobId(v string) *GetExportJobInput {
 type GetExportJobOutput struct {
 	_ struct{} `type:"structure" payload:"ExportJobResponse"`
 
+	// Export job response.
+	//
 	// ExportJobResponse is a required field
 	ExportJobResponse *ExportJobResponse `type:"structure" required:"true"`
 }
@@ -12745,6 +14108,8 @@ func (s *GetImportJobInput) SetJobId(v string) *GetImportJobInput {
 type GetImportJobOutput struct {
 	_ struct{} `type:"structure" payload:"ImportJobResponse"`
 
+	// Import job response.
+	//
 	// ImportJobResponse is a required field
 	ImportJobResponse *ImportJobResponse `type:"structure" required:"true"`
 }
@@ -13405,6 +14770,80 @@ func (s *GetSmsChannelOutput) SetSMSChannelResponse(v *SMSChannelResponse) *GetS
 	return s
 }
 
+type GetUserEndpointsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApplicationId is a required field
+	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
+
+	// UserId is a required field
+	UserId *string `location:"uri" locationName:"user-id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetUserEndpointsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUserEndpointsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetUserEndpointsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetUserEndpointsInput"}
+	if s.ApplicationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.UserId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *GetUserEndpointsInput) SetApplicationId(v string) *GetUserEndpointsInput {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetUserId sets the UserId field's value.
+func (s *GetUserEndpointsInput) SetUserId(v string) *GetUserEndpointsInput {
+	s.UserId = &v
+	return s
+}
+
+type GetUserEndpointsOutput struct {
+	_ struct{} `type:"structure" payload:"EndpointsResponse"`
+
+	// List of endpoints
+	//
+	// EndpointsResponse is a required field
+	EndpointsResponse *EndpointsResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetUserEndpointsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUserEndpointsOutput) GoString() string {
+	return s.String()
+}
+
+// SetEndpointsResponse sets the EndpointsResponse field's value.
+func (s *GetUserEndpointsOutput) SetEndpointsResponse(v *EndpointsResponse) *GetUserEndpointsOutput {
+	s.EndpointsResponse = v
+	return s
+}
+
+// Import job request.
 type ImportJobRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -13502,6 +14941,7 @@ func (s *ImportJobRequest) SetSegmentName(v string) *ImportJobRequest {
 	return s
 }
 
+// Import job resource
 type ImportJobResource struct {
 	_ struct{} `type:"structure"`
 
@@ -13599,6 +15039,7 @@ func (s *ImportJobResource) SetSegmentName(v string) *ImportJobResource {
 	return s
 }
 
+// Import job response.
 type ImportJobResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -13621,6 +15062,7 @@ type ImportJobResponse struct {
 	// The number of pieces that have failed to import as of the time of the request.
 	FailedPieces *int64 `type:"integer"`
 
+	// Provides up to 100 of the first failed entries for the job, if any exist.
 	Failures []*string `type:"list"`
 
 	// The unique ID of the import job.
@@ -13768,6 +15210,7 @@ func (s *ImportJobsResponse) SetNextToken(v string) *ImportJobsResponse {
 	return s
 }
 
+// Message to send
 type Message struct {
 	_ struct{} `type:"structure"`
 
@@ -13806,6 +15249,14 @@ type Message struct {
 	// Indicates if the message should display on the users device.Silent pushes
 	// can be used for Remote Configuration and Phone Home use cases.
 	SilentPush *bool `type:"boolean"`
+
+	// This parameter specifies how long (in seconds) the message should be kept
+	// if the service is unable to deliver the notification the first time. If the
+	// value is 0, it treats the notification as if it expires immediately and does
+	// not store the notification or attempt to redeliver it. This value is converted
+	// to the expiration field when sent to the service. It only applies to APNs
+	// and GCM
+	TimeToLive *int64 `type:"integer"`
 
 	// The message title that displays above the message on the user's device.
 	Title *string `type:"string"`
@@ -13879,6 +15330,12 @@ func (s *Message) SetSilentPush(v bool) *Message {
 	return s
 }
 
+// SetTimeToLive sets the TimeToLive field's value.
+func (s *Message) SetTimeToLive(v int64) *Message {
+	s.TimeToLive = &v
+	return s
+}
+
 // SetTitle sets the Title field's value.
 func (s *Message) SetTitle(v string) *Message {
 	s.Title = &v
@@ -13895,7 +15352,7 @@ func (s *Message) SetUrl(v string) *Message {
 type MessageBody struct {
 	_ struct{} `type:"structure"`
 
-	// The error message returned from the API.
+	// The error message that's returned from the API.
 	Message *string `type:"string"`
 
 	// The unique message body ID.
@@ -14010,8 +15467,9 @@ func (s *MessageConfiguration) SetSMSMessage(v *CampaignSmsMessage) *MessageConf
 type MessageRequest struct {
 	_ struct{} `type:"structure"`
 
-	// A map of destination addresses, with the address as the key(Email address,
-	// phone number or push token) and the Address Configuration as the value.
+	// A map of key-value pairs, where each key is an address and each value is
+	// an AddressConfiguration object. An address can be a push notification token,
+	// a phone number, or an email address.
 	Addresses map[string]*AddressConfiguration `type:"map"`
 
 	// A map of custom attributes to attributes to be attached to the message. This
@@ -14019,8 +15477,10 @@ type MessageRequest struct {
 	// to the email/sms delivery receipt event attributes.
 	Context map[string]*string `type:"map"`
 
-	// A map of destination addresses, with the address as the key(Email address,
-	// phone number or push token) and the Address Configuration as the value.
+	// A map of key-value pairs, where each key is an endpoint ID and each value
+	// is an EndpointSendConfiguration object. Within an EndpointSendConfiguration
+	// object, you can tailor the message for an endpoint by specifying message
+	// overrides or substitutions.
 	Endpoints map[string]*EndpointSendConfiguration `type:"map"`
 
 	// Message configuration.
@@ -14122,6 +15582,9 @@ type MessageResult struct {
 	// Delivery status of message.
 	DeliveryStatus *string `type:"string" enum:"DeliveryStatus"`
 
+	// Unique message identifier associated with the message that was sent.
+	MessageId *string `type:"string"`
+
 	// Downstream service status code.
 	StatusCode *int64 `type:"integer"`
 
@@ -14148,6 +15611,12 @@ func (s *MessageResult) SetDeliveryStatus(v string) *MessageResult {
 	return s
 }
 
+// SetMessageId sets the MessageId field's value.
+func (s *MessageResult) SetMessageId(v string) *MessageResult {
+	s.MessageId = &v
+	return s
+}
+
 // SetStatusCode sets the StatusCode field's value.
 func (s *MessageResult) SetStatusCode(v int64) *MessageResult {
 	s.StatusCode = &v
@@ -14166,15 +15635,288 @@ func (s *MessageResult) SetUpdatedToken(v string) *MessageResult {
 	return s
 }
 
+// Custom metric dimension
+type MetricDimension struct {
+	_ struct{} `type:"structure"`
+
+	// GREATER_THAN | LESS_THAN | GREATER_THAN_OR_EQUAL | LESS_THAN_OR_EQUAL | EQUAL
+	ComparisonOperator *string `type:"string"`
+
+	// Value to be compared.
+	Value *float64 `type:"double"`
+}
+
+// String returns the string representation
+func (s MetricDimension) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricDimension) GoString() string {
+	return s.String()
+}
+
+// SetComparisonOperator sets the ComparisonOperator field's value.
+func (s *MetricDimension) SetComparisonOperator(v string) *MetricDimension {
+	s.ComparisonOperator = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *MetricDimension) SetValue(v float64) *MetricDimension {
+	s.Value = &v
+	return s
+}
+
+// Phone Number Information request.
+type NumberValidateRequest struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) The two-character ISO country code for the country where the phone
+	// number was originally registered.
+	IsoCountryCode *string `type:"string"`
+
+	// The phone number to get information about.
+	PhoneNumber *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NumberValidateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NumberValidateRequest) GoString() string {
+	return s.String()
+}
+
+// SetIsoCountryCode sets the IsoCountryCode field's value.
+func (s *NumberValidateRequest) SetIsoCountryCode(v string) *NumberValidateRequest {
+	s.IsoCountryCode = &v
+	return s
+}
+
+// SetPhoneNumber sets the PhoneNumber field's value.
+func (s *NumberValidateRequest) SetPhoneNumber(v string) *NumberValidateRequest {
+	s.PhoneNumber = &v
+	return s
+}
+
+// Phone Number Information response.
+type NumberValidateResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The carrier that the phone number is registered with.
+	Carrier *string `type:"string"`
+
+	// The city where the phone number was originally registered.
+	City *string `type:"string"`
+
+	// The cleansed (standardized) phone number in E.164 format.
+	CleansedPhoneNumberE164 *string `type:"string"`
+
+	// The cleansed phone number in national format.
+	CleansedPhoneNumberNational *string `type:"string"`
+
+	// The country where the phone number was originally registered.
+	Country *string `type:"string"`
+
+	// The two-character ISO country code for the country where the phone number
+	// was originally registered.
+	CountryCodeIso2 *string `type:"string"`
+
+	// The numeric country code for the country where the phone number was originally
+	// registered.
+	CountryCodeNumeric *string `type:"string"`
+
+	// The county where the phone number was originally registered.
+	County *string `type:"string"`
+
+	// The two-character ISO country code that was included in the request body.
+	OriginalCountryCodeIso2 *string `type:"string"`
+
+	// The phone number that you included in the request body.
+	OriginalPhoneNumber *string `type:"string"`
+
+	// A description of the phone type. Possible values include MOBILE, LANDLINE,
+	// VOIP, INVALID, and OTHER.
+	PhoneType *string `type:"string"`
+
+	// The phone type as an integer. Possible values include 0 (MOBILE), 1 (LANDLINE),
+	// 2 (VOIP), 3 (INVALID), and 4 (OTHER).
+	PhoneTypeCode *int64 `type:"integer"`
+
+	// The time zone for the location where the phone number was originally registered.
+	Timezone *string `type:"string"`
+
+	// The zip code for the location where the phone number was originally registered.
+	ZipCode *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NumberValidateResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NumberValidateResponse) GoString() string {
+	return s.String()
+}
+
+// SetCarrier sets the Carrier field's value.
+func (s *NumberValidateResponse) SetCarrier(v string) *NumberValidateResponse {
+	s.Carrier = &v
+	return s
+}
+
+// SetCity sets the City field's value.
+func (s *NumberValidateResponse) SetCity(v string) *NumberValidateResponse {
+	s.City = &v
+	return s
+}
+
+// SetCleansedPhoneNumberE164 sets the CleansedPhoneNumberE164 field's value.
+func (s *NumberValidateResponse) SetCleansedPhoneNumberE164(v string) *NumberValidateResponse {
+	s.CleansedPhoneNumberE164 = &v
+	return s
+}
+
+// SetCleansedPhoneNumberNational sets the CleansedPhoneNumberNational field's value.
+func (s *NumberValidateResponse) SetCleansedPhoneNumberNational(v string) *NumberValidateResponse {
+	s.CleansedPhoneNumberNational = &v
+	return s
+}
+
+// SetCountry sets the Country field's value.
+func (s *NumberValidateResponse) SetCountry(v string) *NumberValidateResponse {
+	s.Country = &v
+	return s
+}
+
+// SetCountryCodeIso2 sets the CountryCodeIso2 field's value.
+func (s *NumberValidateResponse) SetCountryCodeIso2(v string) *NumberValidateResponse {
+	s.CountryCodeIso2 = &v
+	return s
+}
+
+// SetCountryCodeNumeric sets the CountryCodeNumeric field's value.
+func (s *NumberValidateResponse) SetCountryCodeNumeric(v string) *NumberValidateResponse {
+	s.CountryCodeNumeric = &v
+	return s
+}
+
+// SetCounty sets the County field's value.
+func (s *NumberValidateResponse) SetCounty(v string) *NumberValidateResponse {
+	s.County = &v
+	return s
+}
+
+// SetOriginalCountryCodeIso2 sets the OriginalCountryCodeIso2 field's value.
+func (s *NumberValidateResponse) SetOriginalCountryCodeIso2(v string) *NumberValidateResponse {
+	s.OriginalCountryCodeIso2 = &v
+	return s
+}
+
+// SetOriginalPhoneNumber sets the OriginalPhoneNumber field's value.
+func (s *NumberValidateResponse) SetOriginalPhoneNumber(v string) *NumberValidateResponse {
+	s.OriginalPhoneNumber = &v
+	return s
+}
+
+// SetPhoneType sets the PhoneType field's value.
+func (s *NumberValidateResponse) SetPhoneType(v string) *NumberValidateResponse {
+	s.PhoneType = &v
+	return s
+}
+
+// SetPhoneTypeCode sets the PhoneTypeCode field's value.
+func (s *NumberValidateResponse) SetPhoneTypeCode(v int64) *NumberValidateResponse {
+	s.PhoneTypeCode = &v
+	return s
+}
+
+// SetTimezone sets the Timezone field's value.
+func (s *NumberValidateResponse) SetTimezone(v string) *NumberValidateResponse {
+	s.Timezone = &v
+	return s
+}
+
+// SetZipCode sets the ZipCode field's value.
+func (s *NumberValidateResponse) SetZipCode(v string) *NumberValidateResponse {
+	s.ZipCode = &v
+	return s
+}
+
+type PhoneNumberValidateInput struct {
+	_ struct{} `type:"structure" payload:"NumberValidateRequest"`
+
+	// Phone Number Information request.
+	//
+	// NumberValidateRequest is a required field
+	NumberValidateRequest *NumberValidateRequest `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PhoneNumberValidateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PhoneNumberValidateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PhoneNumberValidateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PhoneNumberValidateInput"}
+	if s.NumberValidateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberValidateRequest"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNumberValidateRequest sets the NumberValidateRequest field's value.
+func (s *PhoneNumberValidateInput) SetNumberValidateRequest(v *NumberValidateRequest) *PhoneNumberValidateInput {
+	s.NumberValidateRequest = v
+	return s
+}
+
+type PhoneNumberValidateOutput struct {
+	_ struct{} `type:"structure" payload:"NumberValidateResponse"`
+
+	// Phone Number Information response.
+	//
+	// NumberValidateResponse is a required field
+	NumberValidateResponse *NumberValidateResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PhoneNumberValidateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PhoneNumberValidateOutput) GoString() string {
+	return s.String()
+}
+
+// SetNumberValidateResponse sets the NumberValidateResponse field's value.
+func (s *PhoneNumberValidateOutput) SetNumberValidateResponse(v *NumberValidateResponse) *PhoneNumberValidateOutput {
+	s.NumberValidateResponse = v
+	return s
+}
+
 type PutEventStreamInput struct {
 	_ struct{} `type:"structure" payload:"WriteEventStream"`
 
-	// Application Id.
-	//
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 
-	// Write event stream wrapper.
+	// Request to save an EventStream.
 	//
 	// WriteEventStream is a required field
 	WriteEventStream *WriteEventStream `type:"structure" required:"true"`
@@ -14312,6 +16054,93 @@ func (s *RecencyDimension) SetRecencyType(v string) *RecencyDimension {
 	return s
 }
 
+type RemoveAttributesInput struct {
+	_ struct{} `type:"structure" payload:"UpdateAttributesRequest"`
+
+	// ApplicationId is a required field
+	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
+
+	// AttributeType is a required field
+	AttributeType *string `location:"uri" locationName:"attribute-type" type:"string" required:"true"`
+
+	// Update attributes request
+	//
+	// UpdateAttributesRequest is a required field
+	UpdateAttributesRequest *UpdateAttributesRequest `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s RemoveAttributesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveAttributesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemoveAttributesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemoveAttributesInput"}
+	if s.ApplicationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.AttributeType == nil {
+		invalidParams.Add(request.NewErrParamRequired("AttributeType"))
+	}
+	if s.UpdateAttributesRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("UpdateAttributesRequest"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *RemoveAttributesInput) SetApplicationId(v string) *RemoveAttributesInput {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetAttributeType sets the AttributeType field's value.
+func (s *RemoveAttributesInput) SetAttributeType(v string) *RemoveAttributesInput {
+	s.AttributeType = &v
+	return s
+}
+
+// SetUpdateAttributesRequest sets the UpdateAttributesRequest field's value.
+func (s *RemoveAttributesInput) SetUpdateAttributesRequest(v *UpdateAttributesRequest) *RemoveAttributesInput {
+	s.UpdateAttributesRequest = v
+	return s
+}
+
+type RemoveAttributesOutput struct {
+	_ struct{} `type:"structure" payload:"AttributesResource"`
+
+	// Attributes.
+	//
+	// AttributesResource is a required field
+	AttributesResource *AttributesResource `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s RemoveAttributesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveAttributesOutput) GoString() string {
+	return s.String()
+}
+
+// SetAttributesResource sets the AttributesResource field's value.
+func (s *RemoveAttributesOutput) SetAttributesResource(v *AttributesResource) *RemoveAttributesOutput {
+	s.AttributesResource = v
+	return s
+}
+
 // SMS Channel Request
 type SMSChannelRequest struct {
 	_ struct{} `type:"structure"`
@@ -14367,7 +16196,7 @@ type SMSChannelResponse struct {
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
 
-	// If the channel is registered with a credential for authentication.
+	// Not used. Retained for backwards compatibility.
 	HasCredential *bool `type:"boolean"`
 
 	// Channel ID. Not used, only for backwards compatibility.
@@ -14385,11 +16214,17 @@ type SMSChannelResponse struct {
 	// Platform type. Will be "SMS"
 	Platform *string `type:"string"`
 
+	// Promotional messages per second that can be sent
+	PromotionalMessagesPerSecond *int64 `type:"integer"`
+
 	// Sender identifier of your messages.
 	SenderId *string `type:"string"`
 
 	// The short code registered with the phone provider.
 	ShortCode *string `type:"string"`
+
+	// Transactional messages per second that can be sent
+	TransactionalMessagesPerSecond *int64 `type:"integer"`
 
 	// Version of channel
 	Version *int64 `type:"integer"`
@@ -14459,6 +16294,12 @@ func (s *SMSChannelResponse) SetPlatform(v string) *SMSChannelResponse {
 	return s
 }
 
+// SetPromotionalMessagesPerSecond sets the PromotionalMessagesPerSecond field's value.
+func (s *SMSChannelResponse) SetPromotionalMessagesPerSecond(v int64) *SMSChannelResponse {
+	s.PromotionalMessagesPerSecond = &v
+	return s
+}
+
 // SetSenderId sets the SenderId field's value.
 func (s *SMSChannelResponse) SetSenderId(v string) *SMSChannelResponse {
 	s.SenderId = &v
@@ -14468,6 +16309,12 @@ func (s *SMSChannelResponse) SetSenderId(v string) *SMSChannelResponse {
 // SetShortCode sets the ShortCode field's value.
 func (s *SMSChannelResponse) SetShortCode(v string) *SMSChannelResponse {
 	s.ShortCode = &v
+	return s
+}
+
+// SetTransactionalMessagesPerSecond sets the TransactionalMessagesPerSecond field's value.
+func (s *SMSChannelResponse) SetTransactionalMessagesPerSecond(v int64) *SMSChannelResponse {
+	s.TransactionalMessagesPerSecond = &v
 	return s
 }
 
@@ -14481,8 +16328,12 @@ func (s *SMSChannelResponse) SetVersion(v int64) *SMSChannelResponse {
 type SMSMessage struct {
 	_ struct{} `type:"structure"`
 
-	// The message body of the notification, the email body or the text message.
+	// The body of the SMS message.
 	Body *string `type:"string"`
+
+	// The SMS program name that you provided to AWS Support when you requested
+	// your dedicated number.
+	Keyword *string `type:"string"`
 
 	// Is this a transaction priority message or lower priority.
 	MessageType *string `type:"string" enum:"MessageType"`
@@ -14497,6 +16348,7 @@ type SMSMessage struct {
 	// Support for sender IDs varies by country or region.
 	SenderId *string `type:"string"`
 
+	// Default message substitutions. Can be overridden by individual address substitutions.
 	Substitutions map[string][]*string `type:"map"`
 }
 
@@ -14513,6 +16365,12 @@ func (s SMSMessage) GoString() string {
 // SetBody sets the Body field's value.
 func (s *SMSMessage) SetBody(v string) *SMSMessage {
 	s.Body = &v
+	return s
+}
+
+// SetKeyword sets the Keyword field's value.
+func (s *SMSMessage) SetKeyword(v string) *SMSMessage {
+	s.Keyword = &v
 	return s
 }
 
@@ -14721,6 +16579,9 @@ type SegmentDimensions struct {
 	// The segment location attributes.
 	Location *SegmentLocation `type:"structure"`
 
+	// Custom segment metrics.
+	Metrics map[string]*MetricDimension `type:"map"`
+
 	// Custom segment user attributes.
 	UserAttributes map[string]*AttributeDimension `type:"map"`
 }
@@ -14759,9 +16620,100 @@ func (s *SegmentDimensions) SetLocation(v *SegmentLocation) *SegmentDimensions {
 	return s
 }
 
+// SetMetrics sets the Metrics field's value.
+func (s *SegmentDimensions) SetMetrics(v map[string]*MetricDimension) *SegmentDimensions {
+	s.Metrics = v
+	return s
+}
+
 // SetUserAttributes sets the UserAttributes field's value.
 func (s *SegmentDimensions) SetUserAttributes(v map[string]*AttributeDimension) *SegmentDimensions {
 	s.UserAttributes = v
+	return s
+}
+
+// Segment group definition.
+type SegmentGroup struct {
+	_ struct{} `type:"structure"`
+
+	// List of dimensions to include or exclude.
+	Dimensions []*SegmentDimensions `type:"list"`
+
+	// Segments that define the source of this segment. Currently a maximum of 1
+	// import segment is supported.
+	SourceSegments []*SegmentReference `type:"list"`
+
+	// Include or exclude the source.
+	SourceType *string `type:"string" enum:"SourceType"`
+
+	// How should the dimensions be applied for the result
+	Type *string `type:"string" enum:"Type"`
+}
+
+// String returns the string representation
+func (s SegmentGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SegmentGroup) GoString() string {
+	return s.String()
+}
+
+// SetDimensions sets the Dimensions field's value.
+func (s *SegmentGroup) SetDimensions(v []*SegmentDimensions) *SegmentGroup {
+	s.Dimensions = v
+	return s
+}
+
+// SetSourceSegments sets the SourceSegments field's value.
+func (s *SegmentGroup) SetSourceSegments(v []*SegmentReference) *SegmentGroup {
+	s.SourceSegments = v
+	return s
+}
+
+// SetSourceType sets the SourceType field's value.
+func (s *SegmentGroup) SetSourceType(v string) *SegmentGroup {
+	s.SourceType = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *SegmentGroup) SetType(v string) *SegmentGroup {
+	s.Type = &v
+	return s
+}
+
+// Segment group definition.
+type SegmentGroupList struct {
+	_ struct{} `type:"structure"`
+
+	// List of dimension groups to evaluate.
+	Groups []*SegmentGroup `type:"list"`
+
+	// How should the groups be applied for the result
+	Include *string `type:"string" enum:"Include"`
+}
+
+// String returns the string representation
+func (s SegmentGroupList) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SegmentGroupList) GoString() string {
+	return s.String()
+}
+
+// SetGroups sets the Groups field's value.
+func (s *SegmentGroupList) SetGroups(v []*SegmentGroup) *SegmentGroupList {
+	s.Groups = v
+	return s
+}
+
+// SetInclude sets the Include field's value.
+func (s *SegmentGroupList) SetInclude(v string) *SegmentGroupList {
+	s.Include = &v
 	return s
 }
 
@@ -14846,6 +16798,9 @@ type SegmentLocation struct {
 
 	// The country filter according to ISO 3166-1 Alpha-2 codes.
 	Country *SetDimension `type:"structure"`
+
+	// The GPS Point dimension.
+	GPSPoint *GPSPointDimension `type:"structure"`
 }
 
 // String returns the string representation
@@ -14861,6 +16816,45 @@ func (s SegmentLocation) GoString() string {
 // SetCountry sets the Country field's value.
 func (s *SegmentLocation) SetCountry(v *SetDimension) *SegmentLocation {
 	s.Country = v
+	return s
+}
+
+// SetGPSPoint sets the GPSPoint field's value.
+func (s *SegmentLocation) SetGPSPoint(v *GPSPointDimension) *SegmentLocation {
+	s.GPSPoint = v
+	return s
+}
+
+// Segment reference.
+type SegmentReference struct {
+	_ struct{} `type:"structure"`
+
+	// Segment Id.
+	Id *string `type:"string"`
+
+	// If specified contains a specific version of the segment included.
+	Version *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s SegmentReference) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SegmentReference) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *SegmentReference) SetId(v string) *SegmentReference {
+	s.Id = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *SegmentReference) SetVersion(v int64) *SegmentReference {
+	s.Version = &v
 	return s
 }
 
@@ -14888,6 +16882,10 @@ type SegmentResponse struct {
 
 	// The name of segment
 	Name *string `type:"string"`
+
+	// Segment definition groups. We currently only support one. If specified Dimensions
+	// must be empty.
+	SegmentGroups *SegmentGroupList `type:"structure"`
 
 	// The segment type:DIMENSIONAL - A dynamic segment built from selection criteria
 	// based on endpoint data reported by your app. You create this type of segment
@@ -14951,6 +16949,12 @@ func (s *SegmentResponse) SetLastModifiedDate(v string) *SegmentResponse {
 // SetName sets the Name field's value.
 func (s *SegmentResponse) SetName(v string) *SegmentResponse {
 	s.Name = &v
+	return s
+}
+
+// SetSegmentGroups sets the SegmentGroups field's value.
+func (s *SegmentResponse) SetSegmentGroups(v *SegmentGroupList) *SegmentResponse {
+	s.SegmentGroups = v
 	return s
 }
 
@@ -15079,16 +17083,19 @@ func (s *SendMessagesOutput) SetMessageResponse(v *MessageResponse) *SendMessage
 type SendUsersMessageRequest struct {
 	_ struct{} `type:"structure"`
 
-	// A map of custom attributes to attributes to be attached to the message. This
-	// payload is added to the push notification's 'data.pinpoint' object or added
-	// to the email/sms delivery receipt event attributes.
+	// A map of custom attribute-value pairs. Amazon Pinpoint adds these attributes
+	// to the data.pinpoint object in the body of the push notification payload.
+	// Amazon Pinpoint also provides these attributes in the events that it generates
+	// for users-messages deliveries.
 	Context map[string]*string `type:"map"`
 
-	// Message configuration.
+	// Message definitions for the default message and any messages that are tailored
+	// for specific channels.
 	MessageConfiguration *DirectMessageConfiguration `type:"structure"`
 
-	// A map of destination endpoints, with the EndpointId as the key Endpoint Message
-	// Configuration as the value.
+	// A map that associates user IDs with EndpointSendConfiguration objects. Within
+	// an EndpointSendConfiguration object, you can tailor the message for a user
+	// by specifying message overrides or substitutions.
 	Users map[string]*EndpointSendConfiguration `type:"map"`
 }
 
@@ -15124,13 +17131,16 @@ func (s *SendUsersMessageRequest) SetUsers(v map[string]*EndpointSendConfigurati
 type SendUsersMessageResponse struct {
 	_ struct{} `type:"structure"`
 
-	// Application id of the message.
+	// The unique ID of the Amazon Pinpoint project used to send the message.
 	ApplicationId *string `type:"string"`
 
-	// Original request Id for which this message was delivered.
+	// The unique ID assigned to the users-messages request.
 	RequestId *string `type:"string"`
 
-	// A map containing of UserId to Map of EndpointId to Endpoint Message Result.
+	// An object that shows the endpoints that were messaged for each user. The
+	// object provides a list of user IDs. For each user ID, it provides the endpoint
+	// IDs that were messaged. For each endpoint ID, it provides an EndpointMessageResult
+	// object.
 	Result map[string]map[string]*EndpointMessageResult `type:"map"`
 }
 
@@ -15246,6 +17256,9 @@ type SetDimension struct {
 	// from the segment.
 	DimensionType *string `type:"string" enum:"DimensionType"`
 
+	// The criteria values for the segment dimension. Endpoints with matching attribute
+	// values are included or excluded from the segment, depending on the setting
+	// for Type.
 	Values []*string `type:"list"`
 }
 
@@ -15796,6 +17809,30 @@ func (s UpdateApplicationSettingsOutput) GoString() string {
 // SetApplicationSettingsResource sets the ApplicationSettingsResource field's value.
 func (s *UpdateApplicationSettingsOutput) SetApplicationSettingsResource(v *ApplicationSettingsResource) *UpdateApplicationSettingsOutput {
 	s.ApplicationSettingsResource = v
+	return s
+}
+
+// Update attributes request
+type UpdateAttributesRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The GLOB wildcard for removing the attributes in the application
+	Blacklist []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateAttributesRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAttributesRequest) GoString() string {
+	return s.String()
+}
+
+// SetBlacklist sets the Blacklist field's value.
+func (s *UpdateAttributesRequest) SetBlacklist(v []*string) *UpdateAttributesRequest {
+	s.Blacklist = v
 	return s
 }
 
@@ -16442,6 +18479,9 @@ type WriteApplicationSettingsRequest struct {
 	// Default campaign hook information.
 	CampaignHook *CampaignHook `type:"structure"`
 
+	// The CloudWatchMetrics settings for the app.
+	CloudWatchMetricsEnabled *bool `type:"boolean"`
+
 	// The default campaign limits for the app. These limits apply to each campaign
 	// for the app, unless the campaign overrides the default with limits of its
 	// own.
@@ -16466,6 +18506,12 @@ func (s WriteApplicationSettingsRequest) GoString() string {
 // SetCampaignHook sets the CampaignHook field's value.
 func (s *WriteApplicationSettingsRequest) SetCampaignHook(v *CampaignHook) *WriteApplicationSettingsRequest {
 	s.CampaignHook = v
+	return s
+}
+
+// SetCloudWatchMetricsEnabled sets the CloudWatchMetricsEnabled field's value.
+func (s *WriteApplicationSettingsRequest) SetCloudWatchMetricsEnabled(v bool) *WriteApplicationSettingsRequest {
+	s.CloudWatchMetricsEnabled = &v
 	return s
 }
 
@@ -16660,6 +18706,10 @@ type WriteSegmentRequest struct {
 
 	// The name of segment
 	Name *string `type:"string"`
+
+	// Segment definition groups. We currently only support one. If specified Dimensions
+	// must be empty.
+	SegmentGroups *SegmentGroupList `type:"structure"`
 }
 
 // String returns the string representation
@@ -16681,6 +18731,12 @@ func (s *WriteSegmentRequest) SetDimensions(v *SegmentDimensions) *WriteSegmentR
 // SetName sets the Name field's value.
 func (s *WriteSegmentRequest) SetName(v string) *WriteSegmentRequest {
 	s.Name = &v
+	return s
+}
+
+// SetSegmentGroups sets the SegmentGroups field's value.
+func (s *WriteSegmentRequest) SetSegmentGroups(v *SegmentGroupList) *WriteSegmentRequest {
+	s.SegmentGroups = v
 	return s
 }
 
@@ -16778,6 +18834,9 @@ const (
 
 	// CampaignStatusPaused is a CampaignStatus enum value
 	CampaignStatusPaused = "PAUSED"
+
+	// CampaignStatusDeleted is a CampaignStatus enum value
+	CampaignStatusDeleted = "DELETED"
 )
 
 const (
@@ -16883,6 +18942,17 @@ const (
 )
 
 const (
+	// IncludeAll is a Include enum value
+	IncludeAll = "ALL"
+
+	// IncludeAny is a Include enum value
+	IncludeAny = "ANY"
+
+	// IncludeNone is a Include enum value
+	IncludeNone = "NONE"
+)
+
+const (
 	// JobStatusCreated is a JobStatus enum value
 	JobStatusCreated = "CREATED"
 
@@ -16935,4 +19005,23 @@ const (
 
 	// SegmentTypeImport is a SegmentType enum value
 	SegmentTypeImport = "IMPORT"
+)
+
+const (
+	// SourceTypeAll is a SourceType enum value
+	SourceTypeAll = "ALL"
+
+	// SourceTypeAny is a SourceType enum value
+	SourceTypeAny = "ANY"
+)
+
+const (
+	// TypeAll is a Type enum value
+	TypeAll = "ALL"
+
+	// TypeAny is a Type enum value
+	TypeAny = "ANY"
+
+	// TypeNone is a Type enum value
+	TypeNone = "NONE"
 )
