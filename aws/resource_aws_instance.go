@@ -280,6 +280,20 @@ func resourceAwsInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"cpu_core_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"cpu_threads_per_core": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"tags": tagsSchema(),
 
 			"volume_tags": tagsSchemaComputed(),
@@ -505,6 +519,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:                          instanceOpts.SubnetID,
 		UserData:                          instanceOpts.UserData64,
 		CreditSpecification:               instanceOpts.CreditSpecification,
+		CpuOptions:                        instanceOpts.CpuOptions,
 	}
 
 	_, ipv6CountOk := d.GetOk("ipv6_address_count")
@@ -670,6 +685,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
+	}
+
+	if instance.CpuOptions != nil {
+		d.Set("cpu_core_count", instance.CpuOptions.CoreCount)
+		d.Set("cpu_threads_per_core", instance.CpuOptions.ThreadsPerCore)
 	}
 
 	d.Set("ami", instance.ImageId)
@@ -1688,6 +1708,7 @@ type awsInstanceOpts struct {
 	SubnetID                          *string
 	UserData64                        *string
 	CreditSpecification               *ec2.CreditSpecificationRequest
+	CpuOptions                        *ec2.CpuOptionsRequest
 }
 
 func buildAwsInstanceOpts(
@@ -1753,6 +1774,17 @@ func buildAwsInstanceOpts(
 
 	if v := d.Get("tenancy").(string); v != "" {
 		opts.Placement.Tenancy = aws.String(v)
+	}
+
+	if v := d.Get("cpu_core_count").(int); v > 0 {
+		tc := d.Get("cpu_threads_per_core").(int)
+		if tc < 0 {
+			tc = 2
+		}
+		opts.CpuOptions = &ec2.CpuOptionsRequest{
+			CoreCount:      aws.Int64(int64(v)),
+			ThreadsPerCore: aws.Int64(int64(tc)),
+		}
 	}
 
 	var groups []*string

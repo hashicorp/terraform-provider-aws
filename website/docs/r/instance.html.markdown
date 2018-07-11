@@ -54,6 +54,11 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The AZ to start the instance in.
 * `placement_group` - (Optional) The Placement Group to start the instance in.
 * `tenancy` - (Optional) The tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
+* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values), specifying this option for non supported instance types throws an EC2 error.
+* `cpu_threads_per_core` - (Optional) This option has no effect unless `cpu_core_count` is also set.  Setting this to 1 will disable hyperthreading, otherwise it defaults to 2 if not set, see [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
+
+-> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resouc to be recreated.
+
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
      Note that if this is not set on an instance type that is optimized by default then
      this will show as disabled but if the instance type is optimized by default then
