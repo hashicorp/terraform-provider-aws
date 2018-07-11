@@ -1698,7 +1698,7 @@ func TestInstanceTenancySchema(t *testing.T) {
 func TestInstanceCpuCoreCountSchema(t *testing.T) {
 	actualSchema := resourceAwsInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeString,
+		Type:     schema.TypeInt,
 		Optional: true,
 		Computed: true,
 		ForceNew: true,
@@ -1714,7 +1714,7 @@ func TestInstanceCpuCoreCountSchema(t *testing.T) {
 func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
 	actualSchema := resourceAwsInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeString,
+		Type:     schema.TypeInt,
 		Optional: true,
 		Computed: true,
 		ForceNew: true,
