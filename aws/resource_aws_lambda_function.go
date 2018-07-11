@@ -104,6 +104,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
 					lambda.RuntimeDotnetcore10,
 					lambda.RuntimeDotnetcore20,
+					lambda.RuntimeDotnetcore21,
 					lambda.RuntimeGo1X,
 					lambda.RuntimeJava8,
 					lambda.RuntimeNodejs43,
