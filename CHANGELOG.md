@@ -1,4 +1,9 @@
 ## 1.28.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_glue_crawler: Prevent error when deleted outside Terraform [GH-5158]
+
 ## 1.27.0 (July 11, 2018)
 
 NOTES:
