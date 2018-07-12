@@ -236,6 +236,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"report_build_status": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 				Required: true,
@@ -508,17 +512,19 @@ func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
 		data := configRaw.(map[string]interface{})
 
 		sourceType := data["type"].(string)
-		location := data["location"].(string)
-		buildspec := data["buildspec"].(string)
-		gitCloneDepth := aws.Int64(int64(data["git_clone_depth"].(int)))
-		insecureSsl := aws.Bool(data["insecure_ssl"].(bool))
 
 		projectSource = codebuild.ProjectSource{
-			Type:          &sourceType,
-			Location:      &location,
-			Buildspec:     &buildspec,
-			GitCloneDepth: gitCloneDepth,
-			InsecureSsl:   insecureSsl,
+			Buildspec:     aws.String(data["buildspec"].(string)),
+			GitCloneDepth: aws.Int64(int64(data["git_clone_depth"].(int))),
+			InsecureSsl:   aws.Bool(data["insecure_ssl"].(bool)),
+			Location:      aws.String(data["location"].(string)),
+			Type:          aws.String(sourceType),
+		}
+
+		// Only valid for GITHUB source type, e.g.
+		// InvalidInputException: Source type GITHUB_ENTERPRISE does not support ReportBuildStatus
+		if sourceType == codebuild.SourceTypeGithub {
+			projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
 		}
 
 		if v, ok := data["auth"]; ok {
@@ -764,28 +770,17 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 
 func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interface{} {
 	l := make([]interface{}, 1)
-	m := map[string]interface{}{}
-
-	m["type"] = *source.Type
+	m := map[string]interface{}{
+		"buildspec":           aws.StringValue(source.Buildspec),
+		"location":            aws.StringValue(source.Location),
+		"git_clone_depth":     int(aws.Int64Value(source.GitCloneDepth)),
+		"insecure_ssl":        aws.BoolValue(source.InsecureSsl),
+		"report_build_status": aws.BoolValue(source.ReportBuildStatus),
+		"type":                aws.StringValue(source.Type),
+	}
 
 	if source.Auth != nil {
 		m["auth"] = schema.NewSet(resourceAwsCodeBuildProjectSourceAuthHash, []interface{}{sourceAuthToMap(source.Auth)})
-	}
-
-	if source.Buildspec != nil {
-		m["buildspec"] = *source.Buildspec
-	}
-
-	if source.Location != nil {
-		m["location"] = *source.Location
-	}
-
-	if source.GitCloneDepth != nil {
-		m["git_clone_depth"] = *source.GitCloneDepth
-	}
-
-	if source.InsecureSsl != nil {
-		m["insecure_ssl"] = *source.InsecureSsl
 	}
 
 	l[0] = m
@@ -860,6 +855,9 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
 	}
 	if v, ok := m["insecure_ssl"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
+	}
+	if v, ok := m["report_build_status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
 	}
 
