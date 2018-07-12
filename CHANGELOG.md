@@ -1,5 +1,9 @@
 ## 1.28.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Add `report_build_status` argument under `source` (support report build status for GitHub source type) [GH-5156]
+
 BUG FIXES:
 
 * resource/aws_glue_crawler: Prevent error when deleted outside Terraform [GH-5158]
