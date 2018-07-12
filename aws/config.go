@@ -246,11 +246,6 @@ func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 	return c.dynamodbconn
 }
 
-func (c *AWSClient) IsGovCloud() bool {
-	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
-	return isGovCloud
-}
-
 func (c *AWSClient) IsChinaCloud() bool {
 	_, isChinaCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsCnPartition()}, c.region)
 	return isChinaCloud
