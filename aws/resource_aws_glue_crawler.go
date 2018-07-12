@@ -427,5 +427,11 @@ func resourceAwsGlueCrawlerExists(d *schema.ResourceData, meta interface{}) (boo
 	}
 
 	_, err := glueConn.GetCrawler(input)
-	return err == nil, err
+	if err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
