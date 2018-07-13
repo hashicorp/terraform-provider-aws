@@ -417,32 +417,45 @@ func (c *Config) Client() (interface{}, error) {
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
 
-	// These two services need to be set up early so we can check on AccountID
+	// Beyond verifying credentials (if enabled), we use the next set of logic
+	// to determine two pieces of information required for manually assembling
+	// resource ARNs when they are not available in the service API:
+	//  * client.accountid
+	//  * client.partition
 	client.iamconn = iam.New(awsIamSess)
 	client.stsconn = sts.New(awsStsSess)
 
+	if c.AssumeRoleARN != "" {
+		client.accountid, client.partition, _ = parseAccountInformationFromARN(c.AssumeRoleARN)
+	}
+
+	// Validate credentials early and fail before we do any graph walking.
 	if !c.SkipCredsValidation {
-		err = c.ValidateCredentials(client.stsconn)
+		var err error
+		client.accountid, client.partition, err = GetAccountInformationFromSTSGetCallerIdentity(client.stsconn)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error validating provider credentials: %s", err)
 		}
 	}
 
-	// Infer AWS partition from configured region
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
-		client.partition = partition.ID()
-	}
-
-	if !c.SkipRequestingAccountId {
-		accountID, err := GetAccountID(client.iamconn, client.stsconn, cp.ProviderName)
-		if err == nil {
-			client.accountid = accountID
+	if client.accountid == "" && !c.SkipRequestingAccountId {
+		var err error
+		client.accountid, client.partition, err = GetAccountInformation(client.iamconn, client.stsconn, cp.ProviderName)
+		if err != nil {
+			return nil, fmt.Errorf("Failed getting account information via all available methods. Errors: %s", err)
 		}
 	}
 
 	authErr := c.ValidateAccountId(client.accountid)
 	if authErr != nil {
 		return nil, authErr
+	}
+
+	// Infer AWS partition from configured region if we still need it
+	if client.partition == "" {
+		if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
+			client.partition = partition.ID()
+		}
 	}
 
 	client.ec2conn = ec2.New(awsEc2Sess)
@@ -611,12 +624,6 @@ func (c *Config) ValidateRegion() error {
 	}
 
 	return fmt.Errorf("Not a valid region: %s", c.Region)
-}
-
-// Validate credentials early and fail before we do any graph walking.
-func (c *Config) ValidateCredentials(stsconn *sts.STS) error {
-	_, err := stsconn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	return err
 }
 
 // ValidateAccountId returns a context-specific error if the configured account
