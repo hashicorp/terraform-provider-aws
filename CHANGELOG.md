@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_log_group: Allow `tags` handling in AWS GovCloud (US) and AWS China [GH-5175]
 * resource/aws_codebuild_project: Add `report_build_status` argument under `source` (support report build status for GitHub source type) [GH-5156]
 
 BUG FIXES:
