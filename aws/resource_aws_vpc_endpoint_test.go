@@ -135,7 +135,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "cidr_blocks.#", "0"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "vpc_endpoint_type", "Interface"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "private_dns_enabled", "true"),
 				),
@@ -438,7 +438,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
-  cidr_block = "10.0.0.0/17"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
@@ -447,10 +447,19 @@ resource "aws_subnet" "sn1" {
 
 resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
-  cidr_block = "10.0.128.0/17"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
+  }
+}
+
+resource "aws_subnet" "sn3" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
+  availability_zone = "${data.aws_availability_zones.available.names[2]}"
+  tags {
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-3"
   }
 }
 
@@ -488,7 +497,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
-  cidr_block = "10.0.0.0/17"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
@@ -497,10 +506,19 @@ resource "aws_subnet" "sn1" {
 
 resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
-  cidr_block = "10.0.128.0/17"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
+  }
+}
+
+resource "aws_subnet" "sn3" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
+  availability_zone = "${data.aws_availability_zones.available.names[2]}"
+  tags {
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-3"
   }
 }
 
@@ -516,7 +534,7 @@ resource "aws_vpc_endpoint" "ec2" {
   vpc_id = "${aws_vpc.foo.id}"
   service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
-  subnet_ids = ["${aws_subnet.sn1.id}", "${aws_subnet.sn2.id}"]
+  subnet_ids = ["${aws_subnet.sn1.id}", "${aws_subnet.sn2.id}", "${aws_subnet.sn3.id}"]
   security_group_ids = ["${aws_security_group.sg1.id}"]
   private_dns_enabled = true
 }

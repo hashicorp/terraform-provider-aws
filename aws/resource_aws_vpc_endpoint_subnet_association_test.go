@@ -197,7 +197,7 @@ resource "aws_subnet" "sn" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, count.index)}"
   tags {
-		Name = "${format("tf-acc-vpc-endpoint-subnet-association-%d", count.index + 1)}"
+    Name = "${format("tf-acc-vpc-endpoint-subnet-association-%d", count.index + 1)}"
   }
 }
 
