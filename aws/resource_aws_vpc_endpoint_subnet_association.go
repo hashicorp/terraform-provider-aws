@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -52,10 +53,25 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 		return err
 	}
 
-	_, err = conn.ModifyVpcEndpoint(&ec2.ModifyVpcEndpointInput{
-		VpcEndpointId: aws.String(endpointId),
-		AddSubnetIds:  aws.StringSlice([]string{snId}),
-	})
+	// See https://github.com/terraform-providers/terraform-provider-aws/issues/3382.
+	// Prevent concurrent subnet association requests and delay between requests.
+	mk := "vpc_endpoint_subnet_association_" + endpointId
+	awsMutexKV.Lock(mk)
+	defer awsMutexKV.Unlock(mk)
+
+	c := &resource.StateChangeConf{
+		Delay:   1 * time.Minute,
+		Timeout: 3 * time.Minute,
+		Target:  []string{"ok"},
+		Refresh: func() (interface{}, string, error) {
+			res, err := conn.ModifyVpcEndpoint(&ec2.ModifyVpcEndpointInput{
+				VpcEndpointId: aws.String(endpointId),
+				AddSubnetIds:  aws.StringSlice([]string{snId}),
+			})
+			return res, "ok", err
+		},
+	}
+	_, err = c.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error creating Vpc Endpoint/Subnet association: %s", err)
 	}
