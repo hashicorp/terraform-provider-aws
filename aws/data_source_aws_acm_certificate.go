@@ -66,7 +66,8 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error listing certificates: %q", err)
+		log.Printf("[DEBUG] No certificate for domain %s found in this region", target)
+		return nil
 	}
 
 	if len(arns) == 0 {
