@@ -24,7 +24,7 @@ resource "aws_ses_domain_identity" "example" {
 }
 
 resource "aws_route53_record" "example_amazonses_verification_record" {
-  zone_id = "${aws_route53_zone.example.id}"
+  zone_id = "${aws_route53_zone.example.zone_id}"
   name    = "_amazonses.${aws_ses_domain_identity.example.id}"
   type    = "TXT"
   ttl     = "600"
@@ -46,7 +46,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The domain name of the domain identity.
 * `arn` - The ARN of the domain identity.

@@ -288,10 +288,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	// reuse db_instance refresh func
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating", "backing-up", "modifying",
-			"configuring-enhanced-monitoring", "maintenance",
-			"rebooting", "renaming", "resetting-master-credentials",
-			"starting", "upgrading"},
+		Pending:    resourceAwsRdsClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -492,10 +489,7 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 		// reuse db_instance refresh func
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"creating", "backing-up", "modifying",
-				"configuring-enhanced-monitoring", "maintenance",
-				"rebooting", "renaming", "resetting-master-credentials",
-				"starting", "upgrading"},
+			Pending:    resourceAwsRdsClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
 			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
@@ -540,7 +534,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	// re-uses db_instance refresh func
 	log.Println("[INFO] Waiting for RDS Cluster Instance to be destroyed")
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"modifying", "deleting"},
+		Pending:    resourceAwsRdsClusterInstanceDeletePendingStates,
 		Target:     []string{},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
@@ -554,4 +548,24 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 
 	return nil
 
+}
+
+var resourceAwsRdsClusterInstanceCreateUpdatePendingStates = []string{
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
+	"creating",
+	"maintenance",
+	"modifying",
+	"rebooting",
+	"renaming",
+	"resetting-master-credentials",
+	"starting",
+	"upgrading",
+}
+
+var resourceAwsRdsClusterInstanceDeletePendingStates = []string{
+	"configuring-log-exports",
+	"modifying",
+	"deleting",
 }

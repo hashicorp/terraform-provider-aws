@@ -250,6 +250,8 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						"aws_db_parameter_group.bar", "parameter.2478663599.value", "utf8"),
 					resource.TestCheckResourceAttr(
 						"aws_db_parameter_group.bar", "tags.%", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_db_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),
 			},
 			resource.TestStep{
@@ -285,6 +287,8 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						"aws_db_parameter_group.bar", "parameter.2478663599.value", "utf8"),
 					resource.TestCheckResourceAttr(
 						"aws_db_parameter_group.bar", "tags.%", "2"),
+					resource.TestMatchResourceAttr(
+						"aws_db_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),
 			},
 		},

@@ -12,13 +12,35 @@ import (
 )
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
+	rName := acctest.RandString(5) + ".example.com"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(acctest.RandString(5)),
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
+	rName := acctest.RandString(64-len("example.com")) + ".example.com"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
@@ -73,7 +95,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "tf-sd-%s.terraform.local"
+  name = "%s"
   description = "test"
   vpc = "${aws_vpc.test.id}"
 }

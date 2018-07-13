@@ -91,12 +91,12 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			"request_templates": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"request_parameters": {
 				Type:          schema.TypeMap,
-				Elem:          schema.TypeString,
+				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"request_parameters_in_json"},
 			},

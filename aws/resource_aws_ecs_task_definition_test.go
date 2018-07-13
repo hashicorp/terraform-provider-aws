@@ -280,31 +280,6 @@ func testAccCheckAWSTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) reso
 		return nil
 	}
 }
-func TestValidateAwsEcsTaskDefinitionNetworkMode(t *testing.T) {
-	validNames := []string{
-		"bridge",
-		"host",
-		"none",
-	}
-	for _, v := range validNames {
-		_, errors := validateAwsEcsTaskDefinitionNetworkMode(v, "network_mode")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid AWS ECS Task Definition Network Mode: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"bridged",
-		"-docker",
-	}
-	for _, v := range invalidNames {
-		_, errors := validateAwsEcsTaskDefinitionNetworkMode(v, "network_mode")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid AWS ECS Task Definition Network Mode", v)
-		}
-	}
-}
-
 func TestValidateAwsEcsTaskDefinitionContainerDefinitions(t *testing.T) {
 	validDefinitions := []string{
 		testValidateAwsEcsTaskDefinitionValidContainerDefinitions,

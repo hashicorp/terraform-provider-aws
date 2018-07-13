@@ -373,9 +373,8 @@ func (c *EC2) AllocateHostsRequest(input *AllocateHostsInput) (req *request.Requ
 
 // AllocateHosts API operation for Amazon Elastic Compute Cloud.
 //
-// Allocates a Dedicated Host to your account. At minimum you need to specify
-// the instance size type, Availability Zone, and quantity of hosts you want
-// to allocate.
+// Allocates a Dedicated Host to your account. At a minimum, specify the instance
+// size type, Availability Zone, and quantity of hosts to allocate.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1374,8 +1373,6 @@ func (c *EC2) AttachVolumeRequest(input *AttachVolumeInput) (req *request.Reques
 //    the product. For example, you can't detach a volume from a Windows instance
 //    and attach it to a Linux instance.
 //
-// For an overview of the AWS Marketplace, see Introducing AWS Marketplace (https://aws.amazon.com/marketplace/help/200900000).
-//
 // For more information about EBS volumes, see Attaching Amazon EBS Volumes
 // (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -2268,11 +2265,7 @@ func (c *EC2) CancelSpotInstanceRequestsRequest(input *CancelSpotInstanceRequest
 
 // CancelSpotInstanceRequests API operation for Amazon Elastic Compute Cloud.
 //
-// Cancels one or more Spot Instance requests. Spot Instances are instances
-// that Amazon EC2 starts on your behalf when the maximum price that you specify
-// exceeds the current Spot price. For more information, see Spot Instance Requests
-// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html) in
-// the Amazon EC2 User Guide for Linux Instances.
+// Cancels one or more Spot Instance requests.
 //
 // Canceling a Spot Instance request does not terminate running Spot Instances
 // associated with the request.
@@ -2594,7 +2587,7 @@ func (c *EC2) CopySnapshotRequest(input *CopySnapshotInput) (req *request.Reques
 // To copy an encrypted snapshot that has been shared from another account,
 // you must have permissions for the CMK used to encrypt the snapshot.
 //
-// Snapshots created by the CopySnapshot action have an arbitrary volume ID
+// Snapshots created by copying another snapshot have an arbitrary volume ID
 // that should not be used for any purpose.
 //
 // For more information, see Copying an Amazon EBS Snapshot (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-copy-snapshot.html)
@@ -3129,7 +3122,7 @@ func (c *EC2) CreateFleetRequest(input *CreateFleetInput) (req *request.Request,
 // You can create a single EC2 Fleet that includes multiple launch specifications
 // that vary by instance type, AMI, Availability Zone, or subnet.
 //
-// For more information, see Launching an EC2 Fleet (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-launch-ec2-fleet.html)
+// For more information, see Launching an EC2 Fleet (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3851,11 +3844,12 @@ func (c *EC2) CreateNatGatewayRequest(input *CreateNatGatewayInput) (req *reques
 
 // CreateNatGateway API operation for Amazon Elastic Compute Cloud.
 //
-// Creates a NAT gateway in the specified subnet. A NAT gateway can be used
-// to enable instances in a private subnet to connect to the Internet. This
-// action creates a network interface in the specified subnet with a private
-// IP address from the IP address range of the subnet. For more information,
-// see NAT Gateways (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html)
+// Creates a NAT gateway in the specified public subnet. This action creates
+// a network interface in the specified subnet with a private IP address from
+// the IP address range of the subnet. Internet-bound traffic from a private
+// subnet can be routed to the NAT gateway, therefore enabling instances in
+// the private subnet to connect to the internet. For more information, see
+// NAT Gateways (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4178,8 +4172,8 @@ func (c *EC2) CreateNetworkInterfacePermissionRequest(input *CreateNetworkInterf
 
 // CreateNetworkInterfacePermission API operation for Amazon Elastic Compute Cloud.
 //
-// Grants an AWS authorized partner account permission to attach the specified
-// network interface to an instance in their account.
+// Grants an AWS-authorized account permission to attach the specified network
+// interface to an instance in their account.
 //
 // You can grant permission to a single AWS account only, and only one account
 // at a time.
@@ -4734,7 +4728,8 @@ func (c *EC2) CreateSnapshotRequest(input *CreateSnapshotInput) (req *request.Re
 // protected.
 //
 // You can tag your snapshots during creation. For more information, see Tagging
-// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
+// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // For more information, see Amazon Elastic Block Store (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html)
 // and Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
@@ -5088,7 +5083,8 @@ func (c *EC2) CreateVolumeRequest(input *CreateVolumeInput) (req *request.Reques
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // You can tag your volumes during creation. For more information, see Tagging
-// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html).
+// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // For more information, see Creating an Amazon EBS Volume (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-creating-volume.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -6084,12 +6080,11 @@ func (c *EC2) DeleteFleetsRequest(input *DeleteFleetsInput) (req *request.Reques
 //
 // Deletes the specified EC2 Fleet.
 //
-// After you delete an EC2 Fleet, the EC2 Fleet launches no new instances. You
-// must specify whether the EC2 Fleet should also terminate its instances. If
-// you terminate the instances, the EC2 Fleet enters the deleted_terminating
-// state. Otherwise, the EC2 Fleet enters the deleted_running state, and the
-// instances continue to run until they are interrupted or you terminate them
-// manually.
+// After you delete an EC2 Fleet, it launches no new instances. You must specify
+// whether an EC2 Fleet should also terminate its instances. If you terminate
+// the instances, the EC2 Fleet enters the deleted_terminating state. Otherwise,
+// the EC2 Fleet enters the deleted_running state, and the instances continue
+// to run until they are interrupted or you terminate them manually.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7641,7 +7636,7 @@ func (c *EC2) DeleteVolumeRequest(input *DeleteVolumeInput) (req *request.Reques
 // Deletes the specified EBS volume. The volume must be in the available state
 // (not attached to an instance).
 //
-// The volume may remain in the deleting state for several minutes.
+// The volume can remain in the deleting state for several minutes.
 //
 // For more information, see Deleting an Amazon EBS Volume (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-deleting-volume.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -9530,7 +9525,7 @@ func (c *EC2) DescribeFleetsRequest(input *DescribeFleetsInput) (req *request.Re
 
 // DescribeFleets API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the specified EC2 Fleet.
+// Describes one or more of your EC2 Fleet.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11977,7 +11972,8 @@ func (c *EC2) DescribePrefixListsRequest(input *DescribePrefixListsInput) (req *
 // the prefix list name and prefix list ID of the service and the IP address
 // range for the service. A prefix list ID is required for creating an outbound
 // security group rule that allows traffic from a VPC to access an AWS service
-// through a gateway VPC endpoint.
+// through a gateway VPC endpoint. Currently, the services that support this
+// action are Amazon S3 and Amazon DynamoDB.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13674,11 +13670,7 @@ func (c *EC2) DescribeSpotInstanceRequestsRequest(input *DescribeSpotInstanceReq
 
 // DescribeSpotInstanceRequests API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the Spot Instance requests that belong to your account. Spot Instances
-// are instances that Amazon EC2 launches when the Spot price that you specify
-// exceeds the current Spot price. For more information, see Spot Instance Requests
-// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html) in
-// the Amazon EC2 User Guide for Linux Instances.
+// Describes the specified Spot Instance requests.
 //
 // You can use DescribeSpotInstanceRequests to find a running Spot Instance
 // by examining the response. If the status of the Spot Instance is fulfilled,
@@ -14286,8 +14278,9 @@ func (c *EC2) DescribeVolumeStatusRequest(input *DescribeVolumeStatusInput) (req
 // status of the volume is ok. If the check fails, the overall status is impaired.
 // If the status is insufficient-data, then the checks may still be taking place
 // on your volume at the time. We recommend that you retry the request. For
-// more information on volume status, see Monitoring the Status of Your Volumes
-// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-status.html).
+// more information about volume status, see Monitoring the Status of Your Volumes
+// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-status.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Events: Reflect the cause of a volume status and may require you to take
 // action. For example, if your volume returns an impaired status, then the
@@ -14579,7 +14572,8 @@ func (c *EC2) DescribeVolumesModificationsRequest(input *DescribeVolumesModifica
 // You can also use CloudWatch Events to check the status of a modification
 // to an EBS volume. For information about CloudWatch Events, see the Amazon
 // CloudWatch Events User Guide (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/).
-// For more information, see Monitoring Volume Modifications" (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html#monitoring_mods).
+// For more information, see Monitoring Volume Modifications" (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html#monitoring_mods)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16974,24 +16968,23 @@ func (c *EC2) GetConsoleOutputRequest(input *GetConsoleOutputInput) (req *reques
 
 // GetConsoleOutput API operation for Amazon Elastic Compute Cloud.
 //
-// Gets the console output for the specified instance.
+// Gets the console output for the specified instance. For Linux instances,
+// the instance console output displays the exact console output that would
+// normally be displayed on a physical monitor attached to a computer. For Windows
+// instances, the instance console output includes output from the EC2Config
+// service.
 //
-// Instances do not have a physical monitor through which you can view their
-// console output. They also lack physical controls that allow you to power
-// up, reboot, or shut them down. To allow these actions, we provide them through
-// the Amazon EC2 API and command line interface.
+// GetConsoleOutput returns up to 64 KB of console output shortly after it's
+// generated by the instance.
 //
-// Instance console output is buffered and posted shortly after instance boot,
-// reboot, and termination. Amazon EC2 preserves the most recent 64 KB output,
-// which is available for at least one hour after the most recent post.
+// By default, the console output returns buffered information that was posted
+// shortly after an instance transition state (start, stop, reboot, or terminate).
+// This information is available for at least one hour after the most recent
+// post.
 //
-// For Linux instances, the instance console output displays the exact console
-// output that would normally be displayed on a physical monitor attached to
-// a computer. This output is buffered because the instance produces it and
-// then posts it to a store where the instance's owner can retrieve it.
-//
-// For Windows instances, the instance console output includes output from the
-// EC2Config service.
+// You can optionally retrieve the latest serial console output at any time
+// during the instance lifecycle. This option is only supported on C5, M5, and
+// i3.metal instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -18869,7 +18862,7 @@ func (c *EC2) ModifySnapshotAttributeRequest(input *ModifySnapshotAttributeInput
 // be made public. Snapshots encrypted with your default CMK cannot be shared
 // with other accounts.
 //
-// For more information on modifying snapshot permissions, see Sharing Snapshots
+// For more information about modifying snapshot permissions, see Sharing Snapshots
 // (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modifying-snapshot-permissions.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
@@ -19142,10 +19135,9 @@ func (c *EC2) ModifyVolumeRequest(input *ModifyVolumeInput) (req *request.Reques
 //
 // With previous-generation instance types, resizing an EBS volume may require
 // detaching and reattaching the volume or stopping and restarting the instance.
-// For more information about modifying an EBS volume running Linux, see Modifying
-// the Size, IOPS, or Type of an EBS Volume on Linux (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html).
-// For more information about modifying an EBS volume running Windows, see Modifying
-// the Size, IOPS, or Type of an EBS Volume on Windows (http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ebs-expand-volume.html).
+// For more information, see Modifying the Size, IOPS, or Type of an EBS Volume
+// on Linux (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html)
+// and Modifying the Size, IOPS, or Type of an EBS Volume on Windows (http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ebs-expand-volume.html).
 //
 // If you reach the maximum volume modification rate per volume limit, you will
 // need to wait at least six hours before applying further modifications to
@@ -21367,9 +21359,9 @@ func (c *EC2) RequestSpotInstancesRequest(input *RequestSpotInstancesInput) (req
 
 // RequestSpotInstances API operation for Amazon Elastic Compute Cloud.
 //
-// Creates a Spot Instance request. Spot Instances are instances that Amazon
-// EC2 launches when the maximum price that you specify exceeds the current
-// Spot price. For more information, see Spot Instance Requests (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html)
+// Creates a Spot Instance request.
+//
+// For more information, see Spot Instance Requests (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-requests.html)
 // in the Amazon EC2 User Guide for Linux Instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -21762,7 +21754,7 @@ func (c *EC2) ResetSnapshotAttributeRequest(input *ResetSnapshotAttributeInput) 
 //
 // Resets permission settings for the specified snapshot.
 //
-// For more information on modifying snapshot permissions, see Sharing Snapshots
+// For more information about modifying snapshot permissions, see Sharing Snapshots
 // (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modifying-snapshot-permissions.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
@@ -23506,20 +23498,19 @@ type AllocateHostsInput struct {
 	// AvailabilityZone is a required field
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string" required:"true"`
 
-	// Unique, case-sensitive identifier you provide to ensure idempotency of the
-	// request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
-	// Specify the instance type that you want your Dedicated Hosts to be configured
-	// for. When you specify the instance type, that is the only instance type that
-	// you can launch onto that host.
+	// Specify the instance type for which to configure your Dedicated Hosts. When
+	// you specify the instance type, that is the only instance type that you can
+	// launch onto that host.
 	//
 	// InstanceType is a required field
 	InstanceType *string `locationName:"instanceType" type:"string" required:"true"`
 
-	// The number of Dedicated Hosts you want to allocate to your account with these
-	// parameters.
+	// The number of Dedicated Hosts to allocate to your account with these parameters.
 	//
 	// Quantity is a required field
 	Quantity *int64 `locationName:"quantity" type:"integer" required:"true"`
@@ -23588,8 +23579,8 @@ func (s *AllocateHostsInput) SetQuantity(v int64) *AllocateHostsInput {
 type AllocateHostsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the allocated Dedicated Host. This is used when you want to launch
-	// an instance onto a specific host.
+	// The ID of the allocated Dedicated Host. This is used to launch an instance
+	// onto a specific host.
 	HostIds []*string `locationName:"hostIdSet" locationNameList:"item" type:"list"`
 }
 
@@ -26672,9 +26663,7 @@ type ConversionTask struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the conversion task.
-	//
-	// ConversionTaskId is a required field
-	ConversionTaskId *string `locationName:"conversionTaskId" type:"string" required:"true"`
+	ConversionTaskId *string `locationName:"conversionTaskId" type:"string"`
 
 	// The time when the task expires. If the upload isn't complete before the expiration
 	// time, we automatically cancel the task.
@@ -26689,9 +26678,7 @@ type ConversionTask struct {
 	ImportVolume *ImportVolumeTaskDetails `locationName:"importVolume" type:"structure"`
 
 	// The state of the conversion task.
-	//
-	// State is a required field
-	State *string `locationName:"state" type:"string" required:"true" enum:"ConversionTaskState"`
+	State *string `locationName:"state" type:"string" enum:"ConversionTaskState"`
 
 	// The status message related to the conversion task.
 	StatusMessage *string `locationName:"statusMessage" type:"string"`
@@ -27050,10 +27037,10 @@ type CopySnapshotInput struct {
 	// copy operation. This parameter is only valid for specifying the destination
 	// region in a PresignedUrl parameter, where it is required.
 	//
-	// CopySnapshot sends the snapshot copy to the regional endpoint that you send
-	// the HTTP request to, such as ec2.us-east-1.amazonaws.com (in the AWS CLI,
-	// this is specified with the --region parameter or the default region in your
-	// AWS configuration file).
+	// The snapshot copy is sent to the regional endpoint that you sent the HTTP
+	// request to (for example, ec2.us-east-1.amazonaws.com). With the AWS CLI,
+	// this is specified using the --region parameter or the default region in your
+	// AWS configuration file.
 	DestinationRegion *string `locationName:"destinationRegion" type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -27219,6 +27206,75 @@ func (s CopySnapshotOutput) GoString() string {
 // SetSnapshotId sets the SnapshotId field's value.
 func (s *CopySnapshotOutput) SetSnapshotId(v string) *CopySnapshotOutput {
 	s.SnapshotId = &v
+	return s
+}
+
+// The CPU options for the instance.
+type CpuOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The number of CPU cores for the instance.
+	CoreCount *int64 `locationName:"coreCount" type:"integer"`
+
+	// The number of threads per CPU core.
+	ThreadsPerCore *int64 `locationName:"threadsPerCore" type:"integer"`
+}
+
+// String returns the string representation
+func (s CpuOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CpuOptions) GoString() string {
+	return s.String()
+}
+
+// SetCoreCount sets the CoreCount field's value.
+func (s *CpuOptions) SetCoreCount(v int64) *CpuOptions {
+	s.CoreCount = &v
+	return s
+}
+
+// SetThreadsPerCore sets the ThreadsPerCore field's value.
+func (s *CpuOptions) SetThreadsPerCore(v int64) *CpuOptions {
+	s.ThreadsPerCore = &v
+	return s
+}
+
+// The CPU options for the instance. Both the core count and threads per core
+// must be specified in the request.
+type CpuOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The number of CPU cores for the instance.
+	CoreCount *int64 `type:"integer"`
+
+	// The number of threads per CPU core. To disable Intel Hyper-Threading Technology
+	// for the instance, specify a value of 1. Otherwise, specify the default value
+	// of 2.
+	ThreadsPerCore *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s CpuOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CpuOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetCoreCount sets the CoreCount field's value.
+func (s *CpuOptionsRequest) SetCoreCount(v int64) *CpuOptionsRequest {
+	s.CoreCount = &v
+	return s
+}
+
+// SetThreadsPerCore sets the ThreadsPerCore field's value.
+func (s *CpuOptionsRequest) SetThreadsPerCore(v int64) *CpuOptionsRequest {
+	s.ThreadsPerCore = &v
 	return s
 }
 
@@ -27650,7 +27706,10 @@ type CreateFleetInput struct {
 	// this structure.
 	SpotOptions *SpotOptionsRequest `type:"structure"`
 
-	// The tags for an EC2 Fleet resource.
+	// The key-value pair for tagging the EC2 Fleet request on creation. The value
+	// for ResourceType must be fleet, otherwise the fleet request fails. To tag
+	// instances at launch, specify the tags in the launch template (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template).
+	// For information about tagging after launch, see Tagging Your Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
 	// The TotalTargetCapacity, OnDemandTargetCapacity, SpotTargetCapacity, and
@@ -28831,12 +28890,12 @@ type CreateNetworkAclEntryInput struct {
 	PortRange *PortRange `locationName:"portRange" type:"structure"`
 
 	// The protocol. A value of -1 or all means all protocols. If you specify all,
-	// -1, or a protocol number other than tcp, udp, or icmp, traffic on all ports
-	// is allowed, regardless of any ports or ICMP types or codes you specify. If
-	// you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR block, traffic
-	// for all ICMP types and codes allowed, regardless of any that you specify.
-	// If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR block, you must
-	// specify an ICMP type and code.
+	// -1, or a protocol number other than 6 (tcp), 17 (udp), or 1 (icmp), traffic
+	// on all ports is allowed, regardless of any ports or ICMP types or codes you
+	// specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR block,
+	// traffic for all ICMP types and codes allowed, regardless of any that you
+	// specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR block,
+	// you must specify an ICMP type and code.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true"`
@@ -29109,16 +29168,6 @@ func (s *CreateNetworkInterfaceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateNetworkInterfaceInput"}
 	if s.SubnetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SubnetId"))
-	}
-	if s.PrivateIpAddresses != nil {
-		for i, v := range s.PrivateIpAddresses {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PrivateIpAddresses", i), err.(request.ErrInvalidParams))
-			}
-		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -30213,7 +30262,8 @@ type CreateVolumeInput struct {
 
 	// The number of I/O operations per second (IOPS) to provision for the volume,
 	// with a maximum ratio of 50 IOPS/GiB. Range is 100 to 32000 IOPS for volumes
-	// in most regions. For exceptions, see Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+	// in most regions. For exceptions, see Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// This parameter is valid only for Provisioned IOPS SSD (io1) volumes.
 	Iops *int64 `type:"integer"`
@@ -34083,12 +34133,9 @@ type DescribeAddressesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of the tag's key). If you want to
-	//    list only resources where Purpose is X, see the tag:key=value filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// [EC2-Classic] One or more Elastic IP addresses.
@@ -34406,16 +34453,9 @@ type DescribeClassicLinkInstancesInput struct {
 	//
 	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC that the instance is linked to.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -34607,16 +34647,9 @@ type DescribeCustomerGatewaysInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 }
 
@@ -34700,16 +34733,9 @@ type DescribeDhcpOptionsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 }
 
@@ -35184,6 +35210,8 @@ type DescribeFleetInstancesInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// One or more filters.
+	//
+	//    * instance-type - The instance type.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The ID of the EC2 Fleet.
@@ -35305,6 +35333,21 @@ type DescribeFleetsInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// One or more filters.
+	//
+	//    * activity-status - The progress of the EC2 Fleet ( error | pending-fulfillment
+	//    | pending-termination | fulfilled).
+	//
+	//    * excess-capacity-termination-policy - Indicates whether to terminate
+	//    running instances if the target capacity is decreased below the current
+	//    EC2 Fleet size (true | false).
+	//
+	//    * fleet-state - The state of the EC2 Fleet (submitted | active | deleted
+	//    | failed | deleted-running | deleted-terminating | modifying).
+	//
+	//    * replace-unhealthy-instances - Indicates whether EC2 Fleet should replace
+	//    unhealthy instances (true | false).
+	//
+	//    * type - The type of request (request | maintain).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The ID of the EC2 Fleets.
@@ -35362,7 +35405,7 @@ func (s *DescribeFleetsInput) SetNextToken(v string) *DescribeFleetsInput {
 type DescribeFleetsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The EC2 Fleets.
+	// Information about the EC2 Fleets.
 	Fleets []*FleetData `locationName:"fleetSet" locationNameList:"item" type:"list"`
 
 	// The token for the next set of results.
@@ -35610,16 +35653,9 @@ type DescribeFpgaImagesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * update-time - The time of the most recent update.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -35963,6 +35999,10 @@ type DescribeHostsInput struct {
 	//
 	//    * state - The allocation state of the Dedicated Host (available | under-assessment
 	//    | permanent-failure | released | released-permanent-failure).
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filter []*Filter `locationName:"filter" locationNameList:"Filter" type:"list"`
 
 	// The IDs of the Dedicated Hosts. The IDs are used for targeted instance launches.
@@ -36527,16 +36567,9 @@ type DescribeImagesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * virtualization-type - The virtualization type (paravirtual | hvm).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -37524,15 +37557,9 @@ type DescribeInstancesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of the tag's key). If you want to
-	//    list only resources where Purpose is X, see the tag:key=value filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * tenancy - The tenancy of an instance (dedicated | default | host).
 	//
@@ -37550,7 +37577,7 @@ type DescribeInstancesInput struct {
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value. This
 	// value can be between 5 and 1000. You cannot specify this parameter and the
-	// instance IDs parameter or tag filters in the same call.
+	// instance IDs parameter in the same call.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// The token to request the next page of results.
@@ -37655,16 +37682,9 @@ type DescribeInternetGatewaysInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more Internet gateway IDs.
@@ -37840,7 +37860,7 @@ type DescribeLaunchTemplateVersionsInput struct {
 
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value. This
-	// value can be between 5 and 1000.
+	// value can be between 1 and 200.
 	MaxResults *int64 `type:"integer"`
 
 	// The version number up to which to describe launch template versions.
@@ -37986,12 +38006,9 @@ type DescribeLaunchTemplatesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of the tag's key). If you want to
-	//    list only resources where Purpose is X, see the tag:key=value filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more launch template IDs.
@@ -38211,16 +38228,9 @@ type DescribeNatGatewaysInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC in which the NAT gateway resides.
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
@@ -38361,16 +38371,9 @@ type DescribeNetworkAclsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC for the network ACL.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -38761,16 +38764,9 @@ type DescribeNetworkInterfacesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC for the network interface.
 	Filters []*Filter `locationName:"filter" locationNameList:"Filter" type:"list"`
@@ -39234,16 +39230,9 @@ type DescribeReservedInstancesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * usage-price - The usage price of the Reserved Instance, per hour (for
 	//    example, 0.84).
@@ -39818,16 +39807,9 @@ type DescribeRouteTablesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC for the route table.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -40318,9 +40300,9 @@ type DescribeSecurityGroupsInput struct {
 	//
 	//    * owner-id - The AWS account ID of the owner of the security group.
 	//
-	//    * tag-key - The key of a tag assigned to the security group.
-	//
-	//    * tag-value - The value of a tag assigned to the security group.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC specified when the security group was created.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -40570,16 +40552,9 @@ type DescribeSnapshotsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * volume-id - The ID of the volume the snapshot is for.
 	//
@@ -41239,16 +41214,9 @@ type DescribeSpotInstanceRequestsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * type - The type of Spot Instance request (one-time | persistent).
 	//
@@ -41619,16 +41587,9 @@ type DescribeSubnetsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC for the subnet.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -41708,9 +41669,9 @@ type DescribeTagsInput struct {
 	//    * resource-id - The resource ID.
 	//
 	//    * resource-type - The resource type (customer-gateway | dhcp-options |
-	//    elastic-ip | fpga-image | image | instance | internet-gateway | launch-template
-	//    | natgateway | network-acl | network-interface | reserved-instances |
-	//    route-table | security-group | snapshot | spot-instances-request | subnet
+	//    elastic-ip | fleet | fpga-image | image | instance | internet-gateway
+	//    | launch-template | natgateway | network-acl | network-interface | reserved-instances
+	//    | route-table | security-group | snapshot | spot-instances-request | subnet
 	//    | volume | vpc | vpc-peering-connection | vpn-connection | vpn-gateway).
 	//
 	//    * value - The tag value.
@@ -42077,16 +42038,9 @@ type DescribeVolumesInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * volume-id - The volume ID.
 	//
@@ -42514,16 +42468,9 @@ type DescribeVpcClassicLinkInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more VPCs for which you want to describe the ClassicLink status.
@@ -43279,16 +43226,9 @@ type DescribeVpcPeeringConnectionsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-peering-connection-id - The ID of the VPC peering connection.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -43397,16 +43337,9 @@ type DescribeVpcsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * vpc-id - The ID of the VPC.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -43505,16 +43438,9 @@ type DescribeVpnConnectionsInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * type - The type of VPN connection. Currently the only supported type
 	//    is ipsec.1.
@@ -43614,16 +43540,9 @@ type DescribeVpnGatewaysInput struct {
 	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
 	//    for the filter name and X for the filter value.
 	//
-	//    * tag-key - The key of a tag assigned to the resource. This filter is
-	//    independent of the tag-value filter. For example, if you use both the
-	//    filter "tag-key=Purpose" and the filter "tag-value=X", you get any resources
-	//    assigned both the tag key Purpose (regardless of what the tag's value
-	//    is), and the tag value X (regardless of what the tag's key is). If you
-	//    want to list only resources where Purpose is X, see the tag:key=value
-	//    filter.
-	//
-	//    * tag-value - The value of a tag assigned to the resource. This filter
-	//    is independent of the tag-key filter.
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	//
 	//    * type - The type of virtual private gateway. Currently the only supported
 	//    type is ipsec.1.
@@ -44764,9 +44683,7 @@ type DiskImageDescription struct {
 	Checksum *string `locationName:"checksum" type:"string"`
 
 	// The disk image format.
-	//
-	// Format is a required field
-	Format *string `locationName:"format" type:"string" required:"true" enum:"DiskImageFormat"`
+	Format *string `locationName:"format" type:"string" enum:"DiskImageFormat"`
 
 	// A presigned URL for the import manifest stored in Amazon S3. For information
 	// about creating a presigned URL for an Amazon S3 object, read the "Query String
@@ -44776,14 +44693,10 @@ type DiskImageDescription struct {
 	//
 	// For information about the import manifest referenced by this API action,
 	// see VM Import Manifest (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/manifest.html).
-	//
-	// ImportManifestUrl is a required field
-	ImportManifestUrl *string `locationName:"importManifestUrl" type:"string" required:"true"`
+	ImportManifestUrl *string `locationName:"importManifestUrl" type:"string"`
 
 	// The size of the disk image, in GiB.
-	//
-	// Size is a required field
-	Size *int64 `locationName:"size" type:"long" required:"true"`
+	Size *int64 `locationName:"size" type:"long"`
 }
 
 // String returns the string representation
@@ -44899,9 +44812,7 @@ type DiskImageVolumeDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The volume identifier.
-	//
-	// Id is a required field
-	Id *string `locationName:"id" type:"string" required:"true"`
+	Id *string `locationName:"id" type:"string"`
 
 	// The size of the volume, in GiB.
 	Size *int64 `locationName:"size" type:"long"`
@@ -44993,8 +44904,8 @@ type EbsBlockDevice struct {
 	// Identifier (key ID, key alias, ID ARN, or alias ARN) for a user-managed CMK
 	// under which the EBS volume is encrypted.
 	//
-	// Note: This parameter is only supported on BlockDeviceMapping objects called
-	// by RunInstances (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html),
+	// This parameter is only supported on BlockDeviceMapping objects called by
+	// RunInstances (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html),
 	// RequestSpotFleet (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html),
 	// and RequestSpotInstances (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotInstances.html).
 	KmsKeyId *string `type:"string"`
@@ -46857,6 +46768,11 @@ type GetConsoleOutputInput struct {
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
+
+	// When enabled, retrieves the latest console output for the instance.
+	//
+	// Default: disabled (false)
+	Latest *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -46894,6 +46810,12 @@ func (s *GetConsoleOutputInput) SetInstanceId(v string) *GetConsoleOutputInput {
 	return s
 }
 
+// SetLatest sets the Latest field's value.
+func (s *GetConsoleOutputInput) SetLatest(v bool) *GetConsoleOutputInput {
+	s.Latest = &v
+	return s
+}
+
 // Contains the output of GetConsoleOutput.
 type GetConsoleOutputOutput struct {
 	_ struct{} `type:"structure"`
@@ -46901,11 +46823,11 @@ type GetConsoleOutputOutput struct {
 	// The ID of the instance.
 	InstanceId *string `locationName:"instanceId" type:"string"`
 
-	// The console output, Base64-encoded. If using a command line tool, the tool
-	// decodes the output for you.
+	// The console output, base64-encoded. If you are using a command line tool,
+	// the tool decodes the output for you.
 	Output *string `locationName:"output" type:"string"`
 
-	// The time the output was last updated.
+	// The time at which the output was last updated.
 	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" timestampFormat:"iso8601"`
 }
 
@@ -47560,7 +47482,7 @@ func (s *HistoryRecord) SetTimestamp(v time.Time) *HistoryRecord {
 	return s
 }
 
-// Describes an event in the history of the EC2 Fleet.
+// Describes an event in the history of an EC2 Fleet.
 type HistoryRecordEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -47641,6 +47563,9 @@ type Host struct {
 
 	// The Dedicated Host's state.
 	State *string `locationName:"state" type:"string" enum:"AllocationState"`
+
+	// Any tags assigned to the Dedicated Host.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -47716,6 +47641,12 @@ func (s *Host) SetReleaseTime(v time.Time) *Host {
 // SetState sets the State field's value.
 func (s *Host) SetState(v string) *Host {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Host) SetTags(v []*Tag) *Host {
+	s.Tags = v
 	return s
 }
 
@@ -49128,9 +49059,7 @@ type ImportInstanceTaskDetails struct {
 	Platform *string `locationName:"platform" type:"string" enum:"PlatformValues"`
 
 	// One or more volumes.
-	//
-	// Volumes is a required field
-	Volumes []*ImportInstanceVolumeDetailItem `locationName:"volumes" locationNameList:"item" type:"list" required:"true"`
+	Volumes []*ImportInstanceVolumeDetailItem `locationName:"volumes" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -49639,27 +49568,19 @@ type ImportVolumeTaskDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The Availability Zone where the resulting volume will reside.
-	//
-	// AvailabilityZone is a required field
-	AvailabilityZone *string `locationName:"availabilityZone" type:"string" required:"true"`
+	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
 	// The number of bytes converted so far.
-	//
-	// BytesConverted is a required field
-	BytesConverted *int64 `locationName:"bytesConverted" type:"long" required:"true"`
+	BytesConverted *int64 `locationName:"bytesConverted" type:"long"`
 
 	// The description you provided when starting the import volume task.
 	Description *string `locationName:"description" type:"string"`
 
 	// The image.
-	//
-	// Image is a required field
-	Image *DiskImageDescription `locationName:"image" type:"structure" required:"true"`
+	Image *DiskImageDescription `locationName:"image" type:"structure"`
 
 	// The volume.
-	//
-	// Volume is a required field
-	Volume *DiskImageVolumeDescription `locationName:"volume" type:"structure" required:"true"`
+	Volume *DiskImageVolumeDescription `locationName:"volume" type:"structure"`
 }
 
 // String returns the string representation
@@ -49718,6 +49639,9 @@ type Instance struct {
 
 	// The idempotency token you provided when you launched the instance, if applicable.
 	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// The CPU options for the instance.
+	CpuOptions *CpuOptions `locationName:"cpuOptions" type:"structure"`
 
 	// Indicates whether the instance is optimized for Amazon EBS I/O. This optimization
 	// provides dedicated throughput to Amazon EBS and an optimized configuration
@@ -49877,6 +49801,12 @@ func (s *Instance) SetBlockDeviceMappings(v []*InstanceBlockDeviceMapping) *Inst
 // SetClientToken sets the ClientToken field's value.
 func (s *Instance) SetClientToken(v string) *Instance {
 	s.ClientToken = &v
+	return s
+}
+
+// SetCpuOptions sets the CpuOptions field's value.
+func (s *Instance) SetCpuOptions(v *CpuOptions) *Instance {
+	s.CpuOptions = v
 	return s
 }
 
@@ -50794,26 +50724,6 @@ func (s InstanceNetworkInterfaceSpecification) String() string {
 // GoString returns the string representation
 func (s InstanceNetworkInterfaceSpecification) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *InstanceNetworkInterfaceSpecification) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "InstanceNetworkInterfaceSpecification"}
-	if s.PrivateIpAddresses != nil {
-		for i, v := range s.PrivateIpAddresses {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PrivateIpAddresses", i), err.(request.ErrInvalidParams))
-			}
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetAssociatePublicIpAddress sets the AssociatePublicIpAddress field's value.
@@ -52000,6 +51910,75 @@ func (s *LaunchTemplateConfig) SetOverrides(v []*LaunchTemplateOverrides) *Launc
 	return s
 }
 
+// The CPU options for the instance.
+type LaunchTemplateCpuOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The number of CPU cores for the instance.
+	CoreCount *int64 `locationName:"coreCount" type:"integer"`
+
+	// The number of threads per CPU core.
+	ThreadsPerCore *int64 `locationName:"threadsPerCore" type:"integer"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateCpuOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateCpuOptions) GoString() string {
+	return s.String()
+}
+
+// SetCoreCount sets the CoreCount field's value.
+func (s *LaunchTemplateCpuOptions) SetCoreCount(v int64) *LaunchTemplateCpuOptions {
+	s.CoreCount = &v
+	return s
+}
+
+// SetThreadsPerCore sets the ThreadsPerCore field's value.
+func (s *LaunchTemplateCpuOptions) SetThreadsPerCore(v int64) *LaunchTemplateCpuOptions {
+	s.ThreadsPerCore = &v
+	return s
+}
+
+// The CPU options for the instance. Both the core count and threads per core
+// must be specified in the request.
+type LaunchTemplateCpuOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The number of CPU cores for the instance.
+	CoreCount *int64 `type:"integer"`
+
+	// The number of threads per CPU core. To disable Intel Hyper-Threading Technology
+	// for the instance, specify a value of 1. Otherwise, specify the default value
+	// of 2.
+	ThreadsPerCore *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateCpuOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateCpuOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetCoreCount sets the CoreCount field's value.
+func (s *LaunchTemplateCpuOptionsRequest) SetCoreCount(v int64) *LaunchTemplateCpuOptionsRequest {
+	s.CoreCount = &v
+	return s
+}
+
+// SetThreadsPerCore sets the ThreadsPerCore field's value.
+func (s *LaunchTemplateCpuOptionsRequest) SetThreadsPerCore(v int64) *LaunchTemplateCpuOptionsRequest {
+	s.ThreadsPerCore = &v
+	return s
+}
+
 // Describes a block device for an EBS volume.
 type LaunchTemplateEbsBlockDevice struct {
 	_ struct{} `type:"structure"`
@@ -52478,26 +52457,6 @@ func (s LaunchTemplateInstanceNetworkInterfaceSpecificationRequest) String() str
 // GoString returns the string representation
 func (s LaunchTemplateInstanceNetworkInterfaceSpecificationRequest) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *LaunchTemplateInstanceNetworkInterfaceSpecificationRequest) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "LaunchTemplateInstanceNetworkInterfaceSpecificationRequest"}
-	if s.PrivateIpAddresses != nil {
-		for i, v := range s.PrivateIpAddresses {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PrivateIpAddresses", i), err.(request.ErrInvalidParams))
-			}
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetAssociatePublicIpAddress sets the AssociatePublicIpAddress field's value.
@@ -52986,7 +52945,8 @@ type LaunchTemplateTagSpecificationRequest struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are instance and volume.
+	// on creation are instance and volume. To tag a resource after it has been
+	// created, see CreateTags.
 	ResourceType *string `type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -54684,9 +54644,8 @@ func (s *ModifyReservedInstancesOutput) SetReservedInstancesModificationId(v str
 type ModifySnapshotAttributeInput struct {
 	_ struct{} `type:"structure"`
 
-	// The snapshot attribute to modify.
-	//
-	// Only volume creation permissions may be modified at the customer level.
+	// The snapshot attribute to modify. Only volume creation permissions can be
+	// modified.
 	Attribute *string `type:"string" enum:"SnapshotAttributeName"`
 
 	// A JSON representation of the snapshot attribute modification.
@@ -55039,19 +54998,17 @@ type ModifyVolumeInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// Target IOPS rate of the volume to be modified.
+	// The target IOPS rate of the volume.
 	//
-	// Only valid for Provisioned IOPS SSD (io1) volumes. For more information about
-	// io1 IOPS configuration, see http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html#EBSVolumeTypes_piops
-	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html#EBSVolumeTypes_piops).
+	// This is only valid for Provisioned IOPS SSD (io1) volumes. For more information,
+	// see Provisioned IOPS SSD (io1) Volumes (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html#EBSVolumeTypes_piops).
 	//
 	// Default: If no IOPS value is specified, the existing value is retained.
 	Iops *int64 `type:"integer"`
 
-	// Target size in GiB of the volume to be modified. Target volume size must
-	// be greater than or equal to than the existing size of the volume. For information
-	// about available EBS volume sizes, see http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
-	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+	// The target size of the volume, in GiB. The target volume size must be greater
+	// than or equal to than the existing size of the volume. For information about
+	// available EBS volume sizes, see Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 	//
 	// Default: If no size is specified, the existing size is retained.
 	Size *int64 `type:"integer"`
@@ -55061,10 +55018,7 @@ type ModifyVolumeInput struct {
 	// VolumeId is a required field
 	VolumeId *string `type:"string" required:"true"`
 
-	// Target EBS volume type of the volume to be modified
-	//
-	// The API does not support modifications for volume type standard. You also
-	// cannot change the type of a volume to standard.
+	// The target EBS volume type of the volume.
 	//
 	// Default: If no type is specified, the existing type is retained.
 	VolumeType *string `type:"string" enum:"VolumeType"`
@@ -55126,7 +55080,7 @@ func (s *ModifyVolumeInput) SetVolumeType(v string) *ModifyVolumeInput {
 type ModifyVolumeOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A VolumeModification object.
+	// Information about the volume modification.
 	VolumeModification *VolumeModification `locationName:"volumeModification" type:"structure"`
 }
 
@@ -57616,9 +57570,7 @@ type PrivateIpAddressSpecification struct {
 	Primary *bool `locationName:"primary" type:"boolean"`
 
 	// The private IPv4 addresses.
-	//
-	// PrivateIpAddress is a required field
-	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string" required:"true"`
+	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string"`
 }
 
 // String returns the string representation
@@ -57629,19 +57581,6 @@ func (s PrivateIpAddressSpecification) String() string {
 // GoString returns the string representation
 func (s PrivateIpAddressSpecification) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *PrivateIpAddressSpecification) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "PrivateIpAddressSpecification"}
-	if s.PrivateIpAddress == nil {
-		invalidParams.Add(request.NewErrParamRequired("PrivateIpAddress"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetPrimary sets the Primary field's value.
@@ -59612,6 +59551,11 @@ type RequestLaunchTemplateData struct {
 	// cannot be changed using this action.
 	BlockDeviceMappings []*LaunchTemplateBlockDeviceMappingRequest `locationName:"BlockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
+	// The CPU options for the instance. For more information, see Optimizing CPU
+	// Options (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	CpuOptions *LaunchTemplateCpuOptionsRequest `type:"structure"`
+
 	// The credit option for CPU usage of the instance. Valid for T2 instances only.
 	CreditSpecification *CreditSpecificationRequest `type:"structure"`
 
@@ -59688,9 +59632,10 @@ type RequestLaunchTemplateData struct {
 	// group ID and security name in the same request.
 	SecurityGroups []*string `locationName:"SecurityGroup" locationNameList:"SecurityGroup" type:"list"`
 
-	// The tags to apply to the resources during launch. You can tag instances and
-	// volumes. The specified tags are applied to all instances or volumes that
-	// are created during launch.
+	// The tags to apply to the resources during launch. You can only tag instances
+	// and volumes on launch. The specified tags are applied to all instances or
+	// volumes that are created during launch. To tag a resource after it has been
+	// created, see CreateTags.
 	TagSpecifications []*LaunchTemplateTagSpecificationRequest `locationName:"TagSpecification" locationNameList:"LaunchTemplateTagSpecificationRequest" type:"list"`
 
 	// The Base64-encoded user data to make available to the instance. For more
@@ -59728,16 +59673,6 @@ func (s *RequestLaunchTemplateData) Validate() error {
 			}
 		}
 	}
-	if s.NetworkInterfaces != nil {
-		for i, v := range s.NetworkInterfaces {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "NetworkInterfaces", i), err.(request.ErrInvalidParams))
-			}
-		}
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -59748,6 +59683,12 @@ func (s *RequestLaunchTemplateData) Validate() error {
 // SetBlockDeviceMappings sets the BlockDeviceMappings field's value.
 func (s *RequestLaunchTemplateData) SetBlockDeviceMappings(v []*LaunchTemplateBlockDeviceMappingRequest) *RequestLaunchTemplateData {
 	s.BlockDeviceMappings = v
+	return s
+}
+
+// SetCpuOptions sets the CpuOptions field's value.
+func (s *RequestLaunchTemplateData) SetCpuOptions(v *LaunchTemplateCpuOptionsRequest) *RequestLaunchTemplateData {
+	s.CpuOptions = v
 	return s
 }
 
@@ -60241,16 +60182,6 @@ func (s *RequestSpotLaunchSpecification) Validate() error {
 	if s.Monitoring != nil {
 		if err := s.Monitoring.Validate(); err != nil {
 			invalidParams.AddNested("Monitoring", err.(request.ErrInvalidParams))
-		}
-	}
-	if s.NetworkInterfaces != nil {
-		for i, v := range s.NetworkInterfaces {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "NetworkInterfaces", i), err.(request.ErrInvalidParams))
-			}
 		}
 	}
 
@@ -61629,6 +61560,11 @@ type ResponseLaunchTemplateData struct {
 	// The block device mappings.
 	BlockDeviceMappings []*LaunchTemplateBlockDeviceMapping `locationName:"blockDeviceMappingSet" locationNameList:"item" type:"list"`
 
+	// The CPU options for the instance. For more information, see Optimizing CPU
+	// Options (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	CpuOptions *LaunchTemplateCpuOptions `locationName:"cpuOptions" type:"structure"`
+
 	// The credit option for CPU usage of the instance.
 	CreditSpecification *CreditSpecification `locationName:"creditSpecification" type:"structure"`
 
@@ -61702,6 +61638,12 @@ func (s ResponseLaunchTemplateData) GoString() string {
 // SetBlockDeviceMappings sets the BlockDeviceMappings field's value.
 func (s *ResponseLaunchTemplateData) SetBlockDeviceMappings(v []*LaunchTemplateBlockDeviceMapping) *ResponseLaunchTemplateData {
 	s.BlockDeviceMappings = v
+	return s
+}
+
+// SetCpuOptions sets the CpuOptions field's value.
+func (s *ResponseLaunchTemplateData) SetCpuOptions(v *LaunchTemplateCpuOptions) *ResponseLaunchTemplateData {
+	s.CpuOptions = v
 	return s
 }
 
@@ -62446,6 +62388,11 @@ type RunInstancesInput struct {
 	// Constraints: Maximum 64 ASCII characters
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
+	// The CPU options for the instance. For more information, see Optimizing CPU
+	// Options (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	CpuOptions *CpuOptionsRequest `type:"structure"`
+
 	// The credit option for CPU usage of the instance. Valid values are standard
 	// and unlimited. To change this attribute after launch, use ModifyInstanceCreditSpecification.
 	// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
@@ -62600,9 +62547,10 @@ type RunInstancesInput struct {
 	// [EC2-VPC] The ID of the subnet to launch the instance into.
 	SubnetId *string `type:"string"`
 
-	// The tags to apply to the resources during launch. You can tag instances and
-	// volumes. The specified tags are applied to all instances or volumes that
-	// are created during launch.
+	// The tags to apply to the resources during launch. You can only tag instances
+	// and volumes on launch. The specified tags are applied to all instances or
+	// volumes that are created during launch. To tag a resource after it has been
+	// created, see CreateTags.
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
 	// The user data to make available to the instance. For more information, see
@@ -62653,16 +62601,6 @@ func (s *RunInstancesInput) Validate() error {
 			invalidParams.AddNested("Monitoring", err.(request.ErrInvalidParams))
 		}
 	}
-	if s.NetworkInterfaces != nil {
-		for i, v := range s.NetworkInterfaces {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "NetworkInterfaces", i), err.(request.ErrInvalidParams))
-			}
-		}
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -62685,6 +62623,12 @@ func (s *RunInstancesInput) SetBlockDeviceMappings(v []*BlockDeviceMapping) *Run
 // SetClientToken sets the ClientToken field's value.
 func (s *RunInstancesInput) SetClientToken(v string) *RunInstancesInput {
 	s.ClientToken = &v
+	return s
+}
+
+// SetCpuOptions sets the CpuOptions field's value.
+func (s *RunInstancesInput) SetCpuOptions(v *CpuOptionsRequest) *RunInstancesInput {
+	s.CpuOptions = v
 	return s
 }
 
@@ -65107,26 +65051,6 @@ func (s SpotFleetLaunchSpecification) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *SpotFleetLaunchSpecification) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "SpotFleetLaunchSpecification"}
-	if s.NetworkInterfaces != nil {
-		for i, v := range s.NetworkInterfaces {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "NetworkInterfaces", i), err.(request.ErrInvalidParams))
-			}
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetAddressingType sets the AddressingType field's value.
 func (s *SpotFleetLaunchSpecification) SetAddressingType(v string) *SpotFleetLaunchSpecification {
 	s.AddressingType = &v
@@ -65448,16 +65372,6 @@ func (s *SpotFleetRequestConfigData) Validate() error {
 	}
 	if s.TargetCapacity == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetCapacity"))
-	}
-	if s.LaunchSpecifications != nil {
-		for i, v := range s.LaunchSpecifications {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "LaunchSpecifications", i), err.(request.ErrInvalidParams))
-			}
-		}
 	}
 	if s.LaunchTemplateConfigs != nil {
 		for i, v := range s.LaunchTemplateConfigs {
@@ -66380,19 +66294,23 @@ type StateReason struct {
 
 	// The message for the state change.
 	//
-	//    * Server.InsufficientInstanceCapacity: There was insufficient instance
-	//    capacity to satisfy the launch request.
+	//    * Server.InsufficientInstanceCapacity: There was insufficient capacity
+	//    available to satisfy the launch request.
 	//
-	//    * Server.InternalError: An internal error occurred during instance launch,
-	//    resulting in termination.
+	//    * Server.InternalError: An internal error caused the instance to terminate
+	//    during launch.
 	//
 	//    * Server.ScheduledStop: The instance was stopped due to a scheduled retirement.
 	//
-	//    * Server.SpotInstanceTermination: A Spot Instance was terminated due to
-	//    an increase in the Spot price.
+	//    * Server.SpotInstanceShutdown: The instance was stopped because the number
+	//    of Spot requests with a maximum price equal to or higher than the Spot
+	//    price exceeded available capacity or because of an increase in the Spot
+	//    price.
 	//
-	//    * Client.InternalError: A client error caused the instance to terminate
-	//    on launch.
+	//    * Server.SpotInstanceTermination: The instance was terminated because
+	//    the number of Spot requests with a maximum price equal to or higher than
+	//    the Spot price exceeded available capacity or because of an increase in
+	//    the Spot price.
 	//
 	//    * Client.InstanceInitiatedShutdown: The instance was shut down using the
 	//    shutdown -h command from the instance.
@@ -66400,14 +66318,17 @@ type StateReason struct {
 	//    * Client.InstanceTerminated: The instance was terminated or rebooted during
 	//    AMI creation.
 	//
+	//    * Client.InternalError: A client error caused the instance to terminate
+	//    during launch.
+	//
+	//    * Client.InvalidSnapshot.NotFound: The specified snapshot was not found.
+	//
 	//    * Client.UserInitiatedShutdown: The instance was shut down using the Amazon
 	//    EC2 API.
 	//
 	//    * Client.VolumeLimitExceeded: The limit on the number of EBS volumes or
 	//    total storage was exceeded. Decrease usage or request an increase in your
-	//    limits.
-	//
-	//    * Client.InvalidSnapshot.NotFound: The specified snapshot was not found.
+	//    account limits.
 	Message *string `locationName:"message" type:"string"`
 }
 
@@ -66891,7 +66812,8 @@ type TagSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are instance and volume.
+	// on creation are fleet, instance, snapshot, and volume. To tag a resource
+	// after it has been created, see CreateTags.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -68161,8 +68083,9 @@ type Volume struct {
 	// For Provisioned IOPS SSD volumes, this represents the number of IOPS that
 	// are provisioned for the volume. For General Purpose SSD volumes, this represents
 	// the baseline performance of the volume and the rate at which the volume accumulates
-	// I/O credits for bursting. For more information on General Purpose SSD baseline
-	// performance, I/O credits, and bursting, see Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
+	// I/O credits for bursting. For more information about General Purpose SSD
+	// baseline performance, I/O credits, and bursting, see Amazon EBS Volume Types
+	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// Constraint: Range is 100-32000 IOPS for io1 volumes and 100-10000 IOPS for
@@ -68393,41 +68316,41 @@ func (s *VolumeDetail) SetSize(v int64) *VolumeDetail {
 type VolumeModification struct {
 	_ struct{} `type:"structure"`
 
-	// Modification completion or failure time.
+	// The modification completion or failure time.
 	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"iso8601"`
 
-	// Current state of modification. Modification state is null for unmodified
+	// The current modification state. The modification state is null for unmodified
 	// volumes.
 	ModificationState *string `locationName:"modificationState" type:"string" enum:"VolumeModificationState"`
 
-	// Original IOPS rate of the volume being modified.
+	// The original IOPS rate of the volume.
 	OriginalIops *int64 `locationName:"originalIops" type:"integer"`
 
-	// Original size of the volume being modified.
+	// The original size of the volume.
 	OriginalSize *int64 `locationName:"originalSize" type:"integer"`
 
-	// Original EBS volume type of the volume being modified.
+	// The original EBS volume type of the volume.
 	OriginalVolumeType *string `locationName:"originalVolumeType" type:"string" enum:"VolumeType"`
 
-	// Modification progress from 0 to 100%.
+	// The modification progress, from 0 to 100 percent complete.
 	Progress *int64 `locationName:"progress" type:"long"`
 
-	// Modification start time
+	// The modification start time.
 	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"iso8601"`
 
-	// Generic status message on modification progress or failure.
+	// A status message about the modification progress or failure.
 	StatusMessage *string `locationName:"statusMessage" type:"string"`
 
-	// Target IOPS rate of the volume being modified.
+	// The target IOPS rate of the volume.
 	TargetIops *int64 `locationName:"targetIops" type:"integer"`
 
-	// Target size of the volume being modified.
+	// The target size of the volume, in GiB.
 	TargetSize *int64 `locationName:"targetSize" type:"integer"`
 
-	// Target EBS volume type of the volume being modified.
+	// The target EBS volume type of the volume.
 	TargetVolumeType *string `locationName:"targetVolumeType" type:"string" enum:"VolumeType"`
 
-	// ID of the volume being modified.
+	// The ID of the volume.
 	VolumeId *string `locationName:"volumeId" type:"string"`
 }
 
@@ -70616,6 +70539,9 @@ const (
 	// InstanceTypeI316xlarge is a InstanceType enum value
 	InstanceTypeI316xlarge = "i3.16xlarge"
 
+	// InstanceTypeI3Metal is a InstanceType enum value
+	InstanceTypeI3Metal = "i3.metal"
+
 	// InstanceTypeHi14xlarge is a InstanceType enum value
 	InstanceTypeHi14xlarge = "hi1.4xlarge"
 
@@ -70675,6 +70601,24 @@ const (
 
 	// InstanceTypeC518xlarge is a InstanceType enum value
 	InstanceTypeC518xlarge = "c5.18xlarge"
+
+	// InstanceTypeC5dLarge is a InstanceType enum value
+	InstanceTypeC5dLarge = "c5d.large"
+
+	// InstanceTypeC5dXlarge is a InstanceType enum value
+	InstanceTypeC5dXlarge = "c5d.xlarge"
+
+	// InstanceTypeC5d2xlarge is a InstanceType enum value
+	InstanceTypeC5d2xlarge = "c5d.2xlarge"
+
+	// InstanceTypeC5d4xlarge is a InstanceType enum value
+	InstanceTypeC5d4xlarge = "c5d.4xlarge"
+
+	// InstanceTypeC5d9xlarge is a InstanceType enum value
+	InstanceTypeC5d9xlarge = "c5d.9xlarge"
+
+	// InstanceTypeC5d18xlarge is a InstanceType enum value
+	InstanceTypeC5d18xlarge = "c5d.18xlarge"
 
 	// InstanceTypeCc14xlarge is a InstanceType enum value
 	InstanceTypeCc14xlarge = "cc1.4xlarge"
@@ -70753,6 +70697,24 @@ const (
 
 	// InstanceTypeM524xlarge is a InstanceType enum value
 	InstanceTypeM524xlarge = "m5.24xlarge"
+
+	// InstanceTypeM5dLarge is a InstanceType enum value
+	InstanceTypeM5dLarge = "m5d.large"
+
+	// InstanceTypeM5dXlarge is a InstanceType enum value
+	InstanceTypeM5dXlarge = "m5d.xlarge"
+
+	// InstanceTypeM5d2xlarge is a InstanceType enum value
+	InstanceTypeM5d2xlarge = "m5d.2xlarge"
+
+	// InstanceTypeM5d4xlarge is a InstanceType enum value
+	InstanceTypeM5d4xlarge = "m5d.4xlarge"
+
+	// InstanceTypeM5d12xlarge is a InstanceType enum value
+	InstanceTypeM5d12xlarge = "m5d.12xlarge"
+
+	// InstanceTypeM5d24xlarge is a InstanceType enum value
+	InstanceTypeM5d24xlarge = "m5d.24xlarge"
 
 	// InstanceTypeH12xlarge is a InstanceType enum value
 	InstanceTypeH12xlarge = "h1.2xlarge"

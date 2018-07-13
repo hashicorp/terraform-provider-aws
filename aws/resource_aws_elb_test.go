@@ -126,8 +126,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 
-	lbName := fmt.Sprintf("Tf-%d",
-		rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+	lbName := fmt.Sprintf("Tf-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -915,57 +914,6 @@ func TestResourceAWSELB_validateAccessLogsInterval(t *testing.T) {
 		}
 	}
 
-}
-
-func TestResourceAWSELB_validateListenerProtocol(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "HTTP:",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "TCP",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ssl",
-			ErrCount: 0,
-		},
-		{
-			Value:    "HTTP",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
 }
 
 func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
