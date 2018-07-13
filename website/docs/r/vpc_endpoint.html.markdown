@@ -93,6 +93,15 @@ Defaults to full access.
 * `private_dns_enabled` - (Optional) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`.
 Defaults to `false`.
 
+### Timeouts
+
+`aws_vpc_endpoint` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating a VPC endpoint
+- `update` - (Default `10 minutes`) Used for VPC endpoint modifications
+- `delete` - (Default `10 minutes`) Used for destroying VPC endpoints
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
