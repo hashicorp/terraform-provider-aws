@@ -161,6 +161,25 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_nonBurstable(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_nonBurstable,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -341,3 +360,13 @@ resource "aws_launch_template" "foo" {
 }
 `, rInt)
 }
+
+const testAccAWSLaunchTemplateConfig_nonBurstable = `
+resource "aws_launch_template" "foo" {
+  name = "non-burstable-launch-template"
+  instance_type = "m1.small"
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`
