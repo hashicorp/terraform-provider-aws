@@ -23,7 +23,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 		Update: resourceAwsRoute53ZoneUpdate,
 		Delete: resourceAwsRoute53ZoneDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsRoute53ZoneImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -179,11 +179,6 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 
 		// In the import case we just associate it with the first VPC
 		if _, ok := d.GetOk("vpc_id"); !ok {
-			if len(zone.VPCs) > 1 {
-				return fmt.Errorf(
-					"Can't import a route53_zone with more than one VPC attachment")
-			}
-
 			if len(zone.VPCs) > 0 {
 				d.Set("vpc_id", zone.VPCs[0].VPCId)
 				d.Set("vpc_region", zone.VPCs[0].VPCRegion)
