@@ -309,9 +309,11 @@ resource "aws_subnet" "foo" {
   }
 }
 
+data "aws_region" "current" {}
+
 resource "aws_vpc_endpoint" "s3" {
   vpc_id = "${aws_vpc.foo.id}"
-  service_name = "com.amazonaws.us-west-2.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
   route_table_ids = ["${aws_route_table.default.id}"]
   policy = <<POLICY
 {
@@ -353,9 +355,11 @@ resource "aws_subnet" "foo" {
   }
 }
 
+data "aws_region" "current" {}
+
 resource "aws_vpc_endpoint" "s3" {
   vpc_id = "${aws_vpc.foo.id}"
-  service_name = "com.amazonaws.us-west-2.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
   route_table_ids = []
   policy = ""
 }
@@ -387,9 +391,11 @@ resource "aws_vpc" "foo" {
   }
 }
 
+data "aws_region" "current" {}
+
 resource "aws_vpc_endpoint" "s3" {
   vpc_id = "${aws_vpc.foo.id}"
-  service_name = "com.amazonaws.us-west-2.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 `
 
@@ -406,28 +412,34 @@ data "aws_security_group" "default" {
   name = "default"
 }
 
+data "aws_region" "current" {}
+
 resource "aws_vpc_endpoint" "ec2" {
   vpc_id = "${aws_vpc.foo.id}"
-	service_name = "com.amazonaws.us-west-2.ec2"
-	vpc_endpoint_type = "Interface"
-	security_group_ids = ["${data.aws_security_group.default.id}"]
+  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = ["${data.aws_security_group.default.id}"]
 }
 `
 
 const testAccVpcEndpointConfig_interfaceWithSubnet = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.0.0.0/16"
-	enable_dns_support = true
-	enable_dns_hostnames = true
-	tags {
-		Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
-	}
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
+  }
 }
+
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.0.0/17"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
   }
@@ -436,7 +448,7 @@ resource "aws_subnet" "sn1" {
 resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.128.0/17"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
   }
@@ -452,28 +464,32 @@ resource "aws_security_group" "sg2" {
 
 resource "aws_vpc_endpoint" "ec2" {
   vpc_id = "${aws_vpc.foo.id}"
-	service_name = "com.amazonaws.us-west-2.ec2"
-	vpc_endpoint_type = "Interface"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
   subnet_ids = ["${aws_subnet.sn1.id}"]
-	security_group_ids = ["${aws_security_group.sg1.id}", "${aws_security_group.sg2.id}"]
-	private_dns_enabled = false
+  security_group_ids = ["${aws_security_group.sg1.id}", "${aws_security_group.sg2.id}"]
+  private_dns_enabled = false
 }
 `
 
 const testAccVpcEndpointConfig_interfaceWithSubnetModified = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.0.0.0/16"
-	enable_dns_support = true
-	enable_dns_hostnames = true
-	tags {
-		Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
-	}
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
+  tags {
+    Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
+  }
 }
+
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.0.0/17"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
   }
@@ -482,7 +498,7 @@ resource "aws_subnet" "sn1" {
 resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.128.0/17"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
   }
@@ -498,11 +514,11 @@ resource "aws_security_group" "sg2" {
 
 resource "aws_vpc_endpoint" "ec2" {
   vpc_id = "${aws_vpc.foo.id}"
-	service_name = "com.amazonaws.us-west-2.ec2"
-	vpc_endpoint_type = "Interface"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
   subnet_ids = ["${aws_subnet.sn1.id}", "${aws_subnet.sn2.id}"]
-	security_group_ids = ["${aws_security_group.sg1.id}"]
-	private_dns_enabled = true
+  security_group_ids = ["${aws_security_group.sg1.id}"]
+  private_dns_enabled = true
 }
 `
 
@@ -534,10 +550,14 @@ resource "aws_lb" "nlb_test_1" {
   }
 }
 
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {}
+
 resource "aws_subnet" "nlb_test_1" {
   vpc_id            = "${aws_vpc.foo.id}"
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags {
     Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-1"
@@ -547,7 +567,7 @@ resource "aws_subnet" "nlb_test_1" {
 resource "aws_subnet" "nlb_test_2" {
   vpc_id            = "${aws_vpc.foo.id}"
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
   tags {
     Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-2"
@@ -568,11 +588,11 @@ resource "aws_security_group" "sg1" {
 
 resource "aws_vpc_endpoint" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
-	service_name = "${aws_vpc_endpoint_service.foo.service_name}"
-	vpc_endpoint_type = "Interface"
-	security_group_ids = ["${aws_security_group.sg1.id}"]
-	private_dns_enabled = false
-	auto_accept = true
+  service_name = "${aws_vpc_endpoint_service.foo.service_name}"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = ["${aws_security_group.sg1.id}"]
+  private_dns_enabled = false
+  auto_accept = true
 }
   `, lbName)
 }
