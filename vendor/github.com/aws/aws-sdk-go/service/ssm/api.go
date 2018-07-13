@@ -28745,9 +28745,22 @@ type StepExecution struct {
 	// Fully-resolved values passed into the step before execution.
 	Inputs map[string]*string `type:"map"`
 
+	// Enable this option to designate a step as critical for the successful completion
+	// of the Automation. If a step with this designation fails, then Automation
+	// reports the final status of the Automation as Failed.
+	IsCritical *bool `type:"boolean"`
+
+	// Enable this option to stop an Automation execution at the end of a specific
+	// step. The Automation execution stops if the step execution failed or succeeded.
+	IsEnd *bool `type:"boolean"`
+
 	// The maximum number of tries to run the action of the step. The default value
 	// is 1.
 	MaxAttempts *int64 `type:"integer"`
+
+	// Specifies which step in an Automation to process next after successfully
+	// completing a step.
+	NextStep *string `type:"string"`
 
 	// The action to take if the step fails. The default value is Abort.
 	OnFailure *string `type:"string"`
@@ -28776,6 +28789,16 @@ type StepExecution struct {
 
 	// The timeout seconds of the step.
 	TimeoutSeconds *int64 `type:"long"`
+
+	// ValidNextSteps offer different strategies for managing an Automation workflow
+	// when a step finishes. Automation dynamically processes ValidNextSteps when
+	// a step is completed. For example, you can specify Abort to stop the Automation
+	// when a step fails or Continue to ignore the failure of the current step and
+	// allow Automation to continue processing the next step. You can also specify
+	// step:step_name to jump to a designated step after a step succeeds. The result
+	// of the current step dynamically determines the ValidNextSteps. If a step
+	// finishes and no ValidNextStep is designated, then the Automation stops.
+	ValidNextSteps []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -28824,9 +28847,27 @@ func (s *StepExecution) SetInputs(v map[string]*string) *StepExecution {
 	return s
 }
 
+// SetIsCritical sets the IsCritical field's value.
+func (s *StepExecution) SetIsCritical(v bool) *StepExecution {
+	s.IsCritical = &v
+	return s
+}
+
+// SetIsEnd sets the IsEnd field's value.
+func (s *StepExecution) SetIsEnd(v bool) *StepExecution {
+	s.IsEnd = &v
+	return s
+}
+
 // SetMaxAttempts sets the MaxAttempts field's value.
 func (s *StepExecution) SetMaxAttempts(v int64) *StepExecution {
 	s.MaxAttempts = &v
+	return s
+}
+
+// SetNextStep sets the NextStep field's value.
+func (s *StepExecution) SetNextStep(v string) *StepExecution {
+	s.NextStep = &v
 	return s
 }
 
@@ -28881,6 +28922,12 @@ func (s *StepExecution) SetStepStatus(v string) *StepExecution {
 // SetTimeoutSeconds sets the TimeoutSeconds field's value.
 func (s *StepExecution) SetTimeoutSeconds(v int64) *StepExecution {
 	s.TimeoutSeconds = &v
+	return s
+}
+
+// SetValidNextSteps sets the ValidNextSteps field's value.
+func (s *StepExecution) SetValidNextSteps(v []*string) *StepExecution {
+	s.ValidNextSteps = v
 	return s
 }
 

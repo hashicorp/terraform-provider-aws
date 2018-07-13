@@ -2002,7 +2002,9 @@ type CreateProjectInput struct {
 	// The ARN of the AWS Identity and Access Management (IAM) role that enables
 	// AWS CodeBuild to interact with dependent AWS services on behalf of the AWS
 	// account.
-	ServiceRole *string `locationName:"serviceRole" min:"1" type:"string"`
+	//
+	// ServiceRole is a required field
+	ServiceRole *string `locationName:"serviceRole" min:"1" type:"string" required:"true"`
 
 	// Information about the build input source code for the build project.
 	//
@@ -2051,6 +2053,9 @@ func (s *CreateProjectInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 2))
+	}
+	if s.ServiceRole == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceRole"))
 	}
 	if s.ServiceRole != nil && len(*s.ServiceRole) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServiceRole", 1))

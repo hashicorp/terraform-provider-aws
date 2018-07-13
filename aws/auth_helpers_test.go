@@ -798,7 +798,7 @@ var instanceIdEndpoint = &endpoint{
 
 var securityCredentialsEndpoints = []*endpoint{
 	&endpoint{
-		Uri:  "/latest/meta-data/iam/security-credentials",
+		Uri:  "/latest/meta-data/iam/security-credentials/",
 		Body: "test_role",
 	},
 	&endpoint{

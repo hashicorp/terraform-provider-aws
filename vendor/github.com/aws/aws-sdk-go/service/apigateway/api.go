@@ -11563,6 +11563,10 @@ type ApiStage struct {
 
 	// API stage name of the associated API stage in a usage plan.
 	Stage *string `locationName:"stage" type:"string"`
+
+	// Map containing method level throttling information for API stage in a usage
+	// plan.
+	Throttle map[string]*ThrottleSettings `locationName:"throttle" type:"map"`
 }
 
 // String returns the string representation
@@ -11584,6 +11588,12 @@ func (s *ApiStage) SetApiId(v string) *ApiStage {
 // SetStage sets the Stage field's value.
 func (s *ApiStage) SetStage(v string) *ApiStage {
 	s.Stage = &v
+	return s
+}
+
+// SetThrottle sets the Throttle field's value.
+func (s *ApiStage) SetThrottle(v map[string]*ThrottleSettings) *ApiStage {
+	s.Throttle = v
 	return s
 }
 
