@@ -193,5 +193,15 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCodePipelineWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codepipelineconn
+	name := d.Get("name").(string)
+
+	resp, err := conn.DeleteWebhook(&DeleteWebhookInput{
+		Name: &name,
+	})
+
+	if err != nil {
+		return fmt.Errorf("Could not delete webhook: %s", err)
+	}
+
 	return nil
 }
