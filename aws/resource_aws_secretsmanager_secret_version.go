@@ -32,6 +32,12 @@ func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
 				Optional:  true,
 				ForceNew:  true,
 				Sensitive: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.HasChange("generate_random_password") {
+						return false
+					}
+					return true
+				},
 			},
 			"version_id": {
 				Type:     schema.TypeString,
