@@ -983,6 +983,14 @@
 			"versionExact": "v1.14.26"
 		},
 		{
+			"checksumSHA1": "7XSW9vBDuN9ZR5wfuCvCaF6QPy0=",
+			"path": "github.com/aws/aws-sdk-go/service/storagegateway",
+			"revision": "9e9afa0895e9daff556cc18f90dc53eb91f41ffd",
+			"revisionTime": "2018-07-12T21:02:49Z",
+			"version": "v1.14.26",
+			"versionExact": "v1.14.26"
+		},
+		{
 			"checksumSHA1": "uguCtF1eoCG71dvEVqrYbFs7py0=",
 			"path": "github.com/aws/aws-sdk-go/service/sts",
 			"revision": "9e9afa0895e9daff556cc18f90dc53eb91f41ffd",
