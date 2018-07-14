@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -66,7 +67,8 @@ func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 				Config: testAccAWSEmrClusterConfigConfigurationsJson(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
+					resource.TestMatchResourceAttr("aws_emr_cluster.tf-test-cluster", "configurations_json",
+						regexp.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
 				),
 			},
 		},
