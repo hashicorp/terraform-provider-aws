@@ -127,7 +127,8 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 	}
 
 	if len(metadatas) == 0 {
-		return fmt.Errorf("Search for AWS IAM server certificate returned no results")
+		log.Printf("[DEBUG] Search for AWS IAM server certificate returned no results")
+		return nil
 	}
 	if len(metadatas) > 1 {
 		if !d.Get("latest").(bool) {
