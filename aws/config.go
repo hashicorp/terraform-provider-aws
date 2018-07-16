@@ -89,6 +89,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/waf"
@@ -222,6 +223,7 @@ type AWSClient struct {
 	sdconn                *servicediscovery.ServiceDiscovery
 	sfnconn               *sfn.SFN
 	ssmconn               *ssm.SSM
+	storagegatewayconn    *storagegateway.StorageGateway
 	swfconn               *swf.SWF
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
@@ -518,6 +520,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
 	client.ssmconn = ssm.New(awsSsmSess)
+	client.storagegatewayconn = storagegateway.New(sess)
 	client.swfconn = swf.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
