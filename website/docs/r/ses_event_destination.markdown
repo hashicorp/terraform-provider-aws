@@ -67,7 +67,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the event destination
 * `configuration_set_name` - (Required) The name of the configuration set
 * `enabled` - (Optional) If true, the event destination will be enabled
-* `matching_types` - (Required) A list of matching types. May be any of `"send"`, `"reject"`, `"bounce"`, `"complaint"`, `"delivery"`, `"open"`, or `"click"`.
+* `matching_types` - (Required) A list of matching types. May be any of `"send"`, `"reject"`, `"bounce"`, `"complaint"`, `"delivery"`, `"open"`, `"click"`, or `"renderingFailure"`.
 * `cloudwatch_destination` - (Optional) CloudWatch destination for the events
 * `kinesis_destination` - (Optional) Send the events to a kinesis firehose destination
 * `sns_destination` - (Optional) Send the events to an SNS Topic destination
