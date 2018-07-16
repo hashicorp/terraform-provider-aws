@@ -1,5 +1,9 @@
 ## 1.28.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_storagegateway_gateway_activation_key` [GH-5200]
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_log_group: Allow `tags` handling in AWS GovCloud (US) and AWS China [GH-5175]
