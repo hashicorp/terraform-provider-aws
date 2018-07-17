@@ -536,7 +536,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		sg = append(sg, aws.StringValue(g.VpcSecurityGroupId))
 	}
 	if err := d.Set("vpc_security_group_ids", sg); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving VPC Security Group IDs to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving VPC Security Group IDs to state for Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
 	var cm []string
@@ -544,7 +544,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
 	}
 	if err := d.Set("cluster_members", cm); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving Neptune Cluster Members to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving Neptune Cluster Members to state for Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
 	var roles []string
@@ -553,14 +553,14 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	}
 
 	if err := d.Set("iam_roles", roles); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving IAM Roles to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving IAM Roles to state for Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(dbc.DBClusterArn)
 	d.Set("arn", arn)
 
 	if err := saveTagsNeptune(conn, d, arn); err != nil {
-		log.Printf("[WARN] Failed to save tags for Neptune Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+		return fmt.Errorf("Failed to save tags for Neptune Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
 	}
 
 	return nil
