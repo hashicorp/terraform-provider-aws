@@ -22,13 +22,13 @@ phase because a modification has not yet taken place. You can use the
 
 ```hcl
 resource "aws_neptune_cluster" "default" {
-  cluster_identifier      = "neptune-cluster-demo"
-  engine                  = "neptune"
-  backup_retention_period = 5
-  preferred_backup_window = "07:00-09:00"
-  skip_final_snapshot = "true"
-  iam_database_authentication_enabled = "true"
-  apply_immediately = "true"
+  cluster_identifier                  = "neptune-cluster-demo"
+  engine                              = "neptune"
+  backup_retention_period             = 5
+  preferred_backup_window             = "07:00-09:00"
+  skip_final_snapshot                 = true
+  iam_database_authentication_enabled = true
+  apply_immediately                   = true
 }
 ```
 
@@ -39,58 +39,45 @@ See the AWS [Docs](https://docs.aws.amazon.com/neptune/latest/userguide/limits.h
 
 The following arguments are supported:
 
-* `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
-* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
-* `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot
-    when this Neptune cluster is deleted. If omitted, no final snapshot will be
-    made.
-* `skip_final_snapshot` - (Optional) Determines whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
+* `apply_immediately` - (Optional) Specifies whether any cluster modifications
+  are applied immediately, or during the next maintenance window. Default is `false`.
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that
   instances in the Neptune cluster can be created in.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
+* `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
+* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
+* `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
+* `engine_version` - (Optional) The database engine version.
+* `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot
+    when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
+* `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the Neptune Cluster.
+* `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
+* `kms_key_arn` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_arn`, `storage_encrypted` needs to be set to true.
+* `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
+* `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g. wed:04:00-wed:04:30
 * `port` - (Optional) The port on which the Neptune accepts connections. Default is `8182`.
-* `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
-  with the Cluster
+* `replication_source_identifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
+* `skip_final_snapshot` - (Optional) Determines whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the Neptune cluster is encrypted. The default is `false` if not specified.
-* `replication_source_identifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
-* `apply_immediately` - (Optional) Specifies whether any cluster modifications
-     are applied immediately, or during the next maintenance window. Default is
-     `false`.
-* `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
-* `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
-* `kms_key_arn` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_arn`, `storage_encrypted` needs to be set to true.
-* `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the Neptune Cluster.
-* `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
-* `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
-* `engine_version` - (Optional) The database engine version.
 * `tags` - (Optional) A mapping of tags to assign to the Neptune cluster.
+* `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Neptune Cluster Identifier
-* `cluster_identifier` - The Neptune Cluster Identifier
 * `cluster_resource_id` - The Neptune Cluster Resource ID
 * `cluster_members` – List of Neptune Instances that are a part of this cluster
-* `availability_zones` - The availability zone of the instance
-* `backup_retention_period` - The backup retention period
-* `preferred_backup_window` - The daily time range during which the backups happen
-* `preferred_maintenance_window` - The maintenance window
 * `endpoint` - The DNS address of the Neptune instance
+* `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
+* `id` - The Neptune Cluster Identifier
 * `reader_endpoint` - A read-only endpoint for the Neptune cluster, automatically
 load-balanced across replicas
-* `engine` - The database engine
-* `engine_version` - The database engine version
-* `port` - The database port
 * `status` - The Neptune instance status
-* `storage_encrypted` - Specifies whether the Neptune cluster is encrypted
-* `replication_source_identifier` - ARN of the source Neptune cluster or Neptune instance if this Neptune cluster is created as a Read Replica.
-* `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 ## Timeouts
 
