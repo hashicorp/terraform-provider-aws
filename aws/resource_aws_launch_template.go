@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -510,8 +511,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
-		return err
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
@@ -786,8 +789,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.InstanceInitiatedShutdownBehavior = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
-		opts.InstanceType = aws.String(v.(string))
+	instanceType := d.Get("instance_type").(string)
+	if instanceType != "" {
+		opts.InstanceType = aws.String(instanceType)
 	}
 
 	if v, ok := d.GetOk("kernel_id"); ok {
@@ -828,7 +832,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok {
+	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 {
