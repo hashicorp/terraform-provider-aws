@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -61,11 +60,9 @@ func testSweepDbOptionGroups(region string) error {
 		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteOptionGroup(deleteOpts)
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok {
-					if awsErr.Code() == "InvalidOptionGroupStateFault" {
-						log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
-						return resource.RetryableError(awsErr)
-					}
+				if isAWSErr(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
+					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
@@ -93,6 +90,7 @@ func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
 					testAccCheckAWSDBOptionGroupAttributes(&v),
+					resource.TestMatchResourceAttr("aws_db_option_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:og:.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 				),
@@ -416,11 +414,7 @@ func testAccCheckAWSDBOptionGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "OptionGroupNotFoundFault" {
+		if !isAWSErr(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
 			return err
 		}
 	}
