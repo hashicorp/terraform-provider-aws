@@ -28,6 +28,15 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+
+			// apply_immediately is used to determine when the update modifications
+			// take place.
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,30 +82,12 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"neptune_subnet_group_name": {
+			"cluster_resource_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 				Computed: true,
-			},
-
-			"neptune_cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "default.neptune1",
 			},
 
 			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"reader_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,13 +105,6 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-			},
-
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
 			},
 
 			"final_snapshot_identifier": {
@@ -142,16 +126,42 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				},
 			},
 
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
-			"snapshot_identifier": {
-				Type:     schema.TypeString,
+			"iam_roles": {
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+
+			"iam_database_authentication_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
+
+			"neptune_subnet_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+
+			"neptune_cluster_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "default.neptune1",
 			},
 
 			"port": {
@@ -159,22 +169,6 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Optional: true,
 				Default:  8182,
 				ForceNew: true,
-			},
-
-			// apply_immediately is used to determine when the update modifications
-			// take place.
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"preferred_backup_window": {
@@ -197,12 +191,9 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				ValidateFunc: validateOnceAWeekWindowFormat,
 			},
 
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
+			"reader_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"replication_source_identifier": {
@@ -210,24 +201,34 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Optional: true,
 			},
 
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"iam_database_authentication_enabled": {
+			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
+				ForceNew: true,
 			},
 
-			"cluster_resource_id": {
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"tags": tagsSchema(),
+
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
