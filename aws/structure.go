@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -4308,4 +4309,17 @@ func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *
 		out = append(out, aws.StringValue(prefix.Cidr))
 	}
 	return schema.NewSet(schema.HashString, out)
+}
+
+func flattenMacieClassificationType(classificationType *macie.ClassificationType) []map[string]interface{} {
+	if classificationType == nil {
+		return []map[string]interface{}{}
+	}
+	m := map[string]interface{}{
+		"one_time": false,
+	}
+	if aws.StringValue(classificationType.OneTime) == macie.S3OneTimeClassificationTypeFull {
+		m["one_time"] = true
+	}
+	return []map[string]interface{}{m}
 }

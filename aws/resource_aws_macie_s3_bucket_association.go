@@ -85,7 +85,7 @@ func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error creating Macie S3 bucket association: %s", resp.FailedS3Resources[0])
 	}
 
-	d.SetId(macieS3BucketAssociationId(d))
+	d.SetId(fmt.Sprintf("%s/%s", d.Get("bucket_name"), d.Get("prefix")))
 	return resourceAwsMacieS3BucketAssociationRead(d, meta)
 }
 
@@ -99,27 +99,20 @@ func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interf
 
 	bucketName := d.Get("bucket_name").(string)
 	prefix := d.Get("prefix")
-	var res *macie.S3ResourceClassification
-	for {
-		resp, err := conn.ListS3Resources(req)
-		if err != nil {
-			return fmt.Errorf("Error listing Macie S3 bucket associations: %s", err)
-		}
 
-		for _, v := range resp.S3Resources {
+	var res *macie.S3ResourceClassification
+	err := conn.ListS3ResourcesPages(req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
+		for _, v := range page.S3Resources {
 			if aws.StringValue(v.BucketName) == bucketName && aws.StringValue(v.Prefix) == prefix {
 				res = v
-				break
+				return false
 			}
 		}
-		if res != nil {
-			break
-		}
 
-		if resp.NextToken == nil {
-			break
-		}
-		req.NextToken = resp.NextToken
+		return true
+	})
+	if err != nil {
+		return fmt.Errorf("Error listing Macie S3 bucket associations: %s", err)
 	}
 
 	if res == nil {
@@ -128,14 +121,8 @@ func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	m := map[string]interface{}{}
-	if aws.StringValue(res.ClassificationType.OneTime) == macie.S3OneTimeClassificationTypeFull {
-		m["one_time"] = true
-	} else {
-		m["one_time"] = false
-	}
-	if err := d.Set("classification_type", []map[string]interface{}{m}); err != nil {
-		return err
+	if err := d.Set("classification_type", flattenMacieClassificationType(res.ClassificationType)); err != nil {
+		return fmt.Errorf("error setting classification_type: %s", err)
 	}
 
 	return nil
@@ -216,10 +203,6 @@ func resourceAwsMacieS3BucketAssociationDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func macieS3BucketAssociationId(d *schema.ResourceData) string {
-	return fmt.Sprintf("%s/%s", d.Get("bucket_name"), d.Get("prefix"))
-}
-
 func macieS3BucketAssociationOneTimeClassification(d *schema.ResourceData) string {
 	oneTime := false
 	if v := d.Get("classification_type").([]interface{}); len(v) > 0 {
@@ -229,7 +212,6 @@ func macieS3BucketAssociationOneTimeClassification(d *schema.ResourceData) strin
 	}
 	if oneTime {
 		return macie.S3OneTimeClassificationTypeFull
-	} else {
-		return macie.S3OneTimeClassificationTypeNone
 	}
+	return macie.S3OneTimeClassificationTypeNone
 }

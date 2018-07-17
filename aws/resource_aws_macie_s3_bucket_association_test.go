@@ -77,22 +77,23 @@ func testAccCheckAWSMacieS3BucketAssociationDestroy(s *terraform.State) error {
 			req.MemberAccountId = aws.String(acctId)
 		}
 
-		for {
-			resp, err := conn.ListS3Resources(req)
-			if err != nil {
-				return err
-			}
-
-			for _, v := range resp.S3Resources {
+		dissociated := true
+		err := conn.ListS3ResourcesPages(req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
+			for _, v := range page.S3Resources {
 				if aws.StringValue(v.BucketName) == rs.Primary.Attributes["bucket_name"] && aws.StringValue(v.Prefix) == rs.Primary.Attributes["prefix"] {
-					return fmt.Errorf("S3 resource %s/%s is not dissociated from Macie", rs.Primary.Attributes["bucket_name"], rs.Primary.Attributes["prefix"])
+					dissociated = false
+					return false
 				}
 			}
 
-			if resp.NextToken == nil {
-				break
-			}
-			req.NextToken = resp.NextToken
+			return true
+		})
+		if err != nil {
+			return err
+		}
+
+		if !dissociated {
+			return fmt.Errorf("S3 resource %s/%s is not dissociated from Macie", rs.Primary.Attributes["bucket_name"], rs.Primary.Attributes["prefix"])
 		}
 	}
 	return nil
@@ -100,9 +101,36 @@ func testAccCheckAWSMacieS3BucketAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		conn := testAccProvider.Meta().(*AWSClient).macieconn
+
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		req := &macie.ListS3ResourcesInput{}
+		acctId := rs.Primary.Attributes["member_account_id"]
+		if acctId != "" {
+			req.MemberAccountId = aws.String(acctId)
+		}
+
+		exists := false
+		err := conn.ListS3ResourcesPages(req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
+			for _, v := range page.S3Resources {
+				if aws.StringValue(v.BucketName) == rs.Primary.Attributes["bucket_name"] && aws.StringValue(v.Prefix) == rs.Primary.Attributes["prefix"] {
+					exists = true
+					return false
+				}
+			}
+
+			return true
+		})
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			return fmt.Errorf("S3 resource %s/%s is not associated with Macie", rs.Primary.Attributes["bucket_name"], rs.Primary.Attributes["prefix"])
 		}
 
 		return nil
