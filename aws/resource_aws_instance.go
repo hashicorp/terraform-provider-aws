@@ -119,6 +119,14 @@ func resourceAwsInstance() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
+					// echo -n "" | shasum
+					if old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "" {
+						return true
+					}
+					return false
+				},
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
@@ -506,8 +514,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified")
 	}
 
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 	if !restricted {
+
 		tagsSpec := make([]*ec2.TagSpecification, 0)
 
 		if v, ok := d.GetOk("tags"); ok {
@@ -833,8 +842,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)
-
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	if d.HasChange("tags") {
 		if !d.IsNewResource() || restricted {
@@ -846,7 +854,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("volume_tags") {
-		if !d.IsNewResource() || !restricted {
+		if !d.IsNewResource() || restricted {
 			if err := setVolumeTags(conn, d); err != nil {
 				return err
 			} else {
@@ -1067,7 +1075,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("disable_api_termination") {
+	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
 		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			DisableApiTermination: &ec2.AttributeBooleanValue{
@@ -1110,7 +1118,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("credit_specification") {
+	if d.HasChange("credit_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("credit_specification"); ok {
 			creditSpecification := v.([]interface{})[0].(map[string]interface{})
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
@@ -1686,17 +1694,23 @@ func buildAwsInstanceOpts(
 	d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*AWSClient).ec2conn
 
+	instanceType := d.Get("instance_type").(string)
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageID:               aws.String(d.Get("ami").(string)),
-		InstanceType:          aws.String(d.Get("instance_type").(string)),
+		InstanceType:          aws.String(instanceType),
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
-		cs := v.([]interface{})[0].(map[string]interface{})
-		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-			CpuCredits: aws.String(cs["cpu_credits"].(string)),
+		// Only T2 instances support T2 Unlimited
+		if strings.HasPrefix(instanceType, "t2") {
+			cs := v.([]interface{})[0].(map[string]interface{})
+			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+				CpuCredits: aws.String(cs["cpu_credits"].(string)),
+			}
+		} else {
+			log.Print("[WARN] credit_specification is defined but instance type is not T2. Ignoring...")
 		}
 	}
 

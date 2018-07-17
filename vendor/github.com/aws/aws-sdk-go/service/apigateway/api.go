@@ -11563,6 +11563,10 @@ type ApiStage struct {
 
 	// API stage name of the associated API stage in a usage plan.
 	Stage *string `locationName:"stage" type:"string"`
+
+	// Map containing method level throttling information for API stage in a usage
+	// plan.
+	Throttle map[string]*ThrottleSettings `locationName:"throttle" type:"map"`
 }
 
 // String returns the string representation
@@ -11584,6 +11588,12 @@ func (s *ApiStage) SetApiId(v string) *ApiStage {
 // SetStage sets the Stage field's value.
 func (s *ApiStage) SetStage(v string) *ApiStage {
 	s.Stage = &v
+	return s
+}
+
+// SetThrottle sets the Throttle field's value.
+func (s *ApiStage) SetThrottle(v map[string]*ThrottleSettings) *ApiStage {
+	s.Throttle = v
 	return s
 }
 
@@ -15203,7 +15213,7 @@ type EndpointConfiguration struct {
 	// A list of endpoint types of an API (RestApi) or its custom domain name (DomainName).
 	// For an edge-optimized API and its custom domain name, the endpoint type is
 	// "EDGE". For a regional API and its custom domain name, the endpoint type
-	// is REGIONAL.
+	// is REGIONAL. For a private API, the endpoint type is PRIVATE.
 	Types []*string `locationName:"types" type:"list"`
 }
 
@@ -16577,11 +16587,11 @@ type GetExportInput struct {
 
 	// A key-value map of query string parameters that specify properties of the
 	// export, depending on the requested exportType. For exportTypeswagger, any
-	// combination of the following parameters are supported: integrations will
-	// export the API with x-amazon-apigateway-integration extensions. authorizers
-	// will export the API with x-amazon-apigateway-authorizer extensions. postman
-	// will export the API with Postman extensions, allowing for import to the Postman
-	// tool
+	// combination of the following parameters are supported: extensions='integrations'
+	// or extensions='apigateway' will export the API with x-amazon-apigateway-integration
+	// extensions. extensions='authorizers' will export the API with x-amazon-apigateway-authorizer
+	// extensions. postman will export the API with Postman extensions, allowing
+	// for import to the Postman tool
 	Parameters map[string]*string `location:"querystring" locationName:"parameters" type:"map"`
 
 	// [Required] The string identifier of the associated RestApi.
@@ -19141,8 +19151,9 @@ type ImportRestApiInput struct {
 	//
 	// To exclude DocumentationParts from the import, set parameters as ignore=documentation.
 	//
-	// To configure the endpoint type, set parameters as endpointConfigurationTypes=EDGE
-	// orendpointConfigurationTypes=REGIONAL. The default endpoint type is EDGE.
+	// To configure the endpoint type, set parameters as endpointConfigurationTypes=EDGE,
+	// endpointConfigurationTypes=REGIONAL, or endpointConfigurationTypes=PRIVATE.
+	// The default endpoint type is EDGE.
 	//
 	// To handle imported basePath, set parameters as basePath=ignore, basePath=prepend
 	// or basePath=split.
@@ -19151,11 +19162,11 @@ type ImportRestApiInput struct {
 	// API is:
 	//
 	//    aws apigateway import-rest-api --parameters ignore=documentation --body
-	//    'file:///path/to/imported-api-body.json
+	//    'file:///path/to/imported-api-body.json'
 	// The AWS CLI command to set the regional endpoint on the imported API is:
 	//
 	//    aws apigateway import-rest-api --parameters endpointConfigurationTypes=REGIONAL
-	//    --body 'file:///path/to/imported-api-body.json
+	//    --body 'file:///path/to/imported-api-body.json'
 	Parameters map[string]*string `location:"querystring" locationName:"parameters" type:"map"`
 }
 
@@ -20996,7 +21007,7 @@ type PutRestApiInput struct {
 	// Custom header parameters as part of the request. For example, to exclude
 	// DocumentationParts from an imported API, set ignore=documentation as a parameters
 	// value, as in the AWS CLI command of aws apigateway import-rest-api --parameters
-	// ignore=documentation --body 'file:///path/to/imported-api-body.json.
+	// ignore=documentation --body 'file:///path/to/imported-api-body.json'.
 	Parameters map[string]*string `location:"querystring" locationName:"parameters" type:"map"`
 
 	// [Required] The string identifier of the associated RestApi.
@@ -24162,15 +24173,19 @@ const (
 	DocumentationPartTypeResponseBody = "RESPONSE_BODY"
 )
 
-// The endpoint type. The valid value is EDGE for edge-optimized API setup,
-// most suitable for mobile applications, REGIONAL for regional API endpoint
-// setup, most suitable for calling from AWS Region
+// The endpoint type. The valid values are EDGE for edge-optimized API setup,
+// most suitable for mobile applications; REGIONAL for regional API endpoint
+// setup, most suitable for calling from AWS Region; and PRIVATE for private
+// APIs.
 const (
 	// EndpointTypeRegional is a EndpointType enum value
 	EndpointTypeRegional = "REGIONAL"
 
 	// EndpointTypeEdge is a EndpointType enum value
 	EndpointTypeEdge = "EDGE"
+
+	// EndpointTypePrivate is a EndpointType enum value
+	EndpointTypePrivate = "PRIVATE"
 )
 
 const (

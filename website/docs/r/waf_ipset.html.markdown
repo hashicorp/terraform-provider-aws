@@ -45,10 +45,17 @@ The following arguments are supported:
 * `value` - (Required) An IPv4 or IPv6 address specified via CIDR notation.
 	e.g. `192.0.2.44/32` or `1111:0000:0000:0000:0000:0000:0000:0000/64`
 
-## Remarks
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF IPSet.
+* `arn` - The ARN of the WAF IPSet.
+
+## Import
+
+WAF IPSets can be imported using their ID, e.g.
+
+```
+$ terraform import aws_waf_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

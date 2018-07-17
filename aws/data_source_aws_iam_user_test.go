@@ -21,8 +21,9 @@ func TestAccAWSDataSourceIAMUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_user.test", "user_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_user.test", "path", "/"),
+					resource.TestCheckResourceAttr("data.aws_iam_user.test", "permissions_boundary", ""),
 					resource.TestCheckResourceAttr("data.aws_iam_user.test", "user_name", userName),
-					resource.TestMatchResourceAttr("data.aws_iam_user.test", "arn", regexp.MustCompile("^arn:aws:iam::[0-9]{12}:user/"+userName)),
+					resource.TestMatchResourceAttr("data.aws_iam_user.test", "arn", regexp.MustCompile("^arn:[^:]+:iam::[0-9]{12}:user/"+userName)),
 				),
 			},
 		},

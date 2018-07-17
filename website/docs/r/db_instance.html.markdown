@@ -58,7 +58,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 The following arguments are supported:
 
 * `allocated_storage` - (Required unless a `snapshot_identifier` or
-`replicate_source_db` is provided) The allocated storage in gigabytes.
+`replicate_source_db` is provided) The allocated storage in gibibytes.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
@@ -95,9 +95,15 @@ for additonal read replica contraints.
    Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
+For information on the difference between the available Aurora MySQL engines
+see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
+in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
 is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
 this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
+For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. If omitted, no final snapshot will be made.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or

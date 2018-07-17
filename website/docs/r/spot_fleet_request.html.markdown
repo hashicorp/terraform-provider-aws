@@ -115,9 +115,11 @@ lowestPrice.
   request is decreased below the current size of the Spot fleet.
 * `terminate_instances_with_expiration` - Indicates whether running Spot
   instances should be terminated when the Spot fleet request expires.
-* `instance_interruption_behavior` - (Optional) Indicates whether a Spot
+* `instance_interruption_behaviour` - (Optional) Indicates whether a Spot
   instance stops or terminates when it is interrupted. Default is
   `terminate`.
+* `fleet_type` - (Optional) The type of fleet request. Indicates whether the Spot Fleet only requests the target
+  capacity or also attempts to maintain it. Default is `maintain`.
 * `valid_until` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. Defaults to 24 hours.
 * `valid_from` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.

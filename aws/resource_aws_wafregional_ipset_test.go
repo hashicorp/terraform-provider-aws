@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -34,6 +35,8 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+					resource.TestMatchResourceAttr("aws_wafregional_ipset.ipset", "arn",
+						regexp.MustCompile(`^arn:[\w-]+:waf-regional:[^:]+:\d{12}:ipset/.+$`)),
 				),
 			},
 		},

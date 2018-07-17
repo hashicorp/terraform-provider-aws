@@ -319,6 +319,16 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateRFC3339TimeString,
 			},
+			"fleet_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.FleetTypeMaintain,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.FleetTypeMaintain,
+					ec2.FleetTypeRequest,
+				}, false),
+			},
 			"spot_request_state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -600,6 +610,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
+		Type: aws.String(d.Get("fleet_type").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -906,6 +917,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
+	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 
 	return nil

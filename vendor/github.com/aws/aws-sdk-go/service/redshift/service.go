@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "redshift"  // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "Redshift"  // ServiceID is a unique identifer of a specific service
+	ServiceName = "redshift"  // Name of service.
+	EndpointsID = ServiceName // ID to lookup a service endpoint with.
+	ServiceID   = "Redshift"  // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the Redshift client with a session.

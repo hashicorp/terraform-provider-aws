@@ -8,13 +8,17 @@ description: |-
 
 # aws_codebuild_webhook
 
-Provides a CodeBuild Webhook resource.
+Manages a CodeBuild webhook, which is an endpoint accepted by the CodeBuild service to trigger builds from source code repositories. Depending on the source type of the CodeBuild project, the CodeBuild service may also automatically create and delete the actual repository webhook as well.
 
 ## Example Usage
 
 ### GitHub
 
-~> **Note:** For GitHub source projects, the AWS account that Terraform uses to create this resource *must* have authorized CodeBuild to access GitHub's OAuth API in each applicable region. This is a manual step that must be done *before* creating webhooks with this resource. If OAuth is not configured, AWS will return an error similar to `ResourceNotFoundException: Could not find access token for server type github`. More information can be found in the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/sample-github-pull-request.html).
+When working with [GitHub](https://github.com) source CodeBuild webhooks, the CodeBuild service will automatically create (on `aws_codebuild_webhook` resource creation) and delete (on `aws_codebuild_webhook` resource deletion) the GitHub repository webhook using its granted OAuth permissions. This behavior cannot be controlled by Terraform.
+
+~> **Note:** The AWS account that Terraform uses to create this resource *must* have authorized CodeBuild to access GitHub's OAuth API in each applicable region. This is a manual step that must be done *before* creating webhooks with this resource. If OAuth is not configured, AWS will return an error similar to `ResourceNotFoundException: Could not find access token for server type github`. More information can be found in the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/sample-github-pull-request.html).
+
+~> **Note:** Further managing the automatically created GitHub webhook with the `github_repository_webhook` resource is only possible with importing that resource after creation of the `aws_codebuild_webhook` resource. The CodeBuild API does not ever provide the `secret` attribute for the `aws_codebuild_webhook` resource in this scenario.
 
 ```hcl
 resource "aws_codebuild_webhook" "example" {
@@ -24,11 +28,13 @@ resource "aws_codebuild_webhook" "example" {
 
 ### GitHub Enterprise
 
+When working with [GitHub Enterprise](https://enterprise.github.com/) source CodeBuild webhooks, the GHE repository webhook must be separately managed (e.g. manually or with the `github_repository_webhook` resource).
+
 More information creating webhooks with GitHub Enterprise can be found in the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/sample-github-enterprise.html).
 
 ```hcl
 resource "aws_codebuild_webhook" "example" {
-  name = "${aws_codebuild_project.example.name}"
+  project_name = "${aws_codebuild_project.example.name}"
 }
 
 resource "github_repository_webhook" "example" {
@@ -39,7 +45,7 @@ resource "github_repository_webhook" "example" {
 
   configuration {
     url          = "${aws_codebuild_webhook.example.payload_url}"
-    secret       = "${aws_codebulld_webhook.example.secret}"
+    secret       = "${aws_codebuild_webhook.example.secret}"
     content_type = "json"
     insecure_ssl = false
   }
@@ -50,7 +56,7 @@ resource "github_repository_webhook" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the build project.
+* `project_name` - (Required) The name of the build project.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built.
 
 ## Attributes Reference
@@ -59,8 +65,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the build project.
 * `payload_url` - The CodeBuild endpoint where webhook events are sent.
-* `secret` - The secret token of the associated repository. Not returned for all source types.
+* `secret` - The secret token of the associated repository. Not returned by the CodeBuild API for all source types.
 * `url` - The URL to the webhook.
+
+~> **Note:** The `secret` attribute is only set on resource creation, so if the secret is manually rotated, terraform will not pick up the change on subsequent runs.  In that case, the webhook resource should be tainted and re-created to get the secret back in sync.
 
 ## Import
 

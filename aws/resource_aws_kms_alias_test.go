@@ -94,6 +94,30 @@ func TestAccAWSKmsAlias_multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
+	rInt := acctest.RandInt()
+	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsArnDiffSuppress(rInt, kmsAliasTimestamp),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsAliasExists("aws_kms_alias.bar"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.bar", "target_key_arn"),
+				),
+			},
+			{
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+				Config:             testAccAWSKmsArnDiffSuppress(rInt, kmsAliasTimestamp),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSKmsAliasDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
@@ -185,4 +209,17 @@ resource "aws_kms_alias" "two" {
     name = "alias/tf-acc-alias-two-%d"
     target_key_id = "${aws_kms_key.single.key_id}"
 }`, timestamp, rInt, rInt)
+}
+
+func testAccAWSKmsArnDiffSuppress(rInt int, timestamp string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test foo %s"
+    deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "bar" {
+	name = "alias/tf-acc-key-alias-%d"
+	target_key_id = "${aws_kms_key.foo.arn}"
+}`, timestamp, rInt)
 }

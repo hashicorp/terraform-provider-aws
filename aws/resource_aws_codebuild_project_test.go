@@ -60,11 +60,12 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.type", "LINUX_CONTAINER"),
 					resource.TestMatchResourceAttr(resourceName, "service_role", regexp.MustCompile(`^arn:[^:]+:iam::[^:]+:role/tf-acc-test-[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3661695266.auth.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source.3661695266.git_clone_depth", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source.3661695266.insecure_ssl", "false"),
-					resource.TestCheckResourceAttr(resourceName, "source.3661695266.location", "https://github.com/hashibot-test/aws-test.git"),
-					resource.TestCheckResourceAttr(resourceName, "source.3661695266.type", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "source.1441597390.auth.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.1441597390.git_clone_depth", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.1441597390.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.1441597390.location", "https://github.com/hashibot-test/aws-test.git"),
+					resource.TestCheckResourceAttr(resourceName, "source.1441597390.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.1441597390.type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -280,9 +281,9 @@ func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_Auth(rName, "FAKERESOURCE1", "OAUTH"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.auth.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.auth.2706882902.resource", "FAKERESOURCE1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.auth.2706882902.type", "OAUTH"),
+					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.2706882902.resource", "FAKERESOURCE1"),
+					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.2706882902.type", "OAUTH"),
 				),
 			},
 		},
@@ -303,14 +304,14 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.402128226.git_clone_depth", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.1181740906.git_clone_depth", "1"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2574842497.git_clone_depth", "2"),
+					resource.TestCheckResourceAttr(resourceName, "source.974047921.git_clone_depth", "2"),
 				),
 			},
 		},
@@ -331,14 +332,147 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3334111800.insecure_ssl", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.1976396802.insecure_ssl", "true"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3680370172.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.3680505372.insecure_ssl", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Source_ReportBuildStatus(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.4215890488.report_build_status", "true"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.3680505372.report_build_status", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.2806293607.type", "BITBUCKET"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_Type_CodeCommit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.3715340088.type", "CODECOMMIT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_Type_CodePipeline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.2280907000.type", "CODEPIPELINE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_Type_GitHubEnterprise(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.553628638.type", "GITHUB_ENTERPRISE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.2751363124.type", "S3"),
 				),
 			},
 		},
@@ -412,6 +546,32 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_WindowsContainer(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.compute_type", "BUILD_GENERAL1_MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.environment_variable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.image", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.type", "WINDOWS_CONTAINER"),
 				),
 			},
 		},
@@ -835,6 +995,150 @@ resource "aws_codebuild_project" "test" {
 `, rName, insecureSSL)
 }
 
+func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus(rName string, reportBuildStatus bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location            = "https://github.com/hashicorp/packer.git"
+    report_build_status = %t
+    type                = "GITHUB"
+  }
+}
+`, rName, reportBuildStatus)
+}
+
+func testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://bitbucket.org/organization/repository.git"
+    type     = "BITBUCKET"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_Source_Type_CodeCommit(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_Source_Type_CodePipeline(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type = "CODEPIPELINE"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_Source_Type_GitHubEnterprise(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://example.com/organization/repository.git"
+    type     = "GITHUB_ENTERPRISE"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "bucket-name/object-name.zip"
+    type     = "S3"
+  }
+}
+`, rName)
+}
+
 func testAccAWSCodeBuildProjectConfig_Tags(rName, tagKey, tagValue string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
@@ -911,4 +1215,28 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, subnetCount, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_WindowsContainer(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_MEDIUM"
+    image        = "2"
+    type         = "WINDOWS_CONTAINER"
+  }
+
+  source {
+    location = "%s"
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccAWSCodeBuildGitHubSourceLocationFromEnv())
 }

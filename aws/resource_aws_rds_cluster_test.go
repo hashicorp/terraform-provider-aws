@@ -39,6 +39,10 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName,
+						"enabled_cloudwatch_logs_exports.0", "audit"),
+					resource.TestCheckResourceAttr(resourceName,
+						"enabled_cloudwatch_logs_exports.1", "error"),
 				),
 			},
 		},
@@ -204,6 +208,39 @@ func TestAccAWSRDSCluster_updateTags(t *testing.T) {
 					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster.default", "tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_updateCloudwatchLogsExports(t *testing.T) {
+	var v rds.DBCluster
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
+					resource.TestCheckResourceAttr("aws_rds_cluster.default",
+						"enabled_cloudwatch_logs_exports.0", "audit"),
+					resource.TestCheckResourceAttr("aws_rds_cluster.default",
+						"enabled_cloudwatch_logs_exports.1", "error"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigUpdatedCloudwatchLogsExports(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
+					resource.TestCheckResourceAttr("aws_rds_cluster.default",
+						"enabled_cloudwatch_logs_exports.0", "error"),
+					resource.TestCheckResourceAttr("aws_rds_cluster.default",
+						"enabled_cloudwatch_logs_exports.1", "slowquery"),
 				),
 			},
 		},
@@ -571,6 +608,10 @@ resource "aws_rds_cluster" "default" {
   tags {
     Environment = "production"
   }
+  enabled_cloudwatch_logs_exports = [
+	"audit",
+	"error",
+  ]
 }`, n)
 }
 
@@ -633,7 +674,7 @@ func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, u
 	return fmt.Sprintf(`
 
 data "aws_region" "current" {}
-    
+
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = "%s"
   region = "${data.aws_region.current.name}"
@@ -828,6 +869,23 @@ resource "aws_rds_cluster" "default" {
     Environment = "production"
     AnotherTag = "test"
   }
+}`, n)
+}
+
+func testAccAWSClusterConfigUpdatedCloudwatchLogsExports(n int) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  skip_final_snapshot = true
+  enabled_cloudwatch_logs_exports = [
+    "error",
+    "slowquery"
+  ]
 }`, n)
 }
 

@@ -72,8 +72,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -88,6 +90,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
@@ -124,6 +127,7 @@ type Config struct {
 	DeviceFarmEndpoint       string
 	Ec2Endpoint              string
 	EcsEndpoint              string
+	AutoscalingEndpoint      string
 	EcrEndpoint              string
 	EfsEndpoint              string
 	EsEndpoint               string
@@ -218,6 +222,7 @@ type AWSClient struct {
 	sdconn                *servicediscovery.ServiceDiscovery
 	sfnconn               *sfn.SFN
 	ssmconn               *ssm.SSM
+	swfconn               *swf.SWF
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
@@ -229,6 +234,8 @@ type AWSClient struct {
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
 	budgetconn            *budgets.Budgets
+	neptuneconn           *neptune.Neptune
+	pricingconn           *pricing.Pricing
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -237,11 +244,6 @@ func (c *AWSClient) S3() *s3.S3 {
 
 func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 	return c.dynamodbconn
-}
-
-func (c *AWSClient) IsGovCloud() bool {
-	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
-	return isGovCloud
 }
 
 func (c *AWSClient) IsChinaCloud() bool {
@@ -390,6 +392,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsCwlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchLogsEndpoint)})
 	awsDynamoSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
+	awsAutoscalingSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.AutoscalingEndpoint)})
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
 	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
@@ -456,7 +459,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
-	client.autoscalingconn = autoscaling.New(sess)
+	client.autoscalingconn = autoscaling.New(awsAutoscalingSess)
 	client.cloud9conn = cloud9.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
 	client.cloudfrontconn = cloudfront.New(sess)
@@ -499,6 +502,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.mqconn = mq.New(sess)
+	client.neptuneconn = neptune.New(sess)
 	client.opsworksconn = opsworks.New(sess)
 	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
@@ -514,6 +518,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
 	client.ssmconn = ssm.New(awsSsmSess)
+	client.swfconn = swf.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
@@ -522,6 +527,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.dxconn = directconnect.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
+	client.neptuneconn = neptune.New(sess)
+	client.pricingconn = pricing.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

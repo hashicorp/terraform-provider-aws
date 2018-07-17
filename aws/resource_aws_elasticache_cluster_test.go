@@ -149,6 +149,34 @@ func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_ParameterGroupName(rName, "memcached", "1.4.34", "default.memcached1.4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.4.34"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memcached1.4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheCluster_Port_Ec2Classic(t *testing.T) {
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
@@ -245,12 +273,10 @@ func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_decreasingCacheNodes(t *testing.T) {
+func TestAccAWSElasticacheCluster_NumCacheNodes_Decrease(t *testing.T) {
 	var ec elasticache.CacheCluster
-
-	ri := acctest.RandInt()
-	preConfig := fmt.Sprintf(testAccAWSElasticacheClusterConfigDecreasingNodes, ri, ri, acctest.RandString(10))
-	postConfig := fmt.Sprintf(testAccAWSElasticacheClusterConfigDecreasingNodes_update, ri, ri, acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -258,22 +284,75 @@ func TestAccAWSElasticacheCluster_decreasingCacheNodes(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: preConfig,
+				Config: testAccAWSElasticacheClusterConfig_NumCacheNodes(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
-					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.bar", &ec),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_cluster.bar", "num_cache_nodes", "3"),
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "3"),
 				),
 			},
-
 			{
-				Config: postConfig,
+				Config: testAccAWSElasticacheClusterConfig_NumCacheNodes(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
-					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.bar", &ec),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_cluster.bar", "num_cache_nodes", "1"),
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_NumCacheNodes_Increase(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_NumCacheNodes(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "1"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_NumCacheNodes(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_NumCacheNodes_IncreaseWithPreferredAvailabilityZones(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_elasticache_cluster.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZones(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_availability_zones.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZones(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_nodes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_availability_zones.#", "3"),
 				),
 			},
 		},
@@ -673,7 +752,6 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica_Ec2Classic(t 
 					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster, &replicationGroup),
 					resource.TestCheckResourceAttr(clusterResourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(clusterResourceName, "node_type", "cache.m3.medium"),
-					resource.TestCheckResourceAttr(clusterResourceName, "parameter_group_name", "default.redis3.2"),
 					resource.TestCheckResourceAttr(clusterResourceName, "port", "6379"),
 				),
 			},
@@ -708,11 +786,9 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica_Ec2Classic(
 					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster2, &replicationGroup),
 					resource.TestCheckResourceAttr(clusterResourceName1, "engine", "redis"),
 					resource.TestCheckResourceAttr(clusterResourceName1, "node_type", "cache.m3.medium"),
-					resource.TestCheckResourceAttr(clusterResourceName1, "parameter_group_name", "default.redis3.2"),
 					resource.TestCheckResourceAttr(clusterResourceName1, "port", "6379"),
 					resource.TestCheckResourceAttr(clusterResourceName2, "engine", "redis"),
 					resource.TestCheckResourceAttr(clusterResourceName2, "node_type", "cache.m3.medium"),
-					resource.TestCheckResourceAttr(clusterResourceName2, "parameter_group_name", "default.redis3.2"),
 					resource.TestCheckResourceAttr(clusterResourceName2, "port", "6379"),
 				),
 			},
@@ -828,7 +904,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "memcached"
   node_type            = "cache.m1.small"
   num_cache_nodes      = 1
-  parameter_group_name = "default.memcached1.4"
 }
 `, rName)
 }
@@ -840,9 +915,21 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "redis"
   node_type            = "cache.m1.small"
   num_cache_nodes      = 1
-  parameter_group_name = "default.redis3.2"
 }
 `, rName)
+}
+
+func testAccAWSElasticacheClusterConfig_ParameterGroupName(rName, engine, engineVersion, parameterGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id           = %q
+  engine               = %q
+  engine_version       = %q
+  node_type            = "cache.m1.small"
+  num_cache_nodes      = 1
+  parameter_group_name = %q
+}
+`, rName, engine, engineVersion, parameterGroupName)
 }
 
 func testAccAWSElasticacheClusterConfig_Port(rName string, port int) string {
@@ -852,7 +939,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "memcached"
   node_type            = "cache.m1.small"
   num_cache_nodes      = 1
-  parameter_group_name = "default.memcached1.4"
   port                 = %d
 }
 `, rName, port)
@@ -889,7 +975,6 @@ resource "aws_elasticache_cluster" "bar" {
     node_type = "cache.m1.small"
     num_cache_nodes = 1
     port = 11211
-    parameter_group_name = "default.memcached1.4"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
@@ -921,7 +1006,6 @@ resource "aws_elasticache_cluster" "bar" {
     node_type = "cache.m1.small"
     num_cache_nodes = 1
     port = 6379
-  	parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     snapshot_window = "05:00-09:00"
     snapshot_retention_limit = 3
@@ -955,7 +1039,6 @@ resource "aws_elasticache_cluster" "bar" {
     node_type = "cache.m1.small"
     num_cache_nodes = 1
     port = 6379
-  	parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     snapshot_window = "07:00-09:00"
     snapshot_retention_limit = 7
@@ -963,70 +1046,37 @@ resource "aws_elasticache_cluster" "bar" {
 }
 `
 
-var testAccAWSElasticacheClusterConfigDecreasingNodes = `
-provider "aws" {
-	region = "us-east-1"
+func testAccAWSElasticacheClusterConfig_NumCacheNodes(rName string, numCacheNodes int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "bar" {
+  apply_immediately    = true
+  cluster_id           = "%s"
+  engine               = "memcached"
+  node_type            = "cache.m1.small"
+  num_cache_nodes      = %d
 }
-resource "aws_security_group" "bar" {
-    name = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    ingress {
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+`, rName, numCacheNodes)
 }
 
-resource "aws_elasticache_security_group" "bar" {
-    name = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    security_group_names = ["${aws_security_group.bar.name}"]
-}
+func testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZones(rName string, numCacheNodes int) string {
+	preferredAvailabilityZones := make([]string, numCacheNodes)
+	for i := range preferredAvailabilityZones {
+		preferredAvailabilityZones[i] = `"${data.aws_availability_zones.available.names[0]}"`
+	}
+
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
 
 resource "aws_elasticache_cluster" "bar" {
-    cluster_id = "tf-%s"
-    engine = "memcached"
-    node_type = "cache.m1.small"
-    num_cache_nodes = 3
-    port = 11211
-    parameter_group_name = "default.memcached1.4"
-    security_group_names = ["${aws_elasticache_security_group.bar.name}"]
+  apply_immediately            = true
+  cluster_id                   = "%s"
+  engine                       = "memcached"
+  node_type                    = "cache.m1.small"
+  num_cache_nodes              = %d
+  preferred_availability_zones = [%s]
 }
-`
-
-var testAccAWSElasticacheClusterConfigDecreasingNodes_update = `
-provider "aws" {
-	region = "us-east-1"
+`, rName, numCacheNodes, strings.Join(preferredAvailabilityZones, ","))
 }
-resource "aws_security_group" "bar" {
-    name = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    ingress {
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-}
-
-resource "aws_elasticache_security_group" "bar" {
-    name = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    security_group_names = ["${aws_security_group.bar.name}"]
-}
-
-resource "aws_elasticache_cluster" "bar" {
-    cluster_id = "tf-%s"
-    engine = "memcached"
-    node_type = "cache.m1.small"
-    num_cache_nodes = 1
-    port = 11211
-    parameter_group_name = "default.memcached1.4"
-    security_group_names = ["${aws_elasticache_security_group.bar.name}"]
-    apply_immediately = true
-}
-`
 
 var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
@@ -1140,9 +1190,8 @@ resource "aws_elasticache_cluster" "bar" {
     port = 11211
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
-    parameter_group_name = "default.memcached1.4"
     az_mode = "cross-az"
-    availability_zones = [
+    preferred_availability_zones = [
         "us-west-2a",
         "us-west-2b"
     ]
@@ -1158,7 +1207,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "memcached"
   node_type            = "cache.m3.medium"
   num_cache_nodes      = 1
-  parameter_group_name = "default.memcached1.4"
   port                 = 11211
 }
 `, rName, azMode)
@@ -1173,7 +1221,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "redis"
   node_type            = "cache.m3.medium"
   num_cache_nodes      = 1
-  parameter_group_name = "default.redis3.2"
   port                 = 6379
 }
 `, rName, azMode)
@@ -1188,7 +1235,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine_version       = "%[2]s"
   node_type            = "cache.m3.medium"
   num_cache_nodes      = 1
-  parameter_group_name = "default.memcached1.4"
   port                 = 11211
 }
 `, rName, engineVersion)
@@ -1203,7 +1249,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine_version       = "%[2]s"
   node_type            = "cache.m3.medium"
   num_cache_nodes      = 1
-  parameter_group_name = "default.redis3.2"
   port                 = 6379
 }
 `, rName, engineVersion)
@@ -1217,7 +1262,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "memcached"
   node_type            = "%[2]s"
   num_cache_nodes      = 1
-  parameter_group_name = "default.memcached1.4"
   port                 = 11211
 }
 `, rName, nodeType)
@@ -1231,7 +1275,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "redis"
   node_type            = "%[2]s"
   num_cache_nodes      = 1
-  parameter_group_name = "default.redis3.2"
   port                 = 6379
 }
 `, rName, nodeType)
@@ -1245,7 +1288,6 @@ resource "aws_elasticache_cluster" "bar" {
   engine               = "redis"
   node_type            = "cache.m3.medium"
   num_cache_nodes      = %[2]d
-  parameter_group_name = "default.redis3.2"
   port                 = 6379
 }
 `, rName, numCacheNodes)
@@ -1268,7 +1310,6 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id           = "%[1]s"
   node_type                      = "cache.m3.medium"
   number_cache_clusters          = 1
-  parameter_group_name           = "default.redis3.2"
   port                           = 6379
 
   lifecycle {

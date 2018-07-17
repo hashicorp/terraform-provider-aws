@@ -12,6 +12,46 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEIPAssociation_importInstance(t *testing.T) {
+	resourceName := "aws_eip_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_instance,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEIPAssociation_importNetworkInterface(t *testing.T) {
+	resourceName := "aws_eip_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_networkInterface,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEIPAssociation_basic(t *testing.T) {
 	var a ec2.Address
 
@@ -345,3 +385,44 @@ resource "aws_eip_association" "test" {
 }
 `, testAccAWSSpotInstanceRequestConfig(rInt))
 }
+
+const testAccAWSEIPAssociationConfig_instance = `
+resource "aws_instance" "test" {
+  # us-west-2
+  ami = "ami-4fccb37f"
+  instance_type = "m1.small"
+}
+
+resource "aws_eip" "test" {}
+
+resource "aws_eip_association" "test" {
+  allocation_id = "${aws_eip.test.id}"
+  instance_id = "${aws_instance.test.id}"
+}
+`
+
+const testAccAWSEIPAssociationConfig_networkInterface = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.1.0/24"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_eip" "test" {}
+
+resource "aws_eip_association" "test" {
+  allocation_id = "${aws_eip.test.id}"
+  network_interface_id = "${aws_network_interface.test.id}"
+}
+`

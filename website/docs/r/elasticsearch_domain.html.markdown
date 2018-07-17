@@ -12,8 +12,16 @@ description: |-
 ## Example Usage
 
 ```hcl
+variable "domain" {
+  default = "tf-test"
+}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_elasticsearch_domain" "es" {
-  domain_name           = "tf-test"
+  domain_name           = "${var.domain}"
   elasticsearch_version = "1.5"
   cluster_config {
     instance_type = "r3.large.elasticsearch"
@@ -31,6 +39,7 @@ resource "aws_elasticsearch_domain" "es" {
 			"Action": "es:*",
 			"Principal": "*",
 			"Effect": "Allow",
+			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
 			"Condition": {
 				"IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
 			}
@@ -56,6 +65,9 @@ The following arguments are supported:
 * `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options.
+   Note that the values for these configuration options must be strings (wrapped in quotes) or they
+   may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch
+   domain on every apply.
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.

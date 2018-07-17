@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "batch"     // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "Batch"     // ServiceID is a unique identifer of a specific service
+	ServiceName = "batch"     // Name of service.
+	EndpointsID = ServiceName // ID to lookup a service endpoint with.
+	ServiceID   = "Batch"     // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the Batch client with a session.

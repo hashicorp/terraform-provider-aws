@@ -2002,7 +2002,9 @@ type CreateProjectInput struct {
 	// The ARN of the AWS Identity and Access Management (IAM) role that enables
 	// AWS CodeBuild to interact with dependent AWS services on behalf of the AWS
 	// account.
-	ServiceRole *string `locationName:"serviceRole" min:"1" type:"string"`
+	//
+	// ServiceRole is a required field
+	ServiceRole *string `locationName:"serviceRole" min:"1" type:"string" required:"true"`
 
 	// Information about the build input source code for the build project.
 	//
@@ -2051,6 +2053,9 @@ func (s *CreateProjectInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 2))
+	}
+	if s.ServiceRole == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceRole"))
 	}
 	if s.ServiceRole != nil && len(*s.ServiceRole) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServiceRole", 1))
@@ -3542,8 +3547,17 @@ type ProjectEnvironment struct {
 	// build commands. (Do not run the following build commands if the specified
 	// build environment image is provided by AWS CodeBuild with Docker support.)
 	//
+	// If the operating system's base image is Ubuntu Linux:
+	//
 	// - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
-	// --storage-driver=overlay& - timeout -t 15 sh -c "until docker info; do echo
+	// --storage-driver=overlay& - timeout 15 sh -c "until docker info; do echo
+	// .; sleep 1; done"
+	//
+	// If the operating system's base image is Alpine Linux, add the -t argument
+	// to timeout:
+	//
+	// - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
+	// --storage-driver=overlay& - timeout 15 -t sh -c "until docker info; do echo
 	// .; sleep 1; done"
 	PrivilegedMode *bool `locationName:"privilegedMode" type:"boolean"`
 
@@ -3697,6 +3711,12 @@ type ProjectSource struct {
 	//    source object, set the auth object's type value to OAUTH.
 	Location *string `locationName:"location" type:"string"`
 
+	// Set to true to report the status of a build's start and finish to your source
+	// provider. This option is only valid when your source provider is GitHub.
+	// If this is set and you use a different source provider, an invalidInputException
+	// is thrown.
+	ReportBuildStatus *bool `locationName:"reportBuildStatus" type:"boolean"`
+
 	// The type of repository that contains the source code to be built. Valid values
 	// include:
 	//
@@ -3771,6 +3791,12 @@ func (s *ProjectSource) SetInsecureSsl(v bool) *ProjectSource {
 // SetLocation sets the Location field's value.
 func (s *ProjectSource) SetLocation(v string) *ProjectSource {
 	s.Location = &v
+	return s
+}
+
+// SetReportBuildStatus sets the ReportBuildStatus field's value.
+func (s *ProjectSource) SetReportBuildStatus(v bool) *ProjectSource {
+	s.ReportBuildStatus = &v
 	return s
 }
 
@@ -3893,6 +3919,11 @@ type StartBuildInput struct {
 	//
 	// ProjectName is a required field
 	ProjectName *string `locationName:"projectName" min:"1" type:"string" required:"true"`
+
+	// Set to true to report to your source provider the status of a build's start
+	// and completion. If you use this option with a source provider other than
+	// GitHub, an invalidInputException is thrown.
+	ReportBuildStatusOverride *bool `locationName:"reportBuildStatusOverride" type:"boolean"`
 
 	// The name of a service role for this build that overrides the one specified
 	// in the build project.
@@ -4072,6 +4103,12 @@ func (s *StartBuildInput) SetPrivilegedModeOverride(v bool) *StartBuildInput {
 // SetProjectName sets the ProjectName field's value.
 func (s *StartBuildInput) SetProjectName(v string) *StartBuildInput {
 	s.ProjectName = &v
+	return s
+}
+
+// SetReportBuildStatusOverride sets the ReportBuildStatusOverride field's value.
+func (s *StartBuildInput) SetReportBuildStatusOverride(v bool) *StartBuildInput {
+	s.ReportBuildStatusOverride = &v
 	return s
 }
 

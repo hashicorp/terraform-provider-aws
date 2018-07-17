@@ -159,6 +159,14 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // For an example, see Exercise 1: Using the K-Means Algorithm Provided by Amazon
 // SageMaker (http://docs.aws.amazon.com/sagemaker/latest/dg/ex1.html).
 //
+// If any of the models hosted at this endpoint get model data from an Amazon
+// S3 location, Amazon SageMaker uses AWS Security Token Service to download
+// model artifacts from the S3 path you provided. AWS STS is activated in your
+// IAM user account by default. If you previously deactivated AWS STS for a
+// region, you need to reactivate AWS STS for that region. For more information,
+// see Activating and Deactivating AWS STS i an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+// in the AWS Identity and Access Management User Guide.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2191,8 +2199,8 @@ func (c *SageMaker) ListHyperParameterTuningJobsRequest(input *ListHyperParamete
 
 // ListHyperParameterTuningJobs API operation for Amazon SageMaker Service.
 //
-// Gets a list of objects that describe the hyperparameter tuning jobs launched
-// in your account.
+// Gets a list of HyperParameterTuningJobSummary objects that describe the hyperparameter
+// tuning jobs launched in your account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2453,7 +2461,8 @@ func (c *SageMaker) ListNotebookInstanceLifecycleConfigsRequest(input *ListNoteb
 
 // ListNotebookInstanceLifecycleConfigs API operation for Amazon SageMaker Service.
 //
-// Lists notebook instance lifestyle configurations created with the API.
+// Lists notebook instance lifestyle configurations created with the CreateNotebookInstanceLifecycleConfig
+// API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2974,8 +2983,8 @@ func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobRequest(input *Lis
 
 // ListTrainingJobsForHyperParameterTuningJob API operation for Amazon SageMaker Service.
 //
-// Gets a list of objects that describe the training jobs that a hyperparameter
-// tuning job launched.
+// Gets a list of TrainingJobSummary objects that describe the training jobs
+// that a hyperparameter tuning job launched.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3462,6 +3471,9 @@ func (c *SageMaker) UpdateEndpointRequest(input *UpdateEndpointInput) (req *requ
 // check the status of an endpoint, use the DescribeEndpoint (http://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
 // API.
 //
+// You cannot update an endpoint with the current EndpointConfig. To update
+// an endpoint, you must create a new EndpointConfig.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3708,7 +3720,8 @@ func (c *SageMaker) UpdateNotebookInstanceLifecycleConfigRequest(input *UpdateNo
 
 // UpdateNotebookInstanceLifecycleConfig API operation for Amazon SageMaker Service.
 //
-// Updates a notebook instance lifecycle configuration created with the API.
+// Updates a notebook instance lifecycle configuration created with the CreateNotebookInstanceLifecycleConfig
+// API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4074,8 +4087,9 @@ type ContainerDefinition struct {
 	// The Amazon EC2 Container Registry (Amazon ECR) path where inference code
 	// is stored. If you are using your own custom algorithm instead of an algorithm
 	// provided by Amazon SageMaker, the inference code must meet Amazon SageMaker
-	// requirements. For more information, see Using Your Own Algorithms with Amazon
-	// SageMaker (http://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html)
+	// requirements. Amazon SageMaker supports both registry/repository[:tag] and
+	// registry/repository[@digest] image path formats. For more information, see
+	// Using Your Own Algorithms with Amazon SageMaker (http://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html)
 	//
 	// Image is a required field
 	Image *string `type:"string" required:"true"`
@@ -4083,6 +4097,14 @@ type ContainerDefinition struct {
 	// The S3 path where the model artifacts, which result from model training,
 	// are stored. This path must point to a single gzip compressed tar archive
 	// (.tar.gz suffix).
+	//
+	// If you provide a value for this parameter, Amazon SageMaker uses AWS Security
+	// Token Service to download model artifacts from the S3 path you provide. AWS
+	// STS is activated in your IAM user account by default. If you previously deactivated
+	// AWS STS for a region, you need to reactivate AWS STS for that region. For
+	// more information, see Activating and Deactivating AWS STS i an AWS Region
+	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+	// in the AWS Identity and Access Management User Guide.
 	ModelDataUrl *string `type:"string"`
 }
 
@@ -4430,9 +4452,9 @@ func (s *CreateEndpointOutput) SetEndpointArn(v string) *CreateEndpointOutput {
 type CreateHyperParameterTuningJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// The object that describes the tuning job, including the search strategy,
-	// metric used to evaluate training jobs, ranges of parameters to search, and
-	// resource limits for the tuning job.
+	// The HyperParameterTuningJobConfig object that describes the tuning job, including
+	// the search strategy, metric used to evaluate training jobs, ranges of parameters
+	// to search, and resource limits for the tuning job.
 	//
 	// HyperParameterTuningJobConfig is a required field
 	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
@@ -4451,9 +4473,10 @@ type CreateHyperParameterTuningJobInput struct {
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 
-	// The object that describes the training jobs that this tuning job launches,
-	// including static hyperparameters, input data configuration, output data configuration,
-	// resource configuration, and stopping condition.
+	// The HyperParameterTrainingJobDefinition object that describes the training
+	// jobs that this tuning job launches, including static hyperparameters, input
+	// data configuration, output data configuration, resource configuration, and
+	// stopping condition.
 	//
 	// TrainingJobDefinition is a required field
 	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
@@ -4591,9 +4614,9 @@ type CreateModelInput struct {
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 
-	// A object that specifies the VPC that you want your model to connect to. Control
-	// access to and from your model container by configuring the VPC. For more
-	// information, see host-vpc.
+	// A VpcConfig object that specifies the VPC that you want your model to connect
+	// to. Control access to and from your model container by configuring the VPC.
+	// For more information, see host-vpc.
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -5149,9 +5172,9 @@ type CreateTrainingJobInput struct {
 	// TrainingJobName is a required field
 	TrainingJobName *string `min:"1" type:"string" required:"true"`
 
-	// A object that specifies the VPC that you want your training job to connect
-	// to. Control access to and from your training container by configuring the
-	// VPC. For more information, see train-vpc
+	// A VpcConfig object that specifies the VPC that you want your training job
+	// to connect to. Control access to and from your training container by configuring
+	// the VPC. For more information, see train-vpc
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -5708,6 +5731,56 @@ func (s DeleteTagsOutput) GoString() string {
 	return s.String()
 }
 
+// Gets the Amazon EC2 Container Registry path of the docker image of the model
+// that is hosted in this ProductionVariant.
+//
+// If you used the registry/repository[:tag] form to to specify the image path
+// of the primary container when you created the model hosted in this ProductionVariant,
+// the path resolves to a path of the form registry/repository[@digest]. A digest
+// is a hash value that identifies a specific version of an image. For information
+// about Amazon ECR paths, see Pulling an Image (http://docs.aws.amazon.com//AmazonECR/latest/userguide/docker-pull-ecr-image.html)
+// in the Amazon ECR User Guide.
+type DeployedImage struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time when the image path for the model resolved to the ResolvedImage
+	ResolutionTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The specific digest path of the image hosted in this ProductionVariant.
+	ResolvedImage *string `type:"string"`
+
+	// The image path you specified when you created the model.
+	SpecifiedImage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DeployedImage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeployedImage) GoString() string {
+	return s.String()
+}
+
+// SetResolutionTime sets the ResolutionTime field's value.
+func (s *DeployedImage) SetResolutionTime(v time.Time) *DeployedImage {
+	s.ResolutionTime = &v
+	return s
+}
+
+// SetResolvedImage sets the ResolvedImage field's value.
+func (s *DeployedImage) SetResolvedImage(v string) *DeployedImage {
+	s.ResolvedImage = &v
+	return s
+}
+
+// SetSpecifiedImage sets the SpecifiedImage field's value.
+func (s *DeployedImage) SetSpecifiedImage(v string) *DeployedImage {
+	s.SpecifiedImage = &v
+	return s
+}
+
 type DescribeEndpointConfigInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5889,8 +5962,8 @@ type DescribeEndpointOutput struct {
 	// LastModifiedTime is a required field
 	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
-	// An array of ProductionVariant objects, one for each model hosted behind this
-	// endpoint.
+	// An array of ProductionVariantSummary objects, one for each model hosted behind
+	// this endpoint.
 	ProductionVariants []*ProductionVariantSummary `min:"1" type:"list"`
 }
 
@@ -5996,8 +6069,8 @@ func (s *DescribeHyperParameterTuningJobInput) SetHyperParameterTuningJobName(v 
 type DescribeHyperParameterTuningJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A object that describes the training job that completed with the best current
-	// .
+	// A TrainingJobSummary object that describes the training job that completed
+	// with the best current HyperParameterTuningJobObjective.
 	BestTrainingJob *HyperParameterTrainingJobSummary `type:"structure"`
 
 	// The date and time that the tuning job started.
@@ -6016,7 +6089,8 @@ type DescribeHyperParameterTuningJobOutput struct {
 	// HyperParameterTuningJobArn is a required field
 	HyperParameterTuningJobArn *string `type:"string" required:"true"`
 
-	// The object that specifies the configuration of the tuning job.
+	// The HyperParameterTuningJobConfig object that specifies the configuration
+	// of the tuning job.
 	//
 	// HyperParameterTuningJobConfig is a required field
 	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
@@ -6035,20 +6109,21 @@ type DescribeHyperParameterTuningJobOutput struct {
 	// The date and time that the status of the tuning job was modified.
 	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The object that specifies the number of training jobs, categorized by the
-	// status of their final objective metric, that this tuning job launched.
+	// The ObjectiveStatusCounters object that specifies the number of training
+	// jobs, categorized by the status of their final objective metric, that this
+	// tuning job launched.
 	//
 	// ObjectiveStatusCounters is a required field
 	ObjectiveStatusCounters *ObjectiveStatusCounters `type:"structure" required:"true"`
 
-	// The object that specifies the definition of the training jobs that this tuning
-	// job launches.
+	// The HyperParameterTrainingJobDefinition object that specifies the definition
+	// of the training jobs that this tuning job launches.
 	//
 	// TrainingJobDefinition is a required field
 	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
 
-	// The object that specifies the number of training jobs, categorized by status,
-	// that this tuning job launched.
+	// The TrainingJobStatusCounters object that specifies the number of training
+	// jobs, categorized by status, that this tuning job launched.
 	//
 	// TrainingJobStatusCounters is a required field
 	TrainingJobStatusCounters *TrainingJobStatusCounters `type:"structure" required:"true"`
@@ -6204,8 +6279,8 @@ type DescribeModelOutput struct {
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
 
-	// A object that specifies the VPC that this model has access to. For more information,
-	// see host-vpc
+	// A VpcConfig object that specifies the VPC that this model has access to.
+	// For more information, see host-vpc
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -6710,8 +6785,8 @@ type DescribeTrainingJobOutput struct {
 	// if the training job was launched by a hyperparameter tuning job.
 	TuningJobArn *string `type:"string"`
 
-	// A object that specifies the VPC that this training job has access to. For
-	// more information, see train-vpc.
+	// A VpcConfig object that specifies the VPC that this training job has access
+	// to. For more information, see train-vpc.
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -7071,7 +7146,8 @@ func (s *FinalHyperParameterTuningJobObjectiveMetric) SetValue(v float64) *Final
 type HyperParameterAlgorithmSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// An array of objects that specify the metrics that the algorithm emits.
+	// An array of MetricDefinition objects that specify the metrics that the algorithm
+	// emits.
 	MetricDefinitions []*MetricDefinition `type:"list"`
 
 	// The registry path of the Docker image that contains the training algorithm.
@@ -7156,14 +7232,14 @@ func (s *HyperParameterAlgorithmSpecification) SetTrainingInputMode(v string) *H
 type HyperParameterTrainingJobDefinition struct {
 	_ struct{} `type:"structure"`
 
-	// The object that specifies the algorithm to use for the training jobs that
-	// the tuning job launches.
+	// The HyperParameterAlgorithmSpecification object that specifies the algorithm
+	// to use for the training jobs that the tuning job launches.
 	//
 	// AlgorithmSpecification is a required field
 	AlgorithmSpecification *HyperParameterAlgorithmSpecification `type:"structure" required:"true"`
 
-	// An array of objects that specify the input for the training jobs that the
-	// tuning job launches.
+	// An array of Channel objects that specify the input for the training jobs
+	// that the tuning job launches.
 	//
 	// InputDataConfig is a required field
 	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
@@ -7210,10 +7286,10 @@ type HyperParameterTrainingJobDefinition struct {
 	// StoppingCondition is a required field
 	StoppingCondition *StoppingCondition `type:"structure" required:"true"`
 
-	// The object that specifies the VPC that you want the training jobs that this
-	// hyperparameter tuning job launches to connect to. Control access to and from
-	// your training container by configuring the VPC. For more information, see
-	// train-vpc.
+	// The VpcConfig object that specifies the VPC that you want the training jobs
+	// that this hyperparameter tuning job launches to connect to. Control access
+	// to and from your training container by configuring the VPC. For more information,
+	// see train-vpc.
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -7353,11 +7429,12 @@ type HyperParameterTrainingJobSummary struct {
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
-	// The reason that the
+	// The reason that the training job failed.
 	FailureReason *string `type:"string"`
 
-	// The object that specifies the value of the objective metric of the tuning
-	// job that launched this training job.
+	// The FinalHyperParameterTuningJobObjectiveMetric object that specifies the
+	// value of the objective metric of the tuning job that launched this training
+	// job.
 	FinalHyperParameterTuningJobObjectiveMetric *FinalHyperParameterTuningJobObjectiveMetric `type:"structure"`
 
 	// The status of the objective metric for the training job:
@@ -7475,19 +7552,20 @@ func (s *HyperParameterTrainingJobSummary) SetTunedHyperParameters(v map[string]
 type HyperParameterTuningJobConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The object that specifies the objective metric for this tuning job.
+	// The HyperParameterTuningJobObjective object that specifies the objective
+	// metric for this tuning job.
 	//
 	// HyperParameterTuningJobObjective is a required field
 	HyperParameterTuningJobObjective *HyperParameterTuningJobObjective `type:"structure" required:"true"`
 
-	// The object that specifies the ranges of hyperparameters that this tuning
-	// job searches.
+	// The ParameterRanges object that specifies the ranges of hyperparameters that
+	// this tuning job searches.
 	//
 	// ParameterRanges is a required field
 	ParameterRanges *ParameterRanges `type:"structure" required:"true"`
 
-	// The object that specifies the maximum number of training jobs and parallel
-	// training jobs for this tuning job.
+	// The ResourceLimits object that specifies the maximum number of training jobs
+	// and parallel training jobs for this tuning job.
 	//
 	// ResourceLimits is a required field
 	ResourceLimits *ResourceLimits `type:"structure" required:"true"`
@@ -7659,14 +7737,14 @@ type HyperParameterTuningJobSummary struct {
 	// The date and time that the tuning job was modified.
 	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The object that specifies the numbers of training jobs, categorized by objective
-	// metric status, that this tuning job launched.
+	// The ObjectiveStatusCounters object that specifies the numbers of training
+	// jobs, categorized by objective metric status, that this tuning job launched.
 	//
 	// ObjectiveStatusCounters is a required field
 	ObjectiveStatusCounters *ObjectiveStatusCounters `type:"structure" required:"true"`
 
-	// The object that specifies the maximum number of training jobs and parallel
-	// training jobs allowed for this tuning job.
+	// The ResourceLimits object that specifies the maximum number of training jobs
+	// and parallel training jobs allowed for this tuning job.
 	ResourceLimits *ResourceLimits `type:"structure"`
 
 	// Specifies the search strategy hyperparameter tuning uses to choose which
@@ -7676,8 +7754,8 @@ type HyperParameterTuningJobSummary struct {
 	// Strategy is a required field
 	Strategy *string `type:"string" required:"true" enum:"HyperParameterTuningJobStrategyType"`
 
-	// The object that specifies the numbers of training jobs, categorized by status,
-	// that this tuning job launched.
+	// The TrainingJobStatusCounters object that specifies the numbers of training
+	// jobs, categorized by status, that this tuning job launched.
 	//
 	// TrainingJobStatusCounters is a required field
 	TrainingJobStatusCounters *TrainingJobStatusCounters `type:"structure" required:"true"`
@@ -8129,7 +8207,7 @@ type ListHyperParameterTuningJobsInput struct {
 	// time.
 	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// The maximum number of tuning jobs to return.
+	// The maximum number of tuning jobs to return. The default value is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// A string in the tuning job name. This filter returns only tuning jobs whose
@@ -8237,8 +8315,8 @@ func (s *ListHyperParameterTuningJobsInput) SetStatusEquals(v string) *ListHyper
 type ListHyperParameterTuningJobsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of objects that describe the tuning jobs that the ListHyperParameterTuningJobs
-	// request returned.
+	// A list of HyperParameterTuningJobSummary objects that describe the tuning
+	// jobs that the ListHyperParameterTuningJobs request returned.
 	//
 	// HyperParameterTuningJobSummaries is a required field
 	HyperParameterTuningJobSummaries []*HyperParameterTuningJobSummary `type:"list" required:"true"`
@@ -8824,7 +8902,7 @@ type ListTrainingJobsForHyperParameterTuningJobInput struct {
 	// HyperParameterTuningJobName is a required field
 	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
 
-	// The maximum number of training jobs to return.
+	// The maximum number of training jobs to return. The default value is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// If the result of the previous ListTrainingJobsForHyperParameterTuningJob
@@ -8833,6 +8911,9 @@ type ListTrainingJobsForHyperParameterTuningJobInput struct {
 	NextToken *string `type:"string"`
 
 	// The field to sort results by. The default is Name.
+	//
+	// If the value of this field is FinalObjectiveMetricValue, any training jobs
+	// that did not return an objective metric are not listed.
 	SortBy *string `type:"string" enum:"TrainingJobSortByOptions"`
 
 	// The sort order for results. The default is Ascending.
@@ -8915,8 +8996,8 @@ type ListTrainingJobsForHyperParameterTuningJobOutput struct {
 	// of training jobs, use the token in the next request.
 	NextToken *string `type:"string"`
 
-	// A list of objects that describe the training jobs that the ListTrainingJobsForHyperParameterTuningJob
-	// request returned.
+	// A list of TrainingJobSummary objects that describe the training jobs that
+	// the ListTrainingJobsForHyperParameterTuningJob request returned.
 	//
 	// TrainingJobSummaries is a required field
 	TrainingJobSummaries []*HyperParameterTrainingJobSummary `type:"list" required:"true"`
@@ -9116,7 +9197,7 @@ type MetricDefinition struct {
 
 	// A regular expression that searches the output of a training job and gets
 	// the value of the metric. For more information about using regular expressions
-	// to define metrics, see hpo-define-metrics.
+	// to define metrics, see automatic-model-tuning-define-metrics.
 	//
 	// Regex is a required field
 	Regex *string `min:"1" type:"string" required:"true"`
@@ -9751,6 +9832,10 @@ type ProductionVariantSummary struct {
 	// The weight associated with the variant.
 	CurrentWeight *float64 `type:"float"`
 
+	// An array of DeployedImage objects that specify the Amazon EC2 Container Registry
+	// paths of the inference images deployed on instances of this ProductionVariant.
+	DeployedImages []*DeployedImage `type:"list"`
+
 	// The number of instances requested in the UpdateEndpointWeightsAndCapacities
 	// request.
 	DesiredInstanceCount *int64 `min:"1" type:"integer"`
@@ -9784,6 +9869,12 @@ func (s *ProductionVariantSummary) SetCurrentInstanceCount(v int64) *ProductionV
 // SetCurrentWeight sets the CurrentWeight field's value.
 func (s *ProductionVariantSummary) SetCurrentWeight(v float64) *ProductionVariantSummary {
 	s.CurrentWeight = &v
+	return s
+}
+
+// SetDeployedImages sets the DeployedImages field's value.
+func (s *ProductionVariantSummary) SetDeployedImages(v []*DeployedImage) *ProductionVariantSummary {
+	s.DeployedImages = v
 	return s
 }
 
@@ -11159,6 +11250,9 @@ const (
 
 	// NotebookInstanceStatusDeleting is a NotebookInstanceStatus enum value
 	NotebookInstanceStatusDeleting = "Deleting"
+
+	// NotebookInstanceStatusUpdating is a NotebookInstanceStatus enum value
+	NotebookInstanceStatusUpdating = "Updating"
 )
 
 const (

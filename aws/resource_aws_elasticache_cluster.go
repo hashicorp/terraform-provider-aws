@@ -180,6 +180,9 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		ForceNew: true,
 	}
 
+	resourceSchema["availability_zones"].ConflictsWith = []string{"preferred_availability_zones"}
+	resourceSchema["availability_zones"].Deprecated = "Use `preferred_availability_zones` instead"
+
 	resourceSchema["configuration_endpoint"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -213,6 +216,12 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				},
 			},
 		},
+	}
+
+	resourceSchema["preferred_availability_zones"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 	}
 
 	resourceSchema["replication_group_id"] = &schema.Schema{
@@ -400,10 +409,14 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		req.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
-	preferred_azs := d.Get("availability_zones").(*schema.Set).List()
-	if len(preferred_azs) > 0 {
-		azs := expandStringList(preferred_azs)
-		req.PreferredAvailabilityZones = azs
+	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
+		req.PreferredAvailabilityZones = expandStringList(v.([]interface{}))
+	} else {
+		preferred_azs := d.Get("availability_zones").(*schema.Set).List()
+		if len(preferred_azs) > 0 {
+			azs := expandStringList(preferred_azs)
+			req.PreferredAvailabilityZones = azs
+		}
 	}
 
 	id, err := createElasticacheCacheCluster(conn, req)
@@ -589,6 +602,22 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 			log.Printf("[INFO] Cluster %s is marked for Decreasing cache nodes from %d to %d", d.Id(), o, n)
 			nodesToRemove := getCacheNodesToRemove(d, o, o-n)
 			req.CacheNodeIdsToRemove = nodesToRemove
+		} else {
+			log.Printf("[INFO] Cluster %s is marked for increasing cache nodes from %d to %d", d.Id(), o, n)
+			// SDK documentation for NewAvailabilityZones states:
+			// The list of Availability Zones where the new Memcached cache nodes are created.
+			//
+			// This parameter is only valid when NumCacheNodes in the request is greater
+			// than the sum of the number of active cache nodes and the number of cache
+			// nodes pending creation (which may be zero). The number of Availability Zones
+			// supplied in this list must match the cache nodes being added in this request.
+			if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
+				// Here we check the list length to prevent a potential panic :)
+				if len(v.([]interface{})) != n {
+					return fmt.Errorf("length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
+				}
+				req.NewAvailabilityZones = expandStringList(v.([]interface{})[o:])
+			}
 		}
 
 		req.NumCacheNodes = aws.Int64(int64(d.Get("num_cache_nodes").(int)))
