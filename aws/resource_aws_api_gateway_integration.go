@@ -143,7 +143,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			"timeout_milliseconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateApiGatewayIntegrationTimeout,
+				ValidateFunc: validation.IntBetween(50, 29000),
 				Default:      29000,
 			},
 		},
