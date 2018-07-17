@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_integration: Add `timeout_milliseconds` argument [GH-5199]
 * resource/aws_cloudwatch_log_group: Allow `tags` handling in AWS GovCloud (US) and AWS China [GH-5175]
 * resource/aws_codebuild_project: Add `report_build_status` argument under `source` (support report build status for GitHub source type) [GH-5156]
+* resource/aws_route: Print more useful error message when missing valid target type [GH-5198]
 
 BUG FIXES:
 
