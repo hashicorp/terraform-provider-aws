@@ -236,17 +236,19 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).neptuneconn
 	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
 
-	var identifier string
+	// Check if any of the parameters that require a cluster modification after creation are set
+	var clusterUpdate bool
+	clusterUpdate = false
+
 	if v, ok := d.GetOk("cluster_identifier"); ok {
-		identifier = v.(string)
+		d.Set("cluster_identifier", v.(string))
 	} else {
 		if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-			identifier = resource.PrefixedUniqueId(v.(string))
+			d.Set("cluster_identifier", resource.PrefixedUniqueId(v.(string)))
 		} else {
-			identifier = resource.PrefixedUniqueId("tf-")
+			d.Set("cluster_identifier", resource.PrefixedUniqueId("tf-"))
 		}
 
-		d.Set("cluster_identifier", identifier)
 	}
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
@@ -270,8 +272,6 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		// Check if any of the parameters that require a cluster modification after creation are set
-		var clusterUpdate bool
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			clusterUpdate = true
 			opts.VpcSecurityGroupIds = expandStringList(attr.List())
@@ -298,37 +298,6 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		})
 		if err != nil {
 			return fmt.Errorf("Error creating Neptune Cluster: %s", err)
-		}
-
-		if clusterUpdate {
-			log.Printf("[INFO] Neptune Cluster is restoring from snapshot with default neptune_cluster_parameter_group_name, backup_retention_period and vpc_security_group_ids" +
-				"but custom values should be set, will now update after snapshot is restored!")
-
-			d.SetId(d.Get("cluster_identifier").(string))
-
-			log.Printf("[INFO] Neptune Cluster ID: %s", d.Id())
-
-			log.Println("[INFO] Waiting for Neptune Cluster to be available")
-
-			stateConf := &resource.StateChangeConf{
-				Pending:    resourceAwsNeptuneClusterCreatePendingStates,
-				Target:     []string{"available"},
-				Refresh:    resourceAwsNeptuneClusterStateRefreshFunc(d, meta),
-				Timeout:    d.Timeout(schema.TimeoutCreate),
-				MinTimeout: 10 * time.Second,
-				Delay:      30 * time.Second,
-			}
-
-			// Wait, catching any errors
-			_, err := stateConf.WaitForState()
-			if err != nil {
-				return err
-			}
-
-			err = resourceAwsNeptuneClusterUpdate(d, meta)
-			if err != nil {
-				return err
-			}
 		}
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &neptune.CreateDBClusterInput{
@@ -494,6 +463,10 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 				return err
 			}
 		}
+	}
+
+	if clusterUpdate {
+		return resourceAwsNeptuneClusterUpdate(d, meta)
 	}
 
 	return resourceAwsNeptuneClusterRead(d, meta)
