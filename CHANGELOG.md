@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_log_group: Allow `tags` handling in AWS GovCloud (US) and AWS China [GH-5175]
 * resource/aws_codebuild_project: Add `report_build_status` argument under `source` (support report build status for GitHub source type) [GH-5156]
 * resource/aws_launch_template: Ignore `credit_specification` when not using T2 `instance_type` [GH-5190]
+* resource/aws_rds_cluster_instance: Add `arn` attribute [GH-5220]
 * resource/aws_route: Print more useful error message when missing valid target type [GH-5198]
 
 BUG FIXES:
