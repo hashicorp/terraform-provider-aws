@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -289,38 +288,28 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// list tags for resource
-	// set tags
-	arn, err := buildDaxArn(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
+	resp, err := conn.ListTags(&dax.ListTagsInput{
+		ResourceName: aws.String(aws.StringValue(c.ClusterArn)),
+	})
+
 	if err != nil {
-		log.Printf("[DEBUG] Error building ARN for DAX Cluster, not setting Tags for cluster %s", *c.ClusterName)
-	} else {
-		resp, err := conn.ListTags(&dax.ListTagsInput{
-			ResourceName: aws.String(arn),
-		})
-
-		if err != nil {
-			log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
-		}
-
-		var dt []*dax.Tag
-		if len(resp.Tags) > 0 {
-			dt = resp.Tags
-		}
-		d.Set("tags", tagsToMapDax(dt))
+		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", aws.StringValue(c.ClusterArn))
 	}
+
+	var dt []*dax.Tag
+	if len(resp.Tags) > 0 {
+		dt = resp.Tags
+	}
+	d.Set("tags", tagsToMapDax(dt))
 
 	return nil
 }
 
 func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).daxconn
-	arn, err := buildDaxArn(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if err != nil {
-		log.Printf("[DEBUG] Error building ARN for DAX Cluster, not updating Tags for cluster %s", d.Id())
-	} else {
-		if err := setTagsDax(conn, d, arn); err != nil {
-			return err
-		}
+
+	if err := setTagsDax(conn, d, d.Get("arn").(string)); err != nil {
+		return err
 	}
 
 	req := &dax.UpdateClusterInput{
@@ -564,23 +553,4 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		log.Printf("[DEBUG] current status: %v", *c.Status)
 		return c, *c.Status, nil
 	}
-}
-
-func buildDaxArn(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct DAX ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct DAX ARN because of missing AWS Account ID")
-	}
-
-	arn := arn.ARN{
-		Partition: partition,
-		Service:   "dax",
-		Region:    region,
-		AccountID: accountid,
-		Resource:  fmt.Sprintf("cache/%s", identifier),
-	}
-
-	return arn.String(), nil
 }
