@@ -18,7 +18,7 @@ resource "aws_macie_s3_bucket_association" "example" {
   prefix      = "data"
 
   classification_type {
-    one_time = true
+    one_time = "FULL"
   }
 }
 ```
@@ -34,7 +34,10 @@ The following arguments are supported:
 
 The `classification_type` object supports the following:
 
-* `one_time` - (Optional) A boolean value indicating whether or not Macie perfoms a one-time classification of all of the existing objects in the bucket. Defaults to `false` indicating that Macie only classifies objects that are added after the association was created.
+* `continuous` - (Optional) A string value indicating that Macie perform a one-time classification of all of the existing objects in the bucket.
+The only valid value is the default value, `FULL`.
+* `one_time` - (Optional) A string value indicating whether or not Macie performs a one-time classification of all of the existing objects in the bucket.
+Valid values are `NONE` and `FULL`. Defaults to `NONE` indicating that Macie only classifies objects that are added after the association was created.
 
 ## Attributes Reference
 

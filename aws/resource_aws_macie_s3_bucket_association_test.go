@@ -23,14 +23,16 @@ func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 				Config: testAccAWSMacieS3BucketAssociationConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMacieS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
-					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "false"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "NONE"),
 				),
 			},
 			{
 				Config: testAccAWSMacieS3BucketAssociationConfig_basicOneTime(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMacieS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
-					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "true"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "FULL"),
 				),
 			},
 		},
@@ -49,14 +51,16 @@ func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 				Config: testAccAWSMacieS3BucketAssociationConfig_accountIdAndPrefix(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMacieS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
-					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "false"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "NONE"),
 				),
 			},
 			{
 				Config: testAccAWSMacieS3BucketAssociationConfig_accountIdAndPrefixOneTime(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMacieS3BucketAssociationExists("aws_macie_s3_bucket_association.test"),
-					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "true"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.continuous", "FULL"),
+					resource.TestCheckResourceAttr("aws_macie_s3_bucket_association.test", "classification_type.0.one_time", "FULL"),
 				),
 			},
 		},
@@ -159,7 +163,7 @@ resource "aws_macie_s3_bucket_association" "test" {
   bucket_name = "${aws_s3_bucket.test.id}"
 
   classification_type {
-    one_time = true
+    one_time = "FULL"
   }
 }
 `, randInt)
@@ -195,7 +199,7 @@ resource "aws_macie_s3_bucket_association" "test" {
   prefix            = "data"
 
   classification_type {
-    one_time = true
+    one_time = "FULL"
   }
 }
 `, randInt)

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsMacieS3BucketAssociation() *schema.Resource {
@@ -41,10 +42,17 @@ func resourceAwsMacieS3BucketAssociation() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"continuous": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      macie.S3ContinuousClassificationTypeFull,
+							ValidateFunc: validation.StringInSlice([]string{macie.S3ContinuousClassificationTypeFull}, false),
+						},
 						"one_time": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      macie.S3OneTimeClassificationTypeNone,
+							ValidateFunc: validation.StringInSlice([]string{macie.S3OneTimeClassificationTypeFull, macie.S3OneTimeClassificationTypeNone}, false),
 						},
 					},
 				},
@@ -59,7 +67,8 @@ func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta inte
 	req := &macie.AssociateS3ResourcesInput{
 		S3Resources: []*macie.S3ResourceClassification{
 			{
-				BucketName: aws.String(d.Get("bucket_name").(string)),
+				BucketName:         aws.String(d.Get("bucket_name").(string)),
+				ClassificationType: expandMacieClassificationType(d),
 			},
 		},
 	}
@@ -69,12 +78,6 @@ func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("prefix"); ok {
 		req.S3Resources[0].Prefix = aws.String(v.(string))
 	}
-
-	ct := &macie.ClassificationType{
-		Continuous: aws.String(macie.S3ContinuousClassificationTypeFull),
-	}
-	ct.OneTime = aws.String(macieS3BucketAssociationOneTimeClassification(d))
-	req.S3Resources[0].ClassificationType = ct
 
 	log.Printf("[DEBUG] Creating Macie S3 bucket association: %#v", req)
 	resp, err := conn.AssociateS3Resources(req)
@@ -136,7 +139,7 @@ func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta inte
 			S3ResourcesUpdate: []*macie.S3ResourceClassificationUpdate{
 				{
 					BucketName:               aws.String(d.Get("bucket_name").(string)),
-					ClassificationTypeUpdate: &macie.ClassificationTypeUpdate{},
+					ClassificationTypeUpdate: expandMacieClassificationTypeUpdate(d),
 				},
 			},
 		}
@@ -146,7 +149,6 @@ func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta inte
 		if v, ok := d.GetOk("prefix"); ok {
 			req.S3ResourcesUpdate[0].Prefix = aws.String(v.(string))
 		}
-		req.S3ResourcesUpdate[0].ClassificationTypeUpdate.OneTime = aws.String(macieS3BucketAssociationOneTimeClassification(d))
 
 		log.Printf("[DEBUG] Updating Macie S3 bucket association: %#v", req)
 		resp, err := conn.UpdateS3Resources(req)
@@ -201,17 +203,4 @@ func resourceAwsMacieS3BucketAssociationDelete(d *schema.ResourceData, meta inte
 	}
 
 	return nil
-}
-
-func macieS3BucketAssociationOneTimeClassification(d *schema.ResourceData) string {
-	oneTime := false
-	if v := d.Get("classification_type").([]interface{}); len(v) > 0 {
-		if m := v[0].(map[string]interface{}); m["one_time"].(bool) {
-			oneTime = true
-		}
-	}
-	if oneTime {
-		return macie.S3OneTimeClassificationTypeFull
-	}
-	return macie.S3OneTimeClassificationTypeNone
 }
