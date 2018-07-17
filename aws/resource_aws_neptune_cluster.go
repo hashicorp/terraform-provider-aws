@@ -69,7 +69,6 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"cluster_members": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
 				Computed: true,
 				Set:      schema.HashString,
 			},
@@ -84,7 +83,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"neptune_cluster_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "default.neptune1",
 			},
 
 			"endpoint": {
@@ -151,7 +150,6 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -159,7 +157,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
+				Default:  8182,
 				ForceNew: true,
 			},
 
@@ -257,6 +255,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                tags,
+			Port:                aws.Int64(int64(d.Get("port").(int))),
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
@@ -269,10 +268,6 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 
 		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("port"); ok {
-			opts.Port = aws.Int64(int64(attr.(int)))
 		}
 
 		// Check if any of the parameters that require a cluster modification after creation are set
@@ -342,10 +337,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			StorageEncrypted:            aws.Bool(d.Get("storage_encrypted").(bool)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
 			Tags: tags,
-		}
-
-		if attr, ok := d.GetOk("port"); ok {
-			createOpts.Port = aws.Int64(int64(attr.(int)))
+			Port: aws.Int64(int64(d.Get("port").(int))),
 		}
 
 		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
@@ -410,10 +402,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 			Engine:              aws.String(d.Get("engine").(string)),
 			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                tags,
-		}
-
-		if attr, ok := d.GetOk("port"); ok {
-			createOpts.Port = aws.Int64(int64(attr.(int)))
+			Port:                aws.Int64(int64(d.Get("port").(int))),
 		}
 
 		if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
