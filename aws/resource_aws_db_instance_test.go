@@ -14,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
@@ -98,6 +96,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					testAccCheckAWSDBInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "allocated_storage", "10"),
+					resource.TestMatchResourceAttr("aws_db_instance.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:db:.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "engine", "mysql"),
 					resource.TestCheckResourceAttr(
@@ -619,24 +618,16 @@ func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 				DBInstanceIdentifier: aws.String(rs.Primary.ID),
 			})
 
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "DBInstanceNotFound" {
-			continue
-		}
-
-		if err == nil {
-			if len(resp.DBInstances) != 0 &&
-				*resp.DBInstances[0].DBInstanceIdentifier == rs.Primary.ID {
-				return fmt.Errorf("DB Instance still exists")
+		if err != nil {
+			if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+				continue
 			}
+			return err
 		}
 
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "DBInstanceNotFound" {
-			return err
+		if len(resp.DBInstances) != 0 &&
+			*resp.DBInstances[0].DBInstanceIdentifier == rs.Primary.ID {
+			return fmt.Errorf("DB Instance still exists")
 		}
 	}
 
@@ -706,25 +697,21 @@ func testAccCheckAWSDBInstanceSnapshot(rInt int) resource.TestCheckFunc {
 			var err error
 			log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
 			snapshot_identifier := fmt.Sprintf("foobarbaz-test-terraform-final-snapshot-%d", rInt)
-			_, snapErr := conn.DescribeDBSnapshots(
+			snapOutput, snapErr := conn.DescribeDBSnapshots(
 				&rds.DescribeDBSnapshotsInput{
 					DBSnapshotIdentifier: aws.String(snapshot_identifier),
 				})
 
 			if snapErr != nil {
-				newerr, _ := snapErr.(awserr.Error)
-				if newerr.Code() == "DBSnapshotNotFound" {
+				if isAWSErr(snapErr, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 					return fmt.Errorf("Snapshot %s not found", snapshot_identifier)
 				}
 			} else { // snapshot was found,
+				if snapOutput == nil || len(snapOutput.DBSnapshots) == 0 {
+					return fmt.Errorf("Snapshot %s not found", snapshot_identifier)
+				}
 				// verify we have the tags copied to the snapshot
-				tagsARN := arn.ARN{
-					Partition: testAccProvider.Meta().(*AWSClient).partition,
-					Service:   "rds",
-					Region:    testAccProvider.Meta().(*AWSClient).region,
-					AccountID: testAccProvider.Meta().(*AWSClient).accountid,
-					Resource:  fmt.Sprintf("snapshot:%s", snapshot_identifier),
-				}.String()
+				tagsARN := aws.StringValue(snapOutput.DBSnapshots[0].DBSnapshotArn)
 				resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
 					ResourceName: aws.String(tagsARN),
 				})
@@ -763,8 +750,7 @@ func testAccCheckAWSDBInstanceSnapshot(rInt int) resource.TestCheckFunc {
 				})
 
 			if err != nil {
-				newerr, _ := err.(awserr.Error)
-				if newerr.Code() != "DBInstanceNotFound" {
+				if !isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 					return err
 				}
 
@@ -795,8 +781,7 @@ func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
 			})
 
 		if err != nil {
-			newerr, _ := err.(awserr.Error)
-			if newerr.Code() != "DBInstanceNotFound" {
+			if !isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 				return err
 			}
 
@@ -814,9 +799,8 @@ func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
 			})
 
 		if snapErr != nil {
-			newerr, _ := snapErr.(awserr.Error)
-			if newerr.Code() != "DBSnapshotNotFound" {
-				return fmt.Errorf("Snapshot %s found and it shouldn't have been", snapshot_identifier)
+			if !isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+				return err
 			}
 		}
 	}
