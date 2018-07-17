@@ -833,6 +833,17 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		if v, vOk := d.GetOk("update_default_version"); vOk && v.(bool) {
 			defaultVersion = strconv.FormatInt(aws.Int64Value(createVersion.LaunchTemplateVersion.VersionNumber), 10)
 		}
+
+		if v, vOk := d.GetOk("update_default_version"); vOk && v.(bool) {
+			modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+				LaunchTemplateId: aws.String(d.Id()),
+				DefaultVersion:   aws.String(strconv.FormatInt(aws.Int64Value(createVersion.LaunchTemplateVersion.VersionNumber), 10)),
+			}
+			_, modifyErr := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+			if modifyErr != nil {
+				return modifyErr
+			}
+		}
 	}
 
 	if d.HasChange("default_version") {
