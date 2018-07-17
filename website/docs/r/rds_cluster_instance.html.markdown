@@ -97,6 +97,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster instance
 * `cluster_identifier` - The RDS Cluster Identifier
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier

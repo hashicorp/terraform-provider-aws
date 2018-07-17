@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -31,6 +30,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -359,22 +363,23 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
 	}
 
-	d.Set("publicly_accessible", db.PubliclyAccessible)
-	d.Set("cluster_identifier", db.DBClusterIdentifier)
-	d.Set("engine", db.Engine)
-	d.Set("engine_version", db.EngineVersion)
-	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("identifier", db.DBInstanceIdentifier)
-	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("storage_encrypted", db.StorageEncrypted)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set("arn", db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
-	d.Set("promotion_tier", db.PromotionTier)
-	d.Set("preferred_backup_window", db.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set("dbi_resource_id", db.DbiResourceId)
+	d.Set("engine_version", db.EngineVersion)
+	d.Set("engine", db.Engine)
+	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set("instance_class", db.DBInstanceClass)
+	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
+	d.Set("preferred_backup_window", db.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set("promotion_tier", db.PromotionTier)
+	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	if db.MonitoringInterval != nil {
 		d.Set("monitoring_interval", db.MonitoringInterval)
@@ -388,15 +393,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	// Fetch and save tags
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("db:%s", d.Id()),
-	}.String()
-	if err := saveTagsRDS(conn, d, arn); err != nil {
+	if err := saveTagsRDS(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
 		log.Printf("[WARN] Failed to save tags for RDS Cluster Instance (%s): %s", *db.DBClusterIdentifier, err)
 	}
 
@@ -505,14 +502,7 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("db:%s", d.Id()),
-	}.String()
-	if err := setTagsRDS(conn, d, arn); err != nil {
+	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
 
