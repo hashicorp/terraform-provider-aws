@@ -2730,3 +2730,33 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateApiGatewayIntegrationTimeout(t *testing.T) {
+	cases := []struct {
+		Value    int
+		ErrCount int
+	}{
+		{
+			Value:    49,
+			ErrCount: 1,
+		},
+		{
+			Value:    29001,
+			ErrCount: 1,
+		},
+		{
+			Value:    50,
+			ErrCount: 0,
+		},
+		{
+			Value:    29000,
+			ErrCount: 0,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateApiGatewayIntegrationTimeout(tc.Value, "timeout_milliseconds")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Integration Timeout value to trigger a validation error for timeout of %d ms", tc.Value)
+		}
+	}
+}

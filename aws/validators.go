@@ -1863,3 +1863,12 @@ func validateNeptuneParamGroupNamePrefix(v interface{}, k string) (ws []string, 
 	}
 	return
 }
+
+func validateApiGatewayIntegrationTimeout(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(int)
+	if value < 50 || value > 29000 {
+		errors = append(errors, fmt.Errorf(
+			"%s must be between 50 and 29000", k))
+	}
+	return
+}
