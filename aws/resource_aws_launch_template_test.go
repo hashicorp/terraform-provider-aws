@@ -939,6 +939,58 @@ func TestAccAWSLaunchTemplate_hibernation(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_defaultVersion(t *testing.T) {
+	resourceName := "aws_launch_template.test"
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_defaultVersion(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
+	resourceName := "aws_launch_template.test"
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateconfig_updateDefaultVersion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1657,4 +1709,29 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccAWSLaunchTemplateConfig_defaultVersion(rName string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = "%s"
+  default_version = %d
+
+  tags {
+    bar = "baz"
+  }
+}
+`, rName, version)
+}
+
+func testAccAWSLaunchTemplateconfig_updateDefaultVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = "%s"
+  update_default_version = true
+  user_data = "bar"
+  tags {
+    bar = "baz"
+  }
+}`, rName)
 }

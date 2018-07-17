@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"log"
 	"strconv"
 	"strings"
@@ -57,8 +58,16 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"default_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"update_default_version"},
+			},
+
+			"update_default_version": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"default_version"},
 			},
 
 			"latest_version": {
@@ -797,19 +806,46 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
-		ClientToken:        aws.String(resource.UniqueId()),
-		LaunchTemplateId:   aws.String(d.Id()),
-		LaunchTemplateData: launchTemplateData,
+	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: aws.String(d.Id()),
+		MaxResults:       aws.Int64(1),
+	})
+	if err != nil {
+		return err
 	}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
-		launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
+	defaultVersion := strconv.FormatInt(aws.Int64Value(dltv.LaunchTemplateVersions[0].VersionNumber), 10)
+	if awsutil.Prettify(launchTemplateData) != awsutil.Prettify(dltv.LaunchTemplateVersions[0].LaunchTemplateData) {
+		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
+			ClientToken:        aws.String(resource.UniqueId()),
+			LaunchTemplateId:   aws.String(d.Id()),
+			LaunchTemplateData: launchTemplateData,
+		}
+
+		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
+		}
+
+		createVersion, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		if createErr != nil {
+			return createErr
+		}
+		if v, vOk := d.GetOk("update_default_version"); vOk && v.(bool) {
+			defaultVersion = strconv.FormatInt(aws.Int64Value(createVersion.LaunchTemplateVersion.VersionNumber), 10)
+		}
 	}
 
-	_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
-	if createErr != nil {
-		return createErr
+	if d.HasChange("default_version") {
+		defaultVersion = strconv.Itoa(d.Get("default_version").(int))
+	}
+
+	modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+		LaunchTemplateId: aws.String(d.Id()),
+		DefaultVersion:   aws.String(defaultVersion),
+	}
+	_, modifyErr := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+	if modifyErr != nil {
+		return modifyErr
 	}
 
 	if d.HasChange("tags") {
