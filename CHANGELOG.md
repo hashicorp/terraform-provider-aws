@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_storagegateway_gateway_activation_key` [GH-5200]
+* **New Resource:** `aws_macie_s3_bucket_association` [GH-5201]
 * **New Resource:** `aws_neptune_cluster` [GH-5050]
 
 ENHANCEMENTS:
