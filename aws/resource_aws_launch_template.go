@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"log"
 	"strconv"
 	"strings"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -832,17 +832,6 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 		if v, vOk := d.GetOk("update_default_version"); vOk && v.(bool) {
 			defaultVersion = strconv.FormatInt(aws.Int64Value(createVersion.LaunchTemplateVersion.VersionNumber), 10)
-		}
-
-		if v, vOk := d.GetOk("update_default_version"); vOk && v.(bool) {
-			modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
-				LaunchTemplateId: aws.String(d.Id()),
-				DefaultVersion:   aws.String(strconv.FormatInt(aws.Int64Value(createVersion.LaunchTemplateVersion.VersionNumber), 10)),
-			}
-			_, modifyErr := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
-			if modifyErr != nil {
-				return modifyErr
-			}
 		}
 	}
 

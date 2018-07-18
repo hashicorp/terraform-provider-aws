@@ -1741,6 +1741,7 @@ func testAccAWSLaunchTemplateConfig_defaultVersion(rName string, version int) st
 resource "aws_launch_template" "test" {
   name = "%s"
   default_version = %d
+  user_data = "bar"
 
   tags {
     bar = "baz"
@@ -1759,16 +1760,4 @@ resource "aws_launch_template" "test" {
     bar = "baz"
   }
 }`, rName)
-}
-
-func testAccAWSLaunchTemplateconfig_updateDefaultVersion(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_launch_template" "foo" {
-  name = "foo_%d"
-  update_default_version = true
-
-  tags {
-    bar = "baz"
-  }
-}`, rInt)
 }
