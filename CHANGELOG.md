@@ -15,10 +15,13 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Ignore `credit_specification` when not using T2 `instance_type` [GH-5190]
 * resource/aws_rds_cluster_instance: Add `arn` attribute [GH-5220]
 * resource/aws_route: Print more useful error message when missing valid target type [GH-5198]
+* resource/aws_vpc_endpoint: Add configurable timeouts [GH-3418]
+* resource/aws_vpc_endpoint_subnet_association: Add configurable timeouts [GH-3418]
 
 BUG FIXES:
 
 * resource/aws_glue_crawler: Prevent error when deleted outside Terraform [GH-5158]
+* resource/aws_vpc_endpoint_subnet_association: Add mutex to prevent errors with concurrent `ModifyVpcEndpoint` calls [GH-3418]
 
 ## 1.27.0 (July 11, 2018)
 
