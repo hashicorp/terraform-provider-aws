@@ -1,27 +1,27 @@
-## 1.28.0 (Unreleased)
+## 1.28.0 (July 18, 2018)
 
 FEATURES:
 
-* **New Resource:** `aws_macie_s3_bucket_association` [GH-5201]
-* **New Resource:** `aws_neptune_cluster` [GH-5050]
-* **New Resource:** `aws_storagegateway_gateway` [GH-5208]
+* **New Resource:** `aws_macie_s3_bucket_association` ([#5201](https://github.com/terraform-providers/terraform-provider-aws/issues/5201))
+* **New Resource:** `aws_neptune_cluster` ([#5050](https://github.com/terraform-providers/terraform-provider-aws/issues/5050))
+* **New Resource:** `aws_storagegateway_gateway` ([#5208](https://github.com/terraform-providers/terraform-provider-aws/issues/5208))
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_user: Add `permissions_boundary` attribute [GH-5187]
-* resource/aws_api_gateway_integration: Add `timeout_milliseconds` argument [GH-5199]
-* resource/aws_cloudwatch_log_group: Allow `tags` handling in AWS GovCloud (US) and AWS China [GH-5175]
-* resource/aws_codebuild_project: Add `report_build_status` argument under `source` (support report build status for GitHub source type) [GH-5156]
-* resource/aws_launch_template: Ignore `credit_specification` when not using T2 `instance_type` [GH-5190]
-* resource/aws_rds_cluster_instance: Add `arn` attribute [GH-5220]
-* resource/aws_route: Print more useful error message when missing valid target type [GH-5198]
-* resource/aws_vpc_endpoint: Add configurable timeouts [GH-3418]
-* resource/aws_vpc_endpoint_subnet_association: Add configurable timeouts [GH-3418]
+* data-source/aws_iam_user: Add `permissions_boundary` attribute ([#5187](https://github.com/terraform-providers/terraform-provider-aws/issues/5187))
+* resource/aws_api_gateway_integration: Add `timeout_milliseconds` argument ([#5199](https://github.com/terraform-providers/terraform-provider-aws/issues/5199))
+* resource/aws_cloudwatch_log_group: Allow `tags` handling in AWS GovCloud (US) and AWS China ([#5175](https://github.com/terraform-providers/terraform-provider-aws/issues/5175))
+* resource/aws_codebuild_project: Add `report_build_status` argument under `source` (support report build status for GitHub source type) ([#5156](https://github.com/terraform-providers/terraform-provider-aws/issues/5156))
+* resource/aws_launch_template: Ignore `credit_specification` when not using T2 `instance_type` ([#5190](https://github.com/terraform-providers/terraform-provider-aws/issues/5190))
+* resource/aws_rds_cluster_instance: Add `arn` attribute ([#5220](https://github.com/terraform-providers/terraform-provider-aws/issues/5220))
+* resource/aws_route: Print more useful error message when missing valid target type ([#5198](https://github.com/terraform-providers/terraform-provider-aws/issues/5198))
+* resource/aws_vpc_endpoint: Add configurable timeouts ([#3418](https://github.com/terraform-providers/terraform-provider-aws/issues/3418))
+* resource/aws_vpc_endpoint_subnet_association: Add configurable timeouts ([#3418](https://github.com/terraform-providers/terraform-provider-aws/issues/3418))
 
 BUG FIXES:
 
-* resource/aws_glue_crawler: Prevent error when deleted outside Terraform [GH-5158]
-* resource/aws_vpc_endpoint_subnet_association: Add mutex to prevent errors with concurrent `ModifyVpcEndpoint` calls [GH-3418]
+* resource/aws_glue_crawler: Prevent error when deleted outside Terraform ([#5158](https://github.com/terraform-providers/terraform-provider-aws/issues/5158))
+* resource/aws_vpc_endpoint_subnet_association: Add mutex to prevent errors with concurrent `ModifyVpcEndpoint` calls ([#3418](https://github.com/terraform-providers/terraform-provider-aws/issues/3418))
 
 ## 1.27.0 (July 11, 2018)
 
