@@ -105,7 +105,6 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
-	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -113,20 +112,24 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Config: testAccAWSLaunchTemplateConfig_asg_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "1"),
 				),
 			},
 			{
-				Config: testAccAWSLaunchTemplateConfig_data(rInt),
+				Config: testAccAWSLaunchTemplateConfig_asg_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "2"),
-					resource.TestCheckResourceAttrSet(resName, "image_id"),
+					resource.TestCheckResourceAttrSet(resName, "instance_type"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "2"),
 				),
 			},
 		},
@@ -412,6 +415,75 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_asg_basic = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foo" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    id = "${aws_launch_template.foo.id}"
+    version = "${aws_launch_template.foo.latest_version}"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_asg_update = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foo" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.nano"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    id = "${aws_launch_template.foo.id}"
+    version = "${aws_launch_template.foo.latest_version}"
   }
 }
 `
