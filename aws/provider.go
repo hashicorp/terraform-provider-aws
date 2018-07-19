@@ -583,6 +583,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ssm_parameter":                                resourceAwsSsmParameter(),
 			"aws_ssm_resource_data_sync":                       resourceAwsSsmResourceDataSync(),
 			"aws_storagegateway_gateway":                       resourceAwsStorageGatewayGateway(),
+			"aws_storagegateway_nfs_file_share":                resourceAwsStorageGatewayNfsFileShare(),
 			"aws_spot_datafeed_subscription":                   resourceAwsSpotDataFeedSubscription(),
 			"aws_spot_instance_request":                        resourceAwsSpotInstanceRequest(),
 			"aws_spot_fleet_request":                           resourceAwsSpotFleetRequest(),
