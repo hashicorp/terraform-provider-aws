@@ -61,7 +61,7 @@ func resourceAwsStorageGatewayCacheCreate(d *schema.ResourceData, meta interface
 func resourceAwsStorageGatewayCacheRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
-	gatewayARN, diskID, err := decodeStorageGatewayID(d.Id())
+	gatewayARN, diskID, err := decodeStorageGatewayCacheID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func resourceAwsStorageGatewayCacheRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func decodeStorageGatewayID(id string) (string, string, error) {
+func decodeStorageGatewayCacheID(id string) (string, string, error) {
 	// id = arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 	idFormatErr := fmt.Errorf("expected ID in form of GatewayARN:DiskId, received: %s", id)
 	gatewayARNAndDisk, err := arn.Parse(id)
