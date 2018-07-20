@@ -182,6 +182,8 @@ is provided) Username for the master DB user.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
+* `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
+* `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -254,6 +256,8 @@ in a Route 53 Alias record).
 * `status` - The RDS instance status.
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
 * `username` - The master username for the database.
+* `performance_insights_enabled` - Specifies whether Performance Insights is enabled or not.
+* `performance_insights_kms_key_id` - The ARN for the KMS encryption key used by Performance Insights.
 
 On Oracle instances the following is exported additionally:
 

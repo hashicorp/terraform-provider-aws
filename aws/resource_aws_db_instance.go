@@ -404,6 +404,19 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
+			"performance_insights_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
+			"performance_insights_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -891,6 +904,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+			opts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -970,6 +991,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", v.KmsKeyId)
 	d.Set("port", v.DbInstancePort)
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
+	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -1308,6 +1331,18 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		} else {
 			return fmt.Errorf("cannot elect new source database for replication")
 		}
+	}
+
+	if d.HasChange("performance_insights_enabled") {
+		d.SetPartial("performance_insights_enabled")
+		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("performance_insights_kms_key_id") {
+		d.SetPartial("performance_insights_kms_key_id")
+		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		requestUpdate = true
 	}
 
 	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {

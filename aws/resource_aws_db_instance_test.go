@@ -673,6 +673,21 @@ func testAccCheckAWSDBInstanceAttributes_MSSQL(v *rds.DBInstance, tz string) res
 	}
 }
 
+func testAccCheckAWSDBInstanceAttributes_postgres(v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if *v.Engine != "postgres" {
+			return fmt.Errorf("bad engine: %#v", *v.Engine)
+		}
+
+		if *v.EngineVersion == "" {
+			return fmt.Errorf("bad engine_version: %#v", *v.EngineVersion)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSDBInstanceReplicaAttributes(source, replica *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
@@ -827,6 +842,31 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 
 		return nil
 	}
+}
+
+func TestAccAWSDBInstance_performanceInsight(t *testing.T) {
+	var v rds.DBInstance
+
+	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAWSDBPerformanceInsights(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckAWSDBInstanceAttributes_postgres(&v),
+					resource.TestCheckResourceAttr(
+						"aws_db_instance.bar", "performance_insights_enabled", "true"),
+					resource.TestMatchResourceAttr(
+						"aws_db_instance.bar", "performance_insights_kms_key_id", keyRegex),
+				),
+			},
+		},
+	})
 }
 
 // Database names cannot collide, and deletion takes so long, that making the
@@ -1918,4 +1958,45 @@ data "template_file" "test" {
   }
 }
 `, rInt)
+}
+
+func testAccCheckAWSDBPerformanceInsights(n int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_db_instance" "bar" {
+	identifier = "foobarbaz-test-terraform-%d"
+	allocated_storage = 10
+	engine = "postgres"
+	engine_version = "10.3"
+	instance_class = "db.m4.large"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
+	backup_retention_period = 0
+	skip_final_snapshot = true
+	parameter_group_name = "default.postgres10"
+	performance_insights_enabled = true
+    performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+    db_subnet_group_name = "tvlk-stg-data"
+}`, n)
 }
