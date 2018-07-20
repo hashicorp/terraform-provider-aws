@@ -12,7 +12,7 @@ The Amazon Web Services EKS service allows for simplified management of
 [Kubernetes](https://kubernetes.io/) servers. While the service itself is
 quite simple from an operator perspective, understanding how it interconnects
 with other pieces of the AWS service universe and how to configure local
-Kubernetes clients to managed clusters can be helpful.
+Kubernetes clients to manage clusters can be helpful.
 
 While the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/)
 provides much of the up-to-date information about getting started with the service
