@@ -45,8 +45,8 @@ Files and folders stored as Amazon S3 objects in S3 buckets don't, by default, h
 
 * `directory_mode` - (Optional) The Unix directory mode in the string form "nnnn". Defaults to `"0777"`.
 * `file_mode` - (Optional) The Unix file mode in the string form "nnnn". Defaults to `"0666"`.
-* `group_id` - (Optional) The default group ID for the file share (unless the files have another group ID specified). Defaults to `0`. Valid values: `0` through `4294967294`.
-* `owner_id` - (Optional) The default owner ID for the file share (unless the files have another owner ID specified). Defaults to `0`. Valid values: `0` through `4294967294`.
+* `group_id` - (Optional) The default group ID for the file share (unless the files have another group ID specified). Defaults to `65534` (`nfsnobody`). Valid values: `0` through `4294967294`.
+* `owner_id` - (Optional) The default owner ID for the file share (unless the files have another owner ID specified). Defaults to `65534` (`nfsnobody`). Valid values: `0` through `4294967294`.
 
 ## Attribute Reference
 

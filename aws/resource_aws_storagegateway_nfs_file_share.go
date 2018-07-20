@@ -99,13 +99,13 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 						"group_id": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      0,
+							Default:      65534,
 							ValidateFunc: validation.IntBetween(0, 4294967294),
 						},
 						"owner_id": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      0,
+							Default:      65534,
 							ValidateFunc: validation.IntBetween(0, 4294967294),
 						},
 					},
