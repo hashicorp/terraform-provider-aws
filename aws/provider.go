@@ -250,6 +250,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_sns_topic":                        dataSourceAwsSnsTopic(),
 			"aws_sqs_queue":                        dataSourceAwsSqsQueue(),
 			"aws_ssm_parameter":                    dataSourceAwsSsmParameter(),
+			"aws_storagegateway_local_disk":        dataSourceAwsStorageGatewayLocalDisk(),
 			"aws_subnet":                           dataSourceAwsSubnet(),
 			"aws_subnet_ids":                       dataSourceAwsSubnetIDs(),
 			"aws_vpcs":                             dataSourceAwsVpcs(),
