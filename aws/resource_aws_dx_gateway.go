@@ -28,10 +28,15 @@ func resourceAwsDxGateway() *schema.Resource {
 				ForceNew: true,
 			},
 			"amazon_side_asn": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAmazonSideAsn,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+					if err := validateAmazonSideAsn(v.(string), k); err != nil {
+						es = append(es, err)
+					}
+					return
+				},
 			},
 		},
 

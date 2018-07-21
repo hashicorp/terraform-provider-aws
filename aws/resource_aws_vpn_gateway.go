@@ -22,6 +22,7 @@ func resourceAwsVpnGateway() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: resourceAwsVpnGatewayCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"availability_zone": {
@@ -31,11 +32,10 @@ func resourceAwsVpnGateway() *schema.Resource {
 			},
 
 			"amazon_side_asn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: validateAmazonSideAsn,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 
 			"vpc_id": {
@@ -176,6 +176,20 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 
 		return resource.NonRetryableError(err)
 	})
+}
+
+func resourceAwsVpnGatewayCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.Id() == "" {
+		// Only validate Amazon-side ASN for new resources.
+		// Imported resources may have legacy 7224 or 9059 ASNs.
+		if v, ok := diff.GetOk("amazon_side_asn"); ok {
+			if err := validateAmazonSideAsn(v, "amazon_side_asn"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error {
