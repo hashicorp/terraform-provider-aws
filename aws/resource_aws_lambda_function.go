@@ -413,7 +413,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("function_name").(string))
 
-	if reservedConcurrentExecutions > 0 {
+	if reservedConcurrentExecutions >= 0 {
 
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
 
