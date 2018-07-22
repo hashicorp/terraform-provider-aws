@@ -1433,6 +1433,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   ec2_attributes {
     subnet_id                         = "${aws_subnet.main.id}"
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
@@ -1483,6 +1485,36 @@ EOF
 
   service_role = "${aws_iam_role.iam_emr_default_role.arn}"
   ebs_root_volume_size = 21
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
 }
 
 resource "aws_vpc" "main" {
