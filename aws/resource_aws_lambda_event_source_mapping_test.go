@@ -230,6 +230,86 @@ func TestAccAWSLambdaEventSourceMapping_sqsDisappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaEventSourceMapping_changesInEnabledAreDetected(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+
+	rString := acctest.RandString(8)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_sqs_import_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_sqs_import_%s", rString)
+	attName := fmt.Sprintf("tf_acc_att_lambda_sqs_import_%s", rString)
+	streamName := fmt.Sprintf("tf_acc_stream_lambda_sqs_import_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_sqs_import_%s", rString)
+	uFuncName := fmt.Sprintf("tf_acc_lambda_sqs_import_updated_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(&conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		// Disable enabled state
+		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+			params := &lambda.UpdateEventSourceMappingInput{
+				UUID:    conf.UUID,
+				Enabled: aws.Bool(false),
+			}
+
+			_, err := conn.UpdateEventSourceMapping(params)
+
+			if err != nil {
+				cgw, ok := err.(awserr.Error)
+				if ok && cgw.Code() == lambda.ErrCodeResourceInUseException {
+					return resource.RetryableError(fmt.Errorf(
+						"Waiting for Lambda Event Source Mapping to be ready to be updated: %v", conf.UUID))
+				}
+
+				return resource.NonRetryableError(
+					fmt.Errorf("Error updating Lambda Event Source Mapping: %s", err))
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		// wait for state to be propagated
+		return resource.Retry(10*time.Minute, func() *resource.RetryError {
+			params := &lambda.GetEventSourceMappingInput{
+				UUID: conf.UUID,
+			}
+			newConf, err := conn.GetEventSourceMapping(params)
+			if err != nil {
+				return resource.NonRetryableError(
+					fmt.Errorf("Error getting Lambda Event Source Mapping: %s", err))
+			}
+
+			if *newConf.State != "Disabled" {
+				return resource.RetryableError(fmt.Errorf(
+					"Waiting to get Lambda Event Source Mapping to be fully enabled, it's currently %s: %v", *newConf.State, conf.UUID))
+
+			}
+
+			return nil
+		})
+
+	}
+}
+
 func testAccCheckAWSLambdaEventSourceMappingDisappears(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
