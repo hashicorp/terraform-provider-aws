@@ -30,7 +30,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_key = "IP"
   rate_limit = 2000
 
-  predicate {
+  predicates {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
     type    = "IPMatch"
@@ -46,11 +46,12 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the rule.
 * `rate_key` - (Required) Valid value is IP.
 * `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 2000.
-* `predicate` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+* `predicate` - **Deprecated**, use `predicates` instead.
+* `predicates` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
 
 ## Nested Blocks
 
-### `predicate`
+### `predicates`
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
 

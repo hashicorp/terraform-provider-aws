@@ -31,6 +31,30 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 				ValidateFunc: validateWafMetricName,
 			},
 			"predicate": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"predicates"},
+				Deprecated:    "use `predicates` instead",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"negated": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"data_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateMaxLength(128),
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateWafPredicatesType(),
+						},
+					},
+				},
+			},
+			"predicates": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -117,7 +141,11 @@ func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interf
 		})
 	}
 
-	d.Set("predicate", predicates)
+	if _, ok := d.GetOk("predicate"); ok {
+		d.Set("predicate", predicates)
+	} else {
+		d.Set("predicates", predicates)
+	}
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 	d.Set("rate_key", resp.Rule.RateKey)
@@ -139,6 +167,15 @@ func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta inte
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
+	} else if d.HasChange("predicates") {
+		o, n := d.GetChange("predicates")
+		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
+		rateLimit := d.Get("rate_limit")
+
+		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		}
 	}
 
 	return resourceAwsWafRegionalRateBasedRuleRead(d, meta)
@@ -148,7 +185,12 @@ func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta inte
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	oldPredicates := d.Get("predicate").(*schema.Set).List()
+	var oldPredicates []interface{}
+	if _, ok := d.GetOk("predicate"); ok {
+		oldPredicates = d.Get("predicate").(*schema.Set).List()
+	} else {
+		oldPredicates = d.Get("predicates").(*schema.Set).List()
+	}
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
 		rateLimit := d.Get("rate_limit")
