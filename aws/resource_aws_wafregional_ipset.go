@@ -29,9 +29,27 @@ func resourceAwsWafRegionalIPSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_set_descriptor": &schema.Schema{
+			"ip_set_descriptors": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"ip_set_descriptor": &schema.Schema{
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"ip_set_descriptors"},
+				Deprecated:    "use `ip_set_descriptors` instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": &schema.Schema{
@@ -87,7 +105,11 @@ func resourceAwsWafRegionalIPSetRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	d.Set("ip_set_descriptor", flattenWafIpSetDescriptorWR(resp.IPSet.IPSetDescriptors))
+	if _, ok := d.GetOk("ip_set_descriptor"); ok {
+		d.Set("ip_set_descriptor", flattenWafIpSetDescriptorWR(resp.IPSet.IPSetDescriptors))
+	} else {
+		d.Set("ip_set_descriptors", flattenWafIpSetDescriptorWR(resp.IPSet.IPSetDescriptors))
+	}
 	d.Set("name", resp.IPSet.Name)
 
 	arn := arn.ARN{
@@ -128,6 +150,14 @@ func resourceAwsWafRegionalIPSetUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
 		}
+	} else if d.HasChange("ip_set_descriptors") {
+		o, n := d.GetChange("ip_set_descriptors")
+		oldD, newD := o.(*schema.Set).List(), n.(*schema.Set).List()
+
+		err := updateIPSetResourceWR(d.Id(), oldD, newD, conn, region)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
+		}
 	}
 	return resourceAwsWafRegionalIPSetRead(d, meta)
 }
@@ -136,7 +166,12 @@ func resourceAwsWafRegionalIPSetDelete(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	oldD := d.Get("ip_set_descriptor").(*schema.Set).List()
+	var oldD []interface{}
+	if _, ok := d.GetOk("ip_set_descriptor"); ok {
+		oldD = d.Get("ip_set_descriptor").(*schema.Set).List()
+	} else {
+		oldD = d.Get("ip_set_descriptors").(*schema.Set).List()
+	}
 
 	if len(oldD) > 0 {
 		noD := []interface{}{}

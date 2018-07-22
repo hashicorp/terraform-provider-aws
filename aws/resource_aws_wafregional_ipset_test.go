@@ -32,9 +32,9 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "name", ipsetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.type", "IPV4"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.value", "192.0.7.0/24"),
 					resource.TestMatchResourceAttr("aws_wafregional_ipset.ipset", "arn",
 						regexp.MustCompile(`^arn:[\w-]+:waf-regional:[^:]+:\d{12}:ipset/.+$`)),
 				),
@@ -80,9 +80,9 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "name", ipsetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.type", "IPV4"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.value", "192.0.7.0/24"),
 				),
 			},
 			{
@@ -92,9 +92,9 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "name", ipsetNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.type", "IPV4"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.value", "192.0.7.0/24"),
 				),
 			},
 		},
@@ -117,11 +117,11 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "name", ipsetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "1"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.type", "IPV4"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.4037960608.value", "192.0.7.0/24"),
 				),
 			},
 			{
@@ -131,11 +131,11 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "name", ipsetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "1"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.type", "IPV4"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.115741513.type", "IPV4"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.value", "192.0.8.0/24"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.115741513.value", "192.0.8.0/24"),
 				),
 			},
 		},
@@ -158,7 +158,7 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "name", ipsetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "0"),
+						"aws_wafregional_ipset.ipset", "ip_set_descriptors.#", "0"),
 				),
 			},
 		},
@@ -371,7 +371,7 @@ func testAccAWSWafRegionalIPSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptor {
+  ip_set_descriptors {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -381,7 +381,7 @@ resource "aws_wafregional_ipset" "ipset" {
 func testAccAWSWafRegionalIPSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptor {
+  ip_set_descriptors {
     type = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -391,7 +391,7 @@ func testAccAWSWafRegionalIPSetConfigChangeName(name string) string {
 func testAccAWSWafRegionalIPSetConfigChangeIPSetDescriptors(name string) string {
 	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-  ip_set_descriptor {
+  ip_set_descriptors {
     type = "IPV4"
     value = "192.0.8.0/24"
   }
