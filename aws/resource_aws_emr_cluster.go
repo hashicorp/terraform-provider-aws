@@ -347,14 +347,16 @@ func resourceAwsEMRCluster() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"configurations": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"configurations_json"},
 			},
 			"configurations_json": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
+				ConflictsWith:    []string{"configurations"},
 				ValidateFunc:     validateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
@@ -559,7 +561,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %v", err)
 		}
-		params.Configurations = expandConfigurationJson(info)
+		params.Configurations, err = expandConfigurationJson(info)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
+		}
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes"); ok {
@@ -686,7 +691,11 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting EMR configurations for cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("configurations_json", flattenConfigurationJson(cluster.Configurations)); err != nil {
+	configOut, err := flattenConfigurationJson(cluster.Configurations)
+	if err != nil {
+		return fmt.Errorf("Error reading EMR cluster configurations: %s", err)
+	}
+	if err := d.Set("configurations_json", configOut); err != nil {
 		return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
 	}
 
@@ -1362,23 +1371,23 @@ func expandAutoScalingPolicy(rawDefinitions string) (*emr.AutoScalingPolicy, err
 	return policy, nil
 }
 
-func expandConfigurationJson(input string) []*emr.Configuration {
+func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
 	configsOut := []*emr.Configuration{}
 	err := json.Unmarshal([]byte(input), &configsOut)
 	if err != nil {
-		log.Printf("[ERROR] parsing JSON: %s", err)
+		return nil, err
 	}
 	log.Printf("[DEBUG] Expanded EMR Configurations %s", configsOut)
 
-	return configsOut
+	return configsOut, nil
 }
 
-func flattenConfigurationJson(config []*emr.Configuration) string {
+func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
 	out, err := jsonutil.BuildJSON(config)
 	if err != nil {
-		log.Printf("[ERROR] reading configurations for configurations_json: %s", err)
+		return "", err
 	}
-	return string(out)
+	return string(out), nil
 }
 
 func expandConfigures(input string) []*emr.Configuration {
