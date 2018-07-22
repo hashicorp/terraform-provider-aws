@@ -16,7 +16,7 @@ Provides an WAF Regional Rule Resource for use with Application Load Balancer.
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
-  ip_set_descriptor {
+  ip_set_descriptors {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -26,7 +26,7 @@ resource "aws_wafregional_rule" "wafrule" {
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
-  predicate {
+  predicates {
     type    = "IPMatch"
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
@@ -40,11 +40,12 @@ The following arguments are supported:
 
 * `name` - (Required) The name or description of the rule.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
-* `predicate` - (Optional) The objects to include in a rule.
+* `predicate` - **Deprecated** use `predicates` instead.
+* `predicates` - (Optional) The objects to include in a rule.
 
 ## Nested Fields
 
-### `predicate`
+### `predicates`
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
 

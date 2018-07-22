@@ -30,9 +30,33 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"predicate": &schema.Schema{
+			"predicates": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"negated": &schema.Schema{
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"data_id": &schema.Schema{
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"type": &schema.Schema{
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateWafPredicatesType(),
+						},
+					},
+				},
+			},
+			"predicate": &schema.Schema{
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"predicates"},
+				Deprecated:    "use `predicates` instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"negated": &schema.Schema{
@@ -96,7 +120,11 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.Set("predicate", flattenWafPredicates(resp.Rule.Predicates))
+	if _, ok := d.GetOk("predicate"); ok {
+		d.Set("predicate", flattenWafPredicates(resp.Rule.Predicates))
+	} else {
+		d.Set("predicates", flattenWafPredicates(resp.Rule.Predicates))
+	}
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
@@ -112,6 +140,14 @@ func resourceAwsWafRegionalRuleUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
+	} else if d.HasChange("predicates") {
+		o, n := d.GetChange("predicates")
+		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
+
+		err := updateWafRegionalRuleResource(d.Id(), oldP, newP, meta)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		}
 	}
 	return resourceAwsWafRegionalRuleRead(d, meta)
 }
@@ -120,7 +156,12 @@ func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	oldPredicates := d.Get("predicate").(*schema.Set).List()
+	var oldPredicates []interface{}
+	if _, ok := d.GetOk("predicate"); ok {
+		oldPredicates = d.Get("predicate").(*schema.Set).List()
+	} else {
+		oldPredicates = d.Get("predicates").(*schema.Set).List()
+	}
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
 		err := updateWafRegionalRuleResource(d.Id(), oldPredicates, noPredicates, meta)
