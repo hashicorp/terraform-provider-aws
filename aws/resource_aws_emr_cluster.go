@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -685,8 +686,8 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting EMR configurations for cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("configurations_json", cluster.Configurations); err != nil {
-		log.Printf("[ERR] Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
+	if err := d.Set("configurations_json", flattenConfigurationJson(cluster.Configurations)); err != nil {
+		return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
@@ -1370,6 +1371,14 @@ func expandConfigurationJson(input string) []*emr.Configuration {
 	log.Printf("[DEBUG] Expanded EMR Configurations %s", configsOut)
 
 	return configsOut
+}
+
+func flattenConfigurationJson(config []*emr.Configuration) string {
+	out, err := jsonutil.BuildJSON(config)
+	if err != nil {
+		log.Printf("[ERROR] reading configurations for configurations_json: %s", err)
+	}
+	return string(out)
 }
 
 func expandConfigures(input string) []*emr.Configuration {

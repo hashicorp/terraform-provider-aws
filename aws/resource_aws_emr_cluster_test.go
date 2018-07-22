@@ -1466,7 +1466,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       "Configurations": [
         {
           "Classification": "export",
-          "Configurations": [],
           "Properties": {
             "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
           }
@@ -1479,7 +1478,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       "Configurations": [
         {
           "Classification": "export",
-          "Configurations": [],
           "Properties": {
             "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
           }
