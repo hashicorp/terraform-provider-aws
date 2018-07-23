@@ -95,6 +95,8 @@ func TestAccAWSVpc_basic(t *testing.T) {
 						"aws_vpc.foo", "default_route_table_id"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "enable_dns_support", "true"),
+					resource.TestCheckResourceAttrSet(
+						"aws_vpc.foo", "arn"),
 				),
 			},
 		},
