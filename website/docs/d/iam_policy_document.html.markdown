@@ -77,17 +77,13 @@ valid to use literal JSON strings within your configuration, or to use the
 
 The following arguments are supported:
 
+* `statement` (Required) - A nested configuration block (described below) configuring one *statement* to be included in the policy document.
+* `override_json` (Optional) - An IAM policy document to import and override the current policy document. Statements with non-blank `sid`s in the override document will overwrite statements with the same `sid` in the current document. Statements without an `sid` cannot be overwritten.
 * `policy_id` (Optional) - An ID for the policy document.
-* `source_json` (Optional) - An IAM policy document to import as a base for the
-  current policy document.  Statements with non-blank `sid`s in the current
-  policy document will overwrite statements with the same `sid` in the source
-  json.  Statements without an `sid` cannot be overwritten.
-* `override_json` (Optional) - An IAM policy document to import and override the
-  current policy document.  Statements with non-blank `sid`s in the override
-  document will overwrite statements with the same `sid` in the current document.
-  Statements without an `sid` cannot be overwritten.
-* `statement` (Required) - A nested configuration block (described below)
-  configuring one *statement* to be included in the policy document.
+* `source_json` (Optional) - An IAM policy document to import as a base for the current policy document. Statements with non-blank `sid`s in the current policy document will overwrite statements with the same `sid` in the source JSON. Statements without an `sid` cannot be overwritten.
+* `version` (Optional) - IAM policy document version. Defaults to `2012-10-17`. Valid values: `2008-10-17`, `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
+
+### statement
 
 Each document configuration must have one or more `statement` blocks, which
 each accept the following arguments:
@@ -113,12 +109,16 @@ each accept the following arguments:
   that defines a further, possibly-service-specific condition that constrains
   whether this statement applies.
 
+#### principals
+
 Each policy may have either zero or more `principals` blocks or zero or more
 `not_principals` blocks, both of which each accept the following arguments:
 
 * `type` (Required) The type of principal. For AWS accounts this is "AWS".
 * `identifiers` (Required) List of identifiers for principals. When `type`
   is "AWS", these are IAM user or role ARNs.
+
+#### condition
 
 Each policy statement may have zero or more `condition` blocks, which each
 accept the following arguments:
@@ -159,7 +159,7 @@ like `type = "AWS"` and `identifiers = ["*"]` will be rendered as `"Principal": 
 
 ## Attributes Reference
 
-The following attribute is exported:
+In addition to the arguments above, the following attributes are exported:
 
 * `json` - The above arguments serialized as a standard JSON policy document.
 

@@ -84,6 +84,15 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 					},
 				},
 			},
+			"version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2012-10-17",
+				ValidateFunc: validation.StringInSlice([]string{
+					"2008-10-17",
+					"2012-10-17",
+				}, false),
+			},
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -103,9 +112,9 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// process the current document
-	doc := &IAMPolicyDoc{}
-
-	doc.Version = "2012-10-17"
+	doc := &IAMPolicyDoc{
+		Version: d.Get("version").(string),
+	}
 
 	if policyId, hasPolicyId := d.GetOk("policy_id"); hasPolicyId {
 		doc.Id = policyId.(string)

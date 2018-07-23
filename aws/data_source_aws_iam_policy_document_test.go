@@ -1,11 +1,9 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
@@ -19,9 +17,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
 			{
 				Config: testAccAWSIAMPolicyDocumentConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStateValue("data.aws_iam_policy_document.test", "json",
-						testAccAWSIAMPolicyDocumentExpectedJSON,
-					),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json", testAccAWSIAMPolicyDocumentExpectedJSON),
 				),
 			},
 		},
@@ -39,17 +35,13 @@ func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
 			{
 				Config: testAccAWSIAMPolicyDocumentSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStateValue("data.aws_iam_policy_document.test_source", "json",
-						testAccAWSIAMPolicyDocumentSourceExpectedJSON,
-					),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source", "json", testAccAWSIAMPolicyDocumentSourceExpectedJSON),
 				),
 			},
 			{
 				Config: testAccAWSIAMPolicyDocumentSourceBlankConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStateValue("data.aws_iam_policy_document.test_source_blank", "json",
-						testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON,
-					),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_blank", "json", testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON),
 				),
 			},
 		},
@@ -64,9 +56,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
 			{
 				Config: testAccAWSIAMPolicyDocumentSourceConflictingConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStateValue("data.aws_iam_policy_document.test_source_conflicting", "json",
-						testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON,
-					),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_conflicting", "json", testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON),
 				),
 			},
 		},
@@ -81,33 +71,26 @@ func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
 			{
 				Config: testAccAWSIAMPolicyDocumentOverrideConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStateValue("data.aws_iam_policy_document.test_override", "json",
-						testAccAWSIAMPolicyDocumentOverrideExpectedJSON,
-					),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override", "json", testAccAWSIAMPolicyDocumentOverrideExpectedJSON),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckStateValue(id, name, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("Not found: %s", id)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		v := rs.Primary.Attributes[name]
-		if v != value {
-			return fmt.Errorf(
-				"Value for %s is %s, not %s", name, v, value)
-		}
-
-		return nil
-	}
+func TestAccAWSDataSourceIAMPolicyDocument_Version_20081017(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentDataSourceConfig_Version_20081017,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json", testAccAWSIAMPolicyDocumentDataSourceConfig_Version_20081017_ExpectedJSON),
+				),
+			},
+		},
+	})
 }
 
 var testAccAWSIAMPolicyDocumentConfig = `
@@ -516,6 +499,29 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
       "Sid": "SidToOverwrite",
       "Effect": "Allow",
       "Action": "s3:*",
+      "Resource": "*"
+    }
+  ]
+}`
+
+const testAccAWSIAMPolicyDocumentDataSourceConfig_Version_20081017 = `
+data "aws_iam_policy_document" "test" {
+  version = "2008-10-17"
+
+  statement {
+    actions   = ["ec2:*"]
+    resources = ["*"]
+  }
+}
+`
+
+const testAccAWSIAMPolicyDocumentDataSourceConfig_Version_20081017_ExpectedJSON = `{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:*",
       "Resource": "*"
     }
   ]
