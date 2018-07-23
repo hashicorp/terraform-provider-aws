@@ -15,7 +15,7 @@ const opCreateCluster = "CreateCluster"
 
 // CreateClusterRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCluster operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -113,7 +113,7 @@ const opCreateService = "CreateService"
 
 // CreateServiceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateService operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -180,17 +180,21 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // balancer are considered healthy if they are in the RUNNING state. Tasks for
 // services that do use a load balancer are considered healthy if they are in
 // the RUNNING state and the container instance they are hosted on is reported
-// as healthy by the load balancer. The default value for minimumHealthyPercent
-// is 50% in the console and 100% for the AWS CLI, the AWS SDKs, and the APIs.
+// as healthy by the load balancer. The default value for a replica service
+// for minimumHealthyPercent is 50% in the console and 100% for the AWS CLI,
+// the AWS SDKs, and the APIs. The default value for a daemon service for minimumHealthyPercent
+// is 0% for the AWS CLI, the AWS SDKs, and the APIs and 50% for the console.
 //
 // The maximumPercent parameter represents an upper limit on the number of your
 // service's tasks that are allowed in the RUNNING or PENDING state during a
 // deployment, as a percentage of the desiredCount (rounded down to the nearest
 // integer). This parameter enables you to define the deployment batch size.
-// For example, if your service has a desiredCount of four tasks and a maximumPercent
-// value of 200%, the scheduler can start four new tasks before stopping the
-// four older tasks (provided that the cluster resources required to do this
-// are available). The default value for maximumPercent is 200%.
+// For example, if your replica service has a desiredCount of four tasks and
+// a maximumPercent value of 200%, the scheduler can start four new tasks before
+// stopping the four older tasks (provided that the cluster resources required
+// to do this are available). The default value for a replica service for maximumPercent
+// is 200%. If you are using a daemon service type, the maximumPercent should
+// remain at 100%, which is the default value.
 //
 // When the service scheduler launches new tasks, it determines task placement
 // in your cluster using the following logic:
@@ -203,11 +207,11 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 //    Zones in this manner (although you can choose a different placement strategy)
 //    with the placementStrategy parameter):
 //
-// Sort the valid container instances by the fewest number of running tasks
-//    for this service in the same Availability Zone as the instance. For example,
-//    if zone A has one running service task and zones B and C each have zero,
-//    valid container instances in either zone B or C are considered optimal
-//    for placement.
+// Sort the valid container instances, giving priority to instances that have
+//    the fewest number of running tasks for this service in their respective
+//    Availability Zone. For example, if zone A has one running service task
+//    and zones B and C each have zero, valid container instances in either
+//    zone B or C are considered optimal for placement.
 //
 // Place the new service task on a valid container instance in an optimal Availability
 //    Zone (based on the previous steps), favoring container instances with
@@ -276,7 +280,7 @@ const opDeleteAttributes = "DeleteAttributes"
 
 // DeleteAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAttributes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -365,7 +369,7 @@ const opDeleteCluster = "DeleteCluster"
 
 // DeleteClusterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCluster operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -472,7 +476,7 @@ const opDeleteService = "DeleteService"
 
 // DeleteServiceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteService operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -581,7 +585,7 @@ const opDeregisterContainerInstance = "DeregisterContainerInstance"
 
 // DeregisterContainerInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterContainerInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -687,7 +691,7 @@ const opDeregisterTaskDefinition = "DeregisterTaskDefinition"
 
 // DeregisterTaskDefinitionRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterTaskDefinition operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -789,7 +793,7 @@ const opDescribeClusters = "DescribeClusters"
 
 // DescribeClustersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeClusters operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -877,7 +881,7 @@ const opDescribeContainerInstances = "DescribeContainerInstances"
 
 // DescribeContainerInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeContainerInstances operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -970,7 +974,7 @@ const opDescribeServices = "DescribeServices"
 
 // DescribeServicesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeServices operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1062,7 +1066,7 @@ const opDescribeTaskDefinition = "DescribeTaskDefinition"
 
 // DescribeTaskDefinitionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTaskDefinition operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1155,7 +1159,7 @@ const opDescribeTasks = "DescribeTasks"
 
 // DescribeTasksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTasks operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1247,7 +1251,7 @@ const opDiscoverPollEndpoint = "DiscoverPollEndpoint"
 
 // DiscoverPollEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DiscoverPollEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1334,7 +1338,7 @@ const opListAttributes = "ListAttributes"
 
 // ListAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the ListAttributes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1424,7 +1428,7 @@ const opListClusters = "ListClusters"
 
 // ListClustersRequest generates a "aws/request.Request" representing the
 // client's request for the ListClusters operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1568,7 +1572,7 @@ const opListContainerInstances = "ListContainerInstances"
 
 // ListContainerInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListContainerInstances operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1720,7 +1724,7 @@ const opListServices = "ListServices"
 
 // ListServicesRequest generates a "aws/request.Request" representing the
 // client's request for the ListServices operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1868,7 +1872,7 @@ const opListTaskDefinitionFamilies = "ListTaskDefinitionFamilies"
 
 // ListTaskDefinitionFamiliesRequest generates a "aws/request.Request" representing the
 // client's request for the ListTaskDefinitionFamilies operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2018,7 +2022,7 @@ const opListTaskDefinitions = "ListTaskDefinitions"
 
 // ListTaskDefinitionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTaskDefinitions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2164,7 +2168,7 @@ const opListTasks = "ListTasks"
 
 // ListTasksRequest generates a "aws/request.Request" representing the
 // client's request for the ListTasks operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2321,7 +2325,7 @@ const opPutAttributes = "PutAttributes"
 
 // PutAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the PutAttributes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2419,7 +2423,7 @@ const opRegisterContainerInstance = "RegisterContainerInstance"
 
 // RegisterContainerInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterContainerInstance operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2511,7 +2515,7 @@ const opRegisterTaskDefinition = "RegisterTaskDefinition"
 
 // RegisterTaskDefinitionRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterTaskDefinition operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2619,7 +2623,7 @@ const opRunTask = "RunTask"
 
 // RunTaskRequest generates a "aws/request.Request" representing the
 // client's request for the RunTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2757,7 +2761,7 @@ const opStartTask = "StartTask"
 
 // StartTaskRequest generates a "aws/request.Request" representing the
 // client's request for the StartTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2854,7 +2858,7 @@ const opStopTask = "StopTask"
 
 // StopTaskRequest generates a "aws/request.Request" representing the
 // client's request for the StopTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2957,7 +2961,7 @@ const opSubmitContainerStateChange = "SubmitContainerStateChange"
 
 // SubmitContainerStateChangeRequest generates a "aws/request.Request" representing the
 // client's request for the SubmitContainerStateChange operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3047,7 +3051,7 @@ const opSubmitTaskStateChange = "SubmitTaskStateChange"
 
 // SubmitTaskStateChangeRequest generates a "aws/request.Request" representing the
 // client's request for the SubmitTaskStateChange operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3137,7 +3141,7 @@ const opUpdateContainerAgent = "UpdateContainerAgent"
 
 // UpdateContainerAgentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateContainerAgent operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3257,7 +3261,7 @@ const opUpdateContainerInstancesState = "UpdateContainerInstancesState"
 
 // UpdateContainerInstancesStateRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateContainerInstancesState operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3392,7 +3396,7 @@ const opUpdateService = "UpdateService"
 
 // UpdateServiceRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateService operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3439,8 +3443,17 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 // in a service by specifying the cluster that the service is running in and
 // a new desiredCount parameter.
 //
-// You can use UpdateService to modify your task definition and deploy a new
-// version of your service.
+// If you have updated the Docker image of your application, you can create
+// a new task definition with that image and deploy it to your service. The
+// service scheduler uses the minimum healthy percent and maximum percent parameters
+// (in the service's deployment configuration) to determine the deployment strategy.
+//
+// If your updated Docker image uses the same tag as what is in the existing
+// task definition for your service (for example, my_image:latest), you do not
+// need to create a new revision of your task definition. You can update the
+// service using the forceNewDeployment option. The new tasks launched by the
+// deployment pull the current image/tag combination from your repository when
+// they start.
 //
 // You can also update the deployment configuration of a service. When a deployment
 // is triggered by updating the task definition of a service, the service scheduler
@@ -3754,10 +3767,12 @@ type AwsVpcConfiguration struct {
 	AssignPublicIp *string `locationName:"assignPublicIp" type:"string" enum:"AssignPublicIp"`
 
 	// The security groups associated with the task or service. If you do not specify
-	// a security group, the default security group for the VPC is used.
+	// a security group, the default security group for the VPC is used. There is
+	// a limit of 5 security groups able to be specified per AwsVpcConfiguration.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
-	// The subnets associated with the task or service.
+	// The subnets associated with the task or service. There is a limit of 10 subnets
+	// able to be specified per AwsVpcConfiguration.
 	//
 	// Subnets is a required field
 	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
@@ -4190,6 +4205,8 @@ type ContainerDefinition struct {
 	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
 	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
 	// and the --hostname option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// The hostname parameter is not supported if using the awsvpc networkMode.
 	Hostname *string `locationName:"hostname" type:"string"`
 
 	// The image used to start a container. This string is passed directly to the
@@ -4686,18 +4703,22 @@ type ContainerInstance struct {
 	// The Unix time stamp for when the container instance was registered.
 	RegisteredAt *time.Time `locationName:"registeredAt" type:"timestamp" timestampFormat:"unix"`
 
-	// For most resource types, this parameter describes the registered resources
-	// on the container instance that are in use by current tasks. For port resource
-	// types, this parameter describes the ports that were reserved by the Amazon
-	// ECS container agent when it registered the container instance with Amazon
-	// ECS.
+	// For CPU and memory resource types, this parameter describes the amount of
+	// each resource that was available on the container instance when the container
+	// agent registered it with Amazon ECS; this value represents the total amount
+	// of CPU and memory that can be allocated on this container instance to tasks.
+	// For port resource types, this parameter describes the ports that were reserved
+	// by the Amazon ECS container agent when it registered the container instance
+	// with Amazon ECS.
 	RegisteredResources []*Resource `locationName:"registeredResources" type:"list"`
 
-	// For most resource types, this parameter describes the remaining resources
-	// of the container instance that are available for new tasks. For port resource
-	// types, this parameter describes the ports that are reserved by the Amazon
-	// ECS container agent and any containers that have reserved port mappings;
-	// any port that is not specified here is available for new tasks.
+	// For CPU and memory resource types, this parameter describes the remaining
+	// CPU and memory that has not already been allocated to tasks and is therefore
+	// available for new tasks. For port resource types, this parameter describes
+	// the ports that were reserved by the Amazon ECS container agent (at instance
+	// registration time) and any task containers that have reserved port mappings
+	// on the host (with the host or bridge network mode). Any port that is not
+	// specified here is available for new tasks.
 	RemainingResources []*Resource `locationName:"remainingResources" type:"list"`
 
 	// The number of tasks on the container instance that are in the RUNNING status.
@@ -5012,8 +5033,8 @@ func (s *CreateClusterOutput) SetCluster(v *Cluster) *CreateClusterOutput {
 type CreateServiceInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. Up to 32 ASCII characters are allowed.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. Up to 32 ASCII characters are allowed.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The short name or full Amazon Resource Name (ARN) of the cluster on which
@@ -5027,9 +5048,7 @@ type CreateServiceInput struct {
 
 	// The number of instantiations of the specified task definition to place and
 	// keep running on your cluster.
-	//
-	// DesiredCount is a required field
-	DesiredCount *int64 `locationName:"desiredCount" type:"integer" required:"true"`
+	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
 
 	// The period of time, in seconds, that the Amazon ECS service scheduler should
 	// ignore unhealthy Elastic Load Balancing target health checks after a task
@@ -5062,6 +5081,13 @@ type CreateServiceInput struct {
 	// balancer. When a task from this service is placed on a container instance,
 	// the container instance and port combination is registered as a target in
 	// the target group specified here.
+	//
+	// Services with tasks that use the awsvpc network mode (for example, those
+	// with the Fargate launch type) only support Application Load Balancers and
+	// Network Load Balancers; Classic Load Balancers are not supported. Also, when
+	// you create any target groups for these services, you must choose ip as the
+	// target type, not instance, because tasks that use the awsvpc network mode
+	// are associated with an elastic network interface, not an Amazon EC2 instance.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
 	// The network configuration for the service. This parameter is required for
@@ -5106,6 +5132,25 @@ type CreateServiceInput struct {
 	// in the IAM User Guide.
 	Role *string `locationName:"role" type:"string"`
 
+	// The scheduling strategy to use for the service. For more information, see
+	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguideecs_services.html).
+	//
+	// There are two service scheduler strategies available:
+	//
+	//    * REPLICA-The replica scheduling strategy places and maintains the desired
+	//    number of tasks across your cluster. By default, the service scheduler
+	//    spreads tasks across Availability Zones. You can use task placement strategies
+	//    and constraints to customize task placement decisions.
+	//
+	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
+	//    active container instance that meets all of the task placement constraints
+	//    that you specify in your cluster. When using this strategy, there is no
+	//    need to specify a desired number of tasks, a task placement strategy,
+	//    or use Service Auto Scaling policies.
+	//
+	// Fargate tasks do not support the DAEMON scheduling strategy.
+	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
+
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
 	// hyphens, and underscores are allowed. Service names must be unique within
 	// a cluster, but you can have similarly named services in multiple clusters
@@ -5113,6 +5158,14 @@ type CreateServiceInput struct {
 	//
 	// ServiceName is a required field
 	ServiceName *string `locationName:"serviceName" type:"string" required:"true"`
+
+	// The details of the service discovery registries you want to assign to this
+	// service. For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html).
+	//
+	// Service discovery is supported for Fargate tasks if using platform version
+	// v1.1.0 or later. For more information, see AWS Fargate Platform Versions
+	// (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
+	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
 
 	// The family and revision (family:revision) or full ARN of the task definition
 	// to run in your service. If a revision is not specified, the latest ACTIVE
@@ -5135,9 +5188,6 @@ func (s CreateServiceInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateServiceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateServiceInput"}
-	if s.DesiredCount == nil {
-		invalidParams.Add(request.NewErrParamRequired("DesiredCount"))
-	}
 	if s.ServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceName"))
 	}
@@ -5228,9 +5278,21 @@ func (s *CreateServiceInput) SetRole(v string) *CreateServiceInput {
 	return s
 }
 
+// SetSchedulingStrategy sets the SchedulingStrategy field's value.
+func (s *CreateServiceInput) SetSchedulingStrategy(v string) *CreateServiceInput {
+	s.SchedulingStrategy = &v
+	return s
+}
+
 // SetServiceName sets the ServiceName field's value.
 func (s *CreateServiceInput) SetServiceName(v string) *CreateServiceInput {
 	s.ServiceName = &v
+	return s
+}
+
+// SetServiceRegistries sets the ServiceRegistries field's value.
+func (s *CreateServiceInput) SetServiceRegistries(v []*ServiceRegistry) *CreateServiceInput {
+	s.ServiceRegistries = v
 	return s
 }
 
@@ -5417,6 +5479,11 @@ type DeleteServiceInput struct {
 	// is assumed.
 	Cluster *string `locationName:"cluster" type:"string"`
 
+	// If true, allows you to delete a service even if it has not been scaled down
+	// to zero tasks. It is only necessary to use this if the service is using the
+	// REPLICA scheduling strategy.
+	Force *bool `locationName:"force" type:"boolean"`
+
 	// The name of the service to delete.
 	//
 	// Service is a required field
@@ -5449,6 +5516,12 @@ func (s *DeleteServiceInput) Validate() error {
 // SetCluster sets the Cluster field's value.
 func (s *DeleteServiceInput) SetCluster(v string) *DeleteServiceInput {
 	s.Cluster = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteServiceInput) SetForce(v bool) *DeleteServiceInput {
+	s.Force = &v
 	return s
 }
 
@@ -5889,7 +5962,8 @@ type DescribeContainerInstancesInput struct {
 	// default cluster is assumed.
 	Cluster *string `locationName:"cluster" type:"string"`
 
-	// A list of container instance IDs or full ARN entries.
+	// A list of up to 100 container instance IDs or full Amazon Resource Name (ARN)
+	// entries.
 	//
 	// ContainerInstances is a required field
 	ContainerInstances []*string `locationName:"containerInstances" type:"list" required:"true"`
@@ -6663,6 +6737,20 @@ type LinuxParameters struct {
 	// container instance, log in to your container instance and run the following
 	// command: sudo docker version | grep "Server API version"
 	InitProcessEnabled *bool `locationName:"initProcessEnabled" type:"boolean"`
+
+	// The value for the size (in MiB) of the /dev/shm volume. This parameter maps
+	// to the --shm-size option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// If you are using tasks that use the Fargate launch type, the sharedMemorySize
+	// parameter is not supported.
+	SharedMemorySize *int64 `locationName:"sharedMemorySize" type:"integer"`
+
+	// The container path, mount options, and size (in MiB) of the tmpfs mount.
+	// This parameter maps to the --tmpfs option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// If you are using tasks that use the Fargate launch type, the tmpfs parameter
+	// is not supported.
+	Tmpfs []*Tmpfs `locationName:"tmpfs" type:"list"`
 }
 
 // String returns the string representation
@@ -6688,6 +6776,16 @@ func (s *LinuxParameters) Validate() error {
 			}
 		}
 	}
+	if s.Tmpfs != nil {
+		for i, v := range s.Tmpfs {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tmpfs", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6710,6 +6808,18 @@ func (s *LinuxParameters) SetDevices(v []*Device) *LinuxParameters {
 // SetInitProcessEnabled sets the InitProcessEnabled field's value.
 func (s *LinuxParameters) SetInitProcessEnabled(v bool) *LinuxParameters {
 	s.InitProcessEnabled = &v
+	return s
+}
+
+// SetSharedMemorySize sets the SharedMemorySize field's value.
+func (s *LinuxParameters) SetSharedMemorySize(v int64) *LinuxParameters {
+	s.SharedMemorySize = &v
+	return s
+}
+
+// SetTmpfs sets the Tmpfs field's value.
+func (s *LinuxParameters) SetTmpfs(v []*Tmpfs) *LinuxParameters {
+	s.Tmpfs = v
 	return s
 }
 
@@ -7070,6 +7180,9 @@ type ListServicesInput struct {
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
 	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The scheduling strategy for services to list.
+	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 }
 
 // String returns the string representation
@@ -7103,6 +7216,12 @@ func (s *ListServicesInput) SetMaxResults(v int64) *ListServicesInput {
 // SetNextToken sets the NextToken field's value.
 func (s *ListServicesInput) SetNextToken(v string) *ListServicesInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetSchedulingStrategy sets the SchedulingStrategy field's value.
+func (s *ListServicesInput) SetSchedulingStrategy(v string) *ListServicesInput {
+	s.SchedulingStrategy = &v
 	return s
 }
 
@@ -7526,6 +7645,13 @@ func (s *ListTasksOutput) SetTaskArns(v []*string) *ListTasksOutput {
 }
 
 // Details on a load balancer that is used with a service.
+//
+// Services with tasks that use the awsvpc network mode (for example, those
+// with the Fargate launch type) only support Application Load Balancers and
+// Network Load Balancers; Classic Load Balancers are not supported. Also, when
+// you create any target groups for these services, you must choose ip as the
+// target type, not instance, because tasks that use the awsvpc network mode
+// are associated with an elastic network interface, not an Amazon EC2 instance.
 type LoadBalancer struct {
 	_ struct{} `type:"structure"`
 
@@ -7544,6 +7670,11 @@ type LoadBalancer struct {
 
 	// The full Amazon Resource Name (ARN) of the Elastic Load Balancing target
 	// group associated with a service.
+	//
+	// If your service's task definition uses the awsvpc network mode (which is
+	// required for the Fargate launch type), you must choose ip as the target type,
+	// not instance, because tasks that use the awsvpc network mode are associated
+	// with an elastic network interface, not an Amazon EC2 instance.
 	TargetGroupArn *string `locationName:"targetGroupArn" type:"string"`
 }
 
@@ -8487,7 +8618,8 @@ type Resource struct {
 	// precision floating-point type.
 	LongValue *int64 `locationName:"longValue" type:"long"`
 
-	// The name of the resource, such as cpu, memory, ports, or a user-defined resource.
+	// The name of the resource, such as CPU, MEMORY, PORTS, PORTS_UDP, or a user-defined
+	// resource.
 	Name *string `locationName:"name" type:"string"`
 
 	// When the stringSetValue type is set, the value of the resource must be a
@@ -8777,6 +8909,13 @@ type Service struct {
 	// A list of Elastic Load Balancing load balancer objects, containing the load
 	// balancer name, the container name (as it appears in a container definition),
 	// and the container port to access from the load balancer.
+	//
+	// Services with tasks that use the awsvpc network mode (for example, those
+	// with the Fargate launch type) only support Application Load Balancers and
+	// Network Load Balancers; Classic Load Balancers are not supported. Also, when
+	// you create any target groups for these services, you must choose ip as the
+	// target type, not instance, because tasks that use the awsvpc network mode
+	// are associated with an elastic network interface, not an Amazon EC2 instance.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
 	// The VPC subnet and security group configuration for tasks that receive their
@@ -8805,6 +8944,23 @@ type Service struct {
 	// The number of tasks in the cluster that are in the RUNNING state.
 	RunningCount *int64 `locationName:"runningCount" type:"integer"`
 
+	// The scheduling strategy to use for the service. For more information, see
+	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguideecs_services.html).
+	//
+	// There are two service scheduler strategies available:
+	//
+	//    * REPLICA-The replica scheduling strategy places and maintains the desired
+	//    number of tasks across your cluster. By default, the service scheduler
+	//    spreads tasks across Availability Zones. You can use task placement strategies
+	//    and constraints to customize task placement decisions.
+	//
+	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
+	//    container instance in your cluster. When using this strategy, do not specify
+	//    a desired number of tasks or any task placement strategies.
+	//
+	// Fargate tasks do not support the DAEMON scheduling strategy.
+	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
+
 	// The ARN that identifies the service. The ARN contains the arn:aws:ecs namespace,
 	// followed by the region of the service, the AWS account ID of the service
 	// owner, the service namespace, and then the service name. For example, arn:aws:ecs:region:012345678910:service/my-service.
@@ -8815,6 +8971,8 @@ type Service struct {
 	// a cluster, but you can have similarly named services in multiple clusters
 	// within a region or across multiple regions.
 	ServiceName *string `locationName:"serviceName" type:"string"`
+
+	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
 
 	// The status of the service. The valid values are ACTIVE, DRAINING, or INACTIVE.
 	Status *string `locationName:"status" type:"string"`
@@ -8931,6 +9089,12 @@ func (s *Service) SetRunningCount(v int64) *Service {
 	return s
 }
 
+// SetSchedulingStrategy sets the SchedulingStrategy field's value.
+func (s *Service) SetSchedulingStrategy(v string) *Service {
+	s.SchedulingStrategy = &v
+	return s
+}
+
 // SetServiceArn sets the ServiceArn field's value.
 func (s *Service) SetServiceArn(v string) *Service {
 	s.ServiceArn = &v
@@ -8940,6 +9104,12 @@ func (s *Service) SetServiceArn(v string) *Service {
 // SetServiceName sets the ServiceName field's value.
 func (s *Service) SetServiceName(v string) *Service {
 	s.ServiceName = &v
+	return s
+}
+
+// SetServiceRegistries sets the ServiceRegistries field's value.
+func (s *Service) SetServiceRegistries(v []*ServiceRegistry) *Service {
+	s.ServiceRegistries = v
 	return s
 }
 
@@ -8994,6 +9164,73 @@ func (s *ServiceEvent) SetId(v string) *ServiceEvent {
 // SetMessage sets the Message field's value.
 func (s *ServiceEvent) SetMessage(v string) *ServiceEvent {
 	s.Message = &v
+	return s
+}
+
+// Details of the service registry.
+type ServiceRegistry struct {
+	_ struct{} `type:"structure"`
+
+	// The container name value, already specified in the task definition, to be
+	// used for your service discovery service. If the task definition that your
+	// service task specifies uses the bridge or host network mode, you must specify
+	// a containerName and containerPort combination from the task definition. If
+	// the task definition that your service task specifies uses the awsvpc network
+	// mode and a type SRV DNS record is used, you must specify either a containerName
+	// and containerPort combination or a port value, but not both.
+	ContainerName *string `locationName:"containerName" type:"string"`
+
+	// The port value, already specified in the task definition, to be used for
+	// your service discovery service. If the task definition your service task
+	// specifies uses the bridge or host network mode, you must specify a containerName
+	// and containerPort combination from the task definition. If the task definition
+	// your service task specifies uses the awsvpc network mode and a type SRV DNS
+	// record is used, you must specify either a containerName and containerPort
+	// combination or a port value, but not both.
+	ContainerPort *int64 `locationName:"containerPort" type:"integer"`
+
+	// The port value used if your service discovery service specified an SRV record.
+	// This field is required if both the awsvpc network mode and SRV records are
+	// used.
+	Port *int64 `locationName:"port" type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the service registry. The currently supported
+	// service registry is Amazon Route 53 Auto Naming. For more information, see
+	// Service (https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
+	RegistryArn *string `locationName:"registryArn" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceRegistry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceRegistry) GoString() string {
+	return s.String()
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ServiceRegistry) SetContainerName(v string) *ServiceRegistry {
+	s.ContainerName = &v
+	return s
+}
+
+// SetContainerPort sets the ContainerPort field's value.
+func (s *ServiceRegistry) SetContainerPort(v int64) *ServiceRegistry {
+	s.ContainerPort = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *ServiceRegistry) SetPort(v int64) *ServiceRegistry {
+	s.Port = &v
+	return s
+}
+
+// SetRegistryArn sets the RegistryArn field's value.
+func (s *ServiceRegistry) SetRegistryArn(v string) *ServiceRegistry {
+	s.RegistryArn = &v
 	return s
 }
 
@@ -10145,6 +10382,74 @@ func (s *TaskOverride) SetTaskRoleArn(v string) *TaskOverride {
 	return s
 }
 
+// The container path, mount options, and size of the tmpfs mount.
+type Tmpfs struct {
+	_ struct{} `type:"structure"`
+
+	// The absolute file path where the tmpfs volume will be mounted.
+	//
+	// ContainerPath is a required field
+	ContainerPath *string `locationName:"containerPath" type:"string" required:"true"`
+
+	// The list of tmpfs volume mount options.
+	//
+	// Valid values: "defaults" | "ro" | "rw" | "suid" | "nosuid" | "dev" | "nodev"
+	// | "exec" | "noexec" | "sync" | "async" | "dirsync" | "remount" | "mand" |
+	// "nomand" | "atime" | "noatime" | "diratime" | "nodiratime" | "bind" | "rbind"
+	// | "unbindable" | "runbindable" | "private" | "rprivate" | "shared" | "rshared"
+	// | "slave" | "rslave" | "relatime" | "norelatime" | "strictatime" | "nostrictatime"
+	MountOptions []*string `locationName:"mountOptions" type:"list"`
+
+	// The size (in MiB) of the tmpfs volume.
+	//
+	// Size is a required field
+	Size *int64 `locationName:"size" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s Tmpfs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tmpfs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tmpfs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tmpfs"}
+	if s.ContainerPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerPath"))
+	}
+	if s.Size == nil {
+		invalidParams.Add(request.NewErrParamRequired("Size"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerPath sets the ContainerPath field's value.
+func (s *Tmpfs) SetContainerPath(v string) *Tmpfs {
+	s.ContainerPath = &v
+	return s
+}
+
+// SetMountOptions sets the MountOptions field's value.
+func (s *Tmpfs) SetMountOptions(v []*string) *Tmpfs {
+	s.MountOptions = v
+	return s
+}
+
+// SetSize sets the Size field's value.
+func (s *Tmpfs) SetSize(v int64) *Tmpfs {
+	s.Size = &v
+	return s
+}
+
 // The ulimit settings to pass to the container.
 type Ulimit struct {
 	_ struct{} `type:"structure"`
@@ -10396,8 +10701,11 @@ type UpdateServiceInput struct {
 	// service.
 	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
 
-	// Whether to force a new deployment of the service. By default, --no-force-new-deployment
-	// is assumed unless otherwise specified.
+	// Whether to force a new deployment of the service. Deployments are not forced
+	// by default. You can use this option to trigger a new deployment with no service
+	// definition changes. For example, you can update a service's tasks to use
+	// a newer Docker image with the same image/tag combination (my_image:latest)
+	// or to roll Fargate tasks onto a newer platform version.
 	ForceNewDeployment *bool `locationName:"forceNewDeployment" type:"boolean"`
 
 	// The period of time, in seconds, that the Amazon ECS service scheduler should
@@ -10820,6 +11128,14 @@ const (
 
 	// PlacementStrategyTypeBinpack is a PlacementStrategyType enum value
 	PlacementStrategyTypeBinpack = "binpack"
+)
+
+const (
+	// SchedulingStrategyReplica is a SchedulingStrategy enum value
+	SchedulingStrategyReplica = "REPLICA"
+
+	// SchedulingStrategyDaemon is a SchedulingStrategy enum value
+	SchedulingStrategyDaemon = "DAEMON"
 )
 
 const (

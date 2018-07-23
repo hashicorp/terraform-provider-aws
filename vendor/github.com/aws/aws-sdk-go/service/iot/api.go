@@ -17,7 +17,7 @@ const opAcceptCertificateTransfer = "AcceptCertificateTransfer"
 
 // AcceptCertificateTransferRequest generates a "aws/request.Request" representing the
 // client's request for the AcceptCertificateTransfer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -118,7 +118,7 @@ const opAddThingToThingGroup = "AddThingToThingGroup"
 
 // AddThingToThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the AddThingToThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -203,7 +203,7 @@ const opAssociateTargetsWithJob = "AssociateTargetsWithJob"
 
 // AssociateTargetsWithJobRequest generates a "aws/request.Request" representing the
 // client's request for the AssociateTargetsWithJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -266,7 +266,7 @@ func (c *IoT) AssociateTargetsWithJobRequest(input *AssociateTargetsWithJobInput
 //   The specified resource does not exist.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -299,7 +299,7 @@ const opAttachPolicy = "AttachPolicy"
 
 // AttachPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the AttachPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -368,7 +368,7 @@ func (c *IoT) AttachPolicyRequest(input *AttachPolicyInput) (req *request.Reques
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) AttachPolicy(input *AttachPolicyInput) (*AttachPolicyOutput, error) {
 	req, out := c.AttachPolicyRequest(input)
@@ -395,7 +395,7 @@ const opAttachPrincipalPolicy = "AttachPrincipalPolicy"
 
 // AttachPrincipalPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the AttachPrincipalPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -470,7 +470,7 @@ func (c *IoT) AttachPrincipalPolicyRequest(input *AttachPrincipalPolicyInput) (r
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) AttachPrincipalPolicy(input *AttachPrincipalPolicyInput) (*AttachPrincipalPolicyOutput, error) {
 	req, out := c.AttachPrincipalPolicyRequest(input)
@@ -497,7 +497,7 @@ const opAttachThingPrincipal = "AttachThingPrincipal"
 
 // AttachThingPrincipalRequest generates a "aws/request.Request" representing the
 // client's request for the AttachThingPrincipal operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -588,7 +588,7 @@ const opCancelCertificateTransfer = "CancelCertificateTransfer"
 
 // CancelCertificateTransferRequest generates a "aws/request.Request" representing the
 // client's request for the CancelCertificateTransfer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -694,7 +694,7 @@ const opCancelJob = "CancelJob"
 
 // CancelJobRequest generates a "aws/request.Request" representing the
 // client's request for the CancelJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -775,11 +775,107 @@ func (c *IoT) CancelJobWithContext(ctx aws.Context, input *CancelJobInput, opts 
 	return out, req.Send()
 }
 
+const opCancelJobExecution = "CancelJobExecution"
+
+// CancelJobExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the CancelJobExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelJobExecution for more information on using the CancelJobExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelJobExecutionRequest method.
+//    req, resp := client.CancelJobExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CancelJobExecutionRequest(input *CancelJobExecutionInput) (req *request.Request, output *CancelJobExecutionOutput) {
+	op := &request.Operation{
+		Name:       opCancelJobExecution,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/things/{thingName}/jobs/{jobId}/cancel",
+	}
+
+	if input == nil {
+		input = &CancelJobExecutionInput{}
+	}
+
+	output = &CancelJobExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CancelJobExecution API operation for AWS IoT.
+//
+// Cancels the execution of a job for a given thing.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CancelJobExecution for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   An attempt was made to change to an invalid state, for example by deleting
+//   a job or a job execution which is "IN_PROGRESS" without setting the force
+//   parameter.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeVersionConflictException "VersionConflictException"
+//   An exception thrown when the version of an entity specified with the expectedVersion
+//   parameter does not match the latest version in the system.
+//
+func (c *IoT) CancelJobExecution(input *CancelJobExecutionInput) (*CancelJobExecutionOutput, error) {
+	req, out := c.CancelJobExecutionRequest(input)
+	return out, req.Send()
+}
+
+// CancelJobExecutionWithContext is the same as CancelJobExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelJobExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CancelJobExecutionWithContext(ctx aws.Context, input *CancelJobExecutionInput, opts ...request.Option) (*CancelJobExecutionOutput, error) {
+	req, out := c.CancelJobExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opClearDefaultAuthorizer = "ClearDefaultAuthorizer"
 
 // ClearDefaultAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the ClearDefaultAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -870,7 +966,7 @@ const opCreateAuthorizer = "CreateAuthorizer"
 
 // CreateAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -925,7 +1021,7 @@ func (c *IoT) CreateAuthorizerRequest(input *CreateAuthorizerInput) (req *reques
 //   The request is not valid.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -964,7 +1060,7 @@ const opCreateCertificateFromCsr = "CreateCertificateFromCsr"
 
 // CreateCertificateFromCsrRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCertificateFromCsr operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1093,7 +1189,7 @@ const opCreateJob = "CreateJob"
 
 // CreateJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1151,7 +1247,7 @@ func (c *IoT) CreateJobRequest(input *CreateJobInput) (req *request.Request, out
 //   The resource already exists.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -1184,7 +1280,7 @@ const opCreateKeysAndCertificate = "CreateKeysAndCertificate"
 
 // CreateKeysAndCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the CreateKeysAndCertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1276,7 +1372,7 @@ const opCreateOTAUpdate = "CreateOTAUpdate"
 
 // CreateOTAUpdateRequest generates a "aws/request.Request" representing the
 // client's request for the CreateOTAUpdate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1370,7 +1466,7 @@ const opCreatePolicy = "CreatePolicy"
 
 // CreatePolicyRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1468,7 +1564,7 @@ const opCreatePolicyVersion = "CreatePolicyVersion"
 
 // CreatePolicyVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePolicyVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1572,7 +1668,7 @@ const opCreateRoleAlias = "CreateRoleAlias"
 
 // CreateRoleAliasRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRoleAlias operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1627,7 +1723,7 @@ func (c *IoT) CreateRoleAliasRequest(input *CreateRoleAliasInput) (req *request.
 //   The request is not valid.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -1666,7 +1762,7 @@ const opCreateStream = "CreateStream"
 
 // CreateStreamRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStream operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1766,7 +1862,7 @@ const opCreateThing = "CreateThing"
 
 // CreateThingRequest generates a "aws/request.Request" representing the
 // client's request for the CreateThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1804,7 +1900,7 @@ func (c *IoT) CreateThingRequest(input *CreateThingInput) (req *request.Request,
 
 // CreateThing API operation for AWS IoT.
 //
-// Creates a thing record in the thing registry.
+// Creates a thing record in the registry.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1860,7 +1956,7 @@ const opCreateThingGroup = "CreateThingGroup"
 
 // CreateThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1945,7 +2041,7 @@ const opCreateThingType = "CreateThingType"
 
 // CreateThingTypeRequest generates a "aws/request.Request" representing the
 // client's request for the CreateThingType operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2036,7 +2132,7 @@ const opCreateTopicRule = "CreateTopicRule"
 
 // CreateTopicRuleRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTopicRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2128,7 +2224,7 @@ const opDeleteAuthorizer = "DeleteAuthorizer"
 
 // DeleteAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2222,7 +2318,7 @@ const opDeleteCACertificate = "DeleteCACertificate"
 
 // DeleteCACertificateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCACertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2316,7 +2412,7 @@ const opDeleteCertificate = "DeleteCertificate"
 
 // DeleteCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2416,11 +2512,207 @@ func (c *IoT) DeleteCertificateWithContext(ctx aws.Context, input *DeleteCertifi
 	return out, req.Send()
 }
 
+const opDeleteJob = "DeleteJob"
+
+// DeleteJobRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteJob for more information on using the DeleteJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteJobRequest method.
+//    req, resp := client.DeleteJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, output *DeleteJobOutput) {
+	op := &request.Operation{
+		Name:       opDeleteJob,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/jobs/{jobId}",
+	}
+
+	if input == nil {
+		input = &DeleteJobInput{}
+	}
+
+	output = &DeleteJobOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteJob API operation for AWS IoT.
+//
+// Deletes a job and its related job executions.
+//
+// Deleting a job may take time, depending on the number of job executions created
+// for the job and various other factors. While the job is being deleted, the
+// status of the job will be shown as "DELETION_IN_PROGRESS". Attempting to
+// delete or cancel a job whose status is already "DELETION_IN_PROGRESS" will
+// result in an error.
+//
+// Only 10 jobs may have status "DELETION_IN_PROGRESS" at the same time, or
+// a LimitExceededException will occur.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   An attempt was made to change to an invalid state, for example by deleting
+//   a job or a job execution which is "IN_PROGRESS" without setting the force
+//   parameter.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit has been exceeded.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) DeleteJob(input *DeleteJobInput) (*DeleteJobOutput, error) {
+	req, out := c.DeleteJobRequest(input)
+	return out, req.Send()
+}
+
+// DeleteJobWithContext is the same as DeleteJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteJobWithContext(ctx aws.Context, input *DeleteJobInput, opts ...request.Option) (*DeleteJobOutput, error) {
+	req, out := c.DeleteJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteJobExecution = "DeleteJobExecution"
+
+// DeleteJobExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteJobExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteJobExecution for more information on using the DeleteJobExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteJobExecutionRequest method.
+//    req, resp := client.DeleteJobExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteJobExecutionRequest(input *DeleteJobExecutionInput) (req *request.Request, output *DeleteJobExecutionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteJobExecution,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/things/{thingName}/jobs/{jobId}/executionNumber/{executionNumber}",
+	}
+
+	if input == nil {
+		input = &DeleteJobExecutionInput{}
+	}
+
+	output = &DeleteJobExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteJobExecution API operation for AWS IoT.
+//
+// Deletes a job execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteJobExecution for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   An attempt was made to change to an invalid state, for example by deleting
+//   a job or a job execution which is "IN_PROGRESS" without setting the force
+//   parameter.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+func (c *IoT) DeleteJobExecution(input *DeleteJobExecutionInput) (*DeleteJobExecutionOutput, error) {
+	req, out := c.DeleteJobExecutionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteJobExecutionWithContext is the same as DeleteJobExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteJobExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteJobExecutionWithContext(ctx aws.Context, input *DeleteJobExecutionInput, opts ...request.Option) (*DeleteJobExecutionOutput, error) {
+	req, out := c.DeleteJobExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteOTAUpdate = "DeleteOTAUpdate"
 
 // DeleteOTAUpdateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteOTAUpdate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2511,7 +2803,7 @@ const opDeletePolicy = "DeletePolicy"
 
 // DeletePolicyRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2617,7 +2909,7 @@ const opDeletePolicyVersion = "DeletePolicyVersion"
 
 // DeletePolicyVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePolicyVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2716,7 +3008,7 @@ const opDeleteRegistrationCode = "DeleteRegistrationCode"
 
 // DeleteRegistrationCodeRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRegistrationCode operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2804,7 +3096,7 @@ const opDeleteRoleAlias = "DeleteRoleAlias"
 
 // DeleteRoleAliasRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRoleAlias operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2898,7 +3190,7 @@ const opDeleteStream = "DeleteStream"
 
 // DeleteStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteStream operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2992,7 +3284,7 @@ const opDeleteThing = "DeleteThing"
 
 // DeleteThingRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3044,8 +3336,8 @@ func (c *IoT) DeleteThingRequest(input *DeleteThingInput) (req *request.Request,
 //   The specified resource does not exist.
 //
 //   * ErrCodeVersionConflictException "VersionConflictException"
-//   An exception thrown when the version of a thing passed to a command is different
-//   than the version specified with the --version parameter.
+//   An exception thrown when the version of an entity specified with the expectedVersion
+//   parameter does not match the latest version in the system.
 //
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   The request is not valid.
@@ -3087,7 +3379,7 @@ const opDeleteThingGroup = "DeleteThingGroup"
 
 // DeleteThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3139,8 +3431,8 @@ func (c *IoT) DeleteThingGroupRequest(input *DeleteThingGroupInput) (req *reques
 //   The request is not valid.
 //
 //   * ErrCodeVersionConflictException "VersionConflictException"
-//   An exception thrown when the version of a thing passed to a command is different
-//   than the version specified with the --version parameter.
+//   An exception thrown when the version of an entity specified with the expectedVersion
+//   parameter does not match the latest version in the system.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -3173,7 +3465,7 @@ const opDeleteThingType = "DeleteThingType"
 
 // DeleteThingTypeRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteThingType operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3268,7 +3560,7 @@ const opDeleteTopicRule = "DeleteTopicRule"
 
 // DeleteTopicRuleRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTopicRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3355,7 +3647,7 @@ const opDeleteV2LoggingLevel = "DeleteV2LoggingLevel"
 
 // DeleteV2LoggingLevelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteV2LoggingLevel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3439,7 +3731,7 @@ const opDeprecateThingType = "DeprecateThingType"
 
 // DeprecateThingTypeRequest generates a "aws/request.Request" representing the
 // client's request for the DeprecateThingType operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3531,7 +3823,7 @@ const opDescribeAuthorizer = "DescribeAuthorizer"
 
 // DescribeAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3622,7 +3914,7 @@ const opDescribeCACertificate = "DescribeCACertificate"
 
 // DescribeCACertificateRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCACertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3713,7 +4005,7 @@ const opDescribeCertificate = "DescribeCertificate"
 
 // DescribeCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3804,7 +4096,7 @@ const opDescribeDefaultAuthorizer = "DescribeDefaultAuthorizer"
 
 // DescribeDefaultAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDefaultAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3895,7 +4187,7 @@ const opDescribeEndpoint = "DescribeEndpoint"
 
 // DescribeEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3980,7 +4272,7 @@ const opDescribeEventConfigurations = "DescribeEventConfigurations"
 
 // DescribeEventConfigurationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEventConfigurations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4059,7 +4351,7 @@ const opDescribeIndex = "DescribeIndex"
 
 // DescribeIndexRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeIndex operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4150,7 +4442,7 @@ const opDescribeJob = "DescribeJob"
 
 // DescribeJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4235,7 +4527,7 @@ const opDescribeJobExecution = "DescribeJobExecution"
 
 // DescribeJobExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeJobExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4320,7 +4612,7 @@ const opDescribeRoleAlias = "DescribeRoleAlias"
 
 // DescribeRoleAliasRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeRoleAlias operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4411,7 +4703,7 @@ const opDescribeStream = "DescribeStream"
 
 // DescribeStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStream operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4502,7 +4794,7 @@ const opDescribeThing = "DescribeThing"
 
 // DescribeThingRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4593,7 +4885,7 @@ const opDescribeThingGroup = "DescribeThingGroup"
 
 // DescribeThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4678,7 +4970,7 @@ const opDescribeThingRegistrationTask = "DescribeThingRegistrationTask"
 
 // DescribeThingRegistrationTaskRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeThingRegistrationTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4766,7 +5058,7 @@ const opDescribeThingType = "DescribeThingType"
 
 // DescribeThingTypeRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeThingType operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4857,7 +5149,7 @@ const opDetachPolicy = "DetachPolicy"
 
 // DetachPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the DetachPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4923,7 +5215,7 @@ func (c *IoT) DetachPolicyRequest(input *DetachPolicyInput) (req *request.Reques
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) DetachPolicy(input *DetachPolicyInput) (*DetachPolicyOutput, error) {
 	req, out := c.DetachPolicyRequest(input)
@@ -4950,7 +5242,7 @@ const opDetachPrincipalPolicy = "DetachPrincipalPolicy"
 
 // DetachPrincipalPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the DetachPrincipalPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5048,7 +5340,7 @@ const opDetachThingPrincipal = "DetachThingPrincipal"
 
 // DetachThingPrincipalRequest generates a "aws/request.Request" representing the
 // client's request for the DetachThingPrincipal operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5139,7 +5431,7 @@ const opDisableTopicRule = "DisableTopicRule"
 
 // DisableTopicRuleRequest generates a "aws/request.Request" representing the
 // client's request for the DisableTopicRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5226,7 +5518,7 @@ const opEnableTopicRule = "EnableTopicRule"
 
 // EnableTopicRuleRequest generates a "aws/request.Request" representing the
 // client's request for the EnableTopicRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5313,7 +5605,7 @@ const opGetEffectivePolicies = "GetEffectivePolicies"
 
 // GetEffectivePoliciesRequest generates a "aws/request.Request" representing the
 // client's request for the GetEffectivePolicies operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5351,7 +5643,8 @@ func (c *IoT) GetEffectivePoliciesRequest(input *GetEffectivePoliciesInput) (req
 
 // GetEffectivePolicies API operation for AWS IoT.
 //
-// Gets effective policies.
+// Gets a list of the policies that have an effect on the authorization behavior
+// of the specified device when it connects to the AWS IoT device gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5380,7 +5673,7 @@ func (c *IoT) GetEffectivePoliciesRequest(input *GetEffectivePoliciesInput) (req
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) GetEffectivePolicies(input *GetEffectivePoliciesInput) (*GetEffectivePoliciesOutput, error) {
 	req, out := c.GetEffectivePoliciesRequest(input)
@@ -5407,7 +5700,7 @@ const opGetIndexingConfiguration = "GetIndexingConfiguration"
 
 // GetIndexingConfigurationRequest generates a "aws/request.Request" representing the
 // client's request for the GetIndexingConfiguration operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5495,7 +5788,7 @@ const opGetJobDocument = "GetJobDocument"
 
 // GetJobDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobDocument operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5580,7 +5873,7 @@ const opGetLoggingOptions = "GetLoggingOptions"
 
 // GetLoggingOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetLoggingOptions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5662,7 +5955,7 @@ const opGetOTAUpdate = "GetOTAUpdate"
 
 // GetOTAUpdateRequest generates a "aws/request.Request" representing the
 // client's request for the GetOTAUpdate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5753,7 +6046,7 @@ const opGetPolicy = "GetPolicy"
 
 // GetPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the GetPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5845,7 +6138,7 @@ const opGetPolicyVersion = "GetPolicyVersion"
 
 // GetPolicyVersionRequest generates a "aws/request.Request" representing the
 // client's request for the GetPolicyVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5936,7 +6229,7 @@ const opGetRegistrationCode = "GetRegistrationCode"
 
 // GetRegistrationCodeRequest generates a "aws/request.Request" representing the
 // client's request for the GetRegistrationCode operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6024,7 +6317,7 @@ const opGetTopicRule = "GetTopicRule"
 
 // GetTopicRuleRequest generates a "aws/request.Request" representing the
 // client's request for the GetTopicRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6109,7 +6402,7 @@ const opGetV2LoggingOptions = "GetV2LoggingOptions"
 
 // GetV2LoggingOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetV2LoggingOptions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6191,7 +6484,7 @@ const opListAttachedPolicies = "ListAttachedPolicies"
 
 // ListAttachedPoliciesRequest generates a "aws/request.Request" representing the
 // client's request for the ListAttachedPolicies operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6258,7 +6551,7 @@ func (c *IoT) ListAttachedPoliciesRequest(input *ListAttachedPoliciesInput) (req
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) ListAttachedPolicies(input *ListAttachedPoliciesInput) (*ListAttachedPoliciesOutput, error) {
 	req, out := c.ListAttachedPoliciesRequest(input)
@@ -6285,7 +6578,7 @@ const opListAuthorizers = "ListAuthorizers"
 
 // ListAuthorizersRequest generates a "aws/request.Request" representing the
 // client's request for the ListAuthorizers operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6373,7 +6666,7 @@ const opListCACertificates = "ListCACertificates"
 
 // ListCACertificatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListCACertificates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6464,7 +6757,7 @@ const opListCertificates = "ListCertificates"
 
 // ListCertificatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListCertificates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6555,7 +6848,7 @@ const opListCertificatesByCA = "ListCertificatesByCA"
 
 // ListCertificatesByCARequest generates a "aws/request.Request" representing the
 // client's request for the ListCertificatesByCA operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6643,7 +6936,7 @@ const opListIndices = "ListIndices"
 
 // ListIndicesRequest generates a "aws/request.Request" representing the
 // client's request for the ListIndices operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6731,7 +7024,7 @@ const opListJobExecutionsForJob = "ListJobExecutionsForJob"
 
 // ListJobExecutionsForJobRequest generates a "aws/request.Request" representing the
 // client's request for the ListJobExecutionsForJob operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6816,7 +7109,7 @@ const opListJobExecutionsForThing = "ListJobExecutionsForThing"
 
 // ListJobExecutionsForThingRequest generates a "aws/request.Request" representing the
 // client's request for the ListJobExecutionsForThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6901,7 +7194,7 @@ const opListJobs = "ListJobs"
 
 // ListJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListJobs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6986,7 +7279,7 @@ const opListOTAUpdates = "ListOTAUpdates"
 
 // ListOTAUpdatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListOTAUpdates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7074,7 +7367,7 @@ const opListOutgoingCertificates = "ListOutgoingCertificates"
 
 // ListOutgoingCertificatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListOutgoingCertificates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7162,7 +7455,7 @@ const opListPolicies = "ListPolicies"
 
 // ListPoliciesRequest generates a "aws/request.Request" representing the
 // client's request for the ListPolicies operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7250,7 +7543,7 @@ const opListPolicyPrincipals = "ListPolicyPrincipals"
 
 // ListPolicyPrincipalsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPolicyPrincipals operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7346,7 +7639,7 @@ const opListPolicyVersions = "ListPolicyVersions"
 
 // ListPolicyVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPolicyVersions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7437,7 +7730,7 @@ const opListPrincipalPolicies = "ListPrincipalPolicies"
 
 // ListPrincipalPoliciesRequest generates a "aws/request.Request" representing the
 // client's request for the ListPrincipalPolicies operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7534,7 +7827,7 @@ const opListPrincipalThings = "ListPrincipalThings"
 
 // ListPrincipalThingsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPrincipalThings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7625,7 +7918,7 @@ const opListRoleAliases = "ListRoleAliases"
 
 // ListRoleAliasesRequest generates a "aws/request.Request" representing the
 // client's request for the ListRoleAliases operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7713,7 +8006,7 @@ const opListStreams = "ListStreams"
 
 // ListStreamsRequest generates a "aws/request.Request" representing the
 // client's request for the ListStreams operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7801,7 +8094,7 @@ const opListTargetsForPolicy = "ListTargetsForPolicy"
 
 // ListTargetsForPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the ListTargetsForPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7868,7 +8161,7 @@ func (c *IoT) ListTargetsForPolicyRequest(input *ListTargetsForPolicyInput) (req
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) ListTargetsForPolicy(input *ListTargetsForPolicyInput) (*ListTargetsForPolicyOutput, error) {
 	req, out := c.ListTargetsForPolicyRequest(input)
@@ -7895,7 +8188,7 @@ const opListThingGroups = "ListThingGroups"
 
 // ListThingGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7977,7 +8270,7 @@ const opListThingGroupsForThing = "ListThingGroupsForThing"
 
 // ListThingGroupsForThingRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingGroupsForThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8059,7 +8352,7 @@ const opListThingPrincipals = "ListThingPrincipals"
 
 // ListThingPrincipalsRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingPrincipals operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8150,7 +8443,7 @@ const opListThingRegistrationTaskReports = "ListThingRegistrationTaskReports"
 
 // ListThingRegistrationTaskReportsRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingRegistrationTaskReports operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8235,7 +8528,7 @@ const opListThingRegistrationTasks = "ListThingRegistrationTasks"
 
 // ListThingRegistrationTasksRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingRegistrationTasks operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8320,7 +8613,7 @@ const opListThingTypes = "ListThingTypes"
 
 // ListThingTypesRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingTypes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8408,7 +8701,7 @@ const opListThings = "ListThings"
 
 // ListThingsRequest generates a "aws/request.Request" representing the
 // client's request for the ListThings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8499,7 +8792,7 @@ const opListThingsInThingGroup = "ListThingsInThingGroup"
 
 // ListThingsInThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ListThingsInThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8581,7 +8874,7 @@ const opListTopicRules = "ListTopicRules"
 
 // ListTopicRulesRequest generates a "aws/request.Request" representing the
 // client's request for the ListTopicRules operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8663,7 +8956,7 @@ const opListV2LoggingLevels = "ListV2LoggingLevels"
 
 // ListV2LoggingLevelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListV2LoggingLevels operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8748,7 +9041,7 @@ const opRegisterCACertificate = "RegisterCACertificate"
 
 // RegisterCACertificateRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterCACertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8818,7 +9111,7 @@ func (c *IoT) RegisterCACertificateRequest(input *RegisterCACertificateInput) (r
 //   The rate exceeds the limit.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeUnauthorizedException "UnauthorizedException"
 //   You are not authorized to perform this operation.
@@ -8854,7 +9147,7 @@ const opRegisterCertificate = "RegisterCertificate"
 
 // RegisterCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterCertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8958,7 +9251,7 @@ const opRegisterThing = "RegisterThing"
 
 // RegisterThingRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9053,7 +9346,7 @@ const opRejectCertificateTransfer = "RejectCertificateTransfer"
 
 // RejectCertificateTransferRequest generates a "aws/request.Request" representing the
 // client's request for the RejectCertificateTransfer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9158,7 +9451,7 @@ const opRemoveThingFromThingGroup = "RemoveThingFromThingGroup"
 
 // RemoveThingFromThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveThingFromThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9243,7 +9536,7 @@ const opReplaceTopicRule = "ReplaceTopicRule"
 
 // ReplaceTopicRuleRequest generates a "aws/request.Request" representing the
 // client's request for the ReplaceTopicRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9335,7 +9628,7 @@ const opSearchIndex = "SearchIndex"
 
 // SearchIndexRequest generates a "aws/request.Request" representing the
 // client's request for the SearchIndex operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9432,7 +9725,7 @@ const opSetDefaultAuthorizer = "SetDefaultAuthorizer"
 
 // SetDefaultAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the SetDefaultAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9527,7 +9820,7 @@ const opSetDefaultPolicyVersion = "SetDefaultPolicyVersion"
 
 // SetDefaultPolicyVersionRequest generates a "aws/request.Request" representing the
 // client's request for the SetDefaultPolicyVersion operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9623,7 +9916,7 @@ const opSetLoggingOptions = "SetLoggingOptions"
 
 // SetLoggingOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the SetLoggingOptions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9707,7 +10000,7 @@ const opSetV2LoggingLevel = "SetV2LoggingLevel"
 
 // SetV2LoggingLevelRequest generates a "aws/request.Request" representing the
 // client's request for the SetV2LoggingLevel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9794,7 +10087,7 @@ const opSetV2LoggingOptions = "SetV2LoggingOptions"
 
 // SetV2LoggingOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the SetV2LoggingOptions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9878,7 +10171,7 @@ const opStartThingRegistrationTask = "StartThingRegistrationTask"
 
 // StartThingRegistrationTaskRequest generates a "aws/request.Request" representing the
 // client's request for the StartThingRegistrationTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -9963,7 +10256,7 @@ const opStopThingRegistrationTask = "StopThingRegistrationTask"
 
 // StopThingRegistrationTaskRequest generates a "aws/request.Request" representing the
 // client's request for the StopThingRegistrationTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10051,7 +10344,7 @@ const opTestAuthorization = "TestAuthorization"
 
 // TestAuthorizationRequest generates a "aws/request.Request" representing the
 // client's request for the TestAuthorization operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10089,7 +10382,9 @@ func (c *IoT) TestAuthorizationRequest(input *TestAuthorizationInput) (req *requ
 
 // TestAuthorization API operation for AWS IoT.
 //
-// Test custom authorization.
+// Tests if a specified principal is authorized to perform an AWS IoT action
+// on a specified resource. Use this to test and debug the authorization behavior
+// of devices that connect to the AWS IoT device gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10118,7 +10413,7 @@ func (c *IoT) TestAuthorizationRequest(input *TestAuthorizationInput) (req *requ
 //   An unexpected error has occurred.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 func (c *IoT) TestAuthorization(input *TestAuthorizationInput) (*TestAuthorizationOutput, error) {
 	req, out := c.TestAuthorizationRequest(input)
@@ -10145,7 +10440,7 @@ const opTestInvokeAuthorizer = "TestInvokeAuthorizer"
 
 // TestInvokeAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the TestInvokeAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10183,7 +10478,9 @@ func (c *IoT) TestInvokeAuthorizerRequest(input *TestInvokeAuthorizerInput) (req
 
 // TestInvokeAuthorizer API operation for AWS IoT.
 //
-// Invoke the specified custom authorizer for testing purposes.
+// Tests a custom authorization behavior by invoking a specified custom authorizer.
+// Use this to test and debug the custom authorization behavior of devices that
+// connect to the AWS IoT device gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10239,7 +10536,7 @@ const opTransferCertificate = "TransferCertificate"
 
 // TransferCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the TransferCertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10348,7 +10645,7 @@ const opUpdateAuthorizer = "UpdateAuthorizer"
 
 // UpdateAuthorizerRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAuthorizer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10403,7 +10700,7 @@ func (c *IoT) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (req *reques
 //   The request is not valid.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
-//   The number of attached entities exceeds the limit.
+//   A limit has been exceeded.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -10442,7 +10739,7 @@ const opUpdateCACertificate = "UpdateCACertificate"
 
 // UpdateCACertificateRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCACertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10535,7 +10832,7 @@ const opUpdateCertificate = "UpdateCertificate"
 
 // UpdateCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCertificate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10637,7 +10934,7 @@ const opUpdateEventConfigurations = "UpdateEventConfigurations"
 
 // UpdateEventConfigurationsRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEventConfigurations operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10719,7 +11016,7 @@ const opUpdateIndexingConfiguration = "UpdateIndexingConfiguration"
 
 // UpdateIndexingConfigurationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateIndexingConfiguration operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10807,7 +11104,7 @@ const opUpdateRoleAlias = "UpdateRoleAlias"
 
 // UpdateRoleAliasRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRoleAlias operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10898,7 +11195,7 @@ const opUpdateStream = "UpdateStream"
 
 // UpdateStreamRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateStream operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -10989,7 +11286,7 @@ const opUpdateThing = "UpdateThing"
 
 // UpdateThingRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -11041,8 +11338,8 @@ func (c *IoT) UpdateThingRequest(input *UpdateThingInput) (req *request.Request,
 //   The request is not valid.
 //
 //   * ErrCodeVersionConflictException "VersionConflictException"
-//   An exception thrown when the version of a thing passed to a command is different
-//   than the version specified with the --version parameter.
+//   An exception thrown when the version of an entity specified with the expectedVersion
+//   parameter does not match the latest version in the system.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -11084,7 +11381,7 @@ const opUpdateThingGroup = "UpdateThingGroup"
 
 // UpdateThingGroupRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateThingGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -11136,8 +11433,8 @@ func (c *IoT) UpdateThingGroupRequest(input *UpdateThingGroupInput) (req *reques
 //   The request is not valid.
 //
 //   * ErrCodeVersionConflictException "VersionConflictException"
-//   An exception thrown when the version of a thing passed to a command is different
-//   than the version specified with the --version parameter.
+//   An exception thrown when the version of an entity specified with the expectedVersion
+//   parameter does not match the latest version in the system.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -11173,7 +11470,7 @@ const opUpdateThingGroupsForThing = "UpdateThingGroupsForThing"
 
 // UpdateThingGroupsForThingRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateThingGroupsForThing operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -11258,7 +11555,8 @@ func (c *IoT) UpdateThingGroupsForThingWithContext(ctx aws.Context, input *Updat
 type AcceptCertificateTransferInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -11342,6 +11640,9 @@ type Action struct {
 
 	// Write to an Amazon Kinesis Firehose stream.
 	Firehose *FirehoseAction `locationName:"firehose" type:"structure"`
+
+	// Sends message data to an AWS IoT Analytics channel.
+	IotAnalytics *IotAnalyticsAction `locationName:"iotAnalytics" type:"structure"`
 
 	// Write data to an Amazon Kinesis stream.
 	Kinesis *KinesisAction `locationName:"kinesis" type:"structure"`
@@ -11483,6 +11784,12 @@ func (s *Action) SetElasticsearch(v *ElasticsearchAction) *Action {
 // SetFirehose sets the Firehose field's value.
 func (s *Action) SetFirehose(v *FirehoseAction) *Action {
 	s.Firehose = v
+	return s
+}
+
+// SetIotAnalytics sets the IotAnalytics field's value.
+func (s *Action) SetIotAnalytics(v *IotAnalyticsAction) *Action {
+	s.IotAnalytics = v
 	return s
 }
 
@@ -12283,10 +12590,13 @@ type CACertificateDescription struct {
 	// The date the CA certificate was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
 
+	// The customer version of the CA certificate.
 	CustomerVersion *int64 `locationName:"customerVersion" min:"1" type:"integer"`
 
+	// The generation ID of the CA certificate.
 	GenerationId *string `locationName:"generationId" type:"string"`
 
+	// The date the CA certificate was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The owner of the CA certificate.
@@ -12370,7 +12680,8 @@ func (s *CACertificateDescription) SetStatus(v string) *CACertificateDescription
 type CancelCertificateTransferInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -12422,11 +12733,136 @@ func (s CancelCertificateTransferOutput) GoString() string {
 	return s.String()
 }
 
+type CancelJobExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) The expected current version of the job execution. Each time you
+	// update the job execution, its version is incremented. If the version of the
+	// job execution stored in Jobs does not match, the update is rejected with
+	// a VersionMismatch error, and an ErrorResponse that contains the current job
+	// execution status data is returned. (This makes it unnecessary to perform
+	// a separate DescribeJobExecution request in order to obtain the job execution
+	// status data.)
+	ExpectedVersion *int64 `locationName:"expectedVersion" type:"long"`
+
+	// (Optional) If true the job execution will be canceled if it has status IN_PROGRESS
+	// or QUEUED, otherwise the job execution will be canceled only if it has status
+	// QUEUED. If you attempt to cancel a job execution that is IN_PROGRESS, and
+	// you do not set force to true, then an InvalidStateTransitionException will
+	// be thrown. The default is false.
+	//
+	// Canceling a job execution which is "IN_PROGRESS", will cause the device to
+	// be unable to update the job execution status. Use caution and ensure that
+	// the device is able to recover to a valid state.
+	Force *bool `location:"querystring" locationName:"force" type:"boolean"`
+
+	// The ID of the job to be canceled.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"jobId" min:"1" type:"string" required:"true"`
+
+	// A collection of name/value pairs that describe the status of the job execution.
+	// If not specified, the statusDetails are unchanged. You can specify at most
+	// 10 name/value pairs.
+	StatusDetails map[string]*string `locationName:"statusDetails" type:"map"`
+
+	// The name of the thing whose execution of the job will be canceled.
+	//
+	// ThingName is a required field
+	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelJobExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelJobExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelJobExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelJobExecutionInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.ThingName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingName"))
+	}
+	if s.ThingName != nil && len(*s.ThingName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExpectedVersion sets the ExpectedVersion field's value.
+func (s *CancelJobExecutionInput) SetExpectedVersion(v int64) *CancelJobExecutionInput {
+	s.ExpectedVersion = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *CancelJobExecutionInput) SetForce(v bool) *CancelJobExecutionInput {
+	s.Force = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *CancelJobExecutionInput) SetJobId(v string) *CancelJobExecutionInput {
+	s.JobId = &v
+	return s
+}
+
+// SetStatusDetails sets the StatusDetails field's value.
+func (s *CancelJobExecutionInput) SetStatusDetails(v map[string]*string) *CancelJobExecutionInput {
+	s.StatusDetails = v
+	return s
+}
+
+// SetThingName sets the ThingName field's value.
+func (s *CancelJobExecutionInput) SetThingName(v string) *CancelJobExecutionInput {
+	s.ThingName = &v
+	return s
+}
+
+type CancelJobExecutionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CancelJobExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelJobExecutionOutput) GoString() string {
+	return s.String()
+}
+
 type CancelJobInput struct {
 	_ struct{} `type:"structure"`
 
 	// An optional comment string describing why the job was canceled.
 	Comment *string `locationName:"comment" type:"string"`
+
+	// (Optional) If true job executions with status "IN_PROGRESS" and "QUEUED"
+	// are canceled, otherwise only job executions with status "QUEUED" are canceled.
+	// The default is false.
+	//
+	// Canceling a job which is "IN_PROGRESS", will cause a device which is executing
+	// the job to be unable to update the job execution status. Use caution and
+	// ensure that each device executing a job which is canceled is able to recover
+	// to a valid state.
+	Force *bool `location:"querystring" locationName:"force" type:"boolean"`
 
 	// The unique identifier you assigned to this job when it was created.
 	//
@@ -12463,6 +12899,12 @@ func (s *CancelJobInput) Validate() error {
 // SetComment sets the Comment field's value.
 func (s *CancelJobInput) SetComment(v string) *CancelJobInput {
 	s.Comment = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *CancelJobInput) SetForce(v bool) *CancelJobInput {
+	s.Force = &v
 	return s
 }
 
@@ -12520,7 +12962,8 @@ type Certificate struct {
 	// The ARN of the certificate.
 	CertificateArn *string `locationName:"certificateArn" type:"string"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
 	// The date and time the certificate was created.
@@ -12585,8 +13028,10 @@ type CertificateDescription struct {
 	// The date and time the certificate was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
 
+	// The customer version of the certificate.
 	CustomerVersion *int64 `locationName:"customerVersion" min:"1" type:"integer"`
 
+	// The generation ID of the certificate.
 	GenerationId *string `locationName:"generationId" type:"string"`
 
 	// The date and time the certificate was last modified.
@@ -14739,7 +15184,8 @@ func (s DeleteAuthorizerOutput) GoString() string {
 type DeleteCACertificateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate to delete.
+	// The ID of the certificate to delete. (The last part of the certificate ARN
+	// contains the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"caCertificateId" min:"64" type:"string" required:"true"`
@@ -14796,7 +15242,8 @@ func (s DeleteCACertificateOutput) GoString() string {
 type DeleteCertificateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -14854,6 +15301,187 @@ func (s DeleteCertificateOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteCertificateOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteJobExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the job execution to be deleted. The executionNumber refers to
+	// the execution of a particular job on a particular device.
+	//
+	// Note that once a job execution is deleted, the executionNumber may be reused
+	// by IoT, so be sure you get and use the correct value here.
+	//
+	// ExecutionNumber is a required field
+	ExecutionNumber *int64 `location:"uri" locationName:"executionNumber" type:"long" required:"true"`
+
+	// (Optional) When true, you can delete a job execution which is "IN_PROGRESS".
+	// Otherwise, you can only delete a job execution which is in a terminal state
+	// ("SUCCEEDED", "FAILED", "REJECTED", "REMOVED" or "CANCELED") or an exception
+	// will occur. The default is false.
+	//
+	// Deleting a job execution which is "IN_PROGRESS", will cause the device to
+	// be unable to access job information or update the job execution status. Use
+	// caution and ensure that the device is able to recover to a valid state.
+	Force *bool `location:"querystring" locationName:"force" type:"boolean"`
+
+	// The ID of the job whose execution on a particular device will be deleted.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"jobId" min:"1" type:"string" required:"true"`
+
+	// The name of the thing whose job execution will be deleted.
+	//
+	// ThingName is a required field
+	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteJobExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteJobExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteJobExecutionInput"}
+	if s.ExecutionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExecutionNumber"))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.ThingName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingName"))
+	}
+	if s.ThingName != nil && len(*s.ThingName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExecutionNumber sets the ExecutionNumber field's value.
+func (s *DeleteJobExecutionInput) SetExecutionNumber(v int64) *DeleteJobExecutionInput {
+	s.ExecutionNumber = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteJobExecutionInput) SetForce(v bool) *DeleteJobExecutionInput {
+	s.Force = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *DeleteJobExecutionInput) SetJobId(v string) *DeleteJobExecutionInput {
+	s.JobId = &v
+	return s
+}
+
+// SetThingName sets the ThingName field's value.
+func (s *DeleteJobExecutionInput) SetThingName(v string) *DeleteJobExecutionInput {
+	s.ThingName = &v
+	return s
+}
+
+type DeleteJobExecutionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteJobExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobExecutionOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) When true, you can delete a job which is "IN_PROGRESS". Otherwise,
+	// you can only delete a job which is in a terminal state ("COMPLETED" or "CANCELED")
+	// or an exception will occur. The default is false.
+	//
+	// Deleting a job which is "IN_PROGRESS", will cause a device which is executing
+	// the job to be unable to access job information or update the job execution
+	// status. Use caution and ensure that each device executing a job which is
+	// deleted is able to recover to a valid state.
+	Force *bool `location:"querystring" locationName:"force" type:"boolean"`
+
+	// The ID of the job to be deleted.
+	//
+	// After a job deletion is completed, you may reuse this jobId when you create
+	// a new job. However, this is not recommended, and you must ensure that your
+	// devices are not using the jobId to refer to the deleted job.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"jobId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteJobInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteJobInput) SetForce(v bool) *DeleteJobInput {
+	s.Force = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *DeleteJobInput) SetJobId(v string) *DeleteJobInput {
+	s.JobId = &v
+	return s
+}
+
+type DeleteJobOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobOutput) GoString() string {
 	return s.String()
 }
 
@@ -15734,7 +16362,8 @@ func (s *DescribeCACertificateOutput) SetRegistrationConfig(v *RegistrationConfi
 type DescribeCertificateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -17945,13 +18574,16 @@ func (s *GetPolicyInput) SetPolicyName(v string) *GetPolicyInput {
 type GetPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The date the policy was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The default policy version ID.
 	DefaultVersionId *string `locationName:"defaultVersionId" type:"string"`
 
+	// The generation ID of the policy.
 	GenerationId *string `locationName:"generationId" type:"string"`
 
+	// The date the policy was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The policy ARN.
@@ -18076,13 +18708,16 @@ func (s *GetPolicyVersionInput) SetPolicyVersionId(v string) *GetPolicyVersionIn
 type GetPolicyVersionOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The date the policy version was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
 
+	// The generation ID of the policy version.
 	GenerationId *string `locationName:"generationId" type:"string"`
 
 	// Specifies whether the policy version is the default.
 	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
 
+	// The date the policy version was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The policy ARN.
@@ -18384,6 +19019,50 @@ func (s *ImplicitDeny) SetPolicies(v []*Policy) *ImplicitDeny {
 	return s
 }
 
+// Sends messge data to an AWS IoT Analytics channel.
+type IotAnalyticsAction struct {
+	_ struct{} `type:"structure"`
+
+	// (deprecated) The ARN of the IoT Analytics channel to which message data will
+	// be sent.
+	ChannelArn *string `locationName:"channelArn" type:"string"`
+
+	// The name of the IoT Analytics channel to which message data will be sent.
+	ChannelName *string `locationName:"channelName" type:"string"`
+
+	// The ARN of the role which has a policy that grants IoT Analytics permission
+	// to send message data via IoT Analytics (iotanalytics:BatchPutMessage).
+	RoleArn *string `locationName:"roleArn" type:"string"`
+}
+
+// String returns the string representation
+func (s IotAnalyticsAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IotAnalyticsAction) GoString() string {
+	return s.String()
+}
+
+// SetChannelArn sets the ChannelArn field's value.
+func (s *IotAnalyticsAction) SetChannelArn(v string) *IotAnalyticsAction {
+	s.ChannelArn = &v
+	return s
+}
+
+// SetChannelName sets the ChannelName field's value.
+func (s *IotAnalyticsAction) SetChannelName(v string) *IotAnalyticsAction {
+	s.ChannelName = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *IotAnalyticsAction) SetRoleArn(v string) *IotAnalyticsAction {
+	s.RoleArn = &v
+	return s
+}
+
 // The Job object contains details about a job.
 type Job struct {
 	_ struct{} `type:"structure"`
@@ -18402,6 +19081,10 @@ type Job struct {
 
 	// The parameters specified for the job document.
 	DocumentParameters map[string]*string `locationName:"documentParameters" type:"map"`
+
+	// Will be true if the job was canceled with the optional force parameter set
+	// to true.
+	ForceCanceled *bool `locationName:"forceCanceled" type:"boolean"`
 
 	// An ARN identifying the job with format "arn:aws:iot:region:account:job/jobId".
 	JobArn *string `locationName:"jobArn" type:"string"`
@@ -18476,6 +19159,12 @@ func (s *Job) SetDocumentParameters(v map[string]*string) *Job {
 	return s
 }
 
+// SetForceCanceled sets the ForceCanceled field's value.
+func (s *Job) SetForceCanceled(v bool) *Job {
+	s.ForceCanceled = &v
+	return s
+}
+
 // SetJobArn sets the JobArn field's value.
 func (s *Job) SetJobArn(v string) *Job {
 	s.JobArn = &v
@@ -18540,6 +19229,10 @@ type JobExecution struct {
 	// which return or update job execution information.
 	ExecutionNumber *int64 `locationName:"executionNumber" type:"long"`
 
+	// Will be true if the job execution was canceled with the optional force parameter
+	// set to true.
+	ForceCanceled *bool `locationName:"forceCanceled" type:"boolean"`
+
 	// The unique identifier you assigned to the job when it was created.
 	JobId *string `locationName:"jobId" min:"1" type:"string"`
 
@@ -18562,6 +19255,10 @@ type JobExecution struct {
 
 	// The ARN of the thing on which the job execution is running.
 	ThingArn *string `locationName:"thingArn" type:"string"`
+
+	// The version of the job execution. Job execution versions are incremented
+	// each time they are updated by a device.
+	VersionNumber *int64 `locationName:"versionNumber" type:"long"`
 }
 
 // String returns the string representation
@@ -18577,6 +19274,12 @@ func (s JobExecution) GoString() string {
 // SetExecutionNumber sets the ExecutionNumber field's value.
 func (s *JobExecution) SetExecutionNumber(v int64) *JobExecution {
 	s.ExecutionNumber = &v
+	return s
+}
+
+// SetForceCanceled sets the ForceCanceled field's value.
+func (s *JobExecution) SetForceCanceled(v bool) *JobExecution {
+	s.ForceCanceled = &v
 	return s
 }
 
@@ -18619,6 +19322,12 @@ func (s *JobExecution) SetStatusDetails(v *JobExecutionStatusDetails) *JobExecut
 // SetThingArn sets the ThingArn field's value.
 func (s *JobExecution) SetThingArn(v string) *JobExecution {
 	s.ThingArn = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *JobExecution) SetVersionNumber(v int64) *JobExecution {
+	s.VersionNumber = &v
 	return s
 }
 
@@ -18840,7 +19549,9 @@ type JobProcessDetails struct {
 	// The number of things which successfully completed the job.
 	NumberOfSucceededThings *int64 `locationName:"numberOfSucceededThings" type:"integer"`
 
-	// The devices on which the job is executing.
+	// The target devices to which the job execution is being rolled out. This value
+	// will be null after the job execution has finished rolling out to all the
+	// target devices.
 	ProcessingTargets []*string `locationName:"processingTargets" type:"list"`
 }
 
@@ -20030,7 +20741,7 @@ type ListOTAUpdatesInput struct {
 	// The maximum number of results to return at one time.
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
-	// A token used to retreive the next set of results.
+	// A token used to retrieve the next set of results.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
 	// The OTA update job status.
@@ -22754,10 +23465,12 @@ func (s *RegisterCertificateOutput) SetCertificateId(v string) *RegisterCertific
 type RegisterThingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The parameters for provisioning a thing.
+	// The parameters for provisioning a thing. See Programmatic Provisioning (http://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// for more information.
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
-	// The provisioning template.
+	// The provisioning template. See Programmatic Provisioning (http://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// for more information.
 	//
 	// TemplateBody is a required field
 	TemplateBody *string `locationName:"templateBody" type:"string" required:"true"`
@@ -22880,7 +23593,8 @@ func (s *RegistrationConfig) SetTemplateBody(v string) *RegistrationConfig {
 type RejectCertificateTransferInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -23168,6 +23882,7 @@ type RoleAliasDescription struct {
 	// The role alias.
 	RoleAlias *string `locationName:"roleAlias" min:"1" type:"string"`
 
+	// The ARN of the role alias.
 	RoleAliasArn *string `locationName:"roleAliasArn" type:"string"`
 
 	// The role ARN.
@@ -23878,9 +24593,9 @@ func (s SetV2LoggingOptionsOutput) GoString() string {
 type SnsAction struct {
 	_ struct{} `type:"structure"`
 
-	// The message format of the message to publish. Optional. Accepted values are
-	// "JSON" and "RAW". The default value of the attribute is "RAW". SNS uses this
-	// setting to determine if the payload should be parsed and relevant platform-specific
+	// (Optional) The message format of the message to publish. Accepted values
+	// are "JSON" and "RAW". The default value of the attribute is "RAW". SNS uses
+	// this setting to determine if the payload should be parsed and relevant platform-specific
 	// bits of the payload should be extracted. To read more about SNS message formats,
 	// see http://docs.aws.amazon.com/sns/latest/dg/json-formats.html (http://docs.aws.amazon.com/sns/latest/dg/json-formats.html)
 	// refer to their official documentation.
@@ -24716,7 +25431,7 @@ type ThingDocument struct {
 	// The attributes.
 	Attributes map[string]*string `locationName:"attributes" type:"map"`
 
-	// The thing shadow.
+	// The shadow.
 	Shadow *string `locationName:"shadow" type:"string"`
 
 	// Thing group names.
@@ -25274,7 +25989,8 @@ func (s *TopicRulePayload) SetSql(v string) *TopicRulePayload {
 type TransferCertificateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -25636,7 +26352,8 @@ func (s UpdateCACertificateOutput) GoString() string {
 type UpdateCertificateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the certificate.
+	// The ID of the certificate. (The last part of the certificate ARN contains
+	// the certificate ID.)
 	//
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
@@ -26446,6 +27163,9 @@ const (
 
 	// JobStatusCompleted is a JobStatus enum value
 	JobStatusCompleted = "COMPLETED"
+
+	// JobStatusDeletionInProgress is a JobStatus enum value
+	JobStatusDeletionInProgress = "DELETION_IN_PROGRESS"
 )
 
 const (

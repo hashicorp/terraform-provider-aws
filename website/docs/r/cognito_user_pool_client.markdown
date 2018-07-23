@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_client"
-side_bar_current: "docs-aws-resource-cognito-user-pool-client"
+sidebar_current: "docs-aws-resource-cognito-user-pool-client"
 description: |-
   Provides a Cognito User Pool Client resource.
 ---
@@ -63,7 +63,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the user pool client.
 * `client_secret` - The client secret of the user pool client.

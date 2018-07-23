@@ -99,7 +99,6 @@ func resourceAwsOpsworksInstance() *schema.Resource {
 
 			"ec2_instance_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -860,7 +859,6 @@ func resourceAwsOpsworksInstanceDelete(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 

@@ -3,9 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -152,7 +150,7 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isListenerNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return nil
 		} else {
 			return errwrap.Wrapf("Unexpected error checking LB Listener destroyed: {{err}}", err)
@@ -488,5 +486,5 @@ resource "tls_self_signed_cert" "example" {
     "server_auth",
   ]
 }
-`, lbName, targetGroupName, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+`, lbName, targetGroupName, acctest.RandInt())
 }

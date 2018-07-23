@@ -3,16 +3,74 @@ package aws
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudwatch_event_permission", &resource.Sweeper{
+		Name: "aws_cloudwatch_event_permission",
+		F:    testSweepCloudWatchEventPermissions,
+	})
+}
+
+func testSweepCloudWatchEventPermissions(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).cloudwatcheventsconn
+
+	output, err := conn.DescribeEventBus(&events.DescribeEventBusInput{})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch Event Permission sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving CloudWatch Event Permissions: %s", err)
+	}
+
+	policy := aws.StringValue(output.Policy)
+
+	if policy == "" {
+		log.Print("[DEBUG] No CloudWatch Event Permissions to sweep")
+		return nil
+	}
+
+	var policyDoc CloudWatchEventPermissionPolicyDoc
+	err = json.Unmarshal([]byte(policy), &policyDoc)
+	if err != nil {
+		return fmt.Errorf("Parsing CloudWatch Event Permissions policy %q failed: %s", policy, err)
+	}
+
+	for _, statement := range policyDoc.Statements {
+		sid := statement.Sid
+
+		if !strings.HasPrefix(sid, "TestAcc") {
+			continue
+		}
+
+		log.Printf("[INFO] Deleting CloudWatch Event Permission %s", sid)
+		_, err := conn.RemovePermission(&events.RemovePermissionInput{
+			StatementId: aws.String(sid),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting CloudWatch Event Permission %s: %s", sid, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
 	principal1 := "111111111111"

@@ -38,6 +38,10 @@ func testSweepKeyPairs(region string) error {
 		},
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing key pairs in Sweeper: %s", err)
 	}
 

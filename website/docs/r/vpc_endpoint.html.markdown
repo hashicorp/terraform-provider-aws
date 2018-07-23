@@ -44,6 +44,39 @@ resource "aws_vpc_endpoint" "ec2" {
 }
 ```
 
+Custom Service Usage:
+
+```hcl
+resource "aws_vpc_endpoint" "ptfe_service" {
+  vpc_id            = "${var.vpc_id}"
+  service_name      = "${var.ptfe_service}"
+  vpc_endpoint_type = "Interface"
+
+  security_group_ids = [
+    "${aws_security_group.ptfe_service.id}",
+  ]
+
+  subnet_ids          = ["${local.subnet_ids}"]
+  private_dns_enabled = false
+}
+
+data "aws_route53_zone" "internal" {
+  name         = "vpc.internal."
+  private_zone = true
+  vpc_id       = "${var.vpc_id}"
+}
+
+resource "aws_route53_record" "ptfe_service" {
+  zone_id = "${data.aws_route53_zone.internal.zone_id}"
+  name    = "ptfe.${data.aws_route53_zone.internal.name}"
+  type    = "CNAME"
+  ttl     = "300"
+  records = ["${lookup(aws_vpc_endpoint.ptfe_service.dns_entry[0], "dns_name")}"]
+}
+```
+
+~> **NOTE The `dns_entry` output is a list of maps:** Terraform interpolation support for lists of maps requires the `lookup` and `[]` until full support of lists of maps is available
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -60,9 +93,18 @@ Defaults to full access.
 * `private_dns_enabled` - (Optional) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`.
 Defaults to `false`.
 
+### Timeouts
+
+`aws_vpc_endpoint` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating a VPC endpoint
+- `update` - (Default `10 minutes`) Used for VPC endpoint modifications
+- `delete` - (Default `10 minutes`) Used for destroying VPC endpoints
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint.
 * `state` - The state of the VPC endpoint.

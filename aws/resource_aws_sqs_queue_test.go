@@ -90,7 +90,25 @@ func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
 				Config: testAccAWSSQSConfigWithNamePrefix(prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue"),
+					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue", false),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_namePrefix_fifo(t *testing.T) {
+	prefix := "acctest-sqs-queue"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSFifoConfigWithNamePrefix(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue", true),
 				),
 			},
 		},
@@ -383,7 +401,7 @@ func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
+func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string, isFifo bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources[resource]
 		if !ok {
@@ -395,6 +413,9 @@ func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string) resource.Tes
 		}
 		if !strings.HasPrefix(name, prefix) {
 			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
+		}
+		if isFifo && !strings.HasSuffix(name, ".fifo") {
+			return fmt.Errorf("Name: %q, does not have suffix: %q", name, ".fifo")
 		}
 		return nil
 	}
@@ -480,6 +501,15 @@ func testAccAWSSQSConfigWithNamePrefix(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
   name_prefix = "%s"
+}
+`, r)
+}
+
+func testAccAWSSQSFifoConfigWithNamePrefix(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name_prefix = "%s"
+  fifo_queue  = true
 }
 `, r)
 }

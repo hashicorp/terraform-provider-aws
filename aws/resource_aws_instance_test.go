@@ -8,12 +8,71 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func TestFetchRootDevice(t *testing.T) {
+	cases := []struct {
+		label  string
+		images []*ec2.Image
+		name   string
+	}{
+		{
+			"device name in mappings",
+			[]*ec2.Image{{
+				RootDeviceType: aws.String("ebs"),
+				RootDeviceName: aws.String("/dev/xvda"),
+				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
+					{DeviceName: aws.String("/dev/xvdb")},
+					{DeviceName: aws.String("/dev/xvda")},
+				},
+			}},
+			"/dev/xvda",
+		},
+		{
+			"device name not in mappings",
+			[]*ec2.Image{{
+				RootDeviceType: aws.String("ebs"),
+				RootDeviceName: aws.String("/dev/xvda"),
+				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
+					{DeviceName: aws.String("/dev/xvdb")},
+					{DeviceName: aws.String("/dev/xvdc")},
+				},
+			}},
+			"/dev/xvdb",
+		},
+		{
+			"no images",
+			[]*ec2.Image{},
+			"",
+		},
+	}
+
+	conn := ec2.New(session.New(nil))
+
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
+			conn.Handlers.Clear()
+			conn.Handlers.Send.PushBack(func(r *request.Request) {
+				data := r.Data.(*ec2.DescribeImagesOutput)
+				data.Images = tc.images
+			})
+			name, err := fetchRootDeviceName("ami-123", conn)
+			if err != nil {
+				t.Errorf("Error fetching device name: %s", err)
+			}
+			if tc.name != aws.StringValue(name) {
+				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
+			}
+		})
+	}
+}
 
 func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
@@ -1397,6 +1456,148 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
+	var before ec2.Instance
+	var after ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_removalReturnsStandard(t *testing.T) {
+	var before ec2.Instance
+	var after ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1482,6 +1683,38 @@ func TestInstanceTenancySchema(t *testing.T) {
 	actualSchema := resourceAwsInstance().Schema["tenancy"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	}
+	if !reflect.DeepEqual(actualSchema, expectedSchema) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			actualSchema,
+			expectedSchema)
+	}
+}
+
+func TestInstanceCpuCoreCountSchema(t *testing.T) {
+	actualSchema := resourceAwsInstance().Schema["cpu_core_count"]
+	expectedSchema := &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	}
+	if !reflect.DeepEqual(actualSchema, expectedSchema) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			actualSchema,
+			expectedSchema)
+	}
+}
+
+func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
+	actualSchema := resourceAwsInstance().Schema["cpu_threads_per_core"]
+	expectedSchema := &schema.Schema{
+		Type:     schema.TypeInt,
 		Optional: true,
 		Computed: true,
 		ForceNew: true,
@@ -2969,4 +3202,105 @@ func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {
 		get_password_data = %t
 	}
 	`, rInt, val)
+}
+
+func testAccInstanceConfig_creditSpecification_unspecified(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+}
+`, rInt)
+}
+
+func testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`, rInt)
+}
+
+func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+`, rInt)
+}
+
+func testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "m1.small"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`, rInt)
 }

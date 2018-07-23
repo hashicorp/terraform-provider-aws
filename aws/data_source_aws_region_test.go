@@ -93,6 +93,7 @@ func TestAccDataSourceAwsRegion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", "ec2.us-east-1.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "US East (N. Virginia)"),
 				),
 			},
 		},
@@ -109,6 +110,8 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 	endpoint2 := "ec2.us-east-2.amazonaws.com"
 	name1 := "us-east-1"
 	name2 := "us-east-2"
+	description1 := "US East (N. Virginia)"
+	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
 	resource.Test(t, resource.TestCase{
@@ -122,6 +125,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
+					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
 			resource.TestStep{
@@ -131,6 +135,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
+					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
 			resource.TestStep{
@@ -151,6 +156,8 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 	endpoint2 := "ec2.us-east-2.amazonaws.com"
 	name1 := "us-east-1"
 	name2 := "us-east-2"
+	description1 := "US East (N. Virginia)"
+	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
 	resource.Test(t, resource.TestCase{
@@ -164,6 +171,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
+					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
 			resource.TestStep{
@@ -173,6 +181,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
+					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
 			resource.TestStep{
@@ -182,6 +191,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
+					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
 			resource.TestStep{
@@ -206,6 +216,8 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 	endpoint2 := "ec2.us-east-2.amazonaws.com"
 	name1 := "us-east-1"
 	name2 := "us-east-2"
+	description1 := "US East (N. Virginia)"
+	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
 	resource.Test(t, resource.TestCase{
@@ -219,6 +231,7 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
+					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
 			resource.TestStep{
@@ -228,6 +241,7 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "current", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
+					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
 			resource.TestStep{

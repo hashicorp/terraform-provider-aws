@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
@@ -46,27 +47,28 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateAwsLbTargetGroupName,
+				ValidateFunc:  validateMaxLength(32),
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsLbTargetGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateMaxLength(32 - resource.UniqueIDSuffixLength),
 			},
 
 			"port": {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsLbTargetGroupPort,
+				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 
 			"protocol": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsLbTargetGroupProtocol,
+				ValidateFunc: validateLbListenerProtocol(),
 			},
 
 			"vpc_id": {
@@ -79,7 +81,20 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      300,
-				ValidateFunc: validateAwsLbTargetGroupDeregistrationDelay,
+				ValidateFunc: validation.IntBetween(0, 3600),
+			},
+
+			"slow_start": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validateSlowStart,
+			},
+
+			"proxy_protocol_v2": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 
 			"target_type": {
@@ -102,15 +117,17 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Default:  true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsLbTargetGroupStickinessType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"lb_cookie",
+							}, false),
 						},
 						"cookie_duration": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      86400,
-							ValidateFunc: validateAwsLbTargetGroupStickinessCookieDuration,
+							ValidateFunc: validation.IntBetween(0, 604800),
 						},
 					},
 				},
@@ -150,21 +167,21 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckProtocol,
+							ValidateFunc: validateLbListenerProtocol(),
 						},
 
 						"timeout": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckTimeout,
+							ValidateFunc: validation.IntBetween(2, 60),
 						},
 
 						"healthy_threshold": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      3,
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckHealthyThreshold,
+							ValidateFunc: validation.IntBetween(2, 10),
 						},
 
 						"matcher": {
@@ -177,7 +194,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      3,
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckHealthyThreshold,
+							ValidateFunc: validation.IntBetween(2, 10),
 						},
 					},
 				},
@@ -330,6 +347,20 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		})
 	}
 
+	if d.HasChange("slow_start") {
+		attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			Key:   aws.String("slow_start.duration_seconds"),
+			Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
+		})
+	}
+
+	if d.HasChange("proxy_protocol_v2") {
+		attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			Key:   aws.String("proxy_protocol_v2.enabled"),
+			Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+		})
+	}
+
 	// In CustomizeDiff we allow LB stickiness to be declared for TCP target
 	// groups, so long as it's not enabled. This allows for better support for
 	// modules, but also means we need to completely skip sending the data to the
@@ -406,6 +437,19 @@ func validateAwsLbTargetGroupHealthCheckPath(v interface{}, k string) (ws []stri
 	return
 }
 
+func validateSlowStart(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(int)
+
+	// Check if the value is between 30-900 or 0 (seconds).
+	if value != 0 && !(value >= 30 && value <= 900) {
+		errors = append(errors, fmt.Errorf(
+			"%q contains an invalid Slow Start Duration \"%d\". "+
+				"Valid intervals are 30-900 or 0 to disable.",
+			k, value))
+	}
+	return
+}
+
 func validateAwsLbTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -422,74 +466,6 @@ func validateAwsLbTargetGroupHealthCheckPort(v interface{}, k string) (ws []stri
 		errors = append(errors, fmt.Errorf("%q must be a valid port number (1-65536) or %q", k, "traffic-port"))
 	}
 
-	return
-}
-
-func validateAwsLbTargetGroupHealthCheckHealthyThreshold(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-	if value < 2 || value > 10 {
-		errors = append(errors, fmt.Errorf("%q must be an integer between 2 and 10", k))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupHealthCheckTimeout(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-	if value < 2 || value > 60 {
-		errors = append(errors, fmt.Errorf("%q must be an integer between 2 and 60", k))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupHealthCheckProtocol(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	if value == "http" || value == "https" || value == "tcp" {
-		return
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
-	return
-}
-
-func validateAwsLbTargetGroupPort(v interface{}, k string) (ws []string, errors []error) {
-	port := v.(int)
-	if port < 1 || port > 65536 {
-		errors = append(errors, fmt.Errorf("%q must be a valid port number (1-65536)", k))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupProtocol(v interface{}, k string) (ws []string, errors []error) {
-	protocol := strings.ToLower(v.(string))
-	if protocol == "http" || protocol == "https" || protocol == "tcp" {
-		return
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
-	return
-}
-
-func validateAwsLbTargetGroupDeregistrationDelay(v interface{}, k string) (ws []string, errors []error) {
-	delay := v.(int)
-	if delay < 0 || delay > 3600 {
-		errors = append(errors, fmt.Errorf("%q must be in the range 0-3600 seconds", k))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupStickinessType(v interface{}, k string) (ws []string, errors []error) {
-	stickinessType := v.(string)
-	if stickinessType != "lb_cookie" {
-		errors = append(errors, fmt.Errorf("%q must have the value %q", k, "lb_cookie"))
-	}
-	return
-}
-
-func validateAwsLbTargetGroupStickinessCookieDuration(v interface{}, k string) (ws []string, errors []error) {
-	duration := v.(int)
-	if duration < 1 || duration > 604800 {
-		errors = append(errors, fmt.Errorf("%q must be a between 1 second and 1 week (1-604800 seconds))", k))
-	}
 	return
 }
 
@@ -530,7 +506,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	if targetGroup.HealthCheckPath != nil {
 		healthCheck["path"] = *targetGroup.HealthCheckPath
 	}
-	if targetGroup.Matcher.HttpCode != nil {
+	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = *targetGroup.Matcher.HttpCode
 	}
 
@@ -543,6 +519,23 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	})
 	if err != nil {
 		return errwrap.Wrapf("Error retrieving Target Group Attributes: {{err}}", err)
+	}
+
+	for _, attr := range attrResp.Attributes {
+		switch *attr.Key {
+		case "proxy_protocol_v2.enabled":
+			enabled, err := strconv.ParseBool(*attr.Value)
+			if err != nil {
+				return fmt.Errorf("Error converting proxy_protocol_v2.enabled to bool: %s", *attr.Value)
+			}
+			d.Set("proxy_protocol_v2", enabled)
+		case "slow_start.duration_seconds":
+			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("slow_start", slowStart)
+		}
 	}
 
 	// We only read in the stickiness attributes if the target group is not

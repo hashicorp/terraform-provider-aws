@@ -36,6 +36,10 @@ func testSweepAutoscalingGroups(region string) error {
 
 	resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping AutoScaling Group sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving AutoScaling Groups in Sweeper: %s", err)
 	}
 
@@ -46,7 +50,7 @@ func testSweepAutoscalingGroups(region string) error {
 
 	for _, asg := range resp.AutoScalingGroups {
 		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-", "tf-test"} {
+		for _, testName := range []string{"foobar", "terraform-", "tf-test", "tf-asg-"} {
 			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
 				testOptGroup = true
 				break
@@ -128,6 +132,8 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 						"aws_autoscaling_group.bar", "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "protect_from_scale_in", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
 				),
 			},
 
@@ -162,7 +168,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSAutoScalingGroup_namePrefix(t *testing.T) {
-	nameRegexp := regexp.MustCompile("^test-")
+	nameRegexp := regexp.MustCompile("^tf-test-")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -251,7 +257,7 @@ func TestAccAWSAutoScalingGroup_terminationPolicies(t *testing.T) {
 func TestAccAWSAutoScalingGroup_tags(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tfautotags-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -360,7 +366,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
 
-	randName := fmt.Sprintf("tf_placement_test-%s", acctest.RandString(5))
+	randName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -468,6 +474,26 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "enabled_metrics.#", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "service_linked_role_arn"),
 				),
 			},
 		},
@@ -878,6 +904,90 @@ func TestAccAWSAutoScalingGroup_emptyAvailabilityZones(t *testing.T) {
 	})
 }
 
+func TestAccAWSAutoScalingGroup_launchTemplate(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withLaunchTemplate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoScalingGroup_launchTemplate_update(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withLaunchTemplate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.name"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withLaunchTemplate_toLaunchConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_configuration"),
+					resource.TestCheckNoResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withLaunchTemplate_toLaunchTemplateName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_configuration", ""),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.name", "foobar2"),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.id"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withLaunchTemplate_toLaunchTemplateVersion,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "$Latest"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccAWSAutoScalingGroupConfig_withLaunchTemplate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttrSet(
+						"aws_autoscaling_group.bar", "launch_template.0.name"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "1"),
+				),
+			},
+		},
+	})
+}
+
 const testAccAWSAutoScalingGroupConfig_autoGeneratedName = `
 data "aws_ami" "test_ami" {
   most_recent = true
@@ -932,7 +1042,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  name_prefix = "test-"
+  name_prefix = "tf-test-"
   launch_configuration = "${aws_launch_configuration.test.name}"
 }
 `
@@ -1268,10 +1378,20 @@ resource "aws_elb" "bar" {
 	depends_on = ["aws_internet_gateway.gw"]
 }
 
+// need an AMI that listens on :80 at boot, this is:
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  owners     = ["979382823631"]
+
+  filter {
+    name   = "name"
+    values = ["bitnami-nginxstack-*-linux-debian-9-x86_64-hvm-ebs"]
+  }
+}
+
 resource "aws_launch_configuration" "foobar" {
-  // need an AMI that listens on :80 at boot, this is:
-  // bitnami-nginxstack-1.6.1-0-linux-ubuntu-14.04.1-x86_64-hvm-ebs-ami-99f5b1a9-3
-  image_id = "ami-b5b3fc85"
+  image_id = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 	security_groups = ["${aws_security_group.foo.id}"]
 }
@@ -1433,6 +1553,40 @@ resource "aws_autoscaling_group" "bar" {
 }
 `, name, name)
 }
+
+const testAccAWSAutoScalingGroupConfig_withServiceLinkedRoleARN = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_iam_role" "autoscaling_service_linked_role" {
+  name = "AWSServiceRoleForAutoScaling"
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  service_linked_role_arn = "${data.aws_iam_role.autoscaling_service_linked_role.arn}"
+}
+`
 
 const testAccAWSAutoscalingMetricsCollectionConfig_allMetricsCollected = `
 data "aws_ami" "test_ami" {
@@ -2165,5 +2319,168 @@ data "aws_ami" "test_ami" {
 resource "aws_launch_configuration" "test" {
   image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withLaunchTemplate = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    id = "${aws_launch_template.foobar.id}"
+    version = "${aws_launch_template.foobar.default_version}"
+  }
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withLaunchTemplate_toLaunchConfig = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.test.name}"
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withLaunchTemplate_toLaunchTemplateName = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_template" "foobar2" {
+  name = "foobar2"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    name = "foobar2"
+  }
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withLaunchTemplate_toLaunchTemplateVersion = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foobar" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_launch_template" "foobar2" {
+  name = "foobar2"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    id = "${aws_launch_template.foobar.id}"
+    version = "$$Latest"
+  }
 }
 `

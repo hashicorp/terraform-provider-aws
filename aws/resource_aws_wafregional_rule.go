@@ -45,15 +45,9 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"type": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"IPMatch",
-								"ByteMatch",
-								"SqlInjectionMatch",
-								"SizeConstraint",
-								"XssMatch",
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateWafPredicatesType(),
 						},
 					},
 				},
@@ -151,7 +145,6 @@ func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-//func updateWafRegionalRuleResource(d *schema.ResourceData, meta interface{}, ChangeAction string) error {
 func updateWafRegionalRuleResource(id string, oldP, newP []interface{}, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region

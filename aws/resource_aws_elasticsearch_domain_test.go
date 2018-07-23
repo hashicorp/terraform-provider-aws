@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +14,63 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
+		Name: "aws_elasticsearch_domain",
+		F:    testSweepElasticSearchDomains,
+	})
+}
+
+func testSweepElasticSearchDomains(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).esconn
+
+	prefixes := []string{
+		"tf-test-",
+		"tf-acc-test-",
+	}
+
+	out, err := conn.ListDomainNames(&elasticsearch.ListDomainNamesInput{})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
+	}
+	for _, domain := range out.DomainNames {
+		skip := true
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(*domain.DomainName, prefix) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			log.Printf("[INFO] Skipping Elasticsearch Domain: %s", *domain.DomainName)
+			continue
+		}
+		log.Printf("[INFO] Deleting Elasticsearch Domain: %s", *domain.DomainName)
+
+		_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
+			DomainName: domain.DomainName,
+		})
+		if err != nil {
+			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
+			continue
+		}
+		err = resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to wait for deletion of Elasticsearch Domain %s: %s", *domain.DomainName, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
@@ -358,6 +417,60 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 		}})
 }
 
+func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
+	var input elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ClusterUpdateEBSVolume(ri, 24),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESEBSVolumeEnabled(true, &input),
+					testAccCheckESEBSVolumeSize(24, &input),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdateInstanceStore(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESEBSVolumeEnabled(false, &input),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdateEBSVolume(ri, 12),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESEBSVolumeEnabled(true, &input),
+					testAccCheckESEBSVolumeSize(12, &input),
+				),
+			},
+		}})
+}
+
+func testAccCheckESEBSVolumeSize(ebsVolumeSize int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.EBSOptions
+		if *conf.VolumeSize != int64(ebsVolumeSize) {
+			return fmt.Errorf("EBS volume size differ. Given: %d, Expected: %d", *conf.VolumeSize, ebsVolumeSize)
+		}
+		return nil
+	}
+}
+func testAccCheckESEBSVolumeEnabled(ebsEnabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.EBSOptions
+		if *conf.EBSEnabled != ebsEnabled {
+			return fmt.Errorf("EBS volume enabled. Given: %t, Expected: %t", *conf.EBSEnabled, ebsEnabled)
+		}
+		return nil
+	}
+}
+
 func testAccCheckESSnapshotHour(snapshotHour int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.SnapshotOptions
@@ -495,6 +608,55 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, instanceInt, snapshotInt)
+}
+
+func testAccESDomainConfig_ClusterUpdateEBSVolume(randInt, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+	elasticsearch_version = "6.0"
+
+  advanced_options {
+    "indices.fielddata.cache.size" = 80
+  }
+
+  ebs_options {
+    ebs_enabled = true
+		volume_size = %d
+  }
+
+  cluster_config {
+    instance_count = 2
+    zone_awareness_enabled = true
+    instance_type = "t2.small.elasticsearch"
+  }
+}
+`, randInt, volumeSize)
+}
+
+func testAccESDomainConfig_ClusterUpdateInstanceStore(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+	elasticsearch_version = "6.0"
+
+  advanced_options {
+    "indices.fielddata.cache.size" = 80
+  }
+
+  ebs_options {
+    ebs_enabled = false
+  }
+
+  cluster_config {
+    instance_count = 2
+    zone_awareness_enabled = true
+    instance_type = "i3.large.elasticsearch"
+  }
+}
+`, randInt)
 }
 
 func testAccESDomainConfig_TagUpdate(randInt int) string {

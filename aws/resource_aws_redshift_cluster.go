@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -189,6 +190,11 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+
+			"dns_name": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 
@@ -566,6 +572,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 		if rsc.Endpoint.Port != nil {
 			endpoint = fmt.Sprintf("%s:%d", endpoint, *rsc.Endpoint.Port)
 		}
+		d.Set("dns_name", rsc.Endpoint.Address)
 		d.Set("port", rsc.Endpoint.Port)
 		d.Set("endpoint", endpoint)
 	}
@@ -622,15 +629,17 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).redshiftconn
 	d.Partial(true)
 
-	arn, tagErr := buildRedshiftARN(d.Id(), meta.(*AWSClient).partition, meta.(*AWSClient).accountid, meta.(*AWSClient).region)
-	if tagErr != nil {
-		return fmt.Errorf("Error building ARN for Redshift Cluster, not updating Tags for cluster %s", d.Id())
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
+		return tagErr
 	} else {
-		if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
-			return tagErr
-		} else {
-			d.SetPartial("tags")
-		}
+		d.SetPartial("tags")
 	}
 
 	requestUpdate := false
@@ -639,25 +648,17 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		ClusterIdentifier: aws.String(d.Id()),
 	}
 
-	if d.HasChange("cluster_type") {
+	// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
+	// items to be sent over
+	if d.HasChange("cluster_type") || d.HasChange("node_type") || d.HasChange("number_of_nodes") {
 		req.ClusterType = aws.String(d.Get("cluster_type").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("node_type") {
 		req.NodeType = aws.String(d.Get("node_type").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("number_of_nodes") {
 		if v := d.Get("number_of_nodes").(int); v > 1 {
 			req.ClusterType = aws.String("multi-node")
 			req.NumberOfNodes = aws.Int64(int64(d.Get("number_of_nodes").(int)))
 		} else {
 			req.ClusterType = aws.String("single-node")
 		}
-
-		req.NodeType = aws.String(d.Get("node_type").(string))
 		requestUpdate = true
 	}
 
@@ -1064,16 +1065,4 @@ func validateRedshiftClusterMasterPassword(v interface{}, k string) (ws []string
 		errors = append(errors, fmt.Errorf("%q must be at least 8 characters", k))
 	}
 	return
-}
-
-func buildRedshiftARN(identifier, partition, accountid, region string) (string, error) {
-	if partition == "" {
-		return "", fmt.Errorf("Unable to construct cluster ARN because of missing AWS partition")
-	}
-	if accountid == "" {
-		return "", fmt.Errorf("Unable to construct cluster ARN because of missing AWS Account ID")
-	}
-	arn := fmt.Sprintf("arn:%s:redshift:%s:%s:cluster:%s", partition, region, accountid, identifier)
-	return arn, nil
-
 }

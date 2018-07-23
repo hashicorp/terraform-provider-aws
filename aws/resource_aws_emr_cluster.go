@@ -42,6 +42,17 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"additional_info": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 			"core_instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -100,34 +111,42 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"key_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_slave_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_master_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_slave_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"instance_profile": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"service_access_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -198,7 +217,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateAwsEmrEbsVolumeType,
+										ValidateFunc: validateAwsEmrEbsVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -224,9 +243,13 @@ func resourceAwsEMRCluster() *schema.Resource {
 							},
 						},
 						"instance_role": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsEmrInstanceGroupRole,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								emr.InstanceFleetTypeMaster,
+								emr.InstanceFleetTypeCore,
+								emr.InstanceFleetTypeTask,
+							}, false),
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -466,6 +489,14 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 	}
 
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		params.AdditionalInfo = aws.String(info)
+	}
+
 	if v, ok := d.GetOk("log_uri"); ok {
 		params.LogUri = aws.String(v.(string))
 	}
@@ -672,6 +703,15 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting step: %s", err)
 	}
 
+	// AWS provides no other way to read back the additional_info
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		d.Set("additional_info", info)
+	}
+
 	return nil
 }
 
@@ -823,7 +863,6 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[ERR] Error waiting for EMR Cluster (%s) Instances to drain", d.Id())
 	}
 
-	d.SetId("")
 	return nil
 }
 
@@ -1370,23 +1409,25 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 			return nil, "", err
 		}
 
-		emrc := resp.Cluster
-
-		if emrc == nil {
+		if resp.Cluster == nil {
 			return 42, "destroyed", nil
 		}
 
-		if resp.Cluster.Status != nil {
-			log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), *resp.Cluster.Status)
+		if resp.Cluster.Status == nil {
+			return resp.Cluster, "", fmt.Errorf("cluster status not provided")
 		}
 
-		status := emrc.Status
-		if *status.State == "TERMINATING" || *status.State == "TERMINATED_WITH_ERRORS" {
-			reason := *status.StateChangeReason
-			return emrc, *status.State, fmt.Errorf("%s: %s",
-				*reason.Code, *reason.Message)
+		state := aws.StringValue(resp.Cluster.Status.State)
+		log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), state)
+
+		if state == emr.ClusterStateTerminating || state == emr.ClusterStateTerminatedWithErrors {
+			reason := resp.Cluster.Status.StateChangeReason
+			if reason == nil {
+				return resp.Cluster, state, fmt.Errorf("%s: reason code and message not provided", state)
+			}
+			return resp.Cluster, state, fmt.Errorf("%s: %s: %s", state, aws.StringValue(reason.Code), aws.StringValue(reason.Message))
 		}
 
-		return emrc, *status.State, nil
+		return resp.Cluster, state, nil
 	}
 }

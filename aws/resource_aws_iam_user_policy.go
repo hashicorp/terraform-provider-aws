@@ -17,14 +17,13 @@ func resourceAwsIamUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutUserPolicy API is idempotent, so these can be the same.
 		Create: resourceAwsIamUserPolicyPut,
+		Read:   resourceAwsIamUserPolicyRead,
 		Update: resourceAwsIamUserPolicyPut,
+		Delete: resourceAwsIamUserPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		Read:   resourceAwsIamUserPolicyRead,
-		Delete: resourceAwsIamUserPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"policy": &schema.Schema{
@@ -41,9 +40,10 @@ func resourceAwsIamUserPolicy() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"user": &schema.Schema{
 				Type:     schema.TypeString,

@@ -32,7 +32,7 @@ resource "aws_elasticsearch_domain_policy" "main" {
             "Condition": {
                 "IpAddress": {"aws:SourceIp": "127.0.0.1/32"}
             },
-            "Resource": "${aws_elasticsearch_domain.example.arn}"
+            "Resource": "${aws_elasticsearch_domain.example.arn}/*"
         }
     ]
 }
