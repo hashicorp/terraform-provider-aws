@@ -116,7 +116,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 **compute_resources** is a child block with a single argument:
 
-* `bid_percentage` - (Optional) The minimum percentage that a Spot Instance price must be when compared with the On-Demand price for that instance type before instances are launched. For example, if your bid percentage is 20%, then the Spot price must be below 20% of the current On-Demand price for that EC2 instance. This parameter is required for SPOT compute environments.
+* `bid_percentage` - (Optional) Integer of minimum percentage that a Spot Instance price must be when compared with the On-Demand price for that instance type before instances are launched. For example, if your bid percentage is 20% (`20`), then the Spot price must be below 20% of the current On-Demand price for that EC2 instance. This parameter is required for SPOT compute environments.
 * `desired_vcpus` - (Optional) The desired number of EC2 vCPUS in the compute environment.
 * `ec2_key_pair` - (Optional) The EC2 key pair that is used for instances launched in the compute environment.
 * `image_id` - (Optional) The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.
