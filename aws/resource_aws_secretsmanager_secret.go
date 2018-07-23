@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -186,9 +185,9 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 	}
 
 	if pOut.ResourcePolicy != nil {
-		policy, err := structure.NormalizeJsonString(*pOut.ResourcePolicy)
+		policy, err := structure.NormalizeJsonString(aws.StringValue(pOut.ResourcePolicy))
 		if err != nil {
-			return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+			return fmt.Errorf("policy contains an invalid JSON: %s", err)
 		}
 		d.Set("policy", policy)
 	}
@@ -236,7 +235,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 		if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
-				return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+				return fmt.Errorf("policy contains an invalid JSON: %s", err)
 			}
 			input := &secretsmanager.PutResourcePolicyInput{
 				ResourcePolicy: aws.String(policy),
