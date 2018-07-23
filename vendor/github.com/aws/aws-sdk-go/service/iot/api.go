@@ -12410,10 +12410,10 @@ type AuthorizerDescription struct {
 	AuthorizerName *string `locationName:"authorizerName" min:"1" type:"string"`
 
 	// The UNIX timestamp of when the authorizer was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The UNIX timestamp of when the authorizer was last updated.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The status of the authorizer.
 	Status *string `locationName:"status" type:"string" enum:"AuthorizerStatus"`
@@ -12528,7 +12528,7 @@ type CACertificate struct {
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
 	// The date the CA certificate was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The status of the CA certificate.
 	//
@@ -12588,7 +12588,7 @@ type CACertificateDescription struct {
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
 
 	// The date the CA certificate was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The customer version of the CA certificate.
 	CustomerVersion *int64 `locationName:"customerVersion" min:"1" type:"integer"`
@@ -12597,7 +12597,7 @@ type CACertificateDescription struct {
 	GenerationId *string `locationName:"generationId" type:"string"`
 
 	// The date the CA certificate was last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The owner of the CA certificate.
 	OwnedBy *string `locationName:"ownedBy" type:"string"`
@@ -12967,7 +12967,7 @@ type Certificate struct {
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
 	// The date and time the certificate was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The status of the certificate.
 	//
@@ -13026,7 +13026,7 @@ type CertificateDescription struct {
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
 
 	// The date and time the certificate was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The customer version of the certificate.
 	CustomerVersion *int64 `locationName:"customerVersion" min:"1" type:"integer"`
@@ -13035,7 +13035,7 @@ type CertificateDescription struct {
 	GenerationId *string `locationName:"generationId" type:"string"`
 
 	// The date and time the certificate was last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The ID of the AWS account that owns the certificate.
 	OwnedBy *string `locationName:"ownedBy" type:"string"`
@@ -16528,13 +16528,13 @@ type DescribeEventConfigurationsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The creation date of the event configuration.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The event configurations.
 	EventConfigurations map[string]*Configuration `locationName:"eventConfigurations" type:"map"`
 
 	// The date the event configurations were last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -17219,7 +17219,7 @@ type DescribeThingRegistrationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The task creation date.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The number of things that failed to be provisioned.
 	FailureCount *int64 `locationName:"failureCount" type:"integer"`
@@ -17231,7 +17231,7 @@ type DescribeThingRegistrationTaskOutput struct {
 	InputFileKey *string `locationName:"inputFileKey" min:"1" type:"string"`
 
 	// The date when the task was last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The message.
 	Message *string `locationName:"message" type:"string"`
@@ -18575,7 +18575,7 @@ type GetPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date the policy was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The default policy version ID.
 	DefaultVersionId *string `locationName:"defaultVersionId" type:"string"`
@@ -18584,7 +18584,7 @@ type GetPolicyOutput struct {
 	GenerationId *string `locationName:"generationId" type:"string"`
 
 	// The date the policy was last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The policy ARN.
 	PolicyArn *string `locationName:"policyArn" type:"string"`
@@ -18709,7 +18709,7 @@ type GetPolicyVersionOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date the policy version was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The generation ID of the policy version.
 	GenerationId *string `locationName:"generationId" type:"string"`
@@ -18718,7 +18718,7 @@ type GetPolicyVersionOutput struct {
 	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
 
 	// The date the policy version was last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The policy ARN.
 	PolicyArn *string `locationName:"policyArn" type:"string"`
@@ -19071,10 +19071,10 @@ type Job struct {
 	Comment *string `locationName:"comment" type:"string"`
 
 	// The time, in milliseconds since the epoch, when the job was completed.
-	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp" timestampFormat:"unix"`
+	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp"`
 
 	// The time, in milliseconds since the epoch, when the job was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// A short text description of the job.
 	Description *string `locationName:"description" type:"string"`
@@ -19099,7 +19099,7 @@ type Job struct {
 	JobProcessDetails *JobProcessDetails `locationName:"jobProcessDetails" type:"structure"`
 
 	// The time, in milliseconds since the epoch, when the job was last updated.
-	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// Configuration for pre-signed S3 URLs.
 	PresignedUrlConfig *PresignedUrlConfig `locationName:"presignedUrlConfig" type:"structure"`
@@ -19238,13 +19238,13 @@ type JobExecution struct {
 
 	// The time, in milliseconds since the epoch, when the job execution was last
 	// updated.
-	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// The time, in milliseconds since the epoch, when the job execution was queued.
-	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp" timestampFormat:"unix"`
+	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp"`
 
 	// The time, in milliseconds since the epoch, when the job execution started.
-	StartedAt *time.Time `locationName:"startedAt" type:"timestamp" timestampFormat:"unix"`
+	StartedAt *time.Time `locationName:"startedAt" type:"timestamp"`
 
 	// The status of the job execution (IN_PROGRESS, QUEUED, FAILED, SUCCESS, CANCELED,
 	// or REJECTED).
@@ -19366,13 +19366,13 @@ type JobExecutionSummary struct {
 
 	// The time, in milliseconds since the epoch, when the job execution was last
 	// updated.
-	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// The time, in milliseconds since the epoch, when the job execution was queued.
-	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp" timestampFormat:"unix"`
+	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp"`
 
 	// The time, in milliseconds since the epoch, when the job execution started.
-	StartedAt *time.Time `locationName:"startedAt" type:"timestamp" timestampFormat:"unix"`
+	StartedAt *time.Time `locationName:"startedAt" type:"timestamp"`
 
 	// The status of the job execution.
 	Status *string `locationName:"status" type:"string" enum:"JobExecutionStatus"`
@@ -19618,10 +19618,10 @@ type JobSummary struct {
 	_ struct{} `type:"structure"`
 
 	// The time, in milliseconds since the epoch, when the job completed.
-	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp" timestampFormat:"unix"`
+	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp"`
 
 	// The time, in milliseconds since the epoch, when the job was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The job ARN.
 	JobArn *string `locationName:"jobArn" type:"string"`
@@ -19630,7 +19630,7 @@ type JobSummary struct {
 	JobId *string `locationName:"jobId" min:"1" type:"string"`
 
 	// The time, in milliseconds since the epoch, when the job was last updated.
-	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// The job summary status.
 	Status *string `locationName:"status" type:"string" enum:"JobStatus"`
@@ -22831,7 +22831,7 @@ type OTAUpdateInfo struct {
 	AwsIotJobId *string `locationName:"awsIotJobId" type:"string"`
 
 	// The date when the OTA update was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// A description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
@@ -22840,7 +22840,7 @@ type OTAUpdateInfo struct {
 	ErrorInfo *ErrorInfo `locationName:"errorInfo" type:"structure"`
 
 	// The date when the OTA update was last updated.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The OTA update ARN.
 	OtaUpdateArn *string `locationName:"otaUpdateArn" type:"string"`
@@ -22959,7 +22959,7 @@ type OTAUpdateSummary struct {
 	_ struct{} `type:"structure"`
 
 	// The date when the OTA update was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The OTA update ARN.
 	OtaUpdateArn *string `locationName:"otaUpdateArn" type:"string"`
@@ -23007,10 +23007,10 @@ type OutgoingCertificate struct {
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
 	// The certificate creation date.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The date the transfer was initiated.
-	TransferDate *time.Time `locationName:"transferDate" type:"timestamp" timestampFormat:"unix"`
+	TransferDate *time.Time `locationName:"transferDate" type:"timestamp"`
 
 	// The transfer message.
 	TransferMessage *string `locationName:"transferMessage" type:"string"`
@@ -23103,7 +23103,7 @@ type PolicyVersion struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the policy was created.
-	CreateDate *time.Time `locationName:"createDate" type:"timestamp" timestampFormat:"unix"`
+	CreateDate *time.Time `locationName:"createDate" type:"timestamp"`
 
 	// Specifies whether the policy version is the default.
 	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
@@ -23868,13 +23868,13 @@ type RoleAliasDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The UNIX timestamp of when the role alias was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The number of seconds for which the credential is valid.
 	CredentialDurationSeconds *int64 `locationName:"credentialDurationSeconds" min:"900" type:"integer"`
 
 	// The UNIX timestamp of when the role alias was last modified.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The role alias owner.
 	Owner *string `locationName:"owner" type:"string"`
@@ -24983,7 +24983,7 @@ type StreamInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The date when the stream was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The description of the stream.
 	Description *string `locationName:"description" type:"string"`
@@ -24992,7 +24992,7 @@ type StreamInfo struct {
 	Files []*StreamFile `locationName:"files" min:"1" type:"list"`
 
 	// The date when the stream was last updated.
-	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// An IAM role AWS IoT assumes to access your S3 files.
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
@@ -25498,7 +25498,7 @@ type ThingGroupMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The UNIX timestamp of when the thing group was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The parent thing group name.
 	ParentGroupName *string `locationName:"parentGroupName" min:"1" type:"string"`
@@ -25659,14 +25659,14 @@ type ThingTypeMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time when the thing type was created.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// Whether the thing type is deprecated. If true, no new things could be associated
 	// with this type.
 	Deprecated *bool `locationName:"deprecated" type:"boolean"`
 
 	// The date and time when the thing type was deprecated.
-	DeprecationDate *time.Time `locationName:"deprecationDate" type:"timestamp" timestampFormat:"unix"`
+	DeprecationDate *time.Time `locationName:"deprecationDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -25742,7 +25742,7 @@ type TopicRule struct {
 	AwsIotSqlVersion *string `locationName:"awsIotSqlVersion" type:"string"`
 
 	// The date and time the rule was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The description of the rule.
 	Description *string `locationName:"description" type:"string"`
@@ -25824,7 +25824,7 @@ type TopicRuleListItem struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the rule was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The rule ARN.
 	RuleArn *string `locationName:"ruleArn" type:"string"`
@@ -26080,16 +26080,16 @@ type TransferData struct {
 	_ struct{} `type:"structure"`
 
 	// The date the transfer was accepted.
-	AcceptDate *time.Time `locationName:"acceptDate" type:"timestamp" timestampFormat:"unix"`
+	AcceptDate *time.Time `locationName:"acceptDate" type:"timestamp"`
 
 	// The date the transfer was rejected.
-	RejectDate *time.Time `locationName:"rejectDate" type:"timestamp" timestampFormat:"unix"`
+	RejectDate *time.Time `locationName:"rejectDate" type:"timestamp"`
 
 	// The reason why the transfer was rejected.
 	RejectReason *string `locationName:"rejectReason" type:"string"`
 
 	// The date the transfer took place.
-	TransferDate *time.Time `locationName:"transferDate" type:"timestamp" timestampFormat:"unix"`
+	TransferDate *time.Time `locationName:"transferDate" type:"timestamp"`
 
 	// The transfer message.
 	TransferMessage *string `locationName:"transferMessage" type:"string"`

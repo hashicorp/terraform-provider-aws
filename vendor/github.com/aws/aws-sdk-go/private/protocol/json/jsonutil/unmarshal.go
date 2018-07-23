@@ -186,6 +186,17 @@ func unmarshalScalar(value reflect.Value, data interface{}, tag reflect.StructTa
 				return err
 			}
 			value.Set(reflect.ValueOf(b))
+		case *time.Time:
+			format := tag.Get("timestampFormat")
+			if len(format) == 0 {
+				format = protocol.ISO8601TimeFormatName
+			}
+
+			t, err := protocol.ParseTime(format, d)
+			if err != nil {
+				return err
+			}
+			value.Set(reflect.ValueOf(&t))
 		case aws.JSONValue:
 			// No need to use escaping as the value is a non-quoted string.
 			v, err := protocol.DecodeJSONValue(d, protocol.NoEscape)
@@ -204,6 +215,7 @@ func unmarshalScalar(value reflect.Value, data interface{}, tag reflect.StructTa
 		case *float64:
 			value.Set(reflect.ValueOf(&d))
 		case *time.Time:
+			// Time unmarshaled from a float64 can only be epoch seconds
 			t := time.Unix(int64(d), 0).UTC()
 			value.Set(reflect.ValueOf(&t))
 		default:
