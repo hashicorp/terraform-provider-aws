@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_instance: Add `cpu_core_count` and `cpu_threads_per_core` arguments [GH-5159]
+* resource/aws_secretsmanager_secret: Add `policy` argument [GH-5290]
 
 ## 1.28.0 (July 18, 2018)
 
