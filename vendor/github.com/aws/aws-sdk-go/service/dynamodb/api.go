@@ -4246,7 +4246,7 @@ type BackupDetails struct {
 	// Time at which the backup was created. This is the request time of the backup.
 	//
 	// BackupCreationDateTime is a required field
-	BackupCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	BackupCreationDateTime *time.Time `type:"timestamp" required:"true"`
 
 	// Name of the requested backup.
 	//
@@ -4310,7 +4310,7 @@ type BackupSummary struct {
 	BackupArn *string `min:"37" type:"string"`
 
 	// Time at which the backup was created.
-	BackupCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	BackupCreationDateTime *time.Time `type:"timestamp"`
 
 	// Name of the specified backup.
 	BackupName *string `min:"3" type:"string"`
@@ -7482,7 +7482,7 @@ type GlobalTableDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The creation time of the global table.
-	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationDateTime *time.Time `type:"timestamp"`
 
 	// The unique identifier of the global table.
 	GlobalTableArn *string `type:"string"`
@@ -7876,11 +7876,11 @@ type ListBackupsInput struct {
 	TableName *string `min:"3" type:"string"`
 
 	// Only backups created after this time are listed. TimeRangeLowerBound is inclusive.
-	TimeRangeLowerBound *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TimeRangeLowerBound *time.Time `type:"timestamp"`
 
 	// Only backups created before this time are listed. TimeRangeUpperBound is
 	// exclusive.
-	TimeRangeUpperBound *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TimeRangeUpperBound *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8513,10 +8513,10 @@ type PointInTimeRecoveryDescription struct {
 
 	// Specifies the earliest point in time you can restore your table to. It You
 	// can restore your table to any point in time during the last 35 days.
-	EarliestRestorableDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	EarliestRestorableDateTime *time.Time `type:"timestamp"`
 
 	// LatestRestorableDateTime is typically 5 minutes before the current time.
-	LatestRestorableDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LatestRestorableDateTime *time.Time `type:"timestamp"`
 
 	// The current state of point in time recovery:
 	//
@@ -8732,10 +8732,10 @@ type ProvisionedThroughputDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time of the last provisioned throughput decrease for this table.
-	LastDecreaseDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastDecreaseDateTime *time.Time `type:"timestamp"`
 
 	// The date and time of the last provisioned throughput increase for this table.
-	LastIncreaseDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastIncreaseDateTime *time.Time `type:"timestamp"`
 
 	// The number of provisioned throughput decreases for this table during this
 	// UTC calendar day. For current maximums on provisioned throughput decreases,
@@ -10064,7 +10064,7 @@ type RestoreSummary struct {
 	// Point in time or source backup time.
 	//
 	// RestoreDateTime is a required field
-	RestoreDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	RestoreDateTime *time.Time `type:"timestamp" required:"true"`
 
 	// Indicates if a restore is in progress or not.
 	//
@@ -10197,7 +10197,7 @@ type RestoreTableToPointInTimeInput struct {
 	_ struct{} `type:"structure"`
 
 	// Time in the past to restore the table to.
-	RestoreDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	RestoreDateTime *time.Time `type:"timestamp"`
 
 	// Name of the source table that is being restored.
 	//
@@ -10887,7 +10887,7 @@ type SourceTableDetails struct {
 	// Time when the source table was created.
 	//
 	// TableCreationDateTime is a required field
-	TableCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	TableCreationDateTime *time.Time `type:"timestamp" required:"true"`
 
 	// Unique identifier for the table for which the backup was created.
 	//
@@ -11091,7 +11091,7 @@ type TableDescription struct {
 
 	// The date and time when the table was created, in UNIX epoch time (http://www.epochconverter.com/)
 	// format.
-	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationDateTime *time.Time `type:"timestamp"`
 
 	// The global secondary indexes, if any, on the table. Each index is scoped
 	// to a given partition key value. Each element is composed of:

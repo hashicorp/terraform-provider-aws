@@ -3979,7 +3979,7 @@ type OptionStatus struct {
 	// Timestamp which tells the creation date for the entity.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `type:"timestamp" required:"true"`
 
 	// Indicates whether the Elasticsearch domain is being deleted.
 	PendingDeletion *bool `type:"boolean"`
@@ -3992,7 +3992,7 @@ type OptionStatus struct {
 	// Timestamp which tells the last updated time for the entity.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	UpdateDate *time.Time `type:"timestamp" required:"true"`
 
 	// Specifies the latest version for the entity.
 	UpdateVersion *int64 `type:"integer"`
@@ -4282,7 +4282,7 @@ type ReservedElasticsearchInstance struct {
 	ReservedElasticsearchInstanceOfferingId *string `type:"string"`
 
 	// The time the reservation started.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 
 	// The state of the reserved Elasticsearch instance.
 	State *string `type:"string"`

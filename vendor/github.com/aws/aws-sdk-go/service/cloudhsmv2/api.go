@@ -1151,7 +1151,7 @@ type Backup struct {
 	ClusterId *string `type:"string"`
 
 	// The date and time when the backup was created.
-	CreateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTimestamp *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -1264,7 +1264,7 @@ type Cluster struct {
 	ClusterId *string `type:"string"`
 
 	// The date and time when the cluster was created.
-	CreateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTimestamp *time.Time `type:"timestamp"`
 
 	// The type of HSM that the cluster contains.
 	HsmType *string `type:"string"`
