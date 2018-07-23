@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
@@ -39,6 +41,12 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"recovery_window_in_days": {
 				Type:         schema.TypeInt,
@@ -91,6 +99,19 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId(aws.StringValue(output.ARN))
+
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		input := &secretsmanager.PutResourcePolicyInput{
+			ResourcePolicy: aws.String(v.(string)),
+			SecretId:       aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %s", input)
+		_, err := conn.PutResourcePolicy(input)
+		if err != nil {
+			return fmt.Errorf("error setting Secrets Manager Secret %q policy: %s", d.Id(), err)
+		}
+	}
 
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 		input := &secretsmanager.RotateSecretInput{
@@ -154,6 +175,24 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
+
+	pIn := &secretsmanager.GetResourcePolicyInput{
+		SecretId: aws.String(d.Id()),
+	}
+	log.Printf("[DEBUG] Reading Secrets Manager Secret policy: %s", pIn)
+	pOut, err := conn.GetResourcePolicy(pIn)
+	if err != nil {
+		return fmt.Errorf("error reading Secrets Manager Secret policy: %s", err)
+	}
+
+	if pOut.ResourcePolicy != nil {
+		policy, err := structure.NormalizeJsonString(*pOut.ResourcePolicy)
+		if err != nil {
+			return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		}
+		d.Set("policy", policy)
+	}
+
 	d.Set("rotation_enabled", output.RotationEnabled)
 
 	if aws.BoolValue(output.RotationEnabled) {
@@ -190,6 +229,35 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 		_, err := conn.UpdateSecret(input)
 		if err != nil {
 			return fmt.Errorf("error updating Secrets Manager Secret: %s", err)
+		}
+	}
+
+	if d.HasChange("policy") {
+		if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+			policy, err := structure.NormalizeJsonString(v.(string))
+			if err != nil {
+				return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+			}
+			input := &secretsmanager.PutResourcePolicyInput{
+				ResourcePolicy: aws.String(policy),
+				SecretId:       aws.String(d.Id()),
+			}
+
+			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %s", input)
+			_, err = conn.PutResourcePolicy(input)
+			if err != nil {
+				return fmt.Errorf("error setting Secrets Manager Secret %q policy: %s", d.Id(), err)
+			}
+		} else {
+			input := &secretsmanager.DeleteResourcePolicyInput{
+				SecretId: aws.String(d.Id()),
+			}
+
+			log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %s", input)
+			_, err := conn.DeleteResourcePolicy(input)
+			if err != nil {
+				return fmt.Errorf("error removing Secrets Manager Secret %q policy: %s", d.Id(), err)
+			}
 		}
 	}
 
