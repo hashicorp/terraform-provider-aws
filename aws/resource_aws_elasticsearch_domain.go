@@ -229,6 +229,33 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Default:  "1.5",
 				ForceNew: true,
 			},
+			"cognito_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"user_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 
 			"tags": tagsSchema(),
 		},
@@ -384,6 +411,21 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("cognito_options"); ok {
+
+		options := v.([]interface{})
+		if len(options) > 1 {
+			return fmt.Errorf("Only a single cognito_options block is expected")
+		} else if len(options) == 1 {
+			if options[0] == nil {
+				return fmt.Errorf("At least one field is expected inside cognito_options")
+			}
+
+			s := options[0].(map[string]interface{})
+			input.CognitoOptions = expandESCognitoOptions(s)
+		}
+	}
+
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
@@ -501,6 +543,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
+	if err != nil {
+		return err
+	}
+	err = d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions))
 	if err != nil {
 		return err
 	}
@@ -632,6 +678,12 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		options := d.Get("vpc_options").([]interface{})
 		s := options[0].(map[string]interface{})
 		input.VPCOptions = expandESVPCOptions(s)
+	}
+
+	if d.HasChange("cognito_options") {
+		options := d.Get("cognito_options").([]interface{})
+		s := options[0].(map[string]interface{})
+		input.CognitoOptions = expandESCognitoOptions(s)
 	}
 
 	if d.HasChange("log_publishing_options") {

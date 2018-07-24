@@ -293,6 +293,25 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_CognitoOptions(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CognitoOptions(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr(
+						"aws_elasticsearch_domain.example", "elasticsearch_version", "6.0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -1063,4 +1082,72 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, randInt, randInt)
+}
+
+func testAccESDomainConfig_CognitoOptions(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "example" {
+  name = "tf-test-%d"
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain = "tf-test-%d"
+	user_pool_id = "${aws_cognito_user_pool.example.id}"
+}
+
+resource "aws_cognito_identity_pool" "example" {
+  identity_pool_name = "tf_test_%d"
+	allow_unauthenticated_identities = false
+}
+
+resource "aws_iam_role" "example" {
+	name = "tf-test-%d" 
+	path = "/service-role/"
+	
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "es.amazonaws.com"
+			},
+			"Effect": "Allow",
+			"Sid": ""
+		}
+	]
+}
+	EOF
+}
+	
+resource "aws_iam_role_policy_attachment" "example" {
+	role       = "${aws_iam_role.example.name}"
+	policy_arn = "arn:aws:iam::aws:policy/AmazonESCognitoAccess"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+	domain_name = "tf-test-%d"
+
+	elasticsearch_version = "6.0"
+	
+	cluster_config {
+		instance_type = "t2.small.elasticsearch"
+	}
+
+  cognito_options {
+		enabled = true
+		user_pool_id = "${aws_cognito_user_pool.example.id}"
+		identity_pool_id = "${aws_cognito_identity_pool.example.id}"
+		role_arn = "${aws_iam_role.example.arn}"
+	}
+	
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.example"]
+}
+`, randInt, randInt, randInt, randInt, randInt)
 }

@@ -1088,6 +1088,51 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	return []map[string]interface{}{m}
 }
 
+func expandESCognitoOptions(m map[string]interface{}) *elasticsearch.CognitoOptions {
+	options := elasticsearch.CognitoOptions{}
+
+	if cognitoEnabled, ok := m["enabled"]; ok {
+		options.Enabled = aws.Bool(cognitoEnabled.(bool))
+
+		if cognitoEnabled.(bool) {
+
+			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
+				options.UserPoolId = aws.String(v.(string))
+			}
+			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
+				options.IdentityPoolId = aws.String(v.(string))
+			}
+			if v, ok := m["role_arn"]; ok && v.(string) != "" {
+				options.RoleArn = aws.String(v.(string))
+			}
+		}
+	}
+
+	return &options
+}
+
+func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if c.Enabled != nil {
+		m["enabled"] = *c.Enabled
+	}
+
+	if aws.BoolValue(c.Enabled) {
+		if c.UserPoolId != nil {
+			m["user_pool_id"] = *c.UserPoolId
+		}
+		if c.IdentityPoolId != nil {
+			m["identity_pool_id"] = *c.IdentityPoolId
+		}
+		if c.RoleArn != nil {
+			m["role_arn"] = *c.RoleArn
+		}
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
