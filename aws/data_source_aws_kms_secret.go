@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsKmsSecret() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "This data source will change or be removed in Terraform AWS provider version 2.0. Please see migration information available in: https://www.terraform.io/docs/providers/aws/d/kms_secrets.html",
+		DeprecationMessage: "This data source will be removed in Terraform AWS provider version 2.0. Please see migration information available in: https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html",
 		Read:               dataSourceAwsKmsSecretRead,
 
 		Schema: map[string]*schema.Schema{
