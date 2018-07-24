@@ -10,6 +10,10 @@ ENHANCEMENTS:
 * resource/aws_vpc: Add `arn` attribute [GH-5300]
 * resource/aws_default_vpc: Add `arn` attribute [GH-5300]
 
+BUG FIXES:
+
+* resource/aws_route53_record: Prevent DomainLabelEmpty errors when expanding record names with trailing period [GH-5312]
+
 ## 1.28.0 (July 18, 2018)
 
 FEATURES:
