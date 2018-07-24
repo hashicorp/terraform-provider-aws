@@ -27,6 +27,8 @@ func TestAccAWSDefaultVpc_basic(t *testing.T) {
 						"aws_default_vpc.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_default_vpc.foo", "tags.Name", "Default VPC"),
+					resource.TestCheckResourceAttrSet(
+						"aws_default_vpc.foo", "arn"),
 					resource.TestCheckNoResourceAttr(
 						"aws_default_vpc.foo", "assign_generated_ipv6_cidr_block"),
 					resource.TestCheckNoResourceAttr(

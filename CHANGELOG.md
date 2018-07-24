@@ -2,7 +2,11 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_vpc: Add `arn` attribute [GH-5300]
 * resource/aws_instance: Add `cpu_core_count` and `cpu_threads_per_core` arguments [GH-5159]
+* resource/aws_secretsmanager_secret: Add `policy` argument [GH-5290]
+* resource/aws_vpc: Add `arn` attribute [GH-5300]
+* resource/aws_default_vpc: Add `arn` attribute [GH-5300]
 
 ## 1.28.0 (July 18, 2018)
 

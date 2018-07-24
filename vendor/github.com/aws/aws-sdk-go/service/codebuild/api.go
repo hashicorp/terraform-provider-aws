@@ -1586,7 +1586,7 @@ type Build struct {
 	CurrentPhase *string `locationName:"currentPhase" type:"string"`
 
 	// When the build process ended, expressed in Unix time format.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
 	// Information about the build environment for this build.
 	Environment *ProjectEnvironment `locationName:"environment" type:"structure"`
@@ -1629,7 +1629,7 @@ type Build struct {
 	SourceVersion *string `locationName:"sourceVersion" min:"1" type:"string"`
 
 	// When the build process started, expressed in Unix time format.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
 
 	// How long, in minutes, for AWS CodeBuild to wait before timing out this build
 	// if it does not get marked as completed.
@@ -1872,7 +1872,7 @@ type BuildPhase struct {
 	DurationInSeconds *int64 `locationName:"durationInSeconds" type:"long"`
 
 	// When the build phase ended, expressed in Unix time format.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
 	// The current status of the build phase. Valid values include:
 	//
@@ -1914,7 +1914,7 @@ type BuildPhase struct {
 	PhaseType *string `locationName:"phaseType" type:"string" enum:"BuildPhaseType"`
 
 	// When the build phase started, expressed in Unix time format.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -3088,7 +3088,7 @@ type Project struct {
 	Cache *ProjectCache `locationName:"cache" type:"structure"`
 
 	// When the build project was created, expressed in Unix time format.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// A description that makes the build project easy to identify.
 	Description *string `locationName:"description" type:"string"`
@@ -3105,7 +3105,7 @@ type Project struct {
 
 	// When the build project's settings were last modified, expressed in Unix time
 	// format.
-	LastModified *time.Time `locationName:"lastModified" type:"timestamp" timestampFormat:"unix"`
+	LastModified *time.Time `locationName:"lastModified" type:"timestamp"`
 
 	// The name of the build project.
 	Name *string `locationName:"name" min:"2" type:"string"`
@@ -4663,7 +4663,7 @@ type Webhook struct {
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
 
 	// A timestamp indicating the last time a repository's secret token was modified.
-	LastModifiedSecret *time.Time `locationName:"lastModifiedSecret" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedSecret *time.Time `locationName:"lastModifiedSecret" type:"timestamp"`
 
 	// The CodeBuild endpoint where webhook events are sent.
 	PayloadUrl *string `locationName:"payloadUrl" min:"1" type:"string"`

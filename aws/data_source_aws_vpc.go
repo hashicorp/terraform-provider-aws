@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -92,6 +93,11 @@ func dataSourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchemaComputed(),
 		},
 	}
@@ -161,6 +167,15 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default", vpc.IsDefault)
 	d.Set("state", vpc.State)
 	d.Set("tags", tagsToMap(vpc.Tags))
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	cidrAssociations := []interface{}{}
 	for _, associationSet := range vpc.CidrBlockAssociationSet {

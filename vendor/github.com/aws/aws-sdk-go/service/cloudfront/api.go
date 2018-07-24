@@ -7574,7 +7574,7 @@ type Distribution struct {
 	// The date and time the distribution was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// This response element indicates the current status of the distribution. When
 	// the status is Deployed, the distribution's information is fully propagated
@@ -8296,7 +8296,7 @@ type DistributionSummary struct {
 	// The date and time the distribution was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// A complex type that contains information about origins for this distribution.
 	//
@@ -8694,7 +8694,7 @@ type FieldLevelEncryption struct {
 	// The last time the field-level encryption configuration was changed.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -8882,7 +8882,7 @@ type FieldLevelEncryptionProfile struct {
 	// The last time the field-level encryption profile was updated.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -9076,7 +9076,7 @@ type FieldLevelEncryptionProfileSummary struct {
 	// The time when the the field-level encryption profile summary was last updated.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// Name for the field-level encryption profile summary.
 	//
@@ -9142,7 +9142,7 @@ type FieldLevelEncryptionSummary struct {
 	// The last time that the summary of field-level encryption items was modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// A summary of a query argument-profile mapping.
 	QueryArgProfileConfig *QueryArgProfileConfig `type:"structure"`
@@ -10467,7 +10467,7 @@ type Invalidation struct {
 	// The date and time the invalidation request was first made.
 	//
 	// CreateTime is a required field
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	CreateTime *time.Time `type:"timestamp" required:"true"`
 
 	// The identifier for the invalidation request. For example: IDFDVBD632BHDS5.
 	//
@@ -10686,7 +10686,7 @@ type InvalidationSummary struct {
 	_ struct{} `type:"structure"`
 
 	// CreateTime is a required field
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	CreateTime *time.Time `type:"timestamp" required:"true"`
 
 	// The unique ID for an invalidation request.
 	//
@@ -12268,7 +12268,7 @@ type PublicKey struct {
 	// A time you added a public key to CloudFront.
 	//
 	// CreatedTime is a required field
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	CreatedTime *time.Time `type:"timestamp" required:"true"`
 
 	// A unique ID assigned to a public key you've added to CloudFront.
 	//
@@ -12459,7 +12459,7 @@ type PublicKeySummary struct {
 	// Creation time for public key information summary.
 	//
 	// CreatedTime is a required field
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	CreatedTime *time.Time `type:"timestamp" required:"true"`
 
 	// Encoded key for public key information summary.
 	//
@@ -12985,7 +12985,7 @@ type StreamingDistribution struct {
 	Id *string `type:"string" required:"true"`
 
 	// The date and time that the distribution was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The current status of the RTMP distribution. When the status is Deployed,
 	// the distribution's information is propagated to all CloudFront edge locations.
@@ -13400,7 +13400,7 @@ type StreamingDistributionSummary struct {
 	// The date and time the distribution was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// PriceClass is a required field
 	PriceClass *string `type:"string" required:"true" enum:"PriceClass"`

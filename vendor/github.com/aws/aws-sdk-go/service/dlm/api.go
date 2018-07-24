@@ -847,10 +847,10 @@ type LifecyclePolicy struct {
 	_ struct{} `type:"structure"`
 
 	// The local date and time when the lifecycle policy was created.
-	DateCreated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	DateCreated *time.Time `type:"timestamp"`
 
 	// The local date and time when the lifecycle policy was last modified.
-	DateModified *time.Time `type:"timestamp" timestampFormat:"unix"`
+	DateModified *time.Time `type:"timestamp"`
 
 	// The description of the lifecycle policy.
 	Description *string `type:"string"`

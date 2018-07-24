@@ -11462,7 +11462,7 @@ type ApiKey struct {
 	_ struct{} `type:"structure"`
 
 	// The timestamp when the API Key was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// An AWS Marketplace customer identifier , when integrating with the AWS SaaS
 	// Marketplace.
@@ -11478,7 +11478,7 @@ type ApiKey struct {
 	Id *string `locationName:"id" type:"string"`
 
 	// The timestamp when the API Key was last updated.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the API Key.
 	Name *string `locationName:"name" type:"string"`
@@ -11861,13 +11861,13 @@ type ClientCertificate struct {
 	ClientCertificateId *string `locationName:"clientCertificateId" type:"string"`
 
 	// The timestamp when the client certificate was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// The description of the client certificate.
 	Description *string `locationName:"description" type:"string"`
 
 	// The timestamp when the client certificate will expire.
-	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp" timestampFormat:"unix"`
+	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp"`
 
 	// The PEM-encoded public key of the client certificate, which can be used to
 	// configure certificate authentication in the integration endpoint .
@@ -14757,7 +14757,7 @@ type Deployment struct {
 	ApiSummary map[string]map[string]*MethodSnapshot `locationName:"apiSummary" type:"map"`
 
 	// The date and time that the deployment resource was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// The description for the deployment resource.
 	Description *string `locationName:"description" type:"string"`
@@ -15024,7 +15024,7 @@ type DocumentationVersion struct {
 	_ struct{} `type:"structure"`
 
 	// The date when the API documentation snapshot is created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// The description of the API documentation snapshot.
 	Description *string `locationName:"description" type:"string"`
@@ -15087,7 +15087,7 @@ type DomainName struct {
 
 	// The timestamp when the certificate that was used by edge-optimized endpoint
 	// for this domain name was uploaded.
-	CertificateUploadDate *time.Time `locationName:"certificateUploadDate" type:"timestamp" timestampFormat:"unix"`
+	CertificateUploadDate *time.Time `locationName:"certificateUploadDate" type:"timestamp"`
 
 	// The domain name of the Amazon CloudFront distribution associated with this
 	// custom domain name for an edge-optimized endpoint. You set up this association
@@ -21252,7 +21252,7 @@ type RestApi struct {
 	BinaryMediaTypes []*string `locationName:"binaryMediaTypes" type:"list"`
 
 	// The timestamp when the API was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// The API's description.
 	Description *string `locationName:"description" type:"string"`
@@ -21501,7 +21501,7 @@ type Stage struct {
 	ClientCertificateId *string `locationName:"clientCertificateId" type:"string"`
 
 	// The timestamp when the stage was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// The identifier of the Deployment that the stage points to.
 	DeploymentId *string `locationName:"deploymentId" type:"string"`
@@ -21513,7 +21513,7 @@ type Stage struct {
 	DocumentationVersion *string `locationName:"documentationVersion" type:"string"`
 
 	// The timestamp when the stage last updated.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// A map that defines the method settings for a Stage resource. Keys (designated
 	// as /{method_setting_key below) are method paths defined as {resource_path}/{http_method}

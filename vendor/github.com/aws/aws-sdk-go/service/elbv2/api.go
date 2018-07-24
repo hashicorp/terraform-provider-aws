@@ -6081,7 +6081,7 @@ type LoadBalancer struct {
 	CanonicalHostedZoneId *string `type:"string"`
 
 	// The date and time the load balancer was created.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The public DNS name of the load balancer.
 	DNSName *string `type:"string"`
