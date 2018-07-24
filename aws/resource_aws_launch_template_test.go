@@ -180,6 +180,28 @@ func TestAccAWSLaunchTemplate_nonBurstable(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_networkInterface,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.0.associate_public_ip_address", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -367,6 +389,29 @@ resource "aws_launch_template" "foo" {
   instance_type = "m1.small"
   credit_specification {
     cpu_credits = "standard"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_networkInterface = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_launch_template" "test" {
+  name = "network-interface-launch-template"
+
+  network_interfaces {
+    network_interface_id = "${aws_network_interface.test.id}"
   }
 }
 `
