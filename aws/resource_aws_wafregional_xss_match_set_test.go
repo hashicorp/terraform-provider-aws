@@ -29,23 +29,23 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_xss_match_set.xss_match_set", "name", xssMatchSet),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.#", "1"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.data", ""),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.field_to_match.2316364334.data", ""),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.text_transformation", "NONE"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.text_transformation", "NONE"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.#", "1"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.data", ""),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.field_to_match.3756326843.data", ""),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.type", "URI"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.field_to_match.3756326843.type", "URI"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.text_transformation", "NONE"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.text_transformation", "NONE"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_xss_match_set.xss_match_set", "name", xssMatchSet),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.#", "2"),
 				),
 			},
 			{
@@ -79,7 +79,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_xss_match_set.xss_match_set", "name", xssMatchSetNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.#", "2"),
 				),
 			},
 		},
@@ -123,23 +123,23 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_xss_match_set.xss_match_set", "name", setName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.#", "1"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.data", ""),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.field_to_match.2316364334.data", ""),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.text_transformation", "NONE"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2018581549.text_transformation", "NONE"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.#", "1"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.data", ""),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.field_to_match.3756326843.data", ""),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.type", "URI"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.field_to_match.3756326843.type", "URI"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.text_transformation", "NONE"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2786024938.text_transformation", "NONE"),
 				),
 			},
 			{
@@ -149,23 +149,23 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_xss_match_set.xss_match_set", "name", setName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.field_to_match.#", "1"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2893682529.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.field_to_match.4253810390.data", "GET"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2893682529.field_to_match.4253810390.data", "GET"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.field_to_match.4253810390.type", "METHOD"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2893682529.field_to_match.4253810390.type", "METHOD"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.text_transformation", "HTML_ENTITY_DECODE"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.2893682529.text_transformation", "HTML_ENTITY_DECODE"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.field_to_match.#", "1"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.4270311415.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.field_to_match.281401076.data", ""),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.4270311415.field_to_match.281401076.data", ""),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.field_to_match.281401076.type", "BODY"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.4270311415.field_to_match.281401076.type", "BODY"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.text_transformation", "CMD_LINE"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.4270311415.text_transformation", "CMD_LINE"),
 				),
 			},
 		},
@@ -188,7 +188,7 @@ func TestAccAWSWafRegionalXssMatchSet_noTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_xss_match_set.xss_match_set", "name", setName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "0"),
+						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuples.#", "0"),
 				),
 			},
 		},
@@ -299,14 +299,14 @@ func testAccAWSWafRegionalXssMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "NONE"
     field_to_match {
       type = "URI"
     }
   }
 
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "NONE"
     field_to_match {
       type = "QUERY_STRING"
@@ -319,14 +319,14 @@ func testAccAWSWafRegionalXssMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "NONE"
     field_to_match {
       type = "URI"
     }
   }
 
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "NONE"
     field_to_match {
       type = "QUERY_STRING"
@@ -339,13 +339,13 @@ func testAccAWSWafRegionalXssMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "CMD_LINE"
     field_to_match {
       type = "BODY"
     }
   }
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "HTML_ENTITY_DECODE"
     field_to_match {
       type = "METHOD"

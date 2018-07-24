@@ -15,14 +15,14 @@ Provides a WAF Regional XSS Match Set Resource for use with Application Load Bal
 ```
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "xss_match_set"
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "NONE"
     field_to_match {
       type = "URI"
     }
   }
 
-  xss_match_tuple {
+  xss_match_tuples {
     text_transformation = "NONE"
     field_to_match {
       type = "QUERY_STRING"
@@ -36,11 +36,12 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the set
-* `xss_match_tuple` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
+* `xss_match_tuple` - **Deprecated** use `xss_match_tuples` instead.
+* `xss_match_tuples` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
 
 ### Nested fields
 
-#### `xss_match_tuple`
+#### `xss_match_tuples`
 
 * `field_to_match` - (Required) Specifies where in a web request to look for cross-site scripting attacks.
 * `text_transformation` - (Required) Which text transformation, if any, to perform on the web request before inspecting the request for cross-site scripting attacks.

@@ -24,6 +24,37 @@ func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
 				ForceNew: true,
 			},
 			"xss_match_tuple": &schema.Schema{
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"xss_match_tuples"},
+				Deprecated:    "use `xss_match_tuples` instead",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"field_to_match": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"data": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"text_transformation": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"xss_match_tuples": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -101,7 +132,11 @@ func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interfac
 
 	set := resp.XssMatchSet
 
-	d.Set("xss_match_tuple", flattenWafXssMatchTuples(set.XssMatchTuples))
+	if _, ok := d.GetOk("xss_match_tuple"); ok {
+		d.Set("xss_match_tuple", flattenWafXssMatchTuples(set.XssMatchTuples))
+	} else {
+		d.Set("xss_match_tuples", flattenWafXssMatchTuples(set.XssMatchTuples))
+	}
 	d.Set("name", set.Name)
 
 	return nil
@@ -119,6 +154,14 @@ func resourceAwsWafRegionalXssMatchSetUpdate(d *schema.ResourceData, meta interf
 		if err != nil {
 			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %s", err)
 		}
+	} else if d.HasChange("xss_match_tuples") {
+		o, n := d.GetChange("xss_match_tuples")
+		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
+
+		err := updateXssMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
+		if err != nil {
+			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %s", err)
+		}
 	}
 
 	return resourceAwsWafRegionalXssMatchSetRead(d, meta)
@@ -128,14 +171,18 @@ func resourceAwsWafRegionalXssMatchSetDelete(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
+	var oldTuples []interface{}
 	if v, ok := d.GetOk("xss_match_tuple"); ok {
-		oldTuples := v.(*schema.Set).List()
-		if len(oldTuples) > 0 {
-			noTuples := []interface{}{}
-			err := updateXssMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
-			if err != nil {
-				return fmt.Errorf("Error updating regional WAF XSS Match Set: %s", err)
-			}
+		oldTuples = v.(*schema.Set).List()
+	} else if v, ok := d.GetOk("xss_match_tuples"); ok {
+		oldTuples = v.(*schema.Set).List()
+	}
+
+	if len(oldTuples) > 0 {
+		noTuples := []interface{}{}
+		err := updateXssMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
+		if err != nil {
+			return fmt.Errorf("Error updating regional WAF XSS Match Set: %s", err)
 		}
 	}
 
