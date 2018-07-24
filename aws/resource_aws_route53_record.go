@@ -929,7 +929,7 @@ func expandRecordName(name, zone string) string {
 		if len(name) == 0 {
 			rn = zone
 		} else {
-			rn = strings.Join([]string{name, zone}, ".")
+			rn = strings.Join([]string{rn, zone}, ".")
 		}
 	}
 	return rn
