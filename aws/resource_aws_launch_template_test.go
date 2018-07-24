@@ -28,6 +28,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
+					resource.TestCheckResourceAttrSet(resName, "arn"),
 				),
 			},
 		},
