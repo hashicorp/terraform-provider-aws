@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -46,6 +47,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"default_version": {
@@ -481,6 +487,15 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set("tags", tagsToMap(lt.Tags))
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
