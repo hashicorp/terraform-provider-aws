@@ -10,13 +10,49 @@ description: |-
 
 ~> **NOTE:** This upgrade guide is a work in progress and will not be completed until the release of version 2.0.0 of the provider later this year.
 
-<!-- TOC depthFrom:2 -->
+Upgrade topics:
 
-- [data-source/aws_kms_secret: Data Source Deprecation and Migrating to aws_kms_secrets Data Source](#data-sourceaws_kms_secret-data-source-deprecation-and-migrating-to-aws_kms_secrets-data-source)
+<!-- TOC depthFrom:2 depthTo:2 -->
+
+- [data-source/aws_iam_role](#data-sourceaws_iam_role)
+- [data-source/aws_kms_secret](#data-sourceaws_kms_secret)
+- [data-source/aws_region](#data-sourceaws_region)
+- [resource/aws_api_gateway_api_key](#resourceaws_api_gateway_api_key)
+- [resource/aws_api_gateway_integration](#resourceaws_api_gateway_integration)
+- [resource/aws_api_gateway_integration_response](#resourceaws_api_gateway_integration_response)
+- [resource/aws_api_gateway_method](#resourceaws_api_gateway_method)
+- [resource/aws_api_gateway_method_response](#resourceaws_api_gateway_method_response)
+- [resource/aws_appautoscaling_policy](#resourceaws_appautoscaling_policy)
+- [resource/aws_autoscaling_policy](#resourceaws_autoscaling_policy)
+- [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
+- [resource/aws_cloudfront_distribution](#resourceaws_cloudfront_distribution)
+- [resource/aws_dx_lag](#resourceaws_dx_lag)
+- [resource/aws_ecs_service](#resourceaws_ecs_service)
+- [resource/aws_efs_file_system](#resourceaws_efs_file_system)
+- [resource/aws_instance](#resourceaws_instance)
+- [resource/aws_network_acl](#resourceaws_network_acl)
+- [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
+- [resource/aws_wafregional_byte_match_set](#resourceaws_wafregional_byte_match_set)
 
 <!-- /TOC -->
 
-## data-source/aws_kms_secret: Data Source Deprecation and Migrating to aws_kms_secrets Data Source
+## data-source/aws_iam_role
+
+### assume_role_policy Attribute Removal
+
+Switch your attribute references to the `assume_role_policy` attribute instead.
+
+### role_id Attribute Removal
+
+Switch your attribute references to the `unique_id` attribute instead.
+
+### role_name Argument Removal
+
+Switch your Terraform configuration to the `name` argument instead.
+
+## data-source/aws_kms_secret
+
+### Data Source Removal and Migrating to aws_kms_secrets Data Source
 
 The implementation of the `aws_kms_secret` data source, prior to Terraform AWS provider version 2.0.0, used dynamic attribute behavior which is not supported with Terraform 0.12 and beyond (full details available in [this GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/5144)).
 
@@ -74,5 +110,447 @@ resource "aws_rds_cluster" "example" {
   # ... other configuration ...
   master_password = "${data.aws_kms_secrets.example.plaintext["master_password"]}"
   master_username = "${data.aws_kms_secrets.example.plaintext["master_username"]}"
+}
+```
+
+## data-source/aws_region
+
+### current Argument Removal
+
+Simply remove `current = true` from your Terraform configuration. The data source defaults to the current provider region if no other filtering is enabled.
+
+## resource/aws_api_gateway_api_key
+
+### stage_key Argument Removal
+
+Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage. To migrate your Terraform configuration, the AWS provider implements support for usage plans with the following resources:
+
+* [`aws_api_gateway_usage_plan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
+* [`aws_api_gateway_usage_plan_key`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
+
+## resource/aws_api_gateway_integration
+
+### request_parameters_in_json Argument Removal
+
+Switch your Terraform configuration to the `request_parameters` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_api_gateway_integration" "example" {
+  # ... other configuration ...
+
+  request_parameters_in_json = <<PARAMS
+{
+    "integration.request.header.X-Authorization": "'static'"
+}
+PARAMS
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_api_gateway_integration" "example" {
+  # ... other configuration ...
+
+  request_parameters = {
+    "integration.request.header.X-Authorization" = "'static'"
+  }
+}
+```
+
+## resource/aws_api_gateway_integration_response
+
+### response_parameters_in_json Argument Removal
+
+Switch your Terraform configuration to the `response_parameters` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_api_gateway_integration_response" "example" {
+  # ... other configuration ...
+
+  response_parameters_in_json = <<PARAMS
+{
+    "method.response.header.Content-Type": "integration.response.body.type"
+}
+PARAMS
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_api_gateway_integration_response" "example" {
+  # ... other configuration ...
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.body.type"
+  }
+}
+```
+
+## resource/aws_api_gateway_method
+
+### request_parameters_in_json Argument Removal
+
+Switch your Terraform configuration to the `request_parameters` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_api_gateway_method" "example" {
+  # ... other configuration ...
+
+  request_parameters_in_json = <<PARAMS
+{
+    "method.request.header.Content-Type": false,
+    "method.request.querystring.page": true
+}
+PARAMS
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_api_gateway_method" "example" {
+  # ... other configuration ...
+
+  request_parameters = {
+    "method.request.header.Content-Type" = false
+    "method.request.querystring.page" = true
+  }
+}
+```
+
+## resource/aws_api_gateway_method_response
+
+### response_parameters_in_json Argument Removal
+
+Switch your Terraform configuration to the `response_parameters` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_api_gateway_method_response" "example" {
+  # ... other configuration ...
+
+  response_parameters_in_json = <<PARAMS
+{
+    "method.response.header.Content-Type": true
+}
+PARAMS
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_api_gateway_method_response" "example" {
+  # ... other configuration ...
+
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+```
+
+## resource/aws_appautoscaling_policy
+
+### Argument Removals
+
+The following arguments have been moved into a nested argument named `step_scaling_policy_configuration`:
+
+* `adjustment_type`
+* `cooldown`
+* `metric_aggregation_type`
+* `min_adjustment_magnitude`
+* `step_adjustment`
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_appautoscaling_policy" "example" {
+  # ... other configuration ...
+
+  adjustment_type         = "ChangeInCapacity"
+  cooldown                = 60
+  metric_aggregation_type = "Maximum"
+
+  step_adjustment {
+    metric_interval_upper_bound = 0
+    scaling_adjustment          = -1
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_appautoscaling_policy" "example" {
+  # ... other configuration ...
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Maximum"
+
+    step_adjustment {
+      metric_interval_upper_bound = 0
+      scaling_adjustment          = -1
+    }
+  }
+}
+```
+
+## resource/aws_autoscaling_policy
+
+### min_adjustment_step Argument Removal
+
+Switch your Terraform configuration to the `min_adjustment_magnitude` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_autoscaling_policy" "example" {
+  # ... other configuration ...
+
+  min_adjustment_step = 2
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_autoscaling_policy" "example" {
+  # ... other configuration ...
+
+  min_adjustment_magnitude = 2
+}
+```
+
+## resource/aws_batch_compute_environment
+
+### ecc_cluster_arn Attribute Removal
+
+Switch your attribute references to the `ecs_cluster_arn` attribute instead.
+
+## resource/aws_cloudfront_distribution
+
+### cache_behavior Argument Removal
+
+Switch your Terraform configuration to the `ordered_cache_behavior` argument instead. It behaves similar to the previous `cache_behavior` argument, however the ordering of the configurations in Terraform is now reflected in the distribution where previously it was indeterminate.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  cache_behavior {
+    # ... other configuration ...
+  }
+
+  cache_behavior {
+    # ... other configuration ...
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  ordered_cache_behavior {
+    # ... other configuration ...
+  }
+
+  ordered_cache_behavior {
+    # ... other configuration ...
+  }
+}
+```
+
+## resource/aws_dx_lag
+
+### number_of_connections Argument Removal
+
+Default connections have been removed as part of LAG creation. To migrate your Terraform configuration, the AWS provider implements the following resources:
+
+* [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html)
+* [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
+
+## resource/aws_ecs_service
+
+### placement_strategy Argument Removal
+
+Switch your Terraform configuration to the `ordered_placement_strategy` argument instead. It behaves similar to the previous `placement_strategy` argument, however the ordering of the configurations in Terraform is now reflected in the distribution where previously it was indeterminate.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_ecs_service" "example" {
+  # ... other configuration ...
+
+  placement_strategy {
+    # ... other configuration ...
+  }
+
+  placement_strategy {
+    # ... other configuration ...
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_ecs_service" "example" {
+  # ... other configuration ...
+
+  ordered_placement_strategy {
+    # ... other configuration ...
+  }
+
+  ordered_placement_strategy {
+    # ... other configuration ...
+  }
+}
+```
+
+## resource/aws_efs_file_system
+
+### reference_name Argument Removal
+
+Switch your Terraform configuration to the `creation_token` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_efs_file_system" "example" {
+  # ... other configuration ...
+
+  reference_name = "example"
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_efs_file_system" "example" {
+  # ... other configuration ...
+
+  creation_token = "example"
+}
+```
+
+## resource/aws_instance
+
+### network_interface_id Attribute Removal
+
+Switch your attribute references to the `primary_network_interface_id` attribute instead.
+
+## resource/aws_network_acl
+
+### subnet_id Argument Removal
+
+Switch your Terraform configuration to the `subnet_ids` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_network_acl" "example" {
+  # ... other configuration ...
+
+  subnet_id = "subnet-12345678"
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_network_acl" "example" {
+  # ... other configuration ...
+
+  subnet_ids = ["subnet-12345678"]
+}
+```
+
+## resource/aws_redshift_cluster
+
+### Argument Removals
+
+The following arguments have been moved into a nested argument named `logging`:
+
+* `bucket_name`
+* `enable_logging`
+* `s3_key_prefix`
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_redshift_cluster" "example" {
+  # ... other configuration ...
+
+  bucket_name    = "example"
+  enable_logging = true
+  s3_key_prefix  = "example"
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_redshift_cluster" "example" {
+  # ... other configuration ...
+
+  logging {
+    bucket_name    = "example"
+    enable         = true
+    s3_key_prefix  = "example"
+  }
+}
+```
+
+## resource/aws_wafregional_byte_match_set
+
+### byte_match_tuple Argument Removal
+
+Switch your Terraform configuration to the `byte_match_tuples` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_ecs_service" "example" {
+  # ... other configuration ...
+
+  byte_match_tuple {
+    # ... other configuration ...
+  }
+
+  byte_match_tuple {
+    # ... other configuration ...
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_ecs_service" "example" {
+  # ... other configuration ...
+
+  byte_match_tuples {
+    # ... other configuration ...
+  }
+
+  byte_match_tuples {
+    # ... other configuration ...
+  }
 }
 ```
