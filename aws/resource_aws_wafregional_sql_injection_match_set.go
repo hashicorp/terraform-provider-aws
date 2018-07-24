@@ -26,10 +26,46 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"sql_injection_match_tuple": {
+			"sql_injection_match_tuples": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Set:      resourceAwsWafRegionalSqlInjectionMatchSetTupleHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"field_to_match": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"data": {
+										Type:     schema.TypeString,
+										Optional: true,
+										StateFunc: func(v interface{}) string {
+											value := v.(string)
+											return strings.ToLower(value)
+										},
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"text_transformation": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"sql_injection_match_tuple": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"sql_injection_match_tuples"},
+				Deprecated:    "use `sql_injection_match_tuples` instead",
+				Set:           resourceAwsWafRegionalSqlInjectionMatchSetTupleHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
@@ -107,7 +143,11 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 	}
 
 	d.Set("name", resp.SqlInjectionMatchSet.Name)
-	d.Set("sql_injection_match_tuple", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
+	if _, ok := d.GetOk("sql_injection_match_tuple"); ok {
+		d.Set("sql_injection_match_tuple", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
+	} else {
+		d.Set("sql_injection_match_tuples", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
+	}
 
 	return nil
 }
@@ -124,6 +164,14 @@ func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, me
 		if err != nil {
 			return fmt.Errorf("[ERROR] Error updating Regional WAF SQL Injection Match Set: %s", err)
 		}
+	} else if d.HasChange("sql_injection_match_tuples") {
+		o, n := d.GetChange("sql_injection_match_tuples")
+		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
+
+		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Error updating Regional WAF SQL Injection Match Set: %s", err)
+		}
 	}
 
 	return resourceAwsWafRegionalSqlInjectionMatchSetRead(d, meta)
@@ -133,7 +181,12 @@ func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	oldTuples := d.Get("sql_injection_match_tuple").(*schema.Set).List()
+	var oldTuples []interface{}
+	if _, ok := d.GetOk("sql_injection_match_tuple"); ok {
+		oldTuples = d.Get("sql_injection_match_tuple").(*schema.Set).List()
+	} else {
+		oldTuples = d.Get("sql_injection_match_tuples").(*schema.Set).List()
+	}
 
 	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}

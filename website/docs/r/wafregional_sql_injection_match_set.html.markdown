@@ -15,7 +15,7 @@ Provides a WAF Regional SQL Injection Match Set Resource for use with Applicatio
 ```hcl
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
   name = "tf-sql_injection_match_set"
-  sql_injection_match_tuple {
+  sql_injection_match_tuples {
     text_transformation = "URL_DECODE"
     field_to_match {
       type = "QUERY_STRING"
@@ -29,11 +29,12 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
 The following arguments are supported:
 
 * `name` - (Required) The name or description of the SizeConstraintSet.
-* `sql_injection_match_tuple` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
+* `sql_injection_match_tuple` - **Deprecated**, use `sql_injection_match_tuples` instead.
+* `sql_injection_match_tuples` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
 
 ### Nested fields
 
-### `sql_injection_match_tuple`
+### `sql_injection_match_tuples`
 
 * `field_to_match` - (Required) Specifies where in a web request to look for snippets of malicious SQL code.
 * `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
