@@ -223,6 +223,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kms_ciphertext":                   dataSourceAwsKmsCiphertext(),
 			"aws_kms_key":                          dataSourceAwsKmsKey(),
 			"aws_kms_secret":                       dataSourceAwsKmsSecret(),
+			"aws_kms_secrets":                      dataSourceAwsKmsSecrets(),
 			"aws_lambda_function":                  dataSourceAwsLambdaFunction(),
 			"aws_lambda_invocation":                dataSourceAwsLambdaInvocation(),
 			"aws_launch_configuration":             dataSourceAwsLaunchConfiguration(),

@@ -11,10 +11,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsKmsSecret() *schema.Resource {
+func dataSourceAwsKmsSecrets() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "This data source will be removed in Terraform AWS provider version 2.0. Please see migration information available in: https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret",
-		Read:               dataSourceAwsKmsSecretRead,
+		Read: dataSourceAwsKmsSecretsRead,
 
 		Schema: map[string]*schema.Schema{
 			"secret": {
@@ -44,20 +43,23 @@ func dataSourceAwsKmsSecret() *schema.Resource {
 					},
 				},
 			},
-			"__has_dynamic_attributes": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"plaintext": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:      schema.TypeString,
+					Sensitive: true,
+				},
 			},
 		},
 	}
 }
 
-// dataSourceAwsKmsSecretRead decrypts the specified secrets
-func dataSourceAwsKmsSecretRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsKmsSecretsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
-	secrets := d.Get("secret").(*schema.Set)
 
-	d.SetId(time.Now().UTC().String())
+	secrets := d.Get("secret").(*schema.Set)
+	plaintext := make(map[string]string, len(secrets.List()))
 
 	for _, v := range secrets.List() {
 		secret := v.(map[string]interface{})
@@ -93,8 +95,14 @@ func dataSourceAwsKmsSecretRead(d *schema.ResourceData, meta interface{}) error 
 
 		// Set the secret via the name
 		log.Printf("[DEBUG] aws_kms_secret - successfully decrypted secret: %s", secret["name"].(string))
-		d.UnsafeSetFieldRaw(secret["name"].(string), string(resp.Plaintext))
+		plaintext[secret["name"].(string)] = string(resp.Plaintext)
 	}
+
+	if err := d.Set("plaintext", plaintext); err != nil {
+		return fmt.Errorf("error setting plaintext: %s", err)
+	}
+
+	d.SetId(time.Now().UTC().String())
 
 	return nil
 }
