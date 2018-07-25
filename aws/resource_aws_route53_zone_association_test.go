@@ -141,7 +141,7 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_route53_zone" "foo" {
-	name = "foo.com"
+	name = "foo.com."
 	vpc_id = "${aws_vpc.foo.id}"
 }
 

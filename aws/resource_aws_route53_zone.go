@@ -43,14 +43,12 @@ func resourceAwsRoute53Zone() *schema.Resource {
 			"vpc_id": &schema.Schema{
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"delegation_set_id"},
 			},
 
 			"vpc_region": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -232,6 +230,23 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).r53conn
 
 	d.Partial(true)
+
+	if _, delegationSetOk := d.GetOk("delegation_set_id"); !delegationSetOk && d.HasChange("vpc_id") {
+		v1, v2 := d.GetChange("vpc_id")
+		oldVpc := v1.(string)
+		newVpc := v2.(string)
+		oldRegion, newRegion := d.GetChange("vpc_region")
+		if oldVpc != "" && newVpc != "" {
+			if err := associateRoute53ZoneWithVpc(d.Id(), newVpc, newRegion.(string), meta); err != nil {
+				return err
+			}
+			if err := dissociateVpcFromRoute53Zone(d.Id(), oldVpc, oldRegion.(string), meta); err != nil {
+				return err
+			}
+			d.SetPartial("vpc_id")
+			d.SetPartial("vpc_region")
+		}
+	}
 
 	if d.HasChange("comment") {
 		zoneInput := route53.UpdateHostedZoneCommentInput{

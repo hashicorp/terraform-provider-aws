@@ -2,12 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strings"
-	"time"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -42,49 +39,20 @@ func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
-
-	req := &route53.AssociateVPCWithHostedZoneInput{
-		HostedZoneId: aws.String(d.Get("zone_id").(string)),
-		VPC: &route53.VPC{
-			VPCId:     aws.String(d.Get("vpc_id").(string)),
-			VPCRegion: aws.String(meta.(*AWSClient).region),
-		},
-		Comment: aws.String("Managed by Terraform"),
-	}
+	zoneId := d.Get("zone_id").(string)
+	vpcId := d.Get("vpc_id").(string)
+	region := meta.(*AWSClient).region
 	if w := d.Get("vpc_region"); w != "" {
-		req.VPC.VPCRegion = aws.String(w.(string))
+		region = w.(string)
 	}
 
-	log.Printf("[DEBUG] Associating Route53 Private Zone %s with VPC %s with region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
-	var err error
-	resp, err := r53.AssociateVPCWithHostedZone(req)
-	if err != nil {
+	if err := associateRoute53ZoneWithVpc(zoneId, vpcId, region, meta); err != nil {
 		return err
 	}
 
 	// Store association id
-	d.SetId(fmt.Sprintf("%s:%s", *req.HostedZoneId, *req.VPC.VPCId))
-	d.Set("vpc_region", req.VPC.VPCRegion)
-
-	// Wait until we are done initializing
-	wait := resource.StateChangeConf{
-		Delay:      30 * time.Second,
-		Pending:    []string{"PENDING"},
-		Target:     []string{"INSYNC"},
-		Timeout:    10 * time.Minute,
-		MinTimeout: 2 * time.Second,
-		Refresh: func() (result interface{}, state string, err error) {
-			changeRequest := &route53.GetChangeInput{
-				Id: aws.String(cleanChangeID(*resp.ChangeInfo.Id)),
-			}
-			return resourceAwsGoRoute53Wait(r53, changeRequest)
-		},
-	}
-	_, err = wait.WaitForState()
-	if err != nil {
-		return err
-	}
+	d.SetId(fmt.Sprintf("%s:%s", zoneId, vpcId))
+	d.Set("vpc_region", region)
 
 	return resourceAwsRoute53ZoneAssociationUpdate(d, meta)
 }
@@ -119,22 +87,9 @@ func resourceAwsRoute53ZoneAssociationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
 	zone_id, vpc_id := resourceAwsRoute53ZoneAssociationParseId(d.Id())
-	log.Printf("[DEBUG] Deleting Route53 Private Zone (%s) association (VPC: %s)",
-		zone_id, vpc_id)
 
-	req := &route53.DisassociateVPCFromHostedZoneInput{
-		HostedZoneId: aws.String(zone_id),
-		VPC: &route53.VPC{
-			VPCId:     aws.String(vpc_id),
-			VPCRegion: aws.String(d.Get("vpc_region").(string)),
-		},
-		Comment: aws.String("Managed by Terraform"),
-	}
-
-	_, err := r53.DisassociateVPCFromHostedZone(req)
-	if err != nil {
+	if err := dissociateVpcFromRoute53Zone(zone_id, vpc_id, d.Get("vpc_region").(string), meta); err != nil {
 		return err
 	}
 
@@ -146,4 +101,56 @@ func resourceAwsRoute53ZoneAssociationParseId(id string) (zone_id, vpc_id string
 	zone_id = parts[0]
 	vpc_id = parts[1]
 	return
+}
+
+func associateRoute53ZoneWithVpc(zoneId string, vpcId string, vpcRegion string, meta interface{}) error {
+	r53 := meta.(*AWSClient).r53conn
+
+	req := &route53.AssociateVPCWithHostedZoneInput{
+		HostedZoneId: aws.String(zoneId),
+		VPC: &route53.VPC{
+			VPCId:     aws.String(vpcId),
+			VPCRegion: aws.String(vpcRegion),
+		},
+		Comment: aws.String("Managed by Terraform"),
+	}
+
+	log.Printf("[DEBUG] Associating Route53 Private Zone %s with VPC %s with region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
+	var err error
+	resp, err := r53.AssociateVPCWithHostedZone(req)
+	if err != nil {
+		return err
+	}
+
+	if err := waitForRoute53RecordSetToSync(r53, cleanChangeID(*resp.ChangeInfo.Id)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func dissociateVpcFromRoute53Zone(zoneId string, vpcId string, vpcRegion string, meta interface{}) error {
+	r53 := meta.(*AWSClient).r53conn
+
+	req := &route53.DisassociateVPCFromHostedZoneInput{
+		HostedZoneId: aws.String(zoneId),
+		VPC: &route53.VPC{
+			VPCId:     aws.String(vpcId),
+			VPCRegion: aws.String(vpcRegion),
+		},
+		Comment: aws.String("Managed by Terraform"),
+	}
+
+	log.Printf("[DEBUG] Dissociating VPC %s with region %s from Private Zone %s", *req.VPC.VPCId, *req.VPC.VPCRegion, *req.HostedZoneId)
+	var err error
+	resp, err := r53.DisassociateVPCFromHostedZone(req)
+	if err != nil {
+		return err
+	}
+
+	if err := waitForRoute53RecordSetToSync(r53, cleanChangeID(*resp.ChangeInfo.Id)); err != nil {
+		return err
+	}
+
+	return nil
 }

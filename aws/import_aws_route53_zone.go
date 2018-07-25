@@ -23,8 +23,8 @@ func resourceAwsRoute53ZoneImportState(
 	if len(zone.VPCs) > 1 {
 		for index, vpc := range zone.VPCs {
 			if index == 0 {
-				d.Set("vpc_region", *vpc.VPCRegion)
-				d.Set("vpc_id", *vpc.VPCId)
+				d.Set("vpc_region", vpc.VPCRegion)
+				d.Set("vpc_id", vpc.VPCId)
 				continue
 			}
 
@@ -32,8 +32,8 @@ func resourceAwsRoute53ZoneImportState(
 			associationData := zoneAssociation.Data(nil)
 			associationData.SetType("aws_route53_zone_association")
 			associationData.SetId(fmt.Sprintf("%s:%s", d.Id(), *vpc.VPCId))
-			associationData.Set("vpc_region", *vpc.VPCRegion)
-			associationData.Set("vpc_id", *vpc.VPCId)
+			associationData.Set("vpc_region", vpc.VPCRegion)
+			associationData.Set("vpc_id", vpc.VPCId)
 			associationData.Set("zone_id", d.Id())
 			results = append(results, associationData)
 		}
