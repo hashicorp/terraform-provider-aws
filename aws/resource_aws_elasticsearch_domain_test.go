@@ -1103,22 +1103,20 @@ resource "aws_cognito_identity_pool" "example" {
 resource "aws_iam_role" "example" {
 	name = "tf-test-%d" 
 	path = "/service-role/"
-	
-	assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "es.amazonaws.com"
-			},
-			"Effect": "Allow",
-			"Sid": ""
-		}
-	]
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role-policy.json}"
 }
-	EOF
+
+data "aws_iam_policy_document" "assume-role-policy" {
+  statement {
+    sid     = ""
+		actions = ["sts:AssumeRole"]
+		effect  = "Allow"
+		
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
+    }
+  }
 }
 	
 resource "aws_iam_role_policy_attachment" "example" {
@@ -1129,11 +1127,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 resource "aws_elasticsearch_domain" "example" {
 	domain_name = "tf-test-%d"
 
-	elasticsearch_version = "6.0"
-	
-	cluster_config {
-		instance_type = "t2.small.elasticsearch"
-	}
+	elasticsearch_version = "5.5"
 
   cognito_options {
 		enabled = true
@@ -1147,7 +1141,10 @@ resource "aws_elasticsearch_domain" "example" {
     volume_size = 10
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.example"]
+  depends_on = [
+		"aws_iam_role.example",
+		"aws_iam_role_policy_attachment.example"
+	]
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }
