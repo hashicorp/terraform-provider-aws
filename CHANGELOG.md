@@ -23,6 +23,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_route53_record: Prevent DomainLabelEmpty errors when expanding record names with trailing period [GH-5312]
+* resource/aws_ses_identity_notification_topic: Prevent panic when API returns no attributes [GH-5327]
 * resource/aws_ssm_parameter: Reduce DescribeParameters API calls by switching filtering logic [GH-5325]
 
 ## 1.28.0 (July 18, 2018)
