@@ -14,11 +14,11 @@ ENHANCEMENTS:
 
 * data-source/aws_iam_role: Add `permissions_boundary` attribute [GH-5186]
 * data-source/aws_vpc: Add `arn` attribute [GH-5300]
+* resource/aws_default_vpc: Add `arn` attribute [GH-5300]
 * resource/aws_instance: Add `cpu_core_count` and `cpu_threads_per_core` arguments [GH-5159]
 * resource/aws_launch_template: Add `arn` attribute [GH-5306]
 * resource/aws_secretsmanager_secret: Add `policy` argument [GH-5290]
 * resource/aws_vpc: Add `arn` attribute [GH-5300]
-* resource/aws_default_vpc: Add `arn` attribute [GH-5300]
 
 BUG FIXES:
 
