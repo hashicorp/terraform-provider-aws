@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_kms_secrets` [GH-5195]
+* **New Data Source:** `aws_network_interfaces` [GH-5324]
 * **New Guide:** `AWS Provider Version 2 Upgrade` [GH-5195]
 
 ENHANCEMENTS:
