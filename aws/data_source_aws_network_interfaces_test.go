@@ -53,7 +53,6 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
-  availability_zone = "us-west-2a"
   vpc_id = "${aws_vpc.test.id}"
   tags {
     Name = "terraform-testacc-eni-data-source-basic-%s"
@@ -79,7 +78,7 @@ func testAccDataSourceAwsNetworkInterfacesConfig_Filter(rName string) string {
 data "aws_network_interfaces" "test" {
   filter {
     name   = "subnet-id"
-    values = ["${aws_network_interface.test.subnet_id}"]
+    values = ["${aws_network_interface.test.subnet_id}", "${aws_network_interface.test1.subnet_id}"]
   }
 }
 `
