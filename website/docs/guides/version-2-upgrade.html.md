@@ -12,7 +12,7 @@ description: |-
 
 Version 2.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. This guide is intended to help with that process and focuses only on changes from version 1.X to version 2.0.0.
 
-Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform run output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
+Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
 
 Upgrade topics:
 
@@ -34,6 +34,7 @@ Upgrade topics:
 - [Resource: aws_dx_lag](#resource-aws_dx_lag)
 - [Resource: aws_ecs_service](#resource-aws_ecs_service)
 - [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
+- [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
@@ -482,6 +483,32 @@ resource "aws_efs_file_system" "example" {
 }
 ```
 
+## Resource: aws_elasticache_cluster
+
+### availability_zones Argument Removal
+
+Switch your Terraform configuration to the `preferred_availability_zones` argument instead. The argument is still optional and the API will continue to automatically choose Availability Zones for nodes if not specified. The new argument will also continue to match the APIs required behavior that the length of the list must be the same as `num_cache_nodes`.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_elasticache_cluster" "example" {
+  # ... other configuration ...
+
+  availability_zones = ["us-west-2a", "us-west-2b"]
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_elasticache_cluster" "example" {
+  # ... other configuration ...
+
+  preferred_availability_zones = ["us-west-2a", "us-west-2b"]
+}
+```
+
 ## Resource: aws_instance
 
 ### network_interface_id Attribute Removal
@@ -521,7 +548,7 @@ resource "aws_network_acl" "example" {
 The following arguments have been moved into a nested argument named `logging`:
 
 * `bucket_name`
-* `enable_logging`
+* `enable_logging` (also renamed to just `enable`)
 * `s3_key_prefix`
 
 For example, given this previous configuration:
