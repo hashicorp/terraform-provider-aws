@@ -16,27 +16,35 @@ import (
 func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.waf_acl"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &v),
+					testAccCheckAWSWafWebAclExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+						resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "name", wafAclName),
+						resourceName, "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+						resourceName, "rules.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "metric_name", wafAclName),
+						resourceName, "metric_name", wafAclName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The WAF ACL rule resource doesn't GET rules
+				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -45,6 +53,7 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 func TestAccAWSWafWebAcl_group(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafaclgroup%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.waf_acl"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,18 +63,25 @@ func TestAccAWSWafWebAcl_group(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSWafWebAclGroupConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &v),
+					testAccCheckAWSWafWebAclExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+						resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "name", wafAclName),
+						resourceName, "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+						resourceName, "rules.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "metric_name", wafAclName),
+						resourceName, "metric_name", wafAclName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The WAF ACL rule resource doesn't GET rules
+				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -75,6 +91,7 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 	var before, after waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.waf_acl"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -84,34 +101,41 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAWSWafWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &before),
+					testAccCheckAWSWafWebAclExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+						resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "name", wafAclName),
+						resourceName, "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+						resourceName, "rules.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "metric_name", wafAclName),
+						resourceName, "metric_name", wafAclName),
 				),
 			},
 			{
 				Config: testAccAWSWafWebAclConfigChangeName(wafAclNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &after),
+					testAccCheckAWSWafWebAclExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+						resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "name", wafAclNewName),
+						resourceName, "name", wafAclNewName),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+						resourceName, "rules.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "metric_name", wafAclNewName),
+						resourceName, "metric_name", wafAclNewName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The WAF ACL rule resource doesn't GET rules
+				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -121,6 +145,7 @@ func TestAccAWSWafWebAcl_changeDefaultAction(t *testing.T) {
 	var before, after waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.waf_acl"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -130,34 +155,41 @@ func TestAccAWSWafWebAcl_changeDefaultAction(t *testing.T) {
 			{
 				Config: testAccAWSWafWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &before),
+					testAccCheckAWSWafWebAclExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+						resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.4234791575.type", "ALLOW"),
+						resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "name", wafAclName),
+						resourceName, "name", wafAclName),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+						resourceName, "rules.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "metric_name", wafAclName),
+						resourceName, "metric_name", wafAclName),
 				),
 			},
 			{
 				Config: testAccAWSWafWebAclConfigDefaultAction(wafAclNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &after),
+					testAccCheckAWSWafWebAclExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.#", "1"),
+						resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "default_action.2267395054.type", "BLOCK"),
+						resourceName, "default_action.2267395054.type", "BLOCK"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "name", wafAclNewName),
+						resourceName, "name", wafAclNewName),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "rules.#", "1"),
+						resourceName, "rules.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_waf_web_acl.waf_acl", "metric_name", wafAclNewName),
+						resourceName, "metric_name", wafAclNewName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The WAF ACL rule resource doesn't GET rules
+				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -166,6 +198,7 @@ func TestAccAWSWafWebAcl_changeDefaultAction(t *testing.T) {
 func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.waf_acl"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -175,7 +208,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafWebAclExists("aws_waf_web_acl.waf_acl", &v),
+					testAccCheckAWSWafWebAclExists(resourceName, &v),
 					testAccCheckAWSWafWebAclDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,

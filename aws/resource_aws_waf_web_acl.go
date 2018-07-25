@@ -17,6 +17,9 @@ func resourceAwsWafWebAcl() *schema.Resource {
 		Read:   resourceAwsWafWebAclRead,
 		Update: resourceAwsWafWebAclUpdate,
 		Delete: resourceAwsWafWebAclDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
