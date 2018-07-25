@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_kms_secret
 
-!> **WARNING:** This data source is deprecated and will be removed in the next major version (2.0.0) of the AWS provider. You can migrate existing Terraform configurations to the [`aws_kms_secrets` data source](/docs/providers/aws/d/kms_secrets.html) following instructions available in the [Terraform AWS Provider Version 2 Upgrade Guide](/docs/providers/aws/guides/version-2-upgrade.html).
+!> **WARNING:** This data source is deprecated and will be removed in the next major version. You can migrate existing configurations to the [`aws_kms_secrets` data source](/docs/providers/aws/d/kms_secrets.html) following instructions available in the [Version 2 Upgrade Guide](/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret).
 
 The KMS secret data source allows you to use data encrypted with the AWS KMS
 service within your resource definitions.

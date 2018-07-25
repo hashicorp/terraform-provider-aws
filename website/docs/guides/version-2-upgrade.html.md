@@ -8,37 +8,70 @@ description: |-
 
 # Terraform AWS Provider Version 2 Upgrade Guide
 
-~> **NOTE:** This upgrade guide is a work in progress and will not be completed until the release of version 2.0.0 of the provider later this year.
+~> **NOTE:** This upgrade guide is a work in progress and will not be completed until the release of version 2.0.0 of the provider later this year. Many of the topics discussed, except for the actual provider upgrade, can be performed using the most recent 1.X version of the provider.
+
+Version 2.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. This guide is intended to help with that process and focuses only on changes from version 1.X to version 2.0.0.
+
+Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform run output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
 
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
 
-- [data-source/aws_iam_role](#data-sourceaws_iam_role)
-- [data-source/aws_kms_secret](#data-sourceaws_kms_secret)
-- [data-source/aws_region](#data-sourceaws_region)
-- [resource/aws_api_gateway_api_key](#resourceaws_api_gateway_api_key)
-- [resource/aws_api_gateway_integration](#resourceaws_api_gateway_integration)
-- [resource/aws_api_gateway_integration_response](#resourceaws_api_gateway_integration_response)
-- [resource/aws_api_gateway_method](#resourceaws_api_gateway_method)
-- [resource/aws_api_gateway_method_response](#resourceaws_api_gateway_method_response)
-- [resource/aws_appautoscaling_policy](#resourceaws_appautoscaling_policy)
-- [resource/aws_autoscaling_policy](#resourceaws_autoscaling_policy)
-- [resource/aws_batch_compute_environment](#resourceaws_batch_compute_environment)
-- [resource/aws_cloudfront_distribution](#resourceaws_cloudfront_distribution)
-- [resource/aws_dx_lag](#resourceaws_dx_lag)
-- [resource/aws_ecs_service](#resourceaws_ecs_service)
-- [resource/aws_efs_file_system](#resourceaws_efs_file_system)
-- [resource/aws_instance](#resourceaws_instance)
-- [resource/aws_network_acl](#resourceaws_network_acl)
-- [resource/aws_redshift_cluster](#resourceaws_redshift_cluster)
-- [resource/aws_wafregional_byte_match_set](#resourceaws_wafregional_byte_match_set)
+- [Provider Version Configuration](#provider-version-configuration)
+- [Data Source: aws_iam_role](#data-source-aws_iam_role)
+- [Data Source: aws_kms_secret](#data-source-aws_kms_secret)
+- [Data Source: aws_region](#data-source-aws_region)
+- [Resource: aws_api_gateway_api_key](#resource-aws_api_gateway_api_key)
+- [Resource: aws_api_gateway_integration](#resource-aws_api_gateway_integration)
+- [Resource: aws_api_gateway_integration_response](#resource-aws_api_gateway_integration_response)
+- [Resource: aws_api_gateway_method](#resource-aws_api_gateway_method)
+- [Resource: aws_api_gateway_method_response](#resource-aws_api_gateway_method_response)
+- [Resource: aws_appautoscaling_policy](#resource-aws_appautoscaling_policy)
+- [Resource: aws_autoscaling_policy](#resource-aws_autoscaling_policy)
+- [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
+- [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
+- [Resource: aws_dx_lag](#resource-aws_dx_lag)
+- [Resource: aws_ecs_service](#resource-aws_ecs_service)
+- [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
+- [Resource: aws_instance](#resource-aws_instance)
+- [Resource: aws_network_acl](#resource-aws_network_acl)
+- [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
+- [Resource: aws_wafregional_byte_match_set](#resource-aws_wafregional_byte_match_set)
 
 <!-- /TOC -->
 
-## data-source/aws_iam_role
+## Provider Version Configuration
 
-### assume_role_policy Attribute Removal
+!> **WARNING:** This topic is placeholder documentation until version 2.0.0 is released later this year.
+
+-> Before upgrading to version 2.0.0, it is recommended to upgrade to the most recent 1.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
+
+It is recommended to use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
+
+For example, given this previous configuration:
+
+```hcl
+provider "aws" {
+  # ... other configuration ...
+
+  version = "~> 1.29.0"
+}
+```
+
+An updated configuration:
+
+```hcl
+provider "aws" {
+  # ... other configuration ...
+
+  version = "~> 2.0.0"
+}
+```
+
+## Data Source: aws_iam_role
+
+### assume_role_policy_document Attribute Removal
 
 Switch your attribute references to the `assume_role_policy` attribute instead.
 
@@ -50,7 +83,7 @@ Switch your attribute references to the `unique_id` attribute instead.
 
 Switch your Terraform configuration to the `name` argument instead.
 
-## data-source/aws_kms_secret
+## Data Source: aws_kms_secret
 
 ### Data Source Removal and Migrating to aws_kms_secrets Data Source
 
@@ -113,13 +146,13 @@ resource "aws_rds_cluster" "example" {
 }
 ```
 
-## data-source/aws_region
+## Data Source: aws_region
 
 ### current Argument Removal
 
 Simply remove `current = true` from your Terraform configuration. The data source defaults to the current provider region if no other filtering is enabled.
 
-## resource/aws_api_gateway_api_key
+## Resource: aws_api_gateway_api_key
 
 ### stage_key Argument Removal
 
@@ -128,7 +161,7 @@ Since the API Gateway usage plans feature was launched on August 11, 2016, usage
 * [`aws_api_gateway_usage_plan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
 * [`aws_api_gateway_usage_plan_key`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
 
-## resource/aws_api_gateway_integration
+## Resource: aws_api_gateway_integration
 
 ### request_parameters_in_json Argument Removal
 
@@ -160,7 +193,7 @@ resource "aws_api_gateway_integration" "example" {
 }
 ```
 
-## resource/aws_api_gateway_integration_response
+## Resource: aws_api_gateway_integration_response
 
 ### response_parameters_in_json Argument Removal
 
@@ -192,7 +225,7 @@ resource "aws_api_gateway_integration_response" "example" {
 }
 ```
 
-## resource/aws_api_gateway_method
+## Resource: aws_api_gateway_method
 
 ### request_parameters_in_json Argument Removal
 
@@ -226,7 +259,7 @@ resource "aws_api_gateway_method" "example" {
 }
 ```
 
-## resource/aws_api_gateway_method_response
+## Resource: aws_api_gateway_method_response
 
 ### response_parameters_in_json Argument Removal
 
@@ -258,7 +291,7 @@ resource "aws_api_gateway_method_response" "example" {
 }
 ```
 
-## resource/aws_appautoscaling_policy
+## Resource: aws_appautoscaling_policy
 
 ### Argument Removals
 
@@ -306,7 +339,7 @@ resource "aws_appautoscaling_policy" "example" {
 }
 ```
 
-## resource/aws_autoscaling_policy
+## Resource: aws_autoscaling_policy
 
 ### min_adjustment_step Argument Removal
 
@@ -332,13 +365,13 @@ resource "aws_autoscaling_policy" "example" {
 }
 ```
 
-## resource/aws_batch_compute_environment
+## Resource: aws_batch_compute_environment
 
 ### ecc_cluster_arn Attribute Removal
 
 Switch your attribute references to the `ecs_cluster_arn` attribute instead.
 
-## resource/aws_cloudfront_distribution
+## Resource: aws_cloudfront_distribution
 
 ### cache_behavior Argument Removal
 
@@ -376,7 +409,7 @@ resource "aws_cloudfront_distribution" "example" {
 }
 ```
 
-## resource/aws_dx_lag
+## Resource: aws_dx_lag
 
 ### number_of_connections Argument Removal
 
@@ -385,7 +418,7 @@ Default connections have been removed as part of LAG creation. To migrate your T
 * [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html)
 * [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
 
-## resource/aws_ecs_service
+## Resource: aws_ecs_service
 
 ### placement_strategy Argument Removal
 
@@ -423,7 +456,7 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
-## resource/aws_efs_file_system
+## Resource: aws_efs_file_system
 
 ### reference_name Argument Removal
 
@@ -449,13 +482,13 @@ resource "aws_efs_file_system" "example" {
 }
 ```
 
-## resource/aws_instance
+## Resource: aws_instance
 
 ### network_interface_id Attribute Removal
 
 Switch your attribute references to the `primary_network_interface_id` attribute instead.
 
-## resource/aws_network_acl
+## Resource: aws_network_acl
 
 ### subnet_id Argument Removal
 
@@ -481,7 +514,7 @@ resource "aws_network_acl" "example" {
 }
 ```
 
-## resource/aws_redshift_cluster
+## Resource: aws_redshift_cluster
 
 ### Argument Removals
 
@@ -517,7 +550,7 @@ resource "aws_redshift_cluster" "example" {
 }
 ```
 
-## resource/aws_wafregional_byte_match_set
+## Resource: aws_wafregional_byte_match_set
 
 ### byte_match_tuple Argument Removal
 
