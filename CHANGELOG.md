@@ -1,5 +1,14 @@
 ## 1.29.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_kms_secret: This data source has been deprecated and will be removed in the next major version. This is required to support the upcoming Terraform 0.12. A new `aws_kms_secrets` data source is available that allows for the same multiple KMS secret decryption functionality, but requires different attribute references. Full migration information is available in the new AWS Provider Version 2 Upgrade guide under the `Data Source: aws_kms_secret` section.
+
+FEATURES:
+
+* **New Data Source:** `aws_kms_secrets` [GH-5195]
+* **New Guide:** `AWS Provider Version 2 Upgrade` [GH-5195]
+
 ENHANCEMENTS:
 
 * data-source/aws_iam_role: Add `permissions_boundary` attribute [GH-5186]
