@@ -1,4 +1,4 @@
-## 1.29.0 (Unreleased)
+## 1.29.0 (July 26, 2018)
 
 NOTES:
 
@@ -6,29 +6,29 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_kms_secrets` [GH-5195]
-* **New Data Source:** `aws_network_interfaces` [GH-5324]
-* **New Guide:** `AWS Provider Version 2 Upgrade` [GH-5195]
+* **New Data Source:** `aws_kms_secrets` ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
+* **New Data Source:** `aws_network_interfaces` ([#5324](https://github.com/terraform-providers/terraform-provider-aws/issues/5324))
+* **New Guide:** `AWS Provider Version 2 Upgrade` ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_role: Add `permissions_boundary` attribute [GH-5186]
-* data-source/aws_vpc: Add `arn` attribute [GH-5300]
-* resource/aws_default_vpc: Add `arn` attribute [GH-5300]
-* resource/aws_instance: Add `cpu_core_count` and `cpu_threads_per_core` arguments [GH-5159]
-* resource/aws_lambda_permission: Add `event_source_token` argument (support Alexa Skills) [GH-5264]
-* resource/aws_launch_template: Add `arn` attribute [GH-5306]
-* resource/aws_secretsmanager_secret: Add `policy` argument [GH-5290]
-* resource/aws_vpc: Add `arn` attribute [GH-5300]
-* resource/aws_waf_web_acl: Support resource import [GH-5337]
+* data-source/aws_iam_role: Add `permissions_boundary` attribute ([#5186](https://github.com/terraform-providers/terraform-provider-aws/issues/5186))
+* data-source/aws_vpc: Add `arn` attribute ([#5300](https://github.com/terraform-providers/terraform-provider-aws/issues/5300))
+* resource/aws_default_vpc: Add `arn` attribute ([#5300](https://github.com/terraform-providers/terraform-provider-aws/issues/5300))
+* resource/aws_instance: Add `cpu_core_count` and `cpu_threads_per_core` arguments ([#5159](https://github.com/terraform-providers/terraform-provider-aws/issues/5159))
+* resource/aws_lambda_permission: Add `event_source_token` argument (support Alexa Skills) ([#5264](https://github.com/terraform-providers/terraform-provider-aws/issues/5264))
+* resource/aws_launch_template: Add `arn` attribute ([#5306](https://github.com/terraform-providers/terraform-provider-aws/issues/5306))
+* resource/aws_secretsmanager_secret: Add `policy` argument ([#5290](https://github.com/terraform-providers/terraform-provider-aws/issues/5290))
+* resource/aws_vpc: Add `arn` attribute ([#5300](https://github.com/terraform-providers/terraform-provider-aws/issues/5300))
+* resource/aws_waf_web_acl: Support resource import ([#5337](https://github.com/terraform-providers/terraform-provider-aws/issues/5337))
 
 BUG FIXES:
 
-* data-source/aws_vpc_endpoint_service: Perform client side filtering to workaround server side filtering issues in AWS China and AWS GovCloud (US) [GH-4592]
-* resource/aws_kinesis_firehose_delivery_stream: Force new resource for `kinesis_source_configuration` argument changes [GH-5332]
-* resource/aws_route53_record: Prevent DomainLabelEmpty errors when expanding record names with trailing period [GH-5312]
-* resource/aws_ses_identity_notification_topic: Prevent panic when API returns no attributes [GH-5327]
-* resource/aws_ssm_parameter: Reduce DescribeParameters API calls by switching filtering logic [GH-5325]
+* data-source/aws_vpc_endpoint_service: Perform client side filtering to workaround server side filtering issues in AWS China and AWS GovCloud (US) ([#4592](https://github.com/terraform-providers/terraform-provider-aws/issues/4592))
+* resource/aws_kinesis_firehose_delivery_stream: Force new resource for `kinesis_source_configuration` argument changes ([#5332](https://github.com/terraform-providers/terraform-provider-aws/issues/5332))
+* resource/aws_route53_record: Prevent DomainLabelEmpty errors when expanding record names with trailing period ([#5312](https://github.com/terraform-providers/terraform-provider-aws/issues/5312))
+* resource/aws_ses_identity_notification_topic: Prevent panic when API returns no attributes ([#5327](https://github.com/terraform-providers/terraform-provider-aws/issues/5327))
+* resource/aws_ssm_parameter: Reduce DescribeParameters API calls by switching filtering logic ([#5325](https://github.com/terraform-providers/terraform-provider-aws/issues/5325))
 
 ## 1.28.0 (July 18, 2018)
 
