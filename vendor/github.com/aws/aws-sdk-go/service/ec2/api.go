@@ -70485,6 +70485,60 @@ const (
 	// InstanceTypeR416xlarge is a InstanceType enum value
 	InstanceTypeR416xlarge = "r4.16xlarge"
 
+	// InstanceTypeR5Large is a InstanceType enum value
+	InstanceTypeR5Large = "r5.large"
+
+	// InstanceTypeR5Xlarge is a InstanceType enum value
+	InstanceTypeR5Xlarge = "r5.xlarge"
+
+	// InstanceTypeR52xlarge is a InstanceType enum value
+	InstanceTypeR52xlarge = "r5.2xlarge"
+
+	// InstanceTypeR54xlarge is a InstanceType enum value
+	InstanceTypeR54xlarge = "r5.4xlarge"
+
+	// InstanceTypeR58xlarge is a InstanceType enum value
+	InstanceTypeR58xlarge = "r5.8xlarge"
+
+	// InstanceTypeR512xlarge is a InstanceType enum value
+	InstanceTypeR512xlarge = "r5.12xlarge"
+
+	// InstanceTypeR516xlarge is a InstanceType enum value
+	InstanceTypeR516xlarge = "r5.16xlarge"
+
+	// InstanceTypeR524xlarge is a InstanceType enum value
+	InstanceTypeR524xlarge = "r5.24xlarge"
+
+	// InstanceTypeR5Metal is a InstanceType enum value
+	InstanceTypeR5Metal = "r5.metal"
+
+	// InstanceTypeR5dLarge is a InstanceType enum value
+	InstanceTypeR5dLarge = "r5d.large"
+
+	// InstanceTypeR5dXlarge is a InstanceType enum value
+	InstanceTypeR5dXlarge = "r5d.xlarge"
+
+	// InstanceTypeR5d2xlarge is a InstanceType enum value
+	InstanceTypeR5d2xlarge = "r5d.2xlarge"
+
+	// InstanceTypeR5d4xlarge is a InstanceType enum value
+	InstanceTypeR5d4xlarge = "r5d.4xlarge"
+
+	// InstanceTypeR5d8xlarge is a InstanceType enum value
+	InstanceTypeR5d8xlarge = "r5d.8xlarge"
+
+	// InstanceTypeR5d12xlarge is a InstanceType enum value
+	InstanceTypeR5d12xlarge = "r5d.12xlarge"
+
+	// InstanceTypeR5d16xlarge is a InstanceType enum value
+	InstanceTypeR5d16xlarge = "r5d.16xlarge"
+
+	// InstanceTypeR5d24xlarge is a InstanceType enum value
+	InstanceTypeR5d24xlarge = "r5d.24xlarge"
+
+	// InstanceTypeR5dMetal is a InstanceType enum value
+	InstanceTypeR5dMetal = "r5d.metal"
+
 	// InstanceTypeX116xlarge is a InstanceType enum value
 	InstanceTypeX116xlarge = "x1.16xlarge"
 
@@ -70727,6 +70781,24 @@ const (
 
 	// InstanceTypeH116xlarge is a InstanceType enum value
 	InstanceTypeH116xlarge = "h1.16xlarge"
+
+	// InstanceTypeZ1dLarge is a InstanceType enum value
+	InstanceTypeZ1dLarge = "z1d.large"
+
+	// InstanceTypeZ1dXlarge is a InstanceType enum value
+	InstanceTypeZ1dXlarge = "z1d.xlarge"
+
+	// InstanceTypeZ1d2xlarge is a InstanceType enum value
+	InstanceTypeZ1d2xlarge = "z1d.2xlarge"
+
+	// InstanceTypeZ1d3xlarge is a InstanceType enum value
+	InstanceTypeZ1d3xlarge = "z1d.3xlarge"
+
+	// InstanceTypeZ1d6xlarge is a InstanceType enum value
+	InstanceTypeZ1d6xlarge = "z1d.6xlarge"
+
+	// InstanceTypeZ1d12xlarge is a InstanceType enum value
+	InstanceTypeZ1d12xlarge = "z1d.12xlarge"
 )
 
 const (

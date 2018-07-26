@@ -4191,6 +4191,394 @@ func (s *AttributeValueUpdate) SetValue(v *AttributeValue) *AttributeValueUpdate
 	return s
 }
 
+// Represents the properties of the scaling policy.
+type AutoScalingPolicyDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the scaling policy.
+	PolicyName *string `min:"1" type:"string"`
+
+	// Represents a target tracking scaling policy configuration.
+	TargetTrackingScalingPolicyConfiguration *AutoScalingTargetTrackingScalingPolicyConfigurationDescription `type:"structure"`
+}
+
+// String returns the string representation
+func (s AutoScalingPolicyDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutoScalingPolicyDescription) GoString() string {
+	return s.String()
+}
+
+// SetPolicyName sets the PolicyName field's value.
+func (s *AutoScalingPolicyDescription) SetPolicyName(v string) *AutoScalingPolicyDescription {
+	s.PolicyName = &v
+	return s
+}
+
+// SetTargetTrackingScalingPolicyConfiguration sets the TargetTrackingScalingPolicyConfiguration field's value.
+func (s *AutoScalingPolicyDescription) SetTargetTrackingScalingPolicyConfiguration(v *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) *AutoScalingPolicyDescription {
+	s.TargetTrackingScalingPolicyConfiguration = v
+	return s
+}
+
+// Represents the autoscaling policy to be modified.
+type AutoScalingPolicyUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the scaling policy.
+	PolicyName *string `min:"1" type:"string"`
+
+	// Represents a target tracking scaling policy configuration.
+	//
+	// TargetTrackingScalingPolicyConfiguration is a required field
+	TargetTrackingScalingPolicyConfiguration *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AutoScalingPolicyUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutoScalingPolicyUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AutoScalingPolicyUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AutoScalingPolicyUpdate"}
+	if s.PolicyName != nil && len(*s.PolicyName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyName", 1))
+	}
+	if s.TargetTrackingScalingPolicyConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetTrackingScalingPolicyConfiguration"))
+	}
+	if s.TargetTrackingScalingPolicyConfiguration != nil {
+		if err := s.TargetTrackingScalingPolicyConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("TargetTrackingScalingPolicyConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPolicyName sets the PolicyName field's value.
+func (s *AutoScalingPolicyUpdate) SetPolicyName(v string) *AutoScalingPolicyUpdate {
+	s.PolicyName = &v
+	return s
+}
+
+// SetTargetTrackingScalingPolicyConfiguration sets the TargetTrackingScalingPolicyConfiguration field's value.
+func (s *AutoScalingPolicyUpdate) SetTargetTrackingScalingPolicyConfiguration(v *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) *AutoScalingPolicyUpdate {
+	s.TargetTrackingScalingPolicyConfiguration = v
+	return s
+}
+
+// Represents the autoscaling settings for a global table or global secondary
+// index.
+type AutoScalingSettingsDescription struct {
+	_ struct{} `type:"structure"`
+
+	// Disabled autoscaling for this global table or global secondary index.
+	AutoScalingDisabled *bool `type:"boolean"`
+
+	// Role ARN used for configuring autoScaling policy.
+	AutoScalingRoleArn *string `type:"string"`
+
+	// The maximum capacity units that a global table or global secondary index
+	// should be scaled up to.
+	MaximumUnits *int64 `min:"1" type:"long"`
+
+	// The minimum capacity units that a global table or global secondary index
+	// should be scaled down to.
+	MinimumUnits *int64 `min:"1" type:"long"`
+
+	// Information about the scaling policies.
+	ScalingPolicies []*AutoScalingPolicyDescription `type:"list"`
+}
+
+// String returns the string representation
+func (s AutoScalingSettingsDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutoScalingSettingsDescription) GoString() string {
+	return s.String()
+}
+
+// SetAutoScalingDisabled sets the AutoScalingDisabled field's value.
+func (s *AutoScalingSettingsDescription) SetAutoScalingDisabled(v bool) *AutoScalingSettingsDescription {
+	s.AutoScalingDisabled = &v
+	return s
+}
+
+// SetAutoScalingRoleArn sets the AutoScalingRoleArn field's value.
+func (s *AutoScalingSettingsDescription) SetAutoScalingRoleArn(v string) *AutoScalingSettingsDescription {
+	s.AutoScalingRoleArn = &v
+	return s
+}
+
+// SetMaximumUnits sets the MaximumUnits field's value.
+func (s *AutoScalingSettingsDescription) SetMaximumUnits(v int64) *AutoScalingSettingsDescription {
+	s.MaximumUnits = &v
+	return s
+}
+
+// SetMinimumUnits sets the MinimumUnits field's value.
+func (s *AutoScalingSettingsDescription) SetMinimumUnits(v int64) *AutoScalingSettingsDescription {
+	s.MinimumUnits = &v
+	return s
+}
+
+// SetScalingPolicies sets the ScalingPolicies field's value.
+func (s *AutoScalingSettingsDescription) SetScalingPolicies(v []*AutoScalingPolicyDescription) *AutoScalingSettingsDescription {
+	s.ScalingPolicies = v
+	return s
+}
+
+// Represents the autoscaling settings to be modified for a global table or
+// global secondary index.
+type AutoScalingSettingsUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// Disabled autoscaling for this global table or global secondary index.
+	AutoScalingDisabled *bool `type:"boolean"`
+
+	// Role ARN used for configuring autoscaling policy.
+	AutoScalingRoleArn *string `min:"1" type:"string"`
+
+	// The maximum capacity units that a global table or global secondary index
+	// should be scaled up to.
+	MaximumUnits *int64 `min:"1" type:"long"`
+
+	// The minimum capacity units that a global table or global secondary index
+	// should be scaled down to.
+	MinimumUnits *int64 `min:"1" type:"long"`
+
+	// The scaling policy to apply for scaling target global table or global secondary
+	// index capacity units.
+	ScalingPolicyUpdate *AutoScalingPolicyUpdate `type:"structure"`
+}
+
+// String returns the string representation
+func (s AutoScalingSettingsUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutoScalingSettingsUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AutoScalingSettingsUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AutoScalingSettingsUpdate"}
+	if s.AutoScalingRoleArn != nil && len(*s.AutoScalingRoleArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AutoScalingRoleArn", 1))
+	}
+	if s.MaximumUnits != nil && *s.MaximumUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumUnits", 1))
+	}
+	if s.MinimumUnits != nil && *s.MinimumUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinimumUnits", 1))
+	}
+	if s.ScalingPolicyUpdate != nil {
+		if err := s.ScalingPolicyUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ScalingPolicyUpdate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAutoScalingDisabled sets the AutoScalingDisabled field's value.
+func (s *AutoScalingSettingsUpdate) SetAutoScalingDisabled(v bool) *AutoScalingSettingsUpdate {
+	s.AutoScalingDisabled = &v
+	return s
+}
+
+// SetAutoScalingRoleArn sets the AutoScalingRoleArn field's value.
+func (s *AutoScalingSettingsUpdate) SetAutoScalingRoleArn(v string) *AutoScalingSettingsUpdate {
+	s.AutoScalingRoleArn = &v
+	return s
+}
+
+// SetMaximumUnits sets the MaximumUnits field's value.
+func (s *AutoScalingSettingsUpdate) SetMaximumUnits(v int64) *AutoScalingSettingsUpdate {
+	s.MaximumUnits = &v
+	return s
+}
+
+// SetMinimumUnits sets the MinimumUnits field's value.
+func (s *AutoScalingSettingsUpdate) SetMinimumUnits(v int64) *AutoScalingSettingsUpdate {
+	s.MinimumUnits = &v
+	return s
+}
+
+// SetScalingPolicyUpdate sets the ScalingPolicyUpdate field's value.
+func (s *AutoScalingSettingsUpdate) SetScalingPolicyUpdate(v *AutoScalingPolicyUpdate) *AutoScalingSettingsUpdate {
+	s.ScalingPolicyUpdate = v
+	return s
+}
+
+// Represents the properties of a target tracking scaling policy.
+type AutoScalingTargetTrackingScalingPolicyConfigurationDescription struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether scale in by the target tracking policy is disabled. If
+	// the value is true, scale in is disabled and the target tracking policy won't
+	// remove capacity from the scalable resource. Otherwise, scale in is enabled
+	// and the target tracking policy can remove capacity from the scalable resource.
+	// The default value is false.
+	DisableScaleIn *bool `type:"boolean"`
+
+	// The amount of time, in seconds, after a scale in activity completes before
+	// another scale in activity can start. The cooldown period is used to block
+	// subsequent scale in requests until it has expired. You should scale in conservatively
+	// to protect your application's availability. However, if another alarm triggers
+	// a scale out policy during the cooldown period after a scale-in, application
+	// autoscaling scales out your scalable target immediately.
+	ScaleInCooldown *int64 `type:"integer"`
+
+	// The amount of time, in seconds, after a scale out activity completes before
+	// another scale out activity can start. While the cooldown period is in effect,
+	// the capacity that has been added by the previous scale out event that initiated
+	// the cooldown is calculated as part of the desired capacity for the next scale
+	// out. You should continuously (but not excessively) scale out.
+	ScaleOutCooldown *int64 `type:"integer"`
+
+	// The target value for the metric. The range is 8.515920e-109 to 1.174271e+108
+	// (Base 10) or 2e-360 to 2e360 (Base 2).
+	//
+	// TargetValue is a required field
+	TargetValue *float64 `type:"double" required:"true"`
+}
+
+// String returns the string representation
+func (s AutoScalingTargetTrackingScalingPolicyConfigurationDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutoScalingTargetTrackingScalingPolicyConfigurationDescription) GoString() string {
+	return s.String()
+}
+
+// SetDisableScaleIn sets the DisableScaleIn field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetDisableScaleIn(v bool) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
+	s.DisableScaleIn = &v
+	return s
+}
+
+// SetScaleInCooldown sets the ScaleInCooldown field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetScaleInCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
+	s.ScaleInCooldown = &v
+	return s
+}
+
+// SetScaleOutCooldown sets the ScaleOutCooldown field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetScaleOutCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
+	s.ScaleOutCooldown = &v
+	return s
+}
+
+// SetTargetValue sets the TargetValue field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetTargetValue(v float64) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
+	s.TargetValue = &v
+	return s
+}
+
+// Represents the settings of a target tracking scaling policy that will be
+// modified.
+type AutoScalingTargetTrackingScalingPolicyConfigurationUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether scale in by the target tracking policy is disabled. If
+	// the value is true, scale in is disabled and the target tracking policy won't
+	// remove capacity from the scalable resource. Otherwise, scale in is enabled
+	// and the target tracking policy can remove capacity from the scalable resource.
+	// The default value is false.
+	DisableScaleIn *bool `type:"boolean"`
+
+	// The amount of time, in seconds, after a scale in activity completes before
+	// another scale in activity can start. The cooldown period is used to block
+	// subsequent scale in requests until it has expired. You should scale in conservatively
+	// to protect your application's availability. However, if another alarm triggers
+	// a scale out policy during the cooldown period after a scale-in, application
+	// autoscaling scales out your scalable target immediately.
+	ScaleInCooldown *int64 `type:"integer"`
+
+	// The amount of time, in seconds, after a scale out activity completes before
+	// another scale out activity can start. While the cooldown period is in effect,
+	// the capacity that has been added by the previous scale out event that initiated
+	// the cooldown is calculated as part of the desired capacity for the next scale
+	// out. You should continuously (but not excessively) scale out.
+	ScaleOutCooldown *int64 `type:"integer"`
+
+	// The target value for the metric. The range is 8.515920e-109 to 1.174271e+108
+	// (Base 10) or 2e-360 to 2e360 (Base 2).
+	//
+	// TargetValue is a required field
+	TargetValue *float64 `type:"double" required:"true"`
+}
+
+// String returns the string representation
+func (s AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate"}
+	if s.TargetValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetValue"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDisableScaleIn sets the DisableScaleIn field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetDisableScaleIn(v bool) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
+	s.DisableScaleIn = &v
+	return s
+}
+
+// SetScaleInCooldown sets the ScaleInCooldown field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetScaleInCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
+	s.ScaleInCooldown = &v
+	return s
+}
+
+// SetScaleOutCooldown sets the ScaleOutCooldown field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetScaleOutCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
+	s.ScaleOutCooldown = &v
+	return s
+}
+
+// SetTargetValue sets the TargetValue field's value.
+func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetTargetValue(v float64) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
+	s.TargetValue = &v
+	return s
+}
+
 // Contains the description of the backup created for the table.
 type BackupDescription struct {
 	_ struct{} `type:"structure"`
@@ -7556,6 +7944,10 @@ type GlobalTableGlobalSecondaryIndexSettingsUpdate struct {
 	// IndexName is a required field
 	IndexName *string `min:"3" type:"string" required:"true"`
 
+	// AutoScaling settings for managing a global secondary index's write capacity
+	// units.
+	ProvisionedWriteCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
+
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException.
 	ProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
@@ -7583,6 +7975,11 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) Validate() error {
 	if s.ProvisionedWriteCapacityUnits != nil && *s.ProvisionedWriteCapacityUnits < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ProvisionedWriteCapacityUnits", 1))
 	}
+	if s.ProvisionedWriteCapacityAutoScalingSettingsUpdate != nil {
+		if err := s.ProvisionedWriteCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedWriteCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7593,6 +7990,12 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) Validate() error {
 // SetIndexName sets the IndexName field's value.
 func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetIndexName(v string) *GlobalTableGlobalSecondaryIndexSettingsUpdate {
 	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedWriteCapacityAutoScalingSettingsUpdate sets the ProvisionedWriteCapacityAutoScalingSettingsUpdate field's value.
+func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetProvisionedWriteCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *GlobalTableGlobalSecondaryIndexSettingsUpdate {
+	s.ProvisionedWriteCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -9745,9 +10148,17 @@ type ReplicaGlobalSecondaryIndexSettingsDescription struct {
 	//    * ACTIVE - The global secondary index is ready for use.
 	IndexStatus *string `type:"string" enum:"IndexStatus"`
 
+	// Autoscaling settings for a global secondary index replica's read capacity
+	// units.
+	ProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
+
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException.
 	ProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
+
+	// AutoScaling settings for a global secondary index replica's write capacity
+	// units.
+	ProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException.
@@ -9776,9 +10187,21 @@ func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetIndexStatus(v string
 	return s
 }
 
+// SetProvisionedReadCapacityAutoScalingSettings sets the ProvisionedReadCapacityAutoScalingSettings field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedReadCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaGlobalSecondaryIndexSettingsDescription {
+	s.ProvisionedReadCapacityAutoScalingSettings = v
+	return s
+}
+
 // SetProvisionedReadCapacityUnits sets the ProvisionedReadCapacityUnits field's value.
 func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedReadCapacityUnits(v int64) *ReplicaGlobalSecondaryIndexSettingsDescription {
 	s.ProvisionedReadCapacityUnits = &v
+	return s
+}
+
+// SetProvisionedWriteCapacityAutoScalingSettings sets the ProvisionedWriteCapacityAutoScalingSettings field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedWriteCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaGlobalSecondaryIndexSettingsDescription {
+	s.ProvisionedWriteCapacityAutoScalingSettings = v
 	return s
 }
 
@@ -9798,6 +10221,10 @@ type ReplicaGlobalSecondaryIndexSettingsUpdate struct {
 	//
 	// IndexName is a required field
 	IndexName *string `min:"3" type:"string" required:"true"`
+
+	// Autoscaling settings for managing a global secondary index replica's read
+	// capacity units.
+	ProvisionedReadCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException.
@@ -9826,6 +10253,11 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) Validate() error {
 	if s.ProvisionedReadCapacityUnits != nil && *s.ProvisionedReadCapacityUnits < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ProvisionedReadCapacityUnits", 1))
 	}
+	if s.ProvisionedReadCapacityAutoScalingSettingsUpdate != nil {
+		if err := s.ProvisionedReadCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedReadCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9836,6 +10268,12 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) Validate() error {
 // SetIndexName sets the IndexName field's value.
 func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetIndexName(v string) *ReplicaGlobalSecondaryIndexSettingsUpdate {
 	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedReadCapacityAutoScalingSettingsUpdate sets the ProvisionedReadCapacityAutoScalingSettingsUpdate field's value.
+func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetProvisionedReadCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *ReplicaGlobalSecondaryIndexSettingsUpdate {
+	s.ProvisionedReadCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -9857,11 +10295,17 @@ type ReplicaSettingsDescription struct {
 	// Replica global secondary index settings for the global table.
 	ReplicaGlobalSecondaryIndexSettings []*ReplicaGlobalSecondaryIndexSettingsDescription `type:"list"`
 
+	// Autoscaling settings for a global table replica's read capacity units.
+	ReplicaProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
+
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException. For more information, see Specifying
 	// Read and Write Requirements (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
 	// in the Amazon DynamoDB Developer Guide.
 	ReplicaProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
+
+	// AutoScaling settings for a global table replica's write capacity units.
+	ReplicaProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException. For more information, see Specifying Read and Write
@@ -9903,9 +10347,21 @@ func (s *ReplicaSettingsDescription) SetReplicaGlobalSecondaryIndexSettings(v []
 	return s
 }
 
+// SetReplicaProvisionedReadCapacityAutoScalingSettings sets the ReplicaProvisionedReadCapacityAutoScalingSettings field's value.
+func (s *ReplicaSettingsDescription) SetReplicaProvisionedReadCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaSettingsDescription {
+	s.ReplicaProvisionedReadCapacityAutoScalingSettings = v
+	return s
+}
+
 // SetReplicaProvisionedReadCapacityUnits sets the ReplicaProvisionedReadCapacityUnits field's value.
 func (s *ReplicaSettingsDescription) SetReplicaProvisionedReadCapacityUnits(v int64) *ReplicaSettingsDescription {
 	s.ReplicaProvisionedReadCapacityUnits = &v
+	return s
+}
+
+// SetReplicaProvisionedWriteCapacityAutoScalingSettings sets the ReplicaProvisionedWriteCapacityAutoScalingSettings field's value.
+func (s *ReplicaSettingsDescription) SetReplicaProvisionedWriteCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaSettingsDescription {
+	s.ReplicaProvisionedWriteCapacityAutoScalingSettings = v
 	return s
 }
 
@@ -9933,6 +10389,10 @@ type ReplicaSettingsUpdate struct {
 	// Represents the settings of a global secondary index for a global table that
 	// will be modified.
 	ReplicaGlobalSecondaryIndexSettingsUpdate []*ReplicaGlobalSecondaryIndexSettingsUpdate `min:"1" type:"list"`
+
+	// Autoscaling settings for managing a global table replica's read capacity
+	// units.
+	ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException. For more information, see Specifying
@@ -9973,6 +10433,11 @@ func (s *ReplicaSettingsUpdate) Validate() error {
 			}
 		}
 	}
+	if s.ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate != nil {
+		if err := s.ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9989,6 +10454,12 @@ func (s *ReplicaSettingsUpdate) SetRegionName(v string) *ReplicaSettingsUpdate {
 // SetReplicaGlobalSecondaryIndexSettingsUpdate sets the ReplicaGlobalSecondaryIndexSettingsUpdate field's value.
 func (s *ReplicaSettingsUpdate) SetReplicaGlobalSecondaryIndexSettingsUpdate(v []*ReplicaGlobalSecondaryIndexSettingsUpdate) *ReplicaSettingsUpdate {
 	s.ReplicaGlobalSecondaryIndexSettingsUpdate = v
+	return s
+}
+
+// SetReplicaProvisionedReadCapacityAutoScalingSettingsUpdate sets the ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate field's value.
+func (s *ReplicaSettingsUpdate) SetReplicaProvisionedReadCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *ReplicaSettingsUpdate {
+	s.ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -11955,6 +12426,10 @@ type UpdateGlobalTableSettingsInput struct {
 	// GlobalTableName is a required field
 	GlobalTableName *string `min:"3" type:"string" required:"true"`
 
+	// AutoScaling settings for managing provisioned write capacity for the global
+	// table.
+	GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
+
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException.
 	GlobalTableProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
@@ -12001,6 +12476,11 @@ func (s *UpdateGlobalTableSettingsInput) Validate() error {
 			}
 		}
 	}
+	if s.GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate != nil {
+		if err := s.GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
+			invalidParams.AddNested("GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ReplicaSettingsUpdate != nil {
 		for i, v := range s.ReplicaSettingsUpdate {
 			if v == nil {
@@ -12027,6 +12507,12 @@ func (s *UpdateGlobalTableSettingsInput) SetGlobalTableGlobalSecondaryIndexSetti
 // SetGlobalTableName sets the GlobalTableName field's value.
 func (s *UpdateGlobalTableSettingsInput) SetGlobalTableName(v string) *UpdateGlobalTableSettingsInput {
 	s.GlobalTableName = &v
+	return s
+}
+
+// SetGlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate sets the GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate field's value.
+func (s *UpdateGlobalTableSettingsInput) SetGlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *UpdateGlobalTableSettingsInput {
+	s.GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
