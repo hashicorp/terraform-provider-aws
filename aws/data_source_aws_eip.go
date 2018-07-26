@@ -24,6 +24,10 @@ func dataSourceAwsEip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"public_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -57,6 +61,7 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(*eip.AllocationId)
 	d.Set("public_ip", eip.PublicIp)
+	d.Set("public_dns", reverseLookup(*eip.PublicIp))
 
 	return nil
 }

@@ -48,3 +48,6 @@ All of the argument attributes are also exported as result attributes. This
 data source will complete the data by populating any fields that are not
 included in the configuration with the data for the selected Elastic IP.
 
+* `public_dns` - DNS name of the allocated EIP
+
+__Note__: The `public_dns` attribute is provided as a convenience, it is computed via Go's built-in reverse lookup and we select only the first result returned. Depending on how and where Terraform is run this lookup may fail, in which case we simply leave it as an empty string `""`.

@@ -112,6 +112,9 @@ In addition to all arguments above, the following attributes are exported:
 * `public_ip` - Contains the public IP address.
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
+* `public_dns` - DNS name of the allocated EIP
+
+__Note__: The `public_dns` attribute is provided as a convenience, it is computed via Go's built-in reverse lookup and we select only the first result returned. Depending on how and where Terraform is run this lookup may fail, in which case we simply leave it as an empty string `""`.
 
 ## Timeouts
 `aws_eip` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
