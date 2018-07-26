@@ -1,5 +1,9 @@
 ## 1.30.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_glue_crawler: Add `dynamodb_target` argument [GH-5152]
+
 BUG FIXES:
 
 * resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
