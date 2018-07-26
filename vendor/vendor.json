@@ -927,6 +927,14 @@
 			"versionExact": "v1.14.31"
 		},
 		{
+			"checksumSHA1": "Y29bmjwKXcPg0d0WvZNFGdhd4+E=",
+			"path": "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository",
+			"revision": "bc3f534c19ffdf835e524e11f0f825b3eaf541c3",
+			"revisionTime": "2018-07-20T20:35:14Z",
+			"version": "v1.14.31",
+			"versionExact": "v1.14.31"
+		},
+		{
 			"checksumSHA1": "T8dOJ1jjEBdogUE03oRPRJCOY3k=",
 			"path": "github.com/aws/aws-sdk-go/service/servicecatalog",
 			"revision": "bc3f534c19ffdf835e524e11f0f825b3eaf541c3",
