@@ -53,8 +53,41 @@ The following arguments are supported:
 
 Action Blocks (for `default_action`) support the following:
 
-* `target_group_arn` - (Required) The ARN of the Target Group to which to route traffic.
-* `type` - (Required) The type of routing action. The only valid value is `forward`.
+* `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic.
+* `type` - (Required) The type of routing action. The valid values are `forward`, `authenticate-oidc` and `authenticate-cognito`.
+* `order` - (Optional) The order for the action.
+* `authenticate_cognito_config` - (Optional) The [authenticate cognito config](#authenticate-cognito-config) configuration.
+* `authenticate_oidc_config` - (Optional) The [authenticate oidc  config](#authenticate-oidc-config) configuration.
+
+### Authenticate Cognito Config
+
+* `authentication_request_extra_params` - (Optional) The query parameters to include in the redirect request to the authorization endpoint. Max: 10. [See](#authentication-request-extra-params)
+* `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
+* `scope` - (Optional) The set of user claims to be requested from the IdP.
+* `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
+* `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
+* `user_pool_arn` - (Required) The ARN of the Cognito user pool.
+* `user_pool_client` - (Required) The ID of the Cognito user pool client.
+* `user_pool_domain` - (Required) The domain prefix or fully-qualified domain name of the Cognito user pool.
+
+### Authenticate OIDC Config
+
+* `authentication_request_extra_params` - (Optional) The query parameters to include in the redirect request to the authorization endpoint. Max: 10. [See](#authentication-request-extra-params)
+* `authorization_endpoint` - (Required) The authorization endpoint of the IdP.
+* `client_id` - (Required) The OAuth 2.0 client identifier.
+* `client_secret` - (Required) The OAuth 2.0 client secret.
+* `issuer` - (Required) The OIDC issuer identifier of the IdP.
+* `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
+* `scope` - (Optional) The set of user claims to be requested from the IdP.
+* `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
+* `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
+* `token_endpoint` - (Required) The token endpoint of the IdP.
+* `user_info_endpoint` - (Required) The user info endpoint of the IdP.
+
+### Authentication Request Extra Params
+
+* `key` - (Required) The key of query parameter
+* `value` - (Required) The value of query parameter
 
 ## Attributes Reference
 
