@@ -24,6 +24,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_vpc_endpoint_service: Perform client side filtering to workaround server side filtering issues in AWS China and AWS GovCloud (US) [GH-4592]
 * resource/aws_kinesis_firehose_delivery_stream: Force new resource for `kinesis_source_configuration` argument changes [GH-5332]
 * resource/aws_route53_record: Prevent DomainLabelEmpty errors when expanding record names with trailing period [GH-5312]
 * resource/aws_ses_identity_notification_topic: Prevent panic when API returns no attributes [GH-5327]
