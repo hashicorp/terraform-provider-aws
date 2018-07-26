@@ -1,4 +1,9 @@
 ## 1.30.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
+
 ## 1.29.0 (July 26, 2018)
 
 NOTES:
