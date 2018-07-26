@@ -306,7 +306,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptions(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "6.0"),
-						testAccCheckESCognitoOptions(true, &domain),
+					testAccCheckESCognitoOptions(true, &domain),
 				),
 			},
 		},
