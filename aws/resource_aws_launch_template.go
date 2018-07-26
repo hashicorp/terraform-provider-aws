@@ -999,9 +999,10 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
 	var privateIpAddress string
-	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
-		AssociatePublicIpAddress: aws.Bool(ni["associate_public_ip_address"].(bool)),
-		DeleteOnTermination:      aws.Bool(ni["delete_on_termination"].(bool)),
+	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
+
+	if v, ok := ni["delete_on_termination"]; ok {
+		networkInterface.DeleteOnTermination = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["description"].(string); ok && v != "" {
@@ -1014,6 +1015,8 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	} else if v, ok := ni["associate_public_ip_address"]; ok {
+		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
