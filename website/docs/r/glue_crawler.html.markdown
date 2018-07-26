@@ -12,6 +12,20 @@ Manages a Glue Crawler. More information can be found in the [AWS Glue Develeper
 
 ## Example Usage
 
+### DynamoDB Target
+
+```hcl
+resource "aws_glue_crawler" "example" {
+  database_name = "${aws_glue_catalog_database.example.name}"
+  name          = "example"
+  role          = "${aws_iam_role.example.name}"
+
+  dynamodb_target {
+    path = "table-name"
+  }
+}
+```
+
 ### JDBC Target
 
 ```hcl
@@ -53,11 +67,16 @@ The following arguments are supported:
 * `classifiers` (Optional) List of custom classifiers. By default, all AWS classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.
 * `configuration` (Optional) JSON string of configuration information.
 * `description` (Optional) Description of the crawler.
+* `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See below.
 * `jdbc_target` (Optional) List of nested JBDC target arguments. See below.
 * `s3_target` (Optional) List nested Amazon S3 target arguments. See below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior.
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
+
+### dynamodb_target Argument Reference
+
+* `path` - (Required) The name of the DynamoDB table to crawl.
 
 ### jdbc_target Argument Reference
 
