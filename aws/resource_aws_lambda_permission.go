@@ -30,6 +30,12 @@ func resourceAwsLambdaPermission() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateLambdaPermissionAction,
 			},
+			"event_source_token": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateLambdaPermissionEventSourceToken,
+			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -105,6 +111,9 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		StatementId:  aws.String(statementId),
 	}
 
+	if v, ok := d.GetOk("event_source_token"); ok {
+		input.EventSourceToken = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
 	}
@@ -257,6 +266,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 
 	if stringEquals, ok := statement.Condition["StringEquals"]; ok {
 		d.Set("source_account", stringEquals["AWS:SourceAccount"])
+		d.Set("event_source_token", stringEquals["lambda:EventSourceToken"])
 	}
 
 	if arnLike, ok := statement.Condition["ArnLike"]; ok {

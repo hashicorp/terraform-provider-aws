@@ -266,6 +266,32 @@ func TestValidateLambdaPermissionAction(t *testing.T) {
 	}
 }
 
+func TestValidateLambdaPermissionEventSourceToken(t *testing.T) {
+	validTokens := []string{
+		"amzn1.ask.skill.80c92c86-e6dd-4c4b-8d0d-000000000000",
+		"test-event-source-token",
+		strings.Repeat(".", 256),
+	}
+	for _, v := range validTokens {
+		_, errors := validateLambdaPermissionEventSourceToken(v, "event_source_token")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Lambda permission event source token", v)
+		}
+	}
+
+	invalidTokens := []string{
+		"!",
+		"test event source token",
+		strings.Repeat(".", 257),
+	}
+	for _, v := range invalidTokens {
+		_, errors := validateLambdaPermissionEventSourceToken(v, "event_source_token")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Lambda permission event source token", v)
+		}
+	}
+}
+
 func TestValidateAwsAccountId(t *testing.T) {
 	validNames := []string{
 		"123456789012",
