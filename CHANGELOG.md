@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_glue_crawler: Add `dynamodb_target` argument [GH-5152]
+* resource/aws_iam_role: Add `permissions_boundary` argument [GH-5184]
 
 BUG FIXES:
 
