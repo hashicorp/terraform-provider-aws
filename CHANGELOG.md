@@ -9,7 +9,7 @@ FEATURES:
 
 * **New Data Source:** `aws_kms_secrets` ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
 * **New Data Source:** `aws_network_interfaces` ([#5324](https://github.com/terraform-providers/terraform-provider-aws/issues/5324))
-* **New Guide:** [`AWS Provider Version 2 Upgrade`](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret) ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
+* **New Guide:** [`AWS Provider Version 2 Upgrade`](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html) ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
 
 ENHANCEMENTS:
 
