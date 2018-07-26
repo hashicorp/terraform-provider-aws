@@ -306,6 +306,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptions(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "6.0"),
+						testAccCheckESCognitoOptions(true, &domain)
 				),
 			},
 		},
@@ -515,6 +516,16 @@ func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.Elasticsearch
 		conf := status.EncryptionAtRestOptions
 		if *conf.Enabled != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESCognitoOptions(enabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.CognitoOptions
+		if *conf.Enabled != enabled {
+			return fmt.Errorf("CognitoOptions not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
 		}
 		return nil
 	}
@@ -1127,7 +1138,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 resource "aws_elasticsearch_domain" "example" {
 	domain_name = "tf-test-%d"
 
-	elasticsearch_version = "5.5"
+	elasticsearch_version = "6.0"
 
   cognito_options {
 		enabled = true
