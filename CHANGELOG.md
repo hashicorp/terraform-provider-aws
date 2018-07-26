@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Add `arn` attribute [GH-5306]
 * resource/aws_secretsmanager_secret: Add `policy` argument [GH-5290]
 * resource/aws_vpc: Add `arn` attribute [GH-5300]
+* resource/aws_waf_web_acl: Support resource import [GH-5337]
 
 BUG FIXES:
 
