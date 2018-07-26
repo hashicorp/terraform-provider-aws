@@ -97,3 +97,5 @@ ECR Lifecycle Policy can be imported using the name of the repository, e.g.
 ```
 $ terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
+
+~> **NOTE:** The AWS ECR API seems to reorder rules based on `rulePriority`. If you define multiple rules that are not sorted ascending in the TF code will be flagged for recreation every `terraform plan`. 
