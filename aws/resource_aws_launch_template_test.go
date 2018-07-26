@@ -348,7 +348,6 @@ resource "aws_launch_template" "foo" {
   }
 
   network_interfaces {
-    associate_public_ip_address = true
     network_interface_id = "eni-123456ab"
     security_groups = ["sg-1a23bc45"]
   }
