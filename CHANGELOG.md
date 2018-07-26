@@ -3,13 +3,13 @@
 
 NOTES:
 
-* data-source/aws_kms_secret: This data source has been deprecated and will be removed in the next major version. This is required to support the upcoming Terraform 0.12. A new `aws_kms_secrets` data source is available that allows for the same multiple KMS secret decryption functionality, but requires different attribute references. Full migration information is available in the new AWS Provider Version 2 Upgrade guide under the `Data Source: aws_kms_secret` section.
+* data-source/aws_kms_secret: This data source has been deprecated and will be removed in the next major version. This is required to support the upcoming Terraform 0.12. A new `aws_kms_secrets` data source is available that allows for the same multiple KMS secret decryption functionality, but requires different attribute references. Full migration information is available in the [AWS Provider Version 2 Upgrade Guide](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret).
 
 FEATURES:
 
 * **New Data Source:** `aws_kms_secrets` ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
 * **New Data Source:** `aws_network_interfaces` ([#5324](https://github.com/terraform-providers/terraform-provider-aws/issues/5324))
-* **New Guide:** `AWS Provider Version 2 Upgrade` ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
+* **New Guide:** [`AWS Provider Version 2 Upgrade`](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret) ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
 
 ENHANCEMENTS:
 
