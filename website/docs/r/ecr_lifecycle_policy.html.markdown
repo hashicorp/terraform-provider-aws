@@ -83,6 +83,8 @@ The following arguments are supported:
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
 
+~> **NOTE:** The AWS ECR API seems to reorder rules based on `rulePriority`. If you define multiple rules that are not sorted ascending in the TF code will be flagged for recreation every `terraform plan`. 
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -97,5 +99,3 @@ ECR Lifecycle Policy can be imported using the name of the repository, e.g.
 ```
 $ terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
-
-~> **NOTE:** The AWS ECR API seems to reorder rules based on `rulePriority`. If you define multiple rules that are not sorted ascending in the TF code will be flagged for recreation every `terraform plan`. 
