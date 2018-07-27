@@ -34,6 +34,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route table associations can be imported using `RouteTableId:AssociationId`, e.g.
+Route table associations can be imported using `RouteTableId:SubnetId`, e.g.
 
-`$ terraform import aws_route_table_association.rtb_assoc rtb-123457:rtbassoc-12345678901234`
+`$ terraform import aws_route_table_association.rtb_assoc rtb-123456:subnet-123456`
