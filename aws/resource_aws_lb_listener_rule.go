@@ -187,7 +187,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("priority", 99999)
 	} else {
 		if priority, err := strconv.Atoi(aws.StringValue(rule.Priority)); err != nil {
-			return fmt.Errorf("Cannot convert rule priority %q to int: %s", err)
+			return fmt.Errorf("Cannot convert rule priority %q to int: %s", aws.StringValue(rule.Priority), err)
 		} else {
 			d.Set("priority", priority)
 		}
