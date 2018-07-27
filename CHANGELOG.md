@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_storagegateway_local_disk` [GH-5279]
+* **New Resource:** `aws_storagegateway_working_storage` [GH-5285]
 * **New Resource:** `aws_storagegateway_nfs_file_share` [GH-5255]
 
 ENHANCEMENTS:
