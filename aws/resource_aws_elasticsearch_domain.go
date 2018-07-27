@@ -411,19 +411,9 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if v, ok := d.GetOk("cognito_options"); ok {
-
-		options := v.([]interface{})
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single cognito_options block is expected")
-		} else if len(options) == 1 {
-			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside cognito_options")
-			}
-
-			s := options[0].(map[string]interface{})
-			input.CognitoOptions = expandESCognitoOptions(s)
-		}
+	if v, ok := d.GetOk("cognito_options"); ok && len(v.([]interface{})) > 0 {
+		m := v.([]interface{})[0].(map[string]interface{})
+		input.CognitoOptions = expandESCognitoOptions(m)
 	}
 
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
