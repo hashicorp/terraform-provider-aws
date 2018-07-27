@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_iam_role: Add `permissions_boundary` argument [GH-5184]
 * resource/aws_neptune_cluster: Support resource import [GH-5227]
 * resource/aws_rds_cluster: Add `arn` attribute [GH-5221]
+* resource/aws_ssm_patch_baseline: Add `AMAZON_LINUX_2` and `SUSE` to `operating_system` plan time validation [GH-5371]
 
 BUG FIXES:
 
