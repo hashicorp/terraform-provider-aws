@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLbbListenerRule() *schema.Resource {
@@ -51,12 +52,130 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"target_group_arn": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateLbListenerActionType(),
+						},
+						"order": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 50000),
+						},
+						"authenticate_cognito_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authentication_request_extra_params": {
+										Type:     schema.TypeMap,
+										Optional: true,
+									},
+									"on_unauthenticated_request": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											elbv2.AuthenticateCognitoActionConditionalBehaviorEnumDeny,
+											elbv2.AuthenticateCognitoActionConditionalBehaviorEnumAllow,
+											elbv2.AuthenticateCognitoActionConditionalBehaviorEnumAuthenticate,
+										}, true),
+									},
+									"scope": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"session_cookie_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"session_timeout": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"user_pool_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"user_pool_client": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"user_pool_domain": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"authenticate_oidc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authentication_request_extra_params": {
+										Type:     schema.TypeMap,
+										Optional: true,
+									},
+									"authorization_endpoint": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"client_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"client_secret": {
+										Type:      schema.TypeString,
+										Required:  true,
+										Sensitive: true,
+									},
+									"issuer": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"on_unauthenticated_request": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											elbv2.AuthenticateOidcActionConditionalBehaviorEnumDeny,
+											elbv2.AuthenticateOidcActionConditionalBehaviorEnumAllow,
+											elbv2.AuthenticateOidcActionConditionalBehaviorEnumAuthenticate,
+										}, true),
+									},
+									"scope": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"session_cookie_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"session_timeout": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"token_endpoint": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"user_info_endpoint": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -96,10 +215,30 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 	params.Actions = make([]*elbv2.Action, len(actions))
 	for i, action := range actions {
 		actionMap := action.(map[string]interface{})
-		params.Actions[i] = &elbv2.Action{
-			TargetGroupArn: aws.String(actionMap["target_group_arn"].(string)),
-			Type:           aws.String(actionMap["type"].(string)),
+
+		actionType := actionMap["type"].(string)
+		action := &elbv2.Action{
+			Type: aws.String(actionType),
 		}
+		if v, ok := actionMap["order"].(int); ok && v != 0 {
+			action.Order = aws.Int64(int64(v))
+		}
+
+		switch actionType {
+		case elbv2.ActionTypeEnumForward:
+			if v, ok := actionMap["target_group_arn"].(string); ok && v != "" {
+				action.TargetGroupArn = aws.String(v)
+			}
+		case elbv2.ActionTypeEnumAuthenticateOidc:
+			if v, ok := actionMap["authenticate_oidc_config"].([]interface{}); ok {
+				action.AuthenticateOidcConfig = expandELbAuthenticateOidcActionConfig(v[0].(map[string]interface{}))
+			}
+		case elbv2.ActionTypeEnumAuthenticateCognito:
+			if v, ok := actionMap["authenticate_cognito_config"].([]interface{}); ok {
+				action.AuthenticateCognitoConfig = expandELbAuthenticateCognitoActionConfig(v[0].(map[string]interface{}))
+			}
+		}
+		params.Actions[i] = action
 	}
 
 	conditions := d.Get("condition").(*schema.Set).List()
@@ -192,12 +331,27 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	actions := make([]interface{}, len(rule.Actions))
-	for i, action := range rule.Actions {
-		actionMap := make(map[string]interface{})
-		actionMap["target_group_arn"] = *action.TargetGroupArn
-		actionMap["type"] = *action.Type
-		actions[i] = actionMap
+	sortedActions := sortActionsBasedonTypeinTFFile("action", rule.Actions, d)
+	actions := make([]interface{}, 0, len(sortedActions))
+	for i, action := range sortedActions {
+		m := make(map[string]interface{})
+		if action.Order != nil {
+			m["order"] = int(aws.Int64Value(action.Order))
+		}
+		actionType := aws.StringValue(action.Type)
+		m["type"] = actionType
+
+		switch actionType {
+		case elbv2.ActionTypeEnumForward:
+			m["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
+		case elbv2.ActionTypeEnumAuthenticateOidc:
+			// Since the client_secret is never returned from the API ignore it and use whats already in the state
+			client_secret := d.Get("action." + strconv.Itoa(i) + ".authenticate_oidc_config.0.client_secret").(string)
+			m["authenticate_oidc_config"] = flattenELbAuthenticateOidcActionConfig(action.AuthenticateOidcConfig, client_secret)
+		case elbv2.ActionTypeEnumAuthenticateCognito:
+			m["authenticate_cognito_config"] = flattenELbAuthenticateCognitoActionConfig(action.AuthenticateCognitoConfig)
+		}
+		actions = append(actions, m)
 	}
 	d.Set("action", actions)
 
@@ -250,10 +404,30 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		params.Actions = make([]*elbv2.Action, len(actions))
 		for i, action := range actions {
 			actionMap := action.(map[string]interface{})
-			params.Actions[i] = &elbv2.Action{
-				TargetGroupArn: aws.String(actionMap["target_group_arn"].(string)),
-				Type:           aws.String(actionMap["type"].(string)),
+
+			actionType := actionMap["type"].(string)
+			action := &elbv2.Action{
+				Type: aws.String(actionType),
 			}
+			if v, ok := actionMap["order"].(int); ok && v != 0 {
+				action.Order = aws.Int64(int64(v))
+			}
+
+			switch actionType {
+			case elbv2.ActionTypeEnumForward:
+				if v, ok := actionMap["target_group_arn"].(string); ok && v != "" {
+					action.TargetGroupArn = aws.String(v)
+				}
+			case elbv2.ActionTypeEnumAuthenticateOidc:
+				if v, ok := actionMap["authenticate_oidc_config"].([]interface{}); ok {
+					action.AuthenticateOidcConfig = expandELbAuthenticateOidcActionConfig(v[0].(map[string]interface{}))
+				}
+			case elbv2.ActionTypeEnumAuthenticateCognito:
+				if v, ok := actionMap["authenticate_cognito_config"].([]interface{}); ok {
+					action.AuthenticateCognitoConfig = expandELbAuthenticateCognitoActionConfig(v[0].(map[string]interface{}))
+				}
+			}
+			params.Actions[i] = action
 		}
 		requestUpdate = true
 		d.SetPartial("action")
