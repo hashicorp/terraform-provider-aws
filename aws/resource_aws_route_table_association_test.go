@@ -13,26 +13,32 @@ import (
 
 func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 	var v, v2 ec2.RouteTable
+	resourceName := "aws_route_table_association.foo"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
-						"aws_route_table_association.foo", &v),
+						resourceName, &v),
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccRouteTableAssociationConfigChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
-						"aws_route_table_association.foo", &v2),
+						resourceName, &v2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
