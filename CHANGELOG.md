@@ -1,5 +1,9 @@
 ## 1.30.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_storagegateway_nfs_file_share` [GH-5255]
+
 ENHANCEMENTS:
 
 * data-source/aws_rds_cluster: Add `arn` attribute [GH-5221]
