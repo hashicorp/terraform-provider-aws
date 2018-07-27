@@ -124,6 +124,7 @@ Security Groups and Subnets referenced in these attributes must all be within th
 
 AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html)
 
+* `enabled` - (Optional, Default: false) Specifies whether Amazon Cognito authentication with Kibana is enabled or not
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use
 * `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonESCognitoAccess policy attached
