@@ -13,6 +13,8 @@ BUG FIXES:
 * resource/aws_codebuild_project: Handle additional IAM retry condition during update [GH-5238]
 * resource/aws_codebuild_project: Remove extraneous UpdateProject API call after CreateProject API call [GH-5238]
 * resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
+* resource/aws_waf_web_acl: Properly read `rules` into Terraform state [GH-5342]
+* resource/aws_wafregional_web_acl: Properly read `rules` into Terraform state [GH-5342]
 
 ## 1.29.0 (July 26, 2018)
 
