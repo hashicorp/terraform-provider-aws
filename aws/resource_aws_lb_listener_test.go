@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -153,7 +152,7 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking LB Listener destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking LB Listener destroyed: %s", err)
 		}
 	}
 
