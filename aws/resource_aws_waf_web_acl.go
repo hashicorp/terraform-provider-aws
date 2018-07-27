@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -22,66 +21,66 @@ func resourceAwsWafWebAcl() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"default_action": &schema.Schema{
+			"default_action": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"metric_name": &schema.Schema{
+			"metric_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateWafMetricName,
 			},
-			"rules": &schema.Schema{
+			"rules": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": &schema.Schema{
-							Type:     schema.TypeSet,
+						"action": {
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"override_action": &schema.Schema{
-							Type:     schema.TypeSet,
+						"override_action": {
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  waf.WafRuleTypeRegular,
@@ -91,7 +90,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 								waf.WafRuleTypeGroup,
 							}, false),
 						},
-						"rule_id": &schema.Schema{
+						"rule_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -132,7 +131,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF ACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -149,6 +148,9 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
+	if err := d.Set("rules", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
+		return fmt.Errorf("error setting rules: %s", err)
+	}
 
 	return nil
 }
@@ -205,7 +207,7 @@ func updateWebAclResource(d *schema.ResourceData, meta interface{}, ChangeAction
 			var aclRuleUpdate *waf.WebACLUpdate
 			switch aclRule["type"].(string) {
 			case waf.WafRuleTypeGroup:
-				overrideAction := aclRule["override_action"].(*schema.Set).List()[0].(map[string]interface{})
+				overrideAction := aclRule["override_action"].([]interface{})[0].(map[string]interface{})
 				aclRuleUpdate = &waf.WebACLUpdate{
 					Action: aws.String(ChangeAction),
 					ActivatedRule: &waf.ActivatedRule{
@@ -216,7 +218,7 @@ func updateWebAclResource(d *schema.ResourceData, meta interface{}, ChangeAction
 					},
 				}
 			default:
-				action := aclRule["action"].(*schema.Set).List()[0].(map[string]interface{})
+				action := aclRule["action"].([]interface{})[0].(map[string]interface{})
 				aclRuleUpdate = &waf.WebACLUpdate{
 					Action: aws.String(ChangeAction),
 					ActivatedRule: &waf.ActivatedRule{

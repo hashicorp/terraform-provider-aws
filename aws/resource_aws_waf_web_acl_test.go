@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
@@ -43,8 +42,6 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The WAF ACL rule resource doesn't GET rules
-				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -80,8 +77,6 @@ func TestAccAWSWafWebAcl_group(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The WAF ACL rule resource doesn't GET rules
-				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -134,8 +129,6 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The WAF ACL rule resource doesn't GET rules
-				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -188,8 +181,6 @@ func TestAccAWSWafWebAcl_changeDefaultAction(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// The WAF ACL rule resource doesn't GET rules
-				ImportStateVerifyIgnore: []string{"rules"},
 			},
 		},
 	})
@@ -279,10 +270,8 @@ func testAccCheckAWSWafWebAclDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the WebACL is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
-				return nil
-			}
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+			continue
 		}
 
 		return err

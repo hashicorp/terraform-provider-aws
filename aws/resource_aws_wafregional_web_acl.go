@@ -19,65 +19,65 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 		Delete: resourceAwsWafRegionalWebAclDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"default_action": &schema.Schema{
+			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"metric_name": &schema.Schema{
+			"metric_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": &schema.Schema{
+						"action": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"override_action": &schema.Schema{
+						"override_action": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  waf.WafRuleTypeRegular,
@@ -87,7 +87,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 								waf.WafRuleTypeGroup,
 							}, false),
 						},
-						"rule_id": &schema.Schema{
+						"rule_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -141,7 +141,9 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("default_action", flattenDefaultActionWR(resp.WebACL.DefaultAction))
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
-	d.Set("rule", flattenWafWebAclRules(resp.WebACL.Rules))
+	if err := d.Set("rule", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
+		return fmt.Errorf("error setting rule: %s", err)
+	}
 
 	return nil
 }
@@ -238,27 +240,27 @@ func flattenDefaultActionWR(n *waf.WafAction) []map[string]interface{} {
 	return m.MapList()
 }
 
-func flattenWafWebAclRules(ts []*waf.ActivatedRule) []interface{} {
-	out := make([]interface{}, len(ts), len(ts))
+func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
+	out := make([]map[string]interface{}, len(ts), len(ts))
 	for i, r := range ts {
 		m := make(map[string]interface{})
 
-		switch *r.Type {
+		switch aws.StringValue(r.Type) {
 		case waf.WafRuleTypeGroup:
 			actionMap := map[string]interface{}{
-				"type": *r.OverrideAction.Type,
+				"type": aws.StringValue(r.OverrideAction.Type),
 			}
-			m["override_action"] = []interface{}{actionMap}
+			m["override_action"] = []map[string]interface{}{actionMap}
 		default:
 			actionMap := map[string]interface{}{
-				"type": *r.Action.Type,
+				"type": aws.StringValue(r.Action.Type),
 			}
-			m["action"] = []interface{}{actionMap}
+			m["action"] = []map[string]interface{}{actionMap}
 		}
 
-		m["priority"] = *r.Priority
-		m["rule_id"] = *r.RuleId
-		m["type"] = *r.Type
+		m["priority"] = int(aws.Int64Value(r.Priority))
+		m["rule_id"] = aws.StringValue(r.RuleId)
+		m["type"] = aws.StringValue(r.Type)
 		out[i] = m
 	}
 	return out
