@@ -191,11 +191,14 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
 
-	if *eventSourceMappingConfiguration.State == "Enabled" {
+	state := aws.StringValue(eventSourceMappingConfiguration.State)
+
+	switch state {
+	case "Enabled", "Enabling":
 		d.Set("enabled", true)
-	} else if *eventSourceMappingConfiguration.State == "Disabled" {
+	case "Disabled", "Disabling":
 		d.Set("enabled", false)
-	} else {
+	default:
 		log.Printf("[DEBUG] Lambda event source mapping is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
 	}
 
