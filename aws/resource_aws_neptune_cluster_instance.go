@@ -287,6 +287,91 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 	return resourceAwsNeptuneClusterInstanceRead(d, meta)
 }
 
+func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
+	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*AWSClient).neptuneconn)
+	if err != nil {
+		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
+	}
+
+	if db == nil {
+		log.Printf("[WARN] Neptune Cluster Instance (%s): not found, removing from state.", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if db.DBClusterIdentifier == nil {
+		return fmt.Errorf("Cluster identifier is missing from instance (%s)", d.Id())
+	}
+
+	conn := meta.(*AWSClient).neptuneconn
+	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
+		DBClusterIdentifier: db.DBClusterIdentifier,
+	})
+
+	var dbc *neptune.DBCluster
+	for _, c := range resp.DBClusters {
+		if aws.StringValue(c.DBClusterIdentifier) == aws.StringValue(db.DBClusterIdentifier) {
+			dbc = c
+		}
+	}
+	if dbc == nil {
+		return fmt.Errorf("Error finding Neptune Cluster (%s) for Cluster Instance (%s): %s",
+			aws.StringValue(db.DBClusterIdentifier), aws.StringValue(db.DBInstanceIdentifier), err)
+	}
+	for _, m := range dbc.DBClusterMembers {
+		if aws.StringValue(db.DBInstanceIdentifier) == aws.StringValue(m.DBInstanceIdentifier) {
+			if aws.BoolValue(m.IsClusterWriter) == true {
+				d.Set("writer", true)
+			} else {
+				d.Set("writer", false)
+			}
+		}
+	}
+
+	if db.Endpoint != nil {
+		d.Set("endpoint", db.Endpoint.Address)
+		d.Set("port", db.Endpoint.Port)
+	}
+
+	if db.DBSubnetGroup != nil {
+		d.Set("neptune_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
+	}
+
+	d.Set("arn", db.DBInstanceArn)
+	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
+	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set("dbi_resource_id", db.DbiResourceId)
+	d.Set("engine_version", db.EngineVersion)
+	d.Set("engine", db.Engine)
+	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set("instance_class", db.DBInstanceClass)
+	d.Set("kms_key_arn", db.KmsKeyId)
+	d.Set("preferred_backup_window", db.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set("promotion_tier", db.PromotionTier)
+	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set("storage_encrypted", db.StorageEncrypted)
+
+	if db.MonitoringInterval != nil {
+		d.Set("monitoring_interval", db.MonitoringInterval)
+	}
+
+	if db.MonitoringRoleArn != nil {
+		d.Set("monitoring_role_arn", db.MonitoringRoleArn)
+	}
+
+	if len(db.DBParameterGroups) > 0 {
+		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
+	}
+
+	if err := saveTagsNeptune(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for Neptune Cluster Instance (%s): %s", aws.StringValue(db.DBInstanceIdentifier), err)
+	}
+
+	return nil
+}
+
 var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
