@@ -2589,9 +2589,9 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		"4294967294",
 	}
 	for _, v := range validAsns {
-		err := validateAmazonSideAsn(v, "amazon_side_asn")
-		if err != nil {
-			t.Fatalf("%q should be a valid ASN: %q", v, err)
+		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
 		}
 	}
 
@@ -2601,8 +2601,8 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		"",
 	}
 	for _, v := range invalidAsns {
-		err := validateAmazonSideAsn(v, "amazon_side_asn")
-		if err == nil {
+		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ASN", v)
 		}
 	}
