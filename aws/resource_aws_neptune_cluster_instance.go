@@ -188,19 +188,6 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Default:  0,
 			},
 
-			"performance_insights_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
-			"performance_insights_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateArn,
-			},
-
 			"tags": tagsSchema(),
 		},
 	}
