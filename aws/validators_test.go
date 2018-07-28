@@ -2577,7 +2577,45 @@ func TestValidateCognitoUserPoolId(t *testing.T) {
 	}
 }
 
-func TestValidateAmazonSideAsn(t *testing.T) {
+func TestValidateVpnGatewayAmazonSideAsn(t *testing.T) {
+	validAsns := []string{
+		"7224",
+		"9059",
+		"64512",
+		"64513",
+		"65533",
+		"65534",
+		"4200000000",
+		"4200000001",
+		"4294967293",
+		"4294967294",
+	}
+	for _, v := range validAsns {
+		_, errors := validateVpnGatewayAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"1",
+		"ABCDEFG",
+		"",
+		"64511",
+		"65535",
+		"4199999999",
+		"4294967295",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := validateVpnGatewayAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
+func TestValidateDxGatewayAmazonSideAsn(t *testing.T) {
 	validAsns := []string{
 		"64512",
 		"64513",
@@ -2589,7 +2627,7 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		"4294967294",
 	}
 	for _, v := range validAsns {
-		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		_, errors := validateDxGatewayAmazonSideAsn(v, "amazon_side_asn")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid ASN: %q", v, errors)
 		}
@@ -2599,9 +2637,16 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		"1",
 		"ABCDEFG",
 		"",
+		"7224",
+		"9059",
+		"64511",
+		"65535",
+		"4199999999",
+		"4294967295",
+		"9999999999",
 	}
 	for _, v := range invalidAsns {
-		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		_, errors := validateDxGatewayAmazonSideAsn(v, "amazon_side_asn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ASN", v)
 		}
