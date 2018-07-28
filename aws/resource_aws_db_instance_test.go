@@ -844,7 +844,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 	}
 }
 
-func TestAccAWSDBInstance_performanceInsight(t *testing.T) {
+func TestAccAWSDBInstance_performanceInsights(t *testing.T) {
 	var v rds.DBInstance
 
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
@@ -863,6 +863,8 @@ func TestAccAWSDBInstance_performanceInsight(t *testing.T) {
 						"aws_db_instance.bar", "performance_insights_enabled", "true"),
 					resource.TestMatchResourceAttr(
 						"aws_db_instance.bar", "performance_insights_kms_key_id", keyRegex),
+					resource.TestCheckResourceAttr(
+						"aws_db_instance.bar", "performance_insights_retention_period", "7"),
 				),
 			},
 		},
@@ -1997,5 +1999,6 @@ resource "aws_db_instance" "bar" {
 	parameter_group_name = "default.postgres10"
 	performance_insights_enabled = true
     performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+	performance_insights_retention_period = 7
 }`, n)
 }

@@ -417,6 +417,12 @@ func resourceAwsDbInstance() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"performance_insights_retention_period": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -912,6 +918,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
+			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -993,6 +1003,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -1342,6 +1353,12 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("performance_insights_kms_key_id") {
 		d.SetPartial("performance_insights_kms_key_id")
 		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("performance_insights_retention_period") {
+		d.SetPartial("performance_insights_retention_period")
+		req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
 		requestUpdate = true
 	}
 
