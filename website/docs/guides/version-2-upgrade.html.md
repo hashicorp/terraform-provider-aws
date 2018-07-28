@@ -102,13 +102,13 @@ As an example, lets take the below sample configuration and migrate it.
 
 data "aws_kms_secret" "example" {
   secret {
-    # ... potentially other configration ...
+    # ... potentially other configuration ...
     name    = "master_password"
     payload = "AQEC..."
   }
 
   secret {
-    # ... potentially other configration ...
+    # ... potentially other configuration ...
     name    = "master_username"
     payload = "AQEC..."
   }
@@ -128,13 +128,13 @@ Updating the sample configuration from above:
 ```hcl
 data "aws_kms_secrets" "example" {
   secret {
-    # ... potentially other configration ...
+    # ... potentially other configuration ...
     name    = "master_password"
     payload = "AQEC..."
   }
 
   secret {
-    # ... potentially other configration ...
+    # ... potentially other configuration ...
     name    = "master_username"
     payload = "AQEC..."
   }
