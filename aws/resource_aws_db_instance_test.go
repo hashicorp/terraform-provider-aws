@@ -1998,7 +1998,7 @@ resource "aws_db_instance" "bar" {
 	skip_final_snapshot = true
 	parameter_group_name = "default.postgres10"
 	performance_insights_enabled = true
-    performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+	performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
 	performance_insights_retention_period = 7
 }`, n)
 }
