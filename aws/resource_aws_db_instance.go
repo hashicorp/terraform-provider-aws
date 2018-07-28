@@ -404,23 +404,6 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
-			"performance_insights_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"performance_insights_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateArn,
-			},
-			"performance_insights_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-
 			"tags": tagsSchema(),
 		},
 	}
@@ -911,11 +894,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
 			opts.EnablePerformanceInsights = aws.Bool(attr.(bool))
 		}
+
 		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
 			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
-		}
-		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
-			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
 		}
 
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
@@ -999,7 +980,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
-	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
+
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -1297,14 +1278,10 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 		requestUpdate = true
 	}
+
 	if d.HasChange("performance_insights_kms_key_id") {
 		d.SetPartial("performance_insights_kms_key_id")
 		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("performance_insights_retention_period") {
-		d.SetPartial("performance_insights_retention_period")
-		req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
 		requestUpdate = true
 	}
 
@@ -1356,13 +1333,10 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	// Tags are set on creation
-	if !d.IsNewResource() && d.HasChange("tags") {
-		if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
-		}
+	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
 	}
 
 	d.Partial(false)
