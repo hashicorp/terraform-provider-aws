@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsNeptuneClusterInstance() *schema.Resource {
@@ -468,6 +466,36 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 	return resourceAwsNeptuneClusterInstanceRead(d, meta)
 }
 
+func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+
+	log.Printf("[DEBUG] Neptune Cluster Instance destroy: %v", d.Id())
+
+	opts := neptune.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
+
+	log.Printf("[DEBUG] Neptune Cluster Instance destroy configuration: %s", opts)
+	if _, err := conn.DeleteDBInstance(&opts); err != nil {
+		return err
+	}
+
+	log.Println("[INFO] Waiting for Neptune Cluster Instance to be destroyed")
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceAwsNeptuneClusterInstanceDeletePendingStates,
+		Target:     []string{},
+		Refresh:    resourceAwsNeptuneInstanceStateRefreshFunc(d.Id(), conn),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
@@ -478,6 +506,11 @@ var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"renaming",
 	"starting",
 	"upgrading",
+}
+
+var resourceAwsNeptuneClusterInstanceDeletePendingStates = []string{
+	"modifying",
+	"deleting",
 }
 
 func resourceAwsNeptuneInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource.StateRefreshFunc {

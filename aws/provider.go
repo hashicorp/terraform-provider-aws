@@ -503,7 +503,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_nat_gateway":                                  resourceAwsNatGateway(),
 			"aws_network_acl":                                  resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                          resourceAwsDefaultNetworkAcl(),
+			"aws_neptune_cluster":                              resourceAwsNeptuneCluster(),
+			"aws_neptune_cluster_instance":                     resourceAwsNeptuneClusterInstance(),
+			"aws_neptune_cluster_parameter_group":              resourceAwsNeptuneClusterParameterGroup(),
 			"aws_neptune_parameter_group":                      resourceAwsNeptuneParameterGroup(),
+			"aws_neptune_subnet_group":                         resourceAwsNeptuneSubnetGroup(),
 			"aws_network_acl_rule":                             resourceAwsNetworkAclRule(),
 			"aws_network_interface":                            resourceAwsNetworkInterface(),
 			"aws_network_interface_attachment":                 resourceAwsNetworkInterfaceAttachment(),
@@ -654,9 +658,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_compute_environment":                    resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                         resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                              resourceAwsBatchJobQueue(),
-			"aws_neptune_subnet_group":                         resourceAwsNeptuneSubnetGroup(),
-			"aws_neptune_cluster_parameter_group":              resourceAwsNeptuneClusterParameterGroup(),
-			"aws_neptune_cluster":                              resourceAwsNeptuneCluster(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
