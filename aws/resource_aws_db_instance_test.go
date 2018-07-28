@@ -1919,3 +1919,44 @@ data "template_file" "test" {
 }
 `, rInt)
 }
+
+func testAccCheckAWSDBPerformanceInsights(n int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_db_instance" "bar" {
+	identifier = "foobarbaz-test-terraform-%d"
+	allocated_storage = 10
+	engine = "postgres"
+	engine_version = "10.3"
+	instance_class = "db.m4.large"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
+	backup_retention_period = 0
+	skip_final_snapshot = true
+	parameter_group_name = "default.postgres10"
+	performance_insights_enabled = true
+	performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+	performance_insights_retention_period = 7
+}`, n)
+}
