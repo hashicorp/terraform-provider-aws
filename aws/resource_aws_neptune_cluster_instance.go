@@ -372,6 +372,102 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
+func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+	requestUpdate := false
+
+	req := &neptune.ModifyDBInstanceInput{
+		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+		DBInstanceIdentifier: aws.String(d.Id()),
+	}
+
+	if d.HasChange("neptune_parameter_group_name") {
+		req.DBParameterGroupName = aws.String(d.Get("neptune_parameter_group_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("instance_class") {
+		req.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("monitoring_role_arn") {
+		d.SetPartial("monitoring_role_arn")
+		req.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("preferred_backup_window") {
+		d.SetPartial("preferred_backup_window")
+		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("preferred_maintenance_window") {
+		d.SetPartial("preferred_maintenance_window")
+		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("monitoring_interval") {
+		d.SetPartial("monitoring_interval")
+		req.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("auto_minor_version_upgrade") {
+		d.SetPartial("auto_minor_version_upgrade")
+		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("promotion_tier") {
+		d.SetPartial("promotion_tier")
+		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	log.Printf("[DEBUG] Send Neptune Instance Modification request: %#v", requestUpdate)
+	if requestUpdate {
+		log.Printf("[DEBUG] Neptune Instance Modification request: %#v", req)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBInstance(req)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error modifying Neptune Instance %s: %s", d.Id(), err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates,
+			Target:     []string{"available"},
+			Refresh:    resourceAwsNeptuneInstanceStateRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second,
+		}
+
+		// Wait, catching any errors
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return err
+		}
+
+	}
+
+	if err := setTagsNeptune(conn, d, d.Get("arn").(string)); err != nil {
+		return err
+	}
+
+	return resourceAwsNeptuneClusterInstanceRead(d, meta)
+}
+
 var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
