@@ -41,7 +41,44 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
 			"availability_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+
+			"cluster_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"dbi_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"engine": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "neptune",
+				ForceNew:     true,
+				ValidateFunc: validateNeptuneEngine(),
+			},
+
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -65,59 +102,25 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				ValidateFunc: validateNeptuneIdentifier,
 			},
 
-			"neptune_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"writer": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  8182,
-				ForceNew: true,
-			},
-
-			"publicly_accessible": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"engine": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "neptune",
-				ForceNew:     true,
-				ValidateFunc: validateNeptuneEngine(),
+			"kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
-			"engine_version": {
+			"monitoring_interval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+
+			"monitoring_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -127,31 +130,18 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Default:  "default.neptune1",
 			},
 
-			"kms_key_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-
-			"monitoring_role_arn": {
+			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Computed: true,
+			},
+
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  8182,
+				ForceNew: true,
 			},
 
 			"preferred_backup_window": {
@@ -174,19 +164,29 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				ValidateFunc: validateOnceAWeekWindowFormat,
 			},
 
-			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-
 			"promotion_tier": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
 			},
 
+			"publicly_accessible": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
+
+			"writer": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
