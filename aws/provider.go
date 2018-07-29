@@ -209,6 +209,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_instance_profile":             dataSourceAwsIAMInstanceProfile(),
 			"aws_iam_policy":                       dataSourceAwsIAMPolicy(),
 			"aws_iam_policy_document":              dataSourceAwsIamPolicyDocument(),
+			"aws_ecr_lifecycle_policy_document":    dataSourceAwsEcrLifecyclePolicyDocument(),
 			"aws_iam_role":                         dataSourceAwsIAMRole(),
 			"aws_iam_server_certificate":           dataSourceAwsIAMServerCertificate(),
 			"aws_iam_user":                         dataSourceAwsIAMUser(),
