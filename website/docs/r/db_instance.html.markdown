@@ -258,7 +258,8 @@ in a Route 53 Alias record).
 * `username` - The master username for the database.
 * `performance_insights_enabled` - Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - The ARN for the KMS encryption key used by Performance Insights.
-
+* `performance_insights_retention_period` -  The amount of time, in days, to retain Performance Insights data.
+Valid values are 7 or 731 (2 years).
 On Oracle instances the following is exported additionally:
 
 * `character_set_name` - The character set used on Oracle instances.
