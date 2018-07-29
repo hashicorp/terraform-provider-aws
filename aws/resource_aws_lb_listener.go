@@ -72,21 +72,76 @@ func resourceAwsLbListener() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_group_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ActionTypeEnumFixedResponse,
 								elbv2.ActionTypeEnumForward,
+								elbv2.ActionTypeEnumRedirect,
 							}, true),
+						},
+						"target_group_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"forward"}),
+						},
+						"status_code": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"fixed-response", "redirect"}),
+						},
+						"host": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"redirect"}),
+						},
+						"query": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"redirect"}),
+						},
+						"path": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"redirect"}),
+						},
+						"port": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"redirect"}),
+						},
+						"content_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"fixed-response"}),
+						},
+						"message_body": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNotInSlice([]string{"fixed-response"}),
 						},
 					},
 				},
 			},
 		},
+	}
+}
+
+func suppressIfDefaultActionTypeNotInSlice(valid []string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		for _, t := range valid {
+			if d.Get("default_action.type").(string) == t {
+				return true
+			}
+		}
+		return false
 	}
 }
 
