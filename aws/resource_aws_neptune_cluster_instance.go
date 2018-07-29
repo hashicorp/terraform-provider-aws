@@ -99,7 +99,7 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateNeptuneIdentifier,
+				ValidateFunc: validateNeptuneIdentifierPrefix,
 			},
 
 			"instance_class": {
