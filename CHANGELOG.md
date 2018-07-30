@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_eip: Properly handle if multiple EIPs are returned during API read [GH-5331]
 * resource/aws_lambda_event_source_mapping: Properly read `enabled` into Terraform state [GH-5292]
 * resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
+* resource/aws_launch_template: Set `latest_version` as re-computed on updates (prevent need for double apply) [GH-5250]
 * resource/aws_lb_listener: Prevent crash from new `fixed-response` and `redirect` actions [GH-5367]
 * resource/aws_lb_listener_rule: Prevent crash from new `fixed-response` and `redirect` actions [GH-5367]
 * resource/aws_waf_web_acl: Properly read `rules` into Terraform state [GH-5342]
