@@ -22,6 +22,7 @@ BUG FIXES:
 
 * resource/aws_codebuild_project: Handle additional IAM retry condition during update [GH-5238]
 * resource/aws_codebuild_project: Remove extraneous UpdateProject API call after CreateProject API call [GH-5238]
+* resource/aws_eip: Properly handle if multiple EIPs are returned during API read [GH-5331]
 * resource/aws_lambda_event_source_mapping: Properly read `enabled` into Terraform state [GH-5292]
 * resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
 * resource/aws_lb_listener: Prevent crash from new `fixed-response` and `redirect` actions [GH-5367]
