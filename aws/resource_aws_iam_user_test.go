@@ -79,6 +79,29 @@ func TestAccAWSUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSUser_disappears(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.user"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(rName, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserDisappears(&user),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSUser_nameChange(t *testing.T) {
 	var conf iam.GetUserOutput
 
@@ -251,6 +274,23 @@ func testAccCheckAWSUserAttributes(user *iam.GetUserOutput, name string, path st
 
 		if *user.User.Path != path {
 			return fmt.Errorf("Bad path: %s", *user.User.Path)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		userName := aws.StringValue(getUserOutput.User.UserName)
+
+		_, err := iamconn.DeleteUser(&iam.DeleteUserInput{
+			UserName: aws.String(userName),
+		})
+		if err != nil {
+			return fmt.Errorf("error deleting user %q: %s", userName, err)
 		}
 
 		return nil

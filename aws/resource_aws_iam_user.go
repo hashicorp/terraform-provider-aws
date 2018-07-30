@@ -100,8 +100,8 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := iamconn.GetUser(request)
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") { // XXX test me
-			log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			log.Printf("[WARN] No IAM user by name (%s) found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -109,7 +109,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output == nil || output.User == nil {
-		log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
+		log.Printf("[WARN] No IAM user by name (%s) found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
