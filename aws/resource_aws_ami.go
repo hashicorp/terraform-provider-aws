@@ -59,6 +59,7 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 		RootDeviceName:     aws.String(d.Get("root_device_name").(string)),
 		SriovNetSupport:    aws.String(d.Get("sriov_net_support").(string)),
 		VirtualizationType: aws.String(d.Get("virtualization_type").(string)),
+		EnaSupport:         aws.Bool(d.Get("ena_support").(bool)),
 	}
 
 	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
@@ -196,6 +197,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("virtualization_type", image.VirtualizationType)
+	d.Set("ena_support", image.EnaSupport)
 
 	var ebsBlockDevs []map[string]interface{}
 	var ephemeralBlockDevs []map[string]interface{}
@@ -567,6 +569,11 @@ func resourceAwsAmiCommonSchema(computed bool) map[string]*schema.Schema {
 		"manage_ebs_snapshots": {
 			Type:     schema.TypeBool,
 			Computed: true,
+			ForceNew: true,
+		},
+		"ena_support": {
+			Type:     schema.TypeBool,
+			Optional: true,
 			ForceNew: true,
 		},
 	}
