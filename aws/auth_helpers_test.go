@@ -123,91 +123,97 @@ func TestGetAccountInformation(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		resetEnv := unsetEnv(t)
-		defer resetEnv()
-		// capture the test server's close method, to call after the test returns
-		awsTs := awsMetadataApiMock(testCase.EC2MetadataEndpoints)
-		defer awsTs()
+		t.Run(testCase.Description, func(t *testing.T) {
+			resetEnv := unsetEnv(t)
+			defer resetEnv()
+			// capture the test server's close method, to call after the test returns
+			awsTs := awsMetadataApiMock(testCase.EC2MetadataEndpoints)
+			defer awsTs()
 
-		closeIam, iamSess, err := getMockedAwsApiSession("IAM", testCase.IAMEndpoints)
-		defer closeIam()
-		if err != nil {
-			t.Fatal(err)
-		}
+			closeIam, iamSess, err := getMockedAwsApiSession("IAM", testCase.IAMEndpoints)
+			defer closeIam()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		closeSts, stsSess, err := getMockedAwsApiSession("STS", testCase.STSEndpoints)
-		defer closeSts()
-		if err != nil {
-			t.Fatal(err)
-		}
+			closeSts, stsSess, err := getMockedAwsApiSession("STS", testCase.STSEndpoints)
+			defer closeSts()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		iamConn := iam.New(iamSess)
-		stsConn := sts.New(stsSess)
+			iamConn := iam.New(iamSess)
+			stsConn := sts.New(stsSess)
 
-		accountID, partition, err := GetAccountInformation(iamConn, stsConn, testCase.AuthProviderName)
-		if err != nil && testCase.ErrCount == 0 {
-			t.Fatalf("%s: Expected no error, received error: %s", testCase.Description, err)
-		}
-		if err == nil && testCase.ErrCount > 0 {
-			t.Fatalf("%s: Expected %d error(s), received none", testCase.Description, testCase.ErrCount)
-		}
-		if accountID != testCase.ExpectedAccountID {
-			t.Fatalf("%s: Parsed account ID doesn't match with expected (%q != %q)", testCase.Description, accountID, testCase.ExpectedAccountID)
-		}
-		if partition != testCase.ExpectedPartition {
-			t.Fatalf("%s: Parsed partition doesn't match with expected (%q != %q)", testCase.Description, partition, testCase.ExpectedPartition)
-		}
+			accountID, partition, err := GetAccountInformation(iamConn, stsConn, testCase.AuthProviderName)
+			if err != nil && testCase.ErrCount == 0 {
+				t.Fatalf("Expected no error, received error: %s", err)
+			}
+			if err == nil && testCase.ErrCount > 0 {
+				t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
+			}
+			if accountID != testCase.ExpectedAccountID {
+				t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
+			}
+			if partition != testCase.ExpectedPartition {
+				t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
+			}
+		})
 	}
 }
 
 func TestGetAccountInformationFromEC2Metadata(t *testing.T) {
-	resetEnv := unsetEnv(t)
-	defer resetEnv()
-	// capture the test server's close method, to call after the test returns
-	awsTs := awsMetadataApiMock(append(ec2metadata_securityCredentialsEndpoints, ec2metadata_instanceIdEndpoint, ec2metadata_iamInfoEndpoint))
-	defer awsTs()
+	t.Run("EC2 metadata success", func(t *testing.T) {
+		resetEnv := unsetEnv(t)
+		defer resetEnv()
+		// capture the test server's close method, to call after the test returns
+		awsTs := awsMetadataApiMock(append(ec2metadata_securityCredentialsEndpoints, ec2metadata_instanceIdEndpoint, ec2metadata_iamInfoEndpoint))
+		defer awsTs()
 
-	id, partition, err := GetAccountInformationFromEC2Metadata()
-	if err != nil {
-		t.Fatalf("Getting account ID from EC2 metadata API failed: %s", err)
-	}
+		id, partition, err := GetAccountInformationFromEC2Metadata()
+		if err != nil {
+			t.Fatalf("Getting account ID from EC2 metadata API failed: %s", err)
+		}
 
-	if id != ec2metadata_iamInfoEndpoint_expectedAccountID {
-		t.Fatalf("Expected account ID: %s, given: %s", ec2metadata_iamInfoEndpoint_expectedAccountID, id)
-	}
-	if partition != ec2metadata_iamInfoEndpoint_expectedPartition {
-		t.Fatalf("Expected partition: %s, given: %s", ec2metadata_iamInfoEndpoint_expectedPartition, partition)
-	}
+		if id != ec2metadata_iamInfoEndpoint_expectedAccountID {
+			t.Fatalf("Expected account ID: %s, given: %s", ec2metadata_iamInfoEndpoint_expectedAccountID, id)
+		}
+		if partition != ec2metadata_iamInfoEndpoint_expectedPartition {
+			t.Fatalf("Expected partition: %s, given: %s", ec2metadata_iamInfoEndpoint_expectedPartition, partition)
+		}
+	})
 }
 
 func TestGetAccountInformationFromIAMGetUser(t *testing.T) {
 	var testCases = []struct {
+		Description       string
 		MockEndpoints     []*awsMockEndpoint
 		ErrCount          int
 		ExpectedAccountID string
 		ExpectedPartition string
 	}{
 		{
+			Description: "Ignore iam:GetUser failure with federated user",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=GetUser&Version=2010-05-08"},
 					Response: &awsMockResponse{400, iamResponse_GetUser_federatedFailure, "text/xml"},
 				},
 			},
-			// We ignore this error
 			ErrCount: 0,
 		},
 		{
+			Description: "Ignore iam:GetUser failure with unauthorized user",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=GetUser&Version=2010-05-08"},
 					Response: &awsMockResponse{403, iamResponse_GetUser_unauthorized, "text/xml"},
 				},
 			},
-			// We ignore this error
 			ErrCount: 0,
 		},
 		{
+			Description: "iam:GetUser success",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=GetUser&Version=2010-05-08"},
@@ -220,38 +226,42 @@ func TestGetAccountInformationFromIAMGetUser(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		closeIam, iamSess, err := getMockedAwsApiSession("IAM", testCase.MockEndpoints)
-		defer closeIam()
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(testCase.Description, func(t *testing.T) {
+			closeIam, iamSess, err := getMockedAwsApiSession("IAM", testCase.MockEndpoints)
+			defer closeIam()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		iamConn := iam.New(iamSess)
+			iamConn := iam.New(iamSess)
 
-		accountID, partition, err := GetAccountInformationFromIAMGetUser(iamConn)
-		if err != nil && testCase.ErrCount == 0 {
-			t.Fatalf("Expected no error, received error: %s", err)
-		}
-		if err == nil && testCase.ErrCount > 0 {
-			t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
-		}
-		if accountID != testCase.ExpectedAccountID {
-			t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
-		}
-		if partition != testCase.ExpectedPartition {
-			t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
-		}
+			accountID, partition, err := GetAccountInformationFromIAMGetUser(iamConn)
+			if err != nil && testCase.ErrCount == 0 {
+				t.Fatalf("Expected no error, received error: %s", err)
+			}
+			if err == nil && testCase.ErrCount > 0 {
+				t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
+			}
+			if accountID != testCase.ExpectedAccountID {
+				t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
+			}
+			if partition != testCase.ExpectedPartition {
+				t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
+			}
+		})
 	}
 }
 
 func TestGetAccountInformationFromIAMListRoles(t *testing.T) {
 	var testCases = []struct {
+		Description       string
 		MockEndpoints     []*awsMockEndpoint
 		ErrCount          int
 		ExpectedAccountID string
 		ExpectedPartition string
 	}{
 		{
+			Description: "iam:ListRoles unauthorized",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=ListRoles&MaxItems=1&Version=2010-05-08"},
@@ -261,6 +271,7 @@ func TestGetAccountInformationFromIAMListRoles(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
+			Description: "iam:ListRoles success",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=ListRoles&MaxItems=1&Version=2010-05-08"},
@@ -273,38 +284,42 @@ func TestGetAccountInformationFromIAMListRoles(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		closeIam, iamSess, err := getMockedAwsApiSession("IAM", testCase.MockEndpoints)
-		defer closeIam()
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(testCase.Description, func(t *testing.T) {
+			closeIam, iamSess, err := getMockedAwsApiSession("IAM", testCase.MockEndpoints)
+			defer closeIam()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		iamConn := iam.New(iamSess)
+			iamConn := iam.New(iamSess)
 
-		accountID, partition, err := GetAccountInformationFromIAMListRoles(iamConn)
-		if err != nil && testCase.ErrCount == 0 {
-			t.Fatalf("Expected no error, received error: %s", err)
-		}
-		if err == nil && testCase.ErrCount > 0 {
-			t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
-		}
-		if accountID != testCase.ExpectedAccountID {
-			t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
-		}
-		if partition != testCase.ExpectedPartition {
-			t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
-		}
+			accountID, partition, err := GetAccountInformationFromIAMListRoles(iamConn)
+			if err != nil && testCase.ErrCount == 0 {
+				t.Fatalf("Expected no error, received error: %s", err)
+			}
+			if err == nil && testCase.ErrCount > 0 {
+				t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
+			}
+			if accountID != testCase.ExpectedAccountID {
+				t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
+			}
+			if partition != testCase.ExpectedPartition {
+				t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
+			}
+		})
 	}
 }
 
 func TestGetAccountInformationFromSTSGetCallerIdentity(t *testing.T) {
 	var testCases = []struct {
+		Description       string
 		MockEndpoints     []*awsMockEndpoint
 		ErrCount          int
 		ExpectedAccountID string
 		ExpectedPartition string
 	}{
 		{
+			Description: "sts:GetCallerIdentity unauthorized",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=GetCallerIdentity&Version=2011-06-15"},
@@ -314,6 +329,7 @@ func TestGetAccountInformationFromSTSGetCallerIdentity(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
+			Description: "sts:GetCallerIdentity success",
 			MockEndpoints: []*awsMockEndpoint{
 				{
 					Request:  &awsMockRequest{"POST", "/", "Action=GetCallerIdentity&Version=2011-06-15"},
@@ -326,27 +342,29 @@ func TestGetAccountInformationFromSTSGetCallerIdentity(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		closeSts, stsSess, err := getMockedAwsApiSession("STS", testCase.MockEndpoints)
-		defer closeSts()
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(testCase.Description, func(t *testing.T) {
+			closeSts, stsSess, err := getMockedAwsApiSession("STS", testCase.MockEndpoints)
+			defer closeSts()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		stsConn := sts.New(stsSess)
+			stsConn := sts.New(stsSess)
 
-		accountID, partition, err := GetAccountInformationFromSTSGetCallerIdentity(stsConn)
-		if err != nil && testCase.ErrCount == 0 {
-			t.Fatalf("Expected no error, received error: %s", err)
-		}
-		if err == nil && testCase.ErrCount > 0 {
-			t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
-		}
-		if accountID != testCase.ExpectedAccountID {
-			t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
-		}
-		if partition != testCase.ExpectedPartition {
-			t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
-		}
+			accountID, partition, err := GetAccountInformationFromSTSGetCallerIdentity(stsConn)
+			if err != nil && testCase.ErrCount == 0 {
+				t.Fatalf("Expected no error, received error: %s", err)
+			}
+			if err == nil && testCase.ErrCount > 0 {
+				t.Fatalf("Expected %d error(s), received none", testCase.ErrCount)
+			}
+			if accountID != testCase.ExpectedAccountID {
+				t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
+			}
+			if partition != testCase.ExpectedPartition {
+				t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
+			}
+		})
 	}
 }
 
