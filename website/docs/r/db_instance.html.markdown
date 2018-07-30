@@ -91,6 +91,8 @@ with read replicas, it needs to be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
 for additonal read replica contraints.
+* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
+* `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
    Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
@@ -239,6 +241,8 @@ In addition to all arguments above, the following attributes are exported:
 * `backup_window` - The backup window.
 * `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
 DB instance.
+* `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
+* `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
 * `endpoint` - The connection endpoint.
 * `engine` - The database engine.
 * `engine_version` - The database engine version.
