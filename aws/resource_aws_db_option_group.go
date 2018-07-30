@@ -274,12 +274,13 @@ func resourceAwsDbOptionGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 		log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 			var err error
 
 			_, err = rdsconn.ModifyOptionGroup(modifyOpts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "SQLSERVER_BACKUP_RESTORE") {
+				// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
