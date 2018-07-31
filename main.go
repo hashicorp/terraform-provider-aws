@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/swinkler/terraform-provider-aws/aws"
+	"github.com/terraform-providers/terraform-provider-aws/aws"
 )
 
 func main() {

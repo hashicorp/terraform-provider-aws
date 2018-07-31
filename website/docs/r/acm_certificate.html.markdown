@@ -46,7 +46,7 @@ resource "aws_acm_certificate" "cert" {
       validation_domain = "example.io"
     },
     {
-      domain_name       = "app1.mytest.rd.elliemae.io"
+      domain_name       = "app1.yolo.example.io"
       validation_domain = "example.io"
     },
   ]
@@ -67,10 +67,13 @@ The following arguments are supported:
 * `subject_alternative_names` - (Optional) One or more domain names (subject alternative names) included in the certificate. This list contains the domain names that are bound to the public key that is contained in the certificate. The subject alternative names include the canonical domain name (CN) of the certificate and additional domain names that can be used to connect to the website.
 * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
 * `domain_validaton_options` - (Optional) Contains information about the initial validation of each domain name that occurs. This is an array of maps that contains information about which validation_domain to use for domains in the subject_alternative_names list.
-  * `domain_name` - (Required) A fully qualified domain name (FQDN) in the certificate. For example, www.example.com or example.com .
-  * `validation_domain` - (Required) The domain name that ACM used to send domain validation emails
+
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+Domain Validation Options objects accept the following attributes
+
+* `domain_name` - (Required) A fully qualified domain name (FQDN) in the certificate. For example, www.example.com or example.com .
+* `validation_domain` - (Required) The domain name that ACM used to send domain validation emails
 
 ## Attributes Reference
 
@@ -80,7 +83,7 @@ The following additional attributes are exported:
 * `arn` - The ARN of the certificate
 * `certificate_details` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. 
 
-Certficiate_detials objects export the following attributes:
+Certificate Details objects export the following attributes:
 
 * `domain_name` - A fully qualified domain name (FQDN) in the certificate. For example, www.example.com or example.com .
 * `resource_record_name` - The name of the DNS record to create in your domain. This is supplied by ACM.
