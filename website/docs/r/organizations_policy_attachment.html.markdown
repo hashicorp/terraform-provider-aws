@@ -51,5 +51,5 @@ The following arguments are supported:
 `aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g. with an account target
 
 ```
-$ terraform import aws_organization_policy_attachment.account 123456789012:p-12345678
+$ terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
 ```
