@@ -154,6 +154,29 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 	})
 }
 
+func TestAccAWSNeptuneClusterInstance_enhancedMonitoring(t *testing.T) {
+	var v neptune.DBInstance
+	interval := 30
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterInstanceEnhancedMonitoring(acctest.RandInt(), interval),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterInstanceExists("aws_neptune_cluster_instance.cluster_instances", &v),
+					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						"aws_neptune_cluster_instance.cluster_instances", "monitoring_interval", interval),
+				),
+			},
+		},
+	})
+}
+
+
 func testAccCheckAWSNeptuneClusterInstanceExists(n string, v *neptune.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -490,4 +513,82 @@ resource "aws_neptune_parameter_group" "bar" {
   }
 }
 `, n, n, n, n)
+}
+
+func testAccAWSNeptuneClusterInstanceEnhancedMonitoring(n int, interval int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier 	= "tf-neptune-cluster-test-%d"
+  availability_zones 	= ["us-west-2a", "us-west-2b", "us-west-2c"]
+  skip_final_snapshot 	= true
+}
+
+resource "aws_neptune_cluster_instance" "cluster_instances" {
+  identifier              		= "tf-cluster-instance-%d"
+  cluster_identifier      		= "${aws_neptune_cluster.default.id}"
+  instance_class          		= "db.r4.large"
+  monitoring_interval           = %d
+  monitoring_role_arn           = "${aws_iam_role.tf_enhanced_monitor_role.arn}"
+}
+
+resource "aws_iam_role" "tf_enhanced_monitor_role" {
+    name = "tf_enhanced_monitor_role-%d"
+    assume_role_policy = <<EOF
+{
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "sts:AssumeRole",
+                    "Principal": {
+                        "Service": "monitoring.rds.amazonaws.com"
+                    },
+                    "Effect": "Allow",
+                    "Sid": ""
+                }
+            ]
+   }
+EOF
+}
+
+resource "aws_iam_policy_attachment" "rds_m_attach" {
+    name = "tf-enhanced-monitoring-attachment-%d"
+    roles = ["${aws_iam_role.tf_enhanced_monitor_role.name}"]
+    policy_arn = "${aws_iam_policy.test.arn}"
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tf-enhanced-monitoring-policy-%d"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EnableCreationAndManagementOfNeptuneCloudwatchLogGroups",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:PutRetentionPolicy"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "EnableCreationAndManagementOfNeptuneCloudwatchLogStreams",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+POLICY
+}
+`, n, n, interval, n, n, n)
 }

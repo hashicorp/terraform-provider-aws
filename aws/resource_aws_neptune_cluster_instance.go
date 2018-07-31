@@ -174,6 +174,7 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 
 			"storage_encrypted": {
@@ -364,7 +365,7 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err := saveTagsNeptune(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for Neptune Cluster Instance (%s): %s", aws.StringValue(db.DBInstanceIdentifier), err)
+		return fmt.Errorf("Failed to save tags for Neptune Cluster Instance (%s): %s", aws.StringValue(db.DBInstanceIdentifier), err)
 	}
 
 	return nil
@@ -475,7 +476,10 @@ func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy configuration: %s", opts)
 	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		return err
+		if isAWSErr(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
+			return nil
+		}
+		return fmt.Errorf("error deleting Neptune cluster instance %q: %s", d.Id(), err)
 	}
 
 	log.Println("[INFO] Waiting for Neptune Cluster Instance to be destroyed")
@@ -551,9 +555,7 @@ func resourceAwsNeptuneInstanceRetrieve(id string, conn *neptune.Neptune) (*nept
 
 	if len(resp.DBInstances) != 1 ||
 		aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) != id {
-		if err != nil {
-			return nil, nil
-		}
+		return nil, nil
 	}
 
 	return resp.DBInstances[0], nil
