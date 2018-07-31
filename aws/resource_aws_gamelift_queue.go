@@ -117,7 +117,7 @@ func resourceAwsGameliftQueuesUpdate(d *schema.ResourceData, meta interface{}) e
 
 	name := d.Get("name").(string)
 
-	log.Printf("[INFO] Updating Gamelift Build: %s", name)
+	log.Printf("[INFO] Updating Gamelift Session Queue: %s", name)
 
 	if d.HasChange("name") || d.HasChange("destinations") ||
 		d.HasChange("player_latency_policies") || d.HasChange("timeout_in_seconds") {
