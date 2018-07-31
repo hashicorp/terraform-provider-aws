@@ -2266,7 +2266,7 @@ type FileSystemSize struct {
 
 	// Time at which the size of data, returned in the Value field, was determined.
 	// The value is the integer number of seconds since 1970-01-01T00:00:00Z.
-	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	Timestamp *time.Time `type:"timestamp"`
 
 	// Latest known metered size (in bytes) of data stored in the file system.
 	//
@@ -2568,7 +2568,7 @@ type UpdateFileSystemOutput struct {
 	// Time that the file system was created, in seconds (since 1970-01-01T00:00:00Z).
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// Opaque string specified in the request.
 	//

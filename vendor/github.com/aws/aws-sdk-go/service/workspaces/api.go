@@ -4675,10 +4675,10 @@ type WorkspaceConnectionStatus struct {
 	ConnectionState *string `type:"string" enum:"ConnectionState"`
 
 	// The timestamp of the connection state check.
-	ConnectionStateCheckTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ConnectionStateCheckTimestamp *time.Time `type:"timestamp"`
 
 	// The timestamp of the last known user connection.
-	LastKnownUserConnectionTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastKnownUserConnectionTimestamp *time.Time `type:"timestamp"`
 
 	// The ID of the WorkSpace.
 	WorkspaceId *string `type:"string"`

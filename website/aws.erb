@@ -25,6 +25,10 @@
                 <a href="#">Guides</a>
                     <ul class="nav nav-visible">
 
+                        <li<%= sidebar_current("docs-aws-guide-version-2-upgrade") %>>
+                            <a href="/docs/providers/aws/guides/version-2-upgrade.html">AWS Provider Version 2 Upgrade</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-guide-eks-getting-started") %>>
                             <a href="/docs/providers/aws/guides/eks-getting-started.html">AWS EKS Getting Started</a>
                         </li>
@@ -235,8 +239,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-kms-ciphertext") %>>
                             <a href="/docs/providers/aws/d/kms_ciphertext.html">aws_kms_ciphertext</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-kms-secret") %>>
+                        <li<%= sidebar_current("docs-aws-datasource-kms-secret-x") %>>
                             <a href="/docs/providers/aws/d/kms_secret.html">aws_kms_secret</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-kms-secrets") %>>
+                            <a href="/docs/providers/aws/d/kms_secrets.html">aws_kms_secrets</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-lambda-invocation") %>>
                             <a href="/docs/providers/aws/d/lambda_invocation.html">aws_lambda_invocation</a>
@@ -247,8 +254,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-network-acls") %>>
                            <a href="/docs/providers/aws/d/network_acls.html">aws_network_acls</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-network-interface") %>>
+                        <li<%= sidebar_current("docs-aws-datasource-network-interface-x") %>>
                             <a href="/docs/providers/aws/d/network_interface.html">aws_network_interface</a>
+                        </li>
+                         <li<%= sidebar_current("docs-aws-datasource-network-interfaces") %>>
+                            <a href="/docs/providers/aws/d/network_interfaces.html">aws_network_interfaces</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-lambda-function") %>>
                             <a href="/docs/providers/aws/d/lambda_function.html">aws_lambda_function</a>
@@ -327,6 +337,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ssm-parameter") %>>
                          <a href="/docs/providers/aws/d/ssm_parameter.html">aws_ssm_parameter</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-storagegateway-local-disk") %>>
+                         <a href="/docs/providers/aws/d/storagegateway_local_disk.html">aws_storagegateway_local_disk</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-subnet-x") %>>
                             <a href="/docs/providers/aws/d/subnet.html">aws_subnet</a>
@@ -1513,6 +1526,10 @@
                     <a href="#">Macie Resources</a>
                     <ul class="nav nav-visible">
 
+                        <li<%= sidebar_current("docs-aws-macie-member-account-association") %>>
+                            <a href="/docs/providers/aws/r/macie_member_account_association.html">aws_macie_member_account_association</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-macie-s3-bucket-association") %>>
                             <a href="/docs/providers/aws/r/macie_s3_bucket_association.html">aws_macie_s3_bucket_association</a>
                         </li>
@@ -2129,6 +2146,18 @@
 
                         <li<%= sidebar_current("docs-aws-resource-storagegateway-gateway") %>>
                             <a href="/docs/providers/aws/r/storagegateway_gateway.html">aws_storagegateway_gateway</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-nfs-file-share") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_nfs_file_share.html">aws_storagegateway_nfs_file_share</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-upload-buffer") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_upload_buffer.html">aws_storagegateway_upload_buffer</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-working-storage") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_working_storage.html">aws_storagegateway_working_storage</a>
                         </li>
 
                     </ul>

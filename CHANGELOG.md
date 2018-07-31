@@ -1,4 +1,74 @@
-## 1.29.0 (Unreleased)
+## 1.30.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_storagegateway_local_disk` [GH-5279]
+* **New Resource:** `aws_macie_member_account_association` [GH-5283]
+* **New Resource:** `aws_storagegateway_nfs_file_share` [GH-5255]
+* **New Resource:** `aws_storagegateway_upload_buffer` [GH-5284]
+* **New Resource:** `aws_storagegateway_working_storage` [GH-5285]
+
+ENHANCEMENTS:
+
+* data-source/aws_rds_cluster: Add `arn` attribute [GH-5221]
+* resource/aws_api_gateway_domain_name: Support resource import [GH-5368]
+* resource/aws_glue_crawler: Add `dynamodb_target` argument [GH-5152]
+* resource/aws_iam_role: Add `permissions_boundary` argument [GH-5184]
+* resource/aws_iam_user: Add `permissions_boundary` argument [GH-5183]
+* resource/aws_neptune_cluster: Support resource import [GH-5227]
+* resource/aws_rds_cluster: Add `arn` attribute [GH-5221]
+* resource/aws_ssm_patch_baseline: Add `AMAZON_LINUX_2` and `SUSE` to `operating_system` plan time validation [GH-5371]
+
+BUG FIXES:
+
+* resource/aws_codebuild_project: Handle additional IAM retry condition during update [GH-5238]
+* resource/aws_codebuild_project: Remove extraneous UpdateProject API call after CreateProject API call [GH-5238]
+* resource/aws_db_instance: Prevent error when restoring database from snapshot with tagging enabled [GH-5370]
+* resource/aws_db_option_group: Prevent error when creating options with new IAM role [GH-5389]
+* resource/aws_eip: Properly handle if multiple EIPs are returned during API read [GH-5331]
+* resource/aws_lambda_event_source_mapping: Properly read `enabled` into Terraform state [GH-5292]
+* resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
+* resource/aws_launch_template: Set `latest_version` as re-computed on updates (prevent need for double apply) [GH-5250]
+* resource/aws_lb_listener: Prevent crash from new `fixed-response` and `redirect` actions [GH-5367]
+* resource/aws_lb_listener_rule: Prevent crash from new `fixed-response` and `redirect` actions [GH-5367]
+* resource/aws_vpn_gateway: Allow legacy `amazon_side_asn` in plan-time validation (ASNs 7224 and 9059) [GH-5291]
+* resource/aws_waf_web_acl: Properly read `rules` into Terraform state [GH-5342]
+* resource/aws_waf_web_acl: Properly update `rules` [GH-5380]
+* resource/aws_wafregional_rate_based_rule: Fix `rate_limit` updates [GH-5356]
+* resource/aws_wafregional_web_acl: Properly read `rules` into Terraform state [GH-5342]
+
+## 1.29.0 (July 26, 2018)
+
+NOTES:
+
+* data-source/aws_kms_secret: This data source has been deprecated and will be removed in the next major version. This is required to support the upcoming Terraform 0.12. A new `aws_kms_secrets` data source is available that allows for the same multiple KMS secret decryption functionality, but requires different attribute references. Full migration information is available in the [AWS Provider Version 2 Upgrade Guide](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret).
+
+FEATURES:
+
+* **New Data Source:** `aws_kms_secrets` ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
+* **New Data Source:** `aws_network_interfaces` ([#5324](https://github.com/terraform-providers/terraform-provider-aws/issues/5324))
+* **New Guide:** [`AWS Provider Version 2 Upgrade`](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html) ([#5195](https://github.com/terraform-providers/terraform-provider-aws/issues/5195))
+
+ENHANCEMENTS:
+
+* data-source/aws_iam_role: Add `permissions_boundary` attribute ([#5186](https://github.com/terraform-providers/terraform-provider-aws/issues/5186))
+* data-source/aws_vpc: Add `arn` attribute ([#5300](https://github.com/terraform-providers/terraform-provider-aws/issues/5300))
+* resource/aws_default_vpc: Add `arn` attribute ([#5300](https://github.com/terraform-providers/terraform-provider-aws/issues/5300))
+* resource/aws_instance: Add `cpu_core_count` and `cpu_threads_per_core` arguments ([#5159](https://github.com/terraform-providers/terraform-provider-aws/issues/5159))
+* resource/aws_lambda_permission: Add `event_source_token` argument (support Alexa Skills) ([#5264](https://github.com/terraform-providers/terraform-provider-aws/issues/5264))
+* resource/aws_launch_template: Add `arn` attribute ([#5306](https://github.com/terraform-providers/terraform-provider-aws/issues/5306))
+* resource/aws_secretsmanager_secret: Add `policy` argument ([#5290](https://github.com/terraform-providers/terraform-provider-aws/issues/5290))
+* resource/aws_vpc: Add `arn` attribute ([#5300](https://github.com/terraform-providers/terraform-provider-aws/issues/5300))
+* resource/aws_waf_web_acl: Support resource import ([#5337](https://github.com/terraform-providers/terraform-provider-aws/issues/5337))
+
+BUG FIXES:
+
+* data-source/aws_vpc_endpoint_service: Perform client side filtering to workaround server side filtering issues in AWS China and AWS GovCloud (US) ([#4592](https://github.com/terraform-providers/terraform-provider-aws/issues/4592))
+* resource/aws_kinesis_firehose_delivery_stream: Force new resource for `kinesis_source_configuration` argument changes ([#5332](https://github.com/terraform-providers/terraform-provider-aws/issues/5332))
+* resource/aws_route53_record: Prevent DomainLabelEmpty errors when expanding record names with trailing period ([#5312](https://github.com/terraform-providers/terraform-provider-aws/issues/5312))
+* resource/aws_ses_identity_notification_topic: Prevent panic when API returns no attributes ([#5327](https://github.com/terraform-providers/terraform-provider-aws/issues/5327))
+* resource/aws_ssm_parameter: Reduce DescribeParameters API calls by switching filtering logic ([#5325](https://github.com/terraform-providers/terraform-provider-aws/issues/5325))
+
 ## 1.28.0 (July 18, 2018)
 
 FEATURES:

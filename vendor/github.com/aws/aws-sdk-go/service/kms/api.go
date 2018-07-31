@@ -6096,7 +6096,7 @@ type GetParametersForImportOutput struct {
 	// The time at which the import token and public key are no longer valid. After
 	// this time, you cannot use them to make an ImportKeyMaterial request and you
 	// must send another GetParametersForImport request to get new ones.
-	ParametersValidTo *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ParametersValidTo *time.Time `type:"timestamp"`
 
 	// The public key to use to encrypt the key material before importing it with
 	// ImportKeyMaterial.
@@ -6200,7 +6200,7 @@ type GrantListEntry struct {
 	Constraints *GrantConstraints `type:"structure"`
 
 	// The date and time when the grant was created.
-	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `type:"timestamp"`
 
 	// The unique identifier for the grant.
 	GrantId *string `min:"1" type:"string"`
@@ -6336,7 +6336,7 @@ type ImportKeyMaterialInput struct {
 	// expires, AWS KMS deletes the key material and the CMK becomes unusable. You
 	// must omit this parameter when the ExpirationModel parameter is set to KEY_MATERIAL_DOES_NOT_EXPIRE.
 	// Otherwise it is required.
-	ValidTo *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ValidTo *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -6470,11 +6470,11 @@ type KeyMetadata struct {
 	Arn *string `min:"20" type:"string"`
 
 	// The date and time when the CMK was created.
-	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `type:"timestamp"`
 
 	// The date and time after which AWS KMS deletes the CMK. This value is present
 	// only when KeyState is PendingDeletion, otherwise this value is omitted.
-	DeletionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	DeletionDate *time.Time `type:"timestamp"`
 
 	// The description of the CMK.
 	Description *string `type:"string"`
@@ -6519,7 +6519,7 @@ type KeyMetadata struct {
 	// expires, AWS KMS deletes the key material and the CMK becomes unusable. This
 	// value is present only for CMKs whose Origin is EXTERNAL and whose ExpirationModel
 	// is KEY_MATERIAL_EXPIRES, otherwise this value is omitted.
-	ValidTo *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ValidTo *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -7803,7 +7803,7 @@ type ScheduleKeyDeletionOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time after which AWS KMS deletes the customer master key (CMK).
-	DeletionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	DeletionDate *time.Time `type:"timestamp"`
 
 	// The unique identifier of the customer master key (CMK) for which deletion
 	// is scheduled.

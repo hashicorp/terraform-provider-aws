@@ -1366,6 +1366,14 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		return err
 	} else {
 		d.SetPartial("tags")
+
+  // Tags are set on creation
+	if !d.IsNewResource() && d.HasChange("tags") {
+		if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	d.Partial(false)

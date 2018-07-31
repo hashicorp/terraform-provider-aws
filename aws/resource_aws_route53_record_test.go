@@ -40,6 +40,7 @@ func TestExpandRecordName(t *testing.T) {
 		Input, Output string
 	}{
 		{"www", "www.nonexample.com"},
+		{"www.", "www.nonexample.com"},
 		{"dev.www", "dev.www.nonexample.com"},
 		{"*", "*.nonexample.com"},
 		{"nonexample.com", "nonexample.com"},

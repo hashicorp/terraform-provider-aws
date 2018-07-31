@@ -3744,7 +3744,7 @@ type CreateEventSourceMappingInput struct {
 	// returned is for the next (later) record. If the timestamp is older than the
 	// current trim horizon, the iterator returned is for the oldest untrimmed data
 	// record (TRIM_HORIZON). Valid only for Kinesis streams (http://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-streams.html).
-	StartingPositionTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartingPositionTimestamp *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -4448,7 +4448,7 @@ type EventSourceMappingConfiguration struct {
 	FunctionArn *string `type:"string"`
 
 	// The UTC time string indicating the last time the event mapping was updated.
-	LastModified *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModified *time.Time `type:"timestamp"`
 
 	// The result of the last AWS Lambda invocation of your Lambda function.
 	LastProcessingResult *string `type:"string"`

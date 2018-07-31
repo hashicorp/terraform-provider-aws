@@ -1695,6 +1695,38 @@ func TestInstanceTenancySchema(t *testing.T) {
 	}
 }
 
+func TestInstanceCpuCoreCountSchema(t *testing.T) {
+	actualSchema := resourceAwsInstance().Schema["cpu_core_count"]
+	expectedSchema := &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	}
+	if !reflect.DeepEqual(actualSchema, expectedSchema) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			actualSchema,
+			expectedSchema)
+	}
+}
+
+func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
+	actualSchema := resourceAwsInstance().Schema["cpu_threads_per_core"]
+	expectedSchema := &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	}
+	if !reflect.DeepEqual(actualSchema, expectedSchema) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			actualSchema,
+			expectedSchema)
+	}
+}
+
 func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn

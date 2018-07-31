@@ -6355,7 +6355,7 @@ type DeployedImage struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time when the image path for the model resolved to the ResolvedImage
-	ResolutionTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ResolutionTime *time.Time `type:"timestamp"`
 
 	// The specific digest path of the image hosted in this ProductionVariant.
 	ResolvedImage *string `type:"string"`
@@ -6436,7 +6436,7 @@ type DescribeEndpointConfigOutput struct {
 	// A timestamp that shows when the endpoint configuration was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint configuration.
 	//
@@ -6543,7 +6543,7 @@ type DescribeEndpointOutput struct {
 	// A timestamp that shows when the endpoint was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint.
 	//
@@ -6571,7 +6571,7 @@ type DescribeEndpointOutput struct {
 	// A timestamp that shows when the endpoint was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// An array of ProductionVariantSummary objects, one for each model hosted behind
 	// this endpoint.
@@ -6687,13 +6687,13 @@ type DescribeHyperParameterTuningJobOutput struct {
 	// The date and time that the tuning job started.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// If the tuning job failed, the reason it failed.
 	FailureReason *string `type:"string"`
 
 	// The date and time that the tuning job ended.
-	HyperParameterTuningEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	HyperParameterTuningEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the tuning job.
 	//
@@ -6718,7 +6718,7 @@ type DescribeHyperParameterTuningJobOutput struct {
 	HyperParameterTuningJobStatus *string `type:"string" required:"true" enum:"HyperParameterTuningJobStatus"`
 
 	// The date and time that the status of the tuning job was modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The ObjectiveStatusCounters object that specifies the number of training
 	// jobs, categorized by the status of their final objective metric, that this
@@ -6866,7 +6866,7 @@ type DescribeModelOutput struct {
 	// A timestamp that shows when the model was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that you specified for the
 	// model.
@@ -7021,10 +7021,10 @@ type DescribeNotebookInstanceLifecycleConfigOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that tells when the lifecycle configuration was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// A timestamp that tells when the lifecycle configuration was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the lifecycle configuration.
 	NotebookInstanceLifecycleConfigArn *string `type:"string"`
@@ -7091,7 +7091,7 @@ type DescribeNotebookInstanceOutput struct {
 
 	// A timestamp. Use this parameter to return the time when the notebook instance
 	// was created
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// Describes whether Amazon SageMaker provides internet access to the notebook
 	// instance. If this value is set to Disabled, he notebook instance does not
@@ -7113,7 +7113,7 @@ type DescribeNotebookInstanceOutput struct {
 
 	// A timestamp. Use this parameter to retrieve the time when the notebook instance
 	// was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// Network interface IDs that Amazon SageMaker created at the time of creating
 	// the instance.
@@ -7299,7 +7299,7 @@ type DescribeTrainingJobOutput struct {
 	// A timestamp that indicates when the training job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// If the training job failed, the reason it failed.
 	FailureReason *string `type:"string"`
@@ -7313,7 +7313,7 @@ type DescribeTrainingJobOutput struct {
 	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
 
 	// A timestamp that indicates when the status of the training job was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// Information about the Amazon S3 location that is configured for storing model
 	// artifacts.
@@ -7351,7 +7351,7 @@ type DescribeTrainingJobOutput struct {
 	// this time. For successful jobs and stopped jobs, this is the time after model
 	// artifacts are uploaded. For failed jobs, this is the time when Amazon SageMaker
 	// detects a job failure.
-	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the training job.
 	//
@@ -7390,7 +7390,7 @@ type DescribeTrainingJobOutput struct {
 	// The start time in CloudWatch Logs might be later than this time. The difference
 	// is due to the time it takes to download the training data and to the size
 	// of the training container.
-	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingStartTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the associated hyperparameter tuning job
 	// if the training job was launched by a hyperparameter tuning job.
@@ -7577,7 +7577,7 @@ type DescribeTransformJobOutput struct {
 	// A timestamp that shows when the transform Job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	Environment map[string]*string `type:"map"`
 
@@ -7598,7 +7598,7 @@ type DescribeTransformJobOutput struct {
 
 	// Indicates when the transform job is Completed, Stopped, or Failed. You are
 	// billed for the time interval between this time and the value of TransformStartTime.
-	TransformEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TransformEndTime *time.Time `type:"timestamp"`
 
 	// Describes the dataset to be transformed and the Amazon S3 location where
 	// it is stored.
@@ -7634,7 +7634,7 @@ type DescribeTransformJobOutput struct {
 
 	// Indicates when the transform job starts on ML instances. You are billed for
 	// the time interval between this time and the value of TransformEndTime.
-	TransformStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TransformStartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -7804,7 +7804,7 @@ type EndpointConfigSummary struct {
 	// A timestamp that shows when the endpoint configuration was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint configuration.
 	//
@@ -7852,7 +7852,7 @@ type EndpointSummary struct {
 	// A timestamp that shows when the endpoint was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint.
 	//
@@ -7872,7 +7872,7 @@ type EndpointSummary struct {
 	// A timestamp that shows when the endpoint was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -8250,7 +8250,7 @@ type HyperParameterTrainingJobSummary struct {
 	// The date and time that the training job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The reason that the training job failed.
 	FailureReason *string `type:"string"`
@@ -8275,7 +8275,7 @@ type HyperParameterTrainingJobSummary struct {
 	ObjectiveStatus *string `type:"string" enum:"ObjectiveStatus"`
 
 	// The date and time that the training job ended.
-	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the training job.
 	//
@@ -8293,7 +8293,7 @@ type HyperParameterTrainingJobSummary struct {
 	TrainingJobStatus *string `type:"string" required:"true" enum:"TrainingJobStatus"`
 
 	// The date and time that the training job started.
-	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingStartTime *time.Time `type:"timestamp"`
 
 	// A list of the hyperparameters for which you specified ranges to search.
 	//
@@ -8537,10 +8537,10 @@ type HyperParameterTuningJobSummary struct {
 	// The date and time that the tuning job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The date and time that the tuning job ended.
-	HyperParameterTuningEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	HyperParameterTuningEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the tuning job.
 	//
@@ -8558,7 +8558,7 @@ type HyperParameterTuningJobSummary struct {
 	HyperParameterTuningJobStatus *string `type:"string" required:"true" enum:"HyperParameterTuningJobStatus"`
 
 	// The date and time that the tuning job was modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The ObjectiveStatusCounters object that specifies the numbers of training
 	// jobs, categorized by objective metric status, that this tuning job launched.
@@ -8727,11 +8727,11 @@ type ListEndpointConfigsInput struct {
 
 	// A filter that returns only endpoint configurations created after the specified
 	// time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoint configurations created before the specified
 	// time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of training jobs to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -8857,19 +8857,19 @@ type ListEndpointsInput struct {
 
 	// A filter that returns only endpoints that were created after the specified
 	// time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were created before the specified
 	// time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were modified after the specified
 	// timestamp.
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were modified before the specified
 	// timestamp.
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of endpoints to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9016,19 +9016,19 @@ type ListHyperParameterTuningJobsInput struct {
 
 	// A filter that returns only tuning jobs that were created after the specified
 	// time.
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only tuning jobs that were created before the specified
 	// time.
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only tuning jobs that were modified after the specified
 	// time.
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only tuning jobs that were modified before the specified
 	// time.
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of tuning jobs to return. The default value is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9176,10 +9176,10 @@ type ListModelsInput struct {
 	_ struct{} `type:"structure"`
 
 	// A filter that returns only models created after the specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only models created before the specified time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of models to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9305,19 +9305,19 @@ type ListNotebookInstanceLifecycleConfigsInput struct {
 
 	// A filter that returns only lifecycle configurations that were created after
 	// the specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only lifecycle configurations that were created before
 	// the specified time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only lifecycle configurations that were modified after
 	// the specified time (timestamp).
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only lifecycle configurations that were modified before
 	// the specified time (timestamp).
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of lifecycle configurations to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9454,19 +9454,19 @@ type ListNotebookInstancesInput struct {
 
 	// A filter that returns only notebook instances that were created after the
 	// specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only notebook instances that were created before the
 	// specified time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only notebook instances that were modified after the
 	// specified time (timestamp).
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only notebook instances that were modified before the
 	// specified time (timestamp).
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of notebook instances to return.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9853,19 +9853,19 @@ type ListTrainingJobsInput struct {
 
 	// A filter that returns only training jobs created after the specified time
 	// (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only training jobs created before the specified time
 	// (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only training jobs modified after the specified time
 	// (timestamp).
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only training jobs modified before the specified time
 	// (timestamp).
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of training jobs to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -10011,16 +10011,16 @@ type ListTransformJobsInput struct {
 	_ struct{} `type:"structure"`
 
 	// A filter that returns only transform jobs created after the specified time.
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only transform jobs created before the specified time.
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only transform jobs modified after the specified time.
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only transform jobs modified before the specified time.
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of transform jobs to return in the response. The default
 	// value is 10.
@@ -10262,7 +10262,7 @@ type ModelSummary struct {
 	// A timestamp that indicates when the model was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the model.
 	//
@@ -10308,10 +10308,10 @@ type NotebookInstanceLifecycleConfigSummary struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that tells when the lifecycle configuration was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// A timestamp that tells when the lifecycle configuration was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the lifecycle configuration.
 	//
@@ -10415,13 +10415,13 @@ type NotebookInstanceSummary struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that shows when the notebook instance was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The type of ML compute instance that the notebook instance is running on.
 	InstanceType *string `type:"string" enum:"InstanceType"`
 
 	// A timestamp that shows when the notebook instance was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the notebook instance.
 	//
@@ -11602,15 +11602,15 @@ type TrainingJobSummary struct {
 	// A timestamp that shows when the training job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// Timestamp when the training job was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// A timestamp that shows when the training job ended. This field is set only
 	// if the training job has one of the terminal statuses (Completed, Failed,
 	// or Stopped).
-	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the training job.
 	//
@@ -11812,19 +11812,19 @@ type TransformJobSummary struct {
 	// A timestamp that shows when the transform Job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// If the transform job failed, the reason it failed.
 	FailureReason *string `type:"string"`
 
 	// Indicates when the transform job was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// Indicates when the transform job ends on compute instances. For successful
 	// jobs and stopped jobs, this is the exact time recorded after the results
 	// are uploaded. For failed jobs, this is when Amazon SageMaker detected that
 	// the job failed.
-	TransformEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TransformEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the transform job.
 	//

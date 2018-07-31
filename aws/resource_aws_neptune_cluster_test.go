@@ -39,6 +39,12 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+			},
 		},
 	})
 }
@@ -59,6 +65,12 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 						"aws_neptune_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-test-")),
 				),
 			},
+			{
+				ResourceName:            "aws_neptune_cluster.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_identifier_prefix", "skip_final_snapshot"},
+			},
 		},
 	})
 }
@@ -77,6 +89,12 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
 				),
+			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot_identifier", "skip_final_snapshot"},
 			},
 		},
 	})
@@ -106,6 +124,12 @@ func TestAccAWSNeptuneCluster_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster.default", "tags.%", "2"),
 				),
+			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
 			},
 		},
 	})
@@ -142,6 +166,12 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 						"aws_neptune_cluster.default", "iam_roles.#", "1"),
 				),
 			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+			},
 		},
 	})
 }
@@ -163,6 +193,12 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 						"aws_neptune_cluster.default", "kms_key_arn", keyRegex),
 				),
 			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+			},
 		},
 	})
 }
@@ -182,6 +218,12 @@ func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster.default", "storage_encrypted", "true"),
 				),
+			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
 			},
 		},
 	})
@@ -208,8 +250,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 						"aws_neptune_cluster.default", "preferred_maintenance_window", "tue:04:00-tue:04:30"),
 				),
 			},
-
-			resource.TestStep{
+			{
 				Config: testAccAWSNeptuneClusterConfig_backupsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
@@ -220,6 +261,12 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster.default", "preferred_maintenance_window", "wed:01:00-wed:01:30"),
 				),
+			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "skip_final_snapshot"},
 			},
 		},
 	})
@@ -240,6 +287,12 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster.default", "iam_database_authentication_enabled", "true"),
 				),
+			},
+			{
+				ResourceName:            "aws_neptune_cluster.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
 			},
 		},
 	})

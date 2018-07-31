@@ -137,6 +137,37 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafRegionalRateBasedRule_changeRateLimit(t *testing.T) {
+	var before, after waf.RateBasedRule
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	rateLimitBefore := "2000"
+	rateLimitAfter := "2001"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(ruleName, rateLimitBefore),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &before),
+					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
+					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "rate_limit", rateLimitBefore),
+				),
+			},
+			{
+				Config: testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(ruleName, rateLimitAfter),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &after),
+					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
+					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "rate_limit", rateLimitAfter),
+				),
+			},
+		},
+	})
+}
+
 // computeWafRegionalRateBasedRulePredicateWithIpSet calculates index
 // which isn't static because dataId is generated as part of the test
 func computeWafRegionalRateBasedRulePredicateWithIpSet(ipSet *waf.IPSet, negated bool, pType string, idx *int) resource.TestCheckFunc {
@@ -401,4 +432,14 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_key = "IP"
   rate_limit = 2000
 }`, name, name)
+}
+
+func testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(name string, limit string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_rate_based_rule" "wafrule" {
+  name = "%s"
+  metric_name = "%s"
+  rate_key = "IP"
+  rate_limit = %s
+}`, name, name, limit)
 }

@@ -4698,7 +4698,7 @@ type Certificate struct {
 	CertificateArn *string `type:"string"`
 
 	// The date that the certificate was created.
-	CertificateCreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CertificateCreationDate *time.Time `type:"timestamp"`
 
 	// The customer-assigned name of the certificate. Valid characters are A-z and
 	// 0-9.
@@ -4722,10 +4722,10 @@ type Certificate struct {
 	SigningAlgorithm *string `type:"string"`
 
 	// The beginning date that the certificate is valid.
-	ValidFromDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ValidFromDate *time.Time `type:"timestamp"`
 
 	// The final date that the certificate is valid.
-	ValidToDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ValidToDate *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -5624,7 +5624,7 @@ type CreateReplicationTaskInput struct {
 	// to start. Specifying both values results in an error.
 	//
 	// Timestamp Example: --cdc-start-time “2018-03-08T12:12:12”
-	CdcStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CdcStartTime *time.Time `type:"timestamp"`
 
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
@@ -6818,7 +6818,7 @@ type DescribeEventsInput struct {
 	Duration *int64 `type:"integer"`
 
 	// The end time for the events to be listed.
-	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `type:"timestamp"`
 
 	// A list of event categories for a source type that you want to subscribe to.
 	EventCategories []*string `type:"list"`
@@ -6851,7 +6851,7 @@ type DescribeEventsInput struct {
 	SourceType *string `type:"string" enum:"SourceType"`
 
 	// The start time for the events to be listed.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8167,7 +8167,7 @@ type Event struct {
 	_ struct{} `type:"structure"`
 
 	// The date of the event.
-	Date *time.Time `type:"timestamp" timestampFormat:"unix"`
+	Date *time.Time `type:"timestamp"`
 
 	// The event categories available for the specified source type.
 	EventCategories []*string `type:"list"`
@@ -9223,7 +9223,7 @@ type ModifyReplicationTaskInput struct {
 	// to start. Specifying both values results in an error.
 	//
 	// Timestamp Example: --cdc-start-time “2018-03-08T12:12:12”
-	CdcStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CdcStartTime *time.Time `type:"timestamp"`
 
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
@@ -9749,7 +9749,7 @@ type RefreshSchemasStatus struct {
 	LastFailureMessage *string `type:"string"`
 
 	// The date the schema was last refreshed.
-	LastRefreshDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastRefreshDate *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the replication instance.
 	ReplicationInstanceArn *string `type:"string"`
@@ -9974,10 +9974,10 @@ type ReplicationInstance struct {
 
 	// The expiration date of the free replication instance that is part of the
 	// Free DMS program.
-	FreeUntil *time.Time `type:"timestamp" timestampFormat:"unix"`
+	FreeUntil *time.Time `type:"timestamp"`
 
 	// The time the replication instance was created.
-	InstanceCreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	InstanceCreateTime *time.Time `type:"timestamp"`
 
 	// The KMS key identifier that is used to encrypt the content on the replication
 	// instance. If you do not specify a value for the KmsKeyId parameter, then
@@ -10390,7 +10390,7 @@ type ReplicationTask struct {
 	ReplicationTaskArn *string `type:"string"`
 
 	// The date the replication task was created.
-	ReplicationTaskCreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ReplicationTaskCreationDate *time.Time `type:"timestamp"`
 
 	// The user-assigned replication task identifier or name.
 	//
@@ -10407,7 +10407,7 @@ type ReplicationTask struct {
 	ReplicationTaskSettings *string `type:"string"`
 
 	// The date the replication task is scheduled to start.
-	ReplicationTaskStartDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ReplicationTaskStartDate *time.Time `type:"timestamp"`
 
 	// The statistics for the task, including elapsed time, tables loaded, and table
 	// errors.
@@ -10562,7 +10562,7 @@ type ReplicationTaskAssessmentResult struct {
 	ReplicationTaskIdentifier *string `type:"string"`
 
 	// The date the task assessment was completed.
-	ReplicationTaskLastAssessmentDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ReplicationTaskLastAssessmentDate *time.Time `type:"timestamp"`
 
 	// The URL of the S3 object containing the task assessment results.
 	S3ObjectUrl *string `type:"string"`
@@ -10853,7 +10853,7 @@ type StartReplicationTaskInput struct {
 	// to start. Specifying both values results in an error.
 	//
 	// Timestamp Example: --cdc-start-time “2018-03-08T12:12:12”
-	CdcStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CdcStartTime *time.Time `type:"timestamp"`
 
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
@@ -11134,7 +11134,7 @@ type TableStatistics struct {
 	Inserts *int64 `type:"long"`
 
 	// The last time the table was updated.
-	LastUpdateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdateTime *time.Time `type:"timestamp"`
 
 	// The schema name.
 	SchemaName *string `type:"string"`

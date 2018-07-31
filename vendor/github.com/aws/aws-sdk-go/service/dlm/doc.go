@@ -3,13 +3,14 @@
 // Package dlm provides the client and types for making API
 // requests to Amazon Data Lifecycle Manager.
 //
-// With Amazon Data Lifecyle Manager, you can manage the lifecycle of your AWS
-// resources. You create lifecycle policies, which are used to automate operations
-// on the specified resources.
+// With Amazon Data Lifecycle Manager, you can manage the lifecycle of your
+// AWS resources. You create lifecycle policies, which are used to automate
+// operations on the specified resources.
 //
-// Data Lifecycle Manager supports Amazon EBS volumes and snapshots. For information
-// about using Data Lifecycle Manager with Amazon EBS, see Amazon Data Lifecyle
-// Manager for Amazon EBS Snapshots (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snapshot-lifecycle.html).
+// Amazon DLM supports Amazon EBS volumes and snapshots. For information about
+// using Amazon DLM with Amazon EBS, see Automating the Amazon EBS Snapshot
+// Lifecycle (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snapshot-lifecycle.html)
+// in the Amazon EC2 User Guide.
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12 for more information on this service.
 //

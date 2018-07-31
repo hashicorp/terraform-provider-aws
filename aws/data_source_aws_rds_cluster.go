@@ -14,6 +14,11 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsRdsClusterRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,

@@ -360,17 +360,15 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	var resp *codebuild.CreateProjectOutput
+	// Handle IAM eventual consistency
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreateProject(params)
 		if err != nil {
-			// Work around eventual consistency of IAM
-			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
-				return resource.RetryableError(err)
-			}
-
-			if isAWSErr(err, "InvalidInputException", "Not authorized to perform DescribeSecurityGroups") {
+			// InvalidInputException: CodeBuild is not authorized to perform
+			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
+			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 
@@ -387,7 +385,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(*resp.Project.Arn)
 
-	return resourceAwsCodeBuildProjectUpdate(d, meta)
+	return resourceAwsCodeBuildProjectRead(d, meta)
 }
 
 func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
@@ -664,13 +662,15 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	// But its a slice of pointers so if not set for every update, they get removed.
 	params.Tags = tagsFromMapCodeBuild(d.Get("tags").(map[string]interface{}))
 
+	// Handle IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 
 		_, err = conn.UpdateProject(params)
 		if err != nil {
-			// Work around eventual consistency of IAM
-			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
+			// InvalidInputException: CodeBuild is not authorized to perform
+			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
+			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 

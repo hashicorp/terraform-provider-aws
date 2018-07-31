@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster"
-sidebar_current: "docs-aws-resource-neptune-cluster"
+sidebar_current: "docs-aws-resource-neptune-cluster-x"
 description: |-
   Provides an Neptune Cluster Resource
 ---
@@ -39,24 +39,20 @@ See the AWS [Docs](https://docs.aws.amazon.com/neptune/latest/userguide/limits.h
 
 The following arguments are supported:
 
-* `apply_immediately` - (Optional) Specifies whether any cluster modifications
-  are applied immediately, or during the next maintenance window. Default is `false`.
-* `availability_zones` - (Optional) A list of EC2 Availability Zones that
-  instances in the Neptune cluster can be created in.
+* `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the Neptune cluster can be created in.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
 * `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engine_version` - (Optional) The database engine version.
-* `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot
-    when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
+* `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the Neptune Cluster.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_arn`, `storage_encrypted` needs to be set to true.
 * `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
 * `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
-* `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
-Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
+* `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g. wed:04:00-wed:04:30
 * `port` - (Optional) The port on which the Neptune accepts connections. Default is `8182`.
 * `replication_source_identifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
@@ -70,13 +66,13 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Neptune Cluster Amazon Resource Name (ARN)
 * `cluster_resource_id` - The Neptune Cluster Resource ID
 * `cluster_members` – List of Neptune Instances that are a part of this cluster
 * `endpoint` - The DNS address of the Neptune instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 * `id` - The Neptune Cluster Identifier
-* `reader_endpoint` - A read-only endpoint for the Neptune cluster, automatically
-load-balanced across replicas
+* `reader_endpoint` - A read-only endpoint for the Neptune cluster, automatically load-balanced across replicas
 * `status` - The Neptune instance status
 
 ## Timeouts
@@ -86,5 +82,12 @@ load-balanced across replicas
 
 - `create` - (Default `120 minutes`) Used for Cluster creation
 - `update` - (Default `120 minutes`) Used for Cluster modifications
-- `delete` - (Default `120 minutes`) Used for destroying cluster. This includes
-any cleanup task during the destroying process.
+- `delete` - (Default `120 minutes`) Used for destroying cluster. This includes any cleanup task during the destroying process.
+
+## Import
+
+`aws_neptune_cluster` can be imported by using the cluster identifier, e.g.
+
+```
+$ terraform import aws_neptune_cluster.example my-cluster
+```
