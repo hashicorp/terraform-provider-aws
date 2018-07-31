@@ -1119,15 +1119,9 @@ func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]inter
 	}
 
 	if aws.BoolValue(c.Enabled) {
-		if c.UserPoolId != nil {
-			m["user_pool_id"] = *c.UserPoolId
-		}
-		if c.IdentityPoolId != nil {
-			m["identity_pool_id"] = *c.IdentityPoolId
-		}
-		if c.RoleArn != nil {
-			m["role_arn"] = *c.RoleArn
-		}
+		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
+		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
+		m["role_arn"] = aws.StringValue(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
