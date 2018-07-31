@@ -339,118 +339,6 @@ func TestAccAWSDBInstance_s3(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstance_SnapshotIdentifier(t *testing.T) {
-	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_db_instance.source"
-	snapshotResourceName := "aws_db_snapshot.test"
-	resourceName := "aws_db_instance.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
-					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
-	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_db_instance.source"
-	snapshotResourceName := "aws_db_snapshot.test"
-	resourceName := "aws_db_instance.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_Tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
-					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
-	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_db_instance.source"
-	snapshotResourceName := "aws_db_snapshot.test"
-	resourceName := "aws_db_instance.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_VpcSecurityGroupIds(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
-					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-				),
-			},
-		},
-	})
-}
-
-// Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5360
-// This acceptance test explicitly tests when snapshot_identifer is set,
-// vpc_security_group_ids is set (which triggered the resource update function),
-// and tags is set which was missing its ARN used for tagging
-func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing.T) {
-	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	sourceDbResourceName := "aws_db_instance.source"
-	snapshotResourceName := "aws_db_snapshot.test"
-	resourceName := "aws_db_instance.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_VpcSecurityGroupIds_Tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
-					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := acctest.RandString(5)
@@ -2032,134 +1920,43 @@ data "template_file" "test" {
 `, rInt)
 }
 
-func testAccAWSDBInstanceConfig_SnapshotIdentifier(rName string) string {
+func testAccCheckAWSDBPerformanceInsights(n int) string {
 	return fmt.Sprintf(`
-resource "aws_db_instance" "source" {
-  allocated_storage   = 5
-  engine              = "mariadb"
-  identifier          = "%s-source"
-  instance_class      = "db.t2.micro"
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
 }
 
-resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.source.id}"
-  db_snapshot_identifier = %q
-}
-
-resource "aws_db_instance" "test" {
-  identifier          = %q
-  instance_class      = "${aws_db_instance.source.instance_class}"
-  snapshot_identifier = "${aws_db_snapshot.test.id}"
-  skip_final_snapshot = true
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_Tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_db_instance" "source" {
-  allocated_storage   = 5
-  engine              = "mariadb"
-  identifier          = "%s-source"
-  instance_class      = "db.t2.micro"
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.source.id}"
-  db_snapshot_identifier = %q
-}
-
-resource "aws_db_instance" "test" {
-  identifier          = %q
-  instance_class      = "${aws_db_instance.source.instance_class}"
-  snapshot_identifier = "${aws_db_snapshot.test.id}"
-  skip_final_snapshot = true
-
-  tags {
-    key1 = "value1"
-  }
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_VpcSecurityGroupIds(rName string) string {
-	return fmt.Sprintf(`
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = "${data.aws_vpc.default.id}"
-}
-
-resource "aws_db_instance" "source" {
-  allocated_storage   = 5
-  engine              = "mariadb"
-  identifier          = "%s-source"
-  instance_class      = "db.t2.micro"
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.source.id}"
-  db_snapshot_identifier = %q
-}
-
-resource "aws_db_instance" "test" {
-  identifier             = %q
-  instance_class         = "${aws_db_instance.source.instance_class}"
-  snapshot_identifier    = "${aws_db_snapshot.test.id}"
-  skip_final_snapshot    = true
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_VpcSecurityGroupIds_Tags(rName string) string {
-	return fmt.Sprintf(`
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = "${data.aws_vpc.default.id}"
-}
-
-resource "aws_db_instance" "source" {
-  allocated_storage   = 5
-  engine              = "mariadb"
-  identifier          = "%s-source"
-  instance_class      = "db.t2.micro"
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.source.id}"
-  db_snapshot_identifier = %q
-}
-
-resource "aws_db_instance" "test" {
-  identifier             = %q
-  instance_class         = "${aws_db_instance.source.instance_class}"
-  snapshot_identifier    = "${aws_db_snapshot.test.id}"
-  skip_final_snapshot    = true
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
-
-  tags {
-    key1 = "value1"
-  }
-}
-`, rName, rName, rName)
+resource "aws_db_instance" "bar" {
+	identifier = "foobarbaz-test-terraform-%d"
+	allocated_storage = 10
+	engine = "postgres"
+	engine_version = "10.3"
+	instance_class = "db.m4.large"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
+	backup_retention_period = 0
+	skip_final_snapshot = true
+	parameter_group_name = "default.postgres10"
+	performance_insights_enabled = true
+	performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+	performance_insights_retention_period = 7
+}`, n)
 }
