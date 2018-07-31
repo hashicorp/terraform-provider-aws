@@ -22,27 +22,27 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
-func GetAccountInformation(iamconn *iam.IAM, stsconn *sts.STS, authProviderName string) (string, string, error) {
+func GetAccountIDAndPartition(iamconn *iam.IAM, stsconn *sts.STS, authProviderName string) (string, string, error) {
 	var accountID, partition string
 	var err, errors error
 
 	if authProviderName == ec2rolecreds.ProviderName {
-		accountID, partition, err = GetAccountInformationFromEC2Metadata()
+		accountID, partition, err = GetAccountIDAndPartitionFromEC2Metadata()
 	} else {
-		accountID, partition, err = GetAccountInformationFromIAMGetUser(iamconn)
+		accountID, partition, err = GetAccountIDAndPartitionFromIAMGetUser(iamconn)
 	}
 	if accountID != "" {
 		return accountID, partition, nil
 	}
 	errors = multierror.Append(errors, err)
 
-	accountID, partition, err = GetAccountInformationFromSTSGetCallerIdentity(stsconn)
+	accountID, partition, err = GetAccountIDAndPartitionFromSTSGetCallerIdentity(stsconn)
 	if accountID != "" {
 		return accountID, partition, nil
 	}
 	errors = multierror.Append(errors, err)
 
-	accountID, partition, err = GetAccountInformationFromIAMListRoles(iamconn)
+	accountID, partition, err = GetAccountIDAndPartitionFromIAMListRoles(iamconn)
 	if accountID != "" {
 		return accountID, partition, nil
 	}
@@ -51,7 +51,7 @@ func GetAccountInformation(iamconn *iam.IAM, stsconn *sts.STS, authProviderName 
 	return accountID, partition, errors
 }
 
-func GetAccountInformationFromEC2Metadata() (string, string, error) {
+func GetAccountIDAndPartitionFromEC2Metadata() (string, string, error) {
 	log.Println("[DEBUG] Trying to get account information via EC2 Metadata")
 
 	cfg := &aws.Config{}
@@ -72,10 +72,10 @@ func GetAccountInformationFromEC2Metadata() (string, string, error) {
 		return "", "", err
 	}
 
-	return parseAccountInformationFromARN(info.InstanceProfileArn)
+	return parseAccountIDAndPartitionFromARN(info.InstanceProfileArn)
 }
 
-func GetAccountInformationFromIAMGetUser(iamconn *iam.IAM) (string, string, error) {
+func GetAccountIDAndPartitionFromIAMGetUser(iamconn *iam.IAM) (string, string, error) {
 	log.Println("[DEBUG] Trying to get account information via iam:GetUser")
 
 	output, err := iamconn.GetUser(&iam.GetUserInput{})
@@ -102,10 +102,10 @@ func GetAccountInformationFromIAMGetUser(iamconn *iam.IAM) (string, string, erro
 		return "", "", err
 	}
 
-	return parseAccountInformationFromARN(aws.StringValue(output.User.Arn))
+	return parseAccountIDAndPartitionFromARN(aws.StringValue(output.User.Arn))
 }
 
-func GetAccountInformationFromIAMListRoles(iamconn *iam.IAM) (string, string, error) {
+func GetAccountIDAndPartitionFromIAMListRoles(iamconn *iam.IAM) (string, string, error) {
 	log.Println("[DEBUG] Trying to get account information via iam:ListRoles")
 
 	output, err := iamconn.ListRoles(&iam.ListRolesInput{
@@ -123,10 +123,10 @@ func GetAccountInformationFromIAMListRoles(iamconn *iam.IAM) (string, string, er
 		return "", "", err
 	}
 
-	return parseAccountInformationFromARN(aws.StringValue(output.Roles[0].Arn))
+	return parseAccountIDAndPartitionFromARN(aws.StringValue(output.Roles[0].Arn))
 }
 
-func GetAccountInformationFromSTSGetCallerIdentity(stsconn *sts.STS) (string, string, error) {
+func GetAccountIDAndPartitionFromSTSGetCallerIdentity(stsconn *sts.STS) (string, string, error) {
 	log.Println("[DEBUG] Trying to get account information via sts:GetCallerIdentity")
 
 	output, err := stsconn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
@@ -140,10 +140,10 @@ func GetAccountInformationFromSTSGetCallerIdentity(stsconn *sts.STS) (string, st
 		return "", "", err
 	}
 
-	return parseAccountInformationFromARN(aws.StringValue(output.Arn))
+	return parseAccountIDAndPartitionFromARN(aws.StringValue(output.Arn))
 }
 
-func parseAccountInformationFromARN(inputARN string) (string, string, error) {
+func parseAccountIDAndPartitionFromARN(inputARN string) (string, string, error) {
 	arn, err := arn.Parse(inputARN)
 	if err != nil {
 		return "", "", fmt.Errorf("error parsing ARN (%s): %s", inputARN, err)

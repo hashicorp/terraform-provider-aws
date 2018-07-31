@@ -426,13 +426,13 @@ func (c *Config) Client() (interface{}, error) {
 	client.stsconn = sts.New(awsStsSess)
 
 	if c.AssumeRoleARN != "" {
-		client.accountid, client.partition, _ = parseAccountInformationFromARN(c.AssumeRoleARN)
+		client.accountid, client.partition, _ = parseAccountIDAndPartitionFromARN(c.AssumeRoleARN)
 	}
 
 	// Validate credentials early and fail before we do any graph walking.
 	if !c.SkipCredsValidation {
 		var err error
-		client.accountid, client.partition, err = GetAccountInformationFromSTSGetCallerIdentity(client.stsconn)
+		client.accountid, client.partition, err = GetAccountIDAndPartitionFromSTSGetCallerIdentity(client.stsconn)
 		if err != nil {
 			return nil, fmt.Errorf("error validating provider credentials: %s", err)
 		}
@@ -440,7 +440,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	if client.accountid == "" && !c.SkipRequestingAccountId {
 		var err error
-		client.accountid, client.partition, err = GetAccountInformation(client.iamconn, client.stsconn, cp.ProviderName)
+		client.accountid, client.partition, err = GetAccountIDAndPartition(client.iamconn, client.stsconn, cp.ProviderName)
 		if err != nil {
 			return nil, fmt.Errorf("Failed getting account information via all available methods. Errors: %s", err)
 		}

@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-func TestGetAccountInformation(t *testing.T) {
+func TestGetAccountIDAndPartition(t *testing.T) {
 	var testCases = []struct {
 		Description          string
 		AuthProviderName     string
@@ -145,7 +145,7 @@ func TestGetAccountInformation(t *testing.T) {
 			iamConn := iam.New(iamSess)
 			stsConn := sts.New(stsSess)
 
-			accountID, partition, err := GetAccountInformation(iamConn, stsConn, testCase.AuthProviderName)
+			accountID, partition, err := GetAccountIDAndPartition(iamConn, stsConn, testCase.AuthProviderName)
 			if err != nil && testCase.ErrCount == 0 {
 				t.Fatalf("Expected no error, received error: %s", err)
 			}
@@ -162,7 +162,7 @@ func TestGetAccountInformation(t *testing.T) {
 	}
 }
 
-func TestGetAccountInformationFromEC2Metadata(t *testing.T) {
+func TestGetAccountIDAndPartitionFromEC2Metadata(t *testing.T) {
 	t.Run("EC2 metadata success", func(t *testing.T) {
 		resetEnv := unsetEnv(t)
 		defer resetEnv()
@@ -170,7 +170,7 @@ func TestGetAccountInformationFromEC2Metadata(t *testing.T) {
 		awsTs := awsMetadataApiMock(append(ec2metadata_securityCredentialsEndpoints, ec2metadata_instanceIdEndpoint, ec2metadata_iamInfoEndpoint))
 		defer awsTs()
 
-		id, partition, err := GetAccountInformationFromEC2Metadata()
+		id, partition, err := GetAccountIDAndPartitionFromEC2Metadata()
 		if err != nil {
 			t.Fatalf("Getting account ID from EC2 metadata API failed: %s", err)
 		}
@@ -184,7 +184,7 @@ func TestGetAccountInformationFromEC2Metadata(t *testing.T) {
 	})
 }
 
-func TestGetAccountInformationFromIAMGetUser(t *testing.T) {
+func TestGetAccountIDAndPartitionFromIAMGetUser(t *testing.T) {
 	var testCases = []struct {
 		Description       string
 		MockEndpoints     []*awsMockEndpoint
@@ -235,7 +235,7 @@ func TestGetAccountInformationFromIAMGetUser(t *testing.T) {
 
 			iamConn := iam.New(iamSess)
 
-			accountID, partition, err := GetAccountInformationFromIAMGetUser(iamConn)
+			accountID, partition, err := GetAccountIDAndPartitionFromIAMGetUser(iamConn)
 			if err != nil && testCase.ErrCount == 0 {
 				t.Fatalf("Expected no error, received error: %s", err)
 			}
@@ -252,7 +252,7 @@ func TestGetAccountInformationFromIAMGetUser(t *testing.T) {
 	}
 }
 
-func TestGetAccountInformationFromIAMListRoles(t *testing.T) {
+func TestGetAccountIDAndPartitionFromIAMListRoles(t *testing.T) {
 	var testCases = []struct {
 		Description       string
 		MockEndpoints     []*awsMockEndpoint
@@ -293,7 +293,7 @@ func TestGetAccountInformationFromIAMListRoles(t *testing.T) {
 
 			iamConn := iam.New(iamSess)
 
-			accountID, partition, err := GetAccountInformationFromIAMListRoles(iamConn)
+			accountID, partition, err := GetAccountIDAndPartitionFromIAMListRoles(iamConn)
 			if err != nil && testCase.ErrCount == 0 {
 				t.Fatalf("Expected no error, received error: %s", err)
 			}
@@ -310,7 +310,7 @@ func TestGetAccountInformationFromIAMListRoles(t *testing.T) {
 	}
 }
 
-func TestGetAccountInformationFromSTSGetCallerIdentity(t *testing.T) {
+func TestGetAccountIDAndPartitionFromSTSGetCallerIdentity(t *testing.T) {
 	var testCases = []struct {
 		Description       string
 		MockEndpoints     []*awsMockEndpoint
@@ -351,7 +351,7 @@ func TestGetAccountInformationFromSTSGetCallerIdentity(t *testing.T) {
 
 			stsConn := sts.New(stsSess)
 
-			accountID, partition, err := GetAccountInformationFromSTSGetCallerIdentity(stsConn)
+			accountID, partition, err := GetAccountIDAndPartitionFromSTSGetCallerIdentity(stsConn)
 			if err != nil && testCase.ErrCount == 0 {
 				t.Fatalf("Expected no error, received error: %s", err)
 			}
@@ -368,7 +368,7 @@ func TestGetAccountInformationFromSTSGetCallerIdentity(t *testing.T) {
 	}
 }
 
-func TestAWSParseAccountInformationFromARN(t *testing.T) {
+func TestAWSparseAccountIDAndPartitionFromARN(t *testing.T) {
 	var testCases = []struct {
 		InputARN          string
 		ErrCount          int
@@ -402,7 +402,7 @@ func TestAWSParseAccountInformationFromARN(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		accountID, partition, err := parseAccountInformationFromARN(testCase.InputARN)
+		accountID, partition, err := parseAccountIDAndPartitionFromARN(testCase.InputARN)
 		if err != nil && testCase.ErrCount == 0 {
 			t.Fatalf("Expected no error when parsing ARN, received error: %s", err)
 		}
