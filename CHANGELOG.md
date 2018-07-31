@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_lb_listener_rule: Prevent crash from new `fixed-response` and `redirect` actions [GH-5367]
 * resource/aws_vpn_gateway: Allow legacy `amazon_side_asn` in plan-time validation (ASNs 7224 and 9059) [GH-5291]
 * resource/aws_waf_web_acl: Properly read `rules` into Terraform state [GH-5342]
+* resource/aws_waf_web_acl: Properly update `rules` [GH-5380]
 * resource/aws_wafregional_rate_based_rule: Fix `rate_limit` updates [GH-5356]
 * resource/aws_wafregional_web_acl: Properly read `rules` into Terraform state [GH-5342]
 
