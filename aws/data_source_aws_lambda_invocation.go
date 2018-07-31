@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -81,7 +82,13 @@ func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{})
 	var result map[string]interface{}
 
 	if err = json.Unmarshal(res.Payload, &result); err != nil {
-		return err
+		unquotedPayload, err := strconv.Unquote(string(res.Payload))
+		if err != nil {
+			return err
+		}
+		if err = json.Unmarshal([]byte(unquotedPayload), &result); err != nil {
+			return err
+		}
 	}
 
 	if err = d.Set("result_map", result); err != nil {
