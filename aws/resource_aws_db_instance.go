@@ -404,6 +404,8 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
+
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -610,6 +612,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
+
+
 
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
