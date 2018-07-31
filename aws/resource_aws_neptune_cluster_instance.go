@@ -112,18 +112,6 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-
-			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
 			"neptune_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -232,20 +220,12 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 		createOpts.EngineVersion = aws.String(attr.(string))
 	}
 
-	if attr, ok := d.GetOk("monitoring_role_arn"); ok {
-		createOpts.MonitoringRoleArn = aws.String(attr.(string))
-	}
-
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
 		createOpts.PreferredBackupWindow = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
 		createOpts.PreferredMaintenanceWindow = aws.String(attr.(string))
-	}
-
-	if attr, ok := d.GetOk("monitoring_interval"); ok {
-		createOpts.MonitoringInterval = aws.Int64(int64(attr.(int)))
 	}
 
 	log.Printf("[DEBUG] Creating Neptune Instance: %s", createOpts)
@@ -352,14 +332,6 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
-	if db.MonitoringInterval != nil {
-		d.Set("monitoring_interval", db.MonitoringInterval)
-	}
-
-	if db.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", db.MonitoringRoleArn)
-	}
-
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
@@ -390,12 +362,6 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 		requestUpdate = true
 	}
 
-	if d.HasChange("monitoring_role_arn") {
-		d.SetPartial("monitoring_role_arn")
-		req.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
-		requestUpdate = true
-	}
-
 	if d.HasChange("preferred_backup_window") {
 		d.SetPartial("preferred_backup_window")
 		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
@@ -405,12 +371,6 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 	if d.HasChange("preferred_maintenance_window") {
 		d.SetPartial("preferred_maintenance_window")
 		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("monitoring_interval") {
-		d.SetPartial("monitoring_interval")
-		req.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
 		requestUpdate = true
 	}
 
@@ -502,7 +462,6 @@ func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interf
 
 var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
-	"configuring-enhanced-monitoring",
 	"creating",
 	"maintenance",
 	"modifying",
