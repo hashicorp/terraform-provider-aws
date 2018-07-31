@@ -368,7 +368,7 @@ func TestGetAccountIDAndPartitionFromSTSGetCallerIdentity(t *testing.T) {
 	}
 }
 
-func TestAWSparseAccountIDAndPartitionFromARN(t *testing.T) {
+func TestAWSParseAccountIDAndPartitionFromARN(t *testing.T) {
 	var testCases = []struct {
 		InputARN          string
 		ErrCount          int
@@ -402,19 +402,21 @@ func TestAWSparseAccountIDAndPartitionFromARN(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		accountID, partition, err := parseAccountIDAndPartitionFromARN(testCase.InputARN)
-		if err != nil && testCase.ErrCount == 0 {
-			t.Fatalf("Expected no error when parsing ARN, received error: %s", err)
-		}
-		if err == nil && testCase.ErrCount > 0 {
-			t.Fatalf("Expected %d error(s) when parsing ARN, received none", testCase.ErrCount)
-		}
-		if accountID != testCase.ExpectedAccountID {
-			t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
-		}
-		if partition != testCase.ExpectedPartition {
-			t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
-		}
+		t.Run(testCase.InputARN, func(t *testing.T) {
+			accountID, partition, err := parseAccountIDAndPartitionFromARN(testCase.InputARN)
+			if err != nil && testCase.ErrCount == 0 {
+				t.Fatalf("Expected no error when parsing ARN, received error: %s", err)
+			}
+			if err == nil && testCase.ErrCount > 0 {
+				t.Fatalf("Expected %d error(s) when parsing ARN, received none", testCase.ErrCount)
+			}
+			if accountID != testCase.ExpectedAccountID {
+				t.Fatalf("Parsed account ID doesn't match with expected (%q != %q)", accountID, testCase.ExpectedAccountID)
+			}
+			if partition != testCase.ExpectedPartition {
+				t.Fatalf("Parsed partition doesn't match with expected (%q != %q)", partition, testCase.ExpectedPartition)
+			}
+		})
 	}
 }
 
