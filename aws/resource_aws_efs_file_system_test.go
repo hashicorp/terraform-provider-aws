@@ -68,6 +68,10 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 						"aws_efs_file_system.foo",
 						"performance_mode",
 						"generalPurpose"),
+					resource.TestCheckResourceAttr(
+						"aws_efs_file_system.foo",
+						"throughput_mode",
+						efs.ThroughputModeBursting),
 					testAccCheckEfsFileSystem(
 						"aws_efs_file_system.foo",
 					),
@@ -178,6 +182,74 @@ func TestAccAWSEFSFileSystem_kmsConfigurationWithoutEncryption(t *testing.T) {
 			{
 				Config:      testAccAWSEFSFileSystemConfigWithKmsKeyNoEncryption(rInt),
 				ExpectError: regexp.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
+	resourceName := "aws_efs_file_system.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfig_ProvisionedThroughputInMibps(1.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "1"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeProvisioned),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfig_ProvisionedThroughputInMibps(2.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "2"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeProvisioned),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
+	resourceName := "aws_efs_file_system.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfig_ProvisionedThroughputInMibps(1.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "1"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeProvisioned),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfig_ThroughputMode(efs.ThroughputModeBursting),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
 			},
 		},
 	})
@@ -389,4 +461,21 @@ resource "aws_efs_file_system" "foo-with-kms" {
   kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt)
+}
+
+func testAccAWSEFSFileSystemConfig_ThroughputMode(throughputMode string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  throughput_mode = %q
+}
+`, throughputMode)
+}
+
+func testAccAWSEFSFileSystemConfig_ProvisionedThroughputInMibps(provisionedThroughputInMibps float64) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  provisioned_throughput_in_mibps = %f
+  throughput_mode                 = "provisioned"
+}
+`, provisionedThroughputInMibps)
 }
