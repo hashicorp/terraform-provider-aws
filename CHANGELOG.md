@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 * data-source/aws_rds_cluster: Add `arn` attribute [GH-5221]
 * resource/aws_api_gateway_domain_name: Support resource import [GH-5368]
+* resource/aws_efs_file_system: Add `provisioned_throughput_in_mibps` and `throughput_mode` arguments [GH-5210]
 * resource/aws_glue_crawler: Add `dynamodb_target` argument [GH-5152]
 * resource/aws_iam_role: Add `permissions_boundary` argument [GH-5184]
 * resource/aws_iam_user: Add `permissions_boundary` argument [GH-5183]
