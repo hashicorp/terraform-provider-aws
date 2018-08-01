@@ -100,25 +100,25 @@ func resourceAwsLbListener() *schema.Resource {
 									"host": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default: "#{host}",
+										Default:  "#{host}",
 									},
 
 									"path": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default: "/#{path}",
+										Default:  "/#{path}",
 									},
 
 									"port": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default: "#{port}",
+										Default:  "#{port}",
 									},
 
 									"protocol": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default: "#{protocol}",
+										Default:  "#{protocol}",
 										ValidateFunc: validation.StringInSlice([]string{
 											"#{protocol}",
 											"HTTP",
@@ -129,7 +129,7 @@ func resourceAwsLbListener() *schema.Resource {
 									"query": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default: "#{query}",
+										Default:  "#{query}",
 									},
 
 									"status_code": {
@@ -163,9 +163,9 @@ func resourceAwsLbListener() *schema.Resource {
 									},
 
 									"status_code": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
 									},
 								},
