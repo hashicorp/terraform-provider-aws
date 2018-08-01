@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_storagegateway_local_disk` [GH-5279]
 * **New Resource:** `aws_macie_member_account_association` [GH-5283]
+* **New Resource:** `aws_neptune_cluster_instance` [GH-5376]
 * **New Resource:** `aws_storagegateway_nfs_file_share` [GH-5255]
 * **New Resource:** `aws_storagegateway_upload_buffer` [GH-5284]
 * **New Resource:** `aws_storagegateway_working_storage` [GH-5285]
