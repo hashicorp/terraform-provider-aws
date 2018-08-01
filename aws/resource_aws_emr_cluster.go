@@ -691,12 +691,14 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting EMR configurations for cluster (%s): %s", d.Id(), err)
 	}
 
-	configOut, err := flattenConfigurationJson(cluster.Configurations)
-	if err != nil {
-		return fmt.Errorf("Error reading EMR cluster configurations: %s", err)
-	}
-	if err := d.Set("configurations_json", configOut); err != nil {
-		return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
+	if _, ok := d.GetOk("configurations_json"); ok {
+		configOut, err := flattenConfigurationJson(cluster.Configurations)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR cluster configurations: %s", err)
+		}
+		if err := d.Set("configurations_json", configOut); err != nil {
+			return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
+		}
 	}
 
 	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
