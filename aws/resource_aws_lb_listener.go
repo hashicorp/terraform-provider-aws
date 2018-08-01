@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"regexp"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -98,29 +99,46 @@ func resourceAwsLbListener() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"host": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default: "#{host}",
 									},
+
 									"path": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default: "/#{path}",
 									},
+
 									"port": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default: "#{port}",
 									},
+
 									"protocol": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default: "#{protocol}",
+										ValidateFunc: validation.StringInSlice([]string{
+											"#{protocol}",
+											"HTTP",
+											"HTTPS",
+										}, false),
 									},
+
 									"query": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default: "#{query}",
 									},
+
 									"status_code": {
 										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"HTTP_301",
+											"HTTP_302",
+										}, false),
 									},
 								},
 							},
@@ -138,14 +156,17 @@ func resourceAwsLbListener() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+
 									"message_body": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									
 									"status_code": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
 									},
 								},
 							},
@@ -223,6 +244,8 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 						Query:      aws.String(redirectMap["query"].(string)),
 						StatusCode: aws.String(redirectMap["status_code"].(string)),
 					}
+				} else {
+					return errors.New("for actions of type 'redirect', you must specify a 'redirect_config'")
 				}
 
 			case "fixed-response":
@@ -236,6 +259,8 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 						MessageBody: aws.String(fixedResponseMap["message_body"].(string)),
 						StatusCode:  aws.String(fixedResponseMap["status_code"].(string)),
 					}
+				} else {
+					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response'")
 				}
 			}
 
