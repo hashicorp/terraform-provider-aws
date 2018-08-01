@@ -106,7 +106,6 @@ EOF
       "Configurations": [
         {
           "Classification": "export",
-          "Configurations": [],
           "Properties": {
             "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
           }
@@ -119,7 +118,6 @@ EOF
       "Configurations": [
         {
           "Classification": "export",
-          "Configurations": [],
           "Properties": {
             "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
           }
@@ -198,6 +196,28 @@ flow. Defined below
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
 * `configurations_json` - (Optional) A JSON string for supplying list of configurations for the EMR cluster.
+~> **NOTE on configurations_json:** If the `Configurations` value is empty then you should skip
+the `Configurations` field instead of providing empty list as value `"Configurations": []`.
+
+```hcl
+configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
+```
+
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`
 * `autoscaling_role` - (Optional) An IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
 * `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform.
@@ -358,7 +378,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       "Configurations": [
         {
           "Classification": "export",
-          "Configurations": [],
           "Properties": {
             "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
           }
@@ -371,7 +390,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       "Configurations": [
         {
           "Classification": "export",
-          "Configurations": [],
           "Properties": {
             "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
           }
