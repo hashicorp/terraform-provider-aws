@@ -187,12 +187,18 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := iamconn.GetRole(request)
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") { // XXX test me
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			log.Printf("[WARN] IAM Role %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error reading IAM Role %s: %s", d.Id(), err)
+	}
+
+	if getResp == nil || getResp.Role == nil {
+		log.Printf("[WARN] IAM Role %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	role := getResp.Role
