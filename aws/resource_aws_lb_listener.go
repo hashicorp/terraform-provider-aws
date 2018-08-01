@@ -161,7 +161,7 @@ func resourceAwsLbListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									
+
 									"status_code": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -330,16 +330,15 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	defaultActions := make([]map[string]interface{}, 0)
 	if listener.DefaultActions != nil && len(listener.DefaultActions) > 0 {
 		for _, defaultAction := range listener.DefaultActions {
-			action := map[string]interface{}{
-				"type": aws.StringValue(defaultAction.Type),
-			}
+			defaultActionMap := make(map[string]interface{})
+			defaultActionMap["type"] = aws.StringValue(defaultAction.Type)
 
 			switch aws.StringValue(defaultAction.Type) {
 			case "forward":
-				action["target_group_arn"] = aws.StringValue(defaultAction.TargetGroupArn)
+				defaultActionMap["target_group_arn"] = aws.StringValue(defaultAction.TargetGroupArn)
 
 			case "redirect":
-				action["redirect"] = []map[string]interface{}{
+				defaultActionMap["redirect"] = []map[string]interface{}{
 					{
 						"host":        aws.StringValue(defaultAction.RedirectConfig.Host),
 						"path":        aws.StringValue(defaultAction.RedirectConfig.Path),
@@ -351,7 +350,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 				}
 
 			case "fixed-response":
-				action["fixed_response"] = []map[string]interface{}{
+				defaultActionMap["fixed_response"] = []map[string]interface{}{
 					{
 						"content_type": aws.StringValue(defaultAction.FixedResponseConfig.ContentType),
 						"message_body": aws.StringValue(defaultAction.FixedResponseConfig.MessageBody),
@@ -360,7 +359,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			defaultActions = append(defaultActions, action)
+			defaultActions = append(defaultActions, defaultActionMap)
 		}
 	}
 	d.Set("default_action", defaultActions)
@@ -394,9 +393,8 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		for i, defaultAction := range defaultActions {
 			defaultActionMap := defaultAction.(map[string]interface{})
 
-			action := &elbv2.Action{
-				Type: aws.String(defaultActionMap["type"].(string)),
-			}
+			action := &elbv2.Action{}
+			action.Type = aws.String(defaultActionMap["type"].(string))
 
 			switch defaultActionMap["type"].(string) {
 			case "forward":
@@ -416,6 +414,8 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 						Query:      aws.String(redirectMap["query"].(string)),
 						StatusCode: aws.String(redirectMap["status_code"].(string)),
 					}
+				} else {
+					return errors.New("for actions of type 'redirect', you must specify a 'redirect_config'")
 				}
 
 			case "fixed-response":
@@ -429,6 +429,8 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 						MessageBody: aws.String(fixedResponseMap["message_body"].(string)),
 						StatusCode:  aws.String(fixedResponseMap["status_code"].(string)),
 					}
+				} else {
+					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response'")
 				}
 			}
 

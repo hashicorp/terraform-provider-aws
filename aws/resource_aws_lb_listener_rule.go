@@ -48,16 +48,102 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_group_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ActionTypeEnumFixedResponse,
 								elbv2.ActionTypeEnumForward,
+								elbv2.ActionTypeEnumRedirect,
 							}, true),
+						},
+
+						"target_group_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot("forward"),
+						},
+
+						"redirect": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot("redirect"),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"host": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default: "#{host}",
+									},
+
+									"path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default: "/#{path}",
+									},
+
+									"port": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default: "#{port}",
+									},
+
+									"protocol": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default: "#{protocol}",
+										ValidateFunc: validation.StringInSlice([]string{
+											"#{protocol}",
+											"HTTP",
+											"HTTPS",
+										}, false),
+									},
+
+									"query": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default: "#{query}",
+									},
+
+									"status_code": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"HTTP_301",
+											"HTTP_302",
+										}, false),
+									},
+								},
+							},
+						},
+
+						"fixed_response": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot("fixed-response"),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"content_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+
+									"message_body": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"status_code": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -97,10 +183,49 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 	params.Actions = make([]*elbv2.Action, len(actions))
 	for i, action := range actions {
 		actionMap := action.(map[string]interface{})
-		params.Actions[i] = &elbv2.Action{
-			TargetGroupArn: aws.String(actionMap["target_group_arn"].(string)),
-			Type:           aws.String(actionMap["type"].(string)),
+
+		action := &elbv2.Action{}
+		action.Type = aws.String(actionMap["type"].(string))
+
+		switch actionMap["type"].(string) {
+		case "forward":
+			action.TargetGroupArn = aws.String(actionMap["target_group_arn"].(string))
+
+		case "redirect":
+			redirectList := actionMap["redirect"].([]interface{})
+
+			if len(redirectList) == 1 {
+				redirectMap := redirectList[0].(map[string]interface{})
+
+				action.RedirectConfig = &elbv2.RedirectActionConfig{
+					Host:       aws.String(redirectMap["host"].(string)),
+					Path:       aws.String(redirectMap["path"].(string)),
+					Port:       aws.String(redirectMap["port"].(string)),
+					Protocol:   aws.String(redirectMap["protocol"].(string)),
+					Query:      aws.String(redirectMap["query"].(string)),
+					StatusCode: aws.String(redirectMap["status_code"].(string)),
+				}
+			} else {
+				return errors.New("for actions of type 'redirect', you must specify a 'redirect_config'")
+			}
+
+		case "fixed-response":
+			fixedResponseList := actionMap["fixed_response"].([]interface{})
+
+			if len(fixedResponseList) == 1 {
+				fixedResponseMap := fixedResponseList[0].(map[string]interface{})
+
+				action.FixedResponseConfig = &elbv2.FixedResponseActionConfig{
+					ContentType: aws.String(fixedResponseMap["content_type"].(string)),
+					MessageBody: aws.String(fixedResponseMap["message_body"].(string)),
+					StatusCode:  aws.String(fixedResponseMap["status_code"].(string)),
+				}
+			} else {
+				return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response'")
+			}
 		}
+
+		params.Actions[i] = action
 	}
 
 	conditions := d.Get("condition").(*schema.Set).List()
@@ -196,8 +321,34 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	actions := make([]interface{}, len(rule.Actions))
 	for i, action := range rule.Actions {
 		actionMap := make(map[string]interface{})
-		actionMap["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
 		actionMap["type"] = aws.StringValue(action.Type)
+
+		switch actionMap["type"] {
+		case "forward":
+			actionMap["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
+
+		case "redirect":
+			actionMap["redirect"] = []map[string]interface{}{
+				{
+					"host":        aws.StringValue(action.RedirectConfig.Host),
+					"path":        aws.StringValue(action.RedirectConfig.Path),
+					"port":        aws.StringValue(action.RedirectConfig.Port),
+					"protocol":    aws.StringValue(action.RedirectConfig.Protocol),
+					"query":       aws.StringValue(action.RedirectConfig.Query),
+					"status_code": aws.StringValue(action.RedirectConfig.StatusCode),
+				},
+			}
+
+		case "fixed-response":
+			actionMap["fixed_response"] = []map[string]interface{}{
+				{
+					"content_type": aws.StringValue(action.FixedResponseConfig.ContentType),
+					"message_body": aws.StringValue(action.FixedResponseConfig.MessageBody),
+					"status_code":  aws.StringValue(action.FixedResponseConfig.StatusCode),
+				},
+			}
+		}
+
 		actions[i] = actionMap
 	}
 	d.Set("action", actions)
@@ -251,10 +402,49 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		params.Actions = make([]*elbv2.Action, len(actions))
 		for i, action := range actions {
 			actionMap := action.(map[string]interface{})
-			params.Actions[i] = &elbv2.Action{
-				TargetGroupArn: aws.String(actionMap["target_group_arn"].(string)),
-				Type:           aws.String(actionMap["type"].(string)),
+
+			action := &elbv2.Action{}
+			action.Type = aws.String(actionMap["type"].(string))
+
+			switch actionMap["type"].(string) {
+			case "forward":
+				action.TargetGroupArn = aws.String(actionMap["target_group_arn"].(string))
+
+			case "redirect":
+				redirectList := actionMap["redirect"].([]interface{})
+
+				if len(redirectList) == 1 {
+					redirectMap := redirectList[0].(map[string]interface{})
+
+					action.RedirectConfig = &elbv2.RedirectActionConfig{
+						Host:       aws.String(redirectMap["host"].(string)),
+						Path:       aws.String(redirectMap["path"].(string)),
+						Port:       aws.String(redirectMap["port"].(string)),
+						Protocol:   aws.String(redirectMap["protocol"].(string)),
+						Query:      aws.String(redirectMap["query"].(string)),
+						StatusCode: aws.String(redirectMap["status_code"].(string)),
+					}
+				} else {
+					return errors.New("for actions of type 'redirect', you must specify a 'redirect_config'")
+				}
+
+			case "fixed-response":
+				fixedResponseList := actionMap["fixed_response"].([]interface{})
+
+				if len(fixedResponseList) == 1 {
+					fixedResponseMap := fixedResponseList[0].(map[string]interface{})
+
+					action.FixedResponseConfig = &elbv2.FixedResponseActionConfig{
+						ContentType: aws.String(fixedResponseMap["content_type"].(string)),
+						MessageBody: aws.String(fixedResponseMap["message_body"].(string)),
+						StatusCode:  aws.String(fixedResponseMap["status_code"].(string)),
+					}
+				} else {
+					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response'")
+				}
 			}
+
+			params.Actions[i] = action
 		}
 		requestUpdate = true
 		d.SetPartial("action")
