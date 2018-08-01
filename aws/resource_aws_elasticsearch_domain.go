@@ -437,6 +437,9 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 			if isAWSErr(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
