@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
@@ -18,11 +19,12 @@ func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateArn,
 			},
-			"name": {
+			"semantic_version": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
-			"semantic_version": {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +45,16 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 
 	applicationID := d.Get("application_id").(string)
+
 	input := &serverlessapplicationrepository.GetApplicationInput{
 		ApplicationId: aws.String(applicationID),
 	}
 
-	log.Printf("[DEBUG] Reading Serverless Repository Application with request: %s", input)
+	if v, ok := d.GetOk("semantic_version"); ok {
+		version := v.(string)
+		input.SemanticVersion = aws.String(version)
+	}
+	log.Printf("[DEBUG] Reading Serverless Repo Application with request: %s", input)
 
 	output, err := conn.GetApplication(input)
 	if err != nil {
