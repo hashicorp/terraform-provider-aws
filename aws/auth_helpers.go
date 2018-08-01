@@ -25,6 +25,16 @@ import (
 
 func GetAccountID(iamconn *iam.IAM, stsconn *sts.STS, authProviderName string) (string, error) {
 	var errors error
+
+	// First, try STS GetCallerIdentity
+	log.Println("[DEBUG] Trying to get account ID via sts:GetCallerIdentity")
+	outCallerIdentity, err := stsconn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err == nil {
+		return parseAccountIDFromArn(*outCallerIdentity.Arn)
+	}
+	log.Printf("[DEBUG] Getting account ID via sts:GetCallerIdentity failed: %s", err)
+	errors = multierror.Append(errors, err)
+
 	// If we have creds from instance profile, we can use metadata API
 	if authProviderName == ec2rolecreds.ProviderName {
 		log.Println("[DEBUG] Trying to get account ID via AWS Metadata API")
@@ -66,15 +76,6 @@ func GetAccountID(iamconn *iam.IAM, stsconn *sts.STS, authProviderName string) (
 		}
 		log.Printf("[DEBUG] Getting account ID via iam:GetUser failed: %s", err)
 	}
-
-	// Then try STS GetCallerIdentity
-	log.Println("[DEBUG] Trying to get account ID via sts:GetCallerIdentity")
-	outCallerIdentity, err := stsconn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	if err == nil {
-		return parseAccountIDFromArn(*outCallerIdentity.Arn)
-	}
-	log.Printf("[DEBUG] Getting account ID via sts:GetCallerIdentity failed: %s", err)
-	errors = multierror.Append(errors, err)
 
 	// Then try IAM ListRoles
 	log.Println("[DEBUG] Trying to get account ID via iam:ListRoles")
