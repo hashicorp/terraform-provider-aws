@@ -55,6 +55,7 @@ The following arguments are supported:
 * `instance_class` - (Required) The instance class to use.
 * `neptune_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise) A subnet group to associate with this neptune instance. **NOTE:** This must match the `neptune_subnet_group_name` of the attached [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html).
 * `neptune_parameter_group_name` - (Optional) The name of the neptune parameter group to associate with this instance.
+* `port` - (Optional) The port on which the DB accepts connections. Defaults to `8182`.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00"
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
@@ -66,9 +67,10 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `address` - The hostname of the instance. See also `endpoint` and `port`.
 * `arn` - Amazon Resource Name (ARN) of neptune instance
 * `dbi_resource_id` - The region-unique, immutable identifier for the neptune instance.
-* `endpoint` - The DNS address for this instance.
+* `endpoint` - The connection endpoint in `address:port` format.
 * `id` - The Instance identifier
 * `kms_key_arn` - The ARN for the KMS encryption key if one is set to the neptune cluster.
 * `storage_encrypted` - Specifies whether the neptune cluster is encrypted.
@@ -81,7 +83,14 @@ In addition to all arguments above, the following attributes are exported:
 `aws_neptune_cluster_instance` provides the following
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
-- `create` - (Default `90 minutes`) Used for Creating Instances and Replicas.
-- `update` - (Default `90 minutes`) Used for instance modifications.
-- `delete` - (Default `90 minutes`) Used for destroying instances. This includes
-the time required to take snapshots.
+- `create` - (Default `90 minutes`) How long to wait for creating instances to become available.
+- `update` - (Default `90 minutes`) How long to wait for updating instances to complete updates.
+- `delete` - (Default `90 minutes`) How long to wait for deleting instances to become fully deleted.
+
+## Import
+
+`aws_neptune_cluster_instance` can be imported by using the instance identifier, e.g.
+
+```
+$ terraform import aws_neptune_cluster_instance.example my-instance
+```

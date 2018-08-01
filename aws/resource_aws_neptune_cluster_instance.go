@@ -29,6 +29,10 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
 			"apply_immediately": {
 				Type:     schema.TypeBool,
@@ -95,11 +99,12 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 			},
 
 			"identifier_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateNeptuneIdentifierPrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"identifier"},
+				ValidateFunc:  validateNeptuneIdentifierPrefix,
 			},
 
 			"instance_class": {
@@ -308,8 +313,11 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	}
 
 	if db.Endpoint != nil {
-		d.Set("endpoint", db.Endpoint.Address)
-		d.Set("port", db.Endpoint.Port)
+		address := aws.StringValue(db.Endpoint.Address)
+		port := int(aws.Int64Value(db.Endpoint.Port))
+		d.Set("address", address)
+		d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
+		d.Set("port", port)
 	}
 
 	if db.DBSubnetGroup != nil {
