@@ -230,16 +230,17 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				ForceNew: true,
 			},
 			"cognito_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: false,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         false,
+				MaxItems:         1,
+				DiffSuppressFunc: esCognitoOptionsDiffSuppress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+							Default:  false,
 						},
 						"user_pool_id": {
 							Type:     schema.TypeString,
@@ -411,9 +412,8 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if v, ok := d.GetOk("cognito_options"); ok && len(v.([]interface{})) > 0 {
-		m := v.([]interface{})[0].(map[string]interface{})
-		input.CognitoOptions = expandESCognitoOptions(m)
+	if v, ok := d.GetOk("cognito_options"); ok {
+		input.CognitoOptions = expandESCognitoOptions(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
@@ -675,8 +675,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("cognito_options") {
 		options := d.Get("cognito_options").([]interface{})
-		s := options[0].(map[string]interface{})
-		input.CognitoOptions = expandESCognitoOptions(s)
+		input.CognitoOptions = expandESCognitoOptions(options)
 	}
 
 	if d.HasChange("log_publishing_options") {
@@ -774,4 +773,11 @@ func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) boo
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
 	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+}
+
+func esCognitoOptionsDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	if old == "1" && new == "0" {
+		return true
+	}
+	return false
 }

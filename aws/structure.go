@@ -1088,8 +1088,15 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	return []map[string]interface{}{m}
 }
 
-func expandESCognitoOptions(m map[string]interface{}) *elasticsearch.CognitoOptions {
-	options := elasticsearch.CognitoOptions{}
+func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
+	options := &elasticsearch.CognitoOptions{
+		Enabled: aws.Bool(false),
+	}
+	if len(c) < 1 {
+		return options
+	}
+
+	m := c[0].(map[string]interface{})
 
 	if cognitoEnabled, ok := m["enabled"]; ok {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
@@ -1108,15 +1115,13 @@ func expandESCognitoOptions(m map[string]interface{}) *elasticsearch.CognitoOpti
 		}
 	}
 
-	return &options
+	return options
 }
 
 func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	if c.Enabled != nil {
-		m["enabled"] = *c.Enabled
-	}
+	m["enabled"] = aws.BoolValue(c.Enabled)
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
