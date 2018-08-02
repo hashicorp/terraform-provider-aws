@@ -57,6 +57,7 @@ are exported:
 interpolation.
 
 * `ami` - The ID of the AMI used to launch the instance.
+* `arn` - The ARN of the instance.
 * `associate_public_ip_address` - Whether or not the Instance is associated with a public IP address or not (Boolean).
 * `availability_zone` - The availability zone of the Instance.
 * `ebs_block_device` - The EBS block device mappings of the Instance.

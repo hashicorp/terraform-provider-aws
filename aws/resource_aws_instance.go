@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -43,6 +44,11 @@ func resourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"associate_public_ip_address": {
@@ -801,6 +807,17 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
 	}
+
+	// ARN
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ec2",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("instance/%s", strings.TrimPrefix(d.Id(), "/")),
+	}
+	d.Set("arn", arn.String())
 
 	// Instance attributes
 	{

@@ -130,6 +130,10 @@ func TestAccAWSInstance_basic(t *testing.T) {
 						"3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.#", "0"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo",
+						"arn",
+						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 				),
 			},
 
