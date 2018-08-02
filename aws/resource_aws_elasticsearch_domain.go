@@ -125,8 +125,9 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dedicated_master_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:             schema.TypeInt,
+							Optional:         true,
+							DiffSuppressFunc: isClusterConfigDisabled,
 						},
 						"dedicated_master_enabled": {
 							Type:     schema.TypeBool,
@@ -134,8 +135,9 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Default:  false,
 						},
 						"dedicated_master_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: isClusterConfigDisabled,
 						},
 						"instance_count": {
 							Type:     schema.TypeInt,
@@ -729,4 +731,13 @@ func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) boo
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
 	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+}
+
+func isClusterConfigDisabled(k, old, new string, d *schema.ResourceData) bool {
+	v, ok := d.GetOk("cluster_config")
+	if ok {
+		clusterConfig := v.([]interface{})[0].(map[string]interface{})
+		return !clusterConfig["dedicated_master_enabled"].(bool)
+	}
+	return false
 }

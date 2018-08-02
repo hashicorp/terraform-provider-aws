@@ -94,6 +94,37 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_WithDedicatedClusterMaster(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_WithDedicatedClusterMaster(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_WithDedicatedClusterMaster(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -580,6 +611,27 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+	domain_name = "tf-test-%d"
+	
+	cluster_config {
+		instance_type            = "t2.micro.elasticsearch"
+    instance_count           = "1"
+    dedicated_master_enabled = %t
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "t2.micro.elasticsearch"
+	}
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, randInt, enabled)
 }
 
 func testAccESDomainConfig_ClusterUpdate(randInt, instanceInt, snapshotInt int) string {
