@@ -6,7 +6,7 @@ description: |-
   Get information on an EBS volume.
 ---
 
-# aws\_ebs\_volume
+# Data Source: aws_ebs_volume
 
 Use this data source to get information about an EBS volume for use in other
 resources.
@@ -42,7 +42,7 @@ several valid keys, for a full reference, check out
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The volume ID (e.g. vol-59fcb34e).
 * `volume_id` - The volume ID (e.g. vol-59fcb34e).

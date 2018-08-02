@@ -40,6 +40,10 @@ func testSweepVPNGateways(region string) error {
 	}
 	resp, err := conn.DescribeVpnGateways(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing VPN Gateways: %s", err)
 	}
 
@@ -122,6 +126,25 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_vpn_gateway.foo", "availability_zone", "us-west-2a"),
+				),
+			},
+		},
+	})
+}
+func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
+	var v ec2.VpnGateway
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccVpnGatewayConfigWithASN,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_vpn_gateway.foo", "amazon_side_asn", "4294967294"),
 				),
 			},
 		},
@@ -420,150 +443,164 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 
 const testAccNoVpnGatewayConfig = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-removed"
+  }
 }
 `
 
 const testAccVpnGatewayConfig = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-basic"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-basic"
+  }
 }
 `
 
 const testAccVpnGatewayConfigChangeVPC = `
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-change-vpc"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-basic"
-	}
+  vpc_id = "${aws_vpc.bar.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-basic"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigTags = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-tags"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-tags-updated"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags-updated"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigReattach = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-foo"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 
 resource "aws_vpn_gateway" "bar" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.bar.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigReattachChange = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-foo"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.bar.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 
 resource "aws_vpn_gateway" "bar" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 `
 
 const testAccVpnGatewayConfigWithAZ = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-az"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	availability_zone = "us-west-2a"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-with-az"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-az"
+  }
+}
+`
+
+const testAccVpnGatewayConfigWithASN = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-asn"
+  }
+}
+
+resource "aws_vpn_gateway" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  amazon_side_asn = 4294967294
 }
 `

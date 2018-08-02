@@ -6,7 +6,7 @@ description: |-
   Attaches a load balancer policy to an ELB Listener.
 ---
 
-# aws\_elb\_load\_balancer\_listener\_policy
+# aws_elb_load_balancer_listener_policy
 
 Attaches a load balancer policy to an ELB Listener.
 
@@ -69,7 +69,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the policy.
 * `load_balancer_name` - The load balancer on which the policy is defined.

@@ -6,7 +6,7 @@ description: |-
   Provides a CodeDeploy deployment group.
 ---
 
-# aws\_codedeploy\_deployment\_group
+# aws_codedeploy_deployment_group
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
@@ -33,35 +33,9 @@ resource "aws_iam_role" "example" {
 EOF
 }
 
-resource "aws_iam_role_policy" "example" {
-  name = "example-policy"
-  role = "${aws_iam_role.example.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "autoscaling:CompleteLifecycleAction",
-        "autoscaling:DeleteLifecycleHook",
-        "autoscaling:DescribeAutoScalingGroups",
-        "autoscaling:DescribeLifecycleHooks",
-        "autoscaling:PutLifecycleHook",
-        "autoscaling:RecordLifecycleActionHeartbeat",
-        "codedeploy:*",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
-        "tag:GetTags",
-        "tag:GetResources",
-        "sns:Publish"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+  role       = "${aws_iam_role.example.name}"
 }
 
 resource "aws_codedeploy_app" "example" {
@@ -77,10 +51,18 @@ resource "aws_codedeploy_deployment_group" "example" {
   deployment_group_name = "example-group"
   service_role_arn      = "${aws_iam_role.example.arn}"
 
-  ec2_tag_filter {
-    key   = "filterkey"
-    type  = "KEY_AND_VALUE"
-    value = "filtervalue"
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = "filterkey1"
+      type  = "KEY_AND_VALUE"
+      value = "filtervalue"
+    }
+
+    ec2_tag_filter {
+      key   = "filterkey2"
+      type  = "KEY_AND_VALUE"
+      value = "filtervalue"
+    }
   }
 
   trigger_configuration {
@@ -150,7 +132,8 @@ The following arguments are supported:
 * `service_role_arn` - (Required) The service role ARN that allows deployments.
 * `autoscaling_groups` - (Optional) Autoscaling groups associated with the deployment group.
 * `deployment_config_name` - (Optional) The name of the group's deployment config. The default is "CodeDeployDefault.OneAtATime".
-* `ec2_tag_filter` - (Optional) Tag filters associated with the group. See the AWS docs for details.
+* `ec2_tag_filter` - (Optional) Tag filters associated with the deployment group. See the AWS docs for details.
+* `ec2_tag_set` - (Optional) Sets of Tag filters associated with the deployment group, which are referred to as *tag groups* in the document.  See the AWS docs for details.
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Trigger Configurations for the deployment group (documented below).
 * `auto_rollback_configuration` - (Optional) The automatic rollback configuration associated with the deployment group (documented below).
@@ -165,6 +148,13 @@ Both `ec2_tag_filter` and `on_premises_tag_filter` support the following:
 * `key` - (Optional) The key of the tag filter.
 * `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
 * `value` - (Optional) The value of the tag filter.
+
+Multiple occurrences of `ec2_tag_filter` are allowed, where any instance that matches to at least one of the tag filters is selected.
+
+
+### Tag Groups
+You can form a tag group by putting a set of tag filters into `ec2_tag_set`. If multiple tag groups are specified, any instance that matches to at least one tag filter of every tag group is selected.
+
 
 ### Trigger Configuration
 Add triggers to a Deployment Group to receive notifications about events related to deployments or instances in the group. Notifications are sent to subscribers of the **SNS** topic associated with the trigger. _CodeDeploy must have permission to publish to the topic from this deployment group_. `trigger_configuration` supports the following:
@@ -193,7 +183,7 @@ You can configure a deployment to stop when a **CloudWatch** alarm detects that 
 _Only one `alarm_configuration` is allowed_.
 
 ### Deployment Style
-You can configure the type of deployment, either in-place` or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
+You can configure the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
 
 * `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`.
 
@@ -258,7 +248,7 @@ You can configure how instances in the original environment are terminated when 
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The deployment group's ID.
 * `app_name` - The group's assigned application.

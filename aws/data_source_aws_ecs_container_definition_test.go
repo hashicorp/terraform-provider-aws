@@ -1,18 +1,25 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
+	rString := acctest.RandString(8)
+	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_containter_definition_%s", rString)
+	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckAwsEcsContainerDefinitionDataSourceConfig,
+				Config: testAccCheckAwsEcsContainerDefinitionDataSourceConfig(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "image", "mongo:latest"),
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "image_digest", "latest"),
@@ -26,13 +33,14 @@ func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsEcsContainerDefinitionDataSourceConfig = `
+func testAccCheckAwsEcsContainerDefinitionDataSourceConfig(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
-  name = "terraformecstest1"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+  family = "%s"
   container_definitions = <<DEFINITION
 [
   {
@@ -52,7 +60,7 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "mongodb"
+  name = "%s"
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
@@ -62,4 +70,5 @@ data "aws_ecs_container_definition" "mongo" {
   task_definition = "${aws_ecs_task_definition.mongo.id}"
   container_name = "mongodb"
 }
-`
+`, clusterName, tdName, svcName)
+}

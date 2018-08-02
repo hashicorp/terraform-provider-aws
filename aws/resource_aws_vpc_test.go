@@ -17,6 +17,9 @@ func init() {
 	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
 		Name: "aws_vpc",
 		Dependencies: []string{
+			"aws_internet_gateway",
+			"aws_nat_gateway",
+			"aws_network_acl",
 			"aws_security_group",
 			"aws_subnet",
 			"aws_vpn_gateway",
@@ -37,16 +40,17 @@ func testSweepVPCs(region string) error {
 			{
 				Name: aws.String("tag-value"),
 				Values: []*string{
-					aws.String("tf-acc-revoke*"),
-					aws.String("terraform-testacc-vpc-data-source-*"),
-					aws.String("terraform-testacc-subnet-data-source*"),
-					aws.String("terraform-testacc-vpn-gateway*"),
+					aws.String("terraform-testacc-*"),
 				},
 			},
 		},
 	}
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing vpcs: %s", err)
 	}
 
@@ -85,10 +89,14 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(
 						"aws_vpc.foo", "default_route_table_id"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "enable_dns_support", "true"),
+					resource.TestCheckResourceAttrSet(
+						"aws_vpc.foo", "arn"),
 				),
 			},
 		},
@@ -159,9 +167,48 @@ func TestAccAWSVpc_dedicatedTenancy(t *testing.T) {
 			{
 				Config: testAccVpcDedicatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists("aws_vpc.bar", &vpc),
+					testAccCheckVpcExists("aws_vpc.foo", &vpc),
 					resource.TestCheckResourceAttr(
-						"aws_vpc.bar", "instance_tenancy", "dedicated"),
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_modifyTenancy(t *testing.T) {
+	var vpcDedicated ec2.Vpc
+	var vpcDefault ec2.Vpc
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcDedicatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDedicated),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+				),
+			},
+			{
+				Config: testAccVpcConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDefault),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "default"),
+					testAccCheckVpcIdsEqual(&vpcDedicated, &vpcDefault),
+				),
+			},
+			{
+				Config: testAccVpcDedicatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDedicated),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+					testAccCheckVpcIdsNotEqual(&vpcDedicated, &vpcDefault),
 				),
 			},
 		},
@@ -273,6 +320,26 @@ func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *vpc1.VpcId != *vpc2.VpcId {
+			return fmt.Errorf("VPC IDs not equal")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *vpc1.VpcId == *vpc2.VpcId {
+			return fmt.Errorf("VPC IDs are equal")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -377,6 +444,9 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 const testAccVpcConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-vpc"
+	}
 }
 `
 
@@ -384,12 +454,18 @@ const testAccVpcConfigIpv6Enabled = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
+	tags {
+		Name = "terraform-testacc-vpc-ipv6"
+	}
 }
 `
 
 const testAccVpcConfigIpv6Disabled = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-vpc-ipv6"
+	}
 }
 `
 
@@ -397,6 +473,9 @@ const testAccVpcConfigUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	enable_dns_hostnames = true
+	tags {
+		Name = "terraform-testacc-vpc"
+	}
 }
 `
 
@@ -406,6 +485,7 @@ resource "aws_vpc" "foo" {
 
 	tags {
 		foo = "bar"
+		Name = "terraform-testacc-vpc-tags"
 	}
 }
 `
@@ -416,14 +496,17 @@ resource "aws_vpc" "foo" {
 
 	tags {
 		bar = "baz"
+		Name = "terraform-testacc-vpc-tags"
 	}
 }
 `
 const testAccVpcDedicatedConfig = `
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "foo" {
 	instance_tenancy = "dedicated"
-
-	cidr_block = "10.2.0.0/16"
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-vpc-dedicated"
+	}
 }
 `
 
@@ -434,37 +517,41 @@ provider "aws" {
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.2.0.0/16"
-
 	enable_dns_hostnames = true
 	enable_dns_support = true
+	tags {
+		Name = "terraform-testacc-vpc-both-dns-opts"
+	}
 }
 `
 
 const testAccVpcConfig_DisabledDnsSupport = `
-provider "aws" {
-	region = "us-west-2"
-}
-
 resource "aws_vpc" "bar" {
 	cidr_block = "10.2.0.0/16"
-
 	enable_dns_support = false
+	tags {
+		Name = "terraform-testacc-vpc-disabled-dns-support"
+	}
 }
 `
 
 const testAccVpcConfig_ClassiclinkOption = `
 resource "aws_vpc" "bar" {
 	cidr_block = "172.2.0.0/16"
-
 	enable_classiclink = true
+	tags {
+		Name = "terraform-testacc-vpc-classic-link"
+	}
 }
 `
 
 const testAccVpcConfig_ClassiclinkDnsSupportOption = `
 resource "aws_vpc" "bar" {
 	cidr_block = "172.2.0.0/16"
-
 	enable_classiclink = true
 	enable_classiclink_dns_support = true
+	tags {
+		Name = "terraform-testacc-vpc-classic-link-support"
+	}
 }
 `

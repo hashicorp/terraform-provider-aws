@@ -21,7 +21,8 @@ resource "aws_ssm_patch_baseline" "production" {
 resource "aws_ssm_patch_group" "patchgroup" {
   baseline_id = "${aws_ssm_patch_baseline.production.id}"
   patch_group = "patch-group-name"
-}```
+}
+```
 
 ## Argument Reference
 
@@ -32,6 +33,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the patch baseline.

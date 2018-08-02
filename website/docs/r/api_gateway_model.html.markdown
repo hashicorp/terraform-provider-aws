@@ -6,7 +6,7 @@ description: |-
   Provides a Model for a API Gateway.
 ---
 
-# aws\_api\_gateway\_model
+# aws_api_gateway_model
 
 Provides a Model for a API Gateway.
 
@@ -44,6 +44,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the model

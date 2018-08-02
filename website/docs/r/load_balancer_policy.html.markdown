@@ -6,7 +6,7 @@ description: |-
   Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 ---
 
-# aws\_elb\_load\_balancer\_policy
+# aws_elb_load_balancer_policy
 
 Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 
@@ -106,7 +106,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the policy.
 * `policy_name` - The name of the stickiness policy.

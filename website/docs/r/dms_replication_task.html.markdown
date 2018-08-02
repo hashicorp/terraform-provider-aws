@@ -6,7 +6,7 @@ description: |-
   Provides a DMS (Data Migration Service) replication task resource.
 ---
 
-# aws\_dms\_replication\_task
+# aws_dms_replication_task
 
 Provides a DMS (Data Migration Service) replication task resource. DMS replication tasks can be created, updated, deleted, and imported.
 
@@ -53,7 +53,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `replication_task_arn` - The Amazon Resource Name (ARN) for the replication task.
 

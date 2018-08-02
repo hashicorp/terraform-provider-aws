@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -20,6 +22,8 @@ func TestCleanRecordName(t *testing.T) {
 	}{
 		{"www.nonexample.com", "www.nonexample.com"},
 		{"\\052.nonexample.com", "*.nonexample.com"},
+		{"\\100.nonexample.com", "@.nonexample.com"},
+		{"\\043.nonexample.com", "#.nonexample.com"},
 		{"nonexample.com", "nonexample.com"},
 	}
 
@@ -36,6 +40,7 @@ func TestExpandRecordName(t *testing.T) {
 		Input, Output string
 	}{
 		{"www", "www.nonexample.com"},
+		{"www.", "www.nonexample.com"},
 		{"dev.www", "dev.www.nonexample.com"},
 		{"*", "*.nonexample.com"},
 		{"nonexample.com", "nonexample.com"},
@@ -52,11 +57,32 @@ func TestExpandRecordName(t *testing.T) {
 	}
 }
 
+func TestNormalizeAwsAliasName(t *testing.T) {
+	cases := []struct {
+		Input, Output string
+	}{
+		{"www.nonexample.com", "www.nonexample.com"},
+		{"www.nonexample.com.", "www.nonexample.com"},
+		{"dualstack.name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+		{"dualstack.test-987654321.region.elb.amazonaws.com", "test-987654321.region.elb.amazonaws.com"},
+		{"dualstacktest.com", "dualstacktest.com"},
+		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+	}
+
+	for _, tc := range cases {
+		actual := normalizeAwsAliasName(tc.Input)
+		if actual != tc.Output {
+			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		}
+	}
+}
+
 func TestParseRecordId(t *testing.T) {
 	cases := []struct {
 		Input, Zone, Name, Type, Set string
 	}{
 		{"ABCDEF_test.notexample.com_A", "ABCDEF", "test.notexample.com", "A", ""},
+		{"ABCDEF_test.notexample.com._A", "ABCDEF", "test.notexample.com", "A", ""},
 		{"ABCDEF_test.notexample.com_A_set1", "ABCDEF", "test.notexample.com", "A", "set1"},
 		{"ABCDEF__underscore.notexample.com_A", "ABCDEF", "_underscore.notexample.com", "A", ""},
 		{"ABCDEF__underscore.notexample.com_A_set1", "ABCDEF", "_underscore.notexample.com", "A", "set1"},
@@ -264,6 +290,25 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 func TestAccAWSRoute53Record_alias(t *testing.T) {
 	rs := acctest.RandString(10)
 	config := fmt.Sprintf(testAccRoute53ElbAliasRecord, rs)
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_route53_record.alias",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.alias"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_aliasUppercase(t *testing.T) {
+	rs := acctest.RandString(10)
+	config := fmt.Sprintf(testAccRoute53ElbAliasRecordUppercase, rs)
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_record.alias",
@@ -488,6 +533,24 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoute53RecordConfig_allowOverwrite(false),
+				ExpectError: regexp.MustCompile("Tried to create resource record set \\[name='www.notexample.com.', type='A'] but it already exists"),
+			},
+			{
+				Config: testAccRoute53RecordConfig_allowOverwrite(true),
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute53RecordExists("aws_route53_record.overwriting")),
+			},
+		},
+	})
+}
+
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).r53conn
 	for _, rs := range s.RootModule().Resources {
@@ -571,6 +634,33 @@ func testAccCheckRoute53RecordExists(n string) resource.TestCheckFunc {
 		}
 		return fmt.Errorf("Record does not exist: %#v", rs.Primary.ID)
 	}
+}
+
+func testAccRoute53RecordConfig_allowOverwrite(allowOverwrite bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "notexample.com."
+}
+
+resource "aws_route53_record" "default" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www.notexample.com"
+  type = "A"
+  ttl = "30"
+  records = ["127.0.0.1"]
+}
+
+resource "aws_route53_record" "overwriting" {
+  depends_on = ["aws_route53_record.default"]
+
+  allow_overwrite = %v
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www.notexample.com"
+  type = "A"
+  ttl = "30"
+  records = ["127.0.0.1"]
+}
+`, allowOverwrite)
 }
 
 const testAccRoute53RecordConfig = `
@@ -957,6 +1047,36 @@ resource "aws_route53_record" "alias" {
 
 resource "aws_elb" "main" {
   name = "foobar-terraform-elb-%s"
+  availability_zones = ["us-west-2a"]
+
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+}
+`
+
+const testAccRoute53ElbAliasRecordUppercase = `
+resource "aws_route53_zone" "main" {
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "alias" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "www"
+  type = "A"
+
+  alias {
+  	zone_id = "${aws_elb.main.zone_id}"
+  	name = "${aws_elb.main.dns_name}"
+  	evaluate_target_health = true
+  }
+}
+
+resource "aws_elb" "main" {
+  name = "FOOBAR-TERRAFORM-ELB-%s"
   availability_zones = ["us-west-2a"]
 
   listener {

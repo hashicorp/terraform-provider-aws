@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -80,6 +79,142 @@ func TestAccAWSUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSUser_disappears(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.user"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(rName, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserDisappears(&user),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_nameChange(t *testing.T) {
+	var conf iam.GetUserOutput
+
+	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	path := "/"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(name1, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
+				),
+			},
+			{
+				Config: testAccAWSUserConfig(name2, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_pathChange(t *testing.T) {
+	var conf iam.GetUserOutput
+
+	name := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	path1 := "/"
+	path2 := "/updated/"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(name, path1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
+				),
+			},
+			{
+				Config: testAccAWSUserConfig(name, path2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_permissionsBoundary(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.user"
+
+	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", testAccGetPartition())
+	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", testAccGetPartition())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			// Test creation
+			{
+				Config: testAccAWSUserConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+				),
+			},
+			// Test update
+			{
+				Config: testAccAWSUserConfig_permissionsBoundary(rName, permissionsBoundary2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
+				),
+			},
+			// Test import
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			// Test removal
+			{
+				Config: testAccAWSUserConfig(rName, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+				),
+			},
+			// Test addition
+			{
+				Config: testAccAWSUserConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSUserDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -97,11 +232,7 @@ func testAccCheckAWSUserDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "NoSuchEntity" {
+		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			return err
 		}
 	}
@@ -149,10 +280,37 @@ func testAccCheckAWSUserAttributes(user *iam.GetUserOutput, name string, path st
 	}
 }
 
-func testAccAWSUserConfig(r, p string) string {
+func testAccCheckAWSUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		userName := aws.StringValue(getUserOutput.User.UserName)
+
+		_, err := iamconn.DeleteUser(&iam.DeleteUserInput{
+			UserName: aws.String(userName),
+		})
+		if err != nil {
+			return fmt.Errorf("error deleting user %q: %s", userName, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccAWSUserConfig(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "%s"
-}`, r, p)
+  name = %q
+  path = %q
+}
+`, rName, path)
+}
+
+func testAccAWSUserConfig_permissionsBoundary(rName, permissionsBoundary string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "user" {
+  name                 = %q
+  permissions_boundary = %q
+}
+`, rName, permissionsBoundary)
 }

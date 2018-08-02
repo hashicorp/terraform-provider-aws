@@ -26,6 +26,10 @@ func TestAccDataSourceAwsNatGateway(t *testing.T) {
 						"data.aws_nat_gateway.test_by_subnet_id", "subnet_id",
 						"aws_nat_gateway.test", "subnet_id"),
 					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "state"),
+					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "allocation_id"),
+					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "network_interface_id"),
+					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "public_ip"),
+					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "private_ip"),
 					resource.TestCheckNoResourceAttr("data.aws_nat_gateway.test_by_id", "attached_vpc_id"),
 				),
 			},
@@ -42,7 +46,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   tags {
-    Name = "terraform-testacc-nat-gateway-data-source-%d"
+    Name = "terraform-testacc-nat-gw-data-source"
   }
 }
 
@@ -52,7 +56,7 @@ resource "aws_subnet" "test" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "terraform-testacc-nat-gateway-data-source-%d"
+    Name = "tf-acc-nat-gw-data-source"
   }
 }
 
@@ -74,6 +78,10 @@ resource "aws_nat_gateway" "test" {
   subnet_id     = "${aws_subnet.test.id}"
   allocation_id = "${aws_eip.test.id}"
 
+  tags {
+    Name = "terraform-testacc-nat-gw-data-source"
+  }
+
   depends_on = ["aws_internet_gateway.test"]
 }
 
@@ -85,5 +93,5 @@ data "aws_nat_gateway" "test_by_subnet_id" {
   subnet_id = "${aws_nat_gateway.test.subnet_id}"
 }
 
-`, rInt, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt)
 }

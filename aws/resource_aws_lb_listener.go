@@ -8,11 +8,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -40,7 +39,7 @@ func resourceAwsLbListener() *schema.Resource {
 			"port": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validateAwsLbListenerPort,
+				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 
 			"protocol": {
@@ -50,7 +49,11 @@ func resourceAwsLbListener() *schema.Resource {
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
-				ValidateFunc: validateAwsLbListenerProtocol,
+				ValidateFunc: validation.StringInSlice([]string{
+					elbv2.ProtocolEnumHttp,
+					elbv2.ProtocolEnumHttps,
+					elbv2.ProtocolEnumTcp,
+				}, true),
 			},
 
 			"ssl_policy": {
@@ -74,9 +77,11 @@ func resourceAwsLbListener() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsLbListenerActionType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ActionTypeEnumForward,
+							}, true),
 						},
 					},
 				},
@@ -126,21 +131,17 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		log.Printf("[DEBUG] Creating LB listener for ARN: %s", d.Get("load_balancer_arn").(string))
 		resp, err = elbconn.CreateListener(params)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "CertificateNotFound" {
-				log.Printf("[WARN] Got an error while trying to create LB listener for ARN: %s: %s", lbArn, err)
+		if err != nil {
+			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
-		}
-		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
 
 	if err != nil {
-		return errwrap.Wrapf("Error creating LB Listener: {{err}}", err)
+		return fmt.Errorf("Error creating LB Listener: %s", err)
 	}
 
 	if len(resp.Listeners) == 0 {
@@ -159,12 +160,12 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		ListenerArns: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isListenerNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			log.Printf("[WARN] DescribeListeners - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return errwrap.Wrapf("Error retrieving Listener: {{err}}", err)
+		return fmt.Errorf("Error retrieving Listener: %s", err)
 	}
 
 	if len(resp.Listeners) != 1 {
@@ -179,7 +180,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("protocol", listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
-	if listener.Certificates != nil && len(listener.Certificates) == 1 {
+	if listener.Certificates != nil && len(listener.Certificates) == 1 && listener.Certificates[0] != nil {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 
@@ -187,8 +188,8 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	if listener.DefaultActions != nil && len(listener.DefaultActions) > 0 {
 		for _, defaultAction := range listener.DefaultActions {
 			action := map[string]interface{}{
-				"target_group_arn": *defaultAction.TargetGroupArn,
-				"type":             *defaultAction.Type,
+				"target_group_arn": aws.StringValue(defaultAction.TargetGroupArn),
+				"type":             aws.StringValue(defaultAction.Type),
 			}
 			defaultActions = append(defaultActions, action)
 		}
@@ -231,9 +232,18 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	_, err := elbconn.ModifyListener(params)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := elbconn.ModifyListener(params)
+		if err != nil {
+			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return errwrap.Wrapf("Error modifying LB Listener: {{err}}", err)
+		return fmt.Errorf("Error modifying LB Listener: %s", err)
 	}
 
 	return resourceAwsLbListenerRead(d, meta)
@@ -246,39 +256,8 @@ func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error
 		ListenerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error deleting Listener: {{err}}", err)
+		return fmt.Errorf("Error deleting Listener: %s", err)
 	}
 
 	return nil
-}
-
-func validateAwsLbListenerPort(v interface{}, k string) (ws []string, errors []error) {
-	port := v.(int)
-	if port < 1 || port > 65536 {
-		errors = append(errors, fmt.Errorf("%q must be a valid port number (1-65536)", k))
-	}
-	return
-}
-
-func validateAwsLbListenerProtocol(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	if value == "http" || value == "https" || value == "tcp" {
-		return
-	}
-
-	errors = append(errors, fmt.Errorf("%q must be either %q, %q or %q", k, "HTTP", "HTTPS", "TCP"))
-	return
-}
-
-func validateAwsLbListenerActionType(v interface{}, k string) (ws []string, errors []error) {
-	value := strings.ToLower(v.(string))
-	if value != "forward" {
-		errors = append(errors, fmt.Errorf("%q must have the value %q", k, "forward"))
-	}
-	return
-}
-
-func isListenerNotFound(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == "ListenerNotFound"
 }

@@ -6,7 +6,7 @@ description: |-
     Provides details about an ecs task definition
 ---
 
-# aws\_ecs\_task\_definition
+# Data Source: aws_ecs_task_definition
 
 The ECS task definition data source allows access to details of
 a specific AWS ECS task definition.
@@ -63,7 +63,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `family` - The family of this task definition
 * `network_mode` - The Docker networking mode to use for the containers in this task.

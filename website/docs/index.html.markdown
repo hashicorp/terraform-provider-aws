@@ -149,7 +149,9 @@ provider "aws" {
 
 ## Argument Reference
 
-The following arguments are supported in the `provider` block:
+In addition to [generic `provider` arguments](https://www.terraform.io/docs/configuration/providers.html)
+(e.g. `alias` and `version`), the following arguments are supported in the AWS
+ `provider` block:
 
 * `access_key` - (Optional) This is the AWS access key. It must be provided, but
   it can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable, or via
@@ -251,6 +253,18 @@ in excess of those allowed by the access policy of the role that is being assume
 
 Nested `endpoints` block supports the following:
 
+* `acm` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom ACM endpoints.
+
+* `apigateway` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom API Gateway endpoints.
+
+* `cloudformation` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom CloudFormation endpoints.
+
 * `cloudwatch` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom CloudWatch endpoints.
@@ -263,13 +277,45 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom CloudWatchLogs endpoints.
 
-* `cloudformation` - (Optional) Use this to override the default endpoint
+* `devicefarm` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
-  custom CloudFormation endpoints.
+  custom DeviceFarm endpoints.
 
 * `dynamodb` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   `dynamodb-local`.
+
+* `ec2` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom EC2 endpoints.
+
+* `autoscaling` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom Autoscaling endpoints.
+
+* `ecr` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom ECR endpoints.
+
+* `ecs` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom ECS endpoints.
+
+* `elb` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom ELB endpoints.
+
+* `efs` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom EFS endpoints.
+
+* `es` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`.  It's typically used to connect to
+  custom Elasticsearch endpoints.
+
+* `iam` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom IAM endpoints.
 
 * `kinesis` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
@@ -279,17 +325,13 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom KMS endpoints.
 
-* `iam` - (Optional) Use this to override the default endpoint
+* `lambda` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
-  custom IAM endpoints.
+  custom Lambda endpoints.
 
-* `ec2` - (Optional) Use this to override the default endpoint
+* `r53` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
-  custom EC2 endpoints.
-
-* `elb` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ELB endpoints.
+  custom Route53 endpoints.
 
 * `rds` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
@@ -306,6 +348,14 @@ Nested `endpoints` block supports the following:
 * `sqs` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom SQS endpoints.
+
+* `sts` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom STS endpoints.
+
+* `ssm` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom SSM endpoints.
 
 ## Getting the Account ID
 

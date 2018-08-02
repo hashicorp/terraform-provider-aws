@@ -7,7 +7,7 @@ description: |-
   connection to AWS.
 ---
 
-# aws\_canonical\_user\_id
+# Data Source: aws_canonical_user_id
 
 The Canonical User ID data source allows access to the [canonical user ID](http://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html)
 for the effective account in which Terraform is working.
@@ -28,7 +28,7 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The canonical user ID associated with the AWS account.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an RDS security group resource.
 ---
 
-# aws\_db\_security\_group
+# aws_db_security_group
 
 Provides an RDS security group resource. This is only for DB instances in the
 EC2-Classic Platform. For instances inside a VPC, use the
@@ -44,7 +44,7 @@ Ingress blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db security group ID.
 * `arn` - The arn of the DB security group.

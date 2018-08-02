@@ -6,7 +6,7 @@ description: |-
   Manage the default VPC resource.
 ---
 
-# aws\_default\_vpc
+# aws_default_vpc
 
 Provides a resource to manage the [default AWS VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
 in the current region.
@@ -23,7 +23,7 @@ into management.
 
 Basic usage with tags:
 
-```
+```hcl
 resource "aws_default_vpc" "default" {
 	tags {
 		Name = "Default VPC"
@@ -53,8 +53,9 @@ You can resume managing the VPC via the AWS Console.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of VPC
 * `id` - The ID of the VPC
 * `cidr_block` - The CIDR block of the VPC
 * `instance_tenancy` - Tenancy of instances spin up within VPC.
@@ -74,3 +75,11 @@ block with a /56 prefix length for the VPC was assigned
 
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html
+
+## Import
+
+Default VPCs can be imported using the `vpc id`, e.g.
+
+```
+$ terraform import aws_default_vpc.default vpc-a01106c2
+```

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Load Balancer resource.
 ---
 
-# aws\_elb
+# aws_elb
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of
@@ -132,7 +132,7 @@ browser.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the ELB
 * `arn` - The ARN of the ELB

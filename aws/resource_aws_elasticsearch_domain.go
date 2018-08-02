@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +14,8 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -63,6 +66,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ebs_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -85,6 +92,28 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"encrypt_at_rest": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+						"kms_key_id": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
 				},
@@ -169,11 +198,64 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 					},
 				},
 			},
+			"log_publishing_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.LogTypeIndexSlowLogs,
+								elasticsearch.LogTypeSearchSlowLogs,
+							}, false),
+						},
+						"cloudwatch_log_group_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
+			},
 			"elasticsearch_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "1.5",
 				ForceNew: true,
+			},
+			"cognito_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         false,
+				MaxItems:         1,
+				DiffSuppressFunc: esCognitoOptionsDiffSuppress,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"user_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 
 			"tags": tagsSchema(),
@@ -259,6 +341,16 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("encrypt_at_rest"); ok {
+		options := v.([]interface{})
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+		}
+
+		s := options[0].(map[string]interface{})
+		input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
+	}
+
 	if v, ok := d.GetOk("cluster_config"); ok {
 		config := v.([]interface{})
 
@@ -308,6 +400,22 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		input.VPCOptions = expandESVPCOptions(s)
 	}
 
+	if v, ok := d.GetOk("log_publishing_options"); ok {
+		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
+		options := v.(*schema.Set).List()
+		for _, vv := range options {
+			lo := vv.(map[string]interface{})
+			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
+				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("cognito_options"); ok {
+		input.CognitoOptions = expandESCognitoOptions(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
@@ -321,6 +429,15 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "Domain is still being deleted") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
 				return resource.RetryableError(err)
 			}
 
@@ -398,7 +515,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	ds := out.DomainStatus
 
 	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
-		policies, err := normalizeJsonString(*ds.AccessPolicies)
+		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
 			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
 		}
@@ -417,7 +534,15 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+	err = d.Set("encrypt_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions))
+	if err != nil {
+		return err
+	}
 	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
+	if err != nil {
+		return err
+	}
+	err = d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions))
 	if err != nil {
 		return err
 	}
@@ -436,16 +561,32 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return err
 		}
+		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", *ds.Endpoint)
+			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
 			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
 		}
+	}
+
+	if ds.LogPublishingOptions != nil {
+		m := make([]map[string]interface{}, 0)
+		for k, val := range ds.LogPublishingOptions {
+			mm := map[string]interface{}{}
+			mm["log_type"] = k
+			if val.CloudWatchLogsLogGroupArn != nil {
+				mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+			}
+			mm["enabled"] = *val.Enabled
+			m = append(m, mm)
+		}
+		d.Set("log_publishing_options", m)
 	}
 
 	d.Set("arn", ds.ARN)
@@ -535,6 +676,23 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		input.VPCOptions = expandESVPCOptions(s)
 	}
 
+	if d.HasChange("cognito_options") {
+		options := d.Get("cognito_options").([]interface{})
+		input.CognitoOptions = expandESCognitoOptions(options)
+	}
+
+	if d.HasChange("log_publishing_options") {
+		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
+		options := d.Get("log_publishing_options").(*schema.Set).List()
+		for _, vv := range options {
+			lo := vv.(map[string]interface{})
+			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
+				Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			}
+		}
+	}
+
 	_, err := conn.UpdateElasticsearchDomainConfig(&input)
 	if err != nil {
 		return err
@@ -566,43 +724,63 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
+	domainName := d.Get("domain_name").(string)
 
-	log.Printf("[DEBUG] Deleting ElasticSearch domain: %q", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Deleting ElasticSearch domain: %q", domainName)
 	_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(domainName),
 	})
 	if err != nil {
+		if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be deleted", d.Get("domain_name").(string))
-	err = resource.Retry(90*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
-		})
+	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be deleted", domainName)
+	err = resourceAwsElasticSearchDomainDeleteWaiter(domainName, conn)
+
+	return err
+}
+
+func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elasticsearch.ElasticsearchService) error {
+	input := &elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(domainName),
+	}
+	err := resource.Retry(90*time.Minute, func() *resource.RetryError {
+		out, err := conn.DescribeElasticsearchDomain(input)
 
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-
-			if awsErr.Code() == "ResourceNotFoundException" {
+			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
-
 			return resource.NonRetryableError(err)
 		}
 
-		if !*out.DomainStatus.Processing {
+		if out.DomainStatus != nil && !aws.BoolValue(out.DomainStatus.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for the domain to be deleted", d.Id()))
+		return resource.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
 	})
 
-	d.SetId("")
-
 	return err
+}
+
+func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
+	// The Elasticsearch API accepts a short KMS key id but always returns the ARN of the key.
+	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
+	// These should be treated as equivalent.
+	return strings.Contains(old, new)
+}
+
+func getKibanaEndpoint(d *schema.ResourceData) string {
+	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+}
+
+func esCognitoOptionsDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	if old == "1" && new == "0" {
+		return true
+	}
+	return false
 }

@@ -6,7 +6,7 @@ description: |-
   Provides an IAM instance profile.
 ---
 
-# aws\_iam\_instance\_profile
+# aws_iam_instance_profile
 
 Provides an IAM instance profile.
 
@@ -16,7 +16,7 @@ Provides an IAM instance profile.
 
 ```hcl
 resource "aws_iam_instance_profile" "test_profile" {
-  name  = "test_profile"
+  name = "test_profile"
   role = "${aws_iam_role.role.name}"
 }
 

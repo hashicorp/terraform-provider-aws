@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLbbListenerRule() *schema.Resource {
@@ -36,7 +38,8 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 			},
 			"priority": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAwsLbListenerRulePriority,
 			},
@@ -50,9 +53,11 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsLbListenerActionType,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ActionTypeEnumForward,
+							}, true),
 						},
 					},
 				},
@@ -65,7 +70,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"field": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateAwsListenerRuleField,
+							ValidateFunc: validateMaxLength(64),
 						},
 						"values": {
 							Type:     schema.TypeList,
@@ -82,10 +87,10 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 
 func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	listenerArn := d.Get("listener_arn").(string)
 
 	params := &elbv2.CreateRuleInput{
-		ListenerArn: aws.String(d.Get("listener_arn").(string)),
-		Priority:    aws.Int64(int64(d.Get("priority").(int))),
+		ListenerArn: aws.String(listenerArn),
 	}
 
 	actions := d.Get("action").([]interface{})
@@ -112,16 +117,41 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	resp, err := elbconn.CreateRule(params)
-	if err != nil {
-		return errwrap.Wrapf("Error creating LB Listener Rule: {{err}}", err)
+	var resp *elbv2.CreateRuleOutput
+	if v, ok := d.GetOk("priority"); ok {
+		var err error
+		params.Priority = aws.Int64(int64(v.(int)))
+		resp, err = elbconn.CreateRule(params)
+		if err != nil {
+			return fmt.Errorf("Error creating LB Listener Rule: %v", err)
+		}
+	} else {
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			var err error
+			priority, err := highestListenerRulePriority(elbconn, listenerArn)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			params.Priority = aws.Int64(priority + 1)
+			resp, err = elbconn.CreateRule(params)
+			if err != nil {
+				if isAWSErr(err, elbv2.ErrCodePriorityInUseException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating LB Listener Rule: %v", err)
+		}
 	}
 
 	if len(resp.Rules) == 0 {
 		return errors.New("Error creating LB Listener Rule: no rules returned in response")
 	}
 
-	d.SetId(*resp.Rules[0].RuleArn)
+	d.SetId(aws.StringValue(resp.Rules[0].RuleArn))
 
 	return resourceAwsLbListenerRuleRead(d, meta)
 }
@@ -133,12 +163,12 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		RuleArns: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isRuleNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return errwrap.Wrapf(fmt.Sprintf("Error retrieving Rules for listener %s: {{err}}", d.Id()), err)
+		return fmt.Errorf("Error retrieving Rules for listener %q: %s", d.Id(), err)
 	}
 
 	if len(resp.Rules) != 1 {
@@ -150,14 +180,14 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", rule.RuleArn)
 
 	// The listener arn isn't in the response but can be derived from the rule arn
-	d.Set("listener_arn", lbListenerARNFromRuleARN(*rule.RuleArn))
+	d.Set("listener_arn", lbListenerARNFromRuleARN(aws.StringValue(rule.RuleArn)))
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
-	if *rule.Priority == "default" {
+	if aws.StringValue(rule.Priority) == "default" {
 		d.Set("priority", 99999)
 	} else {
-		if priority, err := strconv.Atoi(*rule.Priority); err != nil {
-			return errwrap.Wrapf("Cannot convert rule priority %q to int: {{err}}", err)
+		if priority, err := strconv.Atoi(aws.StringValue(rule.Priority)); err != nil {
+			return fmt.Errorf("Cannot convert rule priority %q to int: %s", aws.StringValue(rule.Priority), err)
 		} else {
 			d.Set("priority", priority)
 		}
@@ -166,8 +196,8 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	actions := make([]interface{}, len(rule.Actions))
 	for i, action := range rule.Actions {
 		actionMap := make(map[string]interface{})
-		actionMap["target_group_arn"] = *action.TargetGroupArn
-		actionMap["type"] = *action.Type
+		actionMap["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
+		actionMap["type"] = aws.StringValue(action.Type)
 		actions[i] = actionMap
 	}
 	d.Set("action", actions)
@@ -175,10 +205,10 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	conditions := make([]interface{}, len(rule.Conditions))
 	for i, condition := range rule.Conditions {
 		conditionMap := make(map[string]interface{})
-		conditionMap["field"] = *condition.Field
+		conditionMap["field"] = aws.StringValue(condition.Field)
 		conditionValues := make([]string, len(condition.Values))
 		for k, value := range condition.Values {
-			conditionValues[k] = *value
+			conditionValues[k] = aws.StringValue(value)
 		}
 		conditionMap["values"] = conditionValues
 		conditions[i] = conditionMap
@@ -251,7 +281,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	if requestUpdate {
 		resp, err := elbconn.ModifyRule(params)
 		if err != nil {
-			return errwrap.Wrapf("Error modifying LB Listener Rule: {{err}}", err)
+			return fmt.Errorf("Error modifying LB Listener Rule: %s", err)
 		}
 
 		if len(resp.Rules) == 0 {
@@ -270,24 +300,16 @@ func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := elbconn.DeleteRule(&elbv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),
 	})
-	if err != nil && !isRuleNotFound(err) {
-		return errwrap.Wrapf("Error deleting LB Listener Rule: {{err}}", err)
+	if err != nil && !isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+		return fmt.Errorf("Error deleting LB Listener Rule: %s", err)
 	}
 	return nil
 }
 
 func validateAwsLbListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
-	if value < 1 || value > 99999 {
-		errors = append(errors, fmt.Errorf("%q must be in the range 1-99999", k))
-	}
-	return
-}
-
-func validateAwsListenerRuleField(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf("%q must be a maximum of 64 characters", k))
+	if value < 1 || (value > 50000 && value != 99999) {
+		errors = append(errors, fmt.Errorf("%q must be in the range 1-50000 for normal rule or 99999 for default rule", k))
 	}
 	return
 }
@@ -308,7 +330,38 @@ func lbListenerARNFromRuleARN(ruleArn string) string {
 	return ""
 }
 
-func isRuleNotFound(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == "RuleNotFound"
+func highestListenerRulePriority(conn *elbv2.ELBV2, arn string) (priority int64, err error) {
+	var priorities []int
+	var nextMarker *string
+
+	for {
+		out, aerr := conn.DescribeRules(&elbv2.DescribeRulesInput{
+			ListenerArn: aws.String(arn),
+			Marker:      nextMarker,
+		})
+		if aerr != nil {
+			err = aerr
+			return
+		}
+		for _, rule := range out.Rules {
+			if aws.StringValue(rule.Priority) != "default" {
+				p, _ := strconv.Atoi(aws.StringValue(rule.Priority))
+				priorities = append(priorities, p)
+			}
+		}
+		if out.NextMarker == nil {
+			break
+		}
+		nextMarker = out.NextMarker
+	}
+
+	if len(priorities) == 0 {
+		priority = 0
+		return
+	}
+
+	sort.IntSlice(priorities).Sort()
+	priority = int64(priorities[len(priorities)-1])
+
+	return
 }

@@ -6,9 +6,11 @@ description: |-
   Provides an IAM policy.
 ---
 
-# aws\_iam\_policy
+# aws_iam_policy
 
 Provides an IAM policy.
+
+## Example Usage
 
 ```hcl
 resource "aws_iam_policy" "policy" {
@@ -37,7 +39,7 @@ EOF
 
 The following arguments are supported:
 
-* `description` - (Optional) Description of the IAM policy.
+* `description` - (Optional, Forces new resource) Description of the IAM policy.
 * `name` - (Optional, Forces new resource) The name of the policy. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional, default "/") Path in which to create the policy.
@@ -49,7 +51,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The policy's ID.
 * `arn` - The ARN assigned by AWS to this policy.

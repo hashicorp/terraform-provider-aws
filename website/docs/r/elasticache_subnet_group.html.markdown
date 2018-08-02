@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Subnet Group resource.
 ---
 
-# aws\_elasticache\_subnet\_group
+# aws_elasticache_subnet_group
 
 Provides an ElastiCache Subnet Group resource.
 
@@ -51,7 +51,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `description`
 * `name`

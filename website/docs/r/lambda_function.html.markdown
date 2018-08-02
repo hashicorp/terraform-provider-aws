@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 ---
 
-# aws\_lambda\_function
+# aws_lambda_function
 
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 
@@ -67,7 +67,7 @@ large files efficiently.
 ## Argument Reference
 
 * `filename` - (Optional) The path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
-* `s3_bucket` - (Optional) The S3 bucket location containing the function's deployment package. Conflicts with `filename`.
+* `s3_bucket` - (Optional) The S3 bucket location containing the function's deployment package. Conflicts with `filename`. This bucket must reside in the same AWS region where you are creating the Lambda function.
 * `s3_key` - (Optional) The S3 key of an object containing the function's deployment package. Conflicts with `filename`.
 * `s3_object_version` - (Optional) The object version containing the function's deployment package. Conflicts with `filename`.
 * `function_name` - (Required) A unique name for your Lambda Function.
@@ -78,6 +78,7 @@ large files efficiently.
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
 * `runtime` - (Required) See [Runtimes][6] for valid values.
 * `timeout` - (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5]
+* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. Defaults to Unreserved Concurrency Limits. See [Managing Concurrency][9]
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `vpc_config` - (Optional) Provide this to allow your function to access your VPC. Fields documented below. See [Lambda in VPC][7]
 * `environment` - (Optional) The Lambda environment's configuration settings. Fields documented below.
@@ -100,7 +101,7 @@ large files efficiently.
   from an upstream service. If no tracing header is received, Lambda will call
   X-Ray for a tracing decision.
 
-**vpc\_config** requires the following:
+**vpc_config** requires the following:
 
 * `subnet_ids` - (Required) A list of subnet IDs associated with the Lambda function.
 * `security_group_ids` - (Required) A list of security group IDs associated with the Lambda function.
@@ -120,8 +121,8 @@ For **environment** the following attributes are supported:
 * `version` - Latest published version of your Lambda Function.
 * `last_modified` - The date this resource was last modified.
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key.
-* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file
-  provided either via `filename` or `s3_*` parameters.
+* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file, provided either via `filename` or `s3_*` parameters.
+* `source_code_size` - The size in bytes of the function .zip file.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/walkthrough-s3-events-adminuser-create-test-function-create-function.html
@@ -131,6 +132,7 @@ For **environment** the following attributes are supported:
 [6]: https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime
 [7]: http://docs.aws.amazon.com/lambda/latest/dg/vpc.html
 [8]: https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html
+[9]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
 
 ## Import
 

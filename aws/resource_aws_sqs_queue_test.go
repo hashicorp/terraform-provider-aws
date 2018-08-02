@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -90,7 +90,25 @@ func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
 				Config: testAccAWSSQSConfigWithNamePrefix(prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue"),
+					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue", false),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_namePrefix_fifo(t *testing.T) {
+	prefix := "acctest-sqs-queue"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSFifoConfigWithNamePrefix(prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue", true),
 				),
 			},
 		},
@@ -114,6 +132,33 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQSHasPolicy("aws_sqs_queue.test-email-events", expectedPolicyText),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+				),
+			},
+			{
+				Config: "# delete queue to quickly recreate",
+				Check:  testAccCheckAWSSQSQueueDestroy,
+			},
+			{
+				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
 				),
 			},
 		},
@@ -231,14 +276,17 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 		params := &sqs.GetQueueAttributesInput{
 			QueueUrl: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.GetQueueAttributes(params)
-		if err == nil {
-			return fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID)
-		}
-
-		// Verify the error is what we want
-		_, ok := err.(awserr.Error)
-		if !ok {
+		err := resource.Retry(15*time.Second, func() *resource.RetryError {
+			_, err := conn.GetQueueAttributes(params)
+			if err != nil {
+				if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
+					return nil
+				}
+				return resource.NonRetryableError(err)
+			}
+			return resource.RetryableError(fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID))
+		})
+		if err != nil {
 			return err
 		}
 	}
@@ -353,7 +401,7 @@ func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
+func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string, isFifo bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources[resource]
 		if !ok {
@@ -365,6 +413,9 @@ func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string) resource.Tes
 		}
 		if !strings.HasPrefix(name, prefix) {
 			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
+		}
+		if isFifo && !strings.HasSuffix(name, ".fifo") {
+			return fmt.Errorf("Name: %q, does not have suffix: %q", name, ".fifo")
 		}
 		return nil
 	}
@@ -450,6 +501,15 @@ func testAccAWSSQSConfigWithNamePrefix(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
   name_prefix = "%s"
+}
+`, r)
+}
+
+func testAccAWSSQSFifoConfigWithNamePrefix(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name_prefix = "%s"
+  fifo_queue  = true
 }
 `, r)
 }

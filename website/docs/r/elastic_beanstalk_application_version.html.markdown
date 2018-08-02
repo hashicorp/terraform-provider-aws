@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Application Version Resource
 ---
 
-# aws\_elastic\_beanstalk\_application\_<wbr>version
+# aws_elastic_beanstalk_application_version
 
 Provides an Elastic Beanstalk Application Version Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -66,6 +66,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `name` - The Application Version name.

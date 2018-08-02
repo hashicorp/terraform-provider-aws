@@ -6,7 +6,7 @@ description: |-
   Manages status of an AWS Config Configuration Recorder.
 ---
 
-# aws\_config\_configuration\_recorder\_status
+# aws_config_configuration_recorder_status
 
 Manages status (recording / stopped) of an AWS Config Configuration Recorder.
 
@@ -54,6 +54,29 @@ resource "aws_iam_role" "r" {
       },
       "Effect": "Allow",
       "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "p" {
+  name = "awsconfig-example"
+  role = "${aws_iam_role.r.id}"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.b.arn}",
+        "${aws_s3_bucket.b.arn}/*"
+      ]
     }
   ]
 }

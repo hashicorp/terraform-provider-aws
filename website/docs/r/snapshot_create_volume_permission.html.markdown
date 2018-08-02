@@ -6,7 +6,7 @@ description: |-
   Adds create volume permission to an EBS Snapshot
 ---
 
-# aws\_snapshot\_create\_volume\_permission
+# aws_snapshot_create_volume_permission
 
 Adds permission to create volumes off of a given EBS Snapshot.
 
@@ -37,6 +37,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
   * `id` - A combination of "`snapshot_id`-`account_id`".

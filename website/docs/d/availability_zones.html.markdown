@@ -6,7 +6,7 @@ description: |-
     Provides a list of Availability Zones which can be used by an AWS account.
 ---
 
-# aws\_availability\_zones
+# Data Source: aws_availability_zones
 
 The Availability Zones data source allows access to the list of AWS
 Availability Zones which can be accessed by an AWS account within the region
@@ -47,6 +47,6 @@ to which the underlying AWS account has access, regardless of their state.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `names` - A list of the Availability Zone names available to the account.

@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Config Rule.
 ---
 
-# aws\_config\_config\_rule
+# aws_config_config_rule
 
 Provides an AWS Config Rule.
 
@@ -125,7 +125,7 @@ Provides the rule owner (AWS or customer), the rule identifier, and the notifica
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the config rule
 * `rule_id` - The ID of the config rule

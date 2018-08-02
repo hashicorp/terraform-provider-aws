@@ -37,6 +37,8 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 						"aws_db_subnet_group.foo", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_subnet_group.foo", "description", "Managed by Terraform"),
+					resource.TestMatchResourceAttr(
+						"aws_db_subnet_group.foo", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:subgrp:%s", rName))),
 					testCheck,
 				),
 			},
@@ -210,7 +212,7 @@ func testAccDBSubnetGroupConfig(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig"
+		Name = "terraform-testacc-db-subnet-group"
 	}
 }
 
@@ -219,7 +221,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-subnet-group-1"
 	}
 }
 
@@ -228,7 +230,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-subnet-group-2"
 	}
 }
 
@@ -246,7 +248,7 @@ func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig_updatedDescription"
+		Name = "terraform-testacc-db-subnet-group-updated-description"
 	}
 }
 
@@ -255,7 +257,7 @@ resource "aws_subnet" "foo" {
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-1"
+		Name = "tf-acc-db-subnet-group-1"
 	}
 }
 
@@ -264,7 +266,7 @@ resource "aws_subnet" "bar" {
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags {
-		Name = "tf-dbsubnet-test-2"
+		Name = "tf-acc-db-subnet-group-2"
 	}
 }
 
@@ -282,7 +284,7 @@ const testAccDBSubnetGroupConfig_namePrefix = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig_namePrefix"
+		Name = "terraform-testacc-db-subnet-group-name-prefix"
 	}
 }
 
@@ -290,12 +292,18 @@ resource "aws_subnet" "a" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
+	tags {
+		Name = "tf-acc-db-subnet-group-name-prefix-a"
+	}
 }
 
 resource "aws_subnet" "b" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
+	tags {
+		Name = "tf-acc-db-subnet-group-name-prefix-b"
+	}
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -307,7 +315,7 @@ const testAccDBSubnetGroupConfig_generatedName = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags {
-		Name = "testAccDBSubnetGroupConfig_generatedName"
+		Name = "terraform-testacc-db-subnet-group-generated-name"
 	}
 }
 
@@ -315,12 +323,18 @@ resource "aws_subnet" "a" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
+	tags {
+		Name = "tf-acc-db-subnet-group-generated-name-a"
+	}
 }
 
 resource "aws_subnet" "b" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
+	tags {
+		Name = "tf-acc-db-subnet-group-generated-name-a"
+	}
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -331,7 +345,7 @@ const testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
 resource "aws_vpc" "main" {
     cidr_block = "192.168.0.0/16"
 		tags {
-			Name = "testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces"
+			Name = "terraform-testacc-db-subnet-group-w-underscores-etc"
 		}
 }
 
@@ -339,12 +353,18 @@ resource "aws_subnet" "frontend" {
     vpc_id = "${aws_vpc.main.id}"
     availability_zone = "us-west-2b"
     cidr_block = "192.168.1.0/24"
+    tags {
+        Name = "tf-acc-db-subnet-group-w-underscores-etc-front"
+    }
 }
 
 resource "aws_subnet" "backend" {
     vpc_id = "${aws_vpc.main.id}"
     availability_zone = "us-west-2c"
     cidr_block = "192.168.2.0/24"
+    tags {
+        Name = "tf-acc-db-subnet-group-w-underscores-etc-back"
+    }
 }
 
 resource "aws_db_subnet_group" "underscores" {

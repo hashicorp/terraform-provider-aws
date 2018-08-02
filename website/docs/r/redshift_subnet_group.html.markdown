@@ -6,7 +6,7 @@ description: |-
   Provides a Redshift Subnet Group resource.
 ---
 
-# aws\_redshift\_subnet\_group
+# aws_redshift_subnet_group
 
 Creates a new Amazon Redshift subnet group. You must provide a list of one or more subnets in your existing Amazon Virtual Private Cloud (Amazon VPC) when creating Amazon Redshift subnet group.
 
@@ -58,7 +58,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Redshift Subnet group ID.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a S3 bucket resource.
 ---
 
-# aws\_s3\_bucket
+# aws_s3_bucket
 
 Provides a S3 bucket resource.
 
@@ -116,6 +116,11 @@ resource "aws_s3_bucket" "bucket" {
     tags {
       "rule"      = "log"
       "autoclean" = "true"
+    }
+
+    transition {
+      days = 15
+      storage_class = "ONEZONE_IA"
     }
 
     transition {
@@ -287,6 +292,27 @@ resource "aws_s3_bucket" "bucket" {
 }
 ```
 
+### Enable Default Server Side Encryption
+
+```hcl
+resource "aws_kms_key" "mykey" {
+  description             = "This key is used to encrypt bucket objects"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "mybucket" {
+  bucket = "mybucket"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = "${aws_kms_key.mykey.arn}"
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -310,6 +336,7 @@ Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 buck
 the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
 developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
+* `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
 
@@ -363,7 +390,7 @@ The `transition` object supports the following
 
 * `date` (Optional) Specifies the date after which you want the corresponding action to take effect.
 * `days` (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the object to transition. Can be `STANDARD_IA` or `GLACIER`.
+* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, or `GLACIER`.
 
 The `noncurrent_version_expiration` object supports the following
 
@@ -372,7 +399,7 @@ The `noncurrent_version_expiration` object supports the following
 The `noncurrent_version_transition` object supports the following
 
 * `days` (Required) Specifies the number of days an object is noncurrent object versions expire.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent versions object to transition. Can be `STANDARD_IA` or `GLACIER`.
+* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent versions object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, or `GLACIER`.
 
 The `replication_configuration` object supports the following:
 
@@ -383,6 +410,7 @@ The `rules` object supports the following:
 
 * `id` - (Optional) Unique identifier for the rule.
 * `destination` - (Required) Specifies the destination for the rule (documented below).
+* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
 * `prefix` - (Required) Object keyname prefix identifying one or more objects to which the rule applies. Set as an empty string to replicate the whole bucket.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 
@@ -390,14 +418,39 @@ The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
 * `storage_class` - (Optional) The class of storage used to store the object.
+* `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
+  `sse_kms_encrypted_objects` source selection criteria.
+
+The `source_selection_criteria` object supports the following:
+
+* `sse_kms_encrypted_objects` - (Optional) Match SSE-KMS encrypted objects (documented below). If specified, `replica_kms_key_id`
+   in `destination` must be specified as well.
+
+The `sse_kms_encrypted_objects` object supports the following:
+
+* `enabled` - (Required) Boolean which indicates if this criteria is enabled.
+
+The `server_side_encryption_configuration` object supports the following:
+
+* `rule` - (required) A single object for server-side encryption by default configuration. (documented below)
+
+The `rule` object supports the following:
+
+* `apply_server_side_encryption_by_default` - (required) A single object for setting server-side encryption by default. (documented below)
+
+The `apply_server_side_encryption_by_default` object supports the following:
+
+* `sse_algorithm` - (required) The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
+* `kms_master_key_id` - (optional) The AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the bucket.
 * `arn` - The ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
+* `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.

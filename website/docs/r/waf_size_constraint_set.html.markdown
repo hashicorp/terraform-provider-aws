@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Size Constraint Set resource.
 ---
 
-# aws\_waf\_size\_constraint\_set
+# aws_waf_size_constraint_set
 
 Provides a WAF Size Constraint Set Resource
 
@@ -65,10 +65,8 @@ The following arguments are supported:
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
-## Remarks
-
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Size Constraint Set.

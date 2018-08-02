@@ -6,7 +6,7 @@ description: |-
   Provides a CodeDeploy application.
 ---
 
-# aws\_codedeploy\_app
+# aws_codedeploy_app
 
 Provides a CodeDeploy application to be used as a basis for deployments
 
@@ -23,6 +23,7 @@ resource "aws_codedeploy_app" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the application.
+* `compute_platform` - (Optional) The compute platform can either be `Server` or `Lambda`. Default is `Server`.
 
 ## Attribute Reference
 

@@ -6,7 +6,7 @@ description: |-
   Provides a VPC DHCP Options resource.
 ---
 
-# aws\_vpc\_dhcp\_options
+# aws_vpc_dhcp_options
 
 Provides a VPC DHCP Options resource.
 
@@ -56,7 +56,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the DHCP Options Set.
 

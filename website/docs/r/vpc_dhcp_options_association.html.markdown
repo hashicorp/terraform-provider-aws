@@ -6,7 +6,7 @@ description: |-
   Provides a VPC DHCP Options Association resource.
 ---
 
-# aws\_vpc\_dhcp\_options\_<wbr>association
+# aws_vpc_dhcp_options_association
 
 Provides a VPC DHCP Options Association resource.
 
@@ -32,6 +32,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the DHCP Options Set Association.

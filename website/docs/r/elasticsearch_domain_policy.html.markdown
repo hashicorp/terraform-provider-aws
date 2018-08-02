@@ -6,7 +6,7 @@ description: |-
   Provides an ElasticSearch Domain.
 ---
 
-# aws\_elasticsearch\_domain\_policy
+# aws_elasticsearch_domain_policy
 
 Allows setting policy to an ElasticSearch domain while referencing domain attributes (e.g. ARN)
 
@@ -32,7 +32,7 @@ resource "aws_elasticsearch_domain_policy" "main" {
             "Condition": {
                 "IpAddress": {"aws:SourceIp": "127.0.0.1/32"}
             },
-            "Resource": "${aws_elasticsearch_domain.example.arn}"
+            "Resource": "${aws_elasticsearch_domain.example.arn}/*"
         }
     ]
 }

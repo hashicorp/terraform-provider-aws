@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Instance
 ---
 
-# aws\_lightsail\_instance
+# aws_lightsail_instance
 
 Provides a Lightsail Instance. Amazon Lightsail is a service to provide easy virtual private servers
 with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail)
@@ -85,8 +85,8 @@ The following attributes are exported in addition to the arguments listed above:
 
 ## Import
 
-Lightsail Instances can be imported using their ARN, e.g.
+Lightsail Instances can be imported using their name, e.g.
 
 ```
-$ terraform import aws_lightsail_instance.bar <arn>
+$ terraform import aws_lightsail_instance.gitlab_test 'custom gitlab'
 ```

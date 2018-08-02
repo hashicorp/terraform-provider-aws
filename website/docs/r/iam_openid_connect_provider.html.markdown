@@ -6,7 +6,7 @@ description: |-
   Provides an IAM OpenID Connect provider.
 ---
 
-# aws\_iam\_openid\_connect\_provider
+# aws_iam_openid_connect_provider
 
 Provides an IAM OpenID Connect provider.
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN assigned by AWS for this provider.
 

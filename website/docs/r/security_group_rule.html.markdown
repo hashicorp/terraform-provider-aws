@@ -6,7 +6,7 @@ description: |-
   Provides an security group rule resource.
 ---
 
-# aws\_security\_group\_rule
+# aws_security_group_rule
 
 Provides a security group rule resource. Represents a single `ingress` or
 `egress` group rule, which can be added to external Security Groups.
@@ -79,11 +79,11 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the security group rule
 * `type` - The type of rule, `ingress` or `egress`
 * `from_port` - The start port (or ICMP type number if protocol is "icmp")
 * `to_port` - The end port (or ICMP code if protocol is "icmp")
-* `protocol` – The protocol used
-* `description` – Description of the rule
+* `protocol` – The protocol used
+* `description` – Description of the rule

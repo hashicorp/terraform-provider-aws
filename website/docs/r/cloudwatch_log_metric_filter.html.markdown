@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Log Metric Filter resource.
 ---
 
-# aws\_cloudwatch\_log\_metric\_filter
+# aws_cloudwatch_log_metric_filter
 
 Provides a CloudWatch Log Metric Filter resource.
 
@@ -50,6 +50,6 @@ The `metric_transformation` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the metric filter.

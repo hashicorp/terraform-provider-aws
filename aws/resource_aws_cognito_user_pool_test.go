@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,64 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cognito_user_pool", &resource.Sweeper{
+		Name: "aws_cognito_user_pool",
+		F:    testSweepCognitoUserPools,
+	})
+}
+
+func testSweepCognitoUserPools(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).cognitoidpconn
+
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int64(int64(50)),
+	}
+
+	for {
+		output, err := conn.ListUserPools(input)
+		if err != nil {
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping Cognito User Pool sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Cognito User Pools: %s", err)
+		}
+
+		if len(output.UserPools) == 0 {
+			log.Print("[DEBUG] No Cognito User Pools to sweep")
+			return nil
+		}
+
+		for _, userPool := range output.UserPools {
+			name := aws.StringValue(userPool.Name)
+
+			if !strings.HasPrefix(name, "tf_acc_") {
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Cognito User Pool %s", name)
+			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
+				UserPoolId: userPool.Id,
+			})
+			if err != nil {
+				return fmt.Errorf("Error deleting Cognito User Pool %s: %s", name, err)
+			}
+		}
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	name := acctest.RandString(5)
@@ -26,6 +86,10 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
+						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
+					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
+						regexp.MustCompile("^cognito-idp\\.[^.]+\\.amazonaws.com/[\\w-]+_[0-9a-zA-Z]+$")),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
@@ -272,7 +336,7 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1888159429", "preferred_username"),
-					resource.TestCheckNoResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "0"),
 				),
 			},
 			{
@@ -344,6 +408,8 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.user_migration"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
@@ -358,6 +424,8 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.user_migration"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
@@ -399,8 +467,7 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "3"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.attribute_data_type", "String"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.developer_only_attribute", "false"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.mutable", "false"),
@@ -419,7 +486,21 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.number_attribute_constraints.0.max_value", "6"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.required", "false"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.string_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.attribute_data_type", "Number"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.developer_only_attribute", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.mutable", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.name", "mynondevnumber"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.0.min_value", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.0.max_value", "6"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.required", "false"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.string_attribute_constraints.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_cognito_user_pool.main",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -790,6 +871,8 @@ resource "aws_cognito_user_pool" "main" {
     post_confirmation              = "${aws_lambda_function.main.arn}"
     pre_authentication             = "${aws_lambda_function.main.arn}"
     pre_sign_up                    = "${aws_lambda_function.main.arn}"
+    pre_token_generation           = "${aws_lambda_function.main.arn}"
+    user_migration                 = "${aws_lambda_function.main.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
   }
 }`, name)
@@ -843,6 +926,8 @@ resource "aws_cognito_user_pool" "main" {
     post_confirmation              = "${aws_lambda_function.second.arn}"
     pre_authentication             = "${aws_lambda_function.second.arn}"
     pre_sign_up                    = "${aws_lambda_function.second.arn}"
+    pre_token_generation           = "${aws_lambda_function.second.arn}"
+    user_migration                 = "${aws_lambda_function.second.arn}"
     verify_auth_challenge_response = "${aws_lambda_function.second.arn}"
   }
 }`, name)
@@ -899,6 +984,19 @@ resource "aws_cognito_user_pool" "main" {
     developer_only_attribute = true
     mutable                  = true
     name                     = "mynumber"
+    required                 = false
+
+    number_attribute_constraints {
+      min_value = 2
+      max_value = 6
+    }
+  }
+
+  schema {
+    attribute_data_type      = "Number"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "mynondevnumber"
     required                 = false
 
     number_attribute_constraints {

@@ -6,7 +6,7 @@ description: |-
   Provides a security group resource.
 ---
 
-# aws\_security\_group
+# aws_security_group
 
 Provides a security group resource.
 
@@ -157,9 +157,10 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the security group
+* `arn` - The ARN of the security group
 * `vpc_id` - The VPC ID.
 * `owner_id` - The owner ID.
 * `name` - The name of the security group
@@ -167,6 +168,13 @@ The following attributes are exported:
 * `ingress` - The ingress rules. See above for more.
 * `egress` - The egress rules. See above for more.
 
+## Timeouts
+
+`aws_security_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `10 minutes`) How long to wait for a security group to be created.
+- `delete` - (Default `10 minutes`) How long to wait for a security group to be deleted.
 
 ## Import
 

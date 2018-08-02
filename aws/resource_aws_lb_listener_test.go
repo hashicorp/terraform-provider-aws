@@ -3,13 +3,10 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -152,10 +149,10 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isListenerNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking LB Listener destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking LB Listener destroyed: %s", err)
 		}
 	}
 
@@ -217,7 +214,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-basic"
   }
 }
 
@@ -229,7 +226,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-basic-${count.index}"
   }
 }
 
@@ -313,7 +310,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-bc"
   }
 }
 
@@ -325,7 +322,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-bc-${count.index}"
   }
 }
 
@@ -380,6 +377,8 @@ resource "aws_lb" "alb_test" {
   tags {
     Name = "TestAccAWSALB_basic"
   }
+
+  depends_on = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_lb_target_group" "test" {
@@ -411,7 +410,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-listener-https"
   }
 }
 
@@ -431,7 +430,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    Name = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-listener-https-${count.index}"
   }
 }
 
@@ -486,5 +485,5 @@ resource "tls_self_signed_cert" "example" {
     "server_auth",
   ]
 }
-`, lbName, targetGroupName, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+`, lbName, targetGroupName, acctest.RandInt())
 }
