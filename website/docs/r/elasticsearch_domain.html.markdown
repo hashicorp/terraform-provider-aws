@@ -120,6 +120,15 @@ Security Groups and Subnets referenced in these attributes must all be within th
 * `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Specifies whether given log publishing option is enabled or not.
 
+**cognito_options** supports the following attribute:
+
+AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html)
+
+* `enabled` - (Optional, Default: false) Specifies whether Amazon Cognito authentication with Kibana is enabled or not
+* `user_pool_id` - (Required) ID of the Cognito User Pool to use
+* `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use
+* `role_arn` - (Required) ARN of the IAM role that has the AmazonESCognitoAccess policy attached
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
