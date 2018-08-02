@@ -70,7 +70,7 @@ func resourceAwsLbAttachmentUpdate(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if err != nil {
-		return errwrap.Wrapf("Error reading Target Health: {{err}}", err)
+		return fmt.Errorf("Error reading Target Health: %s", err)
 	}
 
 	targets := d.Get("instances").(*schema.Set)
@@ -99,7 +99,7 @@ func resourceAwsLbAttachmentUpdate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[DEBUG] %d target to remove from %s", len(paramsDereg.Targets), d.Get("target_group_arn").(string))
 		_, err = elbconn.DeregisterTargets(paramsDereg)
 		if err != nil {
-			return errwrap.Wrapf("Error deregistering Targets: {{err}}", err)
+			return fmt.Errorf("Error deregistering Targets: %s", err)
 		}
 	}
 
@@ -126,7 +126,7 @@ func resourceAwsLbAttachmentUpdate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[DEBUG] %d target to add to %s", len(paramsRegister.Targets), d.Get("target_group_arn").(string))
 		_, err = elbconn.RegisterTargets(paramsRegister)
 		if err != nil {
-			return errwrap.Wrapf("Error registering targets with target group: {{err}}", err)
+			return fmt.Errorf("Error registering targets with target group: %s", err)
 		}
 	}
 	return nil
