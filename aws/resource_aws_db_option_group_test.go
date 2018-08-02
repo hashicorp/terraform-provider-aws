@@ -233,6 +233,30 @@ func TestAccAWSDBOptionGroup_OptionSettings(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBOptionGroup_OptionSettingsIAMRole(t *testing.T) {
+	var v rds.OptionGroup
+	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBOptionGroupOptionSettingsIAMRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_db_option_group.bar", "option.#", "1"),
+					testAccCheckAWSDBOptionGroupOptionSettingsIAMRole(&v),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
@@ -339,6 +363,32 @@ func testAccCheckAWSDBOptionGroupAttributes(v *rds.OptionGroup) resource.TestChe
 			return fmt.Errorf("bad option_group_description: %#v", *v.OptionGroupDescription)
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckAWSDBOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if optionGroup == nil {
+			return errors.New("Option Group does not exist")
+		}
+		if len(optionGroup.Options) == 0 {
+			return errors.New("Option Group does not have any options")
+		}
+		if len(optionGroup.Options[0].OptionSettings) == 0 {
+			return errors.New("Option Group does not have any option settings")
+		}
+
+		settingName := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Name)
+		if settingName != "IAM_ROLE_ARN" {
+			return fmt.Errorf("Expected option setting IAM_ROLE_ARN and received %s", settingName)
+		}
+
+		settingValue := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Value)
+		iamArnRegExp := regexp.MustCompile(`^arn:aws:iam::\d{12}:role/.+`)
+		if !iamArnRegExp.MatchString(settingValue) {
+			return fmt.Errorf("Expected option setting to be a valid IAM role but received %s", settingValue)
+		}
 		return nil
 	}
 }
@@ -497,6 +547,40 @@ resource "aws_db_option_group" "bar" {
   }
 }
 `, r)
+}
+
+func testAccAWSDBOptionGroupOptionSettingsIAMRole(r string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "rds_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+	  type = "Service"
+      identifiers = ["rds.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "sql_server_backup" {
+  name = "rds-backup-%s"
+  assume_role_policy = "${data.aws_iam_policy_document.rds_assume_role.json}"
+}
+
+resource "aws_db_option_group" "bar" {
+  name                     = "%s"
+  option_group_description = "Test option group for terraform"
+  engine_name              = "sqlserver-ex"
+  major_engine_version     = "14.00"
+
+  option {
+    option_name = "SQLSERVER_BACKUP_RESTORE"
+    option_settings {
+      name  = "IAM_ROLE_ARN"
+      value = "${aws_iam_role.sql_server_backup.arn}"
+    }
+  }
+}
+`, r, r)
 }
 
 func testAccAWSDBOptionGroupOptionSettings_update(r string) string {
