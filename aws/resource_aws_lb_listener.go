@@ -189,7 +189,6 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 			return false
 		})
 		at := k[:i+1] + "type"
-		log.Printf("[DEBUG] at %s %s", k, at)
 		return d.Get(at).(string) != t
 	}
 }

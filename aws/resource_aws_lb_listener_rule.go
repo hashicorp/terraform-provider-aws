@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"strings"
 )
 
 func resourceAwsLbbListenerRule() *schema.Resource {
@@ -61,13 +62,13 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"target_group_arn": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot("forward"),
+							DiffSuppressFunc: suppressIfActionTypeNot("forward"),
 						},
 
 						"redirect": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot("redirect"),
+							DiffSuppressFunc: suppressIfActionTypeNot("redirect"),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -121,7 +122,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"fixed_response": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot("fixed-response"),
+							DiffSuppressFunc: suppressIfActionTypeNot("fixed-response"),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -168,6 +169,21 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				},
 			},
 		},
+	}
+}
+
+func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		take := 2
+		i := strings.IndexFunc(k, func(r rune) bool {
+			if r == '.' {
+				take -= 1
+				return take == 0
+			}
+			return false
+		})
+		at := k[:i+1] + "type"
+		return d.Get(at).(string) != t
 	}
 }
 
