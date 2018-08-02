@@ -153,8 +153,14 @@ func resourceAwsLbListener() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"content_type": {
 										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"text/plain",
+											"text/css",
+											"text/html",
+											"application/javascript",
+											"application/json",
+										}, false),
 									},
 
 									"message_body": {
