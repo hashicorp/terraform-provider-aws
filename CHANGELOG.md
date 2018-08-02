@@ -5,6 +5,10 @@ ENHANCEMENTS:
 * provider: Allow provider configuration AssumeRoleARN and sts:GetCallerIdentity credential validation call to shortcut account ID and partition lookup [GH-5177]
 * resource/aws_storagegateway_gateway: Add `smb_active_directory_settings` and `smb_guest_password` arguments [GH-5269]
 
+BUG FIXES:
+
+* resource/aws_ssm_maintenance_window: Properly recreate resource when deleted outside Terraform [GH-5416]
+
 ## 1.30.0 (August 02, 2018)
 
 FEATURES:
