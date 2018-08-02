@@ -12,6 +12,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_rds_cluster: Add `arn` attribute [GH-5221]
+* resource/aws_ami: Add `ena_support` argument [GH-5395]
 * resource/aws_api_gateway_domain_name: Support resource import [GH-5368]
 * resource/aws_efs_file_system: Add `provisioned_throughput_in_mibps` and `throughput_mode` arguments [GH-5210]
 * resource/aws_elasticsearch_domain: Add `cognito_options` arguments (support Cognito authentication) [GH-5346]
