@@ -1,4 +1,9 @@
 ## 1.31.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* provider: Allow provider configuration AssumeRoleARN and sts:GetCallerIdentity credential validation call to shortcut account ID and partition lookup [GH-5177]
+
 ## 1.30.0 (August 02, 2018)
 
 FEATURES:
