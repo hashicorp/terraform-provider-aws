@@ -324,6 +324,60 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(true, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(false, &domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(false, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(true, &domain),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -527,6 +581,16 @@ func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.Elasticsearch
 		conf := status.EncryptionAtRestOptions
 		if *conf.Enabled != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESCognitoOptions(enabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.CognitoOptions
+		if *conf.Enabled != enabled {
+			return fmt.Errorf("CognitoOptions not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
 		}
 		return nil
 	}
@@ -1115,4 +1179,82 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, randInt, randInt)
+}
+
+func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions bool) string {
+
+	var cognitoOptions string
+	if includeCognitoOptions {
+		cognitoOptions = `
+		cognito_options {
+			enabled = true
+			user_pool_id = "${aws_cognito_user_pool.example.id}"
+			identity_pool_id = "${aws_cognito_identity_pool.example.id}"
+			role_arn = "${aws_iam_role.example.arn}"
+		}`
+	} else {
+		cognitoOptions = ""
+	}
+
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "example" {
+  name = "tf-test-%d"
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain = "tf-test-%d"
+	user_pool_id = "${aws_cognito_user_pool.example.id}"
+}
+
+resource "aws_cognito_identity_pool" "example" {
+  identity_pool_name = "tf_test_%d"
+	allow_unauthenticated_identities = false
+
+  lifecycle {
+    ignore_changes = ["cognito_identity_providers"]
+  }
+}
+
+resource "aws_iam_role" "example" {
+	name = "tf-test-%d" 
+	path = "/service-role/"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role-policy.json}"
+}
+
+data "aws_iam_policy_document" "assume-role-policy" {
+  statement {
+    sid     = ""
+		actions = ["sts:AssumeRole"]
+		effect  = "Allow"
+		
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
+    }
+  }
+}
+	
+resource "aws_iam_role_policy_attachment" "example" {
+	role       = "${aws_iam_role.example.name}"
+	policy_arn = "arn:aws:iam::aws:policy/AmazonESCognitoAccess"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+	domain_name = "tf-test-%d"
+
+	elasticsearch_version = "6.0"
+
+	%s
+	
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  depends_on = [
+		"aws_iam_role.example",
+		"aws_iam_role_policy_attachment.example"
+	]
+}
+`, randInt, randInt, randInt, randInt, randInt, cognitoOptions)
 }

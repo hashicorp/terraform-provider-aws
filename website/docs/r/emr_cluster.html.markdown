@@ -196,6 +196,7 @@ flow. Defined below
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
 * `configurations_json` - (Optional) A JSON string for supplying list of configurations for the EMR cluster.
+
 ~> **NOTE on configurations_json:** If the `Configurations` value is empty then you should skip
 the `Configurations` field instead of providing empty list as value `"Configurations": []`.
 
