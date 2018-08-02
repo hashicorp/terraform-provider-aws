@@ -14,8 +14,9 @@ Provides a Load Balancer Listener resource.
 
 ## Example Usage
 
+### Forward Action
+
 ```hcl
-# Create a new load balancer
 resource "aws_lb" "front_end" {
   # ...
 }
@@ -32,11 +33,58 @@ resource "aws_lb_listener" "front_end" {
   certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.front_end.arn}"
     type             = "forward"
+    target_group_arn = "${aws_lb_target_group.front_end.arn}"
   }
 }
 ```
+
+### Redirect Action
+
+```hcl
+resource "aws_lb" "front_end" {
+  # ...
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.front_end.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      port = "443"
+      protocol = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+```
+
+### Fixed-response Action
+
+```hcl
+resource "aws_lb" "front_end" {
+  # ...
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.front_end.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Fixed response content"
+      status_code = "200"
+    }
+  }
+}
+```
+
 
 ## Argument Reference
 
@@ -53,8 +101,27 @@ The following arguments are supported:
 
 Action Blocks (for `default_action`) support the following:
 
-* `target_group_arn` - (Required) The ARN of the Target Group to which to route traffic.
-* `type` - (Required) The type of routing action. The only valid value is `forward`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect` and `fixed-response`.
+* `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic. Required if `type` is `forward`.
+* `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
+* `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+
+Redirect Blocks (for `redirect`) support the following:
+
+~> **NOTE::** You can reuse URI components using the following reserved keywords: `#{protocol}`, `#{host}`, `#{port}`, `#{path}` (the leading "/" is removed) and `#{query}`.
+
+* `host` - (Optional) The hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
+* `path` - (Optional) The absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
+* `port` - (Optional) The port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
+* `protocol` - (Optional) The protocol. Valid values are `HTTP`, `HTTPS`, or `#{protocol}`. Defaults to `#{protocol}`.
+* `query` - (Optional) The query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?". Defaults to `#{query}`.
+* `status_code` - (Required) The HTTP redirect code. The redirect is either permanent (`HTTP_301`) or temporary (`HTTP_302`).
+
+Fixed-response Blocks (for `fixed_response`) support the following:
+
+* `content_type` - (Required) The content type. Valid values are `text/plain`, `text/css`, `text/html`, `application/javascript` and `application/json`.
+* `message_body` - (Optional) The message body.
+* `status_code` - (Optional) The HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
 ## Attributes Reference
 
