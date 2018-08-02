@@ -67,6 +67,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -138,6 +139,7 @@ type Config struct {
 	ElbEndpoint              string
 	IamEndpoint              string
 	KinesisEndpoint          string
+	KinesisAnalyticsEndpoint string
 	KmsEndpoint              string
 	LambdaEndpoint           string
 	RdsEndpoint              string
@@ -205,6 +207,7 @@ type AWSClient struct {
 	rdsconn               *rds.RDS
 	iamconn               *iam.IAM
 	kinesisconn           *kinesis.Kinesis
+	kinesisanalyticsconn  *kinesisanalytics.KinesisAnalytics
 	kmsconn               *kms.KMS
 	gameliftconn          *gamelift.GameLift
 	firehoseconn          *firehose.Firehose
@@ -416,6 +419,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
 	awsLambdaSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
+	awsKinesisAnalyticsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
 	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
@@ -536,6 +540,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.guarddutyconn = guardduty.New(sess)
 	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
+	client.kinesisanalyticsconn = kinesisanalytics.New(awsKinesisAnalyticsSess)
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
