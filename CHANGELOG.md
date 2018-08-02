@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_db_option_group: Prevent error when creating options with new IAM role [GH-5389]
 * resource/aws_eip: Properly handle if multiple EIPs are returned during API read [GH-5331]
 * resource/aws_emr_cluster: Add `configurations_json` argument (handles drift detection as compared to `configurations` argument) [GH-5191]
+* resource/aws_emr_cluster: Ensure `keep_job_flow_alive_when_no_step = false` automatically terminates cluster [GH-5415]
 * resource/aws_lambda_event_source_mapping: Properly read `enabled` into Terraform state [GH-5292]
 * resource/aws_launch_template: Exclude `network_interfaces` `associate_public_ip_address` when conflicting `network_interface_id` is set [GH-5314]
 * resource/aws_launch_template: Set `latest_version` as re-computed on updates (prevent need for double apply) [GH-5250]
