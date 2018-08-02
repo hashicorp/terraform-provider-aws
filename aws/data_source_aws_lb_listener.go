@@ -54,77 +54,13 @@ func dataSourceAwsLbListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
 						"target_group_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
-						"redirect": {
-							Type:     schema.TypeList,
+						"type": {
+							Type:     schema.TypeString,
 							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"path": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"port": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"query": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"status_code": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-
-						"fixed_response": {
-							Type:     schema.TypeList,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"content_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"message_body": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"status_code": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
 						},
 					},
 				},
