@@ -417,9 +417,12 @@ The `rules` object supports the following:
 The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
+* `account_id` - (Optional) The ID of the AWS account that owns the destination bucket. Required if `overwrite_owner_acl` is specified.
 * `storage_class` - (Optional) The class of storage used to store the object.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
+* `overwrite_owner_acl` - (Optional) Indicates that the replicated S3 object gets a new ACL that gives full access to the destination account.
+If specified the only valid value is `Destination`.
 
 The `source_selection_criteria` object supports the following:
 

@@ -382,6 +382,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validateArn,
 												},
+												"account_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateAwsAccountId,
+												},
 												"storage_class": {
 													Type:     schema.TypeString,
 													Optional: true,
@@ -395,6 +400,13 @@ func resourceAwsS3Bucket() *schema.Resource {
 												"replica_kms_key_id": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"overwrite_owner_acl": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														s3.OwnerOverrideDestination,
+													}, false),
 												},
 											},
 										},
@@ -1746,6 +1758,10 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			bd := dest.List()[0].(map[string]interface{})
 			ruleDestination.Bucket = aws.String(bd["bucket"].(string))
 
+			if accountId, ok := bd["account_id"]; ok && accountId != "" {
+				ruleDestination.Account = aws.String(accountId.(string))
+			}
+
 			if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
 				ruleDestination.StorageClass = aws.String(storageClass.(string))
 			}
@@ -1753,6 +1769,12 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			if replicaKmsKeyId, ok := bd["replica_kms_key_id"]; ok && replicaKmsKeyId != "" {
 				ruleDestination.EncryptionConfiguration = &s3.EncryptionConfiguration{
 					ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
+				}
+			}
+
+			if overwriteOwnerAcl, ok := bd["overwrite_owner_acl"]; ok && overwriteOwnerAcl != "" {
+				ruleDestination.AccessControlTranslation = &s3.AccessControlTranslation{
+					Owner: aws.String(overwriteOwnerAcl.(string)),
 				}
 			}
 		}
@@ -1992,6 +2014,7 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 			if v.Destination.Bucket != nil {
 				rd["bucket"] = *v.Destination.Bucket
 			}
+			rd["account_id"] = aws.StringValue(v.Destination.Account)
 			if v.Destination.StorageClass != nil {
 				rd["storage_class"] = *v.Destination.StorageClass
 			}
@@ -1999,6 +2022,9 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
 					rd["replica_kms_key_id"] = *v.Destination.EncryptionConfiguration.ReplicaKmsKeyID
 				}
+			}
+			if v.Destination.AccessControlTranslation != nil {
+				rd["overwrite_owner_acl"] = aws.StringValue(v.Destination.AccessControlTranslation.Owner)
 			}
 			t["destination"] = schema.NewSet(destinationHash, []interface{}{rd})
 		}
@@ -2180,10 +2206,16 @@ func destinationHash(v interface{}) int {
 	if v, ok := m["bucket"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
+	if v, ok := m["account_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
 	if v, ok := m["storage_class"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["replica_kms_key_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["overwrite_owner_acl"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	return hashcode.String(buf.String())
