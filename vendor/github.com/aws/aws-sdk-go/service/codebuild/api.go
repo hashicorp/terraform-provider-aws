@@ -1585,6 +1585,13 @@ type Build struct {
 	// The current build phase.
 	CurrentPhase *string `locationName:"currentPhase" type:"string"`
 
+	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
+	// used for encrypting the build output artifacts.
+	//
+	// This is expressed either as the CMK's Amazon Resource Name (ARN) or, if specified,
+	// the CMK's alias (using the format alias/alias-name).
+	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
+
 	// When the build process ended, expressed in Unix time format.
 	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
@@ -1688,6 +1695,12 @@ func (s *Build) SetCurrentPhase(v string) *Build {
 	return s
 }
 
+// SetEncryptionKey sets the EncryptionKey field's value.
+func (s *Build) SetEncryptionKey(v string) *Build {
+	s.EncryptionKey = &v
+	return s
+}
+
 // SetEndTime sets the EndTime field's value.
 func (s *Build) SetEndTime(v time.Time) *Build {
 	s.EndTime = &v
@@ -1776,6 +1789,9 @@ func (s *Build) SetVpcConfig(v *VpcConfig) *Build {
 type BuildArtifacts struct {
 	_ struct{} `type:"structure"`
 
+	// Information that tells you if encryption for build artifacts is disabled.
+	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
+
 	// Information about the location of the build artifacts.
 	Location *string `locationName:"location" type:"string"`
 
@@ -1806,6 +1822,12 @@ func (s BuildArtifacts) String() string {
 // GoString returns the string representation
 func (s BuildArtifacts) GoString() string {
 	return s.String()
+}
+
+// SetEncryptionDisabled sets the EncryptionDisabled field's value.
+func (s *BuildArtifacts) SetEncryptionDisabled(v bool) *BuildArtifacts {
+	s.EncryptionDisabled = &v
+	return s
 }
 
 // SetLocation sets the Location field's value.
@@ -3247,6 +3269,11 @@ func (s *Project) SetWebhook(v *Webhook) *Project {
 type ProjectArtifacts struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true if you do not want your output artifacts encrypted. This option
+	// is only valid if your artifacts type is Amazon S3. If this is set with another
+	// artifacts type, an invalidInputException will be thrown.
+	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
+
 	// Information about the build output artifact location, as follows:
 	//
 	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
@@ -3380,6 +3407,12 @@ func (s *ProjectArtifacts) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEncryptionDisabled sets the EncryptionDisabled field's value.
+func (s *ProjectArtifacts) SetEncryptionDisabled(v bool) *ProjectArtifacts {
+	s.EncryptionDisabled = &v
+	return s
 }
 
 // SetLocation sets the Location field's value.

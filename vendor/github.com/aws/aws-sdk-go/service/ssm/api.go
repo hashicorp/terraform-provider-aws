@@ -6387,6 +6387,127 @@ func (c *SSM) GetPatchBaselineForPatchGroupWithContext(ctx aws.Context, input *G
 	return out, req.Send()
 }
 
+const opLabelParameterVersion = "LabelParameterVersion"
+
+// LabelParameterVersionRequest generates a "aws/request.Request" representing the
+// client's request for the LabelParameterVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See LabelParameterVersion for more information on using the LabelParameterVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the LabelParameterVersionRequest method.
+//    req, resp := client.LabelParameterVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/LabelParameterVersion
+func (c *SSM) LabelParameterVersionRequest(input *LabelParameterVersionInput) (req *request.Request, output *LabelParameterVersionOutput) {
+	op := &request.Operation{
+		Name:       opLabelParameterVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &LabelParameterVersionInput{}
+	}
+
+	output = &LabelParameterVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// LabelParameterVersion API operation for Amazon Simple Systems Manager (SSM).
+//
+// A parameter label is a user-defined alias to help you manage different versions
+// of a parameter. When you modify a parameter, Systems Manager automatically
+// saves a new version and increments the version number by one. A label can
+// help you remember the purpose of a parameter when there are multiple versions.
+//
+// Parameter labels have the following requirements and restrictions.
+//
+//    * A version of a parameter can have a maximum of 10 labels.
+//
+//    * You can't attach the same label to different versions of the same parameter.
+//    For example, if version 1 has the label Production, then you can't attach
+//    Production to version 2.
+//
+//    * You can move a label from one version of a parameter to another.
+//
+//    * You can't create a label when you create a new parameter. You must attach
+//    a label to a specific version of a parameter.
+//
+//    * You can't delete a parameter label. If you no longer want to use a parameter
+//    label, then you must move it to a different version of a parameter.
+//
+//    * A label can have a maximum of 100 characters.
+//
+//    * Labels can contain letters (case sensitive), numbers, periods (.), hyphens
+//    (-), or underscores (_).
+//
+//    * Labels can't begin with a number, "aws," or "ssm" (not case sensitive).
+//    If a label fails to meet these requirements, then the label is not associated
+//    with a parameter and the system displays it in the list of InvalidLabels.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation LabelParameterVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeTooManyUpdates "TooManyUpdates"
+//   There are concurrent updates for a resource that supports one update at a
+//   time.
+//
+//   * ErrCodeParameterNotFound "ParameterNotFound"
+//   The parameter could not be found. Verify the name and try again.
+//
+//   * ErrCodeParameterVersionNotFound "ParameterVersionNotFound"
+//   The specified parameter version was not found. Verify the parameter name
+//   and version, and try again.
+//
+//   * ErrCodeParameterVersionLabelLimitExceeded "ParameterVersionLabelLimitExceeded"
+//   A parameter version can have a maximum of ten labels.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/LabelParameterVersion
+func (c *SSM) LabelParameterVersion(input *LabelParameterVersionInput) (*LabelParameterVersionOutput, error) {
+	req, out := c.LabelParameterVersionRequest(input)
+	return out, req.Send()
+}
+
+// LabelParameterVersionWithContext is the same as LabelParameterVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See LabelParameterVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) LabelParameterVersionWithContext(ctx aws.Context, input *LabelParameterVersionInput, opts ...request.Option) (*LabelParameterVersionOutput, error) {
+	req, out := c.LabelParameterVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListAssociationVersions = "ListAssociationVersions"
 
 // ListAssociationVersionsRequest generates a "aws/request.Request" representing the
@@ -22325,6 +22446,100 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 	return s
 }
 
+type LabelParameterVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// One or more labels to attach to the specified parameter version.
+	//
+	// Labels is a required field
+	Labels []*string `min:"1" type:"list" required:"true"`
+
+	// The parameter name on which you want to attach one or more labels.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The specific version of the parameter on which you want to attach one or
+	// more labels. If no version is specified, the system attaches the label to
+	// the latest version.)
+	ParameterVersion *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s LabelParameterVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LabelParameterVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LabelParameterVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LabelParameterVersionInput"}
+	if s.Labels == nil {
+		invalidParams.Add(request.NewErrParamRequired("Labels"))
+	}
+	if s.Labels != nil && len(s.Labels) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Labels", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLabels sets the Labels field's value.
+func (s *LabelParameterVersionInput) SetLabels(v []*string) *LabelParameterVersionInput {
+	s.Labels = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LabelParameterVersionInput) SetName(v string) *LabelParameterVersionInput {
+	s.Name = &v
+	return s
+}
+
+// SetParameterVersion sets the ParameterVersion field's value.
+func (s *LabelParameterVersionInput) SetParameterVersion(v int64) *LabelParameterVersionInput {
+	s.ParameterVersion = &v
+	return s
+}
+
+type LabelParameterVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The label does not meet the requirements. For information about parameter
+	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
+	// in the AWS Systems Manager User Guide.
+	InvalidLabels []*string `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s LabelParameterVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LabelParameterVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetInvalidLabels sets the InvalidLabels field's value.
+func (s *LabelParameterVersionOutput) SetInvalidLabels(v []*string) *LabelParameterVersionOutput {
+	s.InvalidLabels = v
+	return s
+}
+
 type ListAssociationVersionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25011,8 +25226,27 @@ func (s *OutputSource) SetOutputSourceType(v string) *OutputSource {
 type Parameter struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the parameter.
+	ARN *string `type:"string"`
+
+	// Date the parameter was last changed or updated and the parameter version
+	// was created.
+	LastModifiedDate *time.Time `type:"timestamp"`
+
 	// The name of the parameter.
 	Name *string `min:"1" type:"string"`
+
+	// Either the version number or the label used to retrieve the parameter value.
+	// Specify selectors by using one of the following formats:
+	//
+	// parameter_name:version
+	//
+	// parameter_name:label
+	Selector *string `type:"string"`
+
+	// Applies to parameters that reference information in other AWS services. SourceResult
+	// is the raw result or response from the source.
+	SourceResult *string `type:"string"`
 
 	// The type of parameter. Valid values include the following: String, String
 	// list, Secure string.
@@ -25035,9 +25269,33 @@ func (s Parameter) GoString() string {
 	return s.String()
 }
 
+// SetARN sets the ARN field's value.
+func (s *Parameter) SetARN(v string) *Parameter {
+	s.ARN = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *Parameter) SetLastModifiedDate(v time.Time) *Parameter {
+	s.LastModifiedDate = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *Parameter) SetName(v string) *Parameter {
 	s.Name = &v
+	return s
+}
+
+// SetSelector sets the Selector field's value.
+func (s *Parameter) SetSelector(v string) *Parameter {
+	s.Selector = &v
+	return s
+}
+
+// SetSourceResult sets the SourceResult field's value.
+func (s *Parameter) SetSourceResult(v string) *Parameter {
+	s.SourceResult = &v
 	return s
 }
 
@@ -25073,6 +25331,9 @@ type ParameterHistory struct {
 
 	// The ID of the query key used for this parameter.
 	KeyId *string `min:"1" type:"string"`
+
+	// Labels assigned to the parameter version.
+	Labels []*string `min:"1" type:"list"`
 
 	// Date the parameter was last changed or updated.
 	LastModifiedDate *time.Time `type:"timestamp"`
@@ -25118,6 +25379,12 @@ func (s *ParameterHistory) SetDescription(v string) *ParameterHistory {
 // SetKeyId sets the KeyId field's value.
 func (s *ParameterHistory) SetKeyId(v string) *ParameterHistory {
 	s.KeyId = &v
+	return s
+}
+
+// SetLabels sets the Labels field's value.
+func (s *ParameterHistory) SetLabels(v []*string) *ParameterHistory {
+	s.Labels = v
 	return s
 }
 
@@ -27288,10 +27555,20 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// order with tasks that have the same priority scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// The role that should be assumed when executing the task.
+	// The role to assume when running the Maintenance Window task.
 	//
-	// ServiceRoleArn is a required field
-	ServiceRoleArn *string `type:"string" required:"true"`
+	// If you do not specify a service role ARN, Systems Manager will use your account's
+	// service-linked role for Systems Manager by default. If no service-linked
+	// role for Systems Manager exists in your account, it will be created when
+	// you run RegisterTaskWithMaintenanceWindow without specifying a service role
+	// ARN.
+	//
+	// For more information, see Service-Linked Role Permissions for Systems Manager
+	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
+	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	// in the AWS Systems Manager User Guide.
+	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or Maintenance Window targets).
 	//
@@ -27367,9 +27644,6 @@ func (s *RegisterTaskWithMaintenanceWindowInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 3))
-	}
-	if s.ServiceRoleArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("ServiceRoleArn"))
 	}
 	if s.Targets == nil {
 		invalidParams.Add(request.NewErrParamRequired("Targets"))
@@ -28745,21 +29019,19 @@ type StepExecution struct {
 	// Fully-resolved values passed into the step before execution.
 	Inputs map[string]*string `type:"map"`
 
-	// Enable this option to designate a step as critical for the successful completion
-	// of the Automation. If a step with this designation fails, then Automation
-	// reports the final status of the Automation as Failed.
+	// The flag which can be used to help decide whether the failure of current
+	// step leads to the Automation failure.
 	IsCritical *bool `type:"boolean"`
 
-	// Enable this option to stop an Automation execution at the end of a specific
-	// step. The Automation execution stops if the step execution failed or succeeded.
+	// The flag which can be used to end automation no matter whether the step succeeds
+	// or fails.
 	IsEnd *bool `type:"boolean"`
 
 	// The maximum number of tries to run the action of the step. The default value
 	// is 1.
 	MaxAttempts *int64 `type:"integer"`
 
-	// Specifies which step in an Automation to process next after successfully
-	// completing a step.
+	// The next step after the step succeeds.
 	NextStep *string `type:"string"`
 
 	// The action to take if the step fails. The default value is Abort.
@@ -28790,14 +29062,11 @@ type StepExecution struct {
 	// The timeout seconds of the step.
 	TimeoutSeconds *int64 `type:"long"`
 
-	// ValidNextSteps offer different strategies for managing an Automation workflow
-	// when a step finishes. Automation dynamically processes ValidNextSteps when
-	// a step is completed. For example, you can specify Abort to stop the Automation
-	// when a step fails or Continue to ignore the failure of the current step and
-	// allow Automation to continue processing the next step. You can also specify
-	// step:step_name to jump to a designated step after a step succeeds. The result
-	// of the current step dynamically determines the ValidNextSteps. If a step
-	// finishes and no ValidNextStep is designated, then the Automation stops.
+	// Strategies used when step fails, we support Continue and Abort. Abort will
+	// fail the automation when the step fails. Continue will ignore the failure
+	// of current step and allow automation to execute the next step. With conditional
+	// branching, we add step:stepName to support the automation to go to another
+	// specific step.
 	ValidNextSteps []*string `type:"list"`
 }
 
@@ -30050,6 +30319,18 @@ type UpdateMaintenanceWindowTaskInput struct {
 
 	// The IAM service role ARN to modify. The system assumes this role during task
 	// execution.
+	//
+	// If you do not specify a service role ARN, Systems Manager will use your account's
+	// service-linked role for Systems Manager by default. If no service-linked
+	// role for Systems Manager exists in your account, it will be created when
+	// you run RegisterTaskWithMaintenanceWindow without specifying a service role
+	// ARN.
+	//
+	// For more information, see Service-Linked Role Permissions for Systems Manager
+	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
+	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	// in the AWS Systems Manager User Guide.
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or tags) to modify. Instances are specified

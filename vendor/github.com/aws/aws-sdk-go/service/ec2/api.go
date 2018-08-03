@@ -1722,8 +1722,6 @@ func (c *EC2) BundleInstanceRequest(input *BundleInstanceInput) (req *request.Re
 // This action is not applicable for Linux/Unix instances or Windows instances
 // that are backed by Amazon EBS.
 //
-// For more information, see Creating an Instance Store-Backed Windows AMI (http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/Creating_InstanceStoreBacked_WinAMI.html).
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -9825,14 +9823,14 @@ func (c *EC2) DescribeHostReservationOfferingsRequest(input *DescribeHostReserva
 
 // DescribeHostReservationOfferings API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the Dedicated Host Reservations that are available to purchase.
+// Describes the Dedicated Host reservations that are available to purchase.
 //
-// The results describe all the Dedicated Host Reservation offerings, including
+// The results describe all the Dedicated Host reservation offerings, including
 // offerings that may not match the instance family and region of your Dedicated
-// Hosts. When purchasing an offering, ensure that the the instance family and
-// region of the offering matches that of the Dedicated Host/s it will be associated
-// with. For an overview of supported instance types, see Dedicated Hosts Overview
-// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html)
+// Hosts. When purchasing an offering, ensure that the instance family and Region
+// of the offering matches that of the Dedicated Hosts with which it is to be
+// associated . For more information about supported instance types, see Dedicated
+// Hosts Overview (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -9907,8 +9905,7 @@ func (c *EC2) DescribeHostReservationsRequest(input *DescribeHostReservationsInp
 
 // DescribeHostReservations API operation for Amazon Elastic Compute Cloud.
 //
-// Describes Dedicated Host Reservations which are associated with Dedicated
-// Hosts in your account.
+// Describes reservations that are associated with Dedicated Hosts in your account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9986,7 +9983,7 @@ func (c *EC2) DescribeHostsRequest(input *DescribeHostsInput) (req *request.Requ
 //
 // The results describe only the Dedicated Hosts in the region you're currently
 // using. All listed instances consume capacity on your Dedicated Host. Dedicated
-// Hosts that have recently been released will be listed with the state released.
+// Hosts that have recently been released are listed with the state released.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -17997,12 +17994,12 @@ func (c *EC2) ModifyHostsRequest(input *ModifyHostsInput) (req *request.Request,
 // ModifyHosts API operation for Amazon Elastic Compute Cloud.
 //
 // Modify the auto-placement setting of a Dedicated Host. When auto-placement
-// is enabled, AWS will place instances that you launch with a tenancy of host,
-// but without targeting a specific host ID, onto any available Dedicated Host
-// in your account which has auto-placement enabled. When auto-placement is
-// disabled, you need to provide a host ID if you want the instance to launch
-// onto a specific host. If no host ID is provided, the instance will be launched
-// onto a suitable host which has auto-placement enabled.
+// is enabled, any instances that you launch with a tenancy of host but without
+// a specific host ID are placed onto any available Dedicated Host in your account
+// that has auto-placement enabled. When auto-placement is disabled, you need
+// to provide a host ID ito have the instance launch onto a specific host. If
+// no host ID is provided, the instance is launched onto a suitable host with
+// auto-placement enabled.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -20366,10 +20363,13 @@ func (c *EC2) RegisterImageRequest(input *RegisterImageInput) (req *request.Requ
 // Some Linux distributions, such as Red Hat Enterprise Linux (RHEL) and SUSE
 // Linux Enterprise Server (SLES), use the EC2 billing product code associated
 // with an AMI to verify the subscription status for package updates. Creating
-// an AMI from an EBS snapshot does not maintain this billing code, and subsequent
-// instances launched from such an AMI will not be able to connect to package
-// update infrastructure. To create an AMI that must retain billing codes, see
-// CreateImage.
+// an AMI from an EBS snapshot does not maintain this billing code, and instances
+// launched from such an AMI are not able to connect to package update infrastructure.
+// If you purchase a Reserved Instance offering for one of these Linux distributions
+// and launch instances using an AMI that does not contain the required billing
+// code, your Reserved Instance is not applied to these instances.
+//
+// To create an AMI for operating systems that require a billing code, see CreateImage.
 //
 // If needed, you can deregister an AMI at any time. Any modifications you make
 // to an AMI backed by an instance store volume invalidates its registration.
@@ -20697,15 +20697,14 @@ func (c *EC2) ReleaseHostsRequest(input *ReleaseHostsInput) (req *request.Reques
 // When you no longer want to use an On-Demand Dedicated Host it can be released.
 // On-Demand billing is stopped and the host goes into released state. The host
 // ID of Dedicated Hosts that have been released can no longer be specified
-// in another request, e.g., ModifyHosts. You must stop or terminate all instances
-// on a host before it can be released.
+// in another request, for example, ModifyHosts. You must stop or terminate
+// all instances on a host before it can be released.
 //
-// When Dedicated Hosts are released, it make take some time for them to stop
+// When Dedicated Hosts are released, it may take some time for them to stop
 // counting toward your limit and you may receive capacity errors when trying
-// to allocate new Dedicated hosts. Try waiting a few minutes, and then try
-// again.
+// to allocate new Dedicated Hosts. Wait a few minutes and then try again.
 //
-// Released hosts will still appear in a DescribeHosts response.
+// Released hosts still appear in a DescribeHosts response.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -25216,7 +25215,7 @@ func (s *AvailabilityZoneMessage) SetMessage(v string) *AvailabilityZoneMessage 
 type AvailableCapacity struct {
 	_ struct{} `type:"structure"`
 
-	// The total number of instances that the Dedicated Host supports.
+	// The total number of instances supported by the Dedicated Host.
 	AvailableInstanceCapacity []*InstanceCapacity `locationName:"availableInstanceCapacity" locationNameList:"item" type:"list"`
 
 	// The number of vCPUs available on the Dedicated Host.
@@ -25285,9 +25284,12 @@ type BlockDeviceMapping struct {
 
 	// The virtual device name (ephemeralN). Instance store volumes are numbered
 	// starting from 0. An instance type with 2 available instance store volumes
-	// can specify mappings for ephemeral0 and ephemeral1.The number of available
+	// can specify mappings for ephemeral0 and ephemeral1. The number of available
 	// instance store volumes depends on the instance type. After you connect to
 	// the instance, you must mount the volume.
+	//
+	// NVMe instance store volumes are automatically enumerated and assigned a device
+	// name. Including them in your block device mapping has no effect.
 	//
 	// Constraints: For M3 instances, you must specify instance store volumes in
 	// the block device mapping for the instance. When you launch an M3 instance,
@@ -27699,11 +27701,13 @@ type CreateFleetInput struct {
 	// LaunchTemplateConfigs is a required field
 	LaunchTemplateConfigs []*FleetLaunchTemplateConfigRequest `locationNameList:"item" type:"list" required:"true"`
 
+	// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+	OnDemandOptions *OnDemandOptionsRequest `type:"structure"`
+
 	// Indicates whether EC2 Fleet should replace unhealthy instances.
 	ReplaceUnhealthyInstances *bool `type:"boolean"`
 
-	// Includes SpotAllocationStrategy and SpotInstanceInterruptionBehavior inside
-	// this structure.
+	// Describes the configuration of Spot Instances in an EC2 Fleet.
 	SpotOptions *SpotOptionsRequest `type:"structure"`
 
 	// The key-value pair for tagging the EC2 Fleet request on creation. The value
@@ -27804,6 +27808,12 @@ func (s *CreateFleetInput) SetExcessCapacityTerminationPolicy(v string) *CreateF
 // SetLaunchTemplateConfigs sets the LaunchTemplateConfigs field's value.
 func (s *CreateFleetInput) SetLaunchTemplateConfigs(v []*FleetLaunchTemplateConfigRequest) *CreateFleetInput {
 	s.LaunchTemplateConfigs = v
+	return s
+}
+
+// SetOnDemandOptions sets the OnDemandOptions field's value.
+func (s *CreateFleetInput) SetOnDemandOptions(v *OnDemandOptionsRequest) *CreateFleetInput {
+	s.OnDemandOptions = v
 	return s
 }
 
@@ -31360,7 +31370,8 @@ func (s *CreateVpnGatewayOutput) SetVpnGateway(v *VpnGateway) *CreateVpnGatewayO
 type CreditSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The credit option for CPU usage of a T2 instance.
+	// The credit option for CPU usage of a T2 instance. Valid values are standard
+	// and unlimited.
 	CpuCredits *string `locationName:"cpuCredits" type:"string"`
 }
 
@@ -34128,10 +34139,11 @@ type DescribeAddressesInput struct {
 	//
 	//    * public-ip - The Elastic IP address.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -34451,7 +34463,11 @@ type DescribeClassicLinkInstancesInput struct {
 	//
 	//    * instance-id - The ID of the instance.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -34642,10 +34658,11 @@ type DescribeCustomerGatewaysInput struct {
 	//    * type - The type of customer gateway. Currently, the only supported type
 	//    is ipsec.1.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -34728,10 +34745,11 @@ type DescribeDhcpOptionsInput struct {
 	//
 	//    * value - The value for one of the options.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -35648,10 +35666,11 @@ type DescribeFpgaImagesInput struct {
 	//
 	//    * state - The state of the AFI (pending | failed | available | unavailable).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -35774,22 +35793,23 @@ type DescribeHostReservationOfferingsInput struct {
 
 	// One or more filters.
 	//
-	//    * instance-family - The instance family of the offering (e.g., m4).
+	//    * instance-family - The instance family of the offering (for example,
+	//    m4).
 	//
 	//    * payment-option - The payment option (NoUpfront | PartialUpfront | AllUpfront).
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
 
-	// This is the maximum duration of the reservation you'd like to purchase, specified
-	// in seconds. Reservations are available in one-year and three-year terms.
-	// The number of seconds specified must be the number of seconds in a year (365x24x60x60)
+	// This is the maximum duration of the reservation to purchase, specified in
+	// seconds. Reservations are available in one-year and three-year terms. The
+	// number of seconds specified must be the number of seconds in a year (365x24x60x60)
 	// times one of the supported durations (1 or 3). For example, specify 94608000
 	// for three years.
 	MaxDuration *int64 `type:"integer"`
 
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
-	// nextToken value. This value can be between 5 and 500; if maxResults is given
-	// a larger value than 500, you will receive an error.
+	// nextToken value. This value can be between 5 and 500. If maxResults is given
+	// a larger value than 500, you receive an error.
 	MaxResults *int64 `type:"integer"`
 
 	// This is the minimum duration of the reservation you'd like to purchase, specified
@@ -35890,7 +35910,7 @@ type DescribeHostReservationsInput struct {
 
 	// One or more filters.
 	//
-	//    * instance-family - The instance family (e.g., m4).
+	//    * instance-family - The instance family (for example, m4).
 	//
 	//    * payment-option - The payment option (NoUpfront | PartialUpfront | AllUpfront).
 	//
@@ -35903,8 +35923,8 @@ type DescribeHostReservationsInput struct {
 
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
-	// nextToken value. This value can be between 5 and 500; if maxResults is given
-	// a larger value than 500, you will receive an error.
+	// nextToken value. This value can be between 5 and 500.If maxResults is given
+	// a larger value than 500, you receive an error.
 	MaxResults *int64 `type:"integer"`
 
 	// The token to use to retrieve the next page of results.
@@ -35989,7 +36009,7 @@ type DescribeHostsInput struct {
 	//
 	//    * availability-zone - The Availability Zone of the host.
 	//
-	//    * client-token - The idempotency token you provided when you allocated
+	//    * client-token - The idempotency token that you provided when you allocated
 	//    the host.
 	//
 	//    * host-reservation-id - The ID of the reservation assigned to this host.
@@ -36010,9 +36030,9 @@ type DescribeHostsInput struct {
 
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
-	// nextToken value. This value can be between 5 and 500; if maxResults is given
-	// a larger value than 500, you will receive an error. You cannot specify this
-	// parameter and the host IDs parameter in the same request.
+	// nextToken value. This value can be between 5 and 500. If maxResults is given
+	// a larger value than 500, you receive an error. You cannot specify this parameter
+	// and the host IDs parameter in the same request.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// The token to retrieve the next page of results.
@@ -36562,10 +36582,11 @@ type DescribeImagesInput struct {
 	//    * sriov-net-support - A value of simple indicates that enhanced networking
 	//    with the Intel 82599 VF interface is enabled.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -37201,7 +37222,7 @@ type DescribeInstanceStatusInput struct {
 	//    example, 2014-09-15T17:15:20.000Z).
 	//
 	//    * instance-state-code - The code for the instance state, as a 16-bit unsigned
-	//    integer. The high byte is an opaque internal value and should be ignored.
+	//    integer. The high byte is used for internal purposes and should be ignored.
 	//    The low byte is set based on the state represented. The valid values are
 	//    0 (pending), 16 (running), 32 (shutting-down), 48 (terminated), 64 (stopping),
 	//    and 80 (stopped).
@@ -37385,7 +37406,7 @@ type DescribeInstancesInput struct {
 	//    Scheduled Instance (spot | scheduled).
 	//
 	//    * instance-state-code - The state of the instance, as a 16-bit unsigned
-	//    integer. The high byte is an opaque internal value and should be ignored.
+	//    integer. The high byte is used for internal purposes and should be ignored.
 	//    The low byte is set based on the state represented. The valid values are:
 	//    0 (pending), 16 (running), 32 (shutting-down), 48 (terminated), 64 (stopping),
 	//    and 80 (stopped).
@@ -37552,14 +37573,15 @@ type DescribeInstancesInput struct {
 	//
 	//    * subnet-id - The ID of the subnet for the instance.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
-	//    to find all resources assigned a tag with a specific key, regardless of
-	//    the tag value.
+	//    to find all resources that have a tag with a specific key, regardless
+	//    of the tag value.
 	//
 	//    * tenancy - The tenancy of an instance (dedicated | default | host).
 	//
@@ -37677,10 +37699,11 @@ type DescribeInternetGatewaysInput struct {
 	//
 	//    * internet-gateway-id - The ID of the Internet gateway.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -38001,10 +38024,11 @@ type DescribeLaunchTemplatesInput struct {
 	//
 	//    * launch-template-name - The name of the launch template.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -38223,10 +38247,11 @@ type DescribeNatGatewaysInput struct {
 	//
 	//    * subnet-id - The ID of the subnet in which the NAT gateway resides.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -38366,10 +38391,11 @@ type DescribeNetworkAclsInput struct {
 	//
 	//    * network-acl-id - The ID of the network ACL.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -38759,10 +38785,11 @@ type DescribeNetworkInterfacesInput struct {
 	//
 	//    * subnet-id - The ID of the subnet for the network interface.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -39225,10 +39252,11 @@ type DescribeReservedInstancesInput struct {
 	//    * state - The state of the Reserved Instance (payment-pending | active
 	//    | payment-failed | retired).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -39802,10 +39830,11 @@ type DescribeRouteTablesInput struct {
 	//    * route.vpc-peering-connection-id - The ID of a VPC peering connection
 	//    specified in a route in the table.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -40300,6 +40329,12 @@ type DescribeSecurityGroupsInput struct {
 	//
 	//    * owner-id - The AWS account ID of the owner of the security group.
 	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
 	//    the tag value.
@@ -40547,10 +40582,11 @@ type DescribeSnapshotsInput struct {
 	//
 	//    * status - The status of the snapshot (pending | completed | error).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -41209,10 +41245,11 @@ type DescribeSpotInstanceRequestsInput struct {
 	//    * status-message - The message explaining the status of the Spot Instance
 	//    request.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -41582,10 +41619,11 @@ type DescribeSubnetsInput struct {
 	//
 	//    * subnet-id - The ID of the subnet.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -41725,7 +41763,7 @@ type DescribeTagsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The token to use to retrieve the next page of results. This value is null
-	// when there are no more results to return..
+	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// A list of tags.
@@ -42033,10 +42071,11 @@ type DescribeVolumesInput struct {
 	//    * status - The status of the volume (creating | available | in-use | deleting
 	//    | deleted | error).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -42463,10 +42502,11 @@ type DescribeVpcClassicLinkInput struct {
 	//    * is-classic-link-enabled - Whether the VPC is enabled for ClassicLink
 	//    (true | false).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -43221,10 +43261,11 @@ type DescribeVpcPeeringConnectionsInput struct {
 	//    * status-message - A message that provides more information about the
 	//    status of the VPC peering connection, if applicable.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -43332,10 +43373,11 @@ type DescribeVpcsInput struct {
 	//
 	//    * state - The state of the VPC (pending | available).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -43433,10 +43475,11 @@ type DescribeVpnConnectionsInput struct {
 	//    * bgp-asn - The BGP Autonomous System Number (ASN) associated with a BGP
 	//    device.
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -43535,10 +43578,11 @@ type DescribeVpnGatewaysInput struct {
 	//    * state - The state of the virtual private gateway (pending | available
 	//    | deleting | deleted).
 	//
-	//    * tag:key=value - The key/value combination of a tag assigned to the resource.
-	//    Specify the key of the tag in the filter name and the value of the tag
-	//    in the filter value. For example, for the tag Purpose=X, specify tag:Purpose
-	//    for the filter name and X for the filter value.
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
 	//
 	//    * tag-key - The key of a tag assigned to the resource. Use this filter
 	//    to find all resources assigned a tag with a specific key, regardless of
@@ -45940,6 +45984,9 @@ type FleetData struct {
 	// The launch template and overrides.
 	LaunchTemplateConfigs []*FleetLaunchTemplateConfig `locationName:"launchTemplateConfigs" locationNameList:"item" type:"list"`
 
+	// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+	OnDemandOptions *OnDemandOptions `locationName:"onDemandOptions" type:"structure"`
+
 	// Indicates whether EC2 Fleet should replace unhealthy instances.
 	ReplaceUnhealthyInstances *bool `locationName:"replaceUnhealthyInstances" type:"boolean"`
 
@@ -46041,6 +46088,12 @@ func (s *FleetData) SetFulfilledOnDemandCapacity(v float64) *FleetData {
 // SetLaunchTemplateConfigs sets the LaunchTemplateConfigs field's value.
 func (s *FleetData) SetLaunchTemplateConfigs(v []*FleetLaunchTemplateConfig) *FleetData {
 	s.LaunchTemplateConfigs = v
+	return s
+}
+
+// SetOnDemandOptions sets the OnDemandOptions field's value.
+func (s *FleetData) SetOnDemandOptions(v *OnDemandOptions) *FleetData {
+	s.OnDemandOptions = v
 	return s
 }
 
@@ -46189,6 +46242,14 @@ type FleetLaunchTemplateOverrides struct {
 	// The maximum price per unit hour that you are willing to pay for a Spot Instance.
 	MaxPrice *string `locationName:"maxPrice" type:"string"`
 
+	// The priority for the launch template override. If AllocationStrategy is set
+	// to prioritized, EC2 Fleet uses priority to determine which launch template
+	// override to use first in fulfilling On-Demand capacity. The highest priority
+	// is launched first. Valid values are whole numbers starting at 0. The lower
+	// the number, the higher the priority. If no number is set, the override has
+	// the lowest priority.
+	Priority *float64 `locationName:"priority" type:"double"`
+
 	// The ID of the subnet in which to launch the instances.
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
@@ -46224,6 +46285,12 @@ func (s *FleetLaunchTemplateOverrides) SetMaxPrice(v string) *FleetLaunchTemplat
 	return s
 }
 
+// SetPriority sets the Priority field's value.
+func (s *FleetLaunchTemplateOverrides) SetPriority(v float64) *FleetLaunchTemplateOverrides {
+	s.Priority = &v
+	return s
+}
+
 // SetSubnetId sets the SubnetId field's value.
 func (s *FleetLaunchTemplateOverrides) SetSubnetId(v string) *FleetLaunchTemplateOverrides {
 	s.SubnetId = &v
@@ -46248,6 +46315,14 @@ type FleetLaunchTemplateOverridesRequest struct {
 
 	// The maximum price per unit hour that you are willing to pay for a Spot Instance.
 	MaxPrice *string `type:"string"`
+
+	// The priority for the launch template override. If AllocationStrategy is set
+	// to prioritized, EC2 Fleet uses priority to determine which launch template
+	// override to use first in fulfilling On-Demand capacity. The highest priority
+	// is launched first. Valid values are whole numbers starting at 0. The lower
+	// the number, the higher the priority. If no number is set, the launch template
+	// override has the lowest priority.
+	Priority *float64 `type:"double"`
 
 	// The ID of the subnet in which to launch the instances.
 	SubnetId *string `type:"string"`
@@ -46281,6 +46356,12 @@ func (s *FleetLaunchTemplateOverridesRequest) SetInstanceType(v string) *FleetLa
 // SetMaxPrice sets the MaxPrice field's value.
 func (s *FleetLaunchTemplateOverridesRequest) SetMaxPrice(v string) *FleetLaunchTemplateOverridesRequest {
 	s.MaxPrice = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *FleetLaunchTemplateOverridesRequest) SetPriority(v float64) *FleetLaunchTemplateOverridesRequest {
+	s.Priority = &v
 	return s
 }
 
@@ -46956,8 +47037,7 @@ func (s *GetConsoleScreenshotOutput) SetInstanceId(v string) *GetConsoleScreensh
 type GetHostReservationPurchasePreviewInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID/s of the Dedicated Host/s that the reservation will be associated
-	// with.
+	// The IDs of the Dedicated Hosts with which the reservation is associated.
 	//
 	// HostIdSet is a required field
 	HostIdSet []*string `locationNameList:"item" type:"list" required:"true"`
@@ -47013,7 +47093,7 @@ type GetHostReservationPurchasePreviewOutput struct {
 	// are specified. At this time, the only supported currency is USD.
 	CurrencyCode *string `locationName:"currencyCode" type:"string" enum:"CurrencyCodeValues"`
 
-	// The purchase information of the Dedicated Host Reservation and the Dedicated
+	// The purchase information of the Dedicated Host reservation and the Dedicated
 	// Hosts associated with it.
 	Purchase []*Purchase `locationName:"purchase" locationNameList:"item" type:"list"`
 
@@ -47540,8 +47620,8 @@ type Host struct {
 	// The number of new instances that can be launched onto the Dedicated Host.
 	AvailableCapacity *AvailableCapacity `locationName:"availableCapacity" type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure idempotency of the
-	// request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
+	// Unique, case-sensitive identifier that you provide to ensure idempotency
+	// of the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
@@ -50854,7 +50934,7 @@ func (s *InstancePrivateIpAddress) SetPrivateIpAddress(v string) *InstancePrivat
 type InstanceState struct {
 	_ struct{} `type:"structure"`
 
-	// The low byte represents the state. The high byte is an opaque internal value
+	// The low byte represents the state. The high byte is used for internal purposes
 	// and should be ignored.
 	//
 	//    * 0 : pending
@@ -52541,6 +52621,14 @@ type LaunchTemplateOverrides struct {
 	// The instance type.
 	InstanceType *string `locationName:"instanceType" type:"string" enum:"InstanceType"`
 
+	// The priority for the launch template override. If OnDemandAllocationStrategy
+	// is set to prioritized, Spot Fleet uses priority to determine which launch
+	// template override to use first in fulfilling On-Demand capacity. The highest
+	// priority is launched first. Valid values are whole numbers starting at 0.
+	// The lower the number, the higher the priority. If no number is set, the launch
+	// template override has the lowest priority.
+	Priority *float64 `locationName:"priority" type:"double"`
+
 	// The maximum price per unit hour that you are willing to pay for a Spot Instance.
 	SpotPrice *string `locationName:"spotPrice" type:"string"`
 
@@ -52570,6 +52658,12 @@ func (s *LaunchTemplateOverrides) SetAvailabilityZone(v string) *LaunchTemplateO
 // SetInstanceType sets the InstanceType field's value.
 func (s *LaunchTemplateOverrides) SetInstanceType(v string) *LaunchTemplateOverrides {
 	s.InstanceType = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *LaunchTemplateOverrides) SetPriority(v float64) *LaunchTemplateOverrides {
+	s.Priority = &v
 	return s
 }
 
@@ -53526,7 +53620,7 @@ type ModifyHostsInput struct {
 	// AutoPlacement is a required field
 	AutoPlacement *string `locationName:"autoPlacement" type:"string" required:"true" enum:"AutoPlacement"`
 
-	// The host IDs of the Dedicated Hosts you want to modify.
+	// The IDs of the Dedicated Hosts to modify.
 	//
 	// HostIds is a required field
 	HostIds []*string `locationName:"hostId" locationNameList:"item" type:"list" required:"true"`
@@ -57020,6 +57114,64 @@ func (s *NewDhcpConfiguration) SetValues(v []*string) *NewDhcpConfiguration {
 	return s
 }
 
+// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+type OnDemandOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The order of the launch template overrides to use in fulfilling On-Demand
+	// capacity. If you specify lowest-price, EC2 Fleet uses price to determine
+	// the order, launching the lowest price first. If you specify prioritized,
+	// EC2 Fleet uses the priority that you assigned to each launch template override,
+	// launching the highest priority first. If you do not specify a value, EC2
+	// Fleet defaults to lowest-price.
+	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"FleetOnDemandAllocationStrategy"`
+}
+
+// String returns the string representation
+func (s OnDemandOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnDemandOptions) GoString() string {
+	return s.String()
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *OnDemandOptions) SetAllocationStrategy(v string) *OnDemandOptions {
+	s.AllocationStrategy = &v
+	return s
+}
+
+// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+type OnDemandOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The order of the launch template overrides to use in fulfilling On-Demand
+	// capacity. If you specify lowest-price, EC2 Fleet uses price to determine
+	// the order, launching the lowest price first. If you specify prioritized,
+	// EC2 Fleet uses the priority that you assigned to each launch template override,
+	// launching the highest priority first. If you do not specify a value, EC2
+	// Fleet defaults to lowest-price.
+	AllocationStrategy *string `type:"string" enum:"FleetOnDemandAllocationStrategy"`
+}
+
+// String returns the string representation
+func (s OnDemandOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnDemandOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOptionsRequest {
+	s.AllocationStrategy = &v
+	return s
+}
+
 // Describes the data that identifies an Amazon FPGA image (AFI) on the PCI
 // bus.
 type PciId struct {
@@ -57825,8 +57977,7 @@ type PurchaseHostReservationInput struct {
 	// amounts are specified. At this time, the only supported currency is USD.
 	CurrencyCode *string `type:"string" enum:"CurrencyCodeValues"`
 
-	// The ID/s of the Dedicated Host/s that the reservation will be associated
-	// with.
+	// The IDs of the Dedicated Hosts with which the reservation will be associated.
 	//
 	// HostIdSet is a required field
 	HostIdSet []*string `locationNameList:"item" type:"list" required:"true"`
@@ -57834,10 +57985,9 @@ type PurchaseHostReservationInput struct {
 	// The specified limit is checked against the total upfront cost of the reservation
 	// (calculated as the offering's upfront cost multiplied by the host count).
 	// If the total upfront cost is greater than the specified price limit, the
-	// request will fail. This is used to ensure that the purchase does not exceed
-	// the expected upfront cost of the purchase. At this time, the only supported
-	// currency is USD. For example, to indicate a limit price of USD 100, specify
-	// 100.00.
+	// request fails. This is used to ensure that the purchase does not exceed the
+	// expected upfront cost of the purchase. At this time, the only supported currency
+	// is USD. For example, to indicate a limit price of USD 100, specify 100.00.
 	LimitPrice *string `type:"string"`
 
 	// The ID of the offering.
@@ -57907,7 +58057,7 @@ type PurchaseHostReservationOutput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure idempotency of the
 	// request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide
+	// in the Amazon Elastic Compute Cloud User Guide.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The currency in which the totalUpfrontPrice and totalHourlyPrice amounts
@@ -57920,8 +58070,7 @@ type PurchaseHostReservationOutput struct {
 	// The total hourly price of the reservation calculated per hour.
 	TotalHourlyPrice *string `locationName:"totalHourlyPrice" type:"string"`
 
-	// The total amount that will be charged to your account when you purchase the
-	// reservation.
+	// The total amount charged to your account when you purchase the reservation.
 	TotalUpfrontPrice *string `locationName:"totalUpfrontPrice" type:"string"`
 }
 
@@ -58768,7 +58917,7 @@ func (s ReleaseAddressOutput) GoString() string {
 type ReleaseHostsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The IDs of the Dedicated Hosts you want to release.
+	// The IDs of the Dedicated Hosts to release.
 	//
 	// HostIds is a required field
 	HostIds []*string `locationName:"hostId" locationNameList:"item" type:"list" required:"true"`
@@ -62443,6 +62592,9 @@ type RunInstancesInput struct {
 	InstanceInitiatedShutdownBehavior *string `locationName:"instanceInitiatedShutdownBehavior" type:"string" enum:"ShutdownBehavior"`
 
 	// The market (purchasing) option for the instances.
+	//
+	// For RunInstances, persistent Spot Instance requests are only supported when
+	// InstanceInterruptionBehavior is set to either hibernate or stop.
 	InstanceMarketOptions *InstanceMarketOptionsRequest `type:"structure"`
 
 	// The instance type. For more information, see Instance Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html)
@@ -65289,6 +65441,12 @@ type SpotFleetRequestConfigData struct {
 	// The behavior when a Spot Instance is interrupted. The default is terminate.
 	InstanceInterruptionBehavior *string `locationName:"instanceInterruptionBehavior" type:"string" enum:"InstanceInterruptionBehavior"`
 
+	// The number of Spot pools across which to allocate your target Spot capacity.
+	// Valid only when Spot AllocationStrategy is set to lowest-price. Spot Fleet
+	// selects the cheapest Spot pools and evenly allocates your target Spot capacity
+	// across the number of Spot pools that you specify.
+	InstancePoolsToUseCount *int64 `locationName:"instancePoolsToUseCount" type:"integer"`
+
 	// The launch specifications for the Spot Fleet request.
 	LaunchSpecifications []*SpotFleetLaunchSpecification `locationName:"launchSpecifications" locationNameList:"item" type:"list"`
 
@@ -65303,6 +65461,14 @@ type SpotFleetRequestConfigData struct {
 	// the following instance types: C1, CC1, CC2, CG1, CG2, CR1, CS1, G1, G2, HI1,
 	// HS1, M1, M2, M3, and T1.
 	LoadBalancersConfig *LoadBalancersConfig `locationName:"loadBalancersConfig" type:"structure"`
+
+	// The order of the launch template overrides to use in fulfilling On-Demand
+	// capacity. If you specify lowestPrice, Spot Fleet uses price to determine
+	// the order, launching the lowest price first. If you specify prioritized,
+	// Spot Fleet uses the priority that you assign to each Spot Fleet launch template
+	// override, launching the highest priority first. If you do not specify a value,
+	// Spot Fleet defaults to lowestPrice.
+	OnDemandAllocationStrategy *string `locationName:"onDemandAllocationStrategy" type:"string" enum:"OnDemandAllocationStrategy"`
 
 	// The number of On-Demand units fulfilled by this request compared to the set
 	// target On-Demand capacity.
@@ -65431,6 +65597,12 @@ func (s *SpotFleetRequestConfigData) SetInstanceInterruptionBehavior(v string) *
 	return s
 }
 
+// SetInstancePoolsToUseCount sets the InstancePoolsToUseCount field's value.
+func (s *SpotFleetRequestConfigData) SetInstancePoolsToUseCount(v int64) *SpotFleetRequestConfigData {
+	s.InstancePoolsToUseCount = &v
+	return s
+}
+
 // SetLaunchSpecifications sets the LaunchSpecifications field's value.
 func (s *SpotFleetRequestConfigData) SetLaunchSpecifications(v []*SpotFleetLaunchSpecification) *SpotFleetRequestConfigData {
 	s.LaunchSpecifications = v
@@ -65446,6 +65618,12 @@ func (s *SpotFleetRequestConfigData) SetLaunchTemplateConfigs(v []*LaunchTemplat
 // SetLoadBalancersConfig sets the LoadBalancersConfig field's value.
 func (s *SpotFleetRequestConfigData) SetLoadBalancersConfig(v *LoadBalancersConfig) *SpotFleetRequestConfigData {
 	s.LoadBalancersConfig = v
+	return s
+}
+
+// SetOnDemandAllocationStrategy sets the OnDemandAllocationStrategy field's value.
+func (s *SpotFleetRequestConfigData) SetOnDemandAllocationStrategy(v string) *SpotFleetRequestConfigData {
+	s.OnDemandAllocationStrategy = &v
 	return s
 }
 
@@ -65829,7 +66007,9 @@ type SpotMarketOptions struct {
 	// default is the On-Demand price.
 	MaxPrice *string `type:"string"`
 
-	// The Spot Instance request type.
+	// The Spot Instance request type. For RunInstances, persistent Spot Instance
+	// requests are only supported when InstanceInterruptionBehavior is set to either
+	// hibernate or stop.
 	SpotInstanceType *string `type:"string" enum:"SpotInstanceType"`
 
 	// The end date of the request. For a one-time request, the request remains
@@ -65885,11 +66065,17 @@ type SpotOptions struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates how to allocate the target capacity across the Spot pools specified
-	// by the Spot Fleet request. The default is lowestPrice.
+	// by the Spot Fleet request. The default is lowest-price.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"SpotAllocationStrategy"`
 
 	// The behavior when a Spot Instance is interrupted. The default is terminate.
 	InstanceInterruptionBehavior *string `locationName:"instanceInterruptionBehavior" type:"string" enum:"SpotInstanceInterruptionBehavior"`
+
+	// The number of Spot pools across which to allocate your target Spot capacity.
+	// Valid only when AllocationStrategy is set to lowestPrice. EC2 Fleet selects
+	// the cheapest Spot pools and evenly allocates your target Spot capacity across
+	// the number of Spot pools that you specify.
+	InstancePoolsToUseCount *int64 `locationName:"instancePoolsToUseCount" type:"integer"`
 }
 
 // String returns the string representation
@@ -65914,6 +66100,12 @@ func (s *SpotOptions) SetInstanceInterruptionBehavior(v string) *SpotOptions {
 	return s
 }
 
+// SetInstancePoolsToUseCount sets the InstancePoolsToUseCount field's value.
+func (s *SpotOptions) SetInstancePoolsToUseCount(v int64) *SpotOptions {
+	s.InstancePoolsToUseCount = &v
+	return s
+}
+
 // Describes the configuration of Spot Instances in an EC2 Fleet request.
 type SpotOptionsRequest struct {
 	_ struct{} `type:"structure"`
@@ -65924,6 +66116,12 @@ type SpotOptionsRequest struct {
 
 	// The behavior when a Spot Instance is interrupted. The default is terminate.
 	InstanceInterruptionBehavior *string `type:"string" enum:"SpotInstanceInterruptionBehavior"`
+
+	// The number of Spot pools across which to allocate your target Spot capacity.
+	// Valid only when Spot AllocationStrategy is set to lowest-price. EC2 Fleet
+	// selects the cheapest Spot pools and evenly allocates your target Spot capacity
+	// across the number of Spot pools that you specify.
+	InstancePoolsToUseCount *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -65945,6 +66143,12 @@ func (s *SpotOptionsRequest) SetAllocationStrategy(v string) *SpotOptionsRequest
 // SetInstanceInterruptionBehavior sets the InstanceInterruptionBehavior field's value.
 func (s *SpotOptionsRequest) SetInstanceInterruptionBehavior(v string) *SpotOptionsRequest {
 	s.InstanceInterruptionBehavior = &v
+	return s
+}
+
+// SetInstancePoolsToUseCount sets the InstancePoolsToUseCount field's value.
+func (s *SpotOptionsRequest) SetInstancePoolsToUseCount(v int64) *SpotOptionsRequest {
+	s.InstancePoolsToUseCount = &v
 	return s
 }
 
@@ -70121,6 +70325,14 @@ const (
 )
 
 const (
+	// FleetOnDemandAllocationStrategyLowestPrice is a FleetOnDemandAllocationStrategy enum value
+	FleetOnDemandAllocationStrategyLowestPrice = "lowest-price"
+
+	// FleetOnDemandAllocationStrategyPrioritized is a FleetOnDemandAllocationStrategy enum value
+	FleetOnDemandAllocationStrategyPrioritized = "prioritized"
+)
+
+const (
 	// FleetStateCodeSubmitted is a FleetStateCode enum value
 	FleetStateCodeSubmitted = "submitted"
 
@@ -70980,6 +71192,14 @@ const (
 
 	// OfferingTypeValuesAllUpfront is a OfferingTypeValues enum value
 	OfferingTypeValuesAllUpfront = "All Upfront"
+)
+
+const (
+	// OnDemandAllocationStrategyLowestPrice is a OnDemandAllocationStrategy enum value
+	OnDemandAllocationStrategyLowestPrice = "lowestPrice"
+
+	// OnDemandAllocationStrategyPrioritized is a OnDemandAllocationStrategy enum value
+	OnDemandAllocationStrategyPrioritized = "prioritized"
 )
 
 const (
