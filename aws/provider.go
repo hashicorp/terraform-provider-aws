@@ -590,6 +590,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ssm_patch_group":                              resourceAwsSsmPatchGroup(),
 			"aws_ssm_parameter":                                resourceAwsSsmParameter(),
 			"aws_ssm_resource_data_sync":                       resourceAwsSsmResourceDataSync(),
+			"aws_storagegateway_cache":                         resourceAwsStorageGatewayCache(),
 			"aws_storagegateway_gateway":                       resourceAwsStorageGatewayGateway(),
 			"aws_storagegateway_nfs_file_share":                resourceAwsStorageGatewayNfsFileShare(),
 			"aws_storagegateway_upload_buffer":                 resourceAwsStorageGatewayUploadBuffer(),
