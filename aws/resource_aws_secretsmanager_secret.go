@@ -81,23 +81,69 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+	deleted_date := ""
 
-	input := &secretsmanager.CreateSecretInput{
-		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+	input := &secretsmanager.DescribeSecretInput{
+		SecretId: aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {
-		input.KmsKeyId = aws.String(v.(string))
+	log.Printf("[DEBUG] Checking if Secrets Manager Secret exists: %s", input)
+	output, err := conn.DescribeSecret(input)
+	if err == nil {
+		deleted_date = aws.TimeValue(output.DeletedDate).Format(time.RFC3339)
 	}
 
-	log.Printf("[DEBUG] Creating Secrets Manager Secret: %s", input)
-	output, err := conn.CreateSecret(input)
-	if err != nil {
-		return fmt.Errorf("error creating Secrets Manager Secret: %s", err)
-	}
+	if deleted_date != "" {
+		rInput := &secretsmanager.RestoreSecretInput{
+			SecretId: aws.String(d.Get("name").(string)),
+		}
 
-	d.SetId(aws.StringValue(output.ARN))
+		log.Printf("[DEBUG] Restoring Deleted Secrets Manager Secret: %s", rInput)
+		output, err := conn.RestoreSecret(rInput)
+		if err != nil {
+			return fmt.Errorf("error restoring Secrets Manager Secret: %s", err)
+		}
+		d.SetId(aws.StringValue(output.ARN))
+
+		uInput := &secretsmanager.UpdateSecretInput{
+			SecretId: aws.String(d.Get("name").(string)),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			uInput.Description = aws.String(v.(string))
+		} else {
+			uInput.Description = aws.String("")
+		}
+
+		if v, ok := d.GetOk("kms_key_id"); ok {
+			uInput.KmsKeyId = aws.String(v.(string))
+		} else {
+			uInput.KmsKeyId = aws.String("")
+		}
+
+		log.Printf("[DEBUG] Updating Secrets Manager Secret: %s", uInput)
+		_, err = conn.UpdateSecret(uInput)
+		if err != nil {
+			return fmt.Errorf("error updating Secrets Manager Secret: %s", err)
+		}
+	} else {
+		input := &secretsmanager.CreateSecretInput{
+			Description: aws.String(d.Get("description").(string)),
+			Name:        aws.String(d.Get("name").(string)),
+		}
+
+		if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {
+			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Creating Secrets Manager Secret: %s", input)
+		output, err := conn.CreateSecret(input)
+		if err != nil {
+			return fmt.Errorf("error creating Secrets Manager Secret: %s", err)
+		}
+
+		d.SetId(aws.StringValue(output.ARN))
+	}
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
 		input := &secretsmanager.PutResourcePolicyInput{
