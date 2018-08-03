@@ -34,8 +34,16 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				ForceNew: true,
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"function_arn"},
+				Deprecated:    "Use `function_arn` instead.",
+			},
+			"function_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"function_name"},
+				ValidateFunc:  validateArn,
 			},
 			"starting_position": {
 				Type:     schema.TypeString,
@@ -77,10 +85,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"function_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -110,7 +114,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	functionName := d.Get("function_name").(string)
+	functionName, err := getLambdaEventSourceMappingFunctionName(d)
+	if err != nil {
+		return err
+	}
 	eventSourceArn := d.Get("event_source_arn").(string)
 
 	log.Printf("[DEBUG] Creating Lambda event source mapping: source %s to function %s", eventSourceArn, functionName)
@@ -136,7 +143,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	//
 	// The role may exist, but the permissions may not have propagated, so we
 	// retry
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err := conn.CreateEventSourceMapping(params)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
@@ -183,13 +190,16 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
-	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("last_modified", eventSourceMappingConfiguration.LastModified)
 	d.Set("last_processing_result", eventSourceMappingConfiguration.LastProcessingResult)
 	d.Set("state", eventSourceMappingConfiguration.State)
 	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
-	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
+	if _, ok := d.GetOk("function_name"); ok {
+		d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
+	} else {
+		d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
+	}
 
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
 
@@ -241,14 +251,19 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Updating Lambda event source mapping: %s", d.Id())
 
+	functionName, err := getLambdaEventSourceMappingFunctionName(d)
+	if err != nil {
+		return err
+	}
+
 	params := &lambda.UpdateEventSourceMappingInput{
 		UUID:         aws.String(d.Id()),
 		BatchSize:    aws.Int64(int64(d.Get("batch_size").(int))),
-		FunctionName: aws.String(d.Get("function_name").(string)),
+		FunctionName: aws.String(functionName),
 		Enabled:      aws.Bool(d.Get("enabled").(bool)),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(params)
 		if err != nil {
 			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "") ||
@@ -266,4 +281,16 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
+}
+
+func getLambdaEventSourceMappingFunctionName(d *schema.ResourceData) (string, error) {
+	functionName, nameOk := d.GetOk("function_name")
+	functionArn, arnOk := d.GetOk("function_arn")
+	if !nameOk && !arnOk {
+		return "", fmt.Errorf("Either `function_name` or `function_arn` must be set.")
+	} else if arnOk {
+		return functionArn.(string), nil
+	} else {
+		return functionName.(string), nil
+	}
 }
