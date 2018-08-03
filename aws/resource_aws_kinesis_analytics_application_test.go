@@ -13,7 +13,6 @@ import (
 
 func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 	var application kinesisanalytics.ApplicationDetail
-
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -25,6 +24,32 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplication_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists("aws_kinesis_analytics_application.test", &application),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplication_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplication_update(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "code", "testCode\n"),
 				),
 			},
 		},
@@ -83,4 +108,12 @@ resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
 }
 `, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_update(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+}`, rInt)
 }

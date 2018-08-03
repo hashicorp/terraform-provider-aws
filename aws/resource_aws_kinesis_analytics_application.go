@@ -134,6 +134,29 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kinesisanalyticsconn
+
+	if !d.IsNewResource() {
+		name := d.Get("name").(string)
+		version := d.Get("version").(int)
+
+		updateApplicationOpts := &kinesisanalytics.UpdateApplicationInput{
+			ApplicationName:             aws.String(name),
+			CurrentApplicationVersionId: aws.Int64(int64(version)),
+		}
+
+		applicationUpdate, err := createApplicationUpdateOpts(d)
+		if err != nil {
+			return err
+		}
+
+		updateApplicationOpts.SetApplicationUpdate(applicationUpdate)
+		_, updateErr := conn.UpdateApplication(updateApplicationOpts)
+		if updateErr != nil {
+			return updateErr
+		}
+	}
+
 	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)
 }
 
@@ -157,4 +180,14 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Kinesis Analytics Application deleted: %v", d.Id())
 	return nil
+}
+
+func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {
+	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
+
+	if v, ok := d.GetOk("code"); ok {
+		applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
+	}
+
+	return applicationUpdate, nil
 }
