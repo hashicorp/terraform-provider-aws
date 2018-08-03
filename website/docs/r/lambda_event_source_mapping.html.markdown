@@ -20,7 +20,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   batch_size        = 100
   event_source_arn  = "arn:aws:kinesis:REGION:123456789012:stream/stream_name"
   enabled           = true
-  function_name     = "arn:aws:lambda:REGION:123456789012:function:function_name"
+  function_arn     = "arn:aws:lambda:REGION:123456789012:function:function_name"
   starting_position = "TRIM_HORIZON|LATEST"
 }
 ```
@@ -30,12 +30,12 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB and Kinesis, `10` for SQS.
 * `event_source_arn` - (Required) The event source ARN - can either be a Kinesis or DynamoDB stream.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
-* `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
+* `function_arn` - (Required) The ARN of the Lambda function that will be subscribing to events.
+* `function_name` - **DEPRECATED** (Required) The name or the ARN of the Lambda function that will be subscribing to events. (You should use `function_arn` instead)
 * `starting_position` - (Optional) The position in the stream where AWS Lambda should start reading. Must be one of either `TRIM_HORIZON` or `LATEST` if getting events from Kinesis or DynamoDB.  Must not be provided if getting events from SQS.
 
 ## Attributes Reference
 
-* `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
 * `last_modified` - The date this resource was last modified.
 * `last_processing_result` - The result of the last AWS Lambda invocation of your Lambda function.
 * `state` - The state of the event source mapping.
