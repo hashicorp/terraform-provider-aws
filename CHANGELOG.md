@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_storagegateway_cache` [GH-5282]
+* **New Resource:** `aws_storagegateway_smb_file_share` [GH-5276]
 
 ENHANCEMENTS:
 
