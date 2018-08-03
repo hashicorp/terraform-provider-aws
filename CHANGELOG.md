@@ -1,5 +1,9 @@
 ## 1.31.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_storagegateway_cache` [GH-5282]
+
 ENHANCEMENTS:
 
 * provider: Allow provider configuration AssumeRoleARN and sts:GetCallerIdentity credential validation call to shortcut account ID and partition lookup [GH-5177]
