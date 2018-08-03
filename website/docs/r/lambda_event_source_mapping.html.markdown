@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_lambda_event_source_mapping"
 sidebar_current: "docs-aws-resource-lambda-event-source-mapping"
 description: |-
-  Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis and DynamoDB.
+  Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB and SQS
 ---
 
 # aws_lambda_event_source_mapping
 
-Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis and DynamoDB.
+Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB and SQS
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1]
 For information about event source mappings, see [CreateEventSourceMapping][2] in the API docs.
@@ -27,11 +27,11 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 ## Argument Reference
 
-* `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100`.
+* `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB and Kinesis, `10` for SQS.
 * `event_source_arn` - (Required) The event source ARN - can either be a Kinesis or DynamoDB stream.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
-* `starting_position` - (Required) The position in the stream where AWS Lambda should start reading. Can be one of either `TRIM_HORIZON` or `LATEST`.
+* `starting_position` - (Optional) The position in the stream where AWS Lambda should start reading. Must be one of either `TRIM_HORIZON` or `LATEST` if getting events from Kinesis or DynamoDB.  Must not be provided if getting events from SQS.
 
 ## Attributes Reference
 

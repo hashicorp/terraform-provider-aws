@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "codedeploy" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName  // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "CodeDeploy" // ServiceID is a unique identifer of a specific service
+	ServiceName = "codedeploy" // Name of service.
+	EndpointsID = ServiceName  // ID to lookup a service endpoint with.
+	ServiceID   = "CodeDeploy" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the CodeDeploy client with a session.

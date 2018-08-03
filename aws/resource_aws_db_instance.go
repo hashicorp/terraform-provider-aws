@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -898,20 +896,16 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err = conn.CreateDBInstance(&opts)
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok {
-					if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "ENHANCED_MONITORING") {
-						return resource.RetryableError(awsErr)
-					}
+				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
+					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "InvalidParameterValue" {
-					return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
-				}
+			if isAWSErr(err, "InvalidParameterValue", "") {
+				return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
 			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 
@@ -1022,13 +1016,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// set tags
 	conn := meta.(*AWSClient).rdsconn
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("db:%s", d.Id()),
-	}.String()
+	arn := aws.StringValue(v.DBInstanceArn)
 	d.Set("arn", arn)
 	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
 		ResourceName: aws.String(arn),
@@ -1322,17 +1310,13 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("db:%s", d.Id()),
-	}.String()
-	if err := setTagsRDS(conn, d, arn); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	// Tags are set on creation
+	if !d.IsNewResource() && d.HasChange("tags") {
+		if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	d.Partial(false)
@@ -1353,8 +1337,7 @@ func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, e
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		dbinstanceerr, ok := err.(awserr.Error)
-		if ok && dbinstanceerr.Code() == "DBInstanceNotFound" {
+		if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)

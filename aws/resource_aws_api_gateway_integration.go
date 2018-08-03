@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -91,12 +92,12 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			"request_templates": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"request_parameters": {
 				Type:          schema.TypeMap,
-				Elem:          schema.TypeString,
+				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"request_parameters_in_json"},
 			},
@@ -137,6 +138,13 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+
+			"timeout_milliseconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(50, 29000),
+				Default:      29000,
 			},
 		},
 	}
@@ -213,6 +221,11 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		cacheNamespace = aws.String(v.(string))
 	}
 
+	var timeoutInMillis *int64
+	if v, ok := d.GetOk("timeout_milliseconds"); ok {
+		timeoutInMillis = aws.Int64(int64(v.(int)))
+	}
+
 	_, err := conn.PutIntegration(&apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -229,6 +242,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		ContentHandling:     contentHandling,
 		ConnectionType:      connectionType,
 		ConnectionId:        connectionId,
+		TimeoutInMillis:     timeoutInMillis,
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration: %s", err)
@@ -292,6 +306,10 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 
 	if integration.CacheNamespace != nil {
 		d.Set("cache_namespace", integration.CacheNamespace)
+	}
+
+	if integration.TimeoutInMillis != nil {
+		d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	}
 
 	return nil
@@ -446,6 +464,14 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 			Op:    aws.String("replace"),
 			Path:  aws.String("/connectionId"),
 			Value: aws.String(d.Get("connection_id").(string)),
+		})
+	}
+
+	if d.HasChange("timeout_milliseconds") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/timeoutInMillis"),
+			Value: aws.String(strconv.Itoa(d.Get("timeout_milliseconds").(int))),
 		})
 	}
 

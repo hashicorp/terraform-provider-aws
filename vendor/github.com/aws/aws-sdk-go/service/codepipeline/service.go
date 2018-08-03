@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "codepipeline" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName    // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "CodePipeline" // ServiceID is a unique identifer of a specific service
+	ServiceName = "codepipeline" // Name of service.
+	EndpointsID = ServiceName    // ID to lookup a service endpoint with.
+	ServiceID   = "CodePipeline" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the CodePipeline client with a session.

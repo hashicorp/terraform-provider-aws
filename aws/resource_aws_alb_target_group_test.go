@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -495,10 +494,10 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isTargetGroupNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking ALB destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking ALB destroyed: %s", err)
 		}
 	}
 

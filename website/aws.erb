@@ -25,6 +25,10 @@
                 <a href="#">Guides</a>
                     <ul class="nav nav-visible">
 
+                        <li<%= sidebar_current("docs-aws-guide-version-2-upgrade") %>>
+                            <a href="/docs/providers/aws/guides/version-2-upgrade.html">AWS Provider Version 2 Upgrade</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-guide-eks-getting-started") %>>
                             <a href="/docs/providers/aws/guides/eks-getting-started.html">AWS EKS Getting Started</a>
                         </li>
@@ -114,6 +118,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-snapshot") %>>
                           <a href="/docs/providers/aws/d/db_snapshot.html">aws_db_snapshot</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-dx-gateway") %>>
+                          <a href="/docs/providers/aws/d/dx_gateway.html">aws_dx_gateway</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-dynamodb-table") %>>
                           <a href="/docs/providers/aws/d/dynamodb_table.html">aws_dynamodb_table</a>
@@ -232,8 +239,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-kms-ciphertext") %>>
                             <a href="/docs/providers/aws/d/kms_ciphertext.html">aws_kms_ciphertext</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-kms-secret") %>>
+                        <li<%= sidebar_current("docs-aws-datasource-kms-secret-x") %>>
                             <a href="/docs/providers/aws/d/kms_secret.html">aws_kms_secret</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-kms-secrets") %>>
+                            <a href="/docs/providers/aws/d/kms_secrets.html">aws_kms_secrets</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-lambda-invocation") %>>
                             <a href="/docs/providers/aws/d/lambda_invocation.html">aws_lambda_invocation</a>
@@ -241,11 +251,20 @@
                         <li<%= sidebar_current("docs-aws-datasource-nat-gateway") %>>
                            <a href="/docs/providers/aws/d/nat_gateway.html">aws_nat_gateway</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-network-interface") %>>
+                        <li<%= sidebar_current("docs-aws-datasource-network-acls") %>>
+                           <a href="/docs/providers/aws/d/network_acls.html">aws_network_acls</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-network-interface-x") %>>
                             <a href="/docs/providers/aws/d/network_interface.html">aws_network_interface</a>
+                        </li>
+                         <li<%= sidebar_current("docs-aws-datasource-network-interfaces") %>>
+                            <a href="/docs/providers/aws/d/network_interfaces.html">aws_network_interfaces</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-lambda-function") %>>
                             <a href="/docs/providers/aws/d/lambda_function.html">aws_lambda_function</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-launch-configuration") %>>
+                            <a href="/docs/providers/aws/d/launch_configuration.html">aws_launch_configuration</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-lb-x") %>>
                             <a href="/docs/providers/aws/d/lb.html">aws_lb</a>
@@ -265,6 +284,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-prefix-list") %>>
                             <a href="/docs/providers/aws/d/prefix_list.html">aws_prefix_list</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-pricing-product") %>>
+                            <a href="/docs/providers/aws/d/pricing_product.html">aws_pricing_product</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-rds-cluster") %>>
                             <a href="/docs/providers/aws/d/rds_cluster.html">aws_rds_cluster</a>
                         </li>
@@ -280,8 +302,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-route53-zone") %>>
                           <a href="/docs/providers/aws/d/route53_zone.html">aws_route53_zone</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-route-table") %>>
+                        <li<%= sidebar_current("docs-aws-datasource-route-table-x") %>>
                           <a href="/docs/providers/aws/d/route_table.html">aws_route_table</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-route-tables") %>>
+                          <a href="/docs/providers/aws/d/route_tables.html">aws_route_tables</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-route") %>>
                           <a href="/docs/providers/aws/d/route.html">aws_route</a>
@@ -298,8 +323,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-secretsmanager-secret-version") %>>
                          <a href="/docs/providers/aws/d/secretsmanager_secret_version.html">aws_secretsmanager_secret_version</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-security-group") %>>
+                        <li<%= sidebar_current("docs-aws-datasource-security-group-x") %>>
                          <a href="/docs/providers/aws/d/security_group.html">aws_security_group</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-security-groups") %>>
+                         <a href="/docs/providers/aws/d/security_groups.html">aws_security_groups</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-sqs-queue") %>>
                          <a href="/docs/providers/aws/d/sqs_queue.html">aws_sqs_queue</a>
@@ -309,6 +337,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ssm-parameter") %>>
                          <a href="/docs/providers/aws/d/ssm_parameter.html">aws_ssm_parameter</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-storagegateway-local-disk") %>>
+                         <a href="/docs/providers/aws/d/storagegateway_local_disk.html">aws_storagegateway_local_disk</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-subnet-x") %>>
                             <a href="/docs/providers/aws/d/subnet.html">aws_subnet</a>
@@ -412,6 +443,9 @@
                         <li<%= sidebar_current("docs-aws-resource-api-gateway-model") %>>
                             <a href="/docs/providers/aws/r/api_gateway_model.html">aws_api_gateway_model</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-api-gateway-request-validator") %>>
+                            <a href="/docs/providers/aws/r/api_gateway_request_validator.html">aws_api_gateway_request_validator</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-api-gateway-resource") %>>
                             <a href="/docs/providers/aws/r/api_gateway_resource.html">aws_api_gateway_resource</a>
                         </li>
@@ -456,6 +490,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-resource-appsync-graphql-api") %>>
                             <a href="/docs/providers/aws/r/appsync_graphql_api.html">aws_appsync_graphql_api</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-appsync-api-key") %>>
+                            <a href="/docs/providers/aws/r/appsync_api_key.html">aws_appsync_api_key</a>
                         </li>
                     </ul>
                 </li>
@@ -776,8 +813,26 @@
                         <li<%= sidebar_current("docs-aws-resource-dx-gateway-association") %>>
                             <a href="/docs/providers/aws/r/dx_gateway_association.html">aws_dx_gateway_association</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-hosted-private-virtual-interface") %>>
+                            <a href="/docs/providers/aws/r/dx_hosted_private_virtual_interface.html">aws_dx_hosted_private_virtual_interface</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-hosted-private-virtual-interface-accepter") %>>
+                            <a href="/docs/providers/aws/r/dx_hosted_private_virtual_interface_accepter.html">aws_dx_hosted_private_virtual_interface_accepter</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-hosted-public-virtual-interface") %>>
+                            <a href="/docs/providers/aws/r/dx_hosted_public_virtual_interface.html">aws_dx_hosted_public_virtual_interface</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-hosted-public-virtual-interface-accepter") %>>
+                            <a href="/docs/providers/aws/r/dx_hosted_public_virtual_interface_accepter.html">aws_dx_hosted_public_virtual_interface_accepter</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-dx-lag") %>>
                             <a href="/docs/providers/aws/r/dx_lag.html">aws_dx_lag</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-private-virtual-interface") %>>
+                            <a href="/docs/providers/aws/r/dx_private_virtual_interface.html">aws_dx_private_virtual_interface</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-dx-public-virtual-interface") %>>
+                            <a href="/docs/providers/aws/r/dx_public_virtual_interface.html">aws_dx_public_virtual_interface</a>
                         </li>
                     </ul>
                 </li>
@@ -1467,6 +1522,21 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-macie") %>>
+                    <a href="#">Macie Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-macie-member-account-association") %>>
+                            <a href="/docs/providers/aws/r/macie_member_account_association.html">aws_macie_member_account_association</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-macie-s3-bucket-association") %>>
+                            <a href="/docs/providers/aws/r/macie_s3_bucket_association.html">aws_macie_s3_bucket_association</a>
+                        </li>
+
+                    </ul>
+                </li>
+
                 <li<%= sidebar_current("docs-aws-resource-mq") %>>
                     <a href="#">MQ Resources</a>
                     <ul class="nav nav-visible">
@@ -1486,6 +1556,9 @@
 
                         <li<%= sidebar_current("docs-aws-resource-media-store-container") %>>
                           <a href="/docs/providers/aws/r/media_store_container.html">aws_media_store_container</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-media-store-container-policy") %>>
+                          <a href="/docs/providers/aws/r/media_store_container_policy.html">aws_media_store_container_policy</a>
                         </li>
 
                     </ul>
@@ -1642,6 +1715,14 @@
 
                          <li<%= sidebar_current("docs-aws-resource-neptune-cluster-parameter-group") %>>
                             <a href="/docs/providers/aws/r/neptune_cluster_parameter_group.html">aws_neptune_cluster_parameter_group</a>
+                        </li>
+
+                         <li<%= sidebar_current("docs-aws-resource-neptune-cluster-x") %>>
+                            <a href="/docs/providers/aws/r/neptune_cluster.html">aws_neptune_cluster</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-neptune-cluster-instance") %>>
+                            <a href="/docs/providers/aws/r/neptune_cluster_instance.html">aws_neptune_cluster_instance</a>
                         </li>
 
                     </ul>
@@ -1823,6 +1904,10 @@
 
                         <li<%= sidebar_current("docs-aws-resource-s3-bucket") %>>
                             <a href="/docs/providers/aws/r/s3_bucket.html">aws_s3_bucket</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-s3-bucket-inventory") %>>
+                            <a href="/docs/providers/aws/r/s3_bucket_inventory.html">aws_s3_bucket_inventory</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-s3-bucket-metric") %>>
@@ -2059,6 +2144,39 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-storagegateway") %>>
+                    <a href="#">Storage Gateway Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-gateway") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_gateway.html">aws_storagegateway_gateway</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-nfs-file-share") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_nfs_file_share.html">aws_storagegateway_nfs_file_share</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-upload-buffer") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_upload_buffer.html">aws_storagegateway_upload_buffer</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-working-storage") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_working_storage.html">aws_storagegateway_working_storage</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li<%= sidebar_current("docs-aws-resource-swf") %>>
+                    <a href="#">SWF Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-swf-domain") %>>
+                            <a href="/docs/providers/aws/r/swf_domain.html">aws_swf_domain</a>
+                        </li>
+
+                    </ul>
+                </li>
 
                 <li<%= sidebar_current("docs-aws-resource-(default|customer|egress-only-internet-gateway|flow|internet-gateway|main-route|network|route-|security-group|security-group-attachment|subnet|vpc|vpn)") %>>
                     <a href="#">VPC Resources</a>
@@ -2188,6 +2306,10 @@
 
                         <li<%= sidebar_current("docs-aws-resource-vpc-endpoint-subnet-association") %>>
                             <a href="/docs/providers/aws/r/vpc_endpoint_subnet_association.html">aws_vpc_endpoint_subnet_association</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-vpc-ipv4-cidr-block-association") %>>
+                            <a href="/docs/providers/aws/r/vpc_ipv4_cidr_block_association.html">aws_vpc_ipv4_cidr_block_association</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-vpc-peering") %>>

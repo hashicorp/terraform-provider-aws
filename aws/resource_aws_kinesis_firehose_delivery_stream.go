@@ -673,12 +673,14 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"kinesis_stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
 					},

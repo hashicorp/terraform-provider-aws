@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_network_interface"
-sidebar_current: "docs-aws-datasource-network-interface"
+sidebar_current: "docs-aws-datasource-network-interface-x"
 description: |-  
   Get information on a Network Interface resource.
 ---

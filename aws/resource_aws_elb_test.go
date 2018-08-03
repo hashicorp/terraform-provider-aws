@@ -916,57 +916,6 @@ func TestResourceAWSELB_validateAccessLogsInterval(t *testing.T) {
 
 }
 
-func TestResourceAWSELB_validateListenerProtocol(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "HTTP:",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "TCP",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ssl",
-			ErrCount: 0,
-		},
-		{
-			Value:    "HTTP",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
 func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 	type testCase struct {
 		Value    string

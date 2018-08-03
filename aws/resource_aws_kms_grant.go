@@ -74,14 +74,14 @@ func resourceAwsKmsGrant() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							// ConflictsWith encryption_context_subset handled in Create, see kmsGrantConstraintsIsValid
 						},
 						"encryption_context_subset": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							// ConflictsWith encryption_context_equals handled in Create, see kmsGrantConstraintsIsValid
 						},
 					},
@@ -393,13 +393,16 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("error listing KMS Grants: %s", err)
+	}
 
 	grant = getKmsGrantById(out.Grants, grantId)
 	if grant != nil {
 		return grant, nil
 	}
-	if *out.Truncated {
-		log.Printf("[DEBUG] KMS Grant list truncated, getting next page via marker: %s", *out.NextMarker)
+	if aws.BoolValue(out.Truncated) {
+		log.Printf("[DEBUG] KMS Grant list truncated, getting next page via marker: %s", aws.StringValue(out.NextMarker))
 		return findKmsGrantById(conn, keyId, grantId, out.NextMarker)
 	}
 

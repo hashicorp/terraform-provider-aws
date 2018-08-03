@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "rds"       // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "RDS"       // ServiceID is a unique identifer of a specific service
+	ServiceName = "rds"       // Name of service.
+	EndpointsID = ServiceName // ID to lookup a service endpoint with.
+	ServiceID   = "RDS"       // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the RDS client with a session.

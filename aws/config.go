@@ -70,11 +70,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -88,7 +90,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
@@ -125,6 +129,7 @@ type Config struct {
 	DeviceFarmEndpoint       string
 	Ec2Endpoint              string
 	EcsEndpoint              string
+	AutoscalingEndpoint      string
 	EcrEndpoint              string
 	EfsEndpoint              string
 	EsEndpoint               string
@@ -207,6 +212,7 @@ type AWSClient struct {
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
 	lightsailconn         *lightsail.Lightsail
+	macieconn             *macie.Macie
 	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
 	organizationsconn     *organizations.Organizations
@@ -219,6 +225,8 @@ type AWSClient struct {
 	sdconn                *servicediscovery.ServiceDiscovery
 	sfnconn               *sfn.SFN
 	ssmconn               *ssm.SSM
+	storagegatewayconn    *storagegateway.StorageGateway
+	swfconn               *swf.SWF
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
 	iotconn               *iot.IoT
@@ -231,6 +239,7 @@ type AWSClient struct {
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
 	budgetconn            *budgets.Budgets
 	neptuneconn           *neptune.Neptune
+	pricingconn           *pricing.Pricing
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -239,11 +248,6 @@ func (c *AWSClient) S3() *s3.S3 {
 
 func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 	return c.dynamodbconn
-}
-
-func (c *AWSClient) IsGovCloud() bool {
-	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
-	return isGovCloud
 }
 
 func (c *AWSClient) IsChinaCloud() bool {
@@ -392,6 +396,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsCwlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchLogsEndpoint)})
 	awsDynamoSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})
 	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
+	awsAutoscalingSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.AutoscalingEndpoint)})
 	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
 	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
 	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
@@ -412,32 +417,45 @@ func (c *Config) Client() (interface{}, error) {
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
 
-	// These two services need to be set up early so we can check on AccountID
+	// Beyond verifying credentials (if enabled), we use the next set of logic
+	// to determine two pieces of information required for manually assembling
+	// resource ARNs when they are not available in the service API:
+	//  * client.accountid
+	//  * client.partition
 	client.iamconn = iam.New(awsIamSess)
 	client.stsconn = sts.New(awsStsSess)
 
+	if c.AssumeRoleARN != "" {
+		client.accountid, client.partition, _ = parseAccountIDAndPartitionFromARN(c.AssumeRoleARN)
+	}
+
+	// Validate credentials early and fail before we do any graph walking.
 	if !c.SkipCredsValidation {
-		err = c.ValidateCredentials(client.stsconn)
+		var err error
+		client.accountid, client.partition, err = GetAccountIDAndPartitionFromSTSGetCallerIdentity(client.stsconn)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error validating provider credentials: %s", err)
 		}
 	}
 
-	// Infer AWS partition from configured region
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
-		client.partition = partition.ID()
-	}
-
-	if !c.SkipRequestingAccountId {
-		accountID, err := GetAccountID(client.iamconn, client.stsconn, cp.ProviderName)
-		if err == nil {
-			client.accountid = accountID
+	if client.accountid == "" && !c.SkipRequestingAccountId {
+		var err error
+		client.accountid, client.partition, err = GetAccountIDAndPartition(client.iamconn, client.stsconn, cp.ProviderName)
+		if err != nil {
+			return nil, fmt.Errorf("Failed getting account information via all available methods. Errors: %s", err)
 		}
 	}
 
 	authErr := c.ValidateAccountId(client.accountid)
 	if authErr != nil {
 		return nil, authErr
+	}
+
+	// Infer AWS partition from configured region if we still need it
+	if client.partition == "" {
+		if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
+			client.partition = partition.ID()
+		}
 	}
 
 	client.ec2conn = ec2.New(awsEc2Sess)
@@ -458,7 +476,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.acmpcaconn = acmpca.New(sess)
 	client.apigateway = apigateway.New(awsApigatewaySess)
 	client.appautoscalingconn = applicationautoscaling.New(sess)
-	client.autoscalingconn = autoscaling.New(sess)
+	client.autoscalingconn = autoscaling.New(awsAutoscalingSess)
 	client.cloud9conn = cloud9.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
 	client.cloudfrontconn = cloudfront.New(sess)
@@ -500,6 +518,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
 	client.lightsailconn = lightsail.New(sess)
+	client.macieconn = macie.New(sess)
 	client.mqconn = mq.New(sess)
 	client.neptuneconn = neptune.New(sess)
 	client.opsworksconn = opsworks.New(sess)
@@ -517,6 +536,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
 	client.ssmconn = ssm.New(awsSsmSess)
+	client.storagegatewayconn = storagegateway.New(sess)
+	client.swfconn = swf.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
 	client.batchconn = batch.New(sess)
@@ -526,6 +547,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
 	client.neptuneconn = neptune.New(sess)
+	client.pricingconn = pricing.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -602,12 +624,6 @@ func (c *Config) ValidateRegion() error {
 	}
 
 	return fmt.Errorf("Not a valid region: %s", c.Region)
-}
-
-// Validate credentials early and fail before we do any graph walking.
-func (c *Config) ValidateCredentials(stsconn *sts.STS) error {
-	_, err := stsconn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	return err
 }
 
 // ValidateAccountId returns a context-specific error if the configured account

@@ -119,6 +119,14 @@ func resourceAwsInstance() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
+					// echo -n "" | shasum
+					if old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "" {
+						return true
+					}
+					return false
+				},
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
@@ -267,6 +275,20 @@ func resourceAwsInstance() *schema.Resource {
 
 			"tenancy": {
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"cpu_core_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"cpu_threads_per_core": {
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -497,6 +519,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:                          instanceOpts.SubnetID,
 		UserData:                          instanceOpts.UserData64,
 		CreditSpecification:               instanceOpts.CreditSpecification,
+		CpuOptions:                        instanceOpts.CpuOptions,
 	}
 
 	_, ipv6CountOk := d.GetOk("ipv6_address_count")
@@ -506,8 +529,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified")
 	}
 
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 	if !restricted {
+
 		tagsSpec := make([]*ec2.TagSpecification, 0)
 
 		if v, ok := d.GetOk("tags"); ok {
@@ -661,6 +685,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
+	}
+
+	if instance.CpuOptions != nil {
+		d.Set("cpu_core_count", instance.CpuOptions.CoreCount)
+		d.Set("cpu_threads_per_core", instance.CpuOptions.ThreadsPerCore)
 	}
 
 	d.Set("ami", instance.ImageId)
@@ -833,8 +862,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)
-
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	if d.HasChange("tags") {
 		if !d.IsNewResource() || restricted {
@@ -846,7 +874,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("volume_tags") {
-		if !d.IsNewResource() || !restricted {
+		if !d.IsNewResource() || restricted {
 			if err := setVolumeTags(conn, d); err != nil {
 				return err
 			} else {
@@ -1680,23 +1708,30 @@ type awsInstanceOpts struct {
 	SubnetID                          *string
 	UserData64                        *string
 	CreditSpecification               *ec2.CreditSpecificationRequest
+	CpuOptions                        *ec2.CpuOptionsRequest
 }
 
 func buildAwsInstanceOpts(
 	d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*AWSClient).ec2conn
 
+	instanceType := d.Get("instance_type").(string)
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageID:               aws.String(d.Get("ami").(string)),
-		InstanceType:          aws.String(d.Get("instance_type").(string)),
+		InstanceType:          aws.String(instanceType),
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
-		cs := v.([]interface{})[0].(map[string]interface{})
-		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-			CpuCredits: aws.String(cs["cpu_credits"].(string)),
+		// Only T2 instances support T2 Unlimited
+		if strings.HasPrefix(instanceType, "t2") {
+			cs := v.([]interface{})[0].(map[string]interface{})
+			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+				CpuCredits: aws.String(cs["cpu_credits"].(string)),
+			}
+		} else {
+			log.Print("[WARN] credit_specification is defined but instance type is not T2. Ignoring...")
 		}
 	}
 
@@ -1739,6 +1774,17 @@ func buildAwsInstanceOpts(
 
 	if v := d.Get("tenancy").(string); v != "" {
 		opts.Placement.Tenancy = aws.String(v)
+	}
+
+	if v := d.Get("cpu_core_count").(int); v > 0 {
+		tc := d.Get("cpu_threads_per_core").(int)
+		if tc < 0 {
+			tc = 2
+		}
+		opts.CpuOptions = &ec2.CpuOptionsRequest{
+			CoreCount:      aws.Int64(int64(v)),
+			ThreadsPerCore: aws.Int64(int64(tc)),
+		}
 	}
 
 	var groups []*string

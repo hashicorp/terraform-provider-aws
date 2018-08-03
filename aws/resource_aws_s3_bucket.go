@@ -42,9 +42,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 				ConflictsWith: []string{"bucket_prefix"},
 			},
 			"bucket_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"bucket"},
 			},
 
 			"bucket_domain_name": {
@@ -588,7 +589,7 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	if d.HasChange("acl") {
+	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
 			return err
 		}

@@ -7550,23 +7550,8 @@ type CreateDBInstanceInput struct {
 	// Valid Values: 0 - 15
 	PromotionTier *int64 `type:"integer"`
 
-	// Specifies the accessibility options for the DB instance. A value of true
-	// specifies an Internet-facing instance with a publicly resolvable DNS name,
-	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC: true
-	//
-	//    * VPC: false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
-	PubliclyAccessible *bool `type:"boolean"`
+	// This parameter is not supported.
+	PubliclyAccessible *bool `deprecated:"true" type:"boolean"`
 
 	// Specifies whether the DB instance is encrypted.
 	//
@@ -8317,7 +8302,7 @@ type DBCluster struct {
 
 	// Specifies the time when the DB cluster was created, in Universal Coordinated
 	// Time (UTC).
-	ClusterCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ClusterCreateTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) for the DB cluster.
 	DBClusterArn *string `type:"string"`
@@ -8351,7 +8336,7 @@ type DBCluster struct {
 
 	// Specifies the earliest time to which a database can be restored with point-in-time
 	// restore.
-	EarliestRestorableTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EarliestRestorableTime *time.Time `type:"timestamp"`
 
 	// Specifies the connection endpoint for the primary instance of the DB cluster.
 	Endpoint *string `type:"string"`
@@ -8375,7 +8360,7 @@ type DBCluster struct {
 
 	// Specifies the latest time to which a database can be restored with point-in-time
 	// restore.
-	LatestRestorableTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LatestRestorableTime *time.Time `type:"timestamp"`
 
 	// Contains the master username for the DB cluster.
 	MasterUsername *string `type:"string"`
@@ -8852,7 +8837,7 @@ type DBClusterSnapshot struct {
 
 	// Specifies the time when the DB cluster was created, in Universal Coordinated
 	// Time (UTC).
-	ClusterCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ClusterCreateTime *time.Time `type:"timestamp"`
 
 	// Specifies the DB cluster identifier of the DB cluster that this DB cluster
 	// snapshot was created from.
@@ -8893,7 +8878,7 @@ type DBClusterSnapshot struct {
 
 	// Provides the time when the snapshot was taken, in Universal Coordinated Time
 	// (UTC).
-	SnapshotCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	SnapshotCreateTime *time.Time `type:"timestamp"`
 
 	// Provides the type of the DB cluster snapshot.
 	SnapshotType *string `type:"string"`
@@ -9352,7 +9337,7 @@ type DBInstance struct {
 	IAMDatabaseAuthenticationEnabled *bool `type:"boolean"`
 
 	// Provides the date and time the DB instance was created.
-	InstanceCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	InstanceCreateTime *time.Time `type:"timestamp"`
 
 	// Specifies the Provisioned IOPS (I/O operations per second) value.
 	Iops *int64 `type:"integer"`
@@ -9363,7 +9348,7 @@ type DBInstance struct {
 
 	// Specifies the latest time to which a database can be restored with point-in-time
 	// restore.
-	LatestRestorableTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LatestRestorableTime *time.Time `type:"timestamp"`
 
 	// License model information for this DB instance.
 	LicenseModel *string `type:"string"`
@@ -9410,23 +9395,8 @@ type DBInstance struct {
 	// primary instance after a failure of the existing primary instance.
 	PromotionTier *int64 `type:"integer"`
 
-	// Specifies the accessibility options for the DB instance. A value of true
-	// specifies an Internet-facing instance with a publicly resolvable DNS name,
-	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC:true
-	//
-	//    * VPC:false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
-	PubliclyAccessible *bool `type:"boolean"`
+	// This parameter is not supported.
+	PubliclyAccessible *bool `deprecated:"true" type:"boolean"`
 
 	// Contains one or more identifiers of DB clusters that are Read Replicas of
 	// this DB instance.
@@ -12302,7 +12272,7 @@ type DescribeEventsInput struct {
 	// page. (http://en.wikipedia.org/wiki/ISO_8601)
 	//
 	// Example: 2009-07-08T18:00Z
-	EndTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EndTime *time.Time `type:"timestamp"`
 
 	// A list of event categories that trigger notifications for a event notification
 	// subscription.
@@ -12355,7 +12325,7 @@ type DescribeEventsInput struct {
 	// page. (http://en.wikipedia.org/wiki/ISO_8601)
 	//
 	// Example: 2009-07-08T18:00Z
-	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	StartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -13009,7 +12979,7 @@ type Event struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the date and time of the event.
-	Date *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	Date *time.Time `type:"timestamp"`
 
 	// Specifies the category for the event.
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
@@ -14118,20 +14088,8 @@ type ModifyDBInstanceInput struct {
 	// Valid Values: 0 - 15
 	PromotionTier *int64 `type:"integer"`
 
-	// Boolean value that indicates if the DB instance has a publicly resolvable
-	// DNS name. Set to True to make the DB instance Internet-facing with a publicly
-	// resolvable DNS name, which resolves to a public IP address. Set to False
-	// to make the DB instance internal with a DNS name that resolves to a private
-	// IP address.
-	//
-	// The DB instance must be part of a public subnet and PubliclyAccessible must
-	// be true in order for it to be publicly accessible.
-	//
-	// Changes to the PubliclyAccessible parameter are applied immediately regardless
-	// of the value of the ApplyImmediately parameter.
-	//
-	// Default: false
-	PubliclyAccessible *bool `type:"boolean"`
+	// This parameter is not supported.
+	PubliclyAccessible *bool `deprecated:"true" type:"boolean"`
 
 	// Specifies the storage type to be associated with the DB instance.
 	//
@@ -15095,14 +15053,14 @@ type PendingMaintenanceAction struct {
 	// action is applied to the resource during its first maintenance window after
 	// this date. If this date is specified, any next-maintenance opt-in requests
 	// are ignored.
-	AutoAppliedAfterDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	AutoAppliedAfterDate *time.Time `type:"timestamp"`
 
 	// The effective date when the pending maintenance action is applied to the
 	// resource. This date takes into account opt-in requests received from the
 	// ApplyPendingMaintenanceAction API, the AutoAppliedAfterDate, and the ForcedApplyDate.
 	// This value is blank if an opt-in request has not been received and nothing
 	// has been specified as AutoAppliedAfterDate or ForcedApplyDate.
-	CurrentApplyDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	CurrentApplyDate *time.Time `type:"timestamp"`
 
 	// A description providing more detail about the maintenance action.
 	Description *string `type:"string"`
@@ -15111,7 +15069,7 @@ type PendingMaintenanceAction struct {
 	// action is applied to the resource on this date regardless of the maintenance
 	// window for the resource. If this date is specified, any immediate opt-in
 	// requests are ignored.
-	ForcedApplyDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ForcedApplyDate *time.Time `type:"timestamp"`
 
 	// Indicates the type of opt-in request that has been received for the resource.
 	OptInStatus *string `type:"string"`
@@ -16251,7 +16209,7 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//    * Cannot be specified if RestoreType parameter is copy-on-write
 	//
 	// Example: 2015-03-07T23:45:00Z
-	RestoreToTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	RestoreToTime *time.Time `type:"timestamp"`
 
 	// The type of restore to be performed. You can specify one of the following
 	// values:

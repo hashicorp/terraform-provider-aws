@@ -53,7 +53,45 @@ func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
+func validateNeptuneIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
 func validateRdsIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	return
+}
+
+func validateNeptuneIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -75,6 +113,12 @@ func validateRdsEngine() schema.SchemaValidateFunc {
 		"aurora",
 		"aurora-mysql",
 		"aurora-postgresql",
+	}, false)
+}
+
+func validateNeptuneEngine() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"neptune",
 	}, false)
 }
 
@@ -129,23 +173,23 @@ func validateDbParamGroupName(v interface{}, k string) (ws []string, errors []er
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
+			"first character of parameter group %q must be a letter", k))
 	}
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
+			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot end with a hyphen", k))
+			"parameter group %q cannot end with a hyphen", k))
 	}
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 255 characters", k))
+			"parameter group %q cannot be greater than 255 characters", k))
 	}
 	return
 }
@@ -154,19 +198,19 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
 	}
 	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
+			"first character of parameter group %q must be a letter", k))
 	}
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
+			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 226 characters", k))
+			"parameter group %q cannot be greater than 226 characters", k))
 	}
 	return
 }
@@ -360,6 +404,24 @@ func validateLambdaPermissionAction(v interface{}, k string) (ws []string, error
 
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^(lambda:[*]|lambda:[a-zA-Z]+|[*])$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't comply with restrictions (%q): %q",
+			k, pattern, value))
+	}
+
+	return
+}
+
+func validateLambdaPermissionEventSourceToken(v interface{}, k string) (ws []string, errors []error) {
+	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
+	value := v.(string)
+
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters: %q", k, value))
+	}
+
+	pattern := `^[a-zA-Z0-9._\-]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
@@ -1689,10 +1751,27 @@ func validateStringIn(validValues ...string) schema.SchemaValidateFunc {
 	}
 }
 
-func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
+func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
+	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
+	asn, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
+		return
+	}
+
+	if (asn != 7224) && (asn != 9059) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be 7224 or 9059 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
+	}
+	return
+}
+
+func validateDxGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/directconnect/latest/APIReference/API_CreateDirectConnectGateway.html
 	asn, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))

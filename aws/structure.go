@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -31,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -791,6 +793,15 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+// Expands a map of string to interface to a map of string to *float
+func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
+	float64Map := make(map[string]*float64, len(m))
+	for k, v := range m {
+		float64Map[k] = aws.Float64(v.(float64))
+	}
+	return float64Map
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List())
@@ -1077,6 +1088,50 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	return []map[string]interface{}{m}
 }
 
+func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
+	options := &elasticsearch.CognitoOptions{
+		Enabled: aws.Bool(false),
+	}
+	if len(c) < 1 {
+		return options
+	}
+
+	m := c[0].(map[string]interface{})
+
+	if cognitoEnabled, ok := m["enabled"]; ok {
+		options.Enabled = aws.Bool(cognitoEnabled.(bool))
+
+		if cognitoEnabled.(bool) {
+
+			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
+				options.UserPoolId = aws.String(v.(string))
+			}
+			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
+				options.IdentityPoolId = aws.String(v.(string))
+			}
+			if v, ok := m["role_arn"]; ok && v.(string) != "" {
+				options.RoleArn = aws.String(v.(string))
+			}
+		}
+	}
+
+	return options
+}
+
+func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	m["enabled"] = aws.BoolValue(c.Enabled)
+
+	if aws.BoolValue(c.Enabled) {
+		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
+		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
+		m["role_arn"] = aws.StringValue(c.RoleArn)
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
@@ -1301,6 +1356,18 @@ func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]in
 	return []map[string]interface{}{settings}
 }
 
+func flattenLambdaAliasRoutingConfiguration(arc *lambda.AliasRoutingConfiguration) []interface{} {
+	if arc == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"additional_version_weights": aws.Float64ValueMap(arc.AdditionalVersionWeights),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenDSConnectSettings(
 	customerDnsIps []*string,
 	s *directoryservice.DirectoryConnectSettingsDescription) []map[string]interface{} {
@@ -1449,7 +1516,7 @@ func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key 
 	oldModelMap := oldModels.(map[string]interface{})
 	newModelMap := newModels.(map[string]interface{})
 
-	for k, _ := range oldModelMap {
+	for k := range oldModelMap {
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
@@ -1467,7 +1534,7 @@ func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key 
 
 	for nK, nV := range newModelMap {
 		exists := false
-		for k, _ := range oldModelMap {
+		for k := range oldModelMap {
 			if k == nK {
 				exists = true
 			}
@@ -1501,7 +1568,7 @@ func deprecatedExpandApiGatewayMethodParametersJSONOperations(d *schema.Resource
 		return operations, err
 	}
 
-	for k, _ := range oldParametersMap {
+	for k := range oldParametersMap {
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
@@ -1519,7 +1586,7 @@ func deprecatedExpandApiGatewayMethodParametersJSONOperations(d *schema.Resource
 
 	for nK, nV := range newParametersMap {
 		exists := false
-		for k, _ := range oldParametersMap {
+		for k := range oldParametersMap {
 			if k == nK {
 				exists = true
 			}
@@ -1544,7 +1611,7 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 	oldParametersMap := oldParameters.(map[string]interface{})
 	newParametersMap := newParameters.(map[string]interface{})
 
-	for k, _ := range oldParametersMap {
+	for k := range oldParametersMap {
 		operation := apigateway.PatchOperation{
 			Op:   aws.String("remove"),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
@@ -1567,7 +1634,7 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 
 	for nK, nV := range newParametersMap {
 		exists := false
-		for k, _ := range oldParametersMap {
+		for k := range oldParametersMap {
 			if k == nK {
 				exists = true
 			}
@@ -3403,6 +3470,115 @@ func flattenFieldToMatch(fm *waf.FieldToMatch) []interface{} {
 	return []interface{}{m}
 }
 
+func diffWafWebAclRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
+	updates := make([]*waf.WebACLUpdate, 0)
+
+	for _, or := range oldR {
+		aclRule := or.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newR, aclRule); contains {
+			newR = append(newR[:idx], newR[idx+1:]...)
+			continue
+		}
+		updates = append(updates, expandWafWebAclUpdate(waf.ChangeActionDelete, aclRule))
+	}
+
+	for _, nr := range newR {
+		aclRule := nr.(map[string]interface{})
+		updates = append(updates, expandWafWebAclUpdate(waf.ChangeActionInsert, aclRule))
+	}
+	return updates
+}
+
+func expandWafWebAclUpdate(updateAction string, aclRule map[string]interface{}) *waf.WebACLUpdate {
+	var rule *waf.ActivatedRule
+
+	switch aclRule["type"].(string) {
+	case waf.WafRuleTypeGroup:
+		rule = &waf.ActivatedRule{
+			OverrideAction: expandWafOverrideAction(aclRule["override_action"].([]interface{})),
+			Priority:       aws.Int64(int64(aclRule["priority"].(int))),
+			RuleId:         aws.String(aclRule["rule_id"].(string)),
+			Type:           aws.String(aclRule["type"].(string)),
+		}
+	default:
+		rule = &waf.ActivatedRule{
+			Action:   expandWafAction(aclRule["action"].([]interface{})),
+			Priority: aws.Int64(int64(aclRule["priority"].(int))),
+			RuleId:   aws.String(aclRule["rule_id"].(string)),
+			Type:     aws.String(aclRule["type"].(string)),
+		}
+	}
+
+	update := &waf.WebACLUpdate{
+		Action:        aws.String(updateAction),
+		ActivatedRule: rule,
+	}
+
+	return update
+}
+
+func expandWafAction(l []interface{}) *waf.WafAction {
+	if l == nil || len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &waf.WafAction{
+		Type: aws.String(m["type"].(string)),
+	}
+}
+
+func expandWafOverrideAction(l []interface{}) *waf.WafOverrideAction {
+	if l == nil || len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &waf.WafOverrideAction{
+		Type: aws.String(m["type"].(string)),
+	}
+}
+
+func flattenWafAction(n *waf.WafAction) []map[string]interface{} {
+	if n == nil {
+		return nil
+	}
+
+	m := setMap(make(map[string]interface{}))
+
+	m.SetString("type", n.Type)
+	return m.MapList()
+}
+
+func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
+	out := make([]map[string]interface{}, len(ts), len(ts))
+	for i, r := range ts {
+		m := make(map[string]interface{})
+
+		switch aws.StringValue(r.Type) {
+		case waf.WafRuleTypeGroup:
+			actionMap := map[string]interface{}{
+				"type": aws.StringValue(r.OverrideAction.Type),
+			}
+			m["override_action"] = []map[string]interface{}{actionMap}
+		default:
+			actionMap := map[string]interface{}{
+				"type": aws.StringValue(r.Action.Type),
+			}
+			m["action"] = []map[string]interface{}{actionMap}
+		}
+
+		m["priority"] = int(aws.Int64Value(r.Priority))
+		m["rule_id"] = aws.StringValue(r.RuleId)
+		m["type"] = aws.StringValue(r.Type)
+		out[i] = m
+	}
+	return out
+}
+
 // escapeJsonPointer escapes string per RFC 6901
 // so it can be used as path in JSON patch operations
 func escapeJsonPointer(path string) string {
@@ -4267,4 +4443,64 @@ func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringCon
 	}
 
 	return options
+}
+
+func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
+	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg), len(cfg))
+	for i, p := range cfg {
+		prefix := &directconnect.RouteFilterPrefix{
+			Cidr: aws.String(p.(string)),
+		}
+		prefixes[i] = prefix
+	}
+	return prefixes
+}
+
+func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
+	out := make([]interface{}, 0)
+	for _, prefix := range prefixes {
+		out = append(out, aws.StringValue(prefix.Cidr))
+	}
+	return schema.NewSet(schema.HashString, out)
+}
+
+func expandMacieClassificationType(d *schema.ResourceData) *macie.ClassificationType {
+	continuous := macie.S3ContinuousClassificationTypeFull
+	oneTime := macie.S3OneTimeClassificationTypeNone
+	if v := d.Get("classification_type").([]interface{}); len(v) > 0 {
+		m := v[0].(map[string]interface{})
+		continuous = m["continuous"].(string)
+		oneTime = m["one_time"].(string)
+	}
+
+	return &macie.ClassificationType{
+		Continuous: aws.String(continuous),
+		OneTime:    aws.String(oneTime),
+	}
+}
+
+func expandMacieClassificationTypeUpdate(d *schema.ResourceData) *macie.ClassificationTypeUpdate {
+	continuous := macie.S3ContinuousClassificationTypeFull
+	oneTime := macie.S3OneTimeClassificationTypeNone
+	if v := d.Get("classification_type").([]interface{}); len(v) > 0 {
+		m := v[0].(map[string]interface{})
+		continuous = m["continuous"].(string)
+		oneTime = m["one_time"].(string)
+	}
+
+	return &macie.ClassificationTypeUpdate{
+		Continuous: aws.String(continuous),
+		OneTime:    aws.String(oneTime),
+	}
+}
+
+func flattenMacieClassificationType(classificationType *macie.ClassificationType) []map[string]interface{} {
+	if classificationType == nil {
+		return []map[string]interface{}{}
+	}
+	m := map[string]interface{}{
+		"continuous": aws.StringValue(classificationType.Continuous),
+		"one_time":   aws.StringValue(classificationType.OneTime),
+	}
+	return []map[string]interface{}{m}
 }

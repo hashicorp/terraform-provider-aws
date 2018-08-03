@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "directconnect"  // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName      // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "Direct Connect" // ServiceID is a unique identifer of a specific service
+	ServiceName = "directconnect"  // Name of service.
+	EndpointsID = ServiceName      // ID to lookup a service endpoint with.
+	ServiceID   = "Direct Connect" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the DirectConnect client with a session.

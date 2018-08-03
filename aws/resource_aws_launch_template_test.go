@@ -28,6 +28,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
+					resource.TestCheckResourceAttrSet(resName, "arn"),
 				),
 			},
 		},
@@ -104,7 +105,6 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
-	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -112,20 +112,24 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Config: testAccAWSLaunchTemplateConfig_asg_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "1"),
 				),
 			},
 			{
-				Config: testAccAWSLaunchTemplateConfig_data(rInt),
+				Config: testAccAWSLaunchTemplateConfig_asg_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "2"),
-					resource.TestCheckResourceAttrSet(resName, "image_id"),
+					resource.TestCheckResourceAttrSet(resName, "instance_type"),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "launch_template.0.version", "2"),
 				),
 			},
 		},
@@ -155,6 +159,47 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					testAccCheckTags(&template.Tags, "foo", ""),
 					testAccCheckTags(&template.Tags, "bar", "baz"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_nonBurstable(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_nonBurstable,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_networkInterface,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.0.associate_public_ip_address", "false"),
 				),
 			},
 		},
@@ -307,7 +352,6 @@ resource "aws_launch_template" "foo" {
   }
 
   network_interfaces {
-    associate_public_ip_address = true
     network_interface_id = "eni-123456ab"
     security_groups = ["sg-1a23bc45"]
   }
@@ -341,3 +385,105 @@ resource "aws_launch_template" "foo" {
 }
 `, rInt)
 }
+
+const testAccAWSLaunchTemplateConfig_nonBurstable = `
+resource "aws_launch_template" "foo" {
+  name = "non-burstable-launch-template"
+  instance_type = "m1.small"
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_networkInterface = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_launch_template" "test" {
+  name = "network-interface-launch-template"
+
+  network_interfaces {
+    network_interface_id = "${aws_network_interface.test.id}"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_asg_basic = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foo" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    id = "${aws_launch_template.foo.id}"
+    version = "${aws_launch_template.foo.latest_version}"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_asg_update = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "foo" {
+  name_prefix = "foobar"
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.nano"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_template = {
+    id = "${aws_launch_template.foo.id}"
+    version = "${aws_launch_template.foo.latest_version}"
+  }
+}
+`

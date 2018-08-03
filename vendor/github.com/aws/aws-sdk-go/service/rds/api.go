@@ -8861,6 +8861,10 @@ func (c *RDS) RestoreDBClusterFromSnapshotRequest(input *RestoreDBClusterFromSna
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
 //   An error occurred accessing an AWS KMS key.
 //
+//   * ErrCodeDBClusterParameterGroupNotFoundFault "DBClusterParameterGroupNotFound"
+//   DBClusterParameterGroupName doesn't refer to an existing DB cluster parameter
+//   group.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBClusterFromSnapshot
 func (c *RDS) RestoreDBClusterFromSnapshot(input *RestoreDBClusterFromSnapshotInput) (*RestoreDBClusterFromSnapshotOutput, error) {
 	req, out := c.RestoreDBClusterFromSnapshotRequest(input)
@@ -9004,6 +9008,10 @@ func (c *RDS) RestoreDBClusterToPointInTimeRequest(input *RestoreDBClusterToPoin
 //   * ErrCodeStorageQuotaExceededFault "StorageQuotaExceeded"
 //   The request would result in the user exceeding the allowed amount of storage
 //   available across all DB instances.
+//
+//   * ErrCodeDBClusterParameterGroupNotFoundFault "DBClusterParameterGroupNotFound"
+//   DBClusterParameterGroupName doesn't refer to an existing DB cluster parameter
+//   group.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBClusterToPointInTime
 func (c *RDS) RestoreDBClusterToPointInTime(input *RestoreDBClusterToPointInTimeInput) (*RestoreDBClusterToPointInTimeOutput, error) {
@@ -9164,6 +9172,9 @@ func (c *RDS) RestoreDBInstanceFromDBSnapshotRequest(input *RestoreDBInstanceFro
 //
 //   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
 //   Domain doesn't refer to an existing Active Directory domain.
+//
+//   * ErrCodeDBParameterGroupNotFoundFault "DBParameterGroupNotFound"
+//   DBParameterGroupName doesn't refer to an existing DB parameter group.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBInstanceFromDBSnapshot
 func (c *RDS) RestoreDBInstanceFromDBSnapshot(input *RestoreDBInstanceFromDBSnapshotInput) (*RestoreDBInstanceFromDBSnapshotOutput, error) {
@@ -9461,6 +9472,9 @@ func (c *RDS) RestoreDBInstanceToPointInTimeRequest(input *RestoreDBInstanceToPo
 //
 //   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
 //   Domain doesn't refer to an existing Active Directory domain.
+//
+//   * ErrCodeDBParameterGroupNotFoundFault "DBParameterGroupNotFound"
+//   DBParameterGroupName doesn't refer to an existing DB parameter group.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBInstanceToPointInTime
 func (c *RDS) RestoreDBInstanceToPointInTime(input *RestoreDBInstanceToPointInTimeInput) (*RestoreDBInstanceToPointInTimeOutput, error) {
@@ -10368,7 +10382,7 @@ type BacktrackDBClusterInput struct {
 	// Example: 2017-07-08T18:00Z
 	//
 	// BacktrackTo is a required field
-	BacktrackTo *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	BacktrackTo *time.Time `type:"timestamp" required:"true"`
 
 	// The DB cluster identifier of the DB cluster to be backtracked. This parameter
 	// is stored as a lowercase string.
@@ -10455,13 +10469,13 @@ type BacktrackDBClusterOutput struct {
 	BacktrackIdentifier *string `type:"string"`
 
 	// The timestamp of the time at which the backtrack was requested.
-	BacktrackRequestCreationTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	BacktrackRequestCreationTime *time.Time `type:"timestamp"`
 
 	// The timestamp of the time to which the DB cluster was backtracked.
-	BacktrackTo *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	BacktrackTo *time.Time `type:"timestamp"`
 
 	// The timestamp of the time from which the DB cluster was backtracked.
-	BacktrackedFrom *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	BacktrackedFrom *time.Time `type:"timestamp"`
 
 	// Contains a user-supplied DB cluster identifier. This identifier is the unique
 	// key that identifies a DB cluster.
@@ -10546,10 +10560,10 @@ type Certificate struct {
 	Thumbprint *string `type:"string"`
 
 	// The starting date from which the certificate is valid.
-	ValidFrom *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ValidFrom *time.Time `type:"timestamp"`
 
 	// The final date that the certificate continues to be valid.
-	ValidTill *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ValidTill *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -12682,6 +12696,10 @@ type CreateDBInstanceInput struct {
 	// KMS key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
+	// The amount of time, in days, to retain Performance Insights data. Valid values
+	// are 7 or 731 (2 years).
+	PerformanceInsightsRetentionPeriod *int64 `type:"integer"`
+
 	// The port number on which the database accepts connections.
 	//
 	// MySQL
@@ -13052,6 +13070,12 @@ func (s *CreateDBInstanceInput) SetPerformanceInsightsKMSKeyId(v string) *Create
 	return s
 }
 
+// SetPerformanceInsightsRetentionPeriod sets the PerformanceInsightsRetentionPeriod field's value.
+func (s *CreateDBInstanceInput) SetPerformanceInsightsRetentionPeriod(v int64) *CreateDBInstanceInput {
+	s.PerformanceInsightsRetentionPeriod = &v
+	return s
+}
+
 // SetPort sets the Port field's value.
 func (s *CreateDBInstanceInput) SetPort(v int64) *CreateDBInstanceInput {
 	s.Port = &v
@@ -13300,6 +13324,10 @@ type CreateDBInstanceReadReplicaInput struct {
 	// KMS key ID is the Amazon Resource Name (ARN), KMS key identifier, or the
 	// KMS key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
+
+	// The amount of time, in days, to retain Performance Insights data. Valid values
+	// are 7 or 731 (2 years).
+	PerformanceInsightsRetentionPeriod *int64 `type:"integer"`
 
 	// The port number that the DB instance uses for connections.
 	//
@@ -13551,6 +13579,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetPerformanceInsightsKMSKeyId(v stri
 	return s
 }
 
+// SetPerformanceInsightsRetentionPeriod sets the PerformanceInsightsRetentionPeriod field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetPerformanceInsightsRetentionPeriod(v int64) *CreateDBInstanceReadReplicaInput {
+	s.PerformanceInsightsRetentionPeriod = &v
+	return s
+}
+
 // SetPort sets the Port field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetPort(v int64) *CreateDBInstanceReadReplicaInput {
 	s.Port = &v
@@ -13637,6 +13671,13 @@ type CreateDBParameterGroupInput struct {
 	// with one and only one DB parameter group family, and can be applied only
 	// to a DB instance running a database engine and engine version compatible
 	// with that DB parameter group family.
+	//
+	// To list all of the available parameter group families, use the following
+	// command:
+	//
+	// aws rds describe-db-engine-versions --query "DBEngineVersions[].DBParameterGroupFamily"
+	//
+	// The output contains duplicates.
 	//
 	// DBParameterGroupFamily is a required field
 	DBParameterGroupFamily *string `type:"string" required:"true"`
@@ -14369,7 +14410,7 @@ type DBCluster struct {
 
 	// Specifies the time when the DB cluster was created, in Universal Coordinated
 	// Time (UTC).
-	ClusterCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ClusterCreateTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) for the DB cluster.
 	DBClusterArn *string `type:"string"`
@@ -14402,11 +14443,11 @@ type DBCluster struct {
 	DbClusterResourceId *string `type:"string"`
 
 	// The earliest time to which a DB cluster can be backtracked.
-	EarliestBacktrackTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EarliestBacktrackTime *time.Time `type:"timestamp"`
 
 	// The earliest time to which a database can be restored with point-in-time
 	// restore.
-	EarliestRestorableTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EarliestRestorableTime *time.Time `type:"timestamp"`
 
 	// A list of log types that this DB cluster is configured to export to CloudWatch
 	// Logs.
@@ -14434,7 +14475,7 @@ type DBCluster struct {
 
 	// Specifies the latest time to which a database can be restored with point-in-time
 	// restore.
-	LatestRestorableTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LatestRestorableTime *time.Time `type:"timestamp"`
 
 	// Contains the master username for the DB cluster.
 	MasterUsername *string `type:"string"`
@@ -14969,7 +15010,7 @@ type DBClusterSnapshot struct {
 
 	// Specifies the time when the DB cluster was created, in Universal Coordinated
 	// Time (UTC).
-	ClusterCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ClusterCreateTime *time.Time `type:"timestamp"`
 
 	// Specifies the DB cluster identifier of the DB cluster that this DB cluster
 	// snapshot was created from.
@@ -15010,7 +15051,7 @@ type DBClusterSnapshot struct {
 
 	// Provides the time when the snapshot was taken, in Universal Coordinated Time
 	// (UTC).
-	SnapshotCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	SnapshotCreateTime *time.Time `type:"timestamp"`
 
 	// Provides the type of the DB cluster snapshot.
 	SnapshotType *string `type:"string"`
@@ -15494,7 +15535,7 @@ type DBInstance struct {
 	IAMDatabaseAuthenticationEnabled *bool `type:"boolean"`
 
 	// Provides the date and time the DB instance was created.
-	InstanceCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	InstanceCreateTime *time.Time `type:"timestamp"`
 
 	// Specifies the Provisioned IOPS (I/O operations per second) value.
 	Iops *int64 `type:"integer"`
@@ -15505,7 +15546,7 @@ type DBInstance struct {
 
 	// Specifies the latest time to which a database can be restored with point-in-time
 	// restore.
-	LatestRestorableTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LatestRestorableTime *time.Time `type:"timestamp"`
 
 	// License model information for this DB instance.
 	LicenseModel *string `type:"string"`
@@ -15539,6 +15580,10 @@ type DBInstance struct {
 	// KMS key ID is the Amazon Resource Name (ARN), KMS key identifier, or the
 	// KMS key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
+
+	// The amount of time, in days, to retain Performance Insights data. Valid values
+	// are 7 or 731 (2 years).
+	PerformanceInsightsRetentionPeriod *int64 `type:"integer"`
 
 	// Specifies the daily time range during which automated backups are created
 	// if automated backups are enabled, as determined by the BackupRetentionPeriod.
@@ -15850,6 +15895,12 @@ func (s *DBInstance) SetPerformanceInsightsEnabled(v bool) *DBInstance {
 // SetPerformanceInsightsKMSKeyId sets the PerformanceInsightsKMSKeyId field's value.
 func (s *DBInstance) SetPerformanceInsightsKMSKeyId(v string) *DBInstance {
 	s.PerformanceInsightsKMSKeyId = &v
+	return s
+}
+
+// SetPerformanceInsightsRetentionPeriod sets the PerformanceInsightsRetentionPeriod field's value.
+func (s *DBInstance) SetPerformanceInsightsRetentionPeriod(v int64) *DBInstance {
+	s.PerformanceInsightsRetentionPeriod = &v
 	return s
 }
 
@@ -16284,7 +16335,7 @@ type DBSnapshot struct {
 
 	// Specifies the time when the snapshot was taken, in Universal Coordinated
 	// Time (UTC).
-	InstanceCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	InstanceCreateTime *time.Time `type:"timestamp"`
 
 	// Specifies the Provisioned IOPS (I/O operations per second) value of the DB
 	// instance at the time of the snapshot.
@@ -16315,7 +16366,7 @@ type DBSnapshot struct {
 
 	// Provides the time when the snapshot was taken, in Universal Coordinated Time
 	// (UTC).
-	SnapshotCreateTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	SnapshotCreateTime *time.Time `type:"timestamp"`
 
 	// Provides the type of the DB snapshot.
 	SnapshotType *string `type:"string"`
@@ -19999,7 +20050,7 @@ type DescribeEventsInput struct {
 	// page. (http://en.wikipedia.org/wiki/ISO_8601)
 	//
 	// Example: 2009-07-08T18:00Z
-	EndTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EndTime *time.Time `type:"timestamp"`
 
 	// A list of event categories that trigger notifications for a event notification
 	// subscription.
@@ -20052,7 +20103,7 @@ type DescribeEventsInput struct {
 	// page. (http://en.wikipedia.org/wiki/ISO_8601)
 	//
 	// Example: 2009-07-08T18:00Z
-	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	StartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -21639,7 +21690,7 @@ type Event struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the date and time of the event.
-	Date *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	Date *time.Time `type:"timestamp"`
 
 	// Specifies the category for the event.
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
@@ -22929,6 +22980,10 @@ type ModifyDBInstanceInput struct {
 	// KMS key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
+	// The amount of time, in days, to retain Performance Insights data. Valid values
+	// are 7 or 731 (2 years).
+	PerformanceInsightsRetentionPeriod *int64 `type:"integer"`
+
 	// The daily time range during which automated backups are created if automated
 	// backups are enabled, as determined by the BackupRetentionPeriod parameter.
 	// Changing this parameter doesn't result in an outage and the change is asynchronously
@@ -23233,6 +23288,12 @@ func (s *ModifyDBInstanceInput) SetOptionGroupName(v string) *ModifyDBInstanceIn
 // SetPerformanceInsightsKMSKeyId sets the PerformanceInsightsKMSKeyId field's value.
 func (s *ModifyDBInstanceInput) SetPerformanceInsightsKMSKeyId(v string) *ModifyDBInstanceInput {
 	s.PerformanceInsightsKMSKeyId = &v
+	return s
+}
+
+// SetPerformanceInsightsRetentionPeriod sets the PerformanceInsightsRetentionPeriod field's value.
+func (s *ModifyDBInstanceInput) SetPerformanceInsightsRetentionPeriod(v int64) *ModifyDBInstanceInput {
+	s.PerformanceInsightsRetentionPeriod = &v
 	return s
 }
 
@@ -24955,14 +25016,14 @@ type PendingMaintenanceAction struct {
 	// action is applied to the resource during its first maintenance window after
 	// this date. If this date is specified, any next-maintenance opt-in requests
 	// are ignored.
-	AutoAppliedAfterDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	AutoAppliedAfterDate *time.Time `type:"timestamp"`
 
 	// The effective date when the pending maintenance action is applied to the
 	// resource. This date takes into account opt-in requests received from the
 	// ApplyPendingMaintenanceAction API, the AutoAppliedAfterDate, and the ForcedApplyDate.
 	// This value is blank if an opt-in request has not been received and nothing
 	// has been specified as AutoAppliedAfterDate or ForcedApplyDate.
-	CurrentApplyDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	CurrentApplyDate *time.Time `type:"timestamp"`
 
 	// A description providing more detail about the maintenance action.
 	Description *string `type:"string"`
@@ -24971,7 +25032,7 @@ type PendingMaintenanceAction struct {
 	// action is applied to the resource on this date regardless of the maintenance
 	// window for the resource. If this date is specified, any immediate opt-in
 	// requests are ignored.
-	ForcedApplyDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ForcedApplyDate *time.Time `type:"timestamp"`
 
 	// Indicates the type of opt-in request that has been received for the resource.
 	OptInStatus *string `type:"string"`
@@ -25938,7 +25999,7 @@ type ReservedDBInstance struct {
 	ReservedDBInstancesOfferingId *string `type:"string"`
 
 	// The time the reservation started.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	StartTime *time.Time `type:"timestamp"`
 
 	// The state of the reserved DB instance.
 	State *string `type:"string"`
@@ -27140,7 +27201,7 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//    * Cannot be specified if RestoreType parameter is copy-on-write
 	//
 	// Example: 2015-03-07T23:45:00Z
-	RestoreToTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	RestoreToTime *time.Time `type:"timestamp"`
 
 	// The type of restore to be performed. You can specify one of the following
 	// values:
@@ -27917,6 +27978,10 @@ type RestoreDBInstanceFromS3Input struct {
 	// the KMS key alias for the KMS encryption key.
 	PerformanceInsightsKMSKeyId *string `type:"string"`
 
+	// The amount of time, in days, to retain Performance Insights data. Valid values
+	// are 7 or 731 (2 years).
+	PerformanceInsightsRetentionPeriod *int64 `type:"integer"`
+
 	// The port number on which the database accepts connections.
 	//
 	// Type: Integer
@@ -28214,6 +28279,12 @@ func (s *RestoreDBInstanceFromS3Input) SetPerformanceInsightsKMSKeyId(v string) 
 	return s
 }
 
+// SetPerformanceInsightsRetentionPeriod sets the PerformanceInsightsRetentionPeriod field's value.
+func (s *RestoreDBInstanceFromS3Input) SetPerformanceInsightsRetentionPeriod(v int64) *RestoreDBInstanceFromS3Input {
+	s.PerformanceInsightsRetentionPeriod = &v
+	return s
+}
+
 // SetPort sets the Port field's value.
 func (s *RestoreDBInstanceFromS3Input) SetPort(v int64) *RestoreDBInstanceFromS3Input {
 	s.Port = &v
@@ -28495,7 +28566,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//    * Cannot be specified if UseLatestRestorableTime parameter is true
 	//
 	// Example: 2009-09-07T23:45:00Z
-	RestoreTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	RestoreTime *time.Time `type:"timestamp"`
 
 	// The identifier of the source DB instance from which to restore.
 	//

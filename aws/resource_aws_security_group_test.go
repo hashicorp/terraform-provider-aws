@@ -216,6 +216,212 @@ func TestProtocolForValue(t *testing.T) {
 	}
 }
 
+func calcSecurityGroupChecksum(rules []interface{}) int {
+	var sum int = 0
+	for _, rule := range rules {
+		sum += resourceAwsSecurityGroupRuleHash(rule)
+	}
+	return sum
+}
+
+func TestResourceAwsSecurityGroupExpandCollapseRules(t *testing.T) {
+	expected_compact_list := []interface{}{
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        true,
+			"cidr_blocks": []interface{}{
+				"10.0.0.1/32",
+				"10.0.0.2/32",
+				"10.0.0.3/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with another description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"192.168.0.1/32",
+				"192.168.0.2/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"ipv6_cidr_blocks": []interface{}{
+				"fd00::1/128",
+				"fd00::2/128",
+			},
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-11111",
+				"sg-22222",
+				"sg-33333",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "udp",
+			"from_port":   int(10000),
+			"to_port":     int(10000),
+			"description": "",
+			"self":        false,
+			"prefix_list_ids": []interface{}{
+				"pl-111111",
+				"pl-222222",
+			},
+		},
+	}
+
+	expected_expanded_list := []interface{}{
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        true,
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"10.0.0.1/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"10.0.0.2/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"10.0.0.3/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with another description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"192.168.0.1/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "tcp",
+			"from_port":   int(443),
+			"to_port":     int(443),
+			"description": "block with another description",
+			"self":        false,
+			"cidr_blocks": []interface{}{
+				"192.168.0.2/32",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"ipv6_cidr_blocks": []interface{}{
+				"fd00::1/128",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"ipv6_cidr_blocks": []interface{}{
+				"fd00::2/128",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-11111",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-22222",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   int(8000),
+			"to_port":     int(8080),
+			"description": "",
+			"self":        false,
+			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+				"sg-33333",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":    "udp",
+			"from_port":   int(10000),
+			"to_port":     int(10000),
+			"description": "",
+			"self":        false,
+			"prefix_list_ids": []interface{}{
+				"pl-111111",
+			},
+		},
+		map[string]interface{}{
+			"protocol":    "udp",
+			"from_port":   int(10000),
+			"to_port":     int(10000),
+			"description": "",
+			"self":        false,
+			"prefix_list_ids": []interface{}{
+				"pl-222222",
+			},
+		},
+	}
+
+	expected_compact_set := schema.NewSet(resourceAwsSecurityGroupRuleHash, expected_compact_list)
+	actual_expanded_list := resourceAwsSecurityGroupExpandRules(expected_compact_set).List()
+
+	if calcSecurityGroupChecksum(expected_expanded_list) != calcSecurityGroupChecksum(actual_expanded_list) {
+		t.Fatalf("error matching expanded set for resourceAwsSecurityGroupExpandRules()")
+	}
+
+	actual_collapsed_list := resourceAwsSecurityGroupCollapseRules("ingress", expected_expanded_list)
+
+	if calcSecurityGroupChecksum(expected_compact_list) != calcSecurityGroupChecksum(actual_collapsed_list) {
+		t.Fatalf("error matching collapsed set for resourceAwsSecurityGroupCollapseRules()")
+	}
+}
+
 func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 	raw := []*ec2.IpPermission{
 		{
@@ -1700,6 +1906,13 @@ func testAccCheckAWSSecurityGroupAttributesChanged(group *ec2.SecurityGroup) res
 				group.IpPermissions[0], group.IpPermissions[1]
 		}
 
+		if len(group.IpPermissions[1].IpRanges) > 1 {
+			if *group.IpPermissions[1].IpRanges[0].CidrIp != "0.0.0.0/0" {
+				group.IpPermissions[1].IpRanges[0], group.IpPermissions[1].IpRanges[1] =
+					group.IpPermissions[1].IpRanges[1], group.IpPermissions[1].IpRanges[0]
+			}
+		}
+
 		if !reflect.DeepEqual(group.IpPermissions, p) {
 			return fmt.Errorf(
 				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
@@ -1761,6 +1974,326 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
+	var group ec2.SecurityGroup
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// create a valid SG just under the limit
+			{
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+				),
+			},
+			// append a rule to step over the limit
+			{
+				Config:      testAccAWSSecurityGroupConfigRuleLimit(0, 51),
+				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+			},
+			{
+				PreConfig: func() {
+					// should have the 50 original rules still
+					err := testSecurityGroupRuleCount(*group.GroupId, 0, 50)
+					if err != nil {
+						t.Fatalf("PreConfig check failed: %s", err)
+					}
+				},
+				// running the original config again now should restore the rules
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
+	var group ec2.SecurityGroup
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// create a valid SG just under the limit
+			{
+				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 1),
+				),
+			},
+			// append a rule to step over the limit
+			{
+				Config:      testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, 51),
+				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+			},
+			{
+				PreConfig: func() {
+					// should have the 50 original cidr blocks still in 1 rule
+					err := testSecurityGroupRuleCount(*group.GroupId, 0, 1)
+					if err != nil {
+						t.Fatalf("PreConfig check failed: %s", err)
+					}
+
+					id := *group.GroupId
+
+					conn := testAccProvider.Meta().(*AWSClient).ec2conn
+					req := &ec2.DescribeSecurityGroupsInput{
+						GroupIds: []*string{aws.String(id)},
+					}
+					resp, err := conn.DescribeSecurityGroups(req)
+					if err != nil {
+						t.Fatalf("PreConfig check failed: %s", err)
+					}
+
+					var match *ec2.SecurityGroup
+					if len(resp.SecurityGroups) > 0 && *resp.SecurityGroups[0].GroupId == id {
+						match = resp.SecurityGroups[0]
+					}
+
+					if match == nil {
+						t.Fatalf("PreConfig check failed: security group %s not found", id)
+					}
+
+					if cidrCount := len(match.IpPermissionsEgress[0].IpRanges); cidrCount != 50 {
+						t.Fatalf("PreConfig check failed: rule does not have 50 previous IP ranges, has %d", cidrCount)
+					}
+				},
+				// running the original config again now should restore the rules
+				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
+	var group ec2.SecurityGroup
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// create a valid SG just under the limit
+			{
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+				),
+			},
+			// prepend a rule to step over the limit
+			{
+				Config:      testAccAWSSecurityGroupConfigRuleLimit(1, 51),
+				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+			},
+			{
+				PreConfig: func() {
+					// should have the 49 original rules still (50 - 1 because of the shift)
+					err := testSecurityGroupRuleCount(*group.GroupId, 0, 49)
+					if err != nil {
+						t.Fatalf("PreConfig check failed: %s", err)
+					}
+				},
+				// running the original config again now should restore the rules
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
+	var group ec2.SecurityGroup
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// create a valid SG just under the limit
+			{
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+				),
+			},
+			// add a rule to step over the limit with entirely new rules
+			{
+				Config:      testAccAWSSecurityGroupConfigRuleLimit(100, 51),
+				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+			},
+			{
+				// all the rules should have been revoked and the add failed
+				PreConfig: func() {
+					err := testSecurityGroupRuleCount(*group.GroupId, 0, 0)
+					if err != nil {
+						t.Fatalf("PreConfig check failed: %s", err)
+					}
+				},
+				// running the original config again now should restore the rules
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
+	var group ec2.SecurityGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// Create a valid security group with some rules and make sure it exists
+			{
+				Config: testAccAWSSecurityGroupConfig_rulesDropOnError_Init,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+				),
+			},
+			// Add a bad rule to trigger API error
+			{
+				Config:      testAccAWSSecurityGroupConfig_rulesDropOnError_AddBadRule,
+				ExpectError: regexp.MustCompile("InvalidGroupId.Malformed"),
+			},
+			// All originally added rules must survive. This will return non-empty plan if anything changed.
+			{
+				Config:   testAccAWSSecurityGroupConfig_rulesDropOnError_Init,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		id := *group.GroupId
+		return testSecurityGroupRuleCount(id, expectedIngressCount, expectedEgressCount)
+	}
+}
+
+func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressCount int) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	req := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: []*string{aws.String(id)},
+	}
+	resp, err := conn.DescribeSecurityGroups(req)
+	if err != nil {
+		return err
+	}
+
+	var group *ec2.SecurityGroup
+	if len(resp.SecurityGroups) > 0 && *resp.SecurityGroups[0].GroupId == id {
+		group = resp.SecurityGroups[0]
+	}
+
+	if group == nil {
+		return fmt.Errorf("Security group %s not found", id)
+	}
+
+	if actual := len(group.IpPermissions); actual != expectedIngressCount {
+		return fmt.Errorf("Security group ingress rule count %d does not match %d", actual, expectedIngressCount)
+	}
+
+	if actual := len(group.IpPermissionsEgress); actual != expectedEgressCount {
+		return fmt.Errorf("Security group egress rule count %d does not match %d", actual, expectedEgressCount)
+	}
+
+	return nil
+}
+
+func testAccAWSSecurityGroupConfigRuleLimit(egressStartIndex, egressRulesCount int) string {
+	c := `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-rule-limit"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform_acceptance_test_rule_limit"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
+
+	tags {
+    Name = "tf-acc-test"
+  }
+
+	// egress rules to exhaust the limit
+`
+
+	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
+		c += fmt.Sprintf(`
+  egress {
+		protocol = "tcp"
+		from_port = "${80 + %[1]d}"
+		to_port = "${80 + %[1]d}"
+		cidr_blocks = ["${cidrhost("10.1.0.0/16", %[1]d)}/32"]
+	}
+`, i)
+	}
+
+	c += "\n}"
+
+	return c
+}
+
+func testAccAWSSecurityGroupConfigCidrBlockRuleLimit(egressStartIndex, egressRulesCount int) string {
+	c := `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-rule-limit"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform_acceptance_test_rule_limit"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
+
+	tags {
+    Name = "tf-acc-test"
+  }
+
+	// egress rules to exhaust the limit
+	egress {
+		protocol = "tcp"
+		from_port = "80"
+		to_port = "80"
+		cidr_blocks = [
+`
+
+	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
+		c += fmt.Sprintf(`
+		"${cidrhost("10.1.0.0/16", %[1]d)}/32",
+`, i)
+	}
+
+	c += "\n\t\t]\n\t}\n}"
+
+	return c
 }
 
 const testAccAWSSecurityGroupConfigEmptyRuleDescription = `
@@ -2995,3 +3528,82 @@ resource "aws_security_group" "test" {
 }
 `, sgName)
 }
+
+const testAccAWSSecurityGroupConfig_rulesDropOnError_Init = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-drop-rules-test"
+  }
+}
+
+resource "aws_security_group" "test_ref0" {
+  name = "terraform_acceptance_test_drop_rules_ref0"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test_ref1" {
+  name = "terraform_acceptance_test_drop_rules_ref1"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform_acceptance_test_drop_rules"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-test"
+  }
+
+  ingress {
+    protocol = "tcp"
+    from_port = "80"
+    to_port = "80"
+    security_groups = [
+      "${aws_security_group.test_ref0.id}",
+      "${aws_security_group.test_ref1.id}",
+    ]
+  }
+}
+`
+
+const testAccAWSSecurityGroupConfig_rulesDropOnError_AddBadRule = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-security-group-drop-rules-test"
+  }
+}
+
+resource "aws_security_group" "test_ref0" {
+  name = "terraform_acceptance_test_drop_rules_ref0"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test_ref1" {
+  name = "terraform_acceptance_test_drop_rules_ref1"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_security_group" "test" {
+  name = "terraform_acceptance_test_drop_rules"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-test"
+  }
+
+  ingress {
+    protocol = "tcp"
+    from_port = "80"
+    to_port = "80"
+    security_groups = [
+      "${aws_security_group.test_ref0.id}",
+      "${aws_security_group.test_ref1.id}",
+      "sg-malformed", # non-existent rule to trigger API error
+    ]
+  }
+}
+`

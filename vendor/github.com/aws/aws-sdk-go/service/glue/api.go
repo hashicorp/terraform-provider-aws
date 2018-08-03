@@ -844,8 +844,8 @@ func (c *Glue) CreateCrawlerRequest(input *CreateCrawlerInput) (req *request.Req
 // CreateCrawler API operation for AWS Glue.
 //
 // Creates a new crawler with specified targets, role, configuration, and optional
-// schedule. At least one crawl target must be specified, in either the s3Targets
-// or the jdbcTargets field.
+// schedule. At least one crawl target must be specified, in the s3Targets field,
+// the jdbcTargets field, or the DynamoDBTargets field.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6027,7 +6027,7 @@ func (c *Glue) StartCrawlerRequest(input *StartCrawlerInput) (req *request.Reque
 // StartCrawler API operation for AWS Glue.
 //
 // Starts a crawl using the specified crawler, regardless of what is scheduled.
-// If the crawler is already running, does nothing.
+// If the crawler is already running, returns a CrawlerRunningException (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-exceptions.html#aws-glue-api-exceptions-CrawlerRunningException).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8570,7 +8570,7 @@ type CatalogImportStatus struct {
 	ImportCompleted *bool `type:"boolean"`
 
 	// The time that the migration was started.
-	ImportTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ImportTime *time.Time `type:"timestamp"`
 
 	// The name of the person who initiated the migration.
 	ImportedBy *string `min:"1" type:"string"`
@@ -8604,14 +8604,15 @@ func (s *CatalogImportStatus) SetImportedBy(v string) *CatalogImportStatus {
 	return s
 }
 
-// Classifiers are written in Python and triggered during a crawl task. You
-// can write your own classifiers to best categorize your data sources and specify
-// the appropriate schemas to use for them. A classifier checks whether a given
-// file is in a format it can handle, and if it is, the classifier creates a
-// schema in the form of a StructType object that matches that data format.
+// Classifiers are triggered during a crawl task. A classifier checks whether
+// a given file is in a format it can handle, and if it is, the classifier creates
+// a schema in the form of a StructType object that matches that data format.
 //
-// A classifier can be a grok classifier, an XML classifier, or a JSON classifier,
-// asspecified in one of the fields in the Classifier object.
+// You can use the standard classifiers that AWS Glue supplies, or you can write
+// your own classifiers to best categorize your data sources and specify the
+// appropriate schemas to use for them. A classifier can be a grok classifier,
+// an XML classifier, or a JSON classifier, as specified in one of the fields
+// in the Classifier object.
 type Classifier struct {
 	_ struct{} `type:"structure"`
 
@@ -9001,7 +9002,7 @@ type Connection struct {
 	ConnectionType *string `type:"string" enum:"ConnectionType"`
 
 	// The time this connection definition was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// Description of the connection.
 	Description *string `type:"string"`
@@ -9010,7 +9011,7 @@ type Connection struct {
 	LastUpdatedBy *string `min:"1" type:"string"`
 
 	// The last time this connection definition was updated.
-	LastUpdatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A list of criteria that can be used in selecting this connection.
 	MatchCriteria []*string `type:"list"`
@@ -9225,15 +9226,8 @@ type Crawler struct {
 	Classifiers []*string `type:"list"`
 
 	// Crawler configuration information. This versioned JSON string allows users
-	// to specify aspects of a Crawler's behavior.
-	//
-	// You can use this field to force partitions to inherit metadata such as classification,
-	// input format, output format, serde information, and schema from their parent
-	// table, rather than detect this information separately for each partition.
-	// Use the following JSON string to specify that behavior:
-	//
-	// Example: '{ "Version": 1.0, "CrawlerOutput": { "Partitions": { "AddOrUpdateBehavior":
-	// "InheritFromTable" } } }'
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// If the crawler is running, contains the total time elapsed since the last
@@ -9241,7 +9235,7 @@ type Crawler struct {
 	CrawlElapsedTime *int64 `type:"long"`
 
 	// The time when the crawler was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The database where metadata is written by this crawler.
 	DatabaseName *string `type:"string"`
@@ -9254,7 +9248,7 @@ type Crawler struct {
 	LastCrawl *LastCrawlInfo `type:"structure"`
 
 	// The time the crawler was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The crawler name.
 	Name *string `min:"1" type:"string"`
@@ -9480,6 +9474,9 @@ func (s *CrawlerMetrics) SetTimeLeftSeconds(v float64) *CrawlerMetrics {
 type CrawlerTargets struct {
 	_ struct{} `type:"structure"`
 
+	// Specifies DynamoDB targets.
+	DynamoDBTargets []*DynamoDBTarget `type:"list"`
+
 	// Specifies JDBC targets.
 	JdbcTargets []*JdbcTarget `type:"list"`
 
@@ -9495,6 +9492,12 @@ func (s CrawlerTargets) String() string {
 // GoString returns the string representation
 func (s CrawlerTargets) GoString() string {
 	return s.String()
+}
+
+// SetDynamoDBTargets sets the DynamoDBTargets field's value.
+func (s *CrawlerTargets) SetDynamoDBTargets(v []*DynamoDBTarget) *CrawlerTargets {
+	s.DynamoDBTargets = v
+	return s
 }
 
 // SetJdbcTargets sets the JdbcTargets field's value.
@@ -9663,20 +9666,13 @@ type CreateCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of custom classifiers that the user has registered. By default, all
-	// AWS classifiers are included in a crawl, but these custom classifiers always
-	// override the default classifiers for a given classification.
+	// built-in classifiers are included in a crawl, but these custom classifiers
+	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
 	// Crawler configuration information. This versioned JSON string allows users
-	// to specify aspects of a Crawler's behavior.
-	//
-	// You can use this field to force partitions to inherit metadata such as classification,
-	// input format, output format, serde information, and schema from their parent
-	// table, rather than detect this information separately for each partition.
-	// Use the following JSON string to specify that behavior:
-	//
-	// Example: '{ "Version": 1.0, "CrawlerOutput": { "Partitions": { "AddOrUpdateBehavior":
-	// "InheritFromTable" } } }'
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// The AWS Glue database where results are written, such as: arn:aws:daylight:us-east-1::database/sometable/*.
@@ -10015,7 +10011,7 @@ type CreateDevEndpointOutput struct {
 	AvailabilityZone *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was created.
-	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedTimestamp *time.Time `type:"timestamp"`
 
 	// The name assigned to the new DevEndpoint.
 	EndpointName *string `type:"string"`
@@ -11096,7 +11092,7 @@ type Database struct {
 	_ struct{} `type:"structure"`
 
 	// The time at which the metadata database was created in the catalog.
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `type:"timestamp"`
 
 	// Description of the database.
 	Description *string `type:"string"`
@@ -12036,7 +12032,7 @@ type DevEndpoint struct {
 	AvailabilityZone *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was created.
-	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedTimestamp *time.Time `type:"timestamp"`
 
 	// The name of the DevEndpoint.
 	EndpointName *string `type:"string"`
@@ -12061,7 +12057,7 @@ type DevEndpoint struct {
 	FailureReason *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was last modified.
-	LastModifiedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimestamp *time.Time `type:"timestamp"`
 
 	// The status of the last update.
 	LastUpdateStatus *string `type:"string"`
@@ -12264,6 +12260,30 @@ func (s *DevEndpointCustomLibraries) SetExtraJarsS3Path(v string) *DevEndpointCu
 // SetExtraPythonLibsS3Path sets the ExtraPythonLibsS3Path field's value.
 func (s *DevEndpointCustomLibraries) SetExtraPythonLibsS3Path(v string) *DevEndpointCustomLibraries {
 	s.ExtraPythonLibsS3Path = &v
+	return s
+}
+
+// Specifies a DynamoDB table to crawl.
+type DynamoDBTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the DynamoDB table to crawl.
+	Path *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DynamoDBTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DynamoDBTarget) GoString() string {
+	return s.String()
+}
+
+// SetPath sets the Path field's value.
+func (s *DynamoDBTarget) SetPath(v string) *DynamoDBTarget {
+	s.Path = &v
 	return s
 }
 
@@ -14978,7 +14998,7 @@ type GrokClassifier struct {
 	Classification *string `type:"string" required:"true"`
 
 	// The time this classifier was registered.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// Optional custom grok patterns defined by this classifier. For more information,
 	// see custom patterns in Writing Custom Classifers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
@@ -14991,7 +15011,7 @@ type GrokClassifier struct {
 	GrokPattern *string `min:"1" type:"string" required:"true"`
 
 	// The time this classifier was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
 	//
@@ -15166,7 +15186,7 @@ type Job struct {
 	Connections *ConnectionsList `type:"structure"`
 
 	// The time and date that this job definition was created.
-	CreatedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedOn *time.Time `type:"timestamp"`
 
 	// The default arguments for this job, specified as name-value pairs.
 	//
@@ -15190,7 +15210,7 @@ type Job struct {
 	ExecutionProperty *ExecutionProperty `type:"structure"`
 
 	// The last point in time when this job definition was modified.
-	LastModifiedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedOn *time.Time `type:"timestamp"`
 
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
@@ -15428,7 +15448,7 @@ type JobRun struct {
 	Attempt *int64 `type:"integer"`
 
 	// The date and time this job run completed.
-	CompletedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CompletedOn *time.Time `type:"timestamp"`
 
 	// An error message associated with this job run.
 	ErrorMessage *string `type:"string"`
@@ -15446,7 +15466,7 @@ type JobRun struct {
 	JobRunState *string `type:"string" enum:"JobRunState"`
 
 	// The last time this job run was modified.
-	LastModifiedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedOn *time.Time `type:"timestamp"`
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
@@ -15459,7 +15479,7 @@ type JobRun struct {
 	PreviousRunId *string `min:"1" type:"string"`
 
 	// The date and time at which this job run was started.
-	StartedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartedOn *time.Time `type:"timestamp"`
 
 	// The job run timeout in minutes.
 	Timeout *int64 `min:"1" type:"integer"`
@@ -15728,7 +15748,7 @@ type JsonClassifier struct {
 	_ struct{} `type:"structure"`
 
 	// The time this classifier was registered.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// A JsonPath string defining the JSON data for the classifier to classify.
 	// AWS Glue supports a subset of JsonPath, as described in Writing JsonPath
@@ -15738,7 +15758,7 @@ type JsonClassifier struct {
 	JsonPath *string `type:"string" required:"true"`
 
 	// The time this classifier was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
 	//
@@ -15806,7 +15826,7 @@ type LastCrawlInfo struct {
 	MessagePrefix *string `min:"1" type:"string"`
 
 	// The time at which the crawl started.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 
 	// Status of the last crawl.
 	Status *string `type:"string" enum:"LastCrawlStatus"`
@@ -15862,6 +15882,9 @@ func (s *LastCrawlInfo) SetStatus(v string) *LastCrawlInfo {
 type Location struct {
 	_ struct{} `type:"structure"`
 
+	// A DynamoDB Table location.
+	DynamoDB []*CodeGenNodeArg `type:"list"`
+
 	// A JDBC location.
 	Jdbc []*CodeGenNodeArg `type:"list"`
 
@@ -15882,6 +15905,16 @@ func (s Location) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *Location) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Location"}
+	if s.DynamoDB != nil {
+		for i, v := range s.DynamoDB {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DynamoDB", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Jdbc != nil {
 		for i, v := range s.Jdbc {
 			if v == nil {
@@ -15907,6 +15940,12 @@ func (s *Location) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDynamoDB sets the DynamoDB field's value.
+func (s *Location) SetDynamoDB(v []*CodeGenNodeArg) *Location {
+	s.DynamoDB = v
+	return s
 }
 
 // SetJdbc sets the Jdbc field's value.
@@ -16090,16 +16129,16 @@ type Partition struct {
 	_ struct{} `type:"structure"`
 
 	// The time at which the partition was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The name of the catalog database where the table in question is located.
 	DatabaseName *string `min:"1" type:"string"`
 
 	// The last time at which the partition was accessed.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// The last time at which column statistics were computed for this partition.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
 	// Partition parameters, in the form of a list of key-value pairs.
 	Parameters map[string]*string `type:"map"`
@@ -16210,10 +16249,10 @@ type PartitionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The last time at which the partition was accessed.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// The last time at which column statistics were computed for this partition.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
 	// Partition parameters, in the form of a list of key-value pairs.
 	Parameters map[string]*string `type:"map"`
@@ -17489,7 +17528,7 @@ type Table struct {
 	_ struct{} `type:"structure"`
 
 	// Time when the table definition was created in the Data Catalog.
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `type:"timestamp"`
 
 	// Person or entity who created the table.
 	CreatedBy *string `min:"1" type:"string"`
@@ -17503,10 +17542,10 @@ type Table struct {
 
 	// Last time the table was accessed. This is usually taken from HDFS, and may
 	// not be reliable.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// Last time column statistics were computed for this table.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
 	// Name of the table. For Hive compatibility, this must be entirely lowercase.
 	//
@@ -17534,7 +17573,7 @@ type Table struct {
 	TableType *string `type:"string"`
 
 	// Last time the table was updated.
-	UpdateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	UpdateTime *time.Time `type:"timestamp"`
 
 	// If the table is a view, the expanded text of the view; otherwise null.
 	ViewExpandedText *string `type:"string"`
@@ -17690,10 +17729,10 @@ type TableInput struct {
 	Description *string `type:"string"`
 
 	// Last time the table was accessed.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// Last time column statistics were computed for this table.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
 	// Name of the table. For Hive compatibility, this is folded to lowercase when
 	// it is stored.
@@ -18272,20 +18311,13 @@ type UpdateCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of custom classifiers that the user has registered. By default, all
-	// classifiers are included in a crawl, but these custom classifiers always
-	// override the default classifiers for a given classification.
+	// built-in classifiers are included in a crawl, but these custom classifiers
+	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
 	// Crawler configuration information. This versioned JSON string allows users
-	// to specify aspects of a Crawler's behavior.
-	//
-	// You can use this field to force partitions to inherit metadata such as classification,
-	// input format, output format, serde information, and schema from their parent
-	// table, rather than detect this information separately for each partition.
-	// Use the following JSON string to specify that behavior:
-	//
-	// Example: '{ "Version": 1.0, "CrawlerOutput": { "Partitions": { "AddOrUpdateBehavior":
-	// "InheritFromTable" } } }'
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// The AWS Glue database where results are stored, such as: arn:aws:daylight:us-east-1::database/sometable/*.
@@ -19340,7 +19372,7 @@ type UserDefinedFunction struct {
 	ClassName *string `min:"1" type:"string"`
 
 	// The time at which the function was created.
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `type:"timestamp"`
 
 	// The name of the function.
 	FunctionName *string `min:"1" type:"string"`
@@ -19500,10 +19532,10 @@ type XMLClassifier struct {
 	Classification *string `type:"string" required:"true"`
 
 	// The time this classifier was registered.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The time this classifier was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
 	//

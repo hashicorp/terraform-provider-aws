@@ -2322,8 +2322,8 @@ func (c *ElasticBeanstalk) DescribeInstancesHealthRequest(input *DescribeInstanc
 
 // DescribeInstancesHealth API operation for AWS Elastic Beanstalk.
 //
-// Retrives detailed information about the health of instances in your AWS Elastic
-// Beanstalk. This operation requires enhanced health reporting (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced.html).
+// Retrieves detailed information about the health of instances in your AWS
+// Elastic Beanstalk. This operation requires enhanced health reporting (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3877,10 +3877,10 @@ type ApplicationDescription struct {
 	ConfigurationTemplates []*string `type:"list"`
 
 	// The date when the application was created.
-	DateCreated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateCreated *time.Time `type:"timestamp"`
 
 	// The date when the application was last modified.
-	DateUpdated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateUpdated *time.Time `type:"timestamp"`
 
 	// User-defined description of the application.
 	Description *string `type:"string"`
@@ -4039,6 +4039,14 @@ type ApplicationResourceLifecycleConfig struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of an IAM service role that Elastic Beanstalk has permission to assume.
+	//
+	// The ServiceRole property is required the first time that you provide a VersionLifecycleConfig
+	// for the application in one of the supporting calls (CreateApplication or
+	// UpdateApplicationResourceLifecycle). After you provide it once, in either
+	// one of the calls, Elastic Beanstalk persists the Service Role with the application,
+	// and you don't need to specify it again in subsequent UpdateApplicationResourceLifecycle
+	// calls. You can, however, specify it in subsequent calls to change the Service
+	// Role to another value.
 	ServiceRole *string `type:"string"`
 
 	// The application version lifecycle configuration.
@@ -4096,10 +4104,10 @@ type ApplicationVersionDescription struct {
 	BuildArn *string `type:"string"`
 
 	// The creation date of the application version.
-	DateCreated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateCreated *time.Time `type:"timestamp"`
 
 	// The last modified date of the application version.
-	DateUpdated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateUpdated *time.Time `type:"timestamp"`
 
 	// The description of the application version.
 	Description *string `type:"string"`
@@ -4112,7 +4120,25 @@ type ApplicationVersionDescription struct {
 	// S3.
 	SourceBundle *S3Location `type:"structure"`
 
-	// The processing status of the application version.
+	// The processing status of the application version. Reflects the state of the
+	// application version during its creation. Many of the values are only applicable
+	// if you specified True for the Process parameter of the CreateApplicationVersion
+	// action. The following list describes the possible values.
+	//
+	//    * Unprocessed – Application version wasn't pre-processed or validated.
+	//    Elastic Beanstalk will validate configuration files during deployment
+	//    of the application version to an environment.
+	//
+	//    * Processing – Elastic Beanstalk is currently processing the application
+	//    version.
+	//
+	//    * Building – Application version is currently undergoing an AWS CodeBuild
+	//    build.
+	//
+	//    * Processed – Elastic Beanstalk was successfully pre-processed and validated.
+	//
+	//    * Failed – Either the AWS CodeBuild build failed or configuration files
+	//    didn't pass validation. This application version isn't usable.
 	Status *string `type:"string" enum:"ApplicationVersionStatus"`
 
 	// A unique identifier for the application version.
@@ -4982,10 +5008,10 @@ type ConfigurationSettingsDescription struct {
 	ApplicationName *string `min:"1" type:"string"`
 
 	// The date (in UTC time) when this configuration set was created.
-	DateCreated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateCreated *time.Time `type:"timestamp"`
 
 	// The date (in UTC time) when this configuration set was last modified.
-	DateUpdated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateUpdated *time.Time `type:"timestamp"`
 
 	// If this configuration set is associated with an environment, the DeploymentStatus
 	// parameter indicates the deployment status of this configuration set:
@@ -5180,10 +5206,14 @@ type CreateApplicationVersionInput struct {
 	// Describes this version.
 	Description *string `type:"string"`
 
-	// Preprocesses and validates the environment manifest (env.yaml) and configuration
+	// Pre-processes and validates the environment manifest (env.yaml) and configuration
 	// files (*.config files in the .ebextensions folder) in the source bundle.
 	// Validating configuration files can identify issues prior to deploying the
 	// application version to an environment.
+	//
+	// You must turn processing on for application versions that you create using
+	// AWS CodeBuild or AWS CodeCommit. For application versions built from a source
+	// bundle in Amazon S3, processing is optional.
 	//
 	// The Process option validates Elastic Beanstalk configuration files. It doesn't
 	// validate your application's configuration files, like proxy server or Docker
@@ -5518,6 +5548,9 @@ type CreateEnvironmentInput struct {
 	// This is an alternative to specifying a template name. If specified, AWS Elastic
 	// Beanstalk sets the configuration values to the default values associated
 	// with the specified solution stack.
+	//
+	// For a list of current solution stacks, see Elastic Beanstalk Supported Platforms
+	// (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html).
 	SolutionStackName *string `type:"string"`
 
 	// This specifies the tags applied to resources in the environment.
@@ -6244,7 +6277,7 @@ type Deployment struct {
 	// For in-progress deployments, the time that the deployment started.
 	//
 	// For completed deployments, the time that the deployment ended.
-	DeploymentTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DeploymentTime *time.Time `type:"timestamp"`
 
 	// The status of the deployment:
 	//
@@ -6818,7 +6851,7 @@ type DescribeEnvironmentHealthOutput struct {
 	InstancesHealth *InstanceHealthSummary `type:"structure"`
 
 	// The date and time that the health information was retrieved.
-	RefreshedAt *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	RefreshedAt *time.Time `type:"timestamp"`
 
 	// The environment's operational status. Ready, Launching, Updating, Terminating,
 	// or Terminated.
@@ -7151,7 +7184,7 @@ type DescribeEnvironmentsInput struct {
 
 	// If specified when IncludeDeleted is set to true, then environments deleted
 	// after this date are displayed.
-	IncludedDeletedBackTo *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	IncludedDeletedBackTo *time.Time `type:"timestamp"`
 
 	// For a paginated request. Specify a maximum number of environments to include
 	// in each response.
@@ -7259,7 +7292,7 @@ type DescribeEventsInput struct {
 
 	// If specified, AWS Elastic Beanstalk restricts the returned descriptions to
 	// those that occur up to, but not including, the EndTime.
-	EndTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EndTime *time.Time `type:"timestamp"`
 
 	// If specified, AWS Elastic Beanstalk restricts the returned descriptions to
 	// those associated with this environment.
@@ -7289,7 +7322,7 @@ type DescribeEventsInput struct {
 
 	// If specified, AWS Elastic Beanstalk restricts the returned descriptions to
 	// those that occur on or after this time.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	StartTime *time.Time `type:"timestamp"`
 
 	// If specified, AWS Elastic Beanstalk restricts the returned descriptions to
 	// those that are associated with this environment configuration.
@@ -7521,7 +7554,7 @@ type DescribeInstancesHealthOutput struct {
 	NextToken *string `min:"1" type:"string"`
 
 	// The date and time that the health information was retrieved.
-	RefreshedAt *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	RefreshedAt *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -7617,10 +7650,10 @@ type EnvironmentDescription struct {
 	CNAME *string `min:"1" type:"string"`
 
 	// The creation date for this environment.
-	DateCreated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateCreated *time.Time `type:"timestamp"`
 
 	// The last modified date for this environment.
-	DateUpdated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateUpdated *time.Time `type:"timestamp"`
 
 	// Describes this environment.
 	Description *string `type:"string"`
@@ -7876,7 +7909,7 @@ type EnvironmentInfoDescription struct {
 	Message *string `type:"string"`
 
 	// The time stamp when this information was retrieved.
-	SampleTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	SampleTimestamp *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8063,7 +8096,11 @@ type EnvironmentTier struct {
 	// The type of this environment tier.
 	Type *string `type:"string"`
 
-	// The version of this environment tier.
+	// The version of this environment tier. When you don't set a value to it, Elastic
+	// Beanstalk uses the latest compatible worker tier version.
+	//
+	// This member is deprecated. Any specific version that you set may become out
+	// of date. We recommend leaving it unspecified.
 	Version *string `type:"string"`
 }
 
@@ -8106,7 +8143,7 @@ type EventDescription struct {
 	EnvironmentName *string `min:"4" type:"string"`
 
 	// The date when the event occurred.
-	EventDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	EventDate *time.Time `type:"timestamp"`
 
 	// The event message.
 	Message *string `type:"string"`
@@ -8755,7 +8792,7 @@ type ManagedAction struct {
 
 	// The start time of the maintenance window in which the managed action will
 	// execute.
-	WindowStartTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	WindowStartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8812,7 +8849,7 @@ type ManagedActionHistoryItem struct {
 	ActionType *string `type:"string" enum:"ActionType"`
 
 	// The date and time that the action started executing.
-	ExecutedTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	ExecutedTime *time.Time `type:"timestamp"`
 
 	// If the action failed, a description of the failure.
 	FailureDescription *string `type:"string"`
@@ -8821,7 +8858,7 @@ type ManagedActionHistoryItem struct {
 	FailureType *string `type:"string" enum:"FailureType"`
 
 	// The date and time that the action finished executing.
-	FinishedTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	FinishedTime *time.Time `type:"timestamp"`
 
 	// The status of the action.
 	Status *string `type:"string" enum:"ActionHistoryStatus"`
@@ -9101,10 +9138,10 @@ type PlatformDescription struct {
 	CustomAmiList []*CustomAmi `type:"list"`
 
 	// The date when the platform was created.
-	DateCreated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateCreated *time.Time `type:"timestamp"`
 
 	// The date when the platform was last updated.
-	DateUpdated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	DateUpdated *time.Time `type:"timestamp"`
 
 	// The description of the platform.
 	Description *string `type:"string"`
@@ -9982,7 +10019,7 @@ type SingleInstanceHealth struct {
 	InstanceType *string `type:"string"`
 
 	// The time at which the EC2 instance was launched.
-	LaunchedAt *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LaunchedAt *time.Time `type:"timestamp"`
 
 	// Operating system metrics from the instance.
 	System *SystemStatus `type:"structure"`
@@ -11512,6 +11549,9 @@ const (
 
 	// EnvironmentHealthStatusSevere is a EnvironmentHealthStatus enum value
 	EnvironmentHealthStatusSevere = "Severe"
+
+	// EnvironmentHealthStatusSuspended is a EnvironmentHealthStatus enum value
+	EnvironmentHealthStatusSuspended = "Suspended"
 )
 
 const (

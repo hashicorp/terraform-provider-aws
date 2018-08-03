@@ -266,7 +266,8 @@ is redshift). More details are given below.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
 
-The `kinesis_source_configuration` object supports the following:
+The `kinesis_source_configuration` object supports the following: 
+
 * `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
 * `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
 
@@ -328,6 +329,7 @@ The `splunk_configuration` objects supports the following:
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
 * `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `cloudwatch_logging_options` object supports the following:
 

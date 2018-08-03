@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream"
@@ -6062,6 +6064,7 @@ func (c *S3) SelectObjectContentRequest(input *SelectObjectContentInput) (req *r
 
 	output = &SelectObjectContentOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Send.Swap(client.LogHTTPResponseHandler.Name, client.LogHTTPResponseHeaderHandler)
 	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, rest.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBack(output.runEventStreamLoop)
 	return
@@ -6817,7 +6820,7 @@ type Bucket struct {
 	_ struct{} `type:"structure"`
 
 	// Date the bucket was created.
-	CreationDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	CreationDate *time.Time `type:"timestamp"`
 
 	// The name of the bucket.
 	Name *string `type:"string"`
@@ -7064,6 +7067,11 @@ func (s *CORSRule) SetMaxAgeSeconds(v int64) *CORSRule {
 type CSVInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specifies that CSV field values may contain quoted record delimiters and
+	// such records should be allowed. Default value is FALSE. Setting this value
+	// to TRUE may lower performance.
+	AllowQuotedRecordDelimiter *bool `type:"boolean"`
+
 	// Single character used to indicate a row should be ignored when present at
 	// the start of a row.
 	Comments *string `type:"string"`
@@ -7093,6 +7101,12 @@ func (s CSVInput) String() string {
 // GoString returns the string representation
 func (s CSVInput) GoString() string {
 	return s.String()
+}
+
+// SetAllowQuotedRecordDelimiter sets the AllowQuotedRecordDelimiter field's value.
+func (s *CSVInput) SetAllowQuotedRecordDelimiter(v bool) *CSVInput {
+	s.AllowQuotedRecordDelimiter = &v
+	return s
 }
 
 // SetComments sets the Comments field's value.
@@ -7562,7 +7576,7 @@ func (s *Condition) SetKeyPrefixEquals(v string) *Condition {
 }
 
 type ContinuationEvent struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ContinuationEvent" type:"structure"`
 }
 
 // String returns the string representation
@@ -7623,14 +7637,14 @@ type CopyObjectInput struct {
 	CopySourceIfMatch *string `location:"header" locationName:"x-amz-copy-source-if-match" type:"string"`
 
 	// Copies the object if it has been modified since the specified time.
-	CopySourceIfModifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-modified-since" type:"timestamp" timestampFormat:"rfc822"`
+	CopySourceIfModifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-modified-since" type:"timestamp"`
 
 	// Copies the object if its entity tag (ETag) is different than the specified
 	// ETag.
 	CopySourceIfNoneMatch *string `location:"header" locationName:"x-amz-copy-source-if-none-match" type:"string"`
 
 	// Copies the object if it hasn't been modified since the specified time.
-	CopySourceIfUnmodifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-unmodified-since" type:"timestamp" timestampFormat:"rfc822"`
+	CopySourceIfUnmodifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-unmodified-since" type:"timestamp"`
 
 	// Specifies the algorithm to use when decrypting the source object (e.g., AES256).
 	CopySourceSSECustomerAlgorithm *string `location:"header" locationName:"x-amz-copy-source-server-side-encryption-customer-algorithm" type:"string"`
@@ -7646,7 +7660,7 @@ type CopyObjectInput struct {
 	CopySourceSSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-copy-source-server-side-encryption-customer-key-MD5" type:"string"`
 
 	// The date and time at which the object is no longer cacheable.
-	Expires *time.Time `location:"header" locationName:"Expires" type:"timestamp" timestampFormat:"rfc822"`
+	Expires *time.Time `location:"header" locationName:"Expires" type:"timestamp"`
 
 	// Gives the grantee READ, READ_ACP, and WRITE_ACP permissions on the object.
 	GrantFullControl *string `location:"header" locationName:"x-amz-grant-full-control" type:"string"`
@@ -8075,7 +8089,7 @@ type CopyObjectResult struct {
 
 	ETag *string `type:"string"`
 
-	LastModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModified *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8107,7 +8121,7 @@ type CopyPartResult struct {
 	ETag *string `type:"string"`
 
 	// Date and time at which the object was uploaded.
-	LastModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModified *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8311,7 +8325,7 @@ type CreateMultipartUploadInput struct {
 	ContentType *string `location:"header" locationName:"Content-Type" type:"string"`
 
 	// The date and time at which the object is no longer cacheable.
-	Expires *time.Time `location:"header" locationName:"Expires" type:"timestamp" timestampFormat:"rfc822"`
+	Expires *time.Time `location:"header" locationName:"Expires" type:"timestamp"`
 
 	// Gives the grantee READ, READ_ACP, and WRITE_ACP permissions on the object.
 	GrantFullControl *string `location:"header" locationName:"x-amz-grant-full-control" type:"string"`
@@ -8559,7 +8573,7 @@ type CreateMultipartUploadOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Date when multipart upload will become eligible for abort operation by lifecycle.
-	AbortDate *time.Time `location:"header" locationName:"x-amz-abort-date" type:"timestamp" timestampFormat:"rfc822"`
+	AbortDate *time.Time `location:"header" locationName:"x-amz-abort-date" type:"timestamp"`
 
 	// Id of the lifecycle rule that makes a multipart upload eligible for abort
 	// operation.
@@ -9419,7 +9433,7 @@ type DeleteMarkerEntry struct {
 	Key *string `min:"1" type:"string"`
 
 	// Date and time the object was last modified.
-	LastModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModified *time.Time `type:"timestamp"`
 
 	Owner *Owner `type:"structure"`
 
@@ -10033,7 +10047,7 @@ func (s *EncryptionConfiguration) SetReplicaKmsKeyID(v string) *EncryptionConfig
 }
 
 type EndEvent struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"EndEvent" type:"structure"`
 }
 
 // String returns the string representation
@@ -10153,6 +10167,7 @@ type FilterRule struct {
 	// the filtering rule applies. Maximum prefix length can be up to 1,024 characters.
 	// Overlapping prefixes and suffixes are not supported. For more information,
 	// go to Configuring Event Notifications (http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+	// in the Amazon Simple Storage Service Developer Guide.
 	Name *string `type:"string" enum:"FilterRuleName"`
 
 	Value *string `type:"string"`
@@ -11574,7 +11589,7 @@ type GetObjectInput struct {
 
 	// Return the object only if it has been modified since the specified time,
 	// otherwise return a 304 (not modified).
-	IfModifiedSince *time.Time `location:"header" locationName:"If-Modified-Since" type:"timestamp" timestampFormat:"rfc822"`
+	IfModifiedSince *time.Time `location:"header" locationName:"If-Modified-Since" type:"timestamp"`
 
 	// Return the object only if its entity tag (ETag) is different from the one
 	// specified, otherwise return a 304 (not modified).
@@ -11582,7 +11597,7 @@ type GetObjectInput struct {
 
 	// Return the object only if it has not been modified since the specified time,
 	// otherwise return a 412 (precondition failed).
-	IfUnmodifiedSince *time.Time `location:"header" locationName:"If-Unmodified-Since" type:"timestamp" timestampFormat:"rfc822"`
+	IfUnmodifiedSince *time.Time `location:"header" locationName:"If-Unmodified-Since" type:"timestamp"`
 
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
@@ -11618,7 +11633,7 @@ type GetObjectInput struct {
 	ResponseContentType *string `location:"querystring" locationName:"response-content-type" type:"string"`
 
 	// Sets the Expires header of the response.
-	ResponseExpires *time.Time `location:"querystring" locationName:"response-expires" type:"timestamp" timestampFormat:"iso8601"`
+	ResponseExpires *time.Time `location:"querystring" locationName:"response-expires" type:"timestamp"`
 
 	// Specifies the algorithm to use to when encrypting the object (e.g., AES256).
 	SSECustomerAlgorithm *string `location:"header" locationName:"x-amz-server-side-encryption-customer-algorithm" type:"string"`
@@ -11845,7 +11860,7 @@ type GetObjectOutput struct {
 	Expires *string `location:"header" locationName:"Expires" type:"string"`
 
 	// Last modified date of the object
-	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp" timestampFormat:"rfc822"`
+	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
 
 	// A map of metadata to store with the object in S3.
 	Metadata map[string]*string `location:"headers" locationName:"x-amz-meta-" type:"map"`
@@ -12505,7 +12520,7 @@ type HeadObjectInput struct {
 
 	// Return the object only if it has been modified since the specified time,
 	// otherwise return a 304 (not modified).
-	IfModifiedSince *time.Time `location:"header" locationName:"If-Modified-Since" type:"timestamp" timestampFormat:"rfc822"`
+	IfModifiedSince *time.Time `location:"header" locationName:"If-Modified-Since" type:"timestamp"`
 
 	// Return the object only if its entity tag (ETag) is different from the one
 	// specified, otherwise return a 304 (not modified).
@@ -12513,7 +12528,7 @@ type HeadObjectInput struct {
 
 	// Return the object only if it has not been modified since the specified time,
 	// otherwise return a 412 (precondition failed).
-	IfUnmodifiedSince *time.Time `location:"header" locationName:"If-Unmodified-Since" type:"timestamp" timestampFormat:"rfc822"`
+	IfUnmodifiedSince *time.Time `location:"header" locationName:"If-Unmodified-Since" type:"timestamp"`
 
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
@@ -12717,7 +12732,7 @@ type HeadObjectOutput struct {
 	Expires *string `location:"header" locationName:"Expires" type:"string"`
 
 	// Last modified date of the object
-	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp" timestampFormat:"rfc822"`
+	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
 
 	// A map of metadata to store with the object in S3.
 	Metadata map[string]*string `location:"headers" locationName:"x-amz-meta-" type:"map"`
@@ -13011,7 +13026,7 @@ type InputSerialization struct {
 	// Describes the serialization of a CSV-encoded object.
 	CSV *CSVInput `type:"structure"`
 
-	// Specifies object's compression format. Valid values: NONE, GZIP. Default
+	// Specifies object's compression format. Valid values: NONE, GZIP, BZIP2. Default
 	// Value: NONE.
 	CompressionType *string `type:"string" enum:"CompressionType"`
 
@@ -13517,6 +13532,7 @@ type LambdaFunctionConfiguration struct {
 
 	// Container for object key name filtering rules. For information about key
 	// name filtering, go to Configuring Event Notifications (http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+	// in the Amazon Simple Storage Service Developer Guide.
 	Filter *NotificationConfigurationFilter `type:"structure"`
 
 	// Optional unique identifier for configurations in a notification configuration.
@@ -15334,7 +15350,7 @@ type ListPartsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Date when multipart upload will become eligible for abort operation by lifecycle.
-	AbortDate *time.Time `location:"header" locationName:"x-amz-abort-date" type:"timestamp" timestampFormat:"rfc822"`
+	AbortDate *time.Time `location:"header" locationName:"x-amz-abort-date" type:"timestamp"`
 
 	// Id of the lifecycle rule that makes a multipart upload eligible for abort
 	// operation.
@@ -15890,7 +15906,7 @@ type MultipartUpload struct {
 	_ struct{} `type:"structure"`
 
 	// Date and time at which the multipart upload was initiated.
-	Initiated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	Initiated *time.Time `type:"timestamp"`
 
 	// Identifies who initiated the multipart upload.
 	Initiator *Initiator `type:"structure"`
@@ -15964,7 +15980,8 @@ type NoncurrentVersionExpiration struct {
 	// Specifies the number of days an object is noncurrent before Amazon S3 can
 	// perform the associated action. For information about the noncurrent days
 	// calculations, see How Amazon S3 Calculates When an Object Became Noncurrent
-	// (http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
+	// (http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html) in
+	// the Amazon Simple Storage Service Developer Guide.
 	NoncurrentDays *int64 `type:"integer"`
 }
 
@@ -15996,7 +16013,8 @@ type NoncurrentVersionTransition struct {
 	// Specifies the number of days an object is noncurrent before Amazon S3 can
 	// perform the associated action. For information about the noncurrent days
 	// calculations, see How Amazon S3 Calculates When an Object Became Noncurrent
-	// (http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
+	// (http://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html) in
+	// the Amazon Simple Storage Service Developer Guide.
 	NoncurrentDays *int64 `type:"integer"`
 
 	// The class of storage used to store the object.
@@ -16145,6 +16163,7 @@ func (s *NotificationConfigurationDeprecated) SetTopicConfiguration(v *TopicConf
 
 // Container for object key name filtering rules. For information about key
 // name filtering, go to Configuring Event Notifications (http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+// in the Amazon Simple Storage Service Developer Guide.
 type NotificationConfigurationFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -16175,7 +16194,7 @@ type Object struct {
 
 	Key *string `min:"1" type:"string"`
 
-	LastModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModified *time.Time `type:"timestamp"`
 
 	Owner *Owner `type:"structure"`
 
@@ -16294,7 +16313,7 @@ type ObjectVersion struct {
 	Key *string `min:"1" type:"string"`
 
 	// Date and time the object was last modified.
-	LastModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModified *time.Time `type:"timestamp"`
 
 	Owner *Owner `type:"structure"`
 
@@ -16475,7 +16494,7 @@ type Part struct {
 	ETag *string `type:"string"`
 
 	// Date and time at which the part was uploaded.
-	LastModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+	LastModified *time.Time `type:"timestamp"`
 
 	// Part number identifying the part. This is a positive integer between 1 and
 	// 10,000.
@@ -16561,7 +16580,7 @@ func (s *Progress) SetBytesScanned(v int64) *Progress {
 }
 
 type ProgressEvent struct {
-	_ struct{} `type:"structure" payload:"Details"`
+	_ struct{} `locationName:"ProgressEvent" type:"structure" payload:"Details"`
 
 	// The Progress event details.
 	Details *Progress `locationName:"Details" type:"structure"`
@@ -16595,7 +16614,7 @@ func (s *ProgressEvent) UnmarshalEvent(
 	if err := payloadUnmarshaler.UnmarshalPayload(
 		bytes.NewReader(msg.Payload), s,
 	); err != nil {
-		return fmt.Errorf("failed to unmarshal payload, %v", err)
+		return err
 	}
 	return nil
 }
@@ -18257,7 +18276,7 @@ type PutObjectInput struct {
 	ContentType *string `location:"header" locationName:"Content-Type" type:"string"`
 
 	// The date and time at which the object is no longer cacheable.
-	Expires *time.Time `location:"header" locationName:"Expires" type:"timestamp" timestampFormat:"rfc822"`
+	Expires *time.Time `location:"header" locationName:"Expires" type:"timestamp"`
 
 	// Gives the grantee READ, READ_ACP, and WRITE_ACP permissions on the object.
 	GrantFullControl *string `location:"header" locationName:"x-amz-grant-full-control" type:"string"`
@@ -18730,6 +18749,7 @@ type QueueConfiguration struct {
 
 	// Container for object key name filtering rules. For information about key
 	// name filtering, go to Configuring Event Notifications (http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+	// in the Amazon Simple Storage Service Developer Guide.
 	Filter *NotificationConfigurationFilter `type:"structure"`
 
 	// Optional unique identifier for configurations in a notification configuration.
@@ -18843,7 +18863,7 @@ func (s *QueueConfigurationDeprecated) SetQueue(v string) *QueueConfigurationDep
 }
 
 type RecordsEvent struct {
-	_ struct{} `type:"structure" payload:"Payload"`
+	_ struct{} `locationName:"RecordsEvent" type:"structure" payload:"Payload"`
 
 	// The byte array of partial, one or more result records.
 	//
@@ -19887,8 +19907,11 @@ func (r *readSelectObjectContentEventStream) unmarshalerForEventType(
 	case "Stats":
 		return &StatsEvent{}, nil
 	default:
-		return nil, fmt.Errorf(
-			"unknown event type name, %s, for SelectObjectContentEventStream", eventType)
+		return nil, awserr.New(
+			request.ErrCodeSerialization,
+			fmt.Sprintf("unknown event type name, %s, for SelectObjectContentEventStream", eventType),
+			nil,
+		)
 	}
 }
 
@@ -19898,7 +19921,7 @@ func (r *readSelectObjectContentEventStream) unmarshalerForEventType(
 // Amazon S3 uses this to parse object data into records, and returns only records
 // that match the specified SQL expression. You must also specify the data serialization
 // format for the response. For more information, go to S3Select API Documentation
-// (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectSELECTContent.html)
+// (http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectSELECTContent.html).
 type SelectObjectContentInput struct {
 	_ struct{} `locationName:"SelectObjectContentRequest" type:"structure" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 
@@ -19936,15 +19959,15 @@ type SelectObjectContentInput struct {
 	RequestProgress *RequestProgress `type:"structure"`
 
 	// The SSE Algorithm used to encrypt the object. For more information, go to
-	//  Server-Side Encryption (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html)
+	//  Server-Side Encryption (Using Customer-Provided Encryption Keys (http://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerAlgorithm *string `location:"header" locationName:"x-amz-server-side-encryption-customer-algorithm" type:"string"`
 
 	// The SSE Customer Key. For more information, go to  Server-Side Encryption
-	// (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html)
+	// (Using Customer-Provided Encryption Keys (http://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerKey *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string"`
 
 	// The SSE Customer Key MD5. For more information, go to  Server-Side Encryption
-	// (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html)
+	// (Using Customer-Provided Encryption Keys (http://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 }
 
@@ -20451,7 +20474,7 @@ func (s *Stats) SetBytesScanned(v int64) *Stats {
 }
 
 type StatsEvent struct {
-	_ struct{} `type:"structure" payload:"Details"`
+	_ struct{} `locationName:"StatsEvent" type:"structure" payload:"Details"`
 
 	// The Stats event details.
 	Details *Stats `locationName:"Details" type:"structure"`
@@ -20485,7 +20508,7 @@ func (s *StatsEvent) UnmarshalEvent(
 	if err := payloadUnmarshaler.UnmarshalPayload(
 		bytes.NewReader(msg.Payload), s,
 	); err != nil {
-		return fmt.Errorf("failed to unmarshal payload, %v", err)
+		return err
 	}
 	return nil
 }
@@ -20743,6 +20766,7 @@ type TopicConfiguration struct {
 
 	// Container for object key name filtering rules. For information about key
 	// name filtering, go to Configuring Event Notifications (http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+	// in the Amazon Simple Storage Service Developer Guide.
 	Filter *NotificationConfigurationFilter `type:"structure"`
 
 	// Optional unique identifier for configurations in a notification configuration.
@@ -20916,14 +20940,14 @@ type UploadPartCopyInput struct {
 	CopySourceIfMatch *string `location:"header" locationName:"x-amz-copy-source-if-match" type:"string"`
 
 	// Copies the object if it has been modified since the specified time.
-	CopySourceIfModifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-modified-since" type:"timestamp" timestampFormat:"rfc822"`
+	CopySourceIfModifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-modified-since" type:"timestamp"`
 
 	// Copies the object if its entity tag (ETag) is different than the specified
 	// ETag.
 	CopySourceIfNoneMatch *string `location:"header" locationName:"x-amz-copy-source-if-none-match" type:"string"`
 
 	// Copies the object if it hasn't been modified since the specified time.
-	CopySourceIfUnmodifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-unmodified-since" type:"timestamp" timestampFormat:"rfc822"`
+	CopySourceIfUnmodifiedSince *time.Time `location:"header" locationName:"x-amz-copy-source-if-unmodified-since" type:"timestamp"`
 
 	// The range of bytes to copy from the source object. The range value must use
 	// the form bytes=first-last, where the first and last are the zero-based byte
@@ -21676,6 +21700,9 @@ const (
 
 	// CompressionTypeGzip is a CompressionType enum value
 	CompressionTypeGzip = "GZIP"
+
+	// CompressionTypeBzip2 is a CompressionType enum value
+	CompressionTypeBzip2 = "BZIP2"
 )
 
 // Requests Amazon S3 to encode the object keys in the response and specifies

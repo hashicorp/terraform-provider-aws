@@ -37,6 +37,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "29000"),
 				),
 			},
 
@@ -56,6 +57,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", "{'foobar': 'bar}"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.text/html", "<html>Foo</html>"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "2000"),
 				),
 			},
 
@@ -75,6 +77,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "2000"),
 				),
 			},
 
@@ -90,6 +93,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "0"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "0"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "2000"),
 				),
 			},
 
@@ -108,6 +112,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "29000"),
 				),
 			},
 		},
@@ -356,7 +361,7 @@ resource "aws_api_gateway_integration" "test" {
   uri = "https://www.google.de"
   integration_http_method = "GET"
   passthrough_behavior = "WHEN_NO_MATCH"
-  content_handling = "CONVERT_TO_TEXT"
+	content_handling = "CONVERT_TO_TEXT"
 }
 `
 
@@ -401,7 +406,8 @@ resource "aws_api_gateway_integration" "test" {
   uri = "https://www.google.de"
   integration_http_method = "GET"
   passthrough_behavior = "WHEN_NO_MATCH"
-  content_handling = "CONVERT_TO_TEXT"
+	content_handling = "CONVERT_TO_TEXT"
+	timeout_milliseconds = 2000
 }
 `
 
@@ -446,7 +452,8 @@ resource "aws_api_gateway_integration" "test" {
   uri = "https://www.google.de/updated"
   integration_http_method = "GET"
   passthrough_behavior = "WHEN_NO_MATCH"
-  content_handling = "CONVERT_TO_TEXT"
+	content_handling = "CONVERT_TO_TEXT"
+	timeout_milliseconds = 2000
 }
 `
 
@@ -491,7 +498,8 @@ resource "aws_api_gateway_integration" "test" {
   uri = "https://www.google.de"
   integration_http_method = "GET"
   passthrough_behavior = "WHEN_NO_MATCH"
-  content_handling = "CONVERT_TO_BINARY"
+	content_handling = "CONVERT_TO_BINARY"
+	timeout_milliseconds = 2000
 }
 `
 
@@ -535,7 +543,8 @@ resource "aws_api_gateway_integration" "test" {
   type = "HTTP"
   uri = "https://www.google.de"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
+	passthrough_behavior = "WHEN_NO_MATCH"
+	timeout_milliseconds = 2000
 }
 `
 
@@ -570,7 +579,8 @@ resource "aws_api_gateway_integration" "test" {
   uri = "https://www.google.de"
   integration_http_method = "GET"
   passthrough_behavior = "WHEN_NO_MATCH"
-  content_handling = "CONVERT_TO_TEXT"
+	content_handling = "CONVERT_TO_TEXT"
+	timeout_milliseconds = 2000
 }
 `
 
@@ -623,7 +633,8 @@ resource "aws_api_gateway_integration" "test" {
   uri = "https://www.google.de"
   integration_http_method = "GET"
   passthrough_behavior = "WHEN_NO_MATCH"
-  content_handling = "CONVERT_TO_TEXT"
+	content_handling = "CONVERT_TO_TEXT"
+	timeout_milliseconds = 2000
 }
 `
 

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -33,6 +32,10 @@ func resourceAwsRDSCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
 			"availability_zones": {
 				Type:     schema.TypeSet,
@@ -58,11 +61,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ValidateFunc:  validateRdsIdentifier,
 			},
 			"cluster_identifier_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifierPrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"cluster_identifier"},
+				ValidateFunc:  validateRdsIdentifierPrefix,
 			},
 
 			"cluster_members": {
@@ -818,25 +822,26 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 		d.Set("database_name", dbc.DatabaseName)
 	}
 
+	d.Set("arn", dbc.DBClusterArn)
 	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
+	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
-	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
+	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("endpoint", dbc.Endpoint)
-	d.Set("engine", dbc.Engine)
 	d.Set("engine_version", dbc.EngineVersion)
+	d.Set("engine", dbc.Engine)
+	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+	d.Set("kms_key_id", dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("port", dbc.Port)
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
-	d.Set("kms_key_id", dbc.KmsKeyId)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
-	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set("storage_encrypted", dbc.StorageEncrypted)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(dbc.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -868,14 +873,7 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	}
 
 	// Fetch and save tags
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-	if err := saveTagsRDS(conn, d, arn); err != nil {
+	if err := saveTagsRDS(conn, d, aws.StringValue(dbc.DBClusterArn)); err != nil {
 		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", *dbc.DBClusterIdentifier, err)
 	}
 
@@ -1005,14 +1003,7 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-	if err := setTagsRDS(conn, d, arn); err != nil {
+	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	} else {
 		d.SetPartial("tags")

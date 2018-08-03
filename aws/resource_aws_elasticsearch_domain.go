@@ -229,6 +229,34 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Default:  "1.5",
 				ForceNew: true,
 			},
+			"cognito_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         false,
+				MaxItems:         1,
+				DiffSuppressFunc: esCognitoOptionsDiffSuppress,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"user_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 
 			"tags": tagsSchema(),
 		},
@@ -384,6 +412,10 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("cognito_options"); ok {
+		input.CognitoOptions = expandESCognitoOptions(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
@@ -400,6 +432,12 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, "ValidationException", "Domain is still being deleted") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
 				return resource.RetryableError(err)
 			}
 
@@ -501,6 +539,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
+	if err != nil {
+		return err
+	}
+	err = d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions))
 	if err != nil {
 		return err
 	}
@@ -634,6 +676,11 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		input.VPCOptions = expandESVPCOptions(s)
 	}
 
+	if d.HasChange("cognito_options") {
+		options := d.Get("cognito_options").([]interface{})
+		input.CognitoOptions = expandESCognitoOptions(options)
+	}
+
 	if d.HasChange("log_publishing_options") {
 		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
 		options := d.Get("log_publishing_options").(*schema.Set).List()
@@ -729,4 +776,11 @@ func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) boo
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
 	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+}
+
+func esCognitoOptionsDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	if old == "1" && new == "0" {
+		return true
+	}
+	return false
 }
