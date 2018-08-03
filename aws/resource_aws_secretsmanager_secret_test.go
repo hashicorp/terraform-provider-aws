@@ -103,6 +103,71 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsSecretsManagerSecret_Restore(t *testing.T) {
+	var secretBefore, secretAfter secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_KmsKeyID_Description(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secretBefore),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:secretsmanager:[^:]+:[^:]+:secret:%s-.+$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_lambda_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_KmsKeyID_Description(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secretAfter),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:secretsmanager:[^:]+:[^:]+:secret:%s-.+$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_lambda_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckAwsSecretsManagerCompareKmsKeyIDs(aws.StringValue(secretBefore.KmsKeyId), aws.StringValue(secretAfter.KmsKeyId), false),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+			},
+		},
+	})
+}
+
 func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -443,6 +508,20 @@ func testAccCheckAwsSecretsManagerSecretHasPolicy(name string, expectedPolicyTex
 	}
 }
 
+func testAccCheckAwsSecretsManagerCompareKmsKeyIDs(kms_key_id1, kms_key_id2 string, equal bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		same := false
+		if kms_key_id1 == kms_key_id2 {
+			same = true
+		}
+		if same && equal || !same && !equal {
+			return nil
+		} else {
+			return fmt.Errorf("KMS key 1 %s is not equal to %s", kms_key_id1, kms_key_id2)
+		}
+	}
+}
+
 func testAccAwsSecretsManagerSecretConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -475,6 +554,20 @@ resource "aws_secretsmanager_secret" "test" {
   name       = "%s"
 }
 `, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_KmsKeyID_Description(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  kms_key_id  = "${aws_kms_key.test1.id}"
+  name        = "%s"
+  description = "%s"
+}
+`, rName, description)
 }
 
 func testAccAwsSecretsManagerSecretConfig_KmsKeyID_Updated(rName string) string {
