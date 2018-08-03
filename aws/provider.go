@@ -593,6 +593,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_storagegateway_cache":                         resourceAwsStorageGatewayCache(),
 			"aws_storagegateway_gateway":                       resourceAwsStorageGatewayGateway(),
 			"aws_storagegateway_nfs_file_share":                resourceAwsStorageGatewayNfsFileShare(),
+			"aws_storagegateway_smb_file_share":                resourceAwsStorageGatewaySmbFileShare(),
 			"aws_storagegateway_upload_buffer":                 resourceAwsStorageGatewayUploadBuffer(),
 			"aws_storagegateway_working_storage":               resourceAwsStorageGatewayWorkingStorage(),
 			"aws_spot_datafeed_subscription":                   resourceAwsSpotDataFeedSubscription(),
