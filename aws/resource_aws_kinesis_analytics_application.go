@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
+	"reflect"
 	"time"
 )
 
@@ -62,8 +63,26 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"cloudwatch_logging_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{},
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"log_stream": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+
+						"role": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+					},
 				},
 			},
 
@@ -93,12 +112,32 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		ApplicationName: aws.String(name),
 	}
 
+	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+		createOpts.ApplicationCode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
+		var cloudwatchLoggingOptions []*kinesisanalytics.CloudWatchLoggingOption
+		clos := v.([]interface{})
+
+		if len(clos) > 0 {
+			clo := clos[0].(map[string]interface{})
+			cloudwatchLoggingOption := &kinesisanalytics.CloudWatchLoggingOption{
+				LogStreamARN: aws.String(clo["log_stream"].(string)),
+				RoleARN:      aws.String(clo["role"].(string)),
+			}
+			cloudwatchLoggingOptions = append(cloudwatchLoggingOptions, cloudwatchLoggingOption)
+		}
+
+		createOpts.CloudWatchLoggingOptions = cloudwatchLoggingOptions
+	}
+
 	_, err := conn.CreateApplication(createOpts)
 	if err != nil {
 		return fmt.Errorf("Unable to create Kinesis Analytics Application: %s", err)
 	}
 
-	return resourceAwsKinesisAnalyticsApplicationUpdate(d, meta)
+	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)
 }
 
 func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta interface{}) error {
@@ -130,6 +169,10 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	d.Set("status", aws.StringValue(resp.ApplicationDetail.ApplicationStatus))
 	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
 
+	if err := d.Set("cloudwatch_logging_options", getCloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -137,6 +180,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).kinesisanalyticsconn
 
 	if !d.IsNewResource() {
+		applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 		name := d.Get("name").(string)
 		version := d.Get("version").(int)
 
@@ -150,10 +194,30 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			return err
 		}
 
-		updateApplicationOpts.SetApplicationUpdate(applicationUpdate)
-		_, updateErr := conn.UpdateApplication(updateApplicationOpts)
-		if updateErr != nil {
-			return updateErr
+		if !reflect.DeepEqual(applicationUpdate, &kinesisanalytics.ApplicationUpdate{}) {
+			updateApplicationOpts.SetApplicationUpdate(applicationUpdate)
+			_, updateErr := conn.UpdateApplication(updateApplicationOpts)
+			if updateErr != nil {
+				return updateErr
+			}
+			version = version + 1
+		}
+
+		oldLoggingOptions, newLoggingOptions := d.GetChange("cloudwatch_logging_options")
+		if len(oldLoggingOptions.([]interface{})) == 0 && len(newLoggingOptions.([]interface{})) > 0 {
+			if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
+				clo := v.([]interface{})[0].(map[string]interface{})
+				cloudwatchLoggingOption := &kinesisanalytics.CloudWatchLoggingOption{
+					LogStreamARN: aws.String(clo["log_stream"].(string)),
+					RoleARN:      aws.String(clo["role"].(string)),
+				}
+				addOpts := &kinesisanalytics.AddApplicationCloudWatchLoggingOptionInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					CloudWatchLoggingOption:     cloudwatchLoggingOption,
+				}
+				conn.AddApplicationCloudWatchLoggingOption(addOpts)
+			}
 		}
 	}
 
@@ -185,9 +249,37 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {
 	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 
-	if v, ok := d.GetOk("code"); ok {
+	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
 		applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
 	}
 
+	oldLoggingOptions, _ := d.GetChange("cloudwatch_logging_options")
+	if len(oldLoggingOptions.([]interface{})) > 0 {
+		if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
+			var cloudwatchLoggingOptions []*kinesisanalytics.CloudWatchLoggingOptionUpdate
+			clo := v.([]interface{})[0].(map[string]interface{})
+			cloudwatchLoggingOption := &kinesisanalytics.CloudWatchLoggingOptionUpdate{
+				CloudWatchLoggingOptionId: aws.String(clo["id"].(string)),
+				LogStreamARNUpdate:        aws.String(clo["log_stream"].(string)),
+				RoleARNUpdate:             aws.String(clo["role"].(string)),
+			}
+			cloudwatchLoggingOptions = append(cloudwatchLoggingOptions, cloudwatchLoggingOption)
+			applicationUpdate.CloudWatchLoggingOptionUpdates = cloudwatchLoggingOptions
+		}
+	}
+
 	return applicationUpdate, nil
+}
+
+func getCloudwatchLoggingOptions(options []*kinesisanalytics.CloudWatchLoggingOptionDescription) []interface{} {
+	s := []interface{}{}
+	for _, v := range options {
+		option := map[string]interface{}{
+			"id":         aws.StringValue(v.CloudWatchLoggingOptionId),
+			"log_stream": aws.StringValue(v.LogStreamARN),
+			"role":       aws.StringValue(v.RoleARN),
+		}
+		s = append(s, option)
+	}
+	return s
 }
