@@ -62,6 +62,13 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		Computed: true,
 	}
 
+	resourceSchema["all_endpoint_address"] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+	}
+
 	resourceSchema["configuration_endpoint_address"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -369,8 +376,15 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		} else {
 			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
 			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-		}
 
+			v := make([]string, 0)
+			for  _, groups := range rgp.NodeGroups {
+				for  _, value := range groups.NodeGroupMembers {
+					v = append(v, *value.ReadEndpoint.Address)
+				}
+			}
+			d.Set("all_endpoint_address", v)
+		}
 		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
