@@ -53,7 +53,41 @@ func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplication_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resName, "code", "testCode2\n"),
-					resource.TestCheckResourceAttr(resName, "version", "3"),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+				),
+			},
+			{
+				Config: thirdStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
 				),
 			},
@@ -61,26 +95,41 @@ func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 	})
 }
 
-//func TestAccAWSKinesisAnalyticsApplication_cloudwatchLoggingOptions(t *testing.T) {
-//	var application kinesisanalytics.ApplicationDetail
-//	resName := "aws_kinesis_analytics_application.test"
-//	rInt := acctest.RandInt()
-//
-//	resource.Test(t, resource.TestCase{
-//		PreCheck:     func() { testAccPreCheck(t) },
-//		Providers:    testAccProviders,
-//		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-//					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-//				),
-//			},
-//		},
-//	})
-//}
+func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
+				),
+			},
+			{
+				Config: thirdStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
@@ -130,38 +179,46 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, application *kinesi
 
 func testAccKinesisAnalyticsApplication_basic(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+}
+`, rInt)
 }
 
+func testAccKinesisAnalyticsApplication_update(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode2\n"
+}
+`, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt int, streamName string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "testAcc-%d"
 }
 
 resource "aws_cloudwatch_log_stream" "test" {
-  name = "testAcc-%d"
+  name = "testAcc-%s"
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
-}
-
-resource "aws_iam_role" "test" {
-  name = "testAcc-%d"
-  assume_role_policy = "${data.aws_iam_policy_document.test.json}" 
 }
 
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
   code = "testCode\n"
+  cloudwatch_logging_options {
+    log_stream = "${aws_cloudwatch_log_stream.test.arn}"
+    role = "${aws_iam_role.test.arn}"
+  }
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt, streamName, rInt)
 }
 
-func testAccKinesisAnalyticsApplication_update(rInt int) string {
+// this is used to set up the IAM role
+func testAccKinesisAnalyticsApplication_prereq(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -173,26 +230,9 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "test" {
-  name = "testAcc-%d"
-}
-
-resource "aws_cloudwatch_log_stream" "test" {
-  name = "testAcc-%d"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
-}
-
 resource "aws_iam_role" "test" {
   name = "testAcc-%d"
   assume_role_policy = "${data.aws_iam_policy_document.test.json}" 
 }
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode2\n"
-  cloudwatch_logging_options {
-    log_stream = "${aws_cloudwatch_log_stream.test.arn}"
-    role = "${aws_iam_role.test.arn}"
-  }
-}`, rInt, rInt, rInt, rInt)
+`, rInt)
 }

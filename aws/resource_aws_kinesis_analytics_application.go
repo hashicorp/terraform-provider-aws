@@ -249,8 +249,10 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {
 	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 
-	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
-		applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
+	if d.HasChange("code") {
+		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+			applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
+		}
 	}
 
 	oldLoggingOptions, _ := d.GetChange("cloudwatch_logging_options")
