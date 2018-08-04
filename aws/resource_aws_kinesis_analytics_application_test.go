@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -75,6 +77,9 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
 			},
 			{
 				Config: secondStep,
@@ -110,6 +115,9 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
 			},
 			{
 				Config: secondStep,
@@ -125,6 +133,36 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
 				),
 			},
 		},
@@ -209,12 +247,62 @@ resource "aws_cloudwatch_log_stream" "test" {
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
   code = "testCode\n"
+
   cloudwatch_logging_options {
     log_stream = "${aws_cloudwatch_log_stream.test.arn}"
     role = "${aws_iam_role.test.arn}"
   }
 }
 `, rInt, streamName, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name = "testAcc-%d"
+  shard_count = 1
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+
+  inputs {
+    name_prefix = "test_prefix"
+    kinesis_stream {
+      resource = "${aws_kinesis_stream.test.arn}"
+      role = "${aws_iam_role.test.arn}"
+    }
+    parallelism {
+      count = 1
+    }
+    schema {
+      record_columns {
+        mapping = "$.test"
+        name = "test"
+        sql_type = "VARCHAR(8)"
+      }
+      record_encoding = "UTF-8"
+      record_format {
+        record_format_type = "JSON"
+        mapping_parameters {
+          json {
+            record_row_path = "$"
+          }
+        }
+      }
+    }
+  }
+}
+`, rInt, rInt)
+}
+
+func fulfillSleep() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		log.Print("[DEBUG] Test: Sleep to allow IAM to propagate")
+		time.Sleep(30 * time.Second)
+		return nil
+	}
 }
 
 // this is used to set up the IAM role
