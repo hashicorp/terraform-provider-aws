@@ -17,6 +17,7 @@ import (
 
 func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.lambda_event_source_mapping_test"
 
 	rString := acctest.RandString(8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_esm_basic_%s", rString)
@@ -35,22 +36,18 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
 				),
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"batch_size", strconv.Itoa(200)),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"enabled", strconv.FormatBool(false)),
-					resource.TestMatchResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"function_arn", uFuncArnRe),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"starting_position", "TRIM_HORIZON"),
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", strconv.Itoa(200)),
+					resource.TestCheckResourceAttr(resourceName, "enabled", strconv.FormatBool(false)),
+					resource.TestMatchResourceAttr(resourceName, "function_arn", uFuncArnRe),
+					resource.TestCheckResourceAttr(resourceName, "starting_position", "TRIM_HORIZON"),
 				),
 			},
 		},
@@ -63,6 +60,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 	// a diff.
 
 	var conf lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.lambda_event_source_mapping_test"
 
 	rString := acctest.RandString(8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_esm_basic_%s", rString)
@@ -80,20 +78,17 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
 				),
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"batch_size", strconv.Itoa(100)),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"enabled", strconv.FormatBool(true)),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"starting_position", "TRIM_HORIZON"),
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", strconv.Itoa(100)),
+					resource.TestCheckResourceAttr(resourceName, "enabled", strconv.FormatBool(true)),
+					resource.TestCheckResourceAttr(resourceName, "starting_position", "TRIM_HORIZON"),
 				),
 			},
 		},
@@ -102,6 +97,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 
 func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.lambda_event_source_mapping_test"
 
 	rString := acctest.RandString(8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_sqs_basic_%s", rString)
@@ -120,24 +116,20 @@ func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
-					resource.TestCheckNoResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
+					resource.TestCheckNoResourceAttr(resourceName,
 						"starting_position"),
 				),
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"batch_size", strconv.Itoa(5)),
-					resource.TestCheckResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"enabled", strconv.FormatBool(false)),
-					resource.TestMatchResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"function_arn", uFuncArnRe),
-					resource.TestCheckNoResourceAttr("aws_lambda_event_source_mapping.lambda_event_source_mapping_test",
-						"starting_position"),
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", strconv.Itoa(5)),
+					resource.TestCheckResourceAttr(resourceName, "enabled", strconv.FormatBool(false)),
+					resource.TestMatchResourceAttr(resourceName, "function_name", uFuncArnRe),
+					resource.TestCheckNoResourceAttr(resourceName, "starting_position"),
 				),
 			},
 		},
@@ -505,7 +497,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
     enabled = true
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-    function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
+    function_arn = "${aws_lambda_function.lambda_function_test_create.arn}"
     starting_position = "TRIM_HORIZON"
 }`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
@@ -592,7 +584,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
 	event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
 	enabled = true
 	depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-	function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
+	function_arn = "${aws_lambda_function.lambda_function_test_create.arn}"
 	starting_position = "TRIM_HORIZON"
 }`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
@@ -681,7 +673,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     event_source_arn = "${aws_kinesis_stream.kinesis_stream_test.arn}"
     enabled = false
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-    function_name = "${aws_lambda_function.lambda_function_test_update.arn}"
+    function_arn = "${aws_lambda_function.lambda_function_test_update.arn}"
     starting_position = "TRIM_HORIZON"
 }`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
