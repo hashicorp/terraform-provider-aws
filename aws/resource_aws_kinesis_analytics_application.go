@@ -90,7 +90,191 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{},
+					Schema: map[string]*schema.Schema{
+						"kinesis_firehose": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
+									},
+
+									"role": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
+						"kinesis_stream": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
+									},
+
+									"role": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
+						"name_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"parallelism": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"count": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						"processing_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"resource": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
+
+												"role": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
+						"schema": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"record_columns": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mapping": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"sql_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+
+									"record_encoding": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"record_format": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mapping_parameters": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"csv": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"record_column_delimiter": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"record_row_delimiter": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+
+															"json": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"record_row_path": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"record_format_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 
