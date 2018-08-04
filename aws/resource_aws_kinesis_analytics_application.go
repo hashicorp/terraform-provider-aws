@@ -93,6 +93,11 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"kinesis_firehose": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -275,6 +280,25 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 									},
 								},
 							},
+						},
+
+						"starting_position_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"starting_position": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+
+						"stream_names": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -596,10 +620,130 @@ func getCloudwatchLoggingOptions(options []*kinesisanalytics.CloudWatchLoggingOp
 
 func getInputs(inputs []*kinesisanalytics.InputDescription) []interface{} {
 	s := []interface{}{}
-	for _, v := range inputs {
+
+	if len(inputs) > 0 {
+		id := inputs[0]
+
 		input := map[string]interface{}{
-			"name_prefix": aws.StringValue(v.NamePrefix),
+			"id":          aws.StringValue(id.InputId),
+			"name_prefix": aws.StringValue(id.NamePrefix),
 		}
+
+		list := schema.NewSet(schema.HashString, nil)
+		for _, sn := range id.InAppStreamNames {
+			list.Add(aws.StringValue(sn))
+		}
+		input["stream_names"] = list
+
+		if id.InputParallelism != nil {
+			input["parallelism"] = []interface{}{
+				map[string]interface{}{
+					"count": int(aws.Int64Value(id.InputParallelism.Count)),
+				},
+			}
+		}
+
+		if id.InputProcessingConfigurationDescription != nil {
+			ipcd := id.InputProcessingConfigurationDescription
+
+			if ipcd.InputLambdaProcessorDescription != nil {
+				input["processing_configurations"] = []interface{}{
+					map[string]interface{}{
+						"lambda": []interface{}{
+							map[string]interface{}{
+								"resource": aws.StringValue(ipcd.InputLambdaProcessorDescription.ResourceARN),
+								"role":     aws.StringValue(ipcd.InputLambdaProcessorDescription.RoleARN),
+							},
+						},
+					},
+				}
+			}
+		}
+
+		if id.InputSchema != nil {
+			inputSchema := id.InputSchema
+			is := []interface{}{}
+			rcs := []interface{}{}
+			ss := map[string]interface{}{
+				"record_encoding": aws.StringValue(inputSchema.RecordEncoding),
+			}
+
+			for _, rc := range inputSchema.RecordColumns {
+				rcM := map[string]interface{}{
+					"mapping":  aws.StringValue(rc.Mapping),
+					"name":     aws.StringValue(rc.Name),
+					"sql_type": aws.StringValue(rc.SqlType),
+				}
+				rcs = append(rcs, rcM)
+			}
+			ss["record_columns"] = rcs
+
+			if inputSchema.RecordFormat != nil {
+				rf := inputSchema.RecordFormat
+				rfM := map[string]interface{}{
+					"record_format_type": aws.StringValue(rf.RecordFormatType),
+				}
+
+				if rf.MappingParameters != nil {
+					mps := []interface{}{}
+					if rf.MappingParameters.CSVMappingParameters != nil {
+						cmp := map[string]interface{}{
+							"csv": []interface{}{
+								map[string]interface{}{
+									"record_column_delimiter": aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordColumnDelimiter),
+									"record_row_delimiter":    aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordRowDelimiter),
+								},
+							},
+						}
+						mps = append(mps, cmp)
+					}
+
+					if rf.MappingParameters.JSONMappingParameters != nil {
+						jmp := map[string]interface{}{
+							"json": []interface{}{
+								map[string]interface{}{
+									"record_row_path": aws.StringValue(rf.MappingParameters.JSONMappingParameters.RecordRowPath),
+								},
+							},
+						}
+						mps = append(mps, jmp)
+					}
+
+					rfM["mapping_parameters"] = mps
+				}
+				ss["record_format"] = []interface{}{rfM}
+			}
+
+			is = append(is, ss)
+			input["schema"] = is
+		}
+
+		if id.InputStartingPositionConfiguration != nil && id.InputStartingPositionConfiguration.InputStartingPosition != nil {
+			input["starting_position_configuration"] = []interface{}{
+				map[string]interface{}{
+					"starting_position": aws.StringValue(id.InputStartingPositionConfiguration.InputStartingPosition),
+				},
+			}
+		}
+
+		if id.KinesisFirehoseInputDescription != nil {
+			input["kinesis_firehose"] = []interface{}{
+				map[string]interface{}{
+					"resource": aws.StringValue(id.KinesisFirehoseInputDescription.ResourceARN),
+					"role":     aws.StringValue(id.KinesisFirehoseInputDescription.RoleARN),
+				},
+			}
+		}
+
+		if id.KinesisStreamsInputDescription != nil {
+			input["kinesis_stream"] = []interface{}{
+				map[string]interface{}{
+					"resource": aws.StringValue(id.KinesisStreamsInputDescription.ResourceARN),
+					"role":     aws.StringValue(id.KinesisStreamsInputDescription.RoleARN),
+				},
+			}
+		}
+
 		s = append(s, input)
 	}
 	return s
