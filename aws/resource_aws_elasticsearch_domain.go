@@ -548,7 +548,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	}
 	if ds.SnapshotOptions != nil {
 		d.Set("snapshot_options", map[string]interface{}{
-			"automated_snapshot_start_hour": *ds.SnapshotOptions.AutomatedSnapshotStartHour,
+			"automated_snapshot_start_hour": aws.Int64Value(ds.SnapshotOptions.AutomatedSnapshotStartHour),
 		})
 	}
 	if ds.VPCOptions != nil {
