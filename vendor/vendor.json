@@ -1599,10 +1599,10 @@
 			"revisionTime": "2017-05-25T01:39:02Z"
 		},
 		{
-			"checksumSHA1": "V/quM7+em2ByJbWBLOsEwnY3j/Q=",
+			"checksumSHA1": "Li0PaRmaVBdibS/zs8myzc07L6o=",
 			"path": "github.com/mitchellh/go-homedir",
-			"revision": "b8bc1bf767474819792c23f32d8286a45736f1c6",
-			"revisionTime": "2016-12-03T19:45:07Z"
+			"revision": "58046073cbffe2f25d425fe1331102f55cf719de",
+			"revisionTime": "2018-08-01T23:32:06Z"
 		},
 		{
 			"checksumSHA1": "bDdhmDk8q6utWrccBhEOa6IoGkE=",
