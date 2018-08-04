@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Prefer `USERPROFILE` over `HOMEPATH` for home directory expansion on Windows [GH-5443]
 * resource/aws_ssm_maintenance_window: Properly recreate resource when deleted outside Terraform [GH-5416]
 * resource/aws_ssm_patch_baseline: Properly recreate resource when deleted outside Terraform [GH-5438]
 * resource/aws_vpn_gateway: Allow legacy `amazon_side_asn` in plan-time validation (ASNs 10124 and 17493) [GH-5441]
