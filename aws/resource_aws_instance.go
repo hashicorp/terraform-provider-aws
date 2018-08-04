@@ -815,7 +815,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		Region:    meta.(*AWSClient).region,
 		Service:   "ec2",
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("instance/%s", strings.TrimPrefix(d.Id(), "/")),
+		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
 
