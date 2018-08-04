@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * provider: Allow provider configuration AssumeRoleARN and sts:GetCallerIdentity credential validation call to shortcut account ID and partition lookup [GH-5177]
+* provider: Improved output for multiple error handler [GH-5442]
 * resource/aws_storagegateway_gateway: Add `smb_active_directory_settings` and `smb_guest_password` arguments [GH-5269]
 
 BUG FIXES:
