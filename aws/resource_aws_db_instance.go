@@ -407,20 +407,18 @@ func resourceAwsDbInstance() *schema.Resource {
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 
 			"performance_insights_kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validateArn,
 			},
 
 			"performance_insights_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeInt,
+				Optional:         true,
+				DiffSuppressFunc: suppressPerformanceInsightsRetentionPeriodDiffs,
 			},
 
 			"tags": tagsSchema(),
@@ -1015,7 +1013,9 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
-	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
+	if err := d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod); err != nil {
+		return fmt.Errorf("error setting performance_insights_retention_period: %s", err)
+	}
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}

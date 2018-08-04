@@ -89,3 +89,13 @@ func suppressAutoscalingGroupAvailabilityZoneDiffs(k, old, new string, d *schema
 func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
+
+func suppressPerformanceInsightsRetentionPeriodDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if !d.Get("performance_insights_enabled").(bool) {
+		return false
+	}
+	if old == "7" && new == "0" {
+		return true
+	}
+	return false
+}
