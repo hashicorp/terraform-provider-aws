@@ -74,13 +74,13 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 						"log_stream": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validateArn,
 						},
 
 						"role": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validateArn,
 						},
 					},
@@ -106,13 +106,13 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"resource": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validateArn,
 									},
 
 									"role": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validateArn,
 									},
 								},
@@ -127,13 +127,13 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"resource": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validateArn,
 									},
 
 									"role": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validateArn,
 									},
 								},
@@ -142,7 +142,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 						"name_prefix": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 
 						"parallelism": {
@@ -153,7 +153,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"count": {
 										Type:     schema.TypeInt,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
@@ -167,19 +167,19 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"lambda": {
 										Type:     schema.TypeList,
-										Optional: true,
+										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"resource": {
 													Type:         schema.TypeString,
-													Optional:     true,
+													Required:     true,
 													ValidateFunc: validateArn,
 												},
 
 												"role": {
 													Type:         schema.TypeString,
-													Optional:     true,
+													Required:     true,
 													ValidateFunc: validateArn,
 												},
 											},
@@ -191,13 +191,13 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 						"schema": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"record_columns": {
 										Type:     schema.TypeList,
-										Optional: true,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"mapping": {
@@ -207,12 +207,12 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 												"name": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 
 												"sql_type": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -225,7 +225,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 									"record_format": {
 										Type:     schema.TypeList,
-										Optional: true,
+										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -243,12 +243,12 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 																	Schema: map[string]*schema.Schema{
 																		"record_column_delimiter": {
 																			Type:     schema.TypeString,
-																			Optional: true,
+																			Required: true,
 																		},
 
 																		"record_row_delimiter": {
 																			Type:     schema.TypeString,
-																			Optional: true,
+																			Required: true,
 																		},
 																	},
 																},
@@ -262,7 +262,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 																	Schema: map[string]*schema.Schema{
 																		"record_row_path": {
 																			Type:     schema.TypeString,
-																			Optional: true,
+																			Required: true,
 																		},
 																	},
 																},
@@ -273,7 +273,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 												"record_format_type": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
