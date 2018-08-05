@@ -541,6 +541,24 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 				version = version + 1
 			}
 		}
+
+		oldOutputs, newOutputs := d.GetChange("outputs")
+		if len(oldOutputs.([]interface{})) == 0 && len(newOutputs.([]interface{})) > 0 {
+			if v, ok := d.GetOk("outputs"); ok {
+				o := v.([]interface{})[0].(map[string]interface{})
+				output := createOutputs(o)
+				addOpts := &kinesisanalytics.AddApplicationOutputInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					Output: output,
+				}
+				_, err := conn.AddApplicationOutput(addOpts)
+				if err != nil {
+					return err
+				}
+				version = version + 1
+			}
+		}
 	}
 
 	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)

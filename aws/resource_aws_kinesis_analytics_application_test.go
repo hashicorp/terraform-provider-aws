@@ -309,6 +309,48 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
+	var before, after kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.#", "0"),
+				),
+			},
+			{
+				Config: thirdStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analytics_application" {
