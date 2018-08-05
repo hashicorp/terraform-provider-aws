@@ -308,6 +308,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"outputs": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -395,6 +396,142 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+
+			"reference_data_sources": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"s3": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bucket": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+
+									"file_key": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
+						"schema": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"record_columns": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mapping": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"sql_type": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
+									"record_encoding": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"record_format": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mapping_parameters": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"csv": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"record_column_delimiter": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+
+																		"record_row_delimiter": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
+															"json": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"record_row_path": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"record_format_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
