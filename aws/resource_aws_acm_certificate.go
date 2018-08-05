@@ -21,7 +21,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: resourceAwsAcmCertificateCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
@@ -60,7 +59,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				Default:       "NONE",
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
 			"arn": {
@@ -103,10 +101,17 @@ func resourceAwsAcmCertificate() *schema.Resource {
 
 func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
+		if _, ok := d.GetOk("validation_method"); !ok {
+			return errors.New("validation_method must be set when creating a certificate")
+		}
 		return resourceAwsAcmCertificateCreateRequested(d, meta)
+	} else if _, ok := d.GetOk("private_key"); ok {
+		if _, ok := d.GetOk("certificate_body"); !ok {
+			return errors.New("certificate_body must be set when importing a certificate with private_key")
+		}
+		return resourceAwsAcmCertificateCreateImported(d, meta)
 	}
-
-	return resourceAwsAcmCertificateCreateImported(d, meta)
+	return errors.New("certificate must be imported (private_key) or created (domain_name)")
 }
 
 func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
@@ -205,7 +210,11 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		if err := d.Set("validation_emails", emailValidationOptions); err != nil {
 			return resource.NonRetryableError(err)
 		}
-		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
+
+		if _, ok := d.GetOk("validation_method"); ok {
+			d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
+
+		}
 
 		params := &acm.ListTagsForCertificateInput{
 			CertificateArn: aws.String(d.Id()),
@@ -247,7 +256,7 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 	}
-	return nil
+	return resourceAwsAcmCertificateRead(d, meta)
 }
 
 func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
@@ -315,27 +324,6 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error deleting certificate: %s", err)
 	}
 
-	return nil
-}
-
-func resourceAwsAcmCertificateCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
-	if _, privateKeyExists := diff.GetOk("private_key"); privateKeyExists {
-		if _, certificateExists := diff.GetOk("certificate_body"); !certificateExists {
-			return errors.New("certificate_body must be set when importing a certificate with private_key")
-		}
-		for _, field := range []string{"validation_emails", "domain_validation_options"} {
-			err := diff.Clear(field)
-			if err != nil {
-				return fmt.Errorf("Error clearing diff for field %s: %s", field, err)
-			}
-		}
-	} else if _, domainNameExists := diff.GetOk("domain_name"); domainNameExists {
-		if validationMethod, ok := diff.GetOk("validation_method"); ok && validationMethod.(string) == "NONE" {
-			return errors.New("validation_method must be set when creating a certificate")
-		}
-	} else {
-		return errors.New("certificate must be imported (private_key) or created (domain_name)")
-	}
 	return nil
 }
 

@@ -382,21 +382,33 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 }
 
 func TestAccAWSAcmCertificate_imported(t *testing.T) {
+	resourceName := "aws_acm_certificate.cert"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAcmCertificateConfig_selfSigned("example"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 				),
 			},
-			resource.TestStep{
-				ResourceName:      "aws_acm_certificate.cert",
+			{
+				Config: testAccAcmCertificateConfig_selfSigned("example2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// These are not returned by the API
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
 			},
 		},
 	})
@@ -460,7 +472,7 @@ resource "tls_self_signed_cert" "%[1]s" {
 	private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
 
 	subject {
-		common_name  = "example.com"
+		common_name  = "%[1]s.com"
 		organization = "ACME Examples, Inc"
 	}
 
@@ -474,9 +486,8 @@ resource "tls_self_signed_cert" "%[1]s" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  private_key       = "${tls_private_key.%[1]s.private_key_pem}"
+  private_key 		= "${tls_private_key.%[1]s.private_key_pem}"
   certificate_body  = "${tls_self_signed_cert.%[1]s.cert_pem}"
-  depends_on = ["tls_private_key.%[1]s", "tls_self_signed_cert.%[1]s"]
 }
 `, certName)
 }
