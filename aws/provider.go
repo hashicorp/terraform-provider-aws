@@ -274,6 +274,7 @@ func Provider() terraform.ResourceProvider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_acm_certificate":                              resourceAwsAcmCertificate(),
+			"aws_acm_certificate_imported":                     resourceAwsAcmCertificateImported(),
 			"aws_acm_certificate_validation":                   resourceAwsAcmCertificateValidation(),
 			"aws_acmpca_certificate_authority":                 resourceAwsAcmpcaCertificateAuthority(),
 			"aws_ami":                                          resourceAwsAmi(),

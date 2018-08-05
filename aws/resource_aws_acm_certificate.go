@@ -14,7 +14,7 @@ import (
 func resourceAwsAcmCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAcmCertificateCreate,
-		Read:   resourceAwsAcmCertificateRead,
+		Read:   resourceAwsAcmCertificateRead(true),
 		Update: resourceAwsAcmCertificateUpdate,
 		Delete: resourceAwsAcmCertificateDelete,
 		Importer: &schema.ResourceImporter{
@@ -109,60 +109,65 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsAcmCertificateRead(d, meta)
+	return resourceAwsAcmCertificateRead(true)(d, meta)
 }
 
-func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
+func resourceAwsAcmCertificateRead(readValidationFields bool) func(d *schema.ResourceData, meta interface{}) error {
+	return func(d *schema.ResourceData, meta interface{}) error {
+		acmconn := meta.(*AWSClient).acmconn
 
-	params := &acm.DescribeCertificateInput{
-		CertificateArn: aws.String(d.Id()),
-	}
-
-	return resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
-		resp, err := acmconn.DescribeCertificate(params)
-
-		if err != nil {
-			if isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
-				d.SetId("")
-				return nil
-			}
-			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
-		}
-
-		d.Set("domain_name", resp.Certificate.DomainName)
-		d.Set("arn", resp.Certificate.CertificateArn)
-
-		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
-
-		if err != nil {
-			return resource.RetryableError(err)
-		}
-
-		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if err := d.Set("validation_emails", emailValidationOptions); err != nil {
-			return resource.NonRetryableError(err)
-		}
-		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
-
-		params := &acm.ListTagsForCertificateInput{
+		params := &acm.DescribeCertificateInput{
 			CertificateArn: aws.String(d.Id()),
 		}
 
-		tagResp, err := acmconn.ListTagsForCertificate(params)
-		if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
-			return resource.NonRetryableError(err)
-		}
+		return resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
+			resp, err := acmconn.DescribeCertificate(params)
 
-		return nil
-	})
+			if err != nil {
+				if isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
+					d.SetId("")
+					return nil
+				}
+				return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
+			}
+
+			d.Set("domain_name", resp.Certificate.DomainName)
+			d.Set("arn", resp.Certificate.CertificateArn)
+
+			if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			if readValidationFields {
+				domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
+
+				if err != nil {
+					return resource.RetryableError(err)
+				}
+
+				if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
+					return resource.NonRetryableError(err)
+				}
+				if err := d.Set("validation_emails", emailValidationOptions); err != nil {
+					return resource.NonRetryableError(err)
+				}
+				d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
+			}
+
+			params := &acm.ListTagsForCertificateInput{
+				CertificateArn: aws.String(d.Id()),
+			}
+
+			tagResp, err := acmconn.ListTagsForCertificate(params)
+			if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+	}
 }
+
 func resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions []map[string]interface{}, emailValidationOptions []string) string {
 	// The DescribeCertificate Response doesn't have information on what validation method was used
 	// so we need to guess from the validation options we see...
