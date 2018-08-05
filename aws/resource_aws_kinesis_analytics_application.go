@@ -421,6 +421,12 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		createOpts.Inputs = []*kinesisanalytics.Input{inputs}
 	}
 
+	if v, ok := d.GetOk("outputs"); ok {
+		o := v.([]interface{})[0].(map[string]interface{})
+		outputs := createOutputs(o)
+		createOpts.Outputs = []*kinesisanalytics.Output{outputs}
+	}
+
 	_, err := conn.CreateApplication(createOpts)
 	if err != nil {
 		return fmt.Errorf("Unable to create Kinesis Analytics Application: %s", err)
@@ -545,10 +551,8 @@ func createCloudwatchLoggingOption(clo map[string]interface{}) *kinesisanalytics
 }
 
 func createInputs(i map[string]interface{}) *kinesisanalytics.Input {
-	input := &kinesisanalytics.Input{}
-
-	if v, ok := i["name_prefix"]; ok {
-		input.NamePrefix = aws.String(v.(string))
+	input := &kinesisanalytics.Input{
+		NamePrefix: aws.String(i["name_prefix"].(string)),
 	}
 
 	if v := i["kinesis_firehose"].([]interface{}); len(v) > 0 {
@@ -659,6 +663,49 @@ func createInputs(i map[string]interface{}) *kinesisanalytics.Input {
 	}
 
 	return input
+}
+
+func createOutputs(o map[string]interface{}) *kinesisanalytics.Output {
+	output := &kinesisanalytics.Output{
+		Name: aws.String(o["name"].(string)),
+	}
+
+	if v := o["kinesis_firehose"].([]interface{}); len(v) > 0 {
+		kf := v[0].(map[string]interface{})
+		kfo := &kinesisanalytics.KinesisFirehoseOutput{
+			ResourceARN: aws.String(kf["resource"].(string)),
+			RoleARN:     aws.String(kf["role"].(string)),
+		}
+		output.KinesisFirehoseOutput = kfo
+	}
+
+	if v := o["kinesis_stream"].([]interface{}); len(v) > 0 {
+		ks := v[0].(map[string]interface{})
+		kso := &kinesisanalytics.KinesisStreamsOutput{
+			ResourceARN: aws.String(ks["resource"].(string)),
+			RoleARN:     aws.String(ks["role"].(string)),
+		}
+		output.KinesisStreamsOutput = kso
+	}
+
+	if v := o["lambda"].([]interface{}); len(v) > 0 {
+		l := v[0].(map[string]interface{})
+		lo := &kinesisanalytics.LambdaOutput{
+			ResourceARN: aws.String(l["resource"].(string)),
+			RoleARN:     aws.String(l["role"].(string)),
+		}
+		output.LambdaOutput = lo
+	}
+
+	if v := o["schema"].([]interface{}); len(v) > 0 {
+		ds := v[0].(map[string]interface{})
+		dso := &kinesisanalytics.DestinationSchema{
+			RecordFormatType: aws.String(ds["record_format_type"].(string)),
+		}
+		output.DestinationSchema = dso
+	}
+
+	return output
 }
 
 func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {
