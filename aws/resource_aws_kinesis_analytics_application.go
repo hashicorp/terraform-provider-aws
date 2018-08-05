@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
@@ -387,6 +388,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 									"record_format_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											kinesisanalytics.RecordFormatTypeCsv,
+											kinesisanalytics.RecordFormatTypeJson,
+										}, false),
 									},
 								},
 							},
