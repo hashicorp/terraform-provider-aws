@@ -235,7 +235,8 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputUpdateKinesisStream(rInt, "test2")
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
+	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:stream/testAcc-testStream$"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -266,6 +267,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix2"),
+					resource.TestMatchResourceAttr(resName, "inputs.0.kinesis_stream.0.resource", streamRe),
 					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.0.count", "2"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.0.name", "test2"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
@@ -345,6 +347,55 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing.T) {
+	var before, after kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
+	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:stream/testAcc-testStream$"))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
+				),
+			},
+			{
+				Config: thirdStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name2"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
+					resource.TestMatchResourceAttr(resName, "outputs.0.kinesis_stream.0.resource", streamRe),
+					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "CSV"),
 				),
 			},
 		},
@@ -478,7 +529,7 @@ resource "aws_kinesis_analytics_application" "test" {
 `, rInt, rInt)
 }
 
-func testAccKinesisAnalyticsApplication_inputUpdateKinesisStream(rInt int, streamName string) string {
+func testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name = "testAcc-%s"
@@ -542,6 +593,31 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, rInt, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt int, streamName string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name = "testAcc-%s"
+  shard_count = 1
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+
+  outputs {
+    name = "test_name2"
+    kinesis_stream {
+      resource = "${aws_kinesis_stream.test.arn}"
+      role = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_format_type = "CSV"
+    }
+  }
+}
+`, streamName, rInt)
 }
 
 func fulfillSleep() resource.TestCheckFunc {

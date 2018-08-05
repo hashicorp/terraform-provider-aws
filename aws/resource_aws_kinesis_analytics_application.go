@@ -779,6 +779,15 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.Appl
 		}
 	}
 
+	oldOutputs, newOutputs := d.GetChange("outputs")
+	if len(oldOutputs.([]interface{})) > 0 && len(newOutputs.([]interface{})) > 0 {
+		if v, ok := d.GetOk("outputs"); ok {
+			vL := v.([]interface{})[0].(map[string]interface{})
+			outputUpdate := createOutputUpdate(vL)
+			applicationUpdate.OutputUpdates = []*kinesisanalytics.OutputUpdate{outputUpdate}
+		}
+	}
+
 	return applicationUpdate, nil
 }
 
@@ -787,6 +796,7 @@ func createInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate 
 		InputId:          aws.String(vL["id"].(string)),
 		NamePrefixUpdate: aws.String(vL["name_prefix"].(string)),
 	}
+
 	if v := vL["kinesis_firehose"].([]interface{}); len(v) > 0 {
 		kf := v[0].(map[string]interface{})
 		kfiu := &kinesisanalytics.KinesisFirehoseInputUpdate{
@@ -795,6 +805,7 @@ func createInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate 
 		}
 		inputUpdate.KinesisFirehoseInputUpdate = kfiu
 	}
+
 	if v := vL["kinesis_stream"].([]interface{}); len(v) > 0 {
 		ks := v[0].(map[string]interface{})
 		ksiu := &kinesisanalytics.KinesisStreamsInputUpdate{
@@ -803,6 +814,7 @@ func createInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate 
 		}
 		inputUpdate.KinesisStreamsInputUpdate = ksiu
 	}
+
 	if v := vL["parallelism"].([]interface{}); len(v) > 0 {
 		p := v[0].(map[string]interface{})
 
@@ -813,6 +825,7 @@ func createInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate 
 			inputUpdate.InputParallelismUpdate = ipu
 		}
 	}
+
 	if v := vL["processing_configuration"].([]interface{}); len(v) > 0 {
 		pc := v[0].(map[string]interface{})
 
@@ -827,6 +840,7 @@ func createInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate 
 			inputUpdate.InputProcessingConfigurationUpdate = ipc
 		}
 	}
+
 	if v := vL["schema"].([]interface{}); len(v) > 0 {
 		ss := &kinesisanalytics.InputSchemaUpdate{}
 		vL := v[0].(map[string]interface{})
@@ -883,13 +897,56 @@ func createInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate 
 				}
 				rf.MappingParameters = mp
 			}
-
 			ss.RecordFormatUpdate = rf
 		}
-
 		inputUpdate.InputSchemaUpdate = ss
 	}
+
 	return inputUpdate
+}
+
+func createOutputUpdate(vL map[string]interface{}) *kinesisanalytics.OutputUpdate {
+	outputUpdate := &kinesisanalytics.OutputUpdate{
+		OutputId:   aws.String(vL["id"].(string)),
+		NameUpdate: aws.String(vL["name"].(string)),
+	}
+
+	if v := vL["kinesis_firehose"].([]interface{}); len(v) > 0 {
+		kf := v[0].(map[string]interface{})
+		kfou := &kinesisanalytics.KinesisFirehoseOutputUpdate{
+			ResourceARNUpdate: aws.String(kf["resource"].(string)),
+			RoleARNUpdate:     aws.String(kf["role"].(string)),
+		}
+		outputUpdate.KinesisFirehoseOutputUpdate = kfou
+	}
+
+	if v := vL["kinesis_stream"].([]interface{}); len(v) > 0 {
+		ks := v[0].(map[string]interface{})
+		ksou := &kinesisanalytics.KinesisStreamsOutputUpdate{
+			ResourceARNUpdate: aws.String(ks["resource"].(string)),
+			RoleARNUpdate:     aws.String(ks["role"].(string)),
+		}
+		outputUpdate.KinesisStreamsOutputUpdate = ksou
+	}
+
+	if v := vL["lambda"].([]interface{}); len(v) > 0 {
+		l := v[0].(map[string]interface{})
+		lou := &kinesisanalytics.LambdaOutputUpdate{
+			ResourceARNUpdate: aws.String(l["resource"].(string)),
+			RoleARNUpdate:     aws.String(l["role"].(string)),
+		}
+		outputUpdate.LambdaOutputUpdate = lou
+	}
+
+	if v := vL["schema"].([]interface{}); len(v) > 0 {
+		ds := v[0].(map[string]interface{})
+		dsu := &kinesisanalytics.DestinationSchema{
+			RecordFormatType: aws.String(ds["record_format_type"].(string)),
+		}
+		outputUpdate.DestinationSchemaUpdate = dsu
+	}
+
+	return outputUpdate
 }
 
 func createCloudwatchLoggingOptionUpdate(clo map[string]interface{}) *kinesisanalytics.CloudWatchLoggingOptionUpdate {
