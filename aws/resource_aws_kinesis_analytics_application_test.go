@@ -183,7 +183,53 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsApplication_inputUpdateKinesisStream(t *testing.T) {
+func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
+	var before, after kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.#", "0"),
+				),
+			},
+			{
+				Config: thirdStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.T) {
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()

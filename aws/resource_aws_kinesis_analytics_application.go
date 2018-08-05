@@ -516,7 +516,29 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					CloudWatchLoggingOption:     cloudwatchLoggingOption,
 				}
-				conn.AddApplicationCloudWatchLoggingOption(addOpts)
+				_, err := conn.AddApplicationCloudWatchLoggingOption(addOpts)
+				if err != nil {
+					return err
+				}
+				version = version + 1
+			}
+		}
+
+		oldInputs, newInputs := d.GetChange("inputs")
+		if len(oldInputs.([]interface{})) == 0 && len(newInputs.([]interface{})) > 0 {
+			if v, ok := d.GetOk("inputs"); ok {
+				i := v.([]interface{})[0].(map[string]interface{})
+				input := createInputs(i)
+				addOpts := &kinesisanalytics.AddApplicationInputInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					Input: input,
+				}
+				_, err := conn.AddApplicationInput(addOpts)
+				if err != nil {
+					return err
+				}
+				version = version + 1
 			}
 		}
 	}
@@ -734,8 +756,8 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.Appl
 		}
 	}
 
-	_, newInputs := d.GetChange("inputs")
-	if len(newInputs.([]interface{})) > 0 {
+	oldInputs, newInputs := d.GetChange("inputs")
+	if len(oldInputs.([]interface{})) > 0 && len(newInputs.([]interface{})) > 0 {
 		if v, ok := d.GetOk("inputs"); ok {
 			vL := v.([]interface{})[0].(map[string]interface{})
 			inputUpdate := &kinesisanalytics.InputUpdate{
