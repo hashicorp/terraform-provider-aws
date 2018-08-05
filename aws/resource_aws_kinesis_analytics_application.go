@@ -308,7 +308,90 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{},
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"kinesis_firehose": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+
+									"role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
+						"kinesis_stream": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+
+									"role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
+						"lambda": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+
+									"role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"schema": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"record_format_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
