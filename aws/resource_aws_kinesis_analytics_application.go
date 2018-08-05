@@ -472,6 +472,10 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return err
 	}
 
+	if err := d.Set("outputs", getOutputs(resp.ApplicationDetail.OutputDescriptions)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -994,5 +998,57 @@ func getInputs(inputs []*kinesisanalytics.InputDescription) []interface{} {
 
 		s = append(s, input)
 	}
+	return s
+}
+
+func getOutputs(outputs []*kinesisanalytics.OutputDescription) []interface{} {
+	s := []interface{}{}
+
+	if len(outputs) > 0 {
+		id := outputs[0]
+
+		output := map[string]interface{}{
+			"id":   aws.StringValue(id.OutputId),
+			"name": aws.StringValue(id.Name),
+		}
+
+		if id.KinesisFirehoseOutputDescription != nil {
+			output["kinesis_firehose"] = []interface{}{
+				map[string]interface{}{
+					"resource": aws.StringValue(id.KinesisFirehoseOutputDescription.ResourceARN),
+					"role":     aws.StringValue(id.KinesisFirehoseOutputDescription.RoleARN),
+				},
+			}
+		}
+
+		if id.KinesisStreamsOutputDescription != nil {
+			output["kinesis_stream"] = []interface{}{
+				map[string]interface{}{
+					"resource": aws.StringValue(id.KinesisStreamsOutputDescription.ResourceARN),
+					"role":     aws.StringValue(id.KinesisStreamsOutputDescription.RoleARN),
+				},
+			}
+		}
+
+		if id.LambdaOutputDescription != nil {
+			output["lambda"] = []interface{}{
+				map[string]interface{}{
+					"resource": aws.StringValue(id.LambdaOutputDescription.ResourceARN),
+					"role":     aws.StringValue(id.LambdaOutputDescription.RoleARN),
+				},
+			}
+		}
+
+		if id.DestinationSchema != nil {
+			output["schema"] = []interface{}{
+				map[string]interface{}{
+					"record_format_type": aws.StringValue(id.DestinationSchema.RecordFormatType),
+				},
+			}
+		}
+
+		s = append(s, output)
+	}
+
 	return s
 }
