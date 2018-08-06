@@ -128,10 +128,6 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
-	if err := setTagsNeptune(conn, d, aws.StringValue(output.EventSubscription.EventSubscriptionArn)); err != nil {
-		return fmt.Errorf("Error creating Neptune Event Subscription (%s) tags: %s", d.Id(), err)
-	}
-
 	log.Println("[INFO] Waiting for Neptune Event Subscription to be ready")
 
 	stateConf := &resource.StateChangeConf{
@@ -146,7 +142,7 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Creating Neptune Event Subscription %s failed: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for Neptune Event Subscription state to be \"active\": %s", err)
 	}
 
 	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
