@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"regexp"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -250,7 +250,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 						StatusCode: aws.String(redirectMap["status_code"].(string)),
 					}
 				} else {
-					return errors.New("for actions of type 'redirect', you must specify a 'redirect_config'")
+					return errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
 				}
 
 			case "fixed-response":
@@ -265,7 +265,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 						StatusCode:  aws.String(fixedResponseMap["status_code"].(string)),
 					}
 				} else {
-					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response'")
+					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
 				}
 			}
 
@@ -420,7 +420,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 						StatusCode: aws.String(redirectMap["status_code"].(string)),
 					}
 				} else {
-					return errors.New("for actions of type 'redirect', you must specify a 'redirect_config'")
+					return errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
 				}
 
 			case "fixed-response":
@@ -435,7 +435,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 						StatusCode:  aws.String(fixedResponseMap["status_code"].(string)),
 					}
 				} else {
-					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response'")
+					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
 				}
 			}
 
