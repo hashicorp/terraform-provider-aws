@@ -76,3 +76,78 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 		},
 	}
 }
+
+func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+
+	if v, ok := d.GetOk("name"); ok {
+		d.Set("name", v.(string))
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		d.Set("name", resource.PrefixedUniqueId(v.(string)))
+	} else {
+		d.Set("name", resource.PrefixedUniqueId("tf-"))
+	}
+
+	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
+
+	request := &neptune.CreateEventSubscriptionInput{
+		SubscriptionName: aws.String(d.Get("name").(string)),
+		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Tags:             tags,
+	}
+
+	if v, ok := d.GetOk("source_ids"); ok {
+		sourceIdsSet := v.(*schema.Set)
+		sourceIds := make([]*string, sourceIdsSet.Len())
+		for i, sourceId := range sourceIdsSet.List() {
+			sourceIds[i] = aws.String(sourceId.(string))
+		}
+		request.SourceIds = sourceIds
+	}
+
+	if v, ok := d.GetOk("event_categories"); ok {
+		eventCategoriesSet := v.(*schema.Set)
+		eventCategories := make([]*string, eventCategoriesSet.Len())
+		for i, eventCategory := range eventCategoriesSet.List() {
+			eventCategories[i] = aws.String(eventCategory.(string))
+		}
+		request.EventCategories = eventCategories
+	}
+
+	if v, ok := d.GetOk("source_type"); ok {
+		request.SourceType = aws.String(v.(string))
+	}
+
+	log.Println("[DEBUG] Create Neptune Event Subscription:", request)
+
+	output, err := conn.CreateEventSubscription(request)
+	if err != nil || output.EventSubscription == nil {
+		return fmt.Errorf("Error creating Neptune Event Subscription %s: %s", d.Get("name").(string), err)
+	}
+
+	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
+
+	if err := setTagsNeptune(conn, d, aws.StringValue(output.EventSubscription.EventSubscriptionArn)); err != nil {
+		return fmt.Errorf("Error creating Neptune Event Subscription (%s) tags: %s", d.Id(), err)
+	}
+
+	log.Println("[INFO] Waiting for Neptune Event Subscription to be ready")
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating"},
+		Target:     []string{"active"},
+		Refresh:    resourceAwsNeptuneEventSubscriptionRefreshFunc(d.Id(), conn),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	// Wait, catching any errors
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Creating Neptune Event Subscription %s failed: %s", d.Id(), err)
+	}
+
+	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
+}
