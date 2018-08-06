@@ -1132,6 +1132,18 @@ func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
+func flattenESSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
+	if snapshotOptions == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"automated_snapshot_start_hour": int(aws.Int64Value(snapshotOptions.AutomatedSnapshotStartHour)),
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
