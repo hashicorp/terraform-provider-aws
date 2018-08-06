@@ -786,69 +786,72 @@ func createInputs(i map[string]interface{}) *kinesisanalytics.Input {
 	}
 
 	if v := i["schema"].([]interface{}); len(v) > 0 {
-		ss := &kinesisanalytics.SourceSchema{}
 		vL := v[0].(map[string]interface{})
-
-		if v := vL["record_columns"].([]interface{}); len(v) > 0 {
-			var rcs []*kinesisanalytics.RecordColumn
-
-			for _, rc := range v {
-				rcD := rc.(map[string]interface{})
-				rc := &kinesisanalytics.RecordColumn{
-					Name:    aws.String(rcD["name"].(string)),
-					SqlType: aws.String(rcD["sql_type"].(string)),
-				}
-
-				if v, ok := rcD["mapping"]; ok {
-					rc.Mapping = aws.String(v.(string))
-				}
-
-				rcs = append(rcs, rc)
-			}
-
-			ss.RecordColumns = rcs
-		}
-
-		if v, ok := vL["record_encoding"]; ok && v.(string) != "" {
-			ss.RecordEncoding = aws.String(v.(string))
-		}
-
-		if v := vL["record_format"].([]interface{}); len(v) > 0 {
-			vL := v[0].(map[string]interface{})
-			rf := &kinesisanalytics.RecordFormat{}
-
-			if v := vL["mapping_parameters"].([]interface{}); len(v) > 0 {
-				vL := v[0].(map[string]interface{})
-				mp := &kinesisanalytics.MappingParameters{}
-
-				if v := vL["csv"].([]interface{}); len(v) > 0 {
-					cL := v[0].(map[string]interface{})
-					cmp := &kinesisanalytics.CSVMappingParameters{
-						RecordColumnDelimiter: aws.String(cL["record_column_delimiter"].(string)),
-						RecordRowDelimiter:    aws.String(cL["record_row_delimiter"].(string)),
-					}
-					mp.CSVMappingParameters = cmp
-					rf.RecordFormatType = aws.String("CSV")
-				}
-
-				if v := vL["json"].([]interface{}); len(v) > 0 {
-					jL := v[0].(map[string]interface{})
-					jmp := &kinesisanalytics.JSONMappingParameters{
-						RecordRowPath: aws.String(jL["record_row_path"].(string)),
-					}
-					mp.JSONMappingParameters = jmp
-					rf.RecordFormatType = aws.String("JSON")
-				}
-				rf.MappingParameters = mp
-			}
-
-			ss.RecordFormat = rf
-		}
-
+		ss := createSourceSchema(vL)
 		input.InputSchema = ss
 	}
 
 	return input
+}
+
+func createSourceSchema(vL map[string]interface{}) *kinesisanalytics.SourceSchema {
+	ss := &kinesisanalytics.SourceSchema{}
+	if v := vL["record_columns"].([]interface{}); len(v) > 0 {
+		var rcs []*kinesisanalytics.RecordColumn
+
+		for _, rc := range v {
+			rcD := rc.(map[string]interface{})
+			rc := &kinesisanalytics.RecordColumn{
+				Name:    aws.String(rcD["name"].(string)),
+				SqlType: aws.String(rcD["sql_type"].(string)),
+			}
+
+			if v, ok := rcD["mapping"]; ok {
+				rc.Mapping = aws.String(v.(string))
+			}
+
+			rcs = append(rcs, rc)
+		}
+
+		ss.RecordColumns = rcs
+	}
+
+	if v, ok := vL["record_encoding"]; ok && v.(string) != "" {
+		ss.RecordEncoding = aws.String(v.(string))
+	}
+
+	if v := vL["record_format"].([]interface{}); len(v) > 0 {
+		vL := v[0].(map[string]interface{})
+		rf := &kinesisanalytics.RecordFormat{}
+
+		if v := vL["mapping_parameters"].([]interface{}); len(v) > 0 {
+			vL := v[0].(map[string]interface{})
+			mp := &kinesisanalytics.MappingParameters{}
+
+			if v := vL["csv"].([]interface{}); len(v) > 0 {
+				cL := v[0].(map[string]interface{})
+				cmp := &kinesisanalytics.CSVMappingParameters{
+					RecordColumnDelimiter: aws.String(cL["record_column_delimiter"].(string)),
+					RecordRowDelimiter:    aws.String(cL["record_row_delimiter"].(string)),
+				}
+				mp.CSVMappingParameters = cmp
+				rf.RecordFormatType = aws.String("CSV")
+			}
+
+			if v := vL["json"].([]interface{}); len(v) > 0 {
+				jL := v[0].(map[string]interface{})
+				jmp := &kinesisanalytics.JSONMappingParameters{
+					RecordRowPath: aws.String(jL["record_row_path"].(string)),
+				}
+				mp.JSONMappingParameters = jmp
+				rf.RecordFormatType = aws.String("JSON")
+			}
+			rf.MappingParameters = mp
+		}
+
+		ss.RecordFormat = rf
+	}
+	return ss
 }
 
 func createOutputs(o map[string]interface{}) *kinesisanalytics.Output {
