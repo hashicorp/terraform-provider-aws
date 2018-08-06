@@ -751,6 +751,14 @@
 			"versionExact": "v1.15.4"
 		},
 		{
+			"checksumSHA1": "nUdxsOW9jg+m+sWZYPu7oX9rZo8=",
+			"path": "github.com/aws/aws-sdk-go/service/kinesisanalytics",
+			"revision": "d1f87361dea69f086010bc3d03c120a602320b97",
+			"revisionTime": "2018-08-02T21:11:11Z",
+			"version": "v1.15.4",
+			"versionExact": "v1.15.4"
+		},
+		{
 			"checksumSHA1": "vaMnUnRVDkpHp/e4f3dFX20JblM=",
 			"path": "github.com/aws/aws-sdk-go/service/kms",
 			"revision": "d1f87361dea69f086010bc3d03c120a602320b97",
