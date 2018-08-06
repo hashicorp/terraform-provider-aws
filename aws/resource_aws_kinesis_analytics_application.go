@@ -986,6 +986,39 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.Appl
 		}
 	}
 
+	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
+	if len(oldReferenceData.([]interface{})) > 0 && len(newReferenceData.([]interface{})) > 0 {
+		if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
+			var rdsus []*kinesisanalytics.ReferenceDataSourceUpdate
+			for _, rd := range v {
+				rdL := rd.(map[string]interface{})
+				rdsu := &kinesisanalytics.ReferenceDataSourceUpdate{
+					ReferenceId:     aws.String(rdL["id"].(string)),
+					TableNameUpdate: aws.String(rdL["table_name"].(string)),
+				}
+
+				if v := rdL["s3"].([]interface{}); len(v) > 0 {
+					vL := v[0].(map[string]interface{})
+					s3rdsu := &kinesisanalytics.S3ReferenceDataSourceUpdate{
+						BucketARNUpdate:        aws.String(vL["bucket"].(string)),
+						FileKeyUpdate:          aws.String(vL["file_key"].(string)),
+						ReferenceRoleARNUpdate: aws.String(vL["role"].(string)),
+					}
+					rdsu.S3ReferenceDataSourceUpdate = s3rdsu
+				}
+
+				if v := rdL["schema"].([]interface{}); len(v) > 0 {
+					vL := v[0].(map[string]interface{})
+					ss := createSourceSchema(vL)
+					rdsu.ReferenceSchemaUpdate = ss
+				}
+
+				rdsus = append(rdsus, rdsu)
+			}
+			applicationUpdate.ReferenceDataSourceUpdates = rdsus
+		}
+	}
+
 	return applicationUpdate, nil
 }
 

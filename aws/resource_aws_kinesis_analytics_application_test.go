@@ -436,6 +436,45 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.T) {
+	var before, after kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
+	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+				),
+			},
+			{
+				Config: thirdStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "version", "3"),
+					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analytics_application" {
@@ -681,6 +720,43 @@ resource "aws_kinesis_analytics_application" "test" {
         mapping_parameters {
           json {
             record_row_path = "$"
+          }
+        }
+      }
+    }
+  }
+}
+`, rInt, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "testacc2-%d"
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+
+  reference_data_sources {
+    table_name = "test_table2"
+    s3 {
+      bucket = "${aws_s3_bucket.test.arn}"
+      file_key = "test_file_key"
+      role = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_columns {
+        mapping = "$.test2"
+        name = "test2"
+        sql_type = "VARCHAR(8)"
+      }
+      record_encoding = "UTF-8"
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter = "\n"
           }
         }
       }
