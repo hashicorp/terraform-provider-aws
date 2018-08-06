@@ -618,6 +618,10 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return err
 	}
 
+	if err := d.Set("reference_data_sources", getReferenceDataSources(resp.ApplicationDetail.ReferenceDataSourceDescriptions)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1343,6 +1347,89 @@ func getOutputs(outputs []*kinesisanalytics.OutputDescription) []interface{} {
 		}
 
 		s = append(s, output)
+	}
+
+	return s
+}
+
+func getReferenceDataSources(dataSources []*kinesisanalytics.ReferenceDataSourceDescription) []interface{} {
+	s := []interface{}{}
+
+	if len(dataSources) > 0 {
+		for _, ds := range dataSources {
+			dataSource := map[string]interface{}{
+				"id":         aws.StringValue(ds.ReferenceId),
+				"table_name": aws.StringValue(ds.TableName),
+			}
+
+			if ds.S3ReferenceDataSourceDescription != nil {
+				dataSource["s3"] = []interface{}{
+					map[string]interface{}{
+						"bucket":   aws.StringValue(ds.S3ReferenceDataSourceDescription.BucketARN),
+						"file_key": aws.StringValue(ds.S3ReferenceDataSourceDescription.FileKey),
+						"role":     aws.StringValue(ds.S3ReferenceDataSourceDescription.ReferenceRoleARN),
+					},
+				}
+			}
+
+			if ds.ReferenceSchema != nil {
+				rs := ds.ReferenceSchema
+				rcs := []interface{}{}
+				ss := map[string]interface{}{
+					"record_encoding": aws.StringValue(rs.RecordEncoding),
+				}
+
+				for _, rc := range rs.RecordColumns {
+					rcM := map[string]interface{}{
+						"mapping":  aws.StringValue(rc.Mapping),
+						"name":     aws.StringValue(rc.Name),
+						"sql_type": aws.StringValue(rc.SqlType),
+					}
+					rcs = append(rcs, rcM)
+				}
+				ss["record_columns"] = rcs
+
+				if rs.RecordFormat != nil {
+					rf := rs.RecordFormat
+					rfM := map[string]interface{}{
+						"record_format_type": aws.StringValue(rf.RecordFormatType),
+					}
+
+					if rf.MappingParameters != nil {
+						mps := []interface{}{}
+						if rf.MappingParameters.CSVMappingParameters != nil {
+							cmp := map[string]interface{}{
+								"csv": []interface{}{
+									map[string]interface{}{
+										"record_column_delimiter": aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordColumnDelimiter),
+										"record_row_delimiter":    aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordRowDelimiter),
+									},
+								},
+							}
+							mps = append(mps, cmp)
+						}
+
+						if rf.MappingParameters.JSONMappingParameters != nil {
+							jmp := map[string]interface{}{
+								"json": []interface{}{
+									map[string]interface{}{
+										"record_row_path": aws.StringValue(rf.MappingParameters.JSONMappingParameters.RecordRowPath),
+									},
+								},
+							}
+							mps = append(mps, jmp)
+						}
+
+						rfM["mapping_parameters"] = mps
+					}
+					ss["record_format"] = []interface{}{rfM}
+				}
+
+				dataSource["schema"] = []interface{}{ss}
+			}
+
+			s = append(s, dataSource)
+		}
 	}
 
 	return s
