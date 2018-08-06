@@ -574,7 +574,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("Unable to create Kinesis Analytics Application: %s", err)
 	}
 
-	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)
+	return resourceAwsKinesisAnalyticsApplicationUpdate(d, meta)
 }
 
 func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta interface{}) error {
@@ -622,12 +622,18 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+	var version int
 	conn := meta.(*AWSClient).kinesisanalyticsconn
+	name := d.Get("name").(string)
+
+	if v, ok := d.GetOk("version"); ok {
+		version = v.(int)
+	} else {
+		version = 1
+	}
 
 	if !d.IsNewResource() {
 		applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
-		name := d.Get("name").(string)
-		version := d.Get("version").(int)
 
 		updateApplicationOpts := &kinesisanalytics.UpdateApplicationInput{
 			ApplicationName:             aws.String(name),
@@ -695,6 +701,26 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					Output: output,
 				}
 				_, err := conn.AddApplicationOutput(addOpts)
+				if err != nil {
+					return err
+				}
+				version = version + 1
+			}
+		}
+	}
+
+	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
+	if len(oldReferenceData.([]interface{})) == 0 && len(newReferenceData.([]interface{})) > 0 {
+		if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
+			for _, r := range v {
+				rd := r.(map[string]interface{})
+				referenceData := createReferenceData(rd)
+				addOpts := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					ReferenceDataSource:         referenceData,
+				}
+				_, err := conn.AddApplicationReferenceDataSource(addOpts)
 				if err != nil {
 					return err
 				}
@@ -895,6 +921,29 @@ func createOutputs(o map[string]interface{}) *kinesisanalytics.Output {
 	}
 
 	return output
+}
+
+func createReferenceData(rd map[string]interface{}) *kinesisanalytics.ReferenceDataSource {
+	referenceData := &kinesisanalytics.ReferenceDataSource{
+		TableName: aws.String(rd["table_name"].(string)),
+	}
+
+	if v := rd["s3"].([]interface{}); len(v) > 0 {
+		s3 := v[0].(map[string]interface{})
+		s3rds := &kinesisanalytics.S3ReferenceDataSource{
+			BucketARN:        aws.String(s3["bucket"].(string)),
+			FileKey:          aws.String(s3["file_key"].(string)),
+			ReferenceRoleARN: aws.String(s3["role"].(string)),
+		}
+		referenceData.S3ReferenceDataSource = s3rds
+	}
+
+	if v := rd["schema"].([]interface{}); len(v) > 0 {
+		ss := createSourceSchema(v[0].(map[string]interface{}))
+		referenceData.ReferenceSchema = ss
+	}
+
+	return referenceData
 }
 
 func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {

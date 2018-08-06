@@ -402,6 +402,36 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: firstStep,
+				Check: resource.ComposeTestCheckFunc(
+					fulfillSleep(),
+				),
+			},
+			{
+				Config: secondStep,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analytics_application" {
@@ -618,6 +648,42 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, streamName, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_referenceDataSource(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "testacc-%d"
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+
+  reference_data_sources {
+    table_name = "test_table"
+    s3 {
+      bucket = "${aws_s3_bucket.test.arn}"
+      file_key = "test_file_key"
+      role = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_columns {
+        mapping = "$.test"
+        name = "test"
+        sql_type = "VARCHAR(8)"
+      }
+      record_encoding = "UTF-8"
+      record_format {
+        mapping_parameters {
+          json {
+            record_row_path = "$"
+          }
+        }
+      }
+    }
+  }
+}
+`, rInt, rInt)
 }
 
 func fulfillSleep() resource.TestCheckFunc {
