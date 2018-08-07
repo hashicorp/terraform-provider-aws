@@ -77,7 +77,7 @@ The `cloudwatch_logging_options` block supports the following:
 
 ### Inputs
 
-Configure an Input for the Kinesis Analytics Application.
+Configure an Input for the Kinesis Analytics Application. You can only have 1 Input configured.
 
 The `inputs` block supports the following:
 
@@ -108,7 +108,7 @@ See [Kinesis Stream](#kinesis-stream) below for more details.
 
 ### Reference Data Sources
 
-Add a Reference Data Source to the Kinesis Analytics Application.
+Add a Reference Data Source to the Kinesis Analytics Application. You can only have 1 Reference Data Source.
 
 The `reference_data_sources` block supports the following:
 

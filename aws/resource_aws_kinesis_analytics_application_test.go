@@ -2,10 +2,8 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -67,8 +65,7 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
 	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
 	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:log-stream:testAcc-testStream$"))
 
@@ -79,12 +76,6 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -107,9 +98,8 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
 	beforeRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:log-stream:testAcc-testStream$"))
 	afterRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:log-stream:testAcc-testStream2$"))
 
@@ -121,12 +111,6 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 			{
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
@@ -134,7 +118,7 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 				),
 			},
 			{
-				Config: thirdStep,
+				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
@@ -150,8 +134,6 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -159,13 +141,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -187,9 +163,8 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -199,19 +174,13 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 			{
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.#", "0"),
 				),
 			},
 			{
-				Config: thirdStep,
+				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
@@ -233,9 +202,8 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
 	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:stream/testAcc-testStream$"))
 
 	resource.Test(t, resource.TestCase{
@@ -246,12 +214,6 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 			{
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
@@ -261,7 +223,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 				),
 			},
 			{
-				Config: thirdStep,
+				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
@@ -281,8 +243,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -291,12 +252,6 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -315,9 +270,8 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -327,19 +281,13 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 			{
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.#", "0"),
 				),
 			},
 			{
-				Config: thirdStep,
+				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
@@ -357,9 +305,8 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
 	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:stream/testAcc-testStream$"))
 
 	resource.Test(t, resource.TestCase{
@@ -369,12 +316,6 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -386,7 +327,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 				),
 			},
 			{
-				Config: thirdStep,
+				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
@@ -406,8 +347,7 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -416,12 +356,6 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
@@ -440,9 +374,8 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt)
+	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
+	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -452,19 +385,13 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 			{
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
-					fulfillSleep(),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
 				),
 			},
 			{
-				Config: thirdStep,
+				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "3"),
@@ -764,14 +691,6 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, rInt, rInt)
-}
-
-func fulfillSleep() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		log.Print("[DEBUG] Test: Sleep to allow IAM to propagate")
-		time.Sleep(30 * time.Second)
-		return nil
-	}
 }
 
 // this is used to set up the IAM role

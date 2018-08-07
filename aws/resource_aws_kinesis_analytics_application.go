@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -308,7 +309,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"outputs": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 1,
+				MaxItems: 3,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -319,6 +320,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"kinesis_firehose": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
@@ -339,6 +341,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"kinesis_stream": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
@@ -359,6 +362,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"lambda": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
@@ -384,6 +388,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"schema": {
 							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"record_format_type": {
@@ -404,6 +409,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"reference_data_sources": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -439,7 +445,8 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 						"schema": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"record_columns": {
@@ -569,9 +576,18 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		createOpts.Outputs = []*kinesisanalytics.Output{outputs}
 	}
 
-	_, err := conn.CreateApplication(createOpts)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.CreateApplication(createOpts)
+		if err != nil {
+			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("Unable to create Kinesis Analytics Application: %s", err)
+		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
 	}
 
 	return resourceAwsKinesisAnalyticsApplicationUpdate(d, meta)
@@ -668,9 +684,18 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					CloudWatchLoggingOption:     cloudwatchLoggingOption,
 				}
-				_, err := conn.AddApplicationCloudWatchLoggingOption(addOpts)
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationCloudWatchLoggingOption(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
 				if err != nil {
-					return err
+					return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
 				}
 				version = version + 1
 			}
@@ -686,9 +711,18 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					Input: input,
 				}
-				_, err := conn.AddApplicationInput(addOpts)
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationInput(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
 				if err != nil {
-					return err
+					return fmt.Errorf("Unable to add application inputs: %s", err)
 				}
 				version = version + 1
 			}
@@ -704,9 +738,18 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					Output: output,
 				}
-				_, err := conn.AddApplicationOutput(addOpts)
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationOutput(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
 				if err != nil {
-					return err
+					return fmt.Errorf("Unable to add application outputs: %s", err)
 				}
 				version = version + 1
 			}
@@ -724,9 +767,18 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					ReferenceDataSource:         referenceData,
 				}
-				_, err := conn.AddApplicationReferenceDataSource(addOpts)
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationReferenceDataSource(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
 				if err != nil {
-					return err
+					return fmt.Errorf("Unable to add application reference data source: %s", err)
 				}
 				version = version + 1
 			}
