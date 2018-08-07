@@ -147,3 +147,69 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 
 	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
 }
+
+func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+
+	sub, err := resourceAwsNeptuneEventSubscriptionRetrieve(d.Id(), conn)
+	if err != nil {
+		return fmt.Errorf("Error reading Neptune Event Subscription %s: %s", d.Id(), err)
+	}
+
+	if sub == nil {
+		log.Printf("[DEBUG] Neptune Event Subscription (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("arn", sub.EventSubscriptionArn)
+	d.Set("name", sub.CustSubscriptionId)
+	d.Set("sns_topic_arn", sub.SnsTopicArn)
+	d.Set("enabled", sub.Enabled)
+	d.Set("customer_aws_id", sub.CustomerAwsId)
+
+	if sub.SourceType != nil {
+		d.Set("source_type", sub.SourceType)
+	}
+
+	if sub.SourceIdsList != nil {
+		if err := d.Set("source_ids", flattenStringList(sub.SourceIdsList)); err != nil {
+			return fmt.Errorf("Error saving Source IDs to state for Neptune Event Subscription (%s): %s", d.Id(), err)
+		}
+	}
+
+	if sub.EventCategoriesList != nil {
+		if err := d.Set("event_categories", flattenStringList(sub.EventCategoriesList)); err != nil {
+			return fmt.Errorf("Error saving Event Categories to state for Neptune Event Subscription (%s): %s", d.Id(), err)
+		}
+	}
+
+	if err := saveTagsNeptune(conn, d, aws.StringValue(sub.EventSubscriptionArn)); err != nil {
+		return fmt.Errorf("Error saving tags for Neptune Event Subscription (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsNeptuneEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
+
+	request := &neptune.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(name),
+	}
+
+	describeResp, err := conn.DescribeEventSubscriptions(request)
+	if err != nil {
+		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			log.Printf("[DEBUG] Neptune Event Subscription (%s) not found", name)
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if len(describeResp.EventSubscriptionsList) != 1 ||
+		aws.StringValue(describeResp.EventSubscriptionsList[0].CustSubscriptionId) != name {
+		return nil, nil
+	}
+
+	return describeResp.EventSubscriptionsList[0], nil
+}
