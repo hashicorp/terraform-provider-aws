@@ -191,6 +191,123 @@ func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
+func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+
+	d.Partial(true)
+	requestUpdate := false
+
+	req := &neptune.ModifyEventSubscriptionInput{
+		SubscriptionName: aws.String(d.Id()),
+	}
+
+	if d.HasChange("event_categories") {
+		eventCategoriesSet := d.Get("event_categories").(*schema.Set)
+		req.EventCategories = make([]*string, eventCategoriesSet.Len())
+		for i, eventCategory := range eventCategoriesSet.List() {
+			req.EventCategories[i] = aws.String(eventCategory.(string))
+		}
+		requestUpdate = true
+	}
+
+	if d.HasChange("enabled") {
+		req.Enabled = aws.Bool(d.Get("enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("sns_topic_arn") {
+		req.SnsTopicArn = aws.String(d.Get("sns_topic_arn").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("source_type") {
+		req.SourceType = aws.String(d.Get("source_type").(string))
+		requestUpdate = true
+	}
+
+	log.Printf("[DEBUG] Send Neptune Event Subscription modification request: %#v", requestUpdate)
+	if requestUpdate {
+		log.Printf("[DEBUG] Neptune Event Subscription modification request: %#v", req)
+		_, err := conn.ModifyEventSubscription(req)
+		if err != nil {
+			return fmt.Errorf("Modifying Neptune Event Subscription %s failed: %s", d.Id(), err)
+		}
+
+		log.Println("[INFO] Waiting for Neptune Event Subscription modification to finish")
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"modifying"},
+			Target:     []string{"active"},
+			Refresh:    resourceAwsNeptuneEventSubscriptionRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second,
+		}
+
+		// Wait, catching any errors
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return err
+		}
+		d.SetPartial("event_categories")
+		d.SetPartial("enabled")
+		d.SetPartial("sns_topic_arn")
+		d.SetPartial("source_type")
+	}
+
+	if err := setTagsNeptune(conn, d, d.Get("arn").(string)); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
+	}
+
+	if d.HasChange("source_ids") {
+		o, n := d.GetChange("source_ids")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		remove := expandStringList(os.Difference(ns).List())
+		add := expandStringList(ns.Difference(os).List())
+
+		if len(remove) > 0 {
+			for _, removing := range remove {
+				log.Printf("[INFO] Removing %s as a Source Identifier from %q", *removing, d.Id())
+				_, err := conn.RemoveSourceIdentifierFromSubscription(&neptune.RemoveSourceIdentifierFromSubscriptionInput{
+					SourceIdentifier: removing,
+					SubscriptionName: aws.String(d.Id()),
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		if len(add) > 0 {
+			for _, adding := range add {
+				log.Printf("[INFO] Adding %s as a Source Identifier to %q", *adding, d.Id())
+				_, err := conn.AddSourceIdentifierToSubscription(&neptune.AddSourceIdentifierToSubscriptionInput{
+					SourceIdentifier: adding,
+					SubscriptionName: aws.String(d.Id()),
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
+		d.SetPartial("source_ids")
+	}
+
+	d.Partial(false)
+
+	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
+}
+
 func resourceAwsNeptuneEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
 
 	request := &neptune.DescribeEventSubscriptionsInput{
