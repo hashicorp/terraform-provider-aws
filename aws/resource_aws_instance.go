@@ -128,7 +128,8 @@ func resourceAwsInstance() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
 					// echo -n "" | shasum
-					if old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "" {
+					if (old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "") ||
+						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
 						return true
 					}
 					return false
