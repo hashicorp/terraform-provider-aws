@@ -308,6 +308,38 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
 }
 
+func resourceAwsNeptuneEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).neptuneconn
+	deleteOpts := neptune.DeleteEventSubscriptionInput{
+		SubscriptionName: aws.String(d.Id()),
+	}
+
+	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
+		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			log.Printf("[WARN] Neptune Event Subscription %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error deleting Neptune Event Subscription %s: %s", d.Id(), err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"deleting"},
+		Target:     []string{},
+		Refresh:    resourceAwsNeptuneEventSubscriptionRefreshFunc(d.Id(), conn),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error deleting Neptune Event Subscription %s: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
 func resourceAwsNeptuneEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
 
 	request := &neptune.DescribeEventSubscriptionsInput{
