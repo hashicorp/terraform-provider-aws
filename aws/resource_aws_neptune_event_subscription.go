@@ -340,6 +340,27 @@ func resourceAwsNeptuneEventSubscriptionDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
+func resourceAwsNeptuneEventSubscriptionRefreshFunc(name string, conn *neptune.Neptune) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		sub, err := resourceAwsNeptuneEventSubscriptionRetrieve(name, conn)
+
+		if err != nil {
+			log.Printf("Error on retrieving Neptune Event Subscription when waiting: %s", err)
+			return nil, "", err
+		}
+
+		if sub == nil {
+			return nil, "", nil
+		}
+
+		if sub.Status != nil {
+			log.Printf("[DEBUG] Neptune Event Subscription status for %s: %s", name, aws.StringValue(sub.Status))
+		}
+
+		return sub, aws.StringValue(sub.Status), nil
+	}
+}
+
 func resourceAwsNeptuneEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
 
 	request := &neptune.DescribeEventSubscriptionsInput{
