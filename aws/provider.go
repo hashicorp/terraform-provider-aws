@@ -507,6 +507,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_neptune_cluster":                              resourceAwsNeptuneCluster(),
 			"aws_neptune_cluster_instance":                     resourceAwsNeptuneClusterInstance(),
 			"aws_neptune_cluster_parameter_group":              resourceAwsNeptuneClusterParameterGroup(),
+			"aws_neptune_event_subscription":                   resourceAwsNeptuneEventSubscription(),
 			"aws_neptune_parameter_group":                      resourceAwsNeptuneParameterGroup(),
 			"aws_neptune_subnet_group":                         resourceAwsNeptuneSubnetGroup(),
 			"aws_network_acl_rule":                             resourceAwsNetworkAclRule(),
