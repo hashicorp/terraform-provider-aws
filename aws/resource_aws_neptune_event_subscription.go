@@ -31,6 +31,7 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateNeptuneEventSubscriptionName,
@@ -38,6 +39,7 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateNeptuneEventSubscriptionNamePrefix,
