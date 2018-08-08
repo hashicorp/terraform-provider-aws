@@ -209,6 +209,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								elasticsearch.LogTypeIndexSlowLogs,
 								elasticsearch.LogTypeSearchSlowLogs,
+								elasticsearch.LogTypeEsApplicationLogs,
 							}, false),
 						},
 						"cloudwatch_log_group_arn": {
