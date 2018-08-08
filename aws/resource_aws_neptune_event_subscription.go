@@ -207,6 +207,7 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 		for i, eventCategory := range eventCategoriesSet.List() {
 			req.EventCategories[i] = aws.String(eventCategory.(string))
 		}
+		req.SourceType = aws.String(d.Get("source_type").(string))
 		requestUpdate = true
 	}
 
