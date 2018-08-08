@@ -600,6 +600,13 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
+		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	return &client, nil
 }
 
