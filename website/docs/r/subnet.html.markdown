@@ -64,6 +64,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
+* `arn` - The ARN of the subnet.
 * `availability_zone`- The AZ for the subnet.
 * `cidr_block` - The CIDR block for the subnet.
 * `vpc_id` - The VPC ID.

@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"regexp"
 )
 
 func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
@@ -115,6 +116,13 @@ func testAccDataSourceAwsSubnetCheck(name string, rInt int) resource.TestCheckFu
 		}
 		if attr["tags.Name"] != "tf-acc-subnet-data-source" {
 			return fmt.Errorf("bad Name tag %s", attr["tags.Name"])
+		}
+
+		arnformat := `^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`
+		arnregex := regexp.MustCompile(arnformat)
+
+		if !arnregex.MatchString(attr["arn"]) {
+			return fmt.Errorf("arn doesn't match format %s", attr["arn"])
 		}
 
 		return nil
