@@ -216,7 +216,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 				for _, validationEmail := range o.ValidationEmails {
 					emailValidationResult = append(emailValidationResult, *validationEmail)
 				}
-			} else {
+			} else if *o.ValidationStatus == acm.DomainStatusPendingValidation {
 				log.Printf("[DEBUG] No validation options need to retry: %#v", o)
 				return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
 			}
