@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -20,39 +21,33 @@ func dataSourceAwsDbClusterSnapshot() *schema.Resource {
 			"db_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"db_cluster_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"snapshot_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"include_shared": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 				Default:  false,
 			},
 
 			"include_public": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 				Default:  false,
 			},
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 
 			//Computed values returned
@@ -120,7 +115,7 @@ func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_cluster_snapshot_identifier")
 
 	if !clusterIdentifierOk && !snapshotIdentifierOk {
-		return fmt.Errorf("One of db_cluster_snapshot_identifier or db_cluster_identifier must be assigned")
+		return errors.New("One of db_cluster_snapshot_identifier or db_cluster_identifier must be assigned")
 	}
 
 	params := &rds.DescribeDBClusterSnapshotsInput{
@@ -144,7 +139,7 @@ func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(resp.DBClusterSnapshots) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return errors.New("Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
@@ -154,13 +149,35 @@ func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}
 		if recent {
 			snapshot = mostRecentDbClusterSnapshot(resp.DBClusterSnapshots)
 		} else {
-			return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
+			return errors.New("Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
 		snapshot = resp.DBClusterSnapshots[0]
 	}
 
-	return DBClusterSnapshotDescriptionAttributes(d, snapshot)
+	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
+	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	if err := d.Set("availability_zones", flattenStringList(snapshot.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting availability_zones: %s", err)
+	}
+	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
+	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
+	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
+	d.Set("engine", snapshot.Engine)
+	d.Set("engine_version", snapshot.EngineVersion)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set("license_model", snapshot.LicenseModel)
+	d.Set("port", snapshot.Port)
+	if snapshot.SnapshotCreateTime != nil {
+		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	}
+	d.Set("snapshot_type", snapshot.SnapshotType)
+	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
+	d.Set("status", snapshot.Status)
+	d.Set("storage_encrypted", snapshot.StorageEncrypted)
+	d.Set("vpc_id", snapshot.VpcId)
+
+	return nil
 }
 
 type rdsClusterSnapshotSort []*rds.DBClusterSnapshot
@@ -183,28 +200,4 @@ func mostRecentDbClusterSnapshot(snapshots []*rds.DBClusterSnapshot) *rds.DBClus
 	sortedSnapshots := snapshots
 	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]
-}
-
-func DBClusterSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBClusterSnapshot) error {
-	d.SetId(*snapshot.DBClusterSnapshotIdentifier)
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zones", flattenStringList(snapshot.AvailabilityZones))
-	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
-	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
-	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
-	d.Set("license_model", snapshot.LicenseModel)
-	d.Set("port", snapshot.Port)
-	if snapshot.SnapshotCreateTime != nil {
-		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
-	}
-	d.Set("snapshot_type", snapshot.SnapshotType)
-	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
-	d.Set("status", snapshot.Status)
-	d.Set("storage_encrypted", snapshot.StorageEncrypted)
-	d.Set("vpc_id", snapshot.VpcId)
-
-	return nil
 }

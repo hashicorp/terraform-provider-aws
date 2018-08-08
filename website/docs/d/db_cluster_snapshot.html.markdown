@@ -13,8 +13,6 @@ Use this data source to get information about a DB Cluster Snapshot for use when
 ~> **NOTE:** This data source does not apply to snapshots created on DB Instances. 
 See the [`aws_db_snapshot` data source](/docs/providers/aws/d/db_snapshot.html) for DB Instance snapshots.
 
-
-
 ## Example Usage
 
 ```hcl
@@ -64,23 +62,22 @@ The default is `false`.
 * `include_public` - (Optional) Set this value to true to include manual DB Cluster Snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
 
-
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
-* `id` - The snapshot ID.
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
 * `db_cluster_identifier` - Specifies the DB cluster identifier of the DB cluster that this DB cluster snapshot was created from.
 * `db_cluster_snapshot_arn` - The Amazon Resource Name (ARN) for the DB Cluster Snapshot.
-* `engine` - Specifies the name of the database engine.
 * `engine_version` - Version of the database engine for this DB cluster snapshot.
+* `engine` - Specifies the name of the database engine.
+* `id` - The snapshot ID.
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `license_model` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
-* `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
-* `storage_encrypted` - Specifies whether the DB cluster snapshot is encrypted.
-* `status` - The status of this DB Cluster Snapshot.
-* `vpc_id` - The VPC ID associated with the DB cluster snapshot.
 * `snapshot_create_time` - Time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `status` - The status of this DB Cluster Snapshot.
+* `storage_encrypted` - Specifies whether the DB cluster snapshot is encrypted.
+* `vpc_id` - The VPC ID associated with the DB cluster snapshot.
