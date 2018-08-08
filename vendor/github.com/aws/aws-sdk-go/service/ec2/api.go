@@ -287,16 +287,20 @@ func (c *EC2) AllocateAddressRequest(input *AllocateAddressInput) (req *request.
 
 // AllocateAddress API operation for Amazon Elastic Compute Cloud.
 //
-// Allocates an Elastic IP address.
+// Allocates an Elastic IP address to your AWS account. After you allocate the
+// Elastic IP address you can associate it with an instance or network interface.
+// After you release an Elastic IP address, it is released to the IP address
+// pool and can be allocated to a different AWS account.
+//
+// [EC2-VPC] If you release an Elastic IP address, you might be able to recover
+// it. You cannot recover an Elastic IP address that you released after it is
+// allocated to another AWS account. You cannot recover an Elastic IP address
+// for EC2-Classic. To attempt to recover an Elastic IP address that you released,
+// specify it in this operation.
 //
 // An Elastic IP address is for use either in the EC2-Classic platform or in
 // a VPC. By default, you can allocate 5 Elastic IP addresses for EC2-Classic
 // per region and 5 Elastic IP addresses for EC2-VPC per region.
-//
-// If you release an Elastic IP address for use in a VPC, you might be able
-// to recover it. To recover an Elastic IP address that you released, specify
-// it in the Address parameter. Note that you cannot recover an Elastic IP address
-// that you released after it is allocated to another AWS account.
 //
 // For more information, see Elastic IP Addresses (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -616,6 +620,7 @@ func (c *EC2) AssociateAddressRequest(input *AssociateAddressInput) (req *reques
 // AssociateAddress API operation for Amazon Elastic Compute Cloud.
 //
 // Associates an Elastic IP address with an instance or a network interface.
+// Before you can use an Elastic IP address, you must allocate it to your account.
 //
 // An Elastic IP address is for use in either the EC2-Classic platform or in
 // a VPC. For more information, see Elastic IP Addresses (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
@@ -880,7 +885,7 @@ func (c *EC2) AssociateRouteTableRequest(input *AssociateRouteTableInput) (req *
 // an association ID, which you need in order to disassociate the route table
 // from the subnet later. A route table can be associated with multiple subnets.
 //
-// For more information about route tables, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1198,8 +1203,8 @@ func (c *EC2) AttachInternetGatewayRequest(input *AttachInternetGatewayInput) (r
 
 // AttachInternetGateway API operation for Amazon Elastic Compute Cloud.
 //
-// Attaches an Internet gateway to a VPC, enabling connectivity between the
-// Internet and the VPC. For more information about your VPC and Internet gateway,
+// Attaches an internet gateway to a VPC, enabling connectivity between the
+// internet and the VPC. For more information about your VPC and internet gateway,
 // see the Amazon Virtual Private Cloud User Guide (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2845,12 +2850,12 @@ func (c *EC2) CreateDefaultVpcRequest(input *CreateDefaultVpcInput) (req *reques
 // in the Amazon Virtual Private Cloud User Guide. You cannot specify the components
 // of the default VPC yourself.
 //
-// You can create a default VPC if you deleted your previous default VPC. You
-// cannot have more than one default VPC per region.
+// iIf you deleted your previous default VPC, you can create a default VPC.
+// You cannot have more than one default VPC per Region.
 //
 // If your account supports EC2-Classic, you cannot use this action to create
-// a default VPC in a region that supports EC2-Classic. If you want a default
-// VPC in a region that supports EC2-Classic, see "I really want a default VPC
+// a default VPC in a Region that supports EC2-Classic. If you want a default
+// VPC in a Region that supports EC2-Classic, see "I really want a default VPC
 // for my existing EC2 account. Is that possible?" in the Default VPCs FAQ (http://aws.amazon.com/vpc/faqs/#Default_VPCs).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2934,9 +2939,9 @@ func (c *EC2) CreateDhcpOptionsRequest(input *CreateDhcpOptionsInput) (req *requ
 //    * domain-name-servers - The IP addresses of up to four domain name servers,
 //    or AmazonProvidedDNS. The default DHCP option set specifies AmazonProvidedDNS.
 //    If specifying more than one domain name server, specify the IP addresses
-//    in a single parameter, separated by commas. If you want your instance
-//    to receive a custom DNS hostname as specified in domain-name, you must
-//    set domain-name-servers to a custom DNS server.
+//    in a single parameter, separated by commas. ITo have your instance to
+//    receive a custom DNS hostname as specified in domain-name, you must set
+//    domain-name-servers to a custom DNS server.
 //
 //    * domain-name - If you're using AmazonProvidedDNS in us-east-1, specify
 //    ec2.internal. If you're using AmazonProvidedDNS in another region, specify
@@ -2960,10 +2965,9 @@ func (c *EC2) CreateDhcpOptionsRequest(input *CreateDhcpOptionsInput) (req *requ
 //
 // Your VPC automatically starts out with a set of DHCP options that includes
 // only a DNS server that we provide (AmazonProvidedDNS). If you create a set
-// of options, and if your VPC has an Internet gateway, make sure to set the
+// of options, and if your VPC has an internet gateway, make sure to set the
 // domain-name-servers option either to AmazonProvidedDNS or to a domain name
-// server of your choice. For more information about DHCP options, see DHCP
-// Options Sets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// server of your choice. For more information, see DHCP Options Sets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3038,9 +3042,9 @@ func (c *EC2) CreateEgressOnlyInternetGatewayRequest(input *CreateEgressOnlyInte
 
 // CreateEgressOnlyInternetGateway API operation for Amazon Elastic Compute Cloud.
 //
-// [IPv6 only] Creates an egress-only Internet gateway for your VPC. An egress-only
-// Internet gateway is used to enable outbound communication over IPv6 from
-// instances in your VPC to the Internet, and prevents hosts outside of your
+// [IPv6 only] Creates an egress-only internet gateway for your VPC. An egress-only
+// internet gateway is used to enable outbound communication over IPv6 from
+// instances in your VPC to the internet, and prevents hosts outside of your
 // VPC from initiating an IPv6 connection with your instance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3195,16 +3199,19 @@ func (c *EC2) CreateFlowLogsRequest(input *CreateFlowLogsInput) (req *request.Re
 
 // CreateFlowLogs API operation for Amazon Elastic Compute Cloud.
 //
-// Creates one or more flow logs to capture IP traffic for a specific network
-// interface, subnet, or VPC. Flow logs are delivered to a specified log group
-// in Amazon CloudWatch Logs. If you specify a VPC or subnet in the request,
-// a log stream is created in CloudWatch Logs for each network interface in
-// the subnet or VPC. Log streams can include information about accepted and
-// rejected traffic to a network interface. You can view the data in your log
-// streams using Amazon CloudWatch Logs.
+// Creates one or more flow logs to capture information about IP traffic for
+// a specific network interface, subnet, or VPC.
 //
-// In your request, you must also specify an IAM role that has permission to
-// publish logs to CloudWatch Logs.
+// Flow log data for a monitored network interface is recorded as flow log records,
+// which are log events consisting of fields that describe the traffic flow.
+// For more information, see Flow Log Records (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/flow-logs.html#flow-log-records)
+// in the Amazon Virtual Private Cloud User Guide.
+//
+// When publishing to CloudWatch Logs, flow log records are published to a log
+// group, and each network interface has a unique log stream in the log group.
+// When publishing to Amazon S3, flow log records for all of the monitored network
+// interfaces are published to a single log file object that is stored in the
+// specified bucket.
 //
 // For more information, see VPC Flow Logs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/flow-logs.html)
 // in the Amazon Virtual Private Cloud User Guide.
@@ -3524,10 +3531,10 @@ func (c *EC2) CreateInternetGatewayRequest(input *CreateInternetGatewayInput) (r
 
 // CreateInternetGateway API operation for Amazon Elastic Compute Cloud.
 //
-// Creates an Internet gateway for use with a VPC. After creating the Internet
+// Creates an internet gateway for use with a VPC. After creating the internet
 // gateway, you attach it to a VPC using AttachInternetGateway.
 //
-// For more information about your VPC and Internet gateway, see the Amazon
+// For more information about your VPC and internet gateway, see the Amazon
 // Virtual Private Cloud User Guide (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3925,7 +3932,7 @@ func (c *EC2) CreateNetworkAclRequest(input *CreateNetworkAclInput) (req *reques
 // Creates a network ACL in a VPC. Network ACLs provide an optional layer of
 // security (in addition to security groups) for the instances in your VPC.
 //
-// For more information about network ACLs, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4431,9 +4438,9 @@ func (c *EC2) CreateRouteRequest(input *CreateRouteInput) (req *request.Request,
 //
 // Creates a route in a route table within a VPC.
 //
-// You must specify one of the following targets: Internet gateway or virtual
+// You must specify one of the following targets: internet gateway or virtual
 // private gateway, NAT instance, NAT gateway, VPC peering connection, network
-// interface, or egress-only Internet gateway.
+// interface, or egress-only internet gateway.
 //
 // When determining how to route traffic, we use the route with the most specific
 // match. For example, traffic is destined for the IPv4 address 192.0.2.3, and
@@ -4525,7 +4532,7 @@ func (c *EC2) CreateRouteTableRequest(input *CreateRouteTableInput) (req *reques
 // Creates a route table for the specified VPC. After you create a route table,
 // you can add routes and associate the table with a subnet.
 //
-// For more information about route tables, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4884,13 +4891,13 @@ func (c *EC2) CreateSubnetRequest(input *CreateSubnetInput) (req *request.Reques
 //
 // Creates a subnet in an existing VPC.
 //
-// When you create each subnet, you provide the VPC ID and the IPv4 CIDR block
-// you want for the subnet. After you create a subnet, you can't change its
-// CIDR block. The size of the subnet's IPv4 CIDR block can be the same as a
-// VPC's IPv4 CIDR block, or a subset of a VPC's IPv4 CIDR block. If you create
-// more than one subnet in a VPC, the subnets' CIDR blocks must not overlap.
-// The smallest IPv4 subnet (and VPC) you can create uses a /28 netmask (16
-// IPv4 addresses), and the largest uses a /16 netmask (65,536 IPv4 addresses).
+// When you create each subnet, you provide the VPC ID and IPv4 CIDR block for
+// the subnet. After you create a subnet, you can't change its CIDR block. The
+// size of the subnet's IPv4 CIDR block can be the same as a VPC's IPv4 CIDR
+// block, or a subset of a VPC's IPv4 CIDR block. If you create more than one
+// subnet in a VPC, the subnets' CIDR blocks must not overlap. The smallest
+// IPv4 subnet (and VPC) you can create uses a /28 netmask (16 IPv4 addresses),
+// and the largest uses a /16 netmask (65,536 IPv4 addresses).
 //
 // If you've associated an IPv6 CIDR block with your VPC, you can create a subnet
 // with an IPv6 CIDR block that uses a /64 prefix length.
@@ -5161,8 +5168,8 @@ func (c *EC2) CreateVpcRequest(input *CreateVpcInput) (req *request.Request, out
 //
 // Creates a VPC with the specified IPv4 CIDR block. The smallest VPC you can
 // create uses a /28 netmask (16 IPv4 addresses), and the largest uses a /16
-// netmask (65,536 IPv4 addresses). To help you decide how big to make your
-// VPC, see Your VPC and Subnets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
+// netmask (65,536 IPv4 addresses). For more information about how large to
+// make your VPC, see Your VPC and Subnets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // You can optionally request an Amazon-provided IPv6 CIDR block for the VPC.
@@ -5170,8 +5177,8 @@ func (c *EC2) CreateVpcRequest(input *CreateVpcInput) (req *request.Request, out
 // pool of IPv6 addresses. You cannot choose the IPv6 range for your VPC.
 //
 // By default, each instance you launch in the VPC has the default DHCP options,
-// which includes only a default DNS server that we provide (AmazonProvidedDNS).
-// For more information about DHCP options, see DHCP Options Sets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// which include only a default DNS server that we provide (AmazonProvidedDNS).
+// For more information, see DHCP Options Sets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // You can specify the instance tenancy value for the VPC when you create it.
@@ -5504,7 +5511,7 @@ func (c *EC2) CreateVpcPeeringConnectionRequest(input *CreateVpcPeeringConnectio
 //
 // Requests a VPC peering connection between two VPCs: a requester VPC that
 // you own and an accepter VPC with which to create the connection. The accepter
-// VPC can belong to another AWS account and can be in a different region to
+// VPC can belong to another AWS account and can be in a different Region to
 // the requester VPC. The requester VPC and accepter VPC cannot have overlapping
 // CIDR blocks.
 //
@@ -6002,7 +6009,7 @@ func (c *EC2) DeleteEgressOnlyInternetGatewayRequest(input *DeleteEgressOnlyInte
 
 // DeleteEgressOnlyInternetGateway API operation for Amazon Elastic Compute Cloud.
 //
-// Deletes an egress-only Internet gateway.
+// Deletes an egress-only internet gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6306,7 +6313,7 @@ func (c *EC2) DeleteInternetGatewayRequest(input *DeleteInternetGatewayInput) (r
 
 // DeleteInternetGateway API operation for Amazon Elastic Compute Cloud.
 //
-// Deletes the specified Internet gateway. You must detach the Internet gateway
+// Deletes the specified internet gateway. You must detach the internet gateway
 // from the VPC before you can delete it.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -8844,7 +8851,7 @@ func (c *EC2) DescribeClassicLinkInstancesRequest(input *DescribeClassicLinkInst
 //
 // Describes one or more of your linked EC2-Classic instances. This request
 // only returns information about EC2-Classic instances linked to a VPC through
-// ClassicLink; you cannot use this request to return information about other
+// ClassicLink. You cannot use this request to return information about other
 // instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -9077,7 +9084,7 @@ func (c *EC2) DescribeDhcpOptionsRequest(input *DescribeDhcpOptionsInput) (req *
 //
 // Describes one or more of your DHCP options sets.
 //
-// For more information about DHCP options sets, see DHCP Options Sets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// For more information, see DHCP Options Sets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -9152,7 +9159,7 @@ func (c *EC2) DescribeEgressOnlyInternetGatewaysRequest(input *DescribeEgressOnl
 
 // DescribeEgressOnlyInternetGateways API operation for Amazon Elastic Compute Cloud.
 //
-// Describes one or more of your egress-only Internet gateways.
+// Describes one or more of your egress-only internet gateways.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11083,7 +11090,7 @@ func (c *EC2) DescribeInternetGatewaysRequest(input *DescribeInternetGatewaysInp
 
 // DescribeInternetGateways API operation for Amazon Elastic Compute Cloud.
 //
-// Describes one or more of your Internet gateways.
+// Describes one or more of your internet gateways.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11465,7 +11472,7 @@ func (c *EC2) DescribeNatGatewaysRequest(input *DescribeNatGatewaysInput) (req *
 
 // DescribeNatGateways API operation for Amazon Elastic Compute Cloud.
 //
-// Describes one or more of the your NAT gateways.
+// Describes one or more of your NAT gateways.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11591,7 +11598,7 @@ func (c *EC2) DescribeNetworkAclsRequest(input *DescribeNetworkAclsInput) (req *
 //
 // Describes one or more of your network ACLs.
 //
-// For more information about network ACLs, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -12665,7 +12672,7 @@ func (c *EC2) DescribeRouteTablesRequest(input *DescribeRouteTablesInput) (req *
 // with the main route table. This command does not return the subnet ID for
 // implicit associations.
 //
-// For more information about route tables, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -13966,7 +13973,7 @@ func (c *EC2) DescribeSubnetsRequest(input *DescribeSubnetsInput) (req *request.
 //
 // Describes one or more of your subnets.
 //
-// For more information about subnets, see Your VPC and Subnets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
+// For more information, see Your VPC and Subnets (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -15702,8 +15709,8 @@ func (c *EC2) DetachInternetGatewayRequest(input *DetachInternetGatewayInput) (r
 
 // DetachInternetGateway API operation for Amazon Elastic Compute Cloud.
 //
-// Detaches an Internet gateway from a VPC, disabling connectivity between the
-// Internet and the VPC. The VPC must not contain any running instances with
+// Detaches an internet gateway from a VPC, disabling connectivity between the
+// internet and the VPC. The VPC must not contain any running instances with
 // Elastic IP addresses or public IPv4 addresses.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -16178,8 +16185,8 @@ func (c *EC2) DisableVpcClassicLinkDnsSupportRequest(input *DisableVpcClassicLin
 //
 // Disables ClassicLink DNS support for a VPC. If disabled, DNS hostnames resolve
 // to public IP addresses when addressed between a linked EC2-Classic instance
-// and instances in the VPC to which it's linked. For more information about
-// ClassicLink, see ClassicLink (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
+// and instances in the VPC to which it's linked. For more information, see
+// ClassicLink (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -16807,7 +16814,7 @@ func (c *EC2) EnableVpcClassicLinkRequest(input *EnableVpcClassicLinkInput) (req
 //
 // Enables a VPC for ClassicLink. You can then link EC2-Classic instances to
 // your ClassicLink-enabled VPC to allow communication over private IP addresses.
-// You cannot enable your VPC for ClassicLink if any of your VPC's route tables
+// You cannot enable your VPC for ClassicLink if any of your VPC route tables
 // have existing routes for address ranges within the 10.0.0.0/8 IP address
 // range, excluding local routes for VPCs in the 10.0.0.0/16 and 10.1.0.0/16
 // IP address ranges. For more information, see ClassicLink (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
@@ -16889,8 +16896,8 @@ func (c *EC2) EnableVpcClassicLinkDnsSupportRequest(input *EnableVpcClassicLinkD
 // the DNS hostname of a linked EC2-Classic instance resolves to its private
 // IP address when addressed from an instance in the VPC to which it's linked.
 // Similarly, the DNS hostname of an instance in a VPC resolves to its private
-// IP address when addressed from a linked EC2-Classic instance. For more information
-// about ClassicLink, see ClassicLink (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
+// IP address when addressed from a linked EC2-Classic instance. For more information,
+// see ClassicLink (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -16968,20 +16975,20 @@ func (c *EC2) GetConsoleOutputRequest(input *GetConsoleOutputInput) (req *reques
 // Gets the console output for the specified instance. For Linux instances,
 // the instance console output displays the exact console output that would
 // normally be displayed on a physical monitor attached to a computer. For Windows
-// instances, the instance console output includes output from the EC2Config
-// service.
-//
-// GetConsoleOutput returns up to 64 KB of console output shortly after it's
-// generated by the instance.
+// instances, the instance console output includes the last three system event
+// log errors.
 //
 // By default, the console output returns buffered information that was posted
 // shortly after an instance transition state (start, stop, reboot, or terminate).
 // This information is available for at least one hour after the most recent
-// post.
+// post. Only the most recent 64 KB of console output is available.
 //
 // You can optionally retrieve the latest serial console output at any time
-// during the instance lifecycle. This option is only supported on C5, M5, and
-// i3.metal instances.
+// during the instance lifecycle. This option is supported on instance types
+// that use the Nitro hypervisor.
+//
+// For more information, see Instance Console Output (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-console.html#instance-console-console-output)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -19607,6 +19614,11 @@ func (c *EC2) ModifyVpcEndpointServicePermissionsRequest(input *ModifyVpcEndpoin
 // You can add or remove permissions for service consumers (IAM users, IAM roles,
 // and AWS accounts) to connect to your endpoint service.
 //
+// If you grant permissions to all principals, the service is public. Any users
+// who know the name of a public service can send a request to attach an endpoint.
+// If the service does not require manual approval, attachments are automatically
+// approved.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -19780,7 +19792,7 @@ func (c *EC2) ModifyVpcTenancyRequest(input *ModifyVpcTenancyInput) (req *reques
 // into the VPC have a tenancy of default, unless you specify otherwise during
 // launch. The tenancy of any existing instances in the VPC is not affected.
 //
-// For more information about Dedicated Instances, see Dedicated Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html)
+// For more information, see Dedicated Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -20859,7 +20871,7 @@ func (c *EC2) ReplaceNetworkAclAssociationRequest(input *ReplaceNetworkAclAssoci
 //
 // Changes which network ACL a subnet is associated with. By default when you
 // create a subnet, it's automatically associated with the default network ACL.
-// For more information about network ACLs, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // This is an idempotent operation.
@@ -20938,8 +20950,8 @@ func (c *EC2) ReplaceNetworkAclEntryRequest(input *ReplaceNetworkAclEntryInput) 
 
 // ReplaceNetworkAclEntry API operation for Amazon Elastic Compute Cloud.
 //
-// Replaces an entry (rule) in a network ACL. For more information about network
-// ACLs, see Network ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// Replaces an entry (rule) in a network ACL. For more information, see Network
+// ACLs (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -21017,11 +21029,11 @@ func (c *EC2) ReplaceRouteRequest(input *ReplaceRouteInput) (req *request.Reques
 // ReplaceRoute API operation for Amazon Elastic Compute Cloud.
 //
 // Replaces an existing route within a route table in a VPC. You must provide
-// only one of the following: Internet gateway or virtual private gateway, NAT
+// only one of the following: internet gateway or virtual private gateway, NAT
 // instance, NAT gateway, VPC peering connection, network interface, or egress-only
-// Internet gateway.
+// internet gateway.
 //
-// For more information about route tables, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -24151,7 +24163,8 @@ func (s *AssociateRouteTableInput) SetSubnetId(v string) *AssociateRouteTableInp
 type AssociateRouteTableOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The route table association ID (needed to disassociate the route table).
+	// The route table association ID. This ID is required for disassociating the
+	// route table.
 	AssociationId *string `locationName:"associationId" type:"string"`
 }
 
@@ -24468,7 +24481,7 @@ type AttachInternetGatewayInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The ID of the Internet gateway.
+	// The ID of the internet gateway.
 	//
 	// InternetGatewayId is a required field
 	InternetGatewayId *string `locationName:"internetGatewayId" type:"string" required:"true"`
@@ -27588,8 +27601,8 @@ func (s *CreateDhcpOptionsOutput) SetDhcpOptions(v *DhcpOptions) *CreateDhcpOpti
 type CreateEgressOnlyInternetGatewayInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
 	ClientToken *string `type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -27598,7 +27611,7 @@ type CreateEgressOnlyInternetGatewayInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// The ID of the VPC for which to create the egress-only Internet gateway.
+	// The ID of the VPC for which to create the egress-only internet gateway.
 	//
 	// VpcId is a required field
 	VpcId *string `type:"string" required:"true"`
@@ -27648,11 +27661,11 @@ func (s *CreateEgressOnlyInternetGatewayInput) SetVpcId(v string) *CreateEgressO
 type CreateEgressOnlyInternetGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
-	// Information about the egress-only Internet gateway.
+	// Information about the egress-only internet gateway.
 	EgressOnlyInternetGateway *EgressOnlyInternetGateway `locationName:"egressOnlyInternetGateway" type:"structure"`
 }
 
@@ -27892,20 +27905,44 @@ func (s *CreateFleetOutput) SetFleetId(v string) *CreateFleetOutput {
 type CreateFlowLogsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
 	ClientToken *string `type:"string"`
 
-	// The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs
-	// log group.
-	//
-	// DeliverLogsPermissionArn is a required field
-	DeliverLogsPermissionArn *string `type:"string" required:"true"`
+	// The ARN for the IAM role that's used to post flow logs to a log group.
+	DeliverLogsPermissionArn *string `type:"string"`
 
-	// The name of the CloudWatch log group.
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// Specifies the destination to which the flow log data is to be published.
+	// Flow log data can be published to an CloudWatch Logs log group or an Amazon
+	// S3 bucket. The value specified for this parameter depends on the value specified
+	// for LogDestinationType.
 	//
-	// LogGroupName is a required field
-	LogGroupName *string `type:"string" required:"true"`
+	// If LogDestinationType is not specified or cloud-watch-logs, specify the Amazon
+	// Resource Name (ARN) of the CloudWatch Logs log group.
+	//
+	// If LogDestinationType is s3, specify the ARN of the Amazon S3 bucket. You
+	// can also specify a subfolder in the bucket. To specify a subfolder in the
+	// bucket, use the following ARN format: bucket_ARN/subfolder_name/. For example,
+	// to specify a subfolder named my-logs in a bucket named my-bucket, use the
+	// following ARN: arn:aws:s3:::my-bucket/my-logs/.
+	LogDestination *string `type:"string"`
+
+	// Specifies the type of destination to which the flow log data is to be published.
+	// Flow log data can be published to CloudWatch Logs or Amazon S3. To publish
+	// flow log data to CloudWatch Logs, specify cloud-watch-logs. To publish flow
+	// log data to Amazon S3, specify s3.
+	//
+	// Default: cloud-watch-logs
+	LogDestinationType *string `type:"string" enum:"LogDestinationType"`
+
+	// The name of the log group.
+	LogGroupName *string `type:"string"`
 
 	// One or more subnet, network interface, or VPC IDs.
 	//
@@ -27938,12 +27975,6 @@ func (s CreateFlowLogsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateFlowLogsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateFlowLogsInput"}
-	if s.DeliverLogsPermissionArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("DeliverLogsPermissionArn"))
-	}
-	if s.LogGroupName == nil {
-		invalidParams.Add(request.NewErrParamRequired("LogGroupName"))
-	}
 	if s.ResourceIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceIds"))
 	}
@@ -27969,6 +28000,24 @@ func (s *CreateFlowLogsInput) SetClientToken(v string) *CreateFlowLogsInput {
 // SetDeliverLogsPermissionArn sets the DeliverLogsPermissionArn field's value.
 func (s *CreateFlowLogsInput) SetDeliverLogsPermissionArn(v string) *CreateFlowLogsInput {
 	s.DeliverLogsPermissionArn = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateFlowLogsInput) SetDryRun(v bool) *CreateFlowLogsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetLogDestination sets the LogDestination field's value.
+func (s *CreateFlowLogsInput) SetLogDestination(v string) *CreateFlowLogsInput {
+	s.LogDestination = &v
+	return s
+}
+
+// SetLogDestinationType sets the LogDestinationType field's value.
+func (s *CreateFlowLogsInput) SetLogDestinationType(v string) *CreateFlowLogsInput {
+	s.LogDestinationType = &v
 	return s
 }
 
@@ -28000,8 +28049,8 @@ func (s *CreateFlowLogsInput) SetTrafficType(v string) *CreateFlowLogsInput {
 type CreateFlowLogsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The IDs of the flow logs.
@@ -28404,7 +28453,7 @@ func (s *CreateInternetGatewayInput) SetDryRun(v bool) *CreateInternetGatewayInp
 type CreateInternetGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the Internet gateway.
+	// Information about the internet gateway.
 	InternetGateway *InternetGateway `locationName:"internetGateway" type:"structure"`
 }
 
@@ -28775,8 +28824,8 @@ type CreateNatGatewayInput struct {
 	// AllocationId is a required field
 	AllocationId *string `type:"string" required:"true"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
 	// Constraint: Maximum 64 ASCII characters.
 	ClientToken *string `type:"string"`
@@ -28901,11 +28950,11 @@ type CreateNetworkAclEntryInput struct {
 
 	// The protocol. A value of -1 or all means all protocols. If you specify all,
 	// -1, or a protocol number other than 6 (tcp), 17 (udp), or 1 (icmp), traffic
-	// on all ports is allowed, regardless of any ports or ICMP types or codes you
-	// specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR block,
-	// traffic for all ICMP types and codes allowed, regardless of any that you
-	// specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR block,
-	// you must specify an ICMP type and code.
+	// on all ports is allowed, regardless of any ports or ICMP types or codes that
+	// you specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR
+	// block, traffic for all ICMP types and codes allowed, regardless of any that
+	// you specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR
+	// block, you must specify an ICMP type and code.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true"`
@@ -29582,10 +29631,10 @@ type CreateRouteInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// [IPv6 traffic only] The ID of an egress-only Internet gateway.
+	// [IPv6 traffic only] The ID of an egress-only internet gateway.
 	EgressOnlyInternetGatewayId *string `locationName:"egressOnlyInternetGatewayId" type:"string"`
 
-	// The ID of an Internet gateway or virtual private gateway attached to your
+	// The ID of an internet gateway or virtual private gateway attached to your
 	// VPC.
 	GatewayId *string `locationName:"gatewayId" type:"string"`
 
@@ -31641,7 +31690,7 @@ type DeleteEgressOnlyInternetGatewayInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// The ID of the egress-only Internet gateway.
+	// The ID of the egress-only internet gateway.
 	//
 	// EgressOnlyInternetGatewayId is a required field
 	EgressOnlyInternetGatewayId *string `type:"string" required:"true"`
@@ -31914,6 +31963,12 @@ func (s *DeleteFleetsOutput) SetUnsuccessfulFleetDeletions(v []*DeleteFleetError
 type DeleteFlowLogsInput struct {
 	_ struct{} `type:"structure"`
 
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
 	// One or more flow log IDs.
 	//
 	// FlowLogIds is a required field
@@ -31941,6 +31996,12 @@ func (s *DeleteFlowLogsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteFlowLogsInput) SetDryRun(v bool) *DeleteFlowLogsInput {
+	s.DryRun = &v
+	return s
 }
 
 // SetFlowLogIds sets the FlowLogIds field's value.
@@ -32056,7 +32117,7 @@ type DeleteInternetGatewayInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The ID of the Internet gateway.
+	// The ID of the internet gateway.
 	//
 	// InternetGatewayId is a required field
 	InternetGatewayId *string `locationName:"internetGatewayId" type:"string" required:"true"`
@@ -34473,7 +34534,9 @@ type DescribeClassicLinkInstancesInput struct {
 	//    to find all resources assigned a tag with a specific key, regardless of
 	//    the tag value.
 	//
-	//    * vpc-id - The ID of the VPC that the instance is linked to.
+	//    * vpc-id - The ID of the VPC to which the instance is linked.
+	//
+	// vpc-id - The ID of the VPC that the instance is linked to.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more instance IDs. Must be instances linked to a VPC through ClassicLink.
@@ -34482,7 +34545,7 @@ type DescribeClassicLinkInstancesInput struct {
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results of the initial request can be seen by sending another
 	// request with the returned NextToken value. This value can be between 5 and
-	// 1000; if MaxResults is given a value larger than 1000, only 1000 results
+	// 1000. If MaxResults is given a value larger than 1000, only 1000 results
 	// are returned. You cannot specify this parameter and the instance IDs parameter
 	// in the same request.
 	//
@@ -34818,12 +34881,12 @@ type DescribeEgressOnlyInternetGatewaysInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// One or more egress-only Internet gateway IDs.
+	// One or more egress-only internet gateway IDs.
 	EgressOnlyInternetGatewayIds []*string `locationName:"EgressOnlyInternetGatewayId" locationNameList:"item" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
-	// NextToken value. This value can be between 5 and 1000; if MaxResults is given
+	// NextToken value. This value can be between 5 and 1000. If MaxResults is given
 	// a value larger than 1000, only 1000 results are returned.
 	MaxResults *int64 `type:"integer"`
 
@@ -34868,7 +34931,7 @@ func (s *DescribeEgressOnlyInternetGatewaysInput) SetNextToken(v string) *Descri
 type DescribeEgressOnlyInternetGatewaysOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the egress-only Internet gateways.
+	// Information about the egress-only internet gateways.
 	EgressOnlyInternetGateways []*EgressOnlyInternetGateway `locationName:"egressOnlyInternetGatewaySet" locationNameList:"item" type:"list"`
 
 	// The token to use to retrieve the next page of results.
@@ -35456,9 +35519,19 @@ func (s *DescribeFleetsOutput) SetNextToken(v string) *DescribeFleetsOutput {
 type DescribeFlowLogsInput struct {
 	_ struct{} `type:"structure"`
 
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
 	// One or more filters.
 	//
 	//    * deliver-log-status - The status of the logs delivery (SUCCESS | FAILED).
+	//
+	//    * log-destination-type - The type of destination to which the flow log
+	//    publishes data. Possible destination types include cloud-watch-logs and
+	//    S3.
 	//
 	//    * flow-log-id - The ID of the flow log.
 	//
@@ -35466,7 +35539,7 @@ type DescribeFlowLogsInput struct {
 	//
 	//    * resource-id - The ID of the VPC, subnet, or network interface.
 	//
-	//    * traffic-type - The type of traffic (ACCEPT | REJECT | ALL)
+	//    * traffic-type - The type of traffic (ACCEPT | REJECT | ALL).
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
 
 	// One or more flow log IDs.
@@ -35474,7 +35547,7 @@ type DescribeFlowLogsInput struct {
 
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
-	// NextToken value. This value can be between 5 and 1000; if MaxResults is given
+	// NextToken value. This value can be between 5 and 1000. If MaxResults is given
 	// a value larger than 1000, only 1000 results are returned. You cannot specify
 	// this parameter and the flow log IDs parameter in the same request.
 	MaxResults *int64 `type:"integer"`
@@ -35491,6 +35564,12 @@ func (s DescribeFlowLogsInput) String() string {
 // GoString returns the string representation
 func (s DescribeFlowLogsInput) GoString() string {
 	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeFlowLogsInput) SetDryRun(v bool) *DescribeFlowLogsInput {
+	s.DryRun = &v
+	return s
 }
 
 // SetFilter sets the Filter field's value.
@@ -37710,9 +37789,9 @@ type DescribeInternetGatewaysInput struct {
 	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// One or more Internet gateway IDs.
+	// One or more internet gateway IDs.
 	//
-	// Default: Describes all your Internet gateways.
+	// Default: Describes all your internet gateways.
 	InternetGatewayIds []*string `locationName:"internetGatewayId" locationNameList:"item" type:"list"`
 }
 
@@ -37748,7 +37827,7 @@ func (s *DescribeInternetGatewaysInput) SetInternetGatewayIds(v []*string) *Desc
 type DescribeInternetGatewaysOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about one or more Internet gateways.
+	// Information about one or more internet gateways.
 	InternetGateways []*InternetGateway `locationName:"internetGatewaySet" locationNameList:"item" type:"list"`
 }
 
@@ -43751,7 +43830,7 @@ type DetachInternetGatewayInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The ID of the Internet gateway.
+	// The ID of the internet gateway.
 	//
 	// InternetGatewayId is a required field
 	InternetGatewayId *string `locationName:"internetGatewayId" type:"string" required:"true"`
@@ -45112,14 +45191,14 @@ func (s *EbsInstanceBlockDeviceSpecification) SetVolumeId(v string) *EbsInstance
 	return s
 }
 
-// Describes an egress-only Internet gateway.
+// Describes an egress-only internet gateway.
 type EgressOnlyInternetGateway struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the attachment of the egress-only Internet gateway.
+	// Information about the attachment of the egress-only internet gateway.
 	Attachments []*InternetGatewayAttachment `locationName:"attachmentSet" locationNameList:"item" type:"list"`
 
-	// The ID of the egress-only Internet gateway.
+	// The ID of the egress-only internet gateway.
 	EgressOnlyInternetGatewayId *string `locationName:"egressOnlyInternetGatewayId" type:"string"`
 }
 
@@ -46499,11 +46578,11 @@ type FlowLog struct {
 	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
 
 	// Information about the error that occurred. Rate limited indicates that CloudWatch
-	// logs throttling has been applied for one or more network interfaces, or that
-	// you've reached the limit on the number of CloudWatch Logs log groups that
-	// you can create. Access error indicates that the IAM role associated with
-	// the flow log does not have sufficient permissions to publish to CloudWatch
-	// Logs. Unknown error indicates an internal error.
+	// Logs throttling has been applied for one or more network interfaces, or that
+	// you've reached the limit on the number of log groups that you can create.
+	// Access error indicates that the IAM role associated with the flow log does
+	// not have sufficient permissions to publish to CloudWatch Logs. Unknown error
+	// indicates an internal error.
 	DeliverLogsErrorMessage *string `locationName:"deliverLogsErrorMessage" type:"string"`
 
 	// The ARN of the IAM role that posts logs to CloudWatch Logs.
@@ -46517,6 +46596,18 @@ type FlowLog struct {
 
 	// The status of the flow log (ACTIVE).
 	FlowLogStatus *string `locationName:"flowLogStatus" type:"string"`
+
+	// Specifies the destination to which the flow log data is published. Flow log
+	// data can be published to an CloudWatch Logs log group or an Amazon S3 bucket.
+	// If the flow log publishes to CloudWatch Logs, this element indicates the
+	// Amazon Resource Name (ARN) of the CloudWatch Logs log group to which the
+	// data is published. If the flow log publishes to Amazon S3, this element indicates
+	// the ARN of the Amazon S3 bucket to which the data is published.
+	LogDestination *string `locationName:"logDestination" type:"string"`
+
+	// Specifies the type of destination to which the flow log data is published.
+	// Flow log data can be published to CloudWatch Logs or Amazon S3.
+	LogDestinationType *string `locationName:"logDestinationType" type:"string" enum:"LogDestinationType"`
 
 	// The name of the flow log group.
 	LogGroupName *string `locationName:"logGroupName" type:"string"`
@@ -46571,6 +46662,18 @@ func (s *FlowLog) SetFlowLogId(v string) *FlowLog {
 // SetFlowLogStatus sets the FlowLogStatus field's value.
 func (s *FlowLog) SetFlowLogStatus(v string) *FlowLog {
 	s.FlowLogStatus = &v
+	return s
+}
+
+// SetLogDestination sets the LogDestination field's value.
+func (s *FlowLog) SetLogDestination(v string) *FlowLog {
+	s.LogDestination = &v
+	return s
+}
+
+// SetLogDestinationType sets the LogDestinationType field's value.
+func (s *FlowLog) SetLogDestinationType(v string) *FlowLog {
+	s.LogDestinationType = &v
 	return s
 }
 
@@ -51222,17 +51325,17 @@ func (s *InstanceStatusSummary) SetStatus(v string) *InstanceStatusSummary {
 	return s
 }
 
-// Describes an Internet gateway.
+// Describes an internet gateway.
 type InternetGateway struct {
 	_ struct{} `type:"structure"`
 
-	// Any VPCs attached to the Internet gateway.
+	// Any VPCs attached to the internet gateway.
 	Attachments []*InternetGatewayAttachment `locationName:"attachmentSet" locationNameList:"item" type:"list"`
 
-	// The ID of the Internet gateway.
+	// The ID of the internet gateway.
 	InternetGatewayId *string `locationName:"internetGatewayId" type:"string"`
 
-	// Any tags assigned to the Internet gateway.
+	// Any tags assigned to the internet gateway.
 	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
@@ -51264,12 +51367,12 @@ func (s *InternetGateway) SetTags(v []*Tag) *InternetGateway {
 	return s
 }
 
-// Describes the attachment of a VPC to an Internet gateway or an egress-only
-// Internet gateway.
+// Describes the attachment of a VPC to an internet gateway or an egress-only
+// internet gateway.
 type InternetGatewayAttachment struct {
 	_ struct{} `type:"structure"`
 
-	// The current state of the attachment. For an Internet gateway, the state is
+	// The current state of the attachment. For an internet gateway, the state is
 	// available when attached to a VPC; otherwise, this value is not returned.
 	State *string `locationName:"state" type:"string" enum:"AttachmentStatus"`
 
@@ -55209,8 +55312,8 @@ type ModifyVpcAttributeInput struct {
 	// Indicates whether the DNS resolution is supported for the VPC. If enabled,
 	// queries to the Amazon provided DNS server at the 169.254.169.253 IP address,
 	// or the reserved IP address at the base of the VPC network range "plus two"
-	// will succeed. If disabled, the Amazon provided DNS service in the VPC that
-	// resolves public DNS hostnames to IP addresses is not enabled.
+	// succeed. If disabled, the Amazon provided DNS service in the VPC that resolves
+	// public DNS hostnames to IP addresses is not enabled.
 	//
 	// You cannot modify the DNS resolution and DNS hostnames attributes in the
 	// same request. Use separate requests for each attribute.
@@ -55634,8 +55737,9 @@ func (s *ModifyVpcEndpointServiceConfigurationOutput) SetReturn(v bool) *ModifyV
 type ModifyVpcEndpointServicePermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more Amazon Resource Names (ARNs) of principals for which to allow
-	// permission. Specify * to allow all principals.
+	// The Amazon Resource Names (ARN) of one or more principals. Permissions are
+	// granted to the principals in this list. To grant permissions to all principals,
+	// specify an asterisk (*).
 	AddAllowedPrincipals []*string `locationNameList:"item" type:"list"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -55644,8 +55748,8 @@ type ModifyVpcEndpointServicePermissionsInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// One or more Amazon Resource Names (ARNs) of principals for which to remove
-	// permission.
+	// The Amazon Resource Names (ARN) of one or more principals. Permissions are
+	// revoked for principals in this list.
 	RemoveAllowedPrincipals []*string `locationNameList:"item" type:"list"`
 
 	// The ID of the service.
@@ -57325,7 +57429,7 @@ type Placement struct {
 	// The Availability Zone of the instance.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
-	// The name of the placement group the instance is in (for cluster compute instances).
+	// The name of the placement group the instance is in.
 	GroupName *string `locationName:"groupName" type:"string"`
 
 	// The ID of the Dedicated Host on which the instance resides. This parameter
@@ -57784,7 +57888,7 @@ func (s *ProductCode) SetProductCodeType(v string) *ProductCode {
 type PropagatingVgw struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the virtual private gateway (VGW).
+	// The ID of the virtual private gateway.
 	GatewayId *string `locationName:"gatewayId" type:"string"`
 }
 
@@ -59190,10 +59294,10 @@ type ReplaceNetworkAclEntryInput struct {
 	// The IP protocol. You can specify all or -1 to mean all protocols. If you
 	// specify all, -1, or a protocol number other than tcp, udp, or icmp, traffic
 	// on all ports is allowed, regardless of any ports or ICMP types or codes you
-	// specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR block,
-	// traffic for all ICMP types and codes allowed, regardless of any that you
-	// specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR block,
-	// you must specify an ICMP type and code.
+	// that specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR
+	// block, traffic for all ICMP types and codes allowed, regardless of any that
+	// you specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR
+	// block, you must specify an ICMP type and code.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true"`
@@ -59322,12 +59426,12 @@ func (s ReplaceNetworkAclEntryOutput) GoString() string {
 type ReplaceRouteInput struct {
 	_ struct{} `type:"structure"`
 
-	// The IPv4 CIDR address block used for the destination match. The value you
-	// provide must match the CIDR of an existing route in the table.
+	// The IPv4 CIDR address block used for the destination match. The value that
+	// you provide must match the CIDR of an existing route in the table.
 	DestinationCidrBlock *string `locationName:"destinationCidrBlock" type:"string"`
 
-	// The IPv6 CIDR address block used for the destination match. The value you
-	// provide must match the CIDR of an existing route in the table.
+	// The IPv6 CIDR address block used for the destination match. The value that
+	// you provide must match the CIDR of an existing route in the table.
 	DestinationIpv6CidrBlock *string `locationName:"destinationIpv6CidrBlock" type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -59336,10 +59440,10 @@ type ReplaceRouteInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// [IPv6 traffic only] The ID of an egress-only Internet gateway.
+	// [IPv6 traffic only] The ID of an egress-only internet gateway.
 	EgressOnlyInternetGatewayId *string `locationName:"egressOnlyInternetGatewayId" type:"string"`
 
-	// The ID of an Internet gateway or virtual private gateway.
+	// The ID of an internet gateway or virtual private gateway.
 	GatewayId *string `locationName:"gatewayId" type:"string"`
 
 	// The ID of a NAT instance in your VPC.
@@ -62279,7 +62383,7 @@ type Route struct {
 	// The prefix of the AWS service.
 	DestinationPrefixListId *string `locationName:"destinationPrefixListId" type:"string"`
 
-	// The ID of the egress-only Internet gateway.
+	// The ID of the egress-only internet gateway.
 	EgressOnlyInternetGatewayId *string `locationName:"egressOnlyInternetGatewayId" type:"string"`
 
 	// The ID of a gateway attached to your VPC.
@@ -66715,8 +66819,8 @@ type Subnet struct {
 	// The Availability Zone of the subnet.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
-	// The number of unused private IPv4 addresses in the subnet. Note that the
-	// IPv4 addresses for any stopped instances are considered unavailable.
+	// The number of unused private IPv4 addresses in the subnet. The IPv4 addresses
+	// for any stopped instances are considered unavailable.
 	AvailableIpAddressCount *int64 `locationName:"availableIpAddressCount" type:"integer"`
 
 	// The IPv4 CIDR block assigned to the subnet.
@@ -71067,6 +71171,14 @@ const (
 
 	// ListingStatusClosed is a ListingStatus enum value
 	ListingStatusClosed = "closed"
+)
+
+const (
+	// LogDestinationTypeCloudWatchLogs is a LogDestinationType enum value
+	LogDestinationTypeCloudWatchLogs = "cloud-watch-logs"
+
+	// LogDestinationTypeS3 is a LogDestinationType enum value
+	LogDestinationTypeS3 = "s3"
 )
 
 const (

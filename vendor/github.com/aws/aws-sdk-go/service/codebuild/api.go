@@ -1804,6 +1804,12 @@ type BuildArtifacts struct {
 	// to ZIP.
 	Md5sum *string `locationName:"md5sum" type:"string"`
 
+	// If this flag is set, a name specified in the buildspec file overrides the
+	// artifact name. The name specified in a buildspec file is calculated at build
+	// time and uses the Shell Command Language. For example, you can append a date
+	// and time to your artifact name so that it is always unique.
+	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
+
 	// The SHA-256 hash of the build artifact.
 	//
 	// You can use this hash along with a checksum tool to confirm both file integrity
@@ -1839,6 +1845,12 @@ func (s *BuildArtifacts) SetLocation(v string) *BuildArtifacts {
 // SetMd5sum sets the Md5sum field's value.
 func (s *BuildArtifacts) SetMd5sum(v string) *BuildArtifacts {
 	s.Md5sum = &v
+	return s
+}
+
+// SetOverrideArtifactName sets the OverrideArtifactName field's value.
+func (s *BuildArtifacts) SetOverrideArtifactName(v bool) *BuildArtifacts {
+	s.OverrideArtifactName = &v
 	return s
 }
 
@@ -3336,6 +3348,12 @@ type ProjectArtifacts struct {
 	// in MyArtifacts/build-ID/MyArtifact.zip.
 	NamespaceType *string `locationName:"namespaceType" type:"string" enum:"ArtifactNamespace"`
 
+	// If this flag is set, a name specified in the buildspec file overrides the
+	// artifact name. The name specified in a buildspec file is calculated at build
+	// time and uses the Shell Command Language. For example, you can append a date
+	// and time to your artifact name so that it is always unique.
+	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
+
 	// The type of build output artifact to create, as follows:
 	//
 	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
@@ -3430,6 +3448,12 @@ func (s *ProjectArtifacts) SetName(v string) *ProjectArtifacts {
 // SetNamespaceType sets the NamespaceType field's value.
 func (s *ProjectArtifacts) SetNamespaceType(v string) *ProjectArtifacts {
 	s.NamespaceType = &v
+	return s
+}
+
+// SetOverrideArtifactName sets the OverrideArtifactName field's value.
+func (s *ProjectArtifacts) SetOverrideArtifactName(v bool) *ProjectArtifacts {
+	s.OverrideArtifactName = &v
 	return s
 }
 

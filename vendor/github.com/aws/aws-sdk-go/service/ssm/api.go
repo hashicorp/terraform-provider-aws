@@ -11333,6 +11333,9 @@ type AutomationExecution struct {
 	// The target of the execution.
 	Target *string `type:"string"`
 
+	// The specified key-value mapping of document parameters to target resources.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The parameter name.
 	TargetParameterName *string `min:"1" type:"string"`
 
@@ -11470,6 +11473,12 @@ func (s *AutomationExecution) SetTarget(v string) *AutomationExecution {
 	return s
 }
 
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *AutomationExecution) SetTargetMaps(v []map[string][]*string) *AutomationExecution {
+	s.TargetMaps = v
+	return s
+}
+
 // SetTargetParameterName sets the TargetParameterName field's value.
 func (s *AutomationExecution) SetTargetParameterName(v string) *AutomationExecution {
 	s.TargetParameterName = &v
@@ -11602,6 +11611,9 @@ type AutomationExecutionMetadata struct {
 	// The list of execution outputs as defined in the Automation document.
 	Target *string `type:"string"`
 
+	// The specified key-value mapping of document parameters to target resources.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The list of execution outputs as defined in the Automation document.
 	TargetParameterName *string `min:"1" type:"string"`
 
@@ -11724,6 +11736,12 @@ func (s *AutomationExecutionMetadata) SetResolvedTargets(v *ResolvedTargets) *Au
 // SetTarget sets the Target field's value.
 func (s *AutomationExecutionMetadata) SetTarget(v string) *AutomationExecutionMetadata {
 	s.Target = &v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *AutomationExecutionMetadata) SetTargetMaps(v []map[string][]*string) *AutomationExecutionMetadata {
+	s.TargetMaps = v
 	return s
 }
 
@@ -28861,6 +28879,10 @@ type StartAutomationExecutionInput struct {
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// A key-value mapping of document parameters to target resources. Both Targets
+	// and TargetMaps cannot be specified together.
+	TargetMaps []map[string][]*string `type:"list"`
+
 	// The name of the parameter used as the target resource for the rate-controlled
 	// execution. Required if you specify Targets.
 	TargetParameterName *string `min:"1" type:"string"`
@@ -28956,6 +28978,12 @@ func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecut
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTargetMaps sets the TargetMaps field's value.
+func (s *StartAutomationExecutionInput) SetTargetMaps(v []map[string][]*string) *StartAutomationExecutionInput {
+	s.TargetMaps = v
 	return s
 }
 

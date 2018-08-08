@@ -2204,8 +2204,8 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 
 // UpdateSecret API operation for AWS Secrets Manager.
 //
-// Modifies many of the details of a secret. If you include a ClientRequestToken
-// and either SecretString or SecretBinary then it also creates a new version
+// Modifies many of the details of the specified secret. If you include a ClientRequestToken
+// and eitherSecretString or SecretBinary then it also creates a new version
 // attached to the secret.
 //
 // To modify the rotation configuration of a secret, use RotateSecret instead.
@@ -2216,8 +2216,8 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 // CLI or one of the AWS SDKs.
 //
 //    * If a version with a SecretVersionId with the same value as the ClientRequestToken
-//    parameter already exists, the operation generates an error. You cannot
-//    modify an existing version, you can only create new ones.
+//    parameter already exists, the operation results in an error. You cannot
+//    modify an existing version, you can only create a new version.
 //
 //    * If you include SecretString or SecretBinary to create a new secret version,
 //    Secrets Manager automatically attaches the staging label AWSCURRENT to
@@ -2919,6 +2919,22 @@ func (s *DeleteResourcePolicyOutput) SetName(v string) *DeleteResourcePolicyOutp
 type DeleteSecretInput struct {
 	_ struct{} `type:"structure"`
 
+	// (Optional) Specifies that the secret is to be deleted immediately without
+	// any recovery window. You cannot use both this parameter and the RecoveryWindowInDays
+	// parameter in the same API call.
+	//
+	// An asynchronous background process performs the actual deletion, so there
+	// can be a short delay before the operation completes. If you write code to
+	// delete and then immediately recreate a secret with the same name, ensure
+	// that your code includes appropriate back off and retry logic.
+	//
+	// Use this parameter with caution. This parameter causes the operation to skip
+	// the normal waiting period before the permanent deletion that AWS would normally
+	// impose with the RecoveryWindowInDays parameter. If you delete a secret with
+	// the ForceDeleteWithouRecovery parameter, then you have no opportunity to
+	// recover the secret. It is permanently lost.
+	ForceDeleteWithoutRecovery *bool `type:"boolean"`
+
 	// (Optional) Specifies the number of days that Secrets Manager waits before
 	// it can delete the secret.
 	//
@@ -2956,6 +2972,12 @@ func (s *DeleteSecretInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetForceDeleteWithoutRecovery sets the ForceDeleteWithoutRecovery field's value.
+func (s *DeleteSecretInput) SetForceDeleteWithoutRecovery(v bool) *DeleteSecretInput {
+	s.ForceDeleteWithoutRecovery = &v
+	return s
 }
 
 // SetRecoveryWindowInDays sets the RecoveryWindowInDays field's value.
@@ -4888,46 +4910,43 @@ type UpdateSecretInput struct {
 	// This value becomes the SecretVersionId of the new version.
 	ClientRequestToken *string `min:"32" type:"string" idempotencyToken:"true"`
 
-	// (Optional) Specifies a user-provided description of the secret.
+	// (Optional) Specifies an updated user-provided description of the secret.
 	Description *string `type:"string"`
 
-	// (Optional) Specifies the ARN or alias of the AWS KMS customer master key
-	// (CMK) to be used to encrypt the protected text in the versions of this secret.
-	//
-	// If you don't specify this value, then Secrets Manager defaults to using the
-	// default CMK in the account (the one named aws/secretsmanager). If a AWS KMS
-	// CMK with that name doesn't exist, then Secrets Manager creates it for you
-	// automatically the first time it needs to encrypt a version's Plaintext or
-	// PlaintextString fields.
+	// (Optional) Specifies an updated ARN or alias of the AWS KMS customer master
+	// key (CMK) to be used to encrypt the protected text in new versions of this
+	// secret.
 	//
 	// You can only use the account's default CMK to encrypt and decrypt if you
 	// call this operation using credentials from the same account that owns the
 	// secret. If the secret is in a different account, then you must create a custom
-	// CMK and provide the ARN in this field.
+	// CMK and provide the ARN of that CMK in this field. The user making the call
+	// must have permissions to both the secret and the CMK in their respective
+	// accounts.
 	KmsKeyId *string `type:"string"`
 
-	// (Optional) Specifies binary data that you want to encrypt and store in the
-	// new version of the secret. To use this parameter in the command-line tools,
-	// we recommend that you store your binary data in a file and then use the appropriate
-	// technique for your tool to pass the contents of the file as a parameter.
-	// Either SecretBinary or SecretString must have a value, but not both. They
-	// cannot both be empty.
+	// (Optional) Specifies updated binary data that you want to encrypt and store
+	// in the new version of the secret. To use this parameter in the command-line
+	// tools, we recommend that you store your binary data in a file and then use
+	// the appropriate technique for your tool to pass the contents of the file
+	// as a parameter. Either SecretBinary or SecretString must have a value, but
+	// not both. They cannot both be empty.
 	//
 	// This parameter is not accessible using the Secrets Manager console.
 	//
 	// SecretBinary is automatically base64 encoded/decoded by the SDK.
 	SecretBinary []byte `type:"blob"`
 
-	// Specifies the secret that you want to update or to which you want to add
+	// Specifies the secret that you want to modify or to which you want to add
 	// a new version. You can specify either the Amazon Resource Name (ARN) or the
 	// friendly name of the secret.
 	//
 	// SecretId is a required field
 	SecretId *string `min:"1" type:"string" required:"true"`
 
-	// (Optional) Specifies text data that you want to encrypt and store in this
-	// new version of the secret. Either SecretBinary or SecretString must have
-	// a value, but not both. They cannot both be empty.
+	// (Optional) Specifies updated text data that you want to encrypt and store
+	// in this new version of the secret. Either SecretBinary or SecretString must
+	// have a value, but not both. They cannot both be empty.
 	//
 	// If you create this secret by using the Secrets Manager console then Secrets
 	// Manager puts the protected secret text in only the SecretString parameter.
@@ -4944,7 +4963,12 @@ type UpdateSecretInput struct {
 	//
 	// If your command-line tool or SDK requires quotation marks around the parameter,
 	// you should use single quotes to avoid confusion with the double quotes required
-	// in the JSON text.
+	// in the JSON text. You can also 'escape' the double quote character in the
+	// embedded JSON text by prefacing each with a backslash. For example, the following
+	// string is surrounded by double-quotes. All of the embedded double quotes
+	// are escaped:
+	//
+	// "[{\"username\":\"bob\"},{\"password\":\"abc123xyz456\"}]"
 	SecretString *string `type:"string"`
 }
 
@@ -5016,7 +5040,7 @@ func (s *UpdateSecretInput) SetSecretString(v string) *UpdateSecretInput {
 type UpdateSecretOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of this secret.
+	// The ARN of the secret that was updated.
 	//
 	// Secrets Manager automatically adds several random characters to the name
 	// at the end of the ARN when you initially create a secret. This affects only
@@ -5026,11 +5050,11 @@ type UpdateSecretOutput struct {
 	// the new secret because the ARNs are different.
 	ARN *string `min:"20" type:"string"`
 
-	// The friendly name of this secret.
+	// The friendly name of the secret that was updated.
 	Name *string `min:"1" type:"string"`
 
-	// If a version of the secret was created or updated by this operation, then
-	// its unique identifier is returned.
+	// If a new version of the secret was created by this operation, then VersionId
+	// contains the unique identifier of the new version.
 	VersionId *string `min:"32" type:"string"`
 }
 
@@ -5069,8 +5093,8 @@ type UpdateSecretVersionStageInput struct {
 	// to.
 	//
 	// If any of the staging labels are already attached to a different version
-	// of the secret, then they are removed from that version before adding them
-	// to this version.
+	// of the secret, then they are automatically removed from that version before
+	// adding them to this version.
 	MoveToVersionId *string `min:"32" type:"string"`
 
 	// (Optional) Specifies the secret version ID of the version that the staging
