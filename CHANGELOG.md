@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_ami_copy: Prevent `ena_support` attribute incorrectly reporting force new resource [GH-5433]
 * resource/aws_ami_from_instance: Prevent `ena_support` attribute incorrectly reporting force new resource [GH-5433]
 * resource/aws_elasticsearch_domain: Prevent crash when missing `AutomatedSnapshotStartHour` in API response [GH-5451]
+* resource/aws_rds_cluster: Prevent error when restoring cluster from snapshot with tagging enabled [GH-5479]
 * resource/aws_ssm_maintenance_window: Properly recreate resource when deleted outside Terraform [GH-5416]
 * resource/aws_ssm_patch_baseline: Properly recreate resource when deleted outside Terraform [GH-5438]
 * resource/aws_vpn_gateway: Allow legacy `amazon_side_asn` in plan-time validation (ASNs 10124 and 17493) [GH-5441]
