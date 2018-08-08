@@ -157,6 +157,12 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"snapshot_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"automated_snapshot_start_hour": {
@@ -311,7 +317,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
 	if err == nil {
-		return fmt.Errorf("ElasticSearch domain %q already exists", *resp.DomainStatus.DomainName)
+		return fmt.Errorf("ElasticSearch domain %s already exists", aws.StringValue(resp.DomainStatus.DomainName))
 	}
 
 	input := elasticsearch.CreateElasticsearchDomainInput{
@@ -426,7 +432,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		out, err = conn.CreateElasticsearchDomain(&input)
 		if err != nil {
 			if isAWSErr(err, "InvalidTypeException", "Error setting policy") {
-				log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s", *input.DomainName)
+				log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s", aws.StringValue(input.DomainName))
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
@@ -451,7 +457,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.SetId(*out.DomainStatus.ARN)
+	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
 	// Whilst the domain is being created, we can initialise the tags.
 	// This should mean that if the creation fails (eg because your token expired
@@ -459,7 +465,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	// the resources.
 	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
 
-	if err := setTagsElasticsearchService(conn, d, *out.DomainStatus.ARN); err != nil {
+	if err := setTagsElasticsearchService(conn, d, aws.StringValue(out.DomainStatus.ARN)); err != nil {
 		return err
 	}
 
@@ -515,8 +521,8 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 
 	ds := out.DomainStatus
 
-	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
-		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
+	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
+		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
 		if err != nil {
 			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
 		}
@@ -526,7 +532,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	d.SetId(*ds.ARN)
+	d.SetId(aws.StringValue(ds.ARN))
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
@@ -547,11 +553,11 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	if ds.SnapshotOptions != nil {
-		d.Set("snapshot_options", map[string]interface{}{
-			"automated_snapshot_start_hour": *ds.SnapshotOptions.AutomatedSnapshotStartHour,
-		})
+
+	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
+		return fmt.Errorf("error setting snapshot_options: %s", err)
 	}
+
 	if ds.VPCOptions != nil {
 		err = d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions))
 		if err != nil {
@@ -568,7 +574,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", *ds.Endpoint)
+			d.Set("endpoint", aws.StringValue(ds.Endpoint))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
@@ -582,9 +588,9 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 			mm := map[string]interface{}{}
 			mm["log_type"] = k
 			if val.CloudWatchLogsLogGroupArn != nil {
-				mm["cloudwatch_log_group_arn"] = *val.CloudWatchLogsLogGroupArn
+				mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
 			}
-			mm["enabled"] = *val.Enabled
+			mm["enabled"] = aws.BoolValue(val.Enabled)
 			m = append(m, mm)
 		}
 		d.Set("log_publishing_options", m)
