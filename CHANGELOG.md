@@ -5,6 +5,10 @@ ENHANCEMENTS:
 * data-source/aws_subnet: Add `arn` attribute [GH-5486]
 * resource/aws_subnet: Add `arn` attribute [GH-5486]
 
+BUG FIXES:
+
+* resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
+
 ## 1.31.0 (August 09, 2018)
 
 FEATURES:
