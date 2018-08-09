@@ -1,5 +1,9 @@
 ## 1.32.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_storagegateway_cached_iscsi_volume` [GH-5476]
+
 ENHANCEMENTS:
 
 * data-source/aws_secretsmanager_secret_version: Add `arn` attribute [GH-5488]
@@ -10,8 +14,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* storagegateway: Retry API calls on busy gateway proxy connection errors [GH-5476]
 * resource/aws_cognito_user_pool: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-3458]
 * resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
+* resource/aws_storagegateway_cache: Prevent resource recreation due to disk identifier changes after creation [GH-5476]
 
 ## 1.31.0 (August 09, 2018)
 
