@@ -328,7 +328,7 @@ func getAwsCloudWatchMetricAlarm(d *schema.ResourceData, meta interface{}) (*clo
 
 	// Find it and return it
 	for idx, ma := range resp.MetricAlarms {
-		if *ma.AlarmName == d.Id() {
+		if aws.StringValue(ma.AlarmName) == d.Id() {
 			return resp.MetricAlarms[idx], nil
 		}
 	}
@@ -339,7 +339,7 @@ func getAwsCloudWatchMetricAlarm(d *schema.ResourceData, meta interface{}) (*clo
 func _strArrPtrToList(strArrPtr []*string) []string {
 	var result []string
 	for _, elem := range strArrPtr {
-		result = append(result, *elem)
+		result = append(result, aws.StringValue(elem))
 	}
 	return result
 }
