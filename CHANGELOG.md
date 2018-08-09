@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_db_cluster_snapshot` [GH-4526]
 * **New Resource:** `aws_db_cluster_snapshot` [GH-4526]
+* **New Resource:** `aws_neptune_event_subscription` [GH-5480]
 * **New Resource:** `aws_storagegateway_cache` [GH-5282]
 * **New Resource:** `aws_storagegateway_smb_file_share` [GH-5276]
 
