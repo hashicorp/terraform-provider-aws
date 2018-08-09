@@ -53,6 +53,8 @@ func resourceAwsStorageGatewayCacheCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error adding Storage Gateway cache: %s", err)
 	}
 
+	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
+
 	// Depending on the Storage Gateway software, it will sometimes relabel a local DiskId
 	// with a UUID if previously unlabeled, e.g.
 	//   Before conn.AddCache(): "DiskId": "/dev/xvdb",
