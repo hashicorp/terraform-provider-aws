@@ -1,4 +1,10 @@
 ## 1.32.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_subnet: Add `arn` attribute [GH-5486]
+* resource/aws_subnet: Add `arn` attribute [GH-5486]
+
 ## 1.31.0 (August 09, 2018)
 
 FEATURES:
