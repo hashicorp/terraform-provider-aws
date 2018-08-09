@@ -532,10 +532,6 @@ func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
 				),
 			},
-			{
-				Config:      testAccAWSCognitoUserPoolConfig_basic(name),
-				ExpectError: regexp.MustCompile(`cannot be set to nil`),
-			},
 		},
 	})
 }

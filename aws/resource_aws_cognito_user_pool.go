@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -773,19 +772,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("email_verification_subject"); ok {
-
-		// This is to prevent removing default message since the API disallows it
-		if v.(string) == "" {
-			return errors.New("email_verification_subject cannot be set to nil")
-		}
 		params.EmailVerificationSubject = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("email_verification_message"); ok {
-		// This is to prevent removing default message since the API disallows it
-		if v.(string) == "" {
-			return errors.New("email_verification_message cannot be set to nil")
-		}
 		params.EmailVerificationMessage = aws.String(v.(string))
 	}
 
@@ -846,10 +836,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("sms_verification_message"); ok {
-		// This is to prevent removing default message since the API disallows it
-		if v.(string) == "" {
-			return errors.New("sms_verification_message cannot be set to nil")
-		}
 		params.SmsVerificationMessage = aws.String(v.(string))
 	}
 
