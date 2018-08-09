@@ -68,6 +68,7 @@ for details about valid values.
 The following arguments are supported:
 
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
+* `arn` - The ARN of the cloudwatch metric alarm.
 * `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`.
 * `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
 * `metric_name` - (Required) The name for the alarm's associated metric.
