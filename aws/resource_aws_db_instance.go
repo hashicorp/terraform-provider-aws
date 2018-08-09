@@ -396,10 +396,13 @@ func resourceAwsDbInstance() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
+						"alert",
 						"audit",
 						"error",
 						"general",
+						"listener",
 						"slowquery",
+						"trace",
 					}, false),
 				},
 			},
