@@ -90,3 +90,11 @@ configuration options:
 - `create` - (Default `40m`) How long to wait for creating event subscription to become available.
 - `delete` - (Default `40m`) How long to wait for deleting event subscription to become fully deleted.
 - `update` - (Default `40m`) How long to wait for updating event subscription to complete updates.
+
+## Import
+
+`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.
+
+```
+$ terraform import aws_neptune_event_subscription.example my-event-subscription
+```
