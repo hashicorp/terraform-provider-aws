@@ -7,6 +7,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cognito_user_pool: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-3458]
 * resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
 
 ## 1.31.0 (August 09, 2018)
