@@ -30,6 +30,10 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"arn": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"comparison_operator": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -163,6 +167,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	}
 	d.Set("alarm_description", a.AlarmDescription)
 	d.Set("alarm_name", a.AlarmName)
+	d.Set("arn", a.AlarmArn)
 	d.Set("comparison_operator", a.ComparisonOperator)
 	d.Set("datapoints_to_alarm", a.DatapointsToAlarm)
 	if err := d.Set("dimensions", flattenDimensions(a.Dimensions)); err != nil {
