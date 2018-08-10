@@ -821,6 +821,7 @@ func Provider() *schema.Provider {
 			"aws_lightsail_key_pair":                                  resourceAwsLightsailKeyPair(),
 			"aws_lightsail_static_ip":                                 resourceAwsLightsailStaticIp(),
 			"aws_lightsail_static_ip_attachment":                      resourceAwsLightsailStaticIpAttachment(),
+			"aws_lightsail_public_ports":                              resourceAwsLightsailPublicPorts(),
 			"aws_lb_cookie_stickiness_policy":                         resourceAwsLBCookieStickinessPolicy(),
 			"aws_load_balancer_policy":                                resourceAwsLoadBalancerPolicy(),
 			"aws_load_balancer_backend_server_policy":                 resourceAwsLoadBalancerBackendServerPolicies(),
