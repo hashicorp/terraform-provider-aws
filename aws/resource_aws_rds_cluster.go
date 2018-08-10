@@ -138,6 +138,43 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"scaling_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_pause": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"max_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  16,
+						},
+						"min_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  2,
+						},
+						"seconds_until_auto_pause": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(300, 86400),
+						},
+					},
+				},
+			},
+
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -374,11 +411,12 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
-			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-			Engine:              aws.String(d.Get("engine").(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
-			Tags:                tags,
+			DBClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
+			Engine:               aws.String(d.Get("engine").(string)),
+			EngineMode:           aws.String(d.Get("engine_mode").(string)),
+			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
+			Tags:                 tags,
 		}
 
 		// Need to check value > 0 due to:
@@ -481,7 +519,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Engine:                      aws.String(d.Get("engine").(string)),
 			EngineMode:                  aws.String(d.Get("engine_mode").(string)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
-			Tags: tags,
+			ScalingConfiguration:        expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			Tags:                        tags,
 		}
 
 		// Need to check value > 0 due to:
@@ -681,12 +720,13 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
-			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-			Engine:              aws.String(d.Get("engine").(string)),
-			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
-			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			Tags:                tags,
+			DBClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
+			Engine:               aws.String(d.Get("engine").(string)),
+			EngineMode:           aws.String(d.Get("engine_mode").(string)),
+			MasterUserPassword:   aws.String(d.Get("master_password").(string)),
+			MasterUsername:       aws.String(d.Get("master_username").(string)),
+			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			Tags:                 tags,
 		}
 
 		// Need to check value > 0 due to:
@@ -745,6 +785,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
 			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
+		if attr, ok := d.GetOk("scaling_configuration"); ok && len(attr.([]interface{})) > 0 {
+			createOpts.ScalingConfiguration = expandRdsScalingConfiguration(attr.([]interface{}))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -875,6 +919,9 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
+	if err := d.Set("scaling_configuration", flattenRdsScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
+		return fmt.Errorf("error setting scaling_configuration: %s", err)
+	}
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(dbc.EnabledCloudwatchLogsExports)); err != nil {
@@ -971,6 +1018,12 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("enabled_cloudwatch_logs_exports") && !d.IsNewResource() {
 		d.SetPartial("enabled_cloudwatch_logs_exports")
 		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		requestUpdate = true
+	}
+
+	if d.HasChange("scaling_configuration") && !d.IsNewResource() {
+		d.SetPartial("scaling_configuration")
+		req.ScalingConfiguration = expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 		requestUpdate = true
 	}
 
