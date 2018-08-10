@@ -107,7 +107,7 @@ func TestAccAWSLambdaFunction_importLocalFile_VPC(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaConfigWithVpc(funcName, policyName, roleName, sgName),
 			},
 
 			resource.TestStep{
