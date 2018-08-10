@@ -15,6 +15,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * storagegateway: Retry API calls on busy gateway proxy connection errors [GH-5476]
+* resource/aws_cloudtrail: Increase IAM retry threshold from 15 seconds to 1 minute [GH-5499]
 * resource/aws_cognito_user_pool: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-3458]
 * resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
 * resource/aws_storagegateway_cache: Prevent resource recreation due to disk identifier changes after creation [GH-5476]
