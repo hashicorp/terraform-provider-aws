@@ -22,6 +22,7 @@ func resourceAwsDaxCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: resourceAwsDaxClusterCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(45 * time.Minute),
@@ -94,6 +95,21 @@ func resourceAwsDaxCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+			},
+			"server_side_encryption": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
@@ -186,6 +202,16 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if len(preferred_azs) > 0 {
 		azs := expandStringList(preferred_azs)
 		req.AvailabilityZones = azs
+	}
+
+	if v, ok := d.GetOk("server_side_encryption"); ok {
+		options := v.([]interface{})
+		if options[0] == nil {
+			return fmt.Errorf("At least one field is expected inside server_side_encryption")
+		}
+
+		s := options[0].(map[string]interface{})
+		req.SSESpecification = expandDaxEncryptAtRestOptions(s)
 	}
 
 	// IAM roles take some time to propagate
@@ -285,6 +311,10 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := setDaxClusterNodeData(d, c); err != nil {
 		return err
+	}
+
+	if err := d.Set("server_side_encryption", flattenDaxEncryptAtRestOptions(c.SSEDescription)); err != nil {
+		return fmt.Errorf("error setting server_side_encryption: %s", err)
 	}
 
 	// list tags for resource
@@ -406,6 +436,17 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return resourceAwsDaxClusterRead(d, meta)
+}
+
+func resourceAwsDaxClusterCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() != "" && diff.HasChange("server_side_encryption") {
+		o, n := diff.GetChange("server_side_encryption")
+		if isDaxClusterOptionDisabled(o) && isDaxClusterOptionDisabled(n) {
+			return diff.Clear("server_side_encryption")
+		}
+	}
+
+	return nil
 }
 
 func setDaxClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
@@ -553,4 +594,13 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		log.Printf("[DEBUG] current status: %v", *c.Status)
 		return c, *c.Status, nil
 	}
+}
+
+func isDaxClusterOptionDisabled(v interface{}) bool {
+	options := v.([]interface{})
+	if len(options) == 0 {
+		return true
+	}
+	e := options[0].(map[string]interface{})["enabled"]
+	return !e.(bool)
 }
