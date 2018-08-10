@@ -165,7 +165,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(15*time.Second, func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
