@@ -469,7 +469,7 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBMSSQL_domain(rInt),
+				Config: testAccAWSDBMSSQLDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
 					resource.TestCheckResourceAttrSet(
@@ -1660,7 +1660,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 `, rInt, rInt, rInt)
 }
 
-func testAccAWSDBMSSQL_domain(rInt int) string {
+func testAccAWSDBMSSQLDomain(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
