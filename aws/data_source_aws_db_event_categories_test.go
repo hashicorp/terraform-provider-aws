@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"testing"
@@ -19,14 +20,14 @@ func TestAccAWSDbEventCategories_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsDbEventCategoriesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDbEventCategoriesAttr("data.aws_db_event_categories.example"),
+					testAccAwsDbEventCategoriesAttrCheck("data.aws_db_event_categories.example"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsDbEventCategoriesAttr(n string) resource.TestCheckFunc {
+func testAccAwsDbEventCategoriesAttrCheck(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -82,16 +83,16 @@ func testAccCheckAwsDbEventCategoriesBuild(attrs map[string]string) ([]string, e
 	if qty < 1 {
 		return nil, fmt.Errorf("No DB Event Categories found.")
 	}
-	eventCategories := make([]string, qty)
-	for n := range eventCategories {
-		eventCategory, ok := attrs["event_categories."+strconv.Itoa(n)]
-		if !ok {
-			return nil, fmt.Errorf("DB Event Categories list is corrupted.")
-		}
-		eventCategories[n] = eventCategory
-	}
-	return eventCategories, nil
 
+	var eventCategories []string
+	for k, v := range attrs {
+		matched, _ := regexp.MatchString("event_categories.[0-9]+", k)
+		if matched {
+			eventCategories = append(eventCategories, v)
+		}
+	}
+
+	return eventCategories, nil
 }
 
 var testAccCheckAwsDbEventCategoriesConfig = `
