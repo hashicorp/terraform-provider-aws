@@ -25,6 +25,54 @@ resource "aws_glue_catalog_table" "glue_table" {
 }
 ```
 
+### Table with schema and Parquet
+
+This is a basic config that can be combined with [Kinesis Firehose](kinesis_firehose_delivery_stream.html) processing to ingest JSON data and output Parquet-formatted files into an S3 bucket. Once converted by Firehose the data will be usable for fast/cost-effective analysis with tools like [Athena](https://aws.amazon.com/athena/). For example, to ingest data into firehose in the following format:
+
+```json
+{  
+   "city":"Dallas",
+   "country":"USA",
+   "temperature":74
+}
+```
+
+The following config would work. Although nearly every parameter is optional, some will be required for correct parsing and making the Glue schema available to other tools like Athena.
+
+```hcl
+resource "aws_glue_catalog_database" "glue_database" {
+  name = "glue-database"
+}
+
+resource "aws_glue_catalog_table" "table" {
+  name          = "glue-table"
+  database_name = "${aws_glue_catalog_database.glue_database.name}"
+
+  storage_descriptor {
+    input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+    location      = "s3://NAME-OF-YOUR-DATA-S3-BUCKET/"
+
+    ser_de_info = {
+      name                  = "parquet"
+      serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+
+      parameters = [
+        {
+          serialization.format = 1
+        },
+      ]
+    }
+
+    columns = [
+      {name = "city", type = "string"},
+      {name = "country", type = "string"},
+      {name = "temperature", type = "float"}
+    ]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
