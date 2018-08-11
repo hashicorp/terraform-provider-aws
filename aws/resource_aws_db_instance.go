@@ -407,13 +407,11 @@ func resourceAwsDbInstance() *schema.Resource {
 			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"domain_iam_role_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"tags": tagsSchema(),
@@ -1032,7 +1030,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
-	if v.DomainMemberships != nil {
+	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		d.Set("domain", v.DomainMemberships[0].Domain)
 		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
 	}
