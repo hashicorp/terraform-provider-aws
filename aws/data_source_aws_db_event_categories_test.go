@@ -20,14 +20,31 @@ func TestAccAWSDbEventCategories_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsDbEventCategoriesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsDbEventCategoriesAttrCheck("data.aws_db_event_categories.example"),
+					testAccAwsDbEventCategoriesAttrCheck("data.aws_db_event_categories.example",
+						completeEventCategoriesList),
 				),
 			},
 		},
 	})
 }
 
-func testAccAwsDbEventCategoriesAttrCheck(n string) resource.TestCheckFunc {
+func TestAccAWSDbEventCategories_sourceType(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsDbEventCategoriesConfig_sourceType,
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsDbEventCategoriesAttrCheck("data.aws_db_event_categories.example",
+						DbSnapshotEventCategoriesList),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsDbEventCategoriesAttrCheck(n string, expected []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -41,23 +58,6 @@ func testAccAwsDbEventCategoriesAttrCheck(n string) resource.TestCheckFunc {
 		actual, err := testAccCheckAwsDbEventCategoriesBuild(rs.Primary.Attributes)
 		if err != nil {
 			return err
-		}
-
-		expected := []string{
-			"notification",
-			"deletion",
-			"failover",
-			"maintenance",
-			"availability",
-			"read replica",
-			"failure",
-			"configuration change",
-			"recovery",
-			"low storage",
-			"backup",
-			"creation",
-			"backtrack",
-			"restoration",
 		}
 
 		sort.Strings(actual)
@@ -98,3 +98,33 @@ func testAccCheckAwsDbEventCategoriesBuild(attrs map[string]string) ([]string, e
 var testAccCheckAwsDbEventCategoriesConfig = `
 data "aws_db_event_categories" "example" {}
 `
+
+var completeEventCategoriesList = []string{
+	"notification",
+	"deletion",
+	"failover",
+	"maintenance",
+	"availability",
+	"read replica",
+	"failure",
+	"configuration change",
+	"recovery",
+	"low storage",
+	"backup",
+	"creation",
+	"backtrack",
+	"restoration",
+}
+
+var testAccCheckAwsDbEventCategoriesConfig_sourceType = `
+data "aws_db_event_categories" "example" {
+	source_type = "db-snapshot"
+}
+`
+
+var DbSnapshotEventCategoriesList = []string{
+	"notification",
+	"deletion",
+	"creation",
+	"restoration",
+}
