@@ -12,10 +12,16 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 
 ## Example Usage
 
+### Basic table config
+
 ```hcl
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name = "MyCatalogTable"
-  database_name = "MyCatalogDatabase"
+resource "aws_glue_catalog_database" "glue_database" {
+  name = "glue-database"
+}
+
+resource "aws_glue_catalog_table" "glue_table" {
+  name = "glue-table"
+  database_name = "${aws_glue_catalog_database.glue_database.name}"
 }
 ```
 
