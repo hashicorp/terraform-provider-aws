@@ -51,7 +51,6 @@ resource "aws_glue_catalog_table" "table" {
   storage_descriptor {
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
-    location      = "s3://NAME-OF-YOUR-DATA-S3-BUCKET/"
 
     ser_de_info = {
       name                  = "parquet"
@@ -93,7 +92,7 @@ The following arguments are supported:
 ##### storage_descriptor
 
 * `columns` - (Optional) A list of the [Columns](#column) in the table.
-* `location` - (Optional) The physical location of the table. By default this takes the form of the warehouse location, followed by the database location in the warehouse, followed by the table name.
+* `location` - (Optional) The physical location of the table. By default this takes the form of the warehouse location, followed by the database location in the warehouse, followed by the table name. Specify this as `s3://name-of-your-s3-bucket/` to ensure the table is usable in Athena.
 * `input_format` - (Optional) The input format: SequenceFileInputFormat (binary), or TextInputFormat, or a custom format.
 * `output_format` - (Optional) The output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `compressed` - (Optional) True if the data in the table is compressed, or False if not.

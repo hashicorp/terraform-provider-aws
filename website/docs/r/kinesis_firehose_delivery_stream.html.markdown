@@ -250,6 +250,44 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
+### S3 destination with Parquet conversion
+
+Combine this example with setup of a Glue database and table from the [Glue module](glue_catalog_table.html), where you define the schema of data Firehose will be processing. This will output Parquet-formatted files into the destination S3 bucket which are usable by [Athena](https://aws.amazon.com/athena/) and other analysis tools.
+
+You'll also need to grant `glue:GetTableVersions` permission to the Firehose IAM role.
+
+```hcl
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+
+    data_format_conversion_configuration {
+      input_format_configuration {
+        deserializer {
+          open_x_json_ser_de {}
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          parquet_ser_de {}
+        }
+      }
+
+      schema_configuration {
+        database_name = "${aws_glue_catalog_database.glue_database.name}"
+        role_arn      = "${aws_iam_role.firehose.arn}"
+        table_name    = "${aws_glue_catalog_database.glue_table.name}"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
