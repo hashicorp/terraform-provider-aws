@@ -455,9 +455,6 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := attributes["subnet_id"]; ok {
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
-		if v, ok := attributes["subnet_id"]; ok {
-			instanceConfig.Ec2SubnetId = aws.String(v.(string))
-		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
 			strSlice := strings.Split(v.(string), ",")
