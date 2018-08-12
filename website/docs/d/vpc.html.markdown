@@ -82,6 +82,7 @@ The following attribute is additionally exported:
 * `ipv6_cidr_block` - The IPv6 CIDR block.
 * `enable_dns_support` - Whether or not the VPC has DNS support
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
+* `dhcp_options_id` - (Optional) The DHCP Options ID
 
 `cidr_block_associations` is also exported with the following attributes:
 
