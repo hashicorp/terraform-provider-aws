@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_cloudtrail: Increase IAM retry threshold from 15 seconds to 1 minute [GH-5499]
 * resource/aws_cognito_user_pool: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-3458]
 * resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
+* resource/aws_db_instance: During S3 restore, lower retry threshold for IAM eventual consistency from 5 minutes to 2 minutes and retry on additional error [GH-5536]
 * resource/aws_dynamodb_table: Allow simultaneous region deletion retry of 5 minutes to better handle global table deletions [GH-5518]
 * resource/aws_glue_crawler: Additional IAM eventual consistency retry logic for create and update [GH-5502]
 * resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency error with ElasticSearch destinations [GH-5541]
