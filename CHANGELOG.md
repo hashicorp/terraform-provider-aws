@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
 * resource/aws_dynamodb_table: Allow simultaneous region deletion retry of 5 minutes to better handle global table deletions [GH-5518]
 * resource/aws_glue_crawler: Additional IAM eventual consistency retry logic for create and update [GH-5502]
+* resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency error with ElasticSearch destinations [GH-5541]
 * resource/aws_storagegateway_cache: Prevent resource recreation due to disk identifier changes after creation [GH-5476]
 
 ## 1.31.0 (August 09, 2018)
