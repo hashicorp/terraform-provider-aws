@@ -195,28 +195,66 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 		AssociationId: aws.String(d.Get("association_id").(string)),
 	}
 
+	// AWS creates a new version every time the association is updated, so everything should be passed in the update.
+
+	hasChanges := false
+	
 	if d.HasChange("association_name") {
-		associationInput.AssociationName = aws.String(d.Get("association_name").(string))
+		hasChanges = true
 	}
 
-	if d.HasChange("schedule_expression") {
-		associationInput.ScheduleExpression = aws.String(d.Get("schedule_expression").(string))
+	if d.HasChange("instance_id") {
+		hasChange = true
 	}
 
 	if d.HasChange("document_version") {
-		associationInput.DocumentVersion = aws.String(d.Get("document_version").(string))
+		hasChanges = true
+	}
+
+	if d.HasChange("schedule_expression") {
+		hasChanges = true
 	}
 
 	if d.HasChange("parameters") {
-		associationInput.Parameters = expandSSMDocumentParameters(d.Get("parameters").(map[string]interface{}))
+		hasChanges = true
 	}
 
 	if d.HasChange("output_location") {
-		associationInput.OutputLocation = expandSSMAssociationOutputLocation(d.Get("output_location").([]interface{}))
+		hasChanges = true
 	}
 
 	if d.HasChange("targets") {
+		hasChanges = true
+	}
+
+	if hasChanges {
+		if v, ok := d.GetOk("association_name"); ok {
+			associationInput.AssociationName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("instance_id"); ok {
+			associationInput.InstanceId = aws.String(v.(string))
+		}
+	
+		if v, ok := d.GetOk("document_version"); ok {
+			associationInput.DocumentVersion = aws.String(v.(string))
+		}
+	
+		if v, ok := d.GetOk("schedule_expression"); ok {
+			associationInput.ScheduleExpression = aws.String(v.(string))
+		}
+	
+		if v, ok := d.GetOk("parameters"); ok {
+			associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
+		}
+	
+		if _, ok := d.GetOk("targets"); ok {
 		associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
+	}
+
+		if v, ok := d.GetOk("output_location"); ok {
+			associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+		}
 	}
 
 	_, err := ssmconn.UpdateAssociation(associationInput)
