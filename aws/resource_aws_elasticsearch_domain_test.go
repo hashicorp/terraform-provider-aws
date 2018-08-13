@@ -167,7 +167,7 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
 				),
-				ExpectError: regexp.MustCompile(`domain "[^"]+" already exists`),
+				ExpectError: regexp.MustCompile(`domain .+ already exists`),
 			},
 		},
 	})
