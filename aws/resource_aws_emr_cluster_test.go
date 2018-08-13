@@ -109,8 +109,6 @@ func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
 						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "instance_group.0.ebs_config.0.type", "st1"),
 				),
 			},
 		},
