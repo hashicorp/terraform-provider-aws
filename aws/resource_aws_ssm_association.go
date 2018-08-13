@@ -203,10 +203,6 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 		hasChanges = true
 	}
 
-	if d.HasChange("instance_id") {
-		hasChange = true
-	}
-
 	if d.HasChange("document_version") {
 		hasChanges = true
 	}
@@ -230,10 +226,6 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 	if hasChanges {
 		if v, ok := d.GetOk("association_name"); ok {
 			associationInput.AssociationName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("instance_id"); ok {
-			associationInput.InstanceId = aws.String(v.(string))
 		}
 	
 		if v, ok := d.GetOk("document_version"); ok {
