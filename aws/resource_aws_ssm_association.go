@@ -97,39 +97,39 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
-	assosciationInput := &ssm.CreateAssociationInput{
+	associationInput := &ssm.CreateAssociationInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("association_name"); ok {
-		assosciationInput.AssociationName = aws.String(v.(string))
+		associationInput.AssociationName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("instance_id"); ok {
-		assosciationInput.InstanceId = aws.String(v.(string))
+		associationInput.InstanceId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("document_version"); ok {
-		assosciationInput.DocumentVersion = aws.String(v.(string))
+		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("schedule_expression"); ok {
-		assosciationInput.ScheduleExpression = aws.String(v.(string))
+		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		assosciationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
+		associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
 	}
 
 	if _, ok := d.GetOk("targets"); ok {
-		assosciationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
+		associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		assosciationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
 	}
 
-	resp, err := ssmconn.CreateAssociation(assosciationInput)
+	resp, err := ssmconn.CreateAssociation(associationInput)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Error creating SSM association: %s", err)
 	}
@@ -189,7 +189,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
-	log.Printf("[DEBUG] SSM association update: %s", d.Id())
+	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
 
 	associationInput := &ssm.UpdateAssociationInput{
 		AssociationId: aws.String(d.Get("association_id").(string)),
@@ -230,7 +230,7 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSsmAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
-	log.Printf("[DEBUG] Deleting SSM Assosciation: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SSM Association: %s", d.Id())
 
 	params := &ssm.DeleteAssociationInput{
 		AssociationId: aws.String(d.Get("association_id").(string)),
