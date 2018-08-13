@@ -17,6 +17,9 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 		Read:   resourceAwsNeptuneEventSubscriptionRead,
 		Update: resourceAwsNeptuneEventSubscriptionUpdate,
 		Delete: resourceAwsNeptuneEventSubscriptionDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
