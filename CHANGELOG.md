@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * data-source/aws_secretsmanager_secret_version: Add `arn` attribute [GH-5488]
 * data-source/aws_subnet: Add `arn` attribute [GH-5486]
 * resource/aws_cloudwatch_metric_alarm: Add `arn` attribute [GH-5487]
+* resource/aws_neptune_event_subscription: Support resource import [GH-5491]
 * resource/aws_secretsmanager_secret_version: Add `arn` attribute [GH-5488]
 * resource/aws_subnet: Add `arn` attribute [GH-5486]
 
