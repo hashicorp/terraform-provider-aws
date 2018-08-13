@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_metric_alarm: Add `arn` attribute [GH-5487]
 * resource/aws_db_instance: Allow `alert`, `listener`, and `trace` for `enabled_cloudwatch_logs_exports` (e.g. Oracle specific log exports) [GH-5494]
 * resource/aws_neptune_event_subscription: Support resource import [GH-5491]
+* resource/aws_rds_cluster: Add `engine_mode` argument (support RDS Aurora Serverless) [GH-5507]
 * resource/aws_secretsmanager_secret_version: Add `arn` attribute [GH-5488]
 * resource/aws_subnet: Add `arn` attribute [GH-5486]
 
