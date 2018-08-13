@@ -198,7 +198,7 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 	// AWS creates a new version every time the association is updated, so everything should be passed in the update.
 
 	hasChanges := false
-	
+
 	if d.HasChange("association_name") {
 		hasChanges = true
 	}
@@ -227,22 +227,22 @@ func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) er
 		if v, ok := d.GetOk("association_name"); ok {
 			associationInput.AssociationName = aws.String(v.(string))
 		}
-	
+
 		if v, ok := d.GetOk("document_version"); ok {
 			associationInput.DocumentVersion = aws.String(v.(string))
 		}
-	
+
 		if v, ok := d.GetOk("schedule_expression"); ok {
 			associationInput.ScheduleExpression = aws.String(v.(string))
 		}
-	
+
 		if v, ok := d.GetOk("parameters"); ok {
 			associationInput.Parameters = expandSSMDocumentParameters(v.(map[string]interface{}))
 		}
-	
+
 		if _, ok := d.GetOk("targets"); ok {
-		associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
-	}
+			associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
+		}
 
 		if v, ok := d.GetOk("output_location"); ok {
 			associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
