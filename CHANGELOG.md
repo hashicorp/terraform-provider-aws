@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_neptune_cluster_snapshot` [GH-5492]
 * **New Resource:** `aws_storagegateway_cached_iscsi_volume` [GH-5476]
 
 ENHANCEMENTS:
