@@ -13,7 +13,7 @@ func resourceAwsSsmAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsmAssociationCreate,
 		Read:   resourceAwsSsmAssociationRead,
-		Update: resourceAwsSsmAssocationUpdate,
+		Update: resourceAwsSsmAssociationUpdate,
 		Delete: resourceAwsSsmAssociationDelete,
 
 		MigrateState:  resourceAwsSsmAssociationMigrateState,
@@ -186,7 +186,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSsmAssocationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
