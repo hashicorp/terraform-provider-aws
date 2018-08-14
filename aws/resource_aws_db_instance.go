@@ -736,50 +736,30 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
 
-		var sgUpdate bool
-		var passwordUpdate bool
+		// wait for instance to get up and then modify
+		d.SetId(d.Get("identifier").(string))
 
-		if _, ok := d.GetOk("password"); ok {
-			passwordUpdate = true
+		log.Printf("[INFO] DB Instance ID: %s", d.Id())
+
+		log.Println("[INFO] Waiting for DB Instance to be available")
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    resourceAwsDbInstanceCreatePendingStates,
+			Target:     []string{"available", "storage-optimization"},
+			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second, // Wait 30 secs before starting
 		}
 
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			sgUpdate = true
+		// Wait, catching any errors
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return err
 		}
-		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			sgUpdate = true
-		}
-		if sgUpdate || passwordUpdate {
-			log.Printf("[INFO] DB is restoring from snapshot with default security, but custom security should be set, will now update after snapshot is restored!")
 
-			// wait for instance to get up and then modify security
-			d.SetId(d.Get("identifier").(string))
-
-			log.Printf("[INFO] DB Instance ID: %s", d.Id())
-
-			log.Println(
-				"[INFO] Waiting for DB Instance to be available")
-
-			stateConf := &resource.StateChangeConf{
-				Pending:    resourceAwsDbInstanceCreatePendingStates,
-				Target:     []string{"available", "storage-optimization"},
-				Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
-				Timeout:    d.Timeout(schema.TimeoutCreate),
-				MinTimeout: 10 * time.Second,
-				Delay:      30 * time.Second, // Wait 30 secs before starting
-			}
-
-			// Wait, catching any errors
-			_, err := stateConf.WaitForState()
-			if err != nil {
-				return err
-			}
-
-			err = resourceAwsDbInstanceUpdate(d, meta)
-			if err != nil {
-				return err
-			}
-
+		if err = resourceAwsDbInstanceUpdate(d, meta); err != nil {
+			return err
 		}
 	} else {
 		if _, ok := d.GetOk("allocated_storage"); !ok {
