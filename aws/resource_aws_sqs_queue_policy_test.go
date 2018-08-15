@@ -10,6 +10,8 @@ import (
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
+	var queueAttributes map[string]*string
+
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -19,7 +21,8 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccAWSSQSPolicyConfig_basic(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.q"),
+					testAccCheckAWSSQSQueueExists("aws_sqs_queue.q", &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 					resource.TestMatchResourceAttr("aws_sqs_queue_policy.test", "policy",
 						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 				),
