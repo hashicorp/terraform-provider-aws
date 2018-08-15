@@ -5771,11 +5771,6 @@ type CreateTransformJobInput struct {
 	// means only one record is used per mini-batch. MultiRecord means a mini-batch
 	// is set to contain as many records that can fit within the MaxPayloadInMB
 	// limit.
-	//
-	// Batch transform will automatically split your input data into whatever payload
-	// size is specified if you set SplitType to Line and BatchStrategy to MultiRecord.
-	// There's no need to split the dataset into smaller files or to use larger
-	// payload sizes unless the records in your dataset are very large.
 	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
 
 	// The environment variables to set in the Docker container. We support up to
@@ -7370,22 +7365,21 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * Stopped - the training job has stopped.
 	//
-	//    * MaxRuntimeExceeded - the training job exceeded the specified max run
-	//    time and has been stopped.
+	//    * MaxRuntimeExceeded - the training exceed the specified the max run time,
+	//    which means the training job is stopping.
 	//
 	//    * Completed - the training job has completed.
 	//
 	//    * Failed - the training job has failed. The failure reason is provided
 	//    in the StatusMessage.
 	//
-	// The valid values for SecondaryStatus are subject to change. They primarily
+	// The valid values for SecondaryStatus are subject to change. They primary
 	// provide information on the progress of the training job.
 	//
 	// SecondaryStatus is a required field
 	SecondaryStatus *string `type:"string" required:"true" enum:"SecondaryStatus"`
 
-	// To give an overview of the training job lifecycle, SecondaryStatusTransitions
-	// is a log of time-ordered secondary statuses that a training job has transitioned.
+	// A log of time-ordered secondary statuses that a training job has transitioned.
 	SecondaryStatusTransitions []*SecondaryStatusTransition `type:"list"`
 
 	// The condition under which to stop the training job.
@@ -11213,8 +11207,7 @@ type SecondaryStatusTransition struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that shows when the secondary status has ended and the job has
-	// transitioned into another secondary status. The EndTime timestamp is also
-	// set after the training job has ended.
+	// transitioned into another secondary status.
 	EndTime *time.Time `type:"timestamp"`
 
 	// A timestamp that shows when the training job has entered this secondary status.

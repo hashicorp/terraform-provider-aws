@@ -6854,7 +6854,10 @@ func (c *RDS) ModifyCurrentDBClusterCapacityRequest(input *ModifyCurrentDBCluste
 // in the Amazon RDS User Guide.
 //
 // If you call ModifyCurrentDBClusterCapacity with the default TimeoutAction,
-// connections to the DB cluster are dropped when the capacity is set.
+// connections that prevent Aurora Serverless from finding a scaling point might
+// be dropped. For more information about scaling points, see  Autoscaling for
+// Aurora Serverless (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.auto-scaling)
+// in the Amazon RDS User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22369,8 +22372,8 @@ type ModifyCurrentDBClusterCapacityInput struct {
 	// The action to take when the timeout is reached, either ForceApplyCapacityChange
 	// or RollbackCapacityChange.
 	//
-	// ForceApplyCapacityChange, the default, drops connections to the DB cluster
-	// and sets the capacity to the specified value as soon as possible.
+	// ForceApplyCapacityChange, the default, sets the capacity to the specified
+	// value as soon as possible.
 	//
 	// RollbackCapacityChange ignores the capacity change if a scaling point is
 	// not found in the timeout period.
