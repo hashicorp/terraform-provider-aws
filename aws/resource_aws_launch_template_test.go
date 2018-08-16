@@ -1008,11 +1008,7 @@ resource "aws_launch_template" "test" {
 const testAccAWSLaunchTemplateConfig_asg_basic = `
 data "aws_ami" "test_ami" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -1043,11 +1039,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSLaunchTemplateConfig_asg_update = `
 data "aws_ami" "test_ami" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -1078,11 +1070,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSLaunchTemplateConfig_instanceMarketOptions_basic = `
 data "aws_ami" "test" {
   most_recent = true
-
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name = "name"
@@ -1121,11 +1109,7 @@ resource "aws_autoscaling_group" "test" {
 const testAccAWSLaunchTemplateConfig_instanceMarketOptions_update = `
 data "aws_ami" "test" {
   most_recent = true
-
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name = "name"
