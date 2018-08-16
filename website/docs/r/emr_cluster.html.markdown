@@ -282,7 +282,7 @@ Attributes for each task instance group in the cluster
 Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
 
 * `size` - (Required) The volume size, in gibibytes (GiB).
-* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, and `standard`.
+* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, `standard` and `st1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 * `iops` - (Optional) The number of I/O operations per second (IOPS) that the volume supports
 * `volumes_per_instance` - (Optional) The number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1)
 
