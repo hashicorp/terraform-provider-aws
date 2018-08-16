@@ -43,6 +43,12 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_gateway_response.test", "response_parameters.gatewayresponse.header.Authorization"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_gateway_response.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayGatewayResponseImportStateIdFunc("aws_api_gateway_gateway_response.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -105,6 +111,17 @@ func testAccCheckAWSAPIGatewayGatewayResponseDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAPIGatewayGatewayResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["response_type"]), nil
+	}
 }
 
 func testAccAWSAPIGatewayGatewayResponseConfig(rName string) string {
