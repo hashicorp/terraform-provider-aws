@@ -1,35 +1,35 @@
-## 1.32.0 (Unreleased)
+## 1.32.0 (August 16, 2018)
 
 FEATURES:
 
-* **New Resource:** `aws_neptune_cluster_snapshot` [GH-5492]
-* **New Resource:** `aws_storagegateway_cached_iscsi_volume` [GH-5476]
+* **New Resource:** `aws_neptune_cluster_snapshot` ([#5492](https://github.com/terraform-providers/terraform-provider-aws/issues/5492))
+* **New Resource:** `aws_storagegateway_cached_iscsi_volume` ([#5476](https://github.com/terraform-providers/terraform-provider-aws/issues/5476))
 
 ENHANCEMENTS:
 
-* data-source/aws_secretsmanager_secret_version: Add `arn` attribute [GH-5488]
-* data-source/aws_subnet: Add `arn` attribute [GH-5486]
-* resource/aws_cloudwatch_metric_alarm: Add `arn` attribute [GH-5487]
-* resource/aws_db_instance: Allow `alert`, `listener`, and `trace` for `enabled_cloudwatch_logs_exports` (e.g. Oracle specific log exports) [GH-5494]
-* resource/aws_emr_cluster: Support `st1` type EBS volumes [GH-5534]
-* resource/aws_neptune_event_subscription: Support resource import [GH-5491]
-* resource/aws_rds_cluster: Add `engine_mode` argument (support RDS Aurora Serverless) [GH-5507]
-* resource/aws_rds_cluster: Allow `aurora` (MySQL 5.6) `engine_type` to enable Performance Insights [GH-5468]
-* resource/aws_secretsmanager_secret_version: Add `arn` attribute [GH-5488]
-* resource/aws_subnet: Add `arn` attribute [GH-5486]
+* data-source/aws_secretsmanager_secret_version: Add `arn` attribute ([#5488](https://github.com/terraform-providers/terraform-provider-aws/issues/5488))
+* data-source/aws_subnet: Add `arn` attribute ([#5486](https://github.com/terraform-providers/terraform-provider-aws/issues/5486))
+* resource/aws_cloudwatch_metric_alarm: Add `arn` attribute ([#5487](https://github.com/terraform-providers/terraform-provider-aws/issues/5487))
+* resource/aws_db_instance: Allow `alert`, `listener`, and `trace` for `enabled_cloudwatch_logs_exports` (e.g. Oracle specific log exports) ([#5494](https://github.com/terraform-providers/terraform-provider-aws/issues/5494))
+* resource/aws_emr_cluster: Support `st1` type EBS volumes ([#5534](https://github.com/terraform-providers/terraform-provider-aws/issues/5534))
+* resource/aws_neptune_event_subscription: Support resource import ([#5491](https://github.com/terraform-providers/terraform-provider-aws/issues/5491))
+* resource/aws_rds_cluster: Add `engine_mode` argument (support RDS Aurora Serverless) ([#5507](https://github.com/terraform-providers/terraform-provider-aws/issues/5507))
+* resource/aws_rds_cluster: Allow `aurora` (MySQL 5.6) `engine_type` to enable Performance Insights ([#5468](https://github.com/terraform-providers/terraform-provider-aws/issues/5468))
+* resource/aws_secretsmanager_secret_version: Add `arn` attribute ([#5488](https://github.com/terraform-providers/terraform-provider-aws/issues/5488))
+* resource/aws_subnet: Add `arn` attribute ([#5486](https://github.com/terraform-providers/terraform-provider-aws/issues/5486))
 
 BUG FIXES:
 
-* storagegateway: Retry API calls on busy gateway proxy connection errors [GH-5476]
-* resource/aws_cloudtrail: Increase IAM retry threshold from 15 seconds to 1 minute [GH-5499]
-* resource/aws_cognito_user_pool: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-3458]
-* resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) [GH-5478]
-* resource/aws_db_instance: During S3 restore, lower retry threshold for IAM eventual consistency from 5 minutes to 2 minutes and retry on additional error [GH-5536]
-* resource/aws_dynamodb_table: Allow simultaneous region deletion retry of 5 minutes to better handle global table deletions [GH-5518]
-* resource/aws_glue_crawler: Additional IAM eventual consistency retry logic for create and update [GH-5502]
-* resource/aws_iam_role: Remove extraneous `DeleteRolePermissionsBoundary` API call when deleting IAM role [GH-5544]
-* resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency error with ElasticSearch destinations [GH-5541]
-* resource/aws_storagegateway_cache: Prevent resource recreation due to disk identifier changes after creation [GH-5476]
+* storagegateway: Retry API calls on busy gateway proxy connection errors ([#5476](https://github.com/terraform-providers/terraform-provider-aws/issues/5476))
+* resource/aws_cloudtrail: Increase IAM retry threshold from 15 seconds to 1 minute ([#5499](https://github.com/terraform-providers/terraform-provider-aws/issues/5499))
+* resource/aws_cognito_user_pool: Properly pass all attributes during update (prevent perpetual flip-flop apply) ([#3458](https://github.com/terraform-providers/terraform-provider-aws/issues/3458))
+* resource/aws_cognito_user_pool_client: Properly pass all attributes during update (prevent perpetual flip-flop apply) ([#5478](https://github.com/terraform-providers/terraform-provider-aws/issues/5478))
+* resource/aws_db_instance: During S3 restore, lower retry threshold for IAM eventual consistency from 5 minutes to 2 minutes and retry on additional error ([#5536](https://github.com/terraform-providers/terraform-provider-aws/issues/5536))
+* resource/aws_dynamodb_table: Allow simultaneous region deletion retry of 5 minutes to better handle global table deletions ([#5518](https://github.com/terraform-providers/terraform-provider-aws/issues/5518))
+* resource/aws_glue_crawler: Additional IAM eventual consistency retry logic for create and update ([#5502](https://github.com/terraform-providers/terraform-provider-aws/issues/5502))
+* resource/aws_iam_role: Remove extraneous `DeleteRolePermissionsBoundary` API call when deleting IAM role ([#5544](https://github.com/terraform-providers/terraform-provider-aws/issues/5544))
+* resource/aws_kinesis_firehose_delivery_stream: Retry on additional IAM eventual consistency error with ElasticSearch destinations ([#5541](https://github.com/terraform-providers/terraform-provider-aws/issues/5541))
+* resource/aws_storagegateway_cache: Prevent resource recreation due to disk identifier changes after creation ([#5476](https://github.com/terraform-providers/terraform-provider-aws/issues/5476))
 
 ## 1.31.0 (August 09, 2018)
 
