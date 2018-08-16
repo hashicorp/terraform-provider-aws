@@ -4900,6 +4900,10 @@ type DashIsoGroupSettings struct {
 	//
 	// SegmentLength is a required field
 	SegmentLength *int64 `locationName:"segmentLength" min:"1" type:"integer" required:"true"`
+
+	// When ENABLED, segment durations are indicated in the manifest using SegmentTimeline
+	// and SegmentTimeline will be promoted down into Representation from AdaptationSet.
+	WriteSegmentTimelineInRepresentation *string `locationName:"writeSegmentTimelineInRepresentation" type:"string" enum:"DashIsoWriteSegmentTimelineInRepresentation"`
 }
 
 // String returns the string representation
@@ -4984,6 +4988,12 @@ func (s *DashIsoGroupSettings) SetSegmentControl(v string) *DashIsoGroupSettings
 // SetSegmentLength sets the SegmentLength field's value.
 func (s *DashIsoGroupSettings) SetSegmentLength(v int64) *DashIsoGroupSettings {
 	s.SegmentLength = &v
+	return s
+}
+
+// SetWriteSegmentTimelineInRepresentation sets the WriteSegmentTimelineInRepresentation field's value.
+func (s *DashIsoGroupSettings) SetWriteSegmentTimelineInRepresentation(v string) *DashIsoGroupSettings {
+	s.WriteSegmentTimelineInRepresentation = &v
 	return s
 }
 
@@ -15145,6 +15155,16 @@ const (
 
 	// DashIsoSegmentControlSegmentedFiles is a DashIsoSegmentControl enum value
 	DashIsoSegmentControlSegmentedFiles = "SEGMENTED_FILES"
+)
+
+// When ENABLED, segment durations are indicated in the manifest using SegmentTimeline
+// and SegmentTimeline will be promoted down into Representation from AdaptationSet.
+const (
+	// DashIsoWriteSegmentTimelineInRepresentationEnabled is a DashIsoWriteSegmentTimelineInRepresentation enum value
+	DashIsoWriteSegmentTimelineInRepresentationEnabled = "ENABLED"
+
+	// DashIsoWriteSegmentTimelineInRepresentationDisabled is a DashIsoWriteSegmentTimelineInRepresentation enum value
+	DashIsoWriteSegmentTimelineInRepresentationDisabled = "DISABLED"
 )
 
 // Only applies when you set Deinterlacer (DeinterlaceMode) to Deinterlace (DEINTERLACE)

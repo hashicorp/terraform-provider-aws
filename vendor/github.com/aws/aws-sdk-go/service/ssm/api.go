@@ -356,8 +356,8 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 // or targets.
 //
 // When you associate a document with one or more instances using instance IDs
-// or tags, the SSM Agent running on the instance processes the document and
-// configures the instance as specified.
+// or tags, SSM Agent running on the instance processes the document and configures
+// the instance as specified.
 //
 // If you associate a document with an instance that already has an associated
 // document, the system throws the AssociationAlreadyExists exception.
@@ -489,8 +489,8 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 // or targets.
 //
 // When you associate a document with one or more instances using instance IDs
-// or tags, the SSM Agent running on the instance processes the document and
-// configures the instance as specified.
+// or tags, SSM Agent running on the instance processes the document and configures
+// the instance as specified.
 //
 // If you associate a document with an instance that already has an associated
 // document, the system throws the AssociationAlreadyExists exception.
@@ -5187,11 +5187,18 @@ func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Reques
 //   The filter name is not valid. Verify the you entered the correct name and
 //   try again.
 //
+//   * ErrCodeInvalidInventoryGroupException "InvalidInventoryGroupException"
+//   The specified inventory group is not valid.
+//
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The specified token is not valid.
 //
 //   * ErrCodeInvalidTypeNameException "InvalidTypeNameException"
 //   The parameter type name is not valid.
+//
+//   * ErrCodeInvalidAggregatorException "InvalidAggregatorException"
+//   The specified aggregator is not valid for inventory groups. Verify that the
+//   aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
 //
 //   * ErrCodeInvalidResultAttributeException "InvalidResultAttributeException"
 //   The specified inventory item result attribute is not valid.
@@ -21868,6 +21875,11 @@ type InventoryAggregator struct {
 
 	// The inventory type and attribute name for aggregation.
 	Expression *string `min:"1" type:"string"`
+
+	// A user-defined set of one or more filters on which to aggregate inventory
+	// data. Groups return a count of resources that match and don't match the specified
+	// criteria.
+	Groups []*InventoryGroup `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -21889,6 +21901,9 @@ func (s *InventoryAggregator) Validate() error {
 	if s.Expression != nil && len(*s.Expression) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Expression", 1))
 	}
+	if s.Groups != nil && len(s.Groups) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Groups", 1))
+	}
 	if s.Aggregators != nil {
 		for i, v := range s.Aggregators {
 			if v == nil {
@@ -21896,6 +21911,16 @@ func (s *InventoryAggregator) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Aggregators", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Groups != nil {
+		for i, v := range s.Groups {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Groups", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -21915,6 +21940,12 @@ func (s *InventoryAggregator) SetAggregators(v []*InventoryAggregator) *Inventor
 // SetExpression sets the Expression field's value.
 func (s *InventoryAggregator) SetExpression(v string) *InventoryAggregator {
 	s.Expression = &v
+	return s
+}
+
+// SetGroups sets the Groups field's value.
+func (s *InventoryAggregator) SetGroups(v []*InventoryGroup) *InventoryAggregator {
+	s.Groups = v
 	return s
 }
 
@@ -22151,6 +22182,79 @@ func (s *InventoryFilter) SetType(v string) *InventoryFilter {
 // SetValues sets the Values field's value.
 func (s *InventoryFilter) SetValues(v []*string) *InventoryFilter {
 	s.Values = v
+	return s
+}
+
+// A user-defined set of one or more filters on which to aggregate inventory
+// data. Groups return a count of resources that match and don't match the specified
+// criteria.
+type InventoryGroup struct {
+	_ struct{} `type:"structure"`
+
+	// Filters define the criteria for the group. The matchingCount field displays
+	// the number of resources that match the criteria. The notMatchingCount field
+	// displays the number of resources that don't match the criteria.
+	//
+	// Filters is a required field
+	Filters []*InventoryFilter `min:"1" type:"list" required:"true"`
+
+	// The name of the group.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s InventoryGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InventoryGroup) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InventoryGroup) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InventoryGroup"}
+	if s.Filters == nil {
+		invalidParams.Add(request.NewErrParamRequired("Filters"))
+	}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *InventoryGroup) SetFilters(v []*InventoryFilter) *InventoryGroup {
+	s.Filters = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *InventoryGroup) SetName(v string) *InventoryGroup {
+	s.Name = &v
 	return s
 }
 
@@ -31188,6 +31292,12 @@ const (
 
 	// CommandFilterKeyStatus is a CommandFilterKey enum value
 	CommandFilterKeyStatus = "Status"
+
+	// CommandFilterKeyExecutionStage is a CommandFilterKey enum value
+	CommandFilterKeyExecutionStage = "ExecutionStage"
+
+	// CommandFilterKeyDocumentName is a CommandFilterKey enum value
+	CommandFilterKeyDocumentName = "DocumentName"
 )
 
 const (
@@ -31473,6 +31583,9 @@ const (
 
 	// InventoryQueryOperatorTypeGreaterThan is a InventoryQueryOperatorType enum value
 	InventoryQueryOperatorTypeGreaterThan = "GreaterThan"
+
+	// InventoryQueryOperatorTypeExists is a InventoryQueryOperatorType enum value
+	InventoryQueryOperatorTypeExists = "Exists"
 )
 
 const (
