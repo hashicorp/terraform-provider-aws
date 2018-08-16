@@ -34,6 +34,12 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_stage.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayStageImportStateIdFunc("aws_api_gateway_stage.test"),
+				ImportStateVerify: true,
+			},
 			resource.TestStep{
 				Config: testAccAWSAPIGatewayStageConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -82,6 +88,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "access_log_settings.0.format", clf),
 				),
 			},
+
 			{
 				Config: testAccAWSAPIGatewayStageConfig_accessLogSettings(rName, json),
 				Check: resource.ComposeTestCheckFunc(
@@ -177,6 +184,17 @@ func testAccCheckAWSAPIGatewayStageDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAPIGatewayStageImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"]), nil
+	}
 }
 
 func testAccAWSAPIGatewayStageConfig_base(rName string) string {
