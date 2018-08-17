@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_dax_cluster: Add `server_side_encryption` argument (support encryption at rest) [GH-5508]
+* resource/aws_ecs_service: Add retries for target group attachment [GH-3535]
 
 BUG FIXES:
 
