@@ -297,7 +297,7 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if _, ok := d.GetOk("permissions"); ok {
+	if d.HasChange("permissions") {
 		if err := setDocumentPermissions(d, meta); err != nil {
 			return err
 		}
@@ -376,24 +376,54 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
-	permission := d.Get("permissions").(map[string]interface{})
 
-	ids := aws.StringSlice([]string{permission["account_ids"].(string)})
+	// Since AccountIdsToRemove has higher priority than AccountIdsToAdd,
+	// we update permissions in two steps: we remove all existing permissions
+	// before adding new permissions.
+	o, _ := d.GetChange("permissions")
 
-	if strings.Contains(permission["account_ids"].(string), ",") {
-		ids = aws.StringSlice(strings.Split(permission["account_ids"].(string), ","))
+	permission_old := o.(map[string]interface{})
+
+	if permission_old["account_ids"] != nil {
+		accountsToRemove := aws.StringSlice([]string{permission_old["account_ids"].(string)})
+		if strings.Contains(permission_old["account_ids"].(string), ",") {
+			accountsToRemove = aws.StringSlice(strings.Split(permission_old["account_ids"].(string), ","))
+		}
+
+		permClearInput := &ssm.ModifyDocumentPermissionInput{
+			Name:               aws.String(d.Get("name").(string)),
+			PermissionType:     aws.String("Share"),
+			AccountIdsToRemove: accountsToRemove,
+		}
+
+		_, err := ssmconn.ModifyDocumentPermission(permClearInput)
+
+		if err != nil {
+			return errwrap.Wrapf("[ERROR] Error removing permissions for SSM document: {{err}}", err)
+		}
 	}
 
-	permInput := &ssm.ModifyDocumentPermissionInput{
-		Name:            aws.String(d.Get("name").(string)),
-		PermissionType:  aws.String(permission["type"].(string)),
-		AccountIdsToAdd: ids,
-	}
+	if _, ok := d.GetOk("permissions"); ok {
 
-	_, err := ssmconn.ModifyDocumentPermission(permInput)
+		permission := d.Get("permissions").(map[string]interface{})
 
-	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error setting permissions for SSM document: {{err}}", err)
+		ids := aws.StringSlice([]string{permission["account_ids"].(string)})
+
+		if strings.Contains(permission["account_ids"].(string), ",") {
+			ids = aws.StringSlice(strings.Split(permission["account_ids"].(string), ","))
+		}
+
+		permInput := &ssm.ModifyDocumentPermissionInput{
+			Name:            aws.String(d.Get("name").(string)),
+			PermissionType:  aws.String(permission["type"].(string)),
+			AccountIdsToAdd: ids,
+		}
+
+		_, err := ssmconn.ModifyDocumentPermission(permInput)
+
+		if err != nil {
+			return errwrap.Wrapf("[ERROR] Error setting permissions for SSM document: {{err}}", err)
+		}
 	}
 
 	return nil
