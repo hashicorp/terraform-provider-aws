@@ -448,10 +448,19 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
+	permission := d.Get("permissions").(map[string]interface{})
+	var accountsToRemove []*string
+	if permission["account_ids"] != nil {
+		accountsToRemove = aws.StringSlice([]string{permission["account_ids"].(string)})
+		if strings.Contains(permission["account_ids"].(string), ",") {
+			accountsToRemove = aws.StringSlice(strings.Split(permission["account_ids"].(string), ","))
+		}
+	}
+
 	permInput := &ssm.ModifyDocumentPermissionInput{
 		Name:               aws.String(d.Get("name").(string)),
 		PermissionType:     aws.String("Share"),
-		AccountIdsToRemove: aws.StringSlice(strings.Split("all", ",")),
+		AccountIdsToRemove: accountsToRemove,
 	}
 
 	_, err := ssmconn.ModifyDocumentPermission(permInput)
