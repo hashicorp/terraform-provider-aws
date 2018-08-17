@@ -229,7 +229,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		Optional: true,
 		ForceNew: true,
 		ConflictsWith: []string{
-			"availability_zone",
 			"availability_zones",
 			"az_mode",
 			"engine_version",

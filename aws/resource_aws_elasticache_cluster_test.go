@@ -653,10 +653,6 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testin
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zone", "us-east-1a"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zone`),
-			},
-			{
 				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zones", "${list(\"us-east-1a\", \"us-east-1c\")}"),
 				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zones`),
 			},
@@ -723,6 +719,34 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testin
 			{
 				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "subnet_group_name", "group1"),
 				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with subnet_group_name`),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_ReplicationGroupID_AvailabilityZone_Ec2Classic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var cluster elasticache.CacheCluster
+	var replicationGroup elasticache.ReplicationGroup
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	clusterResourceName := "aws_elasticache_cluster.replica"
+	replicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone_Ec2Classic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(replicationGroupResourceName, &replicationGroup),
+					testAccCheckAWSElasticacheClusterExists(clusterResourceName, &cluster),
+					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster, &replicationGroup),
+				),
 			},
 		},
 	})
@@ -1301,6 +1325,30 @@ resource "aws_elasticache_cluster" "replica" {
   %[2]s                = "%[3]s"
 }
 `, rName, attrName, attrValue)
+}
+
+func testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone_Ec2Classic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_description  = "Terraform Acceptance Testing"
+  replication_group_id           = "%[1]s"
+  node_type                      = "cache.m3.medium"
+  number_cache_clusters          = 1
+  port                           = 6379
+
+  lifecycle {
+    ignore_changes = ["number_cache_clusters"]
+  }
+}
+
+resource "aws_elasticache_cluster" "replica" {
+  availability_zone    = "${data.aws_availability_zones.available.names[0]}"
+  cluster_id           = "%[1]s1"
+  replication_group_id = "${aws_elasticache_replication_group.test.id}"
+}
+`, rName)
 }
 
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica_Ec2Classic(rName string, count int) string {
