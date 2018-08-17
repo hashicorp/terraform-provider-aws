@@ -108,6 +108,35 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_permission_change(t *testing.T) {
+	name := acctest.RandString(10)
+	initial_ids := "123456789012,123456789013"
+	updated_ids := "123456789012"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, initial_ids),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, updated_ids),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_params(t *testing.T) {
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
