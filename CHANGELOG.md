@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_dax_cluster: Add `server_side_encryption` argument (support encryption at rest) [GH-5508]
 
+BUG FIXES:
+
+* resource/aws_instance: Ignore change of `user_data` from omission to empty string [GH-5467]
+
 ## 1.32.0 (August 16, 2018)
 
 FEATURES:
