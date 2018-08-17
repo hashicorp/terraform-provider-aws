@@ -1,4 +1,9 @@
 ## 1.33.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_dax_cluster: Add `server_side_encryption` argument (support encryption at rest) [GH-5508]
+
 ## 1.32.0 (August 16, 2018)
 
 FEATURES:
