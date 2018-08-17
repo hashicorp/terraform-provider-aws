@@ -4559,11 +4559,15 @@ func expandDaxEncryptAtRestOptions(m map[string]interface{}) *dax.SSESpecificati
 }
 
 func flattenDaxEncryptAtRestOptions(options *dax.SSEDescription) []map[string]interface{} {
-	if options == nil {
-		return []map[string]interface{}{}
-	}
 	m := map[string]interface{}{
-		"enabled": aws.StringValue(options.Status) == dax.SSEStatusEnabled,
+		"enabled": false,
 	}
+
+	if options == nil {
+		return []map[string]interface{}{m}
+	}
+
+	m["enabled"] = (aws.StringValue(options.Status) == dax.SSEStatusEnabled)
+
 	return []map[string]interface{}{m}
 }

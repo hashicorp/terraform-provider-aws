@@ -68,7 +68,7 @@ cluster
 
 The `server_side_encryption` object supports the following:
 
-* `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`
+* `enabled` - (Optional) Whether to enable encryption at rest. Defaults to `false`.
 
 ## Attributes Reference
 

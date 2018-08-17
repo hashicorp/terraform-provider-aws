@@ -107,16 +107,6 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 						"aws_dax_cluster.test", "server_side_encryption.0.enabled", "false"),
 				),
 			},
-			{
-				Config:             testAccAWSDAXClusterConfigWithEncryption(rString, false),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
-			{
-				Config:             testAccAWSDAXClusterConfigWithEncryption(rString, true),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
 		},
 	})
 }
@@ -151,15 +141,39 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
 					resource.TestCheckResourceAttr(
 						"aws_dax_cluster.test", "replication_factor", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "server_side_encryption.0.enabled", "true"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSDAXCluster_encryption(t *testing.T) {
+func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDAXClusterConfigWithEncryption(rString, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.0.enabled", "false"),
+				),
+			},
+			// Ensure it shows no difference when removing server_side_encryption configuration
+			{
+				Config:             testAccAWSDAXClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
@@ -171,9 +185,15 @@ func TestAccAWSDAXCluster_encryption(t *testing.T) {
 				Config: testAccAWSDAXClusterConfigWithEncryption(rString, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.0.enabled", "true"),
 				),
+			},
+			// Ensure it shows a difference when removing server_side_encryption configuration
+			{
+				Config:             testAccAWSDAXClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
