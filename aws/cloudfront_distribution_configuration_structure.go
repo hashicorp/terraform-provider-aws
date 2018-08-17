@@ -144,10 +144,10 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		}
 	}
 	if distributionConfig.CacheBehaviors != nil {
-		if _, ok := d.GetOk("ordered_cache_behavior"); ok {
-			err = d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors))
-		} else {
+		if _, ok := d.GetOk("cache_behavior"); ok {
 			err = d.Set("cache_behavior", flattenCacheBehaviorsDeprecated(distributionConfig.CacheBehaviors))
+		} else {
+			err = d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors))
 		}
 
 		if err != nil {
