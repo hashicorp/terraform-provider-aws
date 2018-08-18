@@ -465,7 +465,13 @@ func (c *Config) Client() (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to resolve endpoint. Errors: %s", err)
 	}
-	client.urlsuffix = parseURLSuffixFromEndpoint(endpoint.URL, client.region)
+
+	urlsuffix, err := parseURLSuffixFromEndpoint(endpoint.URL, client.region)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to resolve URL Suffix. Errors: %s", err)
+	}
+
+	client.urlsuffix = aws.StringValue(urlsuffix)
 
 	client.ec2conn = ec2.New(awsEc2Sess)
 
@@ -619,16 +625,22 @@ func (c *Config) Client() (interface{}, error) {
 	return &client, nil
 }
 
-func parseURLSuffixFromEndpoint(endpoint string, region string) string {
+func parseURLSuffixFromEndpoint(endpoint string, region string) (*string, error) {
 	e := strings.Split(endpoint, ".")
 
-	// An endpoint may have the region in the second token
-	if e[1] == region {
-		return strings.Join(e[2:], ".")
+	// Expect endpoints with at least three elements
+	// {service}.{optional region}.{one or more zones}.{root}
+	if len(e) < 2 {
+		return nil, fmt.Errorf("Could not determine URL Suffix from endpoint '%s'", endpoint)
 	}
 
-	// Without a region, the URL Suffix is everything past the first token
-	return strings.Join(e[1:], ".")
+	// An endpoint may have the region in the second element
+	if e[1] == region {
+		return aws.String(strings.Join(e[2:], ".")), nil
+	}
+
+	// Without a region, the URL Suffix is everything past the first element
+	return aws.String(strings.Join(e[1:], ".")), nil
 }
 
 func hasEc2Classic(platforms []string) bool {
