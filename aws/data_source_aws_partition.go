@@ -16,6 +16,10 @@ func dataSourceAwsPartition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"url_suffix": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -28,6 +32,9 @@ func dataSourceAwsPartitionRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Setting AWS Partition to %s.", client.partition)
 	d.Set("partition", meta.(*AWSClient).partition)
+
+	log.Printf("[DEBUG] Setting AWS URL Suffix to %s.", client.urlsuffix)
+	d.Set("url_suffix", meta.(*AWSClient).urlsuffix)
 
 	return nil
 }

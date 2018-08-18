@@ -196,6 +196,7 @@ type AWSClient struct {
 	redshiftconn          *redshift.Redshift
 	r53conn               *route53.Route53
 	partition             string
+	urlsuffix             string
 	accountid             string
 	supportedplatforms    []string
 	region                string
@@ -458,6 +459,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
+	// Infer URL Suffix from STS Endpoint
+	resolver := endpoints.DefaultResolver()
+	endpoint, err := resolver.EndpointFor(endpoints.StatesServiceID, client.region)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to resolve endpoint. Errors: %s", err)
+	}
+	client.urlsuffix = parseURLSuffixFromEndpoint(endpoint.URL, client.region)
+
 	client.ec2conn = ec2.New(awsEc2Sess)
 
 	if !c.SkipGetEC2Platforms {
@@ -608,6 +617,18 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	return &client, nil
+}
+
+func parseURLSuffixFromEndpoint(endpoint string, region string) string {
+	e := strings.Split(endpoint, ".")
+
+	// An endpoint may have the region in the second token
+	if e[1] == region {
+		return strings.Join(e[2:], ".")
+	}
+
+	// Without a region, the URL Suffix is everything past the first token
+	return strings.Join(e[1:], ".")
 }
 
 func hasEc2Classic(platforms []string) bool {

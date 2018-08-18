@@ -8,7 +8,8 @@ description: |-
 
 # Data Source: aws_partition
 
-Use this data source to lookup current AWS partition in which Terraform is working
+Use this data source to lookup information about the current AWS partition in
+which Terraform is working.
 
 ## Example Usage
 
@@ -37,3 +38,4 @@ There are no arguments available for this data source.
 ## Attributes Reference
 
 `partition` is set to the identifier of the current partition.
+`url_suffix` is set to the URL Suffix associated with the current partition.
