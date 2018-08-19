@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -105,6 +106,7 @@ import (
 type Config struct {
 	AccessKey     string
 	SecretKey     string
+	MFA           bool
 	CredsFilename string
 	Profile       string
 	Token         string
@@ -337,6 +339,11 @@ func (c *Config) Client() (interface{}, error) {
 		transport.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
+	}
+
+	if c.MFA {
+		// add StdinTokenProvider for MFA
+		opt.AssumeRoleTokenProvider = stscreds.StdinTokenProvider
 	}
 
 	// create base session with no retries. MaxRetries will be set later
