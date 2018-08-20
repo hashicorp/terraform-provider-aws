@@ -26,6 +26,12 @@ func resourceAwsS3BucketObject() *schema.Resource {
 		Read:   resourceAwsS3BucketObjectRead,
 		Update: resourceAwsS3BucketObjectPut,
 		Delete: resourceAwsS3BucketObjectDelete,
+		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
+			if diff.Get("etag_changed").(bool) {
+				diff.SetNewComputed("etag")
+			}
+			return nil
+		},
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -135,6 +141,11 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"kms_key_id", "server_side_encryption"},
+			},
+
+			"etag_changed": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 
 			"version_id": {
@@ -310,7 +321,12 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("kms_key_id", resp.SSEKMSKeyId)
 		}
 	}
-	d.Set("etag", strings.Trim(*resp.ETag, `"`))
+
+	// We detect if the last saved etag does not match the actual etag, if so, that mean that the s3 object has been
+	// modified outside of terraform and then, we will force the update of the resource.
+	actualEtag := strings.Trim(*resp.ETag, `"`)
+	d.Set("etag_changed", d.Get("etag") != actualEtag)
+	d.Set("etag", actualEtag)
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
