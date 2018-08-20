@@ -7,6 +7,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudfront_distribution: Import into `ordered_cache_behavior` instead of deprecated `cache_behavior` [GH-5586]
 * resource/aws_instance: Ignore change of `user_data` from omission to empty string [GH-5467]
 
 ## 1.32.0 (August 16, 2018)
