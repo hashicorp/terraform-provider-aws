@@ -32,6 +32,12 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 						"aws_api_gateway_model.test", "content_type", "application/json"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_model.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayModelImportStateIdFunc("aws_api_gateway_model.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -115,6 +121,17 @@ func testAccCheckAWSAPIGatewayModelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAPIGatewayModelImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["name"]), nil
+	}
 }
 
 const testAccAWSAPIGatewayModelConfig = `
