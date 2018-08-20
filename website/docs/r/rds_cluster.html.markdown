@@ -3,17 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_rds_cluster"
 sidebar_current: "docs-aws-resource-rds-cluster"
 description: |-
-  Provides an RDS Cluster Resource
+  Manages a RDS Aurora Cluster
 ---
 
 # aws_rds_cluster
 
-Provides an RDS Cluster Resource. A Cluster Resource defines attributes that are
-applied to the entire cluster of [RDS Cluster Instances][3]. Use the RDS Cluster
-resource and RDS Cluster Instances to create and use Amazon Aurora, a MySQL-compatible
-database engine.
-
-For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amazon RDS User Guide.
+Manages a [RDS Aurora Cluster][2]. To manage cluster instances that inherit configuration from the cluster (when not running the cluster in `serverless` engine mode), see the [`aws_rds_cluster_instance` resource](/docs/providers/aws/r/rds_cluster_instance.html). To manage non-Aurora databases (e.g. MySQL, PostgreSQL, SQL Server, etc.), see the [`aws_db_instance` resource](/docs/providers/aws/r/db_instance.html).
 
 For information on the difference between the available Aurora MySQL engines
 see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
