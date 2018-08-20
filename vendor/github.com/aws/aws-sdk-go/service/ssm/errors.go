@@ -524,6 +524,12 @@ const (
 	// The parameter name is not valid.
 	ErrCodeParameterPatternMismatchException = "ParameterPatternMismatchException"
 
+	// ErrCodeParameterVersionLabelLimitExceeded for service response error code
+	// "ParameterVersionLabelLimitExceeded".
+	//
+	// A parameter version can have a maximum of ten labels.
+	ErrCodeParameterVersionLabelLimitExceeded = "ParameterVersionLabelLimitExceeded"
+
 	// ErrCodeParameterVersionNotFound for service response error code
 	// "ParameterVersionNotFound".
 	//

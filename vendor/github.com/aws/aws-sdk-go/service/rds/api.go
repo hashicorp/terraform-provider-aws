@@ -1517,6 +1517,8 @@ func (c *RDS) CreateDBInstanceRequest(input *CreateDBInstanceInput) (req *reques
 //   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
 //   Domain doesn't refer to an existing Active Directory domain.
 //
+//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CreateDBInstance
 func (c *RDS) CreateDBInstance(input *CreateDBInstanceInput) (*CreateDBInstanceOutput, error) {
 	req, out := c.CreateDBInstanceRequest(input)
@@ -6792,6 +6794,111 @@ func (c *RDS) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsFor
 	return out, req.Send()
 }
 
+const opModifyCurrentDBClusterCapacity = "ModifyCurrentDBClusterCapacity"
+
+// ModifyCurrentDBClusterCapacityRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCurrentDBClusterCapacity operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCurrentDBClusterCapacity for more information on using the ModifyCurrentDBClusterCapacity
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyCurrentDBClusterCapacityRequest method.
+//    req, resp := client.ModifyCurrentDBClusterCapacityRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyCurrentDBClusterCapacity
+func (c *RDS) ModifyCurrentDBClusterCapacityRequest(input *ModifyCurrentDBClusterCapacityInput) (req *request.Request, output *ModifyCurrentDBClusterCapacityOutput) {
+	op := &request.Operation{
+		Name:       opModifyCurrentDBClusterCapacity,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyCurrentDBClusterCapacityInput{}
+	}
+
+	output = &ModifyCurrentDBClusterCapacityOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCurrentDBClusterCapacity API operation for Amazon Relational Database Service.
+//
+// Set the capacity of an Aurora Serverless DB cluster to a specific value.
+//
+// Aurora Serverless scales seamlessly based on the workload on the DB cluster.
+// In some cases, the capacity might not scale fast enough to meet a sudden
+// change in workload, such as a large number of new transactions. Call ModifyCurrentDBClusterCapacity
+// to set the capacity explicitly.
+//
+// After this call sets the DB cluster capacity, Aurora Serverless can automatically
+// scale the DB cluster based on the cooldown period for scaling up and the
+// cooldown period for scaling down.
+//
+// For more information about Aurora Serverless, see Using Amazon Aurora Serverless
+// (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.html)
+// in the Amazon RDS User Guide.
+//
+// If you call ModifyCurrentDBClusterCapacity with the default TimeoutAction,
+// connections that prevent Aurora Serverless from finding a scaling point might
+// be dropped. For more information about scaling points, see  Autoscaling for
+// Aurora Serverless (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.auto-scaling)
+// in the Amazon RDS User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation ModifyCurrentDBClusterCapacity for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
+//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBClusterCapacityFault "InvalidDBClusterCapacityFault"
+//   Capacity isn't a valid Aurora Serverless DB cluster capacity. Valid capacity
+//   values are 2, 4, 8, 16, 32, 64, 128, and 256.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyCurrentDBClusterCapacity
+func (c *RDS) ModifyCurrentDBClusterCapacity(input *ModifyCurrentDBClusterCapacityInput) (*ModifyCurrentDBClusterCapacityOutput, error) {
+	req, out := c.ModifyCurrentDBClusterCapacityRequest(input)
+	return out, req.Send()
+}
+
+// ModifyCurrentDBClusterCapacityWithContext is the same as ModifyCurrentDBClusterCapacity with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCurrentDBClusterCapacity for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) ModifyCurrentDBClusterCapacityWithContext(ctx aws.Context, input *ModifyCurrentDBClusterCapacityInput, opts ...request.Option) (*ModifyCurrentDBClusterCapacityOutput, error) {
+	req, out := c.ModifyCurrentDBClusterCapacityRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyDBCluster = "ModifyDBCluster"
 
 // ModifyDBClusterRequest generates a "aws/request.Request" representing the
@@ -7226,6 +7333,8 @@ func (c *RDS) ModifyDBInstanceRequest(input *ModifyDBInstanceInput) (req *reques
 //
 //   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
 //   Domain doesn't refer to an existing Active Directory domain.
+//
+//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyDBInstance
 func (c *RDS) ModifyDBInstance(input *ModifyDBInstanceInput) (*ModifyDBInstanceOutput, error) {
@@ -9176,6 +9285,8 @@ func (c *RDS) RestoreDBInstanceFromDBSnapshotRequest(input *RestoreDBInstanceFro
 //   * ErrCodeDBParameterGroupNotFoundFault "DBParameterGroupNotFound"
 //   DBParameterGroupName doesn't refer to an existing DB parameter group.
 //
+//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBInstanceFromDBSnapshot
 func (c *RDS) RestoreDBInstanceFromDBSnapshot(input *RestoreDBInstanceFromDBSnapshotInput) (*RestoreDBInstanceFromDBSnapshotOutput, error) {
 	req, out := c.RestoreDBInstanceFromDBSnapshotRequest(input)
@@ -9315,6 +9426,8 @@ func (c *RDS) RestoreDBInstanceFromS3Request(input *RestoreDBInstanceFromS3Input
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
 //   An error occurred accessing an AWS KMS key.
+//
+//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBInstanceFromS3
 func (c *RDS) RestoreDBInstanceFromS3(input *RestoreDBInstanceFromS3Input) (*RestoreDBInstanceFromS3Output, error) {
@@ -9475,6 +9588,8 @@ func (c *RDS) RestoreDBInstanceToPointInTimeRequest(input *RestoreDBInstanceToPo
 //
 //   * ErrCodeDBParameterGroupNotFoundFault "DBParameterGroupNotFound"
 //   DBParameterGroupName doesn't refer to an existing DB parameter group.
+//
+//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBInstanceToPointInTime
 func (c *RDS) RestoreDBInstanceToPointInTime(input *RestoreDBInstanceToPointInTimeInput) (*RestoreDBInstanceToPointInTimeOutput, error) {
@@ -10647,6 +10762,12 @@ func (s *CharacterSet) SetCharacterSetName(v string) *CharacterSet {
 
 // The configuration setting for the log types to be enabled for export to CloudWatch
 // Logs for a specific DB instance or DB cluster.
+//
+// The EnableLogTypes and DisableLogTypes arrays determine which logs will be
+// exported (or not exported) to CloudWatch Logs. The values within these arrays
+// depend on the DB engine being used. For more information, see Publishing
+// Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+// in the Amazon Relational Database Service User Guide.
 type CloudwatchLogsExportConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11571,7 +11692,9 @@ type CreateDBClusterInput struct {
 	DestinationRegion *string `type:"string"`
 
 	// The list of log types that need to be enabled for exporting to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -11587,6 +11710,9 @@ type CreateDBClusterInput struct {
 	//
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
+
+	// The DB engine mode of the DB cluster, either provisioned or serverless.
+	EngineMode *string `type:"string"`
 
 	// The version number of the database engine to use.
 	//
@@ -11722,6 +11848,10 @@ type CreateDBClusterInput struct {
 	// this DB cluster is created as a Read Replica.
 	ReplicationSourceIdentifier *string `type:"string"`
 
+	// For DB clusters in serverless DB engine mode, the scaling properties of the
+	// DB cluster.
+	ScalingConfiguration *ScalingConfiguration `type:"structure"`
+
 	// SourceRegion is the source region where the resource exists. This is not
 	// sent over the wire and is only used for presigning. This value should always
 	// have the same region as the source ARN.
@@ -11835,6 +11965,12 @@ func (s *CreateDBClusterInput) SetEngine(v string) *CreateDBClusterInput {
 	return s
 }
 
+// SetEngineMode sets the EngineMode field's value.
+func (s *CreateDBClusterInput) SetEngineMode(v string) *CreateDBClusterInput {
+	s.EngineMode = &v
+	return s
+}
+
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *CreateDBClusterInput) SetEngineVersion(v string) *CreateDBClusterInput {
 	s.EngineVersion = &v
@@ -11892,6 +12028,12 @@ func (s *CreateDBClusterInput) SetPreferredMaintenanceWindow(v string) *CreateDB
 // SetReplicationSourceIdentifier sets the ReplicationSourceIdentifier field's value.
 func (s *CreateDBClusterInput) SetReplicationSourceIdentifier(v string) *CreateDBClusterInput {
 	s.ReplicationSourceIdentifier = &v
+	return s
+}
+
+// SetScalingConfiguration sets the ScalingConfiguration field's value.
+func (s *CreateDBClusterInput) SetScalingConfiguration(v *ScalingConfiguration) *CreateDBClusterInput {
+	s.ScalingConfiguration = v
 	return s
 }
 
@@ -12427,7 +12569,9 @@ type CreateDBInstanceInput struct {
 	DomainIAMRoleName *string `type:"string"`
 
 	// The list of log types that need to be enabled for exporting to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -12804,17 +12948,26 @@ type CreateDBInstanceInput struct {
 	// which resolves to a public IP address. A value of false specifies an internal
 	// instance with a DNS name that resolves to a private IP address.
 	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
+	// Default: The default behavior varies depending on whether DBSubnetGroupName
+	// is specified.
 	//
-	//    * Default VPC: true
+	// If DBSubnetGroupName is not specified, and PubliclyAccessible is not specified,
+	// the following applies:
 	//
-	//    * VPC: false
+	//    * If the default VPC in the target region doesn’t have an Internet gateway
+	//    attached to it, the DB instance is private.
 	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
+	//    * If the default VPC in the target region has an Internet gateway attached
+	//    to it, the DB instance is public.
+	//
+	// If DBSubnetGroupName is specified, and PubliclyAccessible is not specified,
+	// the following applies:
+	//
+	//    * If the subnets are part of a VPC that doesn’t have an Internet gateway
+	//    attached to it, the DB instance is private.
+	//
+	//    * If the subnets are part of a VPC that has an Internet gateway attached
+	//    to it, the DB instance is public.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// Specifies whether the DB instance is encrypted.
@@ -13246,6 +13399,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	DestinationRegion *string `type:"string"`
 
 	// The list of logs that the new DB instance is to export to CloudWatch Logs.
+	// The values in the list depend on the DB engine being used. For more information,
+	// see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -13386,19 +13542,8 @@ type CreateDBInstanceReadReplicaInput struct {
 	// Specifies the accessibility options for the DB instance. A value of true
 	// specifies an Internet-facing instance with a publicly resolvable DNS name,
 	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC:true
-	//
-	//    * VPC:false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
+	// instance with a DNS name that resolves to a private IP address. For more
+	// information, see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// The identifier of the DB instance that will act as the source for the Read
@@ -14401,6 +14546,8 @@ type DBCluster struct {
 	// Specifies the number of days for which automatic DB snapshots are retained.
 	BackupRetentionPeriod *int64 `type:"integer"`
 
+	Capacity *int64 `type:"integer"`
+
 	// If present, specifies the name of the character set that this cluster is
 	// associated with.
 	CharacterSetName *string `type:"string"`
@@ -14451,6 +14598,10 @@ type DBCluster struct {
 
 	// A list of log types that this DB cluster is configured to export to CloudWatch
 	// Logs.
+	//
+	// Log types vary by DB engine. For information about the log types for each
+	// DB engine, see Amazon RDS Database Log Files (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html)
+	// in the Amazon RDS User Guide.
 	EnabledCloudwatchLogsExports []*string `type:"list"`
 
 	// Specifies the connection endpoint for the primary instance of the DB cluster.
@@ -14458,6 +14609,9 @@ type DBCluster struct {
 
 	// Provides the name of the database engine to be used for this DB cluster.
 	Engine *string `type:"string"`
+
+	// The DB engine mode of the DB cluster, either provisioned or serverless.
+	EngineMode *string `type:"string"`
 
 	// Indicates the database engine version.
 	EngineVersion *string `type:"string"`
@@ -14518,6 +14672,13 @@ type DBCluster struct {
 	// Read Replica.
 	ReplicationSourceIdentifier *string `type:"string"`
 
+	// Shows the scaling configuration for an Aurora DB cluster in serverless DB
+	// engine mode.
+	//
+	// For more information, see Using Amazon Aurora Serverless (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.html)
+	// in the Amazon RDS User Guide.
+	ScalingConfigurationInfo *ScalingConfigurationInfo `type:"structure"`
+
 	// Specifies the current state of this DB cluster.
 	Status *string `type:"string"`
 
@@ -14571,6 +14732,12 @@ func (s *DBCluster) SetBacktrackWindow(v int64) *DBCluster {
 // SetBackupRetentionPeriod sets the BackupRetentionPeriod field's value.
 func (s *DBCluster) SetBackupRetentionPeriod(v int64) *DBCluster {
 	s.BackupRetentionPeriod = &v
+	return s
+}
+
+// SetCapacity sets the Capacity field's value.
+func (s *DBCluster) SetCapacity(v int64) *DBCluster {
+	s.Capacity = &v
 	return s
 }
 
@@ -14670,6 +14837,12 @@ func (s *DBCluster) SetEngine(v string) *DBCluster {
 	return s
 }
 
+// SetEngineMode sets the EngineMode field's value.
+func (s *DBCluster) SetEngineMode(v string) *DBCluster {
+	s.EngineMode = &v
+	return s
+}
+
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *DBCluster) SetEngineVersion(v string) *DBCluster {
 	s.EngineVersion = &v
@@ -14751,6 +14924,12 @@ func (s *DBCluster) SetReaderEndpoint(v string) *DBCluster {
 // SetReplicationSourceIdentifier sets the ReplicationSourceIdentifier field's value.
 func (s *DBCluster) SetReplicationSourceIdentifier(v string) *DBCluster {
 	s.ReplicationSourceIdentifier = &v
+	return s
+}
+
+// SetScalingConfigurationInfo sets the ScalingConfigurationInfo field's value.
+func (s *DBCluster) SetScalingConfigurationInfo(v *ScalingConfigurationInfo) *DBCluster {
+	s.ScalingConfigurationInfo = v
 	return s
 }
 
@@ -14954,6 +15133,8 @@ func (s *DBClusterParameterGroupNameMessage) SetDBClusterParameterGroupName(v st
 type DBClusterRole struct {
 	_ struct{} `type:"structure"`
 
+	FeatureName *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the IAM role that is associated with the
 	// DB cluster.
 	RoleArn *string `type:"string"`
@@ -14980,6 +15161,12 @@ func (s DBClusterRole) String() string {
 // GoString returns the string representation
 func (s DBClusterRole) GoString() string {
 	return s.String()
+}
+
+// SetFeatureName sets the FeatureName field's value.
+func (s *DBClusterRole) SetFeatureName(v string) *DBClusterRole {
+	s.FeatureName = &v
+	return s
 }
 
 // SetRoleArn sets the RoleArn field's value.
@@ -15318,6 +15505,9 @@ type DBEngineVersion struct {
 	// parameter of the CreateDBInstance action.
 	SupportedCharacterSets []*CharacterSet `locationNameList:"CharacterSet" type:"list"`
 
+	// A list of the supported DB engine modes.
+	SupportedEngineModes []*string `type:"list"`
+
 	// A list of the time zones supported by this engine for the Timezone parameter
 	// of the CreateDBInstance action.
 	SupportedTimezones []*Timezone `locationNameList:"Timezone" type:"list"`
@@ -15389,6 +15579,12 @@ func (s *DBEngineVersion) SetExportableLogTypes(v []*string) *DBEngineVersion {
 // SetSupportedCharacterSets sets the SupportedCharacterSets field's value.
 func (s *DBEngineVersion) SetSupportedCharacterSets(v []*CharacterSet) *DBEngineVersion {
 	s.SupportedCharacterSets = v
+	return s
+}
+
+// SetSupportedEngineModes sets the SupportedEngineModes field's value.
+func (s *DBEngineVersion) SetSupportedEngineModes(v []*string) *DBEngineVersion {
+	s.SupportedEngineModes = v
 	return s
 }
 
@@ -15506,6 +15702,10 @@ type DBInstance struct {
 
 	// A list of log types that this DB instance is configured to export to CloudWatch
 	// Logs.
+	//
+	// Log types vary by DB engine. For information about the log types for each
+	// DB engine, see Amazon RDS Database Log Files (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html)
+	// in the Amazon RDS User Guide.
 	EnabledCloudwatchLogsExports []*string `type:"list"`
 
 	// Specifies the connection endpoint.
@@ -15606,18 +15806,6 @@ type DBInstance struct {
 	// specifies an Internet-facing instance with a publicly resolvable DNS name,
 	// which resolves to a public IP address. A value of false specifies an internal
 	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC:true
-	//
-	//    * VPC:false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// Contains one or more identifiers of Aurora DB clusters that are Read Replicas
@@ -16007,7 +16195,8 @@ type DBInstanceStatusInfo struct {
 	Normal *bool `type:"boolean"`
 
 	// Status of the DB instance. For a StatusType of read replica, the values can
-	// be replicating, error, stopped, or terminated.
+	// be replicating, replication stop point set, replication stop point reached,
+	// error, stopped, or terminated.
 	Status *string `type:"string"`
 
 	// This value is currently "read replication."
@@ -22153,6 +22342,153 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 	return s
 }
 
+type ModifyCurrentDBClusterCapacityInput struct {
+	_ struct{} `type:"structure"`
+
+	// The DB cluster capacity.
+	//
+	// Constraints:
+	//
+	//    * Value must be 2, 4, 8, 16, 32, 64, 128, or 256.
+	Capacity *int64 `type:"integer"`
+
+	// The DB cluster identifier for the cluster being modified. This parameter
+	// is not case-sensitive.
+	//
+	// Constraints:
+	//
+	//    * Must match the identifier of an existing DB cluster.
+	//
+	// DBClusterIdentifier is a required field
+	DBClusterIdentifier *string `type:"string" required:"true"`
+
+	// The amount of time, in seconds, that Aurora Serverless tries to find a scaling
+	// point to perform seamless scaling before enforcing the timeout action. The
+	// default is 300.
+	//
+	//    * Value must be from 10 through 600.
+	SecondsBeforeTimeout *int64 `type:"integer"`
+
+	// The action to take when the timeout is reached, either ForceApplyCapacityChange
+	// or RollbackCapacityChange.
+	//
+	// ForceApplyCapacityChange, the default, sets the capacity to the specified
+	// value as soon as possible.
+	//
+	// RollbackCapacityChange ignores the capacity change if a scaling point is
+	// not found in the timeout period.
+	TimeoutAction *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ModifyCurrentDBClusterCapacityInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCurrentDBClusterCapacityInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyCurrentDBClusterCapacityInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyCurrentDBClusterCapacityInput"}
+	if s.DBClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("DBClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacity sets the Capacity field's value.
+func (s *ModifyCurrentDBClusterCapacityInput) SetCapacity(v int64) *ModifyCurrentDBClusterCapacityInput {
+	s.Capacity = &v
+	return s
+}
+
+// SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
+func (s *ModifyCurrentDBClusterCapacityInput) SetDBClusterIdentifier(v string) *ModifyCurrentDBClusterCapacityInput {
+	s.DBClusterIdentifier = &v
+	return s
+}
+
+// SetSecondsBeforeTimeout sets the SecondsBeforeTimeout field's value.
+func (s *ModifyCurrentDBClusterCapacityInput) SetSecondsBeforeTimeout(v int64) *ModifyCurrentDBClusterCapacityInput {
+	s.SecondsBeforeTimeout = &v
+	return s
+}
+
+// SetTimeoutAction sets the TimeoutAction field's value.
+func (s *ModifyCurrentDBClusterCapacityInput) SetTimeoutAction(v string) *ModifyCurrentDBClusterCapacityInput {
+	s.TimeoutAction = &v
+	return s
+}
+
+type ModifyCurrentDBClusterCapacityOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current capacity of the DB cluster.
+	CurrentCapacity *int64 `type:"integer"`
+
+	// A user-supplied DB cluster identifier. This identifier is the unique key
+	// that identifies a DB cluster.
+	DBClusterIdentifier *string `type:"string"`
+
+	// A value that specifies the capacity that the DB cluster scales to next.
+	PendingCapacity *int64 `type:"integer"`
+
+	// The number of seconds before a call to ModifyCurrentDBClusterCapacity times
+	// out.
+	SecondsBeforeTimeout *int64 `type:"integer"`
+
+	// The timeout action of a call to ModifyCurrentDBClusterCapacity, either ForceApplyCapacityChange
+	// or RollbackCapacityChange.
+	TimeoutAction *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ModifyCurrentDBClusterCapacityOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCurrentDBClusterCapacityOutput) GoString() string {
+	return s.String()
+}
+
+// SetCurrentCapacity sets the CurrentCapacity field's value.
+func (s *ModifyCurrentDBClusterCapacityOutput) SetCurrentCapacity(v int64) *ModifyCurrentDBClusterCapacityOutput {
+	s.CurrentCapacity = &v
+	return s
+}
+
+// SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
+func (s *ModifyCurrentDBClusterCapacityOutput) SetDBClusterIdentifier(v string) *ModifyCurrentDBClusterCapacityOutput {
+	s.DBClusterIdentifier = &v
+	return s
+}
+
+// SetPendingCapacity sets the PendingCapacity field's value.
+func (s *ModifyCurrentDBClusterCapacityOutput) SetPendingCapacity(v int64) *ModifyCurrentDBClusterCapacityOutput {
+	s.PendingCapacity = &v
+	return s
+}
+
+// SetSecondsBeforeTimeout sets the SecondsBeforeTimeout field's value.
+func (s *ModifyCurrentDBClusterCapacityOutput) SetSecondsBeforeTimeout(v int64) *ModifyCurrentDBClusterCapacityOutput {
+	s.SecondsBeforeTimeout = &v
+	return s
+}
+
+// SetTimeoutAction sets the TimeoutAction field's value.
+func (s *ModifyCurrentDBClusterCapacityOutput) SetTimeoutAction(v string) *ModifyCurrentDBClusterCapacityOutput {
+	s.TimeoutAction = &v
+	return s
+}
+
 type ModifyDBClusterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -22297,6 +22633,10 @@ type ModifyDBClusterInput struct {
 	// Constraints: Minimum 30-minute window.
 	PreferredMaintenanceWindow *string `type:"string"`
 
+	// The scaling properties of the DB cluster. You can only modify scaling properties
+	// for DB clusters in serverless DB engine mode.
+	ScalingConfiguration *ScalingConfiguration `type:"structure"`
+
 	// A list of VPC security groups that the DB cluster will belong to.
 	VpcSecurityGroupIds []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
 }
@@ -22405,6 +22745,12 @@ func (s *ModifyDBClusterInput) SetPreferredBackupWindow(v string) *ModifyDBClust
 // SetPreferredMaintenanceWindow sets the PreferredMaintenanceWindow field's value.
 func (s *ModifyDBClusterInput) SetPreferredMaintenanceWindow(v string) *ModifyDBClusterInput {
 	s.PreferredMaintenanceWindow = &v
+	return s
+}
+
+// SetScalingConfiguration sets the ScalingConfiguration field's value.
+func (s *ModifyDBClusterInput) SetScalingConfiguration(v *ScalingConfiguration) *ModifyDBClusterInput {
+	s.ScalingConfiguration = v
 	return s
 }
 
@@ -24702,6 +25048,9 @@ type OrderableDBInstanceOption struct {
 	// Indicates the storage type for a DB instance.
 	StorageType *string `type:"string"`
 
+	// A list of the supported DB engine modes.
+	SupportedEngineModes []*string `type:"list"`
+
 	// Indicates whether a DB instance supports Enhanced Monitoring at intervals
 	// from 1 to 60 seconds.
 	SupportsEnhancedMonitoring *bool `type:"boolean"`
@@ -24822,6 +25171,12 @@ func (s *OrderableDBInstanceOption) SetStorageType(v string) *OrderableDBInstanc
 	return s
 }
 
+// SetSupportedEngineModes sets the SupportedEngineModes field's value.
+func (s *OrderableDBInstanceOption) SetSupportedEngineModes(v []*string) *OrderableDBInstanceOption {
+	s.SupportedEngineModes = v
+	return s
+}
+
 // SetSupportsEnhancedMonitoring sets the SupportsEnhancedMonitoring field's value.
 func (s *OrderableDBInstanceOption) SetSupportsEnhancedMonitoring(v bool) *OrderableDBInstanceOption {
 	s.SupportsEnhancedMonitoring = &v
@@ -24897,6 +25252,9 @@ type Parameter struct {
 
 	// Indicates the source of the parameter value.
 	Source *string `type:"string"`
+
+	// The valid DB engine modes.
+	SupportedEngineModes []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -24966,6 +25324,12 @@ func (s *Parameter) SetParameterValue(v string) *Parameter {
 // SetSource sets the Source field's value.
 func (s *Parameter) SetSource(v string) *Parameter {
 	s.Source = &v
+	return s
+}
+
+// SetSupportedEngineModes sets the SupportedEngineModes field's value.
+func (s *Parameter) SetSupportedEngineModes(v []*string) *Parameter {
+	s.SupportedEngineModes = v
 	return s
 }
 
@@ -26461,7 +26825,9 @@ type RestoreDBClusterFromS3Input struct {
 	DatabaseName *string `type:"string"`
 
 	// The list of logs that the restored DB cluster is to export to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -26892,7 +27258,9 @@ type RestoreDBClusterFromSnapshotInput struct {
 	DatabaseName *string `type:"string"`
 
 	// The list of logs that the restored DB cluster is to export to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -26909,6 +27277,9 @@ type RestoreDBClusterFromSnapshotInput struct {
 	//
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
+
+	// The DB engine mode of the DB cluster, either provisioned or serverless.
+	EngineMode *string `type:"string"`
 
 	// The version of the database engine to use for the new DB cluster.
 	EngineVersion *string `type:"string"`
@@ -26941,6 +27312,10 @@ type RestoreDBClusterFromSnapshotInput struct {
 	//
 	// Default: The same port as the original DB cluster.
 	Port *int64 `type:"integer"`
+
+	// For DB clusters in serverless DB engine mode, the scaling properties of the
+	// DB cluster.
+	ScalingConfiguration *ScalingConfiguration `type:"structure"`
 
 	// The identifier for the DB snapshot or DB cluster snapshot to restore from.
 	//
@@ -27039,6 +27414,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetEngine(v string) *RestoreDBCluste
 	return s
 }
 
+// SetEngineMode sets the EngineMode field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetEngineMode(v string) *RestoreDBClusterFromSnapshotInput {
+	s.EngineMode = &v
+	return s
+}
+
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetEngineVersion(v string) *RestoreDBClusterFromSnapshotInput {
 	s.EngineVersion = &v
@@ -27060,6 +27441,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetOptionGroupName(v string) *Restor
 // SetPort sets the Port field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetPort(v int64) *RestoreDBClusterFromSnapshotInput {
 	s.Port = &v
+	return s
+}
+
+// SetScalingConfiguration sets the ScalingConfiguration field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetScalingConfiguration(v *ScalingConfiguration) *RestoreDBClusterFromSnapshotInput {
+	s.ScalingConfiguration = v
 	return s
 }
 
@@ -27141,7 +27528,9 @@ type RestoreDBClusterToPointInTimeInput struct {
 	DBSubnetGroupName *string `type:"string"`
 
 	// The list of logs that the restored DB cluster is to export to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -27456,7 +27845,9 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	DomainIAMRoleName *string `type:"string"`
 
 	// The list of logs that the restored DB instance is to export to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -27551,19 +27942,8 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// Specifies the accessibility options for the DB instance. A value of true
 	// specifies an Internet-facing instance with a publicly resolvable DNS name,
 	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC: true
-	//
-	//    * VPC: false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
+	// instance with a DNS name that resolves to a private IP address. For more
+	// information, see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// Specifies the storage type to be associated with the DB instance.
@@ -27878,7 +28258,9 @@ type RestoreDBInstanceFromS3Input struct {
 	DBSubnetGroupName *string `type:"string"`
 
 	// The list of logs that the restored DB instance is to export to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -28026,7 +28408,10 @@ type RestoreDBInstanceFromS3Input struct {
 	// class of the DB instance.
 	ProcessorFeatures []*ProcessorFeature `locationNameList:"ProcessorFeature" type:"list"`
 
-	// Specifies whether the DB instance is publicly accessible or not. For more
+	// Specifies the accessibility options for the DB instance. A value of true
+	// specifies an Internet-facing instance with a publicly resolvable DNS name,
+	// which resolves to a public IP address. A value of false specifies an internal
+	// instance with a DNS name that resolves to a private IP address. For more
 	// information, see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
 
@@ -28450,7 +28835,9 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	DomainIAMRoleName *string `type:"string"`
 
 	// The list of logs that the restored DB instance is to export to CloudWatch
-	// Logs.
+	// Logs. The values in the list depend on the DB engine being used. For more
+	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
+	// in the Amazon Relational Database Service User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
@@ -28540,19 +28927,8 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Specifies the accessibility options for the DB instance. A value of true
 	// specifies an Internet-facing instance with a publicly resolvable DNS name,
 	// which resolves to a public IP address. A value of false specifies an internal
-	// instance with a DNS name that resolves to a private IP address.
-	//
-	// Default: The default behavior varies depending on whether a VPC has been
-	// requested or not. The following list shows the default behavior in each case.
-	//
-	//    * Default VPC:true
-	//
-	//    * VPC:false
-	//
-	// If no DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is publicly accessible. If a specific
-	// DB subnet group has been specified as part of the request and the PubliclyAccessible
-	// value has not been set, the DB instance is private.
+	// instance with a DNS name that resolves to a private IP address. For more
+	// information, see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// The date and time to restore from.
@@ -28942,6 +29318,132 @@ func (s RevokeDBSecurityGroupIngressOutput) GoString() string {
 // SetDBSecurityGroup sets the DBSecurityGroup field's value.
 func (s *RevokeDBSecurityGroupIngressOutput) SetDBSecurityGroup(v *DBSecurityGroup) *RevokeDBSecurityGroupIngressOutput {
 	s.DBSecurityGroup = v
+	return s
+}
+
+// Contains the scaling configuration of an Aurora Serverless DB cluster.
+//
+// For more information, see Using Amazon Aurora Serverless (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.html)
+// in the Amazon RDS User Guide.
+type ScalingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// A value that specifies whether to allow or disallow automatic pause for an
+	// Aurora DB cluster in serverless DB engine mode. A DB cluster can be paused
+	// only when it's idle (it has no connections).
+	//
+	// If a DB cluster is paused for more than seven days, the DB cluster might
+	// be backed up with a snapshot. In this case, the DB cluster is restored when
+	// there is a request to connect to it.
+	AutoPause *bool `type:"boolean"`
+
+	// The maximum capacity for an Aurora DB cluster in serverless DB engine mode.
+	//
+	// Valid capacity values are 2, 4, 8, 16, 32, 64, 128, and 256.
+	//
+	// The maximum capacity must be greater than or equal to the minimum capacity.
+	MaxCapacity *int64 `type:"integer"`
+
+	// The minimum capacity for an Aurora DB cluster in serverless DB engine mode.
+	//
+	// Valid capacity values are 2, 4, 8, 16, 32, 64, 128, and 256.
+	//
+	// The minimum capacity must be less than or equal to the maximum capacity.
+	MinCapacity *int64 `type:"integer"`
+
+	// The time, in seconds, before an Aurora DB cluster in serverless mode is paused.
+	SecondsUntilAutoPause *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ScalingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScalingConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAutoPause sets the AutoPause field's value.
+func (s *ScalingConfiguration) SetAutoPause(v bool) *ScalingConfiguration {
+	s.AutoPause = &v
+	return s
+}
+
+// SetMaxCapacity sets the MaxCapacity field's value.
+func (s *ScalingConfiguration) SetMaxCapacity(v int64) *ScalingConfiguration {
+	s.MaxCapacity = &v
+	return s
+}
+
+// SetMinCapacity sets the MinCapacity field's value.
+func (s *ScalingConfiguration) SetMinCapacity(v int64) *ScalingConfiguration {
+	s.MinCapacity = &v
+	return s
+}
+
+// SetSecondsUntilAutoPause sets the SecondsUntilAutoPause field's value.
+func (s *ScalingConfiguration) SetSecondsUntilAutoPause(v int64) *ScalingConfiguration {
+	s.SecondsUntilAutoPause = &v
+	return s
+}
+
+// Shows the scaling configuration for an Aurora DB cluster in serverless DB
+// engine mode.
+//
+// For more information, see Using Amazon Aurora Serverless (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.html)
+// in the Amazon RDS User Guide.
+type ScalingConfigurationInfo struct {
+	_ struct{} `type:"structure"`
+
+	// A value that indicates whether automatic pause is allowed for the Aurora
+	// DB cluster in serverless DB engine mode.
+	AutoPause *bool `type:"boolean"`
+
+	// The maximum capacity for an Aurora DB cluster in serverless DB engine mode.
+	MaxCapacity *int64 `type:"integer"`
+
+	// The maximum capacity for the Aurora DB cluster in serverless DB engine mode.
+	MinCapacity *int64 `type:"integer"`
+
+	// The remaining amount of time, in seconds, before the Aurora DB cluster in
+	// serverless mode is paused. A DB cluster can be paused only when it's idle
+	// (it has no connections).
+	SecondsUntilAutoPause *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ScalingConfigurationInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScalingConfigurationInfo) GoString() string {
+	return s.String()
+}
+
+// SetAutoPause sets the AutoPause field's value.
+func (s *ScalingConfigurationInfo) SetAutoPause(v bool) *ScalingConfigurationInfo {
+	s.AutoPause = &v
+	return s
+}
+
+// SetMaxCapacity sets the MaxCapacity field's value.
+func (s *ScalingConfigurationInfo) SetMaxCapacity(v int64) *ScalingConfigurationInfo {
+	s.MaxCapacity = &v
+	return s
+}
+
+// SetMinCapacity sets the MinCapacity field's value.
+func (s *ScalingConfigurationInfo) SetMinCapacity(v int64) *ScalingConfigurationInfo {
+	s.MinCapacity = &v
+	return s
+}
+
+// SetSecondsUntilAutoPause sets the SecondsUntilAutoPause field's value.
+func (s *ScalingConfigurationInfo) SetSecondsUntilAutoPause(v int64) *ScalingConfigurationInfo {
+	s.SecondsUntilAutoPause = &v
 	return s
 }
 

@@ -34,7 +34,7 @@ func TestResourceAWSEFSFileSystem_validateReferenceName(t *testing.T) {
 
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	fs := &efs.DescribeFileSystemsOutput{
-		FileSystems: []*efs.UpdateFileSystemOutput{},
+		FileSystems: []*efs.FileSystemDescription{},
 	}
 
 	var actual bool
@@ -45,7 +45,7 @@ func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	}
 
 	// Add an empty file system.
-	fs.FileSystems = append(fs.FileSystems, &efs.UpdateFileSystemOutput{})
+	fs.FileSystems = append(fs.FileSystems, &efs.FileSystemDescription{})
 
 	actual = hasEmptyFileSystems(fs)
 	if actual {

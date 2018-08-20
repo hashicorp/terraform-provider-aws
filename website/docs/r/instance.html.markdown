@@ -240,6 +240,7 @@ resource "aws_instance" "foo" {
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The instance ID.
+* `arn` - The ARN of the instance.
 * `availability_zone` - The availability zone of the instance.
 * `placement_group` - The placement group of the instance.
 * `key_name` - The key name of the instance

@@ -531,6 +531,9 @@ func (c *ECS) DeleteServiceRequest(input *DeleteServiceInput) (req *request.Requ
 // up and purged from Amazon ECS record keeping, and DescribeServices API operations
 // on those services return a ServiceNotFoundException error.
 //
+// If you attempt to create a new service with the same name as an existing
+// service in either ACTIVE or DRAINING status, you will receive an error.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3764,6 +3767,7 @@ type AwsVpcConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Whether the task's elastic network interface receives a public IP address.
+	// The default value is DISABLED.
 	AssignPublicIp *string `locationName:"assignPublicIp" type:"string" enum:"AssignPublicIp"`
 
 	// The security groups associated with the task or service. If you do not specify
@@ -3846,7 +3850,8 @@ type Cluster struct {
 	// The number of tasks in the cluster that are in the PENDING state.
 	PendingTasksCount *int64 `locationName:"pendingTasksCount" type:"integer"`
 
-	// The number of container instances registered into the cluster.
+	// The number of container instances registered into the cluster. This includes
+	// container instances in both ACTIVE and DRAINING status.
 	RegisteredContainerInstancesCount *int64 `locationName:"registeredContainerInstancesCount" type:"integer"`
 
 	// The number of tasks in the cluster that are in the RUNNING state.
@@ -4040,16 +4045,16 @@ type ContainerDefinition struct {
 	_ struct{} `type:"structure"`
 
 	// The command that is passed to the container. This parameter maps to Cmd in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the COMMAND parameter to docker run (https://docs.docker.com/engine/reference/run/).
 	// For more information, see https://docs.docker.com/engine/reference/builder/#cmd
 	// (https://docs.docker.com/engine/reference/builder/#cmd).
 	Command []*string `locationName:"command" type:"list"`
 
 	// The number of cpu units reserved for the container. This parameter maps to
-	// CpuShares in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// CpuShares in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --cpu-shares option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This field is optional for tasks using the Fargate launch type, and the only
@@ -4104,31 +4109,31 @@ type ContainerDefinition struct {
 	Cpu *int64 `locationName:"cpu" type:"integer"`
 
 	// When this parameter is true, networking is disabled within the container.
-	// This parameter maps to NetworkDisabled in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/).
+	// This parameter maps to NetworkDisabled in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/).
 	//
 	// This parameter is not supported for Windows containers.
 	DisableNetworking *bool `locationName:"disableNetworking" type:"boolean"`
 
 	// A list of DNS search domains that are presented to the container. This parameter
-	// maps to DnsSearch in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// maps to DnsSearch in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --dns-search option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This parameter is not supported for Windows containers.
 	DnsSearchDomains []*string `locationName:"dnsSearchDomains" type:"list"`
 
 	// A list of DNS servers that are presented to the container. This parameter
-	// maps to Dns in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// maps to Dns in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --dns option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This parameter is not supported for Windows containers.
 	DnsServers []*string `locationName:"dnsServers" type:"list"`
 
 	// A key/value map of labels to add to the container. This parameter maps to
-	// Labels in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// Labels in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --label option to docker run (https://docs.docker.com/engine/reference/run/).
 	// This parameter requires version 1.18 of the Docker Remote API or greater
 	// on your container instance. To check the Docker Remote API version on your
@@ -4140,8 +4145,8 @@ type ContainerDefinition struct {
 	// security systems. This field is not valid for containers in tasks using the
 	// Fargate launch type.
 	//
-	// This parameter maps to SecurityOpt in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// This parameter maps to SecurityOpt in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --security-opt option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// The Amazon ECS container agent running on a container instance must register
@@ -4159,16 +4164,16 @@ type ContainerDefinition struct {
 	// agent or enter your commands and arguments as command array items instead.
 	//
 	// The entry point that is passed to the container. This parameter maps to Entrypoint
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --entrypoint option to docker run (https://docs.docker.com/engine/reference/run/).
 	// For more information, see https://docs.docker.com/engine/reference/builder/#entrypoint
 	// (https://docs.docker.com/engine/reference/builder/#entrypoint).
 	EntryPoint []*string `locationName:"entryPoint" type:"list"`
 
 	// The environment variables to pass to a container. This parameter maps to
-	// Env in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// Env in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --env option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// We do not recommend using plaintext environment variables for sensitive information,
@@ -4192,22 +4197,22 @@ type ContainerDefinition struct {
 	// A list of hostnames and IP address mappings to append to the /etc/hosts file
 	// on the container. If using the Fargate launch type, this may be used to list
 	// non-Fargate hosts to which the container can talk. This parameter maps to
-	// ExtraHosts in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// ExtraHosts in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --add-host option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This parameter is not supported for Windows containers.
 	ExtraHosts []*HostEntry `locationName:"extraHosts" type:"list"`
 
 	// The health check command and associated configuration parameters for the
-	// container. This parameter maps to HealthCheck in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// container. This parameter maps to HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the HEALTHCHECK parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	HealthCheck *HealthCheck `locationName:"healthCheck" type:"structure"`
 
 	// The hostname to use for your container. This parameter maps to Hostname in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --hostname option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// The hostname parameter is not supported if using the awsvpc networkMode.
@@ -4219,9 +4224,9 @@ type ContainerDefinition struct {
 	// repository-url/image@digest. Up to 255 letters (uppercase and lowercase),
 	// numbers, hyphens, underscores, colons, periods, forward slashes, and number
 	// signs are allowed. This parameter maps to Image in the Create a container
-	// (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
-	// and the IMAGE parameter of docker run (https://docs.docker.com/engine/reference/run/).
+	// (https://docs.docker.com/engine/api/v1.35/#create-a-container) section of
+	// the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and the
+	// IMAGE parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	//    * When a new task starts, the Amazon ECS container agent pulls the latest
 	//    version of the specified image and tag for the container to use. However,
@@ -4251,8 +4256,8 @@ type ContainerDefinition struct {
 	// numbers, hyphens, and underscores are allowed. For more information about
 	// linking Docker containers, go to https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/
 	// (https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/).
-	// This parameter maps to Links in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// This parameter maps to Links in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --link option to docker run (https://docs.docker.com/engine/reference/commandline/run/).
 	//
 	// This parameter is not supported for Windows containers.
@@ -4273,8 +4278,8 @@ type ContainerDefinition struct {
 	//
 	// If using the Fargate launch type, the only supported value is awslogs.
 	//
-	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --log-driver option to docker run (https://docs.docker.com/engine/reference/run/).
 	// By default, containers use the same logging driver that the Docker daemon
 	// uses; however the container may use a different logging driver than the Docker
@@ -4304,8 +4309,8 @@ type ContainerDefinition struct {
 
 	// The hard limit (in MiB) of memory to present to the container. If your container
 	// attempts to exceed the memory specified here, the container is killed. This
-	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --memory option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// If your containers are part of a task using the Fargate launch type, this
@@ -4329,8 +4334,8 @@ type ContainerDefinition struct {
 	// it needs to, up to either the hard limit specified with the memory parameter
 	// (if applicable), or all of the available memory on the container instance,
 	// whichever comes first. This parameter maps to MemoryReservation in the Create
-	// a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --memory-reservation option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// You must specify a non-zero integer for one or both of memory or memoryReservation
@@ -4352,8 +4357,8 @@ type ContainerDefinition struct {
 
 	// The mount points for data volumes in your container.
 	//
-	// This parameter maps to Volumes in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// This parameter maps to Volumes in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --volume option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// Windows containers can mount whole directories on the same drive as $env:ProgramData.
@@ -4365,8 +4370,8 @@ type ContainerDefinition struct {
 	// in a task definition, the name of one container can be entered in the links
 	// of another container to connect the containers. Up to 255 letters (uppercase
 	// and lowercase), numbers, hyphens, and underscores are allowed. This parameter
-	// maps to name in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// maps to name in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --name option to docker run (https://docs.docker.com/engine/reference/run/).
 	Name *string `locationName:"name" type:"string"`
 
@@ -4381,8 +4386,8 @@ type ContainerDefinition struct {
 	// There is no loopback for port mappings on Windows, so you cannot access a
 	// container's mapped port from the host itself.
 	//
-	// This parameter maps to PortBindings in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// This parameter maps to PortBindings in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --publish option to docker run (https://docs.docker.com/engine/reference/run/).
 	// If the network mode of a task definition is set to none, then you can't specify
 	// port mappings. If the network mode of a task definition is set to host, then
@@ -4397,8 +4402,8 @@ type ContainerDefinition struct {
 
 	// When this parameter is true, the container is given elevated privileges on
 	// the host container instance (similar to the root user). This parameter maps
-	// to Privileged in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// to Privileged in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --privileged option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This parameter is not supported for Windows containers or tasks using the
@@ -4407,9 +4412,9 @@ type ContainerDefinition struct {
 
 	// When this parameter is true, the container is given read-only access to its
 	// root file system. This parameter maps to ReadonlyRootfs in the Create a container
-	// (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
-	// and the --read-only option to docker run.
+	// (https://docs.docker.com/engine/api/v1.35/#create-a-container) section of
+	// the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and the
+	// --read-only option to docker run.
 	//
 	// This parameter is not supported for Windows containers.
 	ReadonlyRootFilesystem *bool `locationName:"readonlyRootFilesystem" type:"boolean"`
@@ -4418,8 +4423,8 @@ type ContainerDefinition struct {
 	RepositoryCredentials *RepositoryCredentials `locationName:"repositoryCredentials" type:"structure"`
 
 	// A list of ulimits to set in the container. This parameter maps to Ulimits
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --ulimit option to docker run (https://docs.docker.com/engine/reference/run/).
 	// Valid naming values are displayed in the Ulimit data type. This parameter
 	// requires version 1.18 of the Docker Remote API or greater on your container
@@ -4431,22 +4436,22 @@ type ContainerDefinition struct {
 	Ulimits []*Ulimit `locationName:"ulimits" type:"list"`
 
 	// The user name to use inside the container. This parameter maps to User in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --user option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This parameter is not supported for Windows containers.
 	User *string `locationName:"user" type:"string"`
 
 	// Data volumes to mount from another container. This parameter maps to VolumesFrom
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --volumes-from option to docker run (https://docs.docker.com/engine/reference/run/).
 	VolumesFrom []*VolumeFrom `locationName:"volumesFrom" type:"list"`
 
 	// The working directory in which to run commands inside the container. This
-	// parameter maps to WorkingDir in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// parameter maps to WorkingDir in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --workdir option to docker run (https://docs.docker.com/engine/reference/run/).
 	WorkingDirectory *string `locationName:"workingDirectory" type:"string"`
 }
@@ -6406,6 +6411,87 @@ func (s *DiscoverPollEndpointOutput) SetTelemetryEndpoint(v string) *DiscoverPol
 	return s
 }
 
+// The configuration for the Docker volume. This parameter is specified when
+// using Docker volumes.
+type DockerVolumeConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// If this value is true, the Docker volume is created if it does not already
+	// exist.
+	//
+	// This field is only used if the scope is shared.
+	Autoprovision *bool `locationName:"autoprovision" type:"boolean"`
+
+	// The Docker volume driver to use. The driver value must match the driver name
+	// provided by Docker because it is used for task placement. If the driver was
+	// installed using the Docker plugin CLI, use docker plugin ls to retrieve the
+	// driver name from your container instance. If the driver was installed using
+	// another method, use Docker plugin discovery to retrieve the driver name.
+	// For more information, see Docker plugin discovery (https://docs.docker.com/engine/extend/plugin_api/#plugin-discovery).
+	// This parameter maps to Driver in the Create a volume (https://docs.docker.com/engine/api/v1.35/#operation/VolumeCreate)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+	// and the xxdriver option to docker volume create (https://docs.docker.com/engine/reference/commandline/volume_create/).
+	Driver *string `locationName:"driver" type:"string"`
+
+	// A map of Docker driver specific options passed through. This parameter maps
+	// to DriverOpts in the Create a volume (https://docs.docker.com/engine/api/v1.35/#operation/VolumeCreate)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+	// and the xxopt option to docker volume create (https://docs.docker.com/engine/reference/commandline/volume_create/).
+	DriverOpts map[string]*string `locationName:"driverOpts" type:"map"`
+
+	// Custom metadata to add to your Docker volume. This parameter maps to Labels
+	// in the Create a volume (https://docs.docker.com/engine/api/v1.35/#operation/VolumeCreate)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+	// and the xxlabel option to docker volume create (https://docs.docker.com/engine/reference/commandline/volume_create/).
+	Labels map[string]*string `locationName:"labels" type:"map"`
+
+	// The scope for the Docker volume which determines it's lifecycle. Docker volumes
+	// that are scoped to a task are automatically provisioned when the task starts
+	// and destroyed when the task stops. Docker volumes that are scoped as shared
+	// persist after the task stops.
+	Scope *string `locationName:"scope" type:"string" enum:"Scope"`
+}
+
+// String returns the string representation
+func (s DockerVolumeConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DockerVolumeConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAutoprovision sets the Autoprovision field's value.
+func (s *DockerVolumeConfiguration) SetAutoprovision(v bool) *DockerVolumeConfiguration {
+	s.Autoprovision = &v
+	return s
+}
+
+// SetDriver sets the Driver field's value.
+func (s *DockerVolumeConfiguration) SetDriver(v string) *DockerVolumeConfiguration {
+	s.Driver = &v
+	return s
+}
+
+// SetDriverOpts sets the DriverOpts field's value.
+func (s *DockerVolumeConfiguration) SetDriverOpts(v map[string]*string) *DockerVolumeConfiguration {
+	s.DriverOpts = v
+	return s
+}
+
+// SetLabels sets the Labels field's value.
+func (s *DockerVolumeConfiguration) SetLabels(v map[string]*string) *DockerVolumeConfiguration {
+	s.Labels = v
+	return s
+}
+
+// SetScope sets the Scope field's value.
+func (s *DockerVolumeConfiguration) SetScope(v string) *DockerVolumeConfiguration {
+	s.Scope = &v
+	return s
+}
+
 // A failed resource.
 type Failure struct {
 	_ struct{} `type:"structure"`
@@ -6454,8 +6540,8 @@ type HealthCheck struct {
 	// [ "CMD-SHELL", "curl -f http://localhost/ || exit 1" ]
 	//
 	// An exit code of 0 indicates success, and non-zero exit code indicates failure.
-	// For more information, see HealthCheck in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/).
+	// For more information, see HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/).
 	//
 	// Command is a required field
 	Command []*string `locationName:"command" type:"list" required:"true"`
@@ -6592,17 +6678,18 @@ func (s *HostEntry) SetIpAddress(v string) *HostEntry {
 	return s
 }
 
-// Details on a container instance host volume.
+// Details on a container instance bind mount host volume.
 type HostVolumeProperties struct {
 	_ struct{} `type:"structure"`
 
-	// The path on the host container instance that is presented to the container.
-	// If this parameter is empty, then the Docker daemon has assigned a host path
-	// for you. If the host parameter contains a sourcePath file location, then
-	// the data volume persists at the specified location on the host container
-	// instance until you delete it manually. If the sourcePath value does not exist
-	// on the host container instance, the Docker daemon creates it. If the location
-	// does exist, the contents of the source path folder are exported.
+	// When the host parameter is used, specify a sourcePath to declare the path
+	// on the host container instance that is presented to the container. If this
+	// parameter is empty, then the Docker daemon has assigned a host path for you.
+	// If the host parameter contains a sourcePath file location, then the data
+	// volume persists at the specified location on the host container instance
+	// until you delete it manually. If the sourcePath value does not exist on the
+	// host container instance, the Docker daemon creates it. If the location does
+	// exist, the contents of the source path folder are exported.
 	//
 	// If you are using the Fargate launch type, the sourcePath parameter is not
 	// supported.
@@ -6637,8 +6724,8 @@ type KernelCapabilities struct {
 
 	// The Linux capabilities for the container that have been added to the default
 	// configuration provided by Docker. This parameter maps to CapAdd in the Create
-	// a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --cap-add option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// If you are using tasks that use the Fargate launch type, the add parameter
@@ -6656,8 +6743,8 @@ type KernelCapabilities struct {
 
 	// The Linux capabilities for the container that have been removed from the
 	// default configuration provided by Docker. This parameter maps to CapDrop
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --cap-drop option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// Valid values: "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" |
@@ -6740,8 +6827,8 @@ type LinuxParameters struct {
 	Capabilities *KernelCapabilities `locationName:"capabilities" type:"structure"`
 
 	// Any host devices to expose to the container. This parameter maps to Devices
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.27/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --device option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// If you are using tasks that use the Fargate launch type, the devices parameter
@@ -7811,7 +7898,8 @@ type MountPoint struct {
 	// value is false.
 	ReadOnly *bool `locationName:"readOnly" type:"boolean"`
 
-	// The name of the volume to mount.
+	// The name of the volume to mount. Must be a volume name referenced in the
+	// name parameter of task definition volume.
 	SourceVolume *string `locationName:"sourceVolume" type:"string"`
 }
 
@@ -9832,7 +9920,8 @@ type Task struct {
 	// state).
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
-	// The desired status of the task.
+	// The desired status of the task. For more information, see Task Lifecycle
+	// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_life_cycle.html).
 	DesiredStatus *string `locationName:"desiredStatus" type:"string"`
 
 	// The Unix time stamp for when the task execution stopped.
@@ -9854,7 +9943,8 @@ type Task struct {
 	// override any Docker health checks that exist in the container image.
 	HealthStatus *string `locationName:"healthStatus" type:"string" enum:"HealthStatus"`
 
-	// The last known status of the task.
+	// The last known status of the task. For more information, see Task Lifecycle
+	// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_life_cycle.html).
 	LastStatus *string `locationName:"lastStatus" type:"string"`
 
 	// The launch type on which your task is running.
@@ -10458,6 +10548,7 @@ type Tmpfs struct {
 	// "nomand" | "atime" | "noatime" | "diratime" | "nodiratime" | "bind" | "rbind"
 	// | "unbindable" | "runbindable" | "private" | "rprivate" | "shared" | "rshared"
 	// | "slave" | "rslave" | "relatime" | "norelatime" | "strictatime" | "nostrictatime"
+	// | "mode" | "uid" | "gid" | "nr_inodes" | "nr_blocks" | "mpol"
 	MountOptions []*string `locationName:"mountOptions" type:"list"`
 
 	// The size (in MiB) of the tmpfs volume.
@@ -10956,15 +11047,24 @@ func (s *VersionInfo) SetDockerVersion(v string) *VersionInfo {
 	return s
 }
 
-// A data volume used in a task definition.
+// A data volume used in a task definition. For tasks that use a Docker volume,
+// specify a DockerVolumeConfiguration. For tasks that use a bind mount host
+// volume, specify a host and optional sourcePath. For more information, see
+// Using Data Volumes in Tasks (http://docs.aws.amazon.com/AmazonECS/latest/developerguideusing_data_volumes.html).
 type Volume struct {
 	_ struct{} `type:"structure"`
 
-	// The contents of the host parameter determine whether your data volume persists
-	// on the host container instance and where it is stored. If the host parameter
-	// is empty, then the Docker daemon assigns a host path for your data volume,
-	// but the data is not guaranteed to persist after the containers associated
-	// with it stop running.
+	// The configuration for the Docker volume. This parameter is specified when
+	// using Docker volumes.
+	DockerVolumeConfiguration *DockerVolumeConfiguration `locationName:"dockerVolumeConfiguration" type:"structure"`
+
+	// This parameter is specified when using bind mount host volumes. Bind mount
+	// host volumes are supported when using either the EC2 or Fargate launch types.
+	// The contents of the host parameter determine whether your bind mount host
+	// volume persists on the host container instance and where it is stored. If
+	// the host parameter is empty, then the Docker daemon assigns a host path for
+	// your data volume, but the data is not guaranteed to persist after the containers
+	// associated with it stop running.
 	//
 	// Windows containers can mount whole directories on the same drive as $env:ProgramData.
 	// Windows containers cannot mount directories on a different drive, and mount
@@ -10986,6 +11086,12 @@ func (s Volume) String() string {
 // GoString returns the string representation
 func (s Volume) GoString() string {
 	return s.String()
+}
+
+// SetDockerVolumeConfiguration sets the DockerVolumeConfiguration field's value.
+func (s *Volume) SetDockerVolumeConfiguration(v *DockerVolumeConfiguration) *Volume {
+	s.DockerVolumeConfiguration = v
+	return s
 }
 
 // SetHost sets the Host field's value.
@@ -11196,6 +11302,14 @@ const (
 
 	// SchedulingStrategyDaemon is a SchedulingStrategy enum value
 	SchedulingStrategyDaemon = "DAEMON"
+)
+
+const (
+	// ScopeTask is a Scope enum value
+	ScopeTask = "task"
+
+	// ScopeShared is a Scope enum value
+	ScopeShared = "shared"
 )
 
 const (

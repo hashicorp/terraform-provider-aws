@@ -396,10 +396,13 @@ func resourceAwsDbInstance() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
+						"alert",
 						"audit",
 						"error",
 						"general",
+						"listener",
 						"slowquery",
+						"trace",
 					}, false),
 				},
 			},
@@ -623,7 +626,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		// Retry for IAM eventual consistency
+		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
@@ -633,6 +637,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 					return resource.RetryableError(err)
 				}
 				if isAWSErr(err, "InvalidParameterValue", "S3 bucket cannot be found") {
+					return resource.RetryableError(err)
+				}
+				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded. Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
+				if isAWSErr(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)

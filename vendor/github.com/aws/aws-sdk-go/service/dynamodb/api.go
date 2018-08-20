@@ -4636,6 +4636,10 @@ type BackupDetails struct {
 	// BackupCreationDateTime is a required field
 	BackupCreationDateTime *time.Time `type:"timestamp" required:"true"`
 
+	// Time at which the automatic on demand backup created by DynamoDB will expire.
+	// This SYSTEM on demand backup expires automatically 35 days after its creation.
+	BackupExpiryDateTime *time.Time `type:"timestamp"`
+
 	// Name of the requested backup.
 	//
 	// BackupName is a required field
@@ -4648,6 +4652,15 @@ type BackupDetails struct {
 	//
 	// BackupStatus is a required field
 	BackupStatus *string `type:"string" required:"true" enum:"BackupStatus"`
+
+	// BackupType:
+	//
+	//    * USER - On demand backup created by you.
+	//
+	//    * SYSTEM - On demand backup automatically created by DynamoDB.
+	//
+	// BackupType is a required field
+	BackupType *string `type:"string" required:"true" enum:"BackupType"`
 }
 
 // String returns the string representation
@@ -4672,6 +4685,12 @@ func (s *BackupDetails) SetBackupCreationDateTime(v time.Time) *BackupDetails {
 	return s
 }
 
+// SetBackupExpiryDateTime sets the BackupExpiryDateTime field's value.
+func (s *BackupDetails) SetBackupExpiryDateTime(v time.Time) *BackupDetails {
+	s.BackupExpiryDateTime = &v
+	return s
+}
+
 // SetBackupName sets the BackupName field's value.
 func (s *BackupDetails) SetBackupName(v string) *BackupDetails {
 	s.BackupName = &v
@@ -4690,6 +4709,12 @@ func (s *BackupDetails) SetBackupStatus(v string) *BackupDetails {
 	return s
 }
 
+// SetBackupType sets the BackupType field's value.
+func (s *BackupDetails) SetBackupType(v string) *BackupDetails {
+	s.BackupType = &v
+	return s
+}
+
 // Contains details for the backup.
 type BackupSummary struct {
 	_ struct{} `type:"structure"`
@@ -4700,6 +4725,10 @@ type BackupSummary struct {
 	// Time at which the backup was created.
 	BackupCreationDateTime *time.Time `type:"timestamp"`
 
+	// Time at which the automatic on demand backup created by DynamoDB will expire.
+	// This SYSTEM on demand backup expires automatically 35 days after its creation.
+	BackupExpiryDateTime *time.Time `type:"timestamp"`
+
 	// Name of the specified backup.
 	BackupName *string `min:"3" type:"string"`
 
@@ -4708,6 +4737,13 @@ type BackupSummary struct {
 
 	// Backup can be in one of the following states: CREATING, ACTIVE, DELETED.
 	BackupStatus *string `type:"string" enum:"BackupStatus"`
+
+	// BackupType:
+	//
+	//    * USER - On demand backup created by you.
+	//
+	//    * SYSTEM - On demand backup automatically created by DynamoDB.
+	BackupType *string `type:"string" enum:"BackupType"`
 
 	// ARN associated with the table.
 	TableArn *string `type:"string"`
@@ -4741,6 +4777,12 @@ func (s *BackupSummary) SetBackupCreationDateTime(v time.Time) *BackupSummary {
 	return s
 }
 
+// SetBackupExpiryDateTime sets the BackupExpiryDateTime field's value.
+func (s *BackupSummary) SetBackupExpiryDateTime(v time.Time) *BackupSummary {
+	s.BackupExpiryDateTime = &v
+	return s
+}
+
 // SetBackupName sets the BackupName field's value.
 func (s *BackupSummary) SetBackupName(v string) *BackupSummary {
 	s.BackupName = &v
@@ -4756,6 +4798,12 @@ func (s *BackupSummary) SetBackupSizeBytes(v int64) *BackupSummary {
 // SetBackupStatus sets the BackupStatus field's value.
 func (s *BackupSummary) SetBackupStatus(v string) *BackupSummary {
 	s.BackupStatus = &v
+	return s
+}
+
+// SetBackupType sets the BackupType field's value.
+func (s *BackupSummary) SetBackupType(v string) *BackupSummary {
+	s.BackupType = &v
 	return s
 }
 
@@ -8266,6 +8314,17 @@ func (s *KeysAndAttributes) SetProjectionExpression(v string) *KeysAndAttributes
 type ListBackupsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The backups from the table specified by BackupType are listed.
+	//
+	// Where BackupType can be:
+	//
+	//    * USER - On demand backup created by you.
+	//
+	//    * SYSTEM - On demand backup automatically created by DynamoDB.
+	//
+	//    * ALL - All types of on demand backups (USER and SYSTEM).
+	BackupType *string `type:"string" enum:"BackupTypeFilter"`
+
 	// LastEvaluatedBackupArn is the ARN of the backup last evaluated when the current
 	// page of results was returned, inclusive of the current page of results. This
 	// value may be specified as the ExclusiveStartBackupArn of a new ListBackups
@@ -8313,6 +8372,12 @@ func (s *ListBackupsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetBackupType sets the BackupType field's value.
+func (s *ListBackupsInput) SetBackupType(v string) *ListBackupsInput {
+	s.BackupType = &v
+	return s
 }
 
 // SetExclusiveStartBackupArn sets the ExclusiveStartBackupArn field's value.
@@ -13251,6 +13316,25 @@ const (
 
 	// BackupStatusAvailable is a BackupStatus enum value
 	BackupStatusAvailable = "AVAILABLE"
+)
+
+const (
+	// BackupTypeUser is a BackupType enum value
+	BackupTypeUser = "USER"
+
+	// BackupTypeSystem is a BackupType enum value
+	BackupTypeSystem = "SYSTEM"
+)
+
+const (
+	// BackupTypeFilterUser is a BackupTypeFilter enum value
+	BackupTypeFilterUser = "USER"
+
+	// BackupTypeFilterSystem is a BackupTypeFilter enum value
+	BackupTypeFilterSystem = "SYSTEM"
+
+	// BackupTypeFilterAll is a BackupTypeFilter enum value
+	BackupTypeFilterAll = "ALL"
 )
 
 const (

@@ -874,12 +874,12 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   }
   filter {
     name = "root-device-type"
-    values = [%q]
+    values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "foo" {
-	ami = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
 	instance_type = "m1.small"
 }
 
@@ -900,12 +900,12 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   }
   filter {
     name = "root-device-type"
-    values = [%q]
+    values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "foo" {
-	ami = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
 	instance_type = "m1.small"
 }
 

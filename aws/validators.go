@@ -800,6 +800,7 @@ func validateAwsEmrEbsVolumeType() schema.SchemaValidateFunc {
 		"gp2",
 		"io1",
 		"standard",
+		"st1",
 	}, false)
 }
 
@@ -1755,15 +1756,19 @@ func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, erro
 	value := v.(string)
 
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
-	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
 	asn, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
 		return
 	}
 
-	if (asn != 7224) && (asn != 9059) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be 7224 or 9059 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
+	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
+	isLegacyAsn := func(a int64) bool {
+		return a == 7224 || a == 9059 || a == 10124 || a == 17493
+	}
+
+	if !isLegacyAsn(asn) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be 7224, 9059, 10124 or 17493 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
 	}
 	return
 }
@@ -1934,6 +1939,33 @@ func validateNeptuneParamGroupNamePrefix(v interface{}, k string) (ws []string, 
 	if regexp.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
+	}
+	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
+}
+
+func validateNeptuneEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 255 characters", k))
+	}
+	return
+}
+
+func validateNeptuneEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
 	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {

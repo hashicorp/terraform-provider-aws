@@ -1585,6 +1585,13 @@ type Build struct {
 	// The current build phase.
 	CurrentPhase *string `locationName:"currentPhase" type:"string"`
 
+	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
+	// used for encrypting the build output artifacts.
+	//
+	// This is expressed either as the CMK's Amazon Resource Name (ARN) or, if specified,
+	// the CMK's alias (using the format alias/alias-name).
+	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
+
 	// When the build process ended, expressed in Unix time format.
 	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
@@ -1688,6 +1695,12 @@ func (s *Build) SetCurrentPhase(v string) *Build {
 	return s
 }
 
+// SetEncryptionKey sets the EncryptionKey field's value.
+func (s *Build) SetEncryptionKey(v string) *Build {
+	s.EncryptionKey = &v
+	return s
+}
+
 // SetEndTime sets the EndTime field's value.
 func (s *Build) SetEndTime(v time.Time) *Build {
 	s.EndTime = &v
@@ -1776,6 +1789,9 @@ func (s *Build) SetVpcConfig(v *VpcConfig) *Build {
 type BuildArtifacts struct {
 	_ struct{} `type:"structure"`
 
+	// Information that tells you if encryption for build artifacts is disabled.
+	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
+
 	// Information about the location of the build artifacts.
 	Location *string `locationName:"location" type:"string"`
 
@@ -1787,6 +1803,12 @@ type BuildArtifacts struct {
 	// This value is available only if the build project's packaging value is set
 	// to ZIP.
 	Md5sum *string `locationName:"md5sum" type:"string"`
+
+	// If this flag is set, a name specified in the buildspec file overrides the
+	// artifact name. The name specified in a buildspec file is calculated at build
+	// time and uses the Shell Command Language. For example, you can append a date
+	// and time to your artifact name so that it is always unique.
+	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
 
 	// The SHA-256 hash of the build artifact.
 	//
@@ -1808,6 +1830,12 @@ func (s BuildArtifacts) GoString() string {
 	return s.String()
 }
 
+// SetEncryptionDisabled sets the EncryptionDisabled field's value.
+func (s *BuildArtifacts) SetEncryptionDisabled(v bool) *BuildArtifacts {
+	s.EncryptionDisabled = &v
+	return s
+}
+
 // SetLocation sets the Location field's value.
 func (s *BuildArtifacts) SetLocation(v string) *BuildArtifacts {
 	s.Location = &v
@@ -1817,6 +1845,12 @@ func (s *BuildArtifacts) SetLocation(v string) *BuildArtifacts {
 // SetMd5sum sets the Md5sum field's value.
 func (s *BuildArtifacts) SetMd5sum(v string) *BuildArtifacts {
 	s.Md5sum = &v
+	return s
+}
+
+// SetOverrideArtifactName sets the OverrideArtifactName field's value.
+func (s *BuildArtifacts) SetOverrideArtifactName(v bool) *BuildArtifacts {
+	s.OverrideArtifactName = &v
 	return s
 }
 
@@ -3247,6 +3281,11 @@ func (s *Project) SetWebhook(v *Webhook) *Project {
 type ProjectArtifacts struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true if you do not want your output artifacts encrypted. This option
+	// is only valid if your artifacts type is Amazon S3. If this is set with another
+	// artifacts type, an invalidInputException will be thrown.
+	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
+
 	// Information about the build output artifact location, as follows:
 	//
 	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
@@ -3308,6 +3347,12 @@ type ProjectArtifacts struct {
 	// and name is set to MyArtifact.zip, then the output artifact would be stored
 	// in MyArtifacts/build-ID/MyArtifact.zip.
 	NamespaceType *string `locationName:"namespaceType" type:"string" enum:"ArtifactNamespace"`
+
+	// If this flag is set, a name specified in the buildspec file overrides the
+	// artifact name. The name specified in a buildspec file is calculated at build
+	// time and uses the Shell Command Language. For example, you can append a date
+	// and time to your artifact name so that it is always unique.
+	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
 
 	// The type of build output artifact to create, as follows:
 	//
@@ -3382,6 +3427,12 @@ func (s *ProjectArtifacts) Validate() error {
 	return nil
 }
 
+// SetEncryptionDisabled sets the EncryptionDisabled field's value.
+func (s *ProjectArtifacts) SetEncryptionDisabled(v bool) *ProjectArtifacts {
+	s.EncryptionDisabled = &v
+	return s
+}
+
 // SetLocation sets the Location field's value.
 func (s *ProjectArtifacts) SetLocation(v string) *ProjectArtifacts {
 	s.Location = &v
@@ -3397,6 +3448,12 @@ func (s *ProjectArtifacts) SetName(v string) *ProjectArtifacts {
 // SetNamespaceType sets the NamespaceType field's value.
 func (s *ProjectArtifacts) SetNamespaceType(v string) *ProjectArtifacts {
 	s.NamespaceType = &v
+	return s
+}
+
+// SetOverrideArtifactName sets the OverrideArtifactName field's value.
+func (s *ProjectArtifacts) SetOverrideArtifactName(v bool) *ProjectArtifacts {
+	s.OverrideArtifactName = &v
 	return s
 }
 

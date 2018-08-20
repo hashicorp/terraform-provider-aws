@@ -26,6 +26,8 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
 					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_name", "CPUUtilization"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "statistic", "Average"),
+					resource.TestMatchResourceAttr("aws_cloudwatch_metric_alarm.foobar", "arn",
+						regexp.MustCompile(`^arn:[\w-]+:cloudwatch:[^:]+:\d{12}:alarm:.+$`)),
 					testAccCheckCloudWatchMetricAlarmDimension(
 						"aws_cloudwatch_metric_alarm.foobar", "InstanceId", "i-abc123"),
 				),
