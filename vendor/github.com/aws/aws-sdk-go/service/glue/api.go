@@ -9915,8 +9915,20 @@ type CreateDevEndpointInput struct {
 	// The number of AWS Glue Data Processing Units (DPUs) to allocate to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// The public key to use for authentication.
+	// The public key to be used by this DevEndpoint for authentication. This attribute
+	// is provided for backward compatibility, as the recommended attribute to use
+	// is public keys.
 	PublicKey *string `type:"string"`
+
+	// A list of public keys to be used by the DevEndpoints for authentication.
+	// The use of this attribute is preferred over a single public key because the
+	// public keys allow you to have a different private key per client.
+	//
+	// If you previously created an endpoint with a public key, you must remove
+	// that key to be able to set a list of public keys: call the UpdateDevEndpoint
+	// API with the public key content in the deletePublicKeys attribute, and the
+	// list of new keys in the addPublicKeys attribute.
+	PublicKeys []*string `type:"list"`
 
 	// The IAM role for the DevEndpoint.
 	//
@@ -9983,6 +9995,12 @@ func (s *CreateDevEndpointInput) SetNumberOfNodes(v int64) *CreateDevEndpointInp
 // SetPublicKey sets the PublicKey field's value.
 func (s *CreateDevEndpointInput) SetPublicKey(v string) *CreateDevEndpointInput {
 	s.PublicKey = &v
+	return s
+}
+
+// SetPublicKeys sets the PublicKeys field's value.
+func (s *CreateDevEndpointInput) SetPublicKeys(v []*string) *CreateDevEndpointInput {
+	s.PublicKeys = v
 	return s
 }
 
@@ -12065,14 +12083,27 @@ type DevEndpoint struct {
 	// The number of AWS Glue Data Processing Units (DPUs) allocated to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// The private address used by this DevEndpoint.
+	// A private DNS to access the DevEndpoint within a VPC, if the DevEndpoint
+	// is created within one.
 	PrivateAddress *string `type:"string"`
 
 	// The public VPC address used by this DevEndpoint.
 	PublicAddress *string `type:"string"`
 
-	// The public key to be used by this DevEndpoint for authentication.
+	// The public key to be used by this DevEndpoint for authentication. This attribute
+	// is provided for backward compatibility, as the recommended attribute to use
+	// is public keys.
 	PublicKey *string `type:"string"`
+
+	// A list of public keys to be used by the DevEndpoints for authentication.
+	// The use of this attribute is preferred over a single public key because the
+	// public keys allow you to have a different private key per client.
+	//
+	// If you previously created an endpoint with a public key, you must remove
+	// that key to be able to set a list of public keys: call the UpdateDevEndpoint
+	// API with the public key content in the deletePublicKeys attribute, and the
+	// list of new keys in the addPublicKeys attribute.
+	PublicKeys []*string `type:"list"`
 
 	// The AWS ARN of the IAM role used in this DevEndpoint.
 	RoleArn *string `type:"string"`
@@ -12175,6 +12206,12 @@ func (s *DevEndpoint) SetPublicAddress(v string) *DevEndpoint {
 // SetPublicKey sets the PublicKey field's value.
 func (s *DevEndpoint) SetPublicKey(v string) *DevEndpoint {
 	s.PublicKey = &v
+	return s
+}
+
+// SetPublicKeys sets the PublicKeys field's value.
+func (s *DevEndpoint) SetPublicKeys(v []*string) *DevEndpoint {
+	s.PublicKeys = v
 	return s
 }
 
@@ -18610,8 +18647,14 @@ func (s UpdateDatabaseOutput) GoString() string {
 type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// The list of public keys for the DevEndpoint to use.
+	AddPublicKeys []*string `type:"list"`
+
 	// Custom Python or Java libraries to be loaded in the DevEndpoint.
 	CustomLibraries *DevEndpointCustomLibraries `type:"structure"`
+
+	// The list of public keys to be deleted from the DevEndpoint.
+	DeletePublicKeys []*string `type:"list"`
 
 	// The name of the DevEndpoint to be updated.
 	//
@@ -18649,9 +18692,21 @@ func (s *UpdateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetAddPublicKeys sets the AddPublicKeys field's value.
+func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpointInput {
+	s.AddPublicKeys = v
+	return s
+}
+
 // SetCustomLibraries sets the CustomLibraries field's value.
 func (s *UpdateDevEndpointInput) SetCustomLibraries(v *DevEndpointCustomLibraries) *UpdateDevEndpointInput {
 	s.CustomLibraries = v
+	return s
+}
+
+// SetDeletePublicKeys sets the DeletePublicKeys field's value.
+func (s *UpdateDevEndpointInput) SetDeletePublicKeys(v []*string) *UpdateDevEndpointInput {
+	s.DeletePublicKeys = v
 	return s
 }
 

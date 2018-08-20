@@ -443,6 +443,9 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Please verify that the ECS service role being passed has the proper permissions.") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 
@@ -778,6 +781,9 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		out, err := conn.UpdateService(&input)
 		if err != nil {
 			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Please verify that the ECS service role being passed has the proper permissions.") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

@@ -218,6 +218,11 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 
 	_, err := ssmconn.UpdatePatchBaseline(params)
 	if err != nil {
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -232,6 +237,11 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := ssmconn.GetPatchBaseline(params)
 	if err != nil {
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 

@@ -120,6 +120,17 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ValidateFunc: validateRdsEngine(),
 			},
 
+			"engine_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "provisioned",
+				ValidateFunc: validation.StringInSlice([]string{
+					"provisioned",
+					"serverless",
+				}, false),
+			},
+
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -130,8 +141,18 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Allow configuration to be unset when using engine_mode serverless, as its required to be true
+					// InvalidParameterCombination: Aurora Serverless DB clusters are always encrypted at rest. Encryption can't be disabled.
+					if d.Get("engine_mode").(string) != "serverless" {
+						return false
+					}
+					if new != "false" {
+						return false
+					}
+					return true
+				},
 			},
 
 			"s3_import": {
@@ -355,6 +376,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		opts := rds.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
+			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                tags,
 		}
@@ -457,7 +479,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 			Engine:                      aws.String(d.Get("engine").(string)),
-			StorageEncrypted:            aws.Bool(d.Get("storage_encrypted").(bool)),
+			EngineMode:                  aws.String(d.Get("engine_mode").(string)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
 			Tags: tags,
 		}
@@ -512,6 +534,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.SourceRegion = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
+			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
+		}
+
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
 			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
@@ -553,7 +579,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			S3Prefix:            aws.String(s3_bucket["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion: aws.String(s3_bucket["source_engine_version"].(string)),
-			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                tags,
 		}
 
@@ -613,6 +638,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
 			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
+		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
+			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore options: %s", createOpts)
@@ -654,9 +683,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 			Engine:              aws.String(d.Get("engine").(string)),
+			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                tags,
 		}
 
@@ -716,6 +745,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
 			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
+		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
+			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
 		}
 
 		log.Printf("[DEBUG] RDS Cluster create options: %s", createOpts)
@@ -830,6 +863,7 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("endpoint", dbc.Endpoint)
+	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
@@ -1003,10 +1037,13 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	// Tags are set on creation
+	if !d.IsNewResource() && d.HasChange("tags") {
+		if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	return resourceAwsRDSClusterRead(d, meta)

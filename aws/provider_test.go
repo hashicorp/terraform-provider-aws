@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/organizations"
+
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -115,6 +117,19 @@ func testAccMultipleRegionsPreCheck(t *testing.T) {
 			t.Skip("skipping tests; partition only includes a single region")
 		}
 	}
+}
+
+func testAccOrganizationsAccountPreCheck(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	input := &organizations.DescribeOrganizationInput{}
+	_, err := conn.DescribeOrganization(input)
+	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		return
+	}
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {

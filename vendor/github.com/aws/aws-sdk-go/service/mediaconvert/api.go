@@ -3991,6 +3991,19 @@ type CmafGroupSettings struct {
 	// playout.
 	MinBufferTime *int64 `locationName:"minBufferTime" type:"integer"`
 
+	// Keep this setting at the default value of 0, unless you are troubleshooting
+	// a problem with how devices play back the end of your video asset. If you
+	// know that player devices are hanging on the final segment of your video because
+	// the length of your final segment is too short, use this setting to specify
+	// a minimum final segment length, in seconds. Choose a value that is greater
+	// than or equal to 1 and less than your segment length. When you specify a
+	// value for this setting, the encoder will combine any final segment that is
+	// shorter than the length that you specify with the previous segment. For example,
+	// your segment length is 3 seconds and your final segment is .5 seconds without
+	// a minimum final segment length; when you set the minimum final segment length
+	// to 1, your final segment is 3.5 seconds.
+	MinFinalSegmentLength *float64 `locationName:"minFinalSegmentLength" type:"double"`
+
 	// When set to SINGLE_FILE, a single output file is generated, which is internally
 	// segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 	// separate segment files will be created.
@@ -4107,6 +4120,12 @@ func (s *CmafGroupSettings) SetManifestDurationFormat(v string) *CmafGroupSettin
 // SetMinBufferTime sets the MinBufferTime field's value.
 func (s *CmafGroupSettings) SetMinBufferTime(v int64) *CmafGroupSettings {
 	s.MinBufferTime = &v
+	return s
+}
+
+// SetMinFinalSegmentLength sets the MinFinalSegmentLength field's value.
+func (s *CmafGroupSettings) SetMinFinalSegmentLength(v float64) *CmafGroupSettings {
+	s.MinFinalSegmentLength = &v
 	return s
 }
 
@@ -6531,6 +6550,72 @@ func (s *GetQueueOutput) SetQueue(v *Queue) *GetQueueOutput {
 	return s
 }
 
+// Settings for quality-defined variable bitrate encoding with the H.264 codec.
+// Required when you set Rate control mode to QVBR. Not valid when you set Rate
+// control mode to a value other than QVBR, or when you don't define Rate control
+// mode.
+type H264QvbrSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use this setting only when Rate control mode is QVBR and Quality tuning level
+	// is Multi-pass HQ. For Max average bitrate values suited to the complexity
+	// of your input video, the service limits the average bitrate of the video
+	// part of this output to the value you choose. That is, the total size of the
+	// video element is less than or equal to the value you set multiplied by the
+	// number of seconds of encoded output.
+	MaxAverageBitrate *int64 `locationName:"maxAverageBitrate" min:"1000" type:"integer"`
+
+	// Required when you use QVBR rate control mode. That is, when you specify qvbrSettings
+	// within h264Settings. Specify the target quality level for this output, from
+	// 1 to 10. Use higher numbers for greater quality. Level 10 results in nearly
+	// lossless compression. The quality level for most broadcast-quality transcodes
+	// is between 6 and 9.
+	//
+	// QvbrQualityLevel is a required field
+	QvbrQualityLevel *int64 `locationName:"qvbrQualityLevel" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s H264QvbrSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H264QvbrSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *H264QvbrSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "H264QvbrSettings"}
+	if s.MaxAverageBitrate != nil && *s.MaxAverageBitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxAverageBitrate", 1000))
+	}
+	if s.QvbrQualityLevel == nil {
+		invalidParams.Add(request.NewErrParamRequired("QvbrQualityLevel"))
+	}
+	if s.QvbrQualityLevel != nil && *s.QvbrQualityLevel < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("QvbrQualityLevel", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxAverageBitrate sets the MaxAverageBitrate field's value.
+func (s *H264QvbrSettings) SetMaxAverageBitrate(v int64) *H264QvbrSettings {
+	s.MaxAverageBitrate = &v
+	return s
+}
+
+// SetQvbrQualityLevel sets the QvbrQualityLevel field's value.
+func (s *H264QvbrSettings) SetQvbrQualityLevel(v int64) *H264QvbrSettings {
+	s.QvbrQualityLevel = &v
+	return s
+}
+
 // Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
 // the value H_264.
 type H264Settings struct {
@@ -6550,6 +6635,13 @@ type H264Settings struct {
 	// H.264 Profile. High 4:2:2 and 10-bit profiles are only available with the
 	// AVC-I License.
 	CodecProfile *string `locationName:"codecProfile" type:"string" enum:"H264CodecProfile"`
+
+	// Choose Adaptive to improve subjective video quality for high-motion content.
+	// This will cause the service to use fewer B-frames (which infer information
+	// based on other frames) for high-motion portions of the video and more B-frames
+	// for low-motion portions. The maximum number of B-frames is limited by the
+	// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
+	DynamicSubGop *string `locationName:"dynamicSubGop" type:"string" enum:"H264DynamicSubGop"`
 
 	// Entropy encoding mode. Use CABAC (must be in Main or High profile) or CAVLC.
 	EntropyEncoding *string `locationName:"entropyEncoding" type:"string" enum:"H264EntropyEncoding"`
@@ -6626,7 +6718,7 @@ type H264Settings struct {
 	InterlaceMode *string `locationName:"interlaceMode" type:"string" enum:"H264InterlaceMode"`
 
 	// Maximum bitrate in bits/second. For example, enter five megabits per second
-	// as 5000000.
+	// as 5000000. Required when Rate control mode is QVBR.
 	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
 
 	// Enforces separation between repeated (cadence) I-frames and I-frames inserted
@@ -6661,8 +6753,14 @@ type H264Settings struct {
 	// video encoding.
 	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"H264QualityTuningLevel"`
 
-	// Use this setting to specify whether this output has a variable bitrate (VBR)
-	// or constant bitrate (CBR).
+	// Settings for quality-defined variable bitrate encoding with the H.264 codec.
+	// Required when you set Rate control mode to QVBR. Not valid when you set Rate
+	// control mode to a value other than QVBR, or when you don't define Rate control
+	// mode.
+	QvbrSettings *H264QvbrSettings `locationName:"qvbrSettings" type:"structure"`
+
+	// Use this setting to specify whether this output has a variable bitrate (VBR),
+	// constant bitrate (CBR) or quality-defined variable bitrate (QVBR).
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H264RateControlMode"`
 
 	// Places a PPS header on each encoded picture, even if repeated.
@@ -6745,6 +6843,11 @@ func (s *H264Settings) Validate() error {
 	if s.Slices != nil && *s.Slices < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Slices", 1))
 	}
+	if s.QvbrSettings != nil {
+		if err := s.QvbrSettings.Validate(); err != nil {
+			invalidParams.AddNested("QvbrSettings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6773,6 +6876,12 @@ func (s *H264Settings) SetCodecLevel(v string) *H264Settings {
 // SetCodecProfile sets the CodecProfile field's value.
 func (s *H264Settings) SetCodecProfile(v string) *H264Settings {
 	s.CodecProfile = &v
+	return s
+}
+
+// SetDynamicSubGop sets the DynamicSubGop field's value.
+func (s *H264Settings) SetDynamicSubGop(v string) *H264Settings {
+	s.DynamicSubGop = &v
 	return s
 }
 
@@ -6908,6 +7017,12 @@ func (s *H264Settings) SetQualityTuningLevel(v string) *H264Settings {
 	return s
 }
 
+// SetQvbrSettings sets the QvbrSettings field's value.
+func (s *H264Settings) SetQvbrSettings(v *H264QvbrSettings) *H264Settings {
+	s.QvbrSettings = v
+	return s
+}
+
 // SetRateControlMode sets the RateControlMode field's value.
 func (s *H264Settings) SetRateControlMode(v string) *H264Settings {
 	s.RateControlMode = &v
@@ -6974,6 +7089,72 @@ func (s *H264Settings) SetUnregisteredSeiTimecode(v string) *H264Settings {
 	return s
 }
 
+// Settings for quality-defined variable bitrate encoding with the H.265 codec.
+// Required when you set Rate control mode to QVBR. Not valid when you set Rate
+// control mode to a value other than QVBR, or when you don't define Rate control
+// mode.
+type H265QvbrSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use this setting only when Rate control mode is QVBR and Quality tuning level
+	// is Multi-pass HQ. For Max average bitrate values suited to the complexity
+	// of your input video, the service limits the average bitrate of the video
+	// part of this output to the value you choose. That is, the total size of the
+	// video element is less than or equal to the value you set multiplied by the
+	// number of seconds of encoded output.
+	MaxAverageBitrate *int64 `locationName:"maxAverageBitrate" min:"1000" type:"integer"`
+
+	// Required when you use QVBR rate control mode. That is, when you specify qvbrSettings
+	// within h265Settings. Specify the target quality level for this output, from
+	// 1 to 10. Use higher numbers for greater quality. Level 10 results in nearly
+	// lossless compression. The quality level for most broadcast-quality transcodes
+	// is between 6 and 9.
+	//
+	// QvbrQualityLevel is a required field
+	QvbrQualityLevel *int64 `locationName:"qvbrQualityLevel" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s H265QvbrSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H265QvbrSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *H265QvbrSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "H265QvbrSettings"}
+	if s.MaxAverageBitrate != nil && *s.MaxAverageBitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxAverageBitrate", 1000))
+	}
+	if s.QvbrQualityLevel == nil {
+		invalidParams.Add(request.NewErrParamRequired("QvbrQualityLevel"))
+	}
+	if s.QvbrQualityLevel != nil && *s.QvbrQualityLevel < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("QvbrQualityLevel", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxAverageBitrate sets the MaxAverageBitrate field's value.
+func (s *H265QvbrSettings) SetMaxAverageBitrate(v int64) *H265QvbrSettings {
+	s.MaxAverageBitrate = &v
+	return s
+}
+
+// SetQvbrQualityLevel sets the QvbrQualityLevel field's value.
+func (s *H265QvbrSettings) SetQvbrQualityLevel(v int64) *H265QvbrSettings {
+	s.QvbrQualityLevel = &v
+	return s
+}
+
 // Settings for H265 codec
 type H265Settings struct {
 	_ struct{} `type:"structure"`
@@ -6997,6 +7178,13 @@ type H265Settings struct {
 	// are grouped as [Profile] / [Tier], so "Main/High" represents Main Profile
 	// with High Tier. 4:2:2 profiles are only available with the HEVC 4:2:2 License.
 	CodecProfile *string `locationName:"codecProfile" type:"string" enum:"H265CodecProfile"`
+
+	// Choose Adaptive to improve subjective video quality for high-motion content.
+	// This will cause the service to use fewer B-frames (which infer information
+	// based on other frames) for high-motion portions of the video and more B-frames
+	// for low-motion portions. The maximum number of B-frames is limited by the
+	// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
+	DynamicSubGop *string `locationName:"dynamicSubGop" type:"string" enum:"H265DynamicSubGop"`
 
 	// Adjust quantization within each frame to reduce flicker or 'pop' on I-frames.
 	FlickerAdaptiveQuantization *string `locationName:"flickerAdaptiveQuantization" type:"string" enum:"H265FlickerAdaptiveQuantization"`
@@ -7061,7 +7249,8 @@ type H265Settings struct {
 	// on which of the Follow options you chose.
 	InterlaceMode *string `locationName:"interlaceMode" type:"string" enum:"H265InterlaceMode"`
 
-	// Maximum bitrate in bits/second.
+	// Maximum bitrate in bits/second. For example, enter five megabits per second
+	// as 5000000. Required when Rate control mode is QVBR.
 	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
 
 	// Enforces separation between repeated (cadence) I-frames and I-frames inserted
@@ -7096,8 +7285,14 @@ type H265Settings struct {
 	// video encoding.
 	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"H265QualityTuningLevel"`
 
-	// Use this setting to specify whether this output has a variable bitrate (VBR)
-	// or constant bitrate (CBR).
+	// Settings for quality-defined variable bitrate encoding with the H.265 codec.
+	// Required when you set Rate control mode to QVBR. Not valid when you set Rate
+	// control mode to a value other than QVBR, or when you don't define Rate control
+	// mode.
+	QvbrSettings *H265QvbrSettings `locationName:"qvbrSettings" type:"structure"`
+
+	// Use this setting to specify whether this output has a variable bitrate (VBR),
+	// constant bitrate (CBR) or quality-defined variable bitrate (QVBR).
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H265RateControlMode"`
 
 	// Specify Sample Adaptive Offset (SAO) filter strength. Adaptive mode dynamically
@@ -7194,6 +7389,11 @@ func (s *H265Settings) Validate() error {
 	if s.Slices != nil && *s.Slices < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Slices", 1))
 	}
+	if s.QvbrSettings != nil {
+		if err := s.QvbrSettings.Validate(); err != nil {
+			invalidParams.AddNested("QvbrSettings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7228,6 +7428,12 @@ func (s *H265Settings) SetCodecLevel(v string) *H265Settings {
 // SetCodecProfile sets the CodecProfile field's value.
 func (s *H265Settings) SetCodecProfile(v string) *H265Settings {
 	s.CodecProfile = &v
+	return s
+}
+
+// SetDynamicSubGop sets the DynamicSubGop field's value.
+func (s *H265Settings) SetDynamicSubGop(v string) *H265Settings {
+	s.DynamicSubGop = &v
 	return s
 }
 
@@ -7348,6 +7554,12 @@ func (s *H265Settings) SetParNumerator(v int64) *H265Settings {
 // SetQualityTuningLevel sets the QualityTuningLevel field's value.
 func (s *H265Settings) SetQualityTuningLevel(v string) *H265Settings {
 	s.QualityTuningLevel = &v
+	return s
+}
+
+// SetQvbrSettings sets the QvbrSettings field's value.
+func (s *H265Settings) SetQvbrSettings(v *H265QvbrSettings) *H265Settings {
+	s.QvbrSettings = v
 	return s
 }
 
@@ -7818,6 +8030,19 @@ type HlsGroupSettings struct {
 	// segment duration.
 	ManifestDurationFormat *string `locationName:"manifestDurationFormat" type:"string" enum:"HlsManifestDurationFormat"`
 
+	// Keep this setting at the default value of 0, unless you are troubleshooting
+	// a problem with how devices play back the end of your video asset. If you
+	// know that player devices are hanging on the final segment of your video because
+	// the length of your final segment is too short, use this setting to specify
+	// a minimum final segment length, in seconds. Choose a value that is greater
+	// than or equal to 1 and less than your segment length. When you specify a
+	// value for this setting, the encoder will combine any final segment that is
+	// shorter than the length that you specify with the previous segment. For example,
+	// your segment length is 3 seconds and your final segment is .5 seconds without
+	// a minimum final segment length; when you set the minimum final segment length
+	// to 1, your final segment is 3.5 seconds.
+	MinFinalSegmentLength *float64 `locationName:"minFinalSegmentLength" type:"double"`
+
 	// When set, Minimum Segment Size is enforced by looking ahead and back within
 	// the specified range for a nearby avail and extending the segment size if
 	// needed.
@@ -7983,6 +8208,12 @@ func (s *HlsGroupSettings) SetManifestCompression(v string) *HlsGroupSettings {
 // SetManifestDurationFormat sets the ManifestDurationFormat field's value.
 func (s *HlsGroupSettings) SetManifestDurationFormat(v string) *HlsGroupSettings {
 	s.ManifestDurationFormat = &v
+	return s
+}
+
+// SetMinFinalSegmentLength sets the MinFinalSegmentLength field's value.
+func (s *HlsGroupSettings) SetMinFinalSegmentLength(v float64) *HlsGroupSettings {
+	s.MinFinalSegmentLength = &v
 	return s
 }
 
@@ -8913,7 +9144,7 @@ type Job struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The time, in Unix epoch format in seconds, when the job got created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// Error code for the job
 	ErrorCode *int64 `locationName:"errorCode" type:"integer"`
@@ -9206,13 +9437,13 @@ type JobTemplate struct {
 	Category *string `locationName:"category" type:"string"`
 
 	// The timestamp in epoch seconds for Job template creation.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// An optional description you create for each job template.
 	Description *string `locationName:"description" type:"string"`
 
 	// The timestamp in epoch seconds when the Job template was last updated.
-	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"iso8601"`
+	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// A name you create for each job template. Each name must be unique within
 	// your account.
@@ -9890,9 +10121,9 @@ func (s *ListQueuesOutput) SetQueues(v []*Queue) *ListQueuesOutput {
 	return s
 }
 
-// List the tags for your MediaConvert resource by sending a request with the
-// Amazon Resource Name (ARN) of the resource. To get the ARN, send a GET request
-// with the resource name.
+// List the tags for your AWS Elemental MediaConvert resource by sending a request
+// with the Amazon Resource Name (ARN) of the resource. To get the ARN, send
+// a GET request with the resource name.
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9932,7 +10163,8 @@ func (s *ListTagsForResourceInput) SetArn(v string) *ListTagsForResourceInput {
 	return s
 }
 
-// Successful list tags for resource requests return a JSON map of tags.
+// A successful request to list the tags for a resource returns a JSON map of
+// tags.
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10785,6 +11017,13 @@ type Mpeg2Settings struct {
 	// Use Profile (Mpeg2CodecProfile) to set the MPEG-2 profile for the video output.
 	CodecProfile *string `locationName:"codecProfile" type:"string" enum:"Mpeg2CodecProfile"`
 
+	// Choose Adaptive to improve subjective video quality for high-motion content.
+	// This will cause the service to use fewer B-frames (which infer information
+	// based on other frames) for high-motion portions of the video and more B-frames
+	// for low-motion portions. The maximum number of B-frames is limited by the
+	// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
+	DynamicSubGop *string `locationName:"dynamicSubGop" type:"string" enum:"Mpeg2DynamicSubGop"`
+
 	// If you are using the console, use the Framerate setting to specify the framerate
 	// for this output. If you want to keep the same framerate as the input video,
 	// choose Follow source. If you want to do framerate conversion, choose a framerate
@@ -10970,6 +11209,12 @@ func (s *Mpeg2Settings) SetCodecLevel(v string) *Mpeg2Settings {
 // SetCodecProfile sets the CodecProfile field's value.
 func (s *Mpeg2Settings) SetCodecProfile(v string) *Mpeg2Settings {
 	s.CodecProfile = &v
+	return s
+}
+
+// SetDynamicSubGop sets the DynamicSubGop field's value.
+func (s *Mpeg2Settings) SetDynamicSubGop(v string) *Mpeg2Settings {
+	s.DynamicSubGop = &v
 	return s
 }
 
@@ -11937,13 +12182,13 @@ type Preset struct {
 	Category *string `locationName:"category" type:"string"`
 
 	// The timestamp in epoch seconds for preset creation.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// An optional description you create for each preset.
 	Description *string `locationName:"description" type:"string"`
 
 	// The timestamp in epoch seconds when the preset was last updated.
-	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"iso8601"`
+	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// A name you create for each preset. Each name must be unique within your account.
 	//
@@ -12293,13 +12538,13 @@ type Queue struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The timestamp in epoch seconds for queue creation.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// An optional description you create for each queue.
 	Description *string `locationName:"description" type:"string"`
 
 	// The timestamp in epoch seconds when the queue was last updated.
-	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"iso8601"`
+	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// A name you create for each queue. Each name must be unique within your account.
 	//
@@ -12390,24 +12635,24 @@ func (s *Queue) SetType(v string) *Queue {
 type Rectangle struct {
 	_ struct{} `type:"structure"`
 
-	// Height of rectangle in pixels.
+	// Height of rectangle in pixels. Specify only even numbers.
 	//
 	// Height is a required field
-	Height *int64 `locationName:"height" type:"integer" required:"true"`
+	Height *int64 `locationName:"height" min:"2" type:"integer" required:"true"`
 
-	// Width of rectangle in pixels.
+	// Width of rectangle in pixels. Specify only even numbers.
 	//
 	// Width is a required field
-	Width *int64 `locationName:"width" type:"integer" required:"true"`
+	Width *int64 `locationName:"width" min:"2" type:"integer" required:"true"`
 
 	// The distance, in pixels, between the rectangle and the left edge of the video
-	// frame.
+	// frame. Specify only even numbers.
 	//
 	// X is a required field
 	X *int64 `locationName:"x" type:"integer" required:"true"`
 
 	// The distance, in pixels, between the rectangle and the top edge of the video
-	// frame.
+	// frame. Specify only even numbers.
 	//
 	// Y is a required field
 	Y *int64 `locationName:"y" type:"integer" required:"true"`
@@ -12429,26 +12674,20 @@ func (s *Rectangle) Validate() error {
 	if s.Height == nil {
 		invalidParams.Add(request.NewErrParamRequired("Height"))
 	}
-	if s.Height != nil && *s.Height < -2.147483648e+09 {
-		invalidParams.Add(request.NewErrParamMinValue("Height", -2.147483648e+09))
+	if s.Height != nil && *s.Height < 2 {
+		invalidParams.Add(request.NewErrParamMinValue("Height", 2))
 	}
 	if s.Width == nil {
 		invalidParams.Add(request.NewErrParamRequired("Width"))
 	}
-	if s.Width != nil && *s.Width < -2.147483648e+09 {
-		invalidParams.Add(request.NewErrParamMinValue("Width", -2.147483648e+09))
+	if s.Width != nil && *s.Width < 2 {
+		invalidParams.Add(request.NewErrParamMinValue("Width", 2))
 	}
 	if s.X == nil {
 		invalidParams.Add(request.NewErrParamRequired("X"))
 	}
-	if s.X != nil && *s.X < -2.147483648e+09 {
-		invalidParams.Add(request.NewErrParamMinValue("X", -2.147483648e+09))
-	}
 	if s.Y == nil {
 		invalidParams.Add(request.NewErrParamRequired("Y"))
-	}
-	if s.Y != nil && *s.Y < -2.147483648e+09 {
-		invalidParams.Add(request.NewErrParamMinValue("Y", -2.147483648e+09))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13124,13 +13363,13 @@ type Timing struct {
 	_ struct{} `type:"structure"`
 
 	// The time, in Unix epoch format, that the transcoding job finished
-	FinishTime *time.Time `locationName:"finishTime" type:"timestamp" timestampFormat:"iso8601"`
+	FinishTime *time.Time `locationName:"finishTime" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// The time, in Unix epoch format, that transcoding for the job began.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"iso8601"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// The time, in Unix epoch format, that you submitted the job.
-	SubmitTime *time.Time `locationName:"submitTime" type:"timestamp" timestampFormat:"iso8601"`
+	SubmitTime *time.Time `locationName:"submitTime" type:"timestamp" timestampFormat:"unixTimestamp"`
 }
 
 // String returns the string representation
@@ -13222,7 +13461,7 @@ func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
 	return s
 }
 
-// Successful untag resource requests return an OK message.
+// A successful request to remove a tag from a resource returns an OK message.
 type UntagResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -15391,6 +15630,19 @@ const (
 	H264CodecProfileMain = "MAIN"
 )
 
+// Choose Adaptive to improve subjective video quality for high-motion content.
+// This will cause the service to use fewer B-frames (which infer information
+// based on other frames) for high-motion portions of the video and more B-frames
+// for low-motion portions. The maximum number of B-frames is limited by the
+// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
+const (
+	// H264DynamicSubGopAdaptive is a H264DynamicSubGop enum value
+	H264DynamicSubGopAdaptive = "ADAPTIVE"
+
+	// H264DynamicSubGopStatic is a H264DynamicSubGop enum value
+	H264DynamicSubGopStatic = "STATIC"
+)
+
 // Entropy encoding mode. Use CABAC (must be in Main or High profile) or CAVLC.
 const (
 	// H264EntropyEncodingCabac is a H264EntropyEncoding enum value
@@ -15519,14 +15771,17 @@ const (
 	H264QualityTuningLevelMultiPassHq = "MULTI_PASS_HQ"
 )
 
-// Use this setting to specify whether this output has a variable bitrate (VBR)
-// or constant bitrate (CBR).
+// Use this setting to specify whether this output has a variable bitrate (VBR),
+// constant bitrate (CBR) or quality-defined variable bitrate (QVBR).
 const (
 	// H264RateControlModeVbr is a H264RateControlMode enum value
 	H264RateControlModeVbr = "VBR"
 
 	// H264RateControlModeCbr is a H264RateControlMode enum value
 	H264RateControlModeCbr = "CBR"
+
+	// H264RateControlModeQvbr is a H264RateControlMode enum value
+	H264RateControlModeQvbr = "QVBR"
 )
 
 // Places a PPS header on each encoded picture, even if repeated.
@@ -15719,6 +15974,19 @@ const (
 	H265CodecProfileMain42210bitHigh = "MAIN_422_10BIT_HIGH"
 )
 
+// Choose Adaptive to improve subjective video quality for high-motion content.
+// This will cause the service to use fewer B-frames (which infer information
+// based on other frames) for high-motion portions of the video and more B-frames
+// for low-motion portions. The maximum number of B-frames is limited by the
+// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
+const (
+	// H265DynamicSubGopAdaptive is a H265DynamicSubGop enum value
+	H265DynamicSubGopAdaptive = "ADAPTIVE"
+
+	// H265DynamicSubGopStatic is a H265DynamicSubGop enum value
+	H265DynamicSubGopStatic = "STATIC"
+)
+
 // Adjust quantization within each frame to reduce flicker or 'pop' on I-frames.
 const (
 	// H265FlickerAdaptiveQuantizationDisabled is a H265FlickerAdaptiveQuantization enum value
@@ -15829,14 +16097,17 @@ const (
 	H265QualityTuningLevelMultiPassHq = "MULTI_PASS_HQ"
 )
 
-// Use this setting to specify whether this output has a variable bitrate (VBR)
-// or constant bitrate (CBR).
+// Use this setting to specify whether this output has a variable bitrate (VBR),
+// constant bitrate (CBR) or quality-defined variable bitrate (QVBR).
 const (
 	// H265RateControlModeVbr is a H265RateControlMode enum value
 	H265RateControlModeVbr = "VBR"
 
 	// H265RateControlModeCbr is a H265RateControlMode enum value
 	H265RateControlModeCbr = "CBR"
+
+	// H265RateControlModeQvbr is a H265RateControlMode enum value
+	H265RateControlModeQvbr = "QVBR"
 )
 
 // Specify Sample Adaptive Offset (SAO) filter strength. Adaptive mode dynamically
@@ -17128,6 +17399,19 @@ const (
 
 	// Mpeg2CodecProfileProfile422 is a Mpeg2CodecProfile enum value
 	Mpeg2CodecProfileProfile422 = "PROFILE_422"
+)
+
+// Choose Adaptive to improve subjective video quality for high-motion content.
+// This will cause the service to use fewer B-frames (which infer information
+// based on other frames) for high-motion portions of the video and more B-frames
+// for low-motion portions. The maximum number of B-frames is limited by the
+// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
+const (
+	// Mpeg2DynamicSubGopAdaptive is a Mpeg2DynamicSubGop enum value
+	Mpeg2DynamicSubGopAdaptive = "ADAPTIVE"
+
+	// Mpeg2DynamicSubGopStatic is a Mpeg2DynamicSubGop enum value
+	Mpeg2DynamicSubGopStatic = "STATIC"
 )
 
 // If you are using the console, use the Framerate setting to specify the framerate

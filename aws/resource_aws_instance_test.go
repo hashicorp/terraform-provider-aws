@@ -130,6 +130,10 @@ func TestAccAWSInstance_basic(t *testing.T) {
 						"3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.#", "0"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo",
+						"arn",
+						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 				),
 			},
 
@@ -1593,6 +1597,58 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resName, &instance),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
+	var instance ec2.Instance
+	rInt := acctest.RandInt()
+	resourceName := "aws_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_UserData_EmptyString(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+			// Switching should show no difference
+			{
+				Config:             testAccInstanceConfig_UserData_Unspecified(rInt),
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
+	var instance ec2.Instance
+	rInt := acctest.RandInt()
+	resourceName := "aws_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_UserData_Unspecified(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+			// Switching should show no difference
+			{
+				Config:             testAccInstanceConfig_UserData_EmptyString(rInt),
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
 			},
 		},
 	})
@@ -3303,4 +3359,60 @@ resource "aws_instance" "foo" {
   }
 }
 `, rInt)
+}
+
+func testAccInstanceConfig_UserData_Base(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block = "172.16.0.0/24"
+
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+`, rInt, rInt)
+}
+
+func testAccInstanceConfig_UserData_Unspecified(rInt int) string {
+	return testAccInstanceConfig_UserData_Base(rInt) + `
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+}
+`
+}
+
+func testAccInstanceConfig_UserData_EmptyString(rInt int) string {
+	return testAccInstanceConfig_UserData_Base(rInt) + `
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+  user_data     = ""
+}
+`
 }

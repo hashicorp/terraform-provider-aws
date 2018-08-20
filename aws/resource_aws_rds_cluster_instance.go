@@ -249,7 +249,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
 	}
 
-	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" {
+	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" || attr == "aurora" {
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
 			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
 		}

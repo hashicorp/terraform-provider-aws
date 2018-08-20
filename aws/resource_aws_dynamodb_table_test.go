@@ -454,7 +454,7 @@ func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSDynamoDbConfigStreamSpecification("anything", true, ""),
-				ExpectError: regexp.MustCompile(`stream_view_type is required when stream_enabled = true$`),
+				ExpectError: regexp.MustCompile(`stream_view_type is required when stream_enabled = true`),
 			},
 		},
 	})
@@ -738,11 +738,11 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "unusedKey", "S"),
-				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["unusedKey"\]$`),
+				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["unusedKey"\]`),
 			},
 			{
 				Config:      testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
-				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]$`),
+				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
 			},
 		},
 	})
