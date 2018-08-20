@@ -365,6 +365,60 @@ func TestAccAWSDBInstance_SnapshotIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_SnapshotIdentifier_MultiAZ(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_MultiAZ(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_MultiAZ_SQLServer(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_MultiAZ_SQLServer(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
@@ -2099,6 +2153,63 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_MultiAZ(rName string, multiAz bool) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mariadb"
+  identifier          = "%s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  multi_az            = %t
+  snapshot_identifier = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot = true
+}
+`, rName, rName, rName, multiAz)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_MultiAZ_SQLServer(rName string, multiAz bool) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 20
+  engine              = "sqlserver-se"
+  identifier          = "%s-source"
+  instance_class      = "db.m4.large"
+  license_model       = "license-included"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  # InvalidParameterValue: Mirroring cannot be applied to instances with backup retention set to zero.
+  backup_retention_period = 1
+  identifier              = %q
+  instance_class          = "${aws_db_instance.source.instance_class}"
+  multi_az                = %t
+  snapshot_identifier     = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot     = true
+}
+`, rName, rName, rName, multiAz)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_Tags(rName string) string {
