@@ -46,9 +46,17 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", d.Get("name").(string)))
-	input := &servicediscovery.CreatePublicDnsNamespaceInput{
-		Name:             aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	// The CreatorRequestId has a limit of 64 bytes
+	var requestId string
+	if len(name) > (64 - resource.UniqueIDSuffixLength) {
+		requestId = resource.PrefixedUniqueId(name[0:(64 - resource.UniqueIDSuffixLength - 1)])
+	} else {
+		requestId = resource.PrefixedUniqueId(name)
+	}
+
+	input := &servicediscovery.CreatePublicDnsNamespaceInput {
+		Name:             aws.String(name),
 		CreatorRequestId: aws.String(requestId),
 	}
 
@@ -61,7 +69,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &resource.StateChangeConf {
 		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
 		Target:  []string{servicediscovery.OperationStatusSuccess},
 		Refresh: servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
