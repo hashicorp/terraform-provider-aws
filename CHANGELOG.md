@@ -18,6 +18,8 @@ BUG FIXES:
 * resource/aws_db_instance: Prevent error when using `snapshot_identifier` with `multi_az` enabled and sqlserver `engine` [GH-5613]
 * resource/aws_db_instance: Prevent double apply when using `snapshot_identifier` parameters that require `ModifyDBInstance` during resource creation [GH-5613]
 * resource/aws_instance: Ignore change of `user_data` from omission to empty string [GH-5467]
+* resource/aws_waf_ipset: Properly handle updates and deletions over 1000 IP set descriptors [GH-5588]
+* resource/aws_wafregional_ipset: Properly handle updates and deletions over 1000 IP set descriptors [GH-5588]
 
 ## 1.32.0 (August 16, 2018)
 
