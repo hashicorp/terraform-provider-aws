@@ -41876,7 +41876,9 @@ type DescribeVolumeAttributeInput struct {
 	_ struct{} `type:"structure"`
 
 	// The attribute of the volume. This parameter is required.
-	Attribute *string `type:"string" enum:"VolumeAttributeName"`
+	//
+	// Attribute is a required field
+	Attribute *string `type:"string" required:"true" enum:"VolumeAttributeName"`
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
@@ -41903,6 +41905,9 @@ func (s DescribeVolumeAttributeInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeVolumeAttributeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeVolumeAttributeInput"}
+	if s.Attribute == nil {
+		invalidParams.Add(request.NewErrParamRequired("Attribute"))
+	}
 	if s.VolumeId == nil {
 		invalidParams.Add(request.NewErrParamRequired("VolumeId"))
 	}

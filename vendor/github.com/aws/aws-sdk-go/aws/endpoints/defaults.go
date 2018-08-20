@@ -1121,7 +1121,7 @@ var awsPartition = partition{
 		"elasticmapreduce": service{
 			Defaults: endpoint{
 				SSLCommonName: "{region}.{service}.{dnsSuffix}",
-				Protocols:     []string{"http", "https"},
+				Protocols:     []string{"https"},
 			},
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
@@ -2660,7 +2660,7 @@ var awscnPartition = partition{
 		},
 		"elasticmapreduce": service{
 			Defaults: endpoint{
-				Protocols: []string{"http", "https"},
+				Protocols: []string{"https"},
 			},
 			Endpoints: endpoints{
 				"cn-north-1":     endpoint{},
@@ -3016,7 +3016,7 @@ var awsusgovPartition = partition{
 
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{
-					Protocols: []string{"http", "https"},
+					Protocols: []string{"https"},
 				},
 			},
 		},
@@ -3055,6 +3055,16 @@ var awsusgovPartition = partition{
 		},
 		"inspector": service{
 
+			Endpoints: endpoints{
+				"us-gov-west-1": endpoint{},
+			},
+		},
+		"iot": service{
+			Defaults: endpoint{
+				CredentialScope: credentialScope{
+					Service: "execute-api",
+				},
+			},
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{},
 			},

@@ -196,6 +196,13 @@ const (
 	// or ActivationCode and try again.
 	ErrCodeInvalidActivationId = "InvalidActivationId"
 
+	// ErrCodeInvalidAggregatorException for service response error code
+	// "InvalidAggregatorException".
+	//
+	// The specified aggregator is not valid for inventory groups. Verify that the
+	// aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
+	ErrCodeInvalidAggregatorException = "InvalidAggregatorException"
+
 	// ErrCodeInvalidAllowedPatternException for service response error code
 	// "InvalidAllowedPatternException".
 	//
@@ -334,6 +341,12 @@ const (
 	//
 	// The specified filter value is not valid.
 	ErrCodeInvalidInstanceInformationFilterValue = "InvalidInstanceInformationFilterValue"
+
+	// ErrCodeInvalidInventoryGroupException for service response error code
+	// "InvalidInventoryGroupException".
+	//
+	// The specified inventory group is not valid.
+	ErrCodeInvalidInventoryGroupException = "InvalidInventoryGroupException"
 
 	// ErrCodeInvalidInventoryItemContextException for service response error code
 	// "InvalidInventoryItemContextException".
