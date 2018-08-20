@@ -96,7 +96,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resour
 }
 
 func testAccAWSServiceDiscoveryPublicDnsNamespace_longname(t *testing.T) {
-	rName := acctest.RandString(64-len("terraform.com"))
+	rName := acctest.RandString(64 - len("terraform.com"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -55,7 +55,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 		requestId = resource.PrefixedUniqueId(name)
 	}
 
-	input := &servicediscovery.CreatePublicDnsNamespaceInput {
+	input := &servicediscovery.CreatePublicDnsNamespaceInput{
 		Name:             aws.String(name),
 		CreatorRequestId: aws.String(requestId),
 	}
@@ -69,7 +69,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf {
+	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
 		Target:  []string{servicediscovery.OperationStatusSuccess},
 		Refresh: servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
