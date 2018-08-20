@@ -233,7 +233,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 
 In addition to all arguments above, the following attributes are exported:
 
-* `address` - The address of the RDS instance.
+* `address` - The hostname of the RDS instance. See also `endpoint` and `port`.
 * `arn` - The ARN of the RDS instance.
 * `allocated_storage` - The amount of allocated storage.
 * `availability_zone` - The availability zone of the instance.
@@ -243,7 +243,7 @@ In addition to all arguments above, the following attributes are exported:
 DB instance.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
 * `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
-* `endpoint` - The connection endpoint.
+* `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
 * `engine_version` - The database engine version.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
