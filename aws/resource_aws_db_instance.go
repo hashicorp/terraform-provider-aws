@@ -1285,14 +1285,10 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
-	if d.HasChange("domain") && !d.IsNewResource() {
+	if (d.HasChange("domain") || d.HasChange("domain_iam_role_name")) && !d.IsNewResource() {
 		d.SetPartial("domain")
-		req.Domain = aws.String(d.Get("domain").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("domain_iam_role_name") && !d.IsNewResource() {
 		d.SetPartial("domain_iam_role_name")
+		req.Domain = aws.String(d.Get("domain").(string))
 		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		requestUpdate = true
 	}
