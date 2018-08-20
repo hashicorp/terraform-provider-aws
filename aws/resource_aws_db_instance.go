@@ -665,6 +665,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		return resourceAwsDbInstanceRead(d, meta)
 	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
+		// RestoreDBInstanceFromDBSnapshot does not support all parameters
+		// correctly apply in one pass. For missing parameters or unsupported
+		// configurations, we need to call ModifyDBInstance afterwards to
+		// prevent Terraform operators from API errors or double apply.
+		var requiresModifyDbInstance bool
+
 		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
@@ -711,7 +717,17 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("multi_az"); ok {
-			opts.MultiAZ = aws.Bool(attr.(bool))
+			// When using SQL Server engine with MultiAZ enabled, its not
+			// possible to immediately enable mirroring since
+			// BackupRetentionPeriod is not available as a parameter to
+			// RestoreDBInstanceFromDBSnapshot and you receive an error. e.g.
+			// InvalidParameterValue: Mirroring cannot be applied to instances with backup retention set to zero.
+			// If we know the engine, prevent the error upfront.
+			if v, ok := d.GetOk("engine"); ok && strings.HasPrefix(strings.ToLower(v.(string)), "sqlserver") {
+				requiresModifyDbInstance = true
+			} else {
+				opts.MultiAZ = aws.Bool(attr.(bool))
+			}
 		}
 
 		if attr, ok := d.GetOk("option_group_name"); ok {
@@ -719,46 +735,56 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		}
 
+		if _, ok := d.GetOk("password"); ok {
+			requiresModifyDbInstance = true
+		}
+
 		if attr, ok := d.GetOk("port"); ok {
 			opts.Port = aws.Int64(int64(attr.(int)))
 		}
-		if attr, ok := d.GetOk("tde_credential_arn"); ok {
-			opts.TdeCredentialArn = aws.String(attr.(string))
+
+		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
+			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("tde_credential_arn"); ok {
+			opts.TdeCredentialArn = aws.String(attr.(string))
+		}
+
+		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			requiresModifyDbInstance = true
+		}
+
 		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
 		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
+
+		// When using SQL Server engine with MultiAZ enabled, its not
+		// possible to immediately enable mirroring since
+		// BackupRetentionPeriod is not available as a parameter to
+		// RestoreDBInstanceFromDBSnapshot and you receive an error. e.g.
+		// InvalidParameterValue: Mirroring cannot be applied to instances with backup retention set to zero.
+		// Since engine is not a required argument when using snapshot_identifier
+		// and the RDS API determines this condition, we catch the error
+		// and remove the invalid configuration for it to be fixed afterwards.
+		if isAWSErr(err, "InvalidParameterValue", "Mirroring cannot be applied to instances with backup retention set to zero") {
+			opts.MultiAZ = aws.Bool(false)
+			requiresModifyDbInstance = true
+			_, err = conn.RestoreDBInstanceFromDBSnapshot(&opts)
+		}
+
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
 
-		var sgUpdate bool
-		var passwordUpdate bool
-
-		if _, ok := d.GetOk("password"); ok {
-			passwordUpdate = true
-		}
-
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			sgUpdate = true
-		}
-		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			sgUpdate = true
-		}
-		if sgUpdate || passwordUpdate {
-			log.Printf("[INFO] DB is restoring from snapshot with default security, but custom security should be set, will now update after snapshot is restored!")
-
-			// wait for instance to get up and then modify security
+		if requiresModifyDbInstance {
 			d.SetId(d.Get("identifier").(string))
 
-			log.Printf("[INFO] DB Instance ID: %s", d.Id())
-
-			log.Println(
-				"[INFO] Waiting for DB Instance to be available")
+			log.Printf("[INFO] DB Instance %q configuration requires ModifyDBInstance after RestoreDBInstanceFromDBSnapshot", d.Id())
+			log.Printf("[INFO] Waiting for DB Instance %q to be available", d.Id())
 
 			stateConf := &resource.StateChangeConf{
 				Pending:    resourceAwsDbInstanceCreatePendingStates,
@@ -1123,9 +1149,17 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 		DBInstanceIdentifier: aws.String(d.Id()),
 	}
+
+	// ModifyDBInstance might be called during resource creation
+	// to fix unsupported configurations, e.g. missing parameters
+	// from RestoreDBInstanceFromDBSnapshot. In this case, we should
+	// always apply immediately.
+	if d.IsNewResource() {
+		req.ApplyImmediately = aws.Bool(true)
+	}
 	d.SetPartial("apply_immediately")
 
-	if !d.Get("apply_immediately").(bool) {
+	if !aws.BoolValue(req.ApplyImmediately) {
 		log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
 	}
 
