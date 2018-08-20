@@ -148,6 +148,11 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"remove_all_on_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -339,8 +344,9 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	delete_versions := d.Get("remove_all_on_delete").(bool)
 
-	if _, ok := d.GetOk("version_id"); ok {
+	if _, ok := d.GetOk("version_id"); ok && delete_versions {
 		// Bucket is versioned, we need to delete all versions
 		vInput := s3.ListObjectVersionsInput{
 			Bucket: aws.String(bucket),

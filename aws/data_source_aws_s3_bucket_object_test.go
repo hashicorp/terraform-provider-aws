@@ -285,6 +285,7 @@ CONTENT
 	content_disposition = "attachment"
 	content_encoding = "identity"
 	content_language = "en-GB"
+	remove_all_on_delete = true
 	tags {
 		Key1 = "Value 1"
 	}
