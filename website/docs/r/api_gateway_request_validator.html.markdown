@@ -35,3 +35,11 @@ The following argument is supported:
 The following attribute is exported in addition to the arguments listed above:
 
 * `id` - The unique ID of the request validator
+
+## Import
+
+`aws_api_gateway_request_validator` can be imported using `REST-API-ID/REQUEST-VALIDATOR-ID`, e.g.
+
+```
+$ terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij
+```
