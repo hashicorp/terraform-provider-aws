@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_model: Support resource import [GH-5572]
 * resource/aws_api_gateway_request_validator: Support resource import [GH-5573]
 * resource/aws_api_gateway_resource: Support resource import [GH-5574]
+* resource/aws_api_gateway_rest_api: Support resource import [GH-5564]
 * resource/aws_api_gateway_stage: Support resource import [GH-5575]
 * resource/aws_dax_cluster: Add `server_side_encryption` argument (support encryption at rest) [GH-5508]
 * resource/aws_ecs_service: Add retries for target group attachment [GH-3535]
