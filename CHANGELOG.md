@@ -14,6 +14,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Import into `ordered_cache_behavior` instead of deprecated `cache_behavior` [GH-5586]
+* resource/aws_db_instance: Prevent error when using `snapshot_identifier` with `multi_az` enabled and sqlserver `engine` [GH-5613]
+* resource/aws_db_instance: Prevent double apply when using `snapshot_identifier` parameters that require `ModifyDBInstance` during resource creation [GH-5613]
 * resource/aws_instance: Ignore change of `user_data` from omission to empty string [GH-5467]
 
 ## 1.32.0 (August 16, 2018)
