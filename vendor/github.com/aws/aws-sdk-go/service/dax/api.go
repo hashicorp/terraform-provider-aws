@@ -2187,7 +2187,9 @@ type CreateClusterInput struct {
 	// A valid Amazon Resource Name (ARN) that identifies an IAM role. At runtime,
 	// DAX will assume this role and use the role's permissions to access DynamoDB
 	// on your behalf.
-	IamRoleArn *string `type:"string"`
+	//
+	// IamRoleArn is a required field
+	IamRoleArn *string `type:"string" required:"true"`
 
 	// The compute and memory capacity of the nodes in the cluster.
 	//
@@ -2274,6 +2276,9 @@ func (s *CreateClusterInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateClusterInput"}
 	if s.ClusterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterName"))
+	}
+	if s.IamRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("IamRoleArn"))
 	}
 	if s.NodeType == nil {
 		invalidParams.Add(request.NewErrParamRequired("NodeType"))
