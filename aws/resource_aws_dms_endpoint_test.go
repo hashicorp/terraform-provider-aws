@@ -63,11 +63,12 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 				Config: dmsEndpointS3Config(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "addColumnName=true;bucketFolder=bucket_folder;bucketName=bucket_name;compressionType=NONE;csvDelimiter=,;csvRowDelimiter=\\n;"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "bucket_folder"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
 				),
@@ -82,7 +83,7 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 				Config: dmsEndpointS3ConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "key=value;"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "addColumnName=false;bucketFolder=new-bucket_folder;bucketName=new-bucket_name;compressionType=GZIP;csvDelimiter=.;csvRowDelimiter=\\r;"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
@@ -395,7 +396,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	endpoint_type = "target"
 	engine_name = "s3"
 	ssl_mode = "none"
-	extra_connection_attributes = ""
+	extra_connection_attributes = "addColumnName=true;bucketFolder=bucket_folder;bucketName=bucket_name;compressionType=NONE;csvDelimiter=,;csvRowDelimiter=\\n;"
 	tags {
 		Name = "tf-test-s3-endpoint-%[1]s"
 		Update = "to-update"
@@ -403,6 +404,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	}
 	s3_settings {
 		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+		bucket_folder = "bucket_folder"
 		bucket_name = "bucket_name"
 	}
 
@@ -467,7 +469,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	endpoint_type = "target"
 	engine_name = "s3"
 	ssl_mode = "none"
-	extra_connection_attributes = "key=value;"
+	extra_connection_attributes = "addColumnName=false;bucketFolder=new-bucket_folder;bucketName=new-bucket_name;compressionType=GZIP;csvDelimiter=.;csvRowDelimiter=\\r;"
 	tags {
 		Name = "tf-test-s3-endpoint-%[1]s"
 		Update = "updated"

@@ -279,14 +279,14 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		if v, ok := d.GetOk("database_name"); ok {
 			request.DatabaseName = aws.String(v.(string))
 		}
-		if v, ok := d.GetOk("extra_connection_attributes"); ok {
-			request.ExtraConnectionAttributes = aws.String(v.(string))
-		}
 		if v, ok := d.GetOk("kms_key_arn"); ok {
 			request.KmsKeyId = aws.String(v.(string))
 		}
 	}
 
+	if v, ok := d.GetOk("extra_connection_attributes"); ok {
+		request.ExtraConnectionAttributes = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("certificate_arn"); ok {
 		request.CertificateArn = aws.String(v.(string))
 	}
@@ -562,12 +562,12 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
-		d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
 	}
 
+	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 	d.Set("kms_key_arn", endpoint.KmsKeyId)
 	d.Set("ssl_mode", endpoint.SslMode)
 
