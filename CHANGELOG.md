@@ -11,6 +11,8 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_stage: Support resource import [GH-5575]
 * resource/aws_dax_cluster: Add `server_side_encryption` argument (support encryption at rest) [GH-5508]
 * resource/aws_ecs_service: Add retries for target group attachment [GH-3535]
+* resource/aws_lb_listener: Add support for 'redirect' and 'fixed-response' actions [GH-5430]
+* resource/aws_lb_listener_rule: Add support for 'redirect' and 'fixed-response' actions [GH-5430]
 
 BUG FIXES:
 
