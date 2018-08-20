@@ -822,7 +822,6 @@ func testAccCheckAWSDBInstanceAttributes_MSSQL(v *rds.DBInstance, tz string) res
 
 func testAccCheckAWSDBInstanceDomainAttributes(domain string, v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// Grab domainmemberships list and compare domain to FQDN
 		for _, dm := range v.DomainMemberships {
 			if *dm.FQDN != domain {
 				continue
@@ -832,24 +831,6 @@ func testAccCheckAWSDBInstanceDomainAttributes(domain string, v *rds.DBInstance)
 		}
 
 		return fmt.Errorf("Domain %s not found in domain memberships", domain)
-		/*dsconn := testAccProvider.Meta().(*AWSClient).dsconn
-		out, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-			DirectoryIds: []*string{aws.String(*v.Domain)},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if len(out.DirectoryDescriptions) < 1 {
-			return fmt.Errorf("DS directory %s not found", *v.Domain)
-		}
-
-		if *out.DirectoryDescriptions[0].Name != domain {
-			return fmt.Errorf("DS directory name mismatch, expected: '%s', got: '%s'", domain, *out.DirectoryDescriptions[0].Name)
-		}*/
-
-		return nil
 	}
 }
 
