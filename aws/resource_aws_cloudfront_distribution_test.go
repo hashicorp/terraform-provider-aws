@@ -219,6 +219,11 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.path_pattern", "images2/*.jpg"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
