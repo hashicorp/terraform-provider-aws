@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_ecs_task_definition: Treat `INACTIVE` task definitions as removed [GH-5565]
 * resource/aws_elasticache_cluster: Allow `availability_zone` to be specified with `replication_group_id` [GH-5585]
 * resource/aws_instance: Ignore change of `user_data` from omission to empty string [GH-5467]
+* resource/aws_service_discovery_public_dns_namespace: Prevent creation error with names longer than 34 characters [GH-5610]
 * resource/aws_waf_ipset: Properly handle updates and deletions over 1000 IP set descriptors [GH-5588]
 * resource/aws_wafregional_ipset: Properly handle updates and deletions over 1000 IP set descriptors [GH-5588]
 
