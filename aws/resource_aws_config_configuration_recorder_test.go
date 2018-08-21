@@ -126,11 +126,11 @@ func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigConfigurationRecorderConfig_basic(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

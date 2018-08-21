@@ -15,11 +15,11 @@ func TestAccAWSDxConnection_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDxConnectionConfig(acctest.RandString(5)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

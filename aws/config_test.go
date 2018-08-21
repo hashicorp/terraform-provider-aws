@@ -18,7 +18,7 @@ import (
 
 func TestGetSupportedEC2Platforms(t *testing.T) {
 	ec2Endpoints := []*awsMockEndpoint{
-		&awsMockEndpoint{
+		{
 			Request: &awsMockRequest{"POST", "/", "Action=DescribeAccountAttributes&" +
 				"AttributeName.1=supported-platforms&Version=2016-11-15"},
 			Response: &awsMockResponse{200, test_ec2_describeAccountAttributes_response, "text/xml"},

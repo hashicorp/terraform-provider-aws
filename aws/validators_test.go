@@ -2352,9 +2352,9 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 
 func TestValidateCognitoRoles(t *testing.T) {
 	validValues := []map[string]interface{}{
-		map[string]interface{}{"authenticated": "hoge"},
-		map[string]interface{}{"unauthenticated": "hoge"},
-		map[string]interface{}{"authenticated": "hoge", "unauthenticated": "hoge"},
+		{"authenticated": "hoge"},
+		{"unauthenticated": "hoge"},
+		{"authenticated": "hoge", "unauthenticated": "hoge"},
 	}
 
 	for _, s := range validValues {
@@ -2365,8 +2365,8 @@ func TestValidateCognitoRoles(t *testing.T) {
 	}
 
 	invalidValues := []map[string]interface{}{
-		map[string]interface{}{},
-		map[string]interface{}{"invalid": "hoge"},
+		{},
+		{"invalid": "hoge"},
 	}
 
 	for _, s := range invalidValues {

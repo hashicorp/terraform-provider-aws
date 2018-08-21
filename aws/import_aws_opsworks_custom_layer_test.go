@@ -17,11 +17,11 @@ func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

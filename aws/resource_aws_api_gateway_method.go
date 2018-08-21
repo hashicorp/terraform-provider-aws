@@ -22,69 +22,69 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 		Delete: resourceAwsApiGatewayMethodDelete,
 
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": &schema.Schema{
+			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"resource_id": &schema.Schema{
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"http_method": &schema.Schema{
+			"http_method": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateHTTPMethod(),
 			},
 
-			"authorization": &schema.Schema{
+			"authorization": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"authorizer_id": &schema.Schema{
+			"authorizer_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"authorization_scopes": &schema.Schema{
+			"authorization_scopes": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 				Optional: true,
 			},
 
-			"api_key_required": &schema.Schema{
+			"api_key_required": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			"request_models": &schema.Schema{
+			"request_models": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"request_parameters": &schema.Schema{
+			"request_parameters": {
 				Type:          schema.TypeMap,
 				Elem:          &schema.Schema{Type: schema.TypeBool},
 				Optional:      true,
 				ConflictsWith: []string{"request_parameters_in_json"},
 			},
 
-			"request_parameters_in_json": &schema.Schema{
+			"request_parameters_in_json": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"request_parameters"},
 				Deprecated:    "Use field request_parameters instead",
 			},
 
-			"request_validator_id": &schema.Schema{
+			"request_validator_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

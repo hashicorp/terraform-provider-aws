@@ -45,11 +45,11 @@ func TestAccAwsDaxParameterGroup_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDaxParameterGroupConfig(rName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

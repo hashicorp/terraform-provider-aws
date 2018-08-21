@@ -40,11 +40,11 @@ func TestAccAWSEcrLifecyclePolicy_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccEcrLifecyclePolicyConfig(rName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

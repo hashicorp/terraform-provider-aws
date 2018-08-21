@@ -373,7 +373,7 @@ func setTagsSQS(conn *sqs.SQS, d *schema.ResourceData) error {
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
 			keys := make([]*string, 0, len(remove))
-			for k, _ := range remove {
+			for k := range remove {
 				keys = append(keys, aws.String(k))
 			}
 

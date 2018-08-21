@@ -526,7 +526,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		}
 	}
 
-	for username, _ := range existingUsers {
+	for username := range existingUsers {
 		di = append(di, &mq.DeleteUserInput{
 			BrokerId: aws.String(bId),
 			Username: aws.String(username),

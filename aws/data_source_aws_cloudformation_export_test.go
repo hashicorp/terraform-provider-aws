@@ -16,7 +16,7 @@ func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudformationExportConfig(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(

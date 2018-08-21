@@ -25,7 +25,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
@@ -54,7 +54,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
@@ -63,7 +63,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, uDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
@@ -88,10 +88,10 @@ func TestAccAWSAPIGatewayDocumentationVersion_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -114,10 +114,10 @@ func TestAccAWSAPIGatewayDocumentationVersion_importAllFields(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, description),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
