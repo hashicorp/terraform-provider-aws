@@ -149,6 +149,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"ebs_optimized": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 
 			"elastic_gpu_specifications": {
@@ -840,7 +841,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
+	if v, ok := d.GetOkExists("ebs_optimized"); ok {
 		opts.EbsOptimized = aws.Bool(v.(bool))
 	}
 

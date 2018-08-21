@@ -81,6 +81,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "block_device_mappings.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "disable_api_termination"),
+					resource.TestCheckResourceAttrSet(resName, "ebs_optimized"),
 					resource.TestCheckResourceAttr(resName, "elastic_gpu_specifications.#", "1"),
 					resource.TestCheckResourceAttr(resName, "iam_instance_profile.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "image_id"),
