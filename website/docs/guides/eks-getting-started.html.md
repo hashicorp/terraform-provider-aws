@@ -84,7 +84,7 @@ and configuration of these applications, see their official documentation.
 
 Relevant Links:
 
-* [Kubernetes Client Downloads](https://kubernetes.io/docs/imported/release/notes/#client-binaries)
+* [Kubernetes Client Install Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [AWS IAM Authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
 
 ## Create Sample Architecture in AWS
