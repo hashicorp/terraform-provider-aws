@@ -75,6 +75,8 @@ resource "aws_launch_template" "foo" {
       Name = "test"
     }
   }
+  
+  user_data = "${base64encode(...)}"
 }
 ```
 
