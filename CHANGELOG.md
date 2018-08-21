@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_storagegateway_local_disk: Add `disk_node` argument [GH-5595]
 * resource/aws_api_gateway_base_path_mapping: Support resource import [GH-5566]
+* resource/aws_api_gateway_gateway_response: Support resource import [GH-5567]
 * resource/aws_api_gateway_model: Support resource import [GH-5572]
 * resource/aws_api_gateway_request_validator: Support resource import [GH-5573]
 * resource/aws_api_gateway_resource: Support resource import [GH-5574]
