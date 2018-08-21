@@ -6,11 +6,15 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestDataSourceAwsApiGatewayResource(t *testing.T) {
+func TestAccDataSourceAwsApiGatewayResource(t *testing.T) {
 	rName := acctest.RandString(8)
+	resourceName1 := "aws_api_gateway_resource.example_v1"
+	dataSourceName1 := "data.aws_api_gateway_resource.example_v1"
+	resourceName2 := "aws_api_gateway_resource.example_v1_endpoint"
+	dataSourceName2 := "data.aws_api_gateway_resource.example_v1_endpoint"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -18,55 +22,16 @@ func TestDataSourceAwsApiGatewayResource(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsApiGatewayResourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsApiGatewayResourceCheck("aws_api_gateway_resource.example_v1"),
-					testAccDataSourceAwsApiGatewayResourceCheck("aws_api_gateway_resource.example_v1_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName1, "parent_id", dataSourceName1, "parent_id"),
+					resource.TestCheckResourceAttrPair(resourceName1, "path_part", dataSourceName1, "path_part"),
+					resource.TestCheckResourceAttrPair(resourceName2, "id", dataSourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName2, "parent_id", dataSourceName2, "parent_id"),
+					resource.TestCheckResourceAttrPair(resourceName2, "path_part", dataSourceName2, "path_part"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsApiGatewayResourceCheck(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		created, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		datasource, ok := s.RootModule().Resources[fmt.Sprintf("data.%s", name)]
-		if !ok {
-			return fmt.Errorf("root modules has no datasource called data.%s", name)
-		}
-
-		rattr := created.Primary.Attributes
-		dattr := datasource.Primary.Attributes
-
-		if got, want := rattr["id"], dattr["id"]; got != want {
-			return fmt.Errorf(
-				"id is %s; want %s",
-				got,
-				want,
-			)
-		}
-
-		if got, want := rattr["path_part"], dattr["path_part"]; got != want {
-			return fmt.Errorf(
-				"path_part is %s; want %s",
-				got,
-				want,
-			)
-		}
-
-		if got, want := rattr["parent_id"], dattr["parent_id"]; got != want {
-			return fmt.Errorf(
-				"parent_id is %s; want %s",
-				got,
-				want,
-			)
-		}
-
-		return nil
-	}
 }
 
 func testAccDataSourceAwsApiGatewayResourceConfig(r string) string {
