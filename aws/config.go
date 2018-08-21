@@ -379,6 +379,12 @@ func (c *Config) Client() (interface{}, error) {
 			log.Printf("[WARN] Disabling retries after next request due to networking issue")
 			r.Retryable = aws.Bool(false)
 		}
+		// RequestError: send request failed
+		// caused by: Post https://FQDN/: dial tcp IPADDRESS:443: connect: connection refused
+		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "connection refused") {
+			log.Printf("[WARN] Disabling retries after next request due to networking issue")
+			r.Retryable = aws.Bool(false)
+		}
 	})
 
 	// This restriction should only be used for Route53 sessions.
