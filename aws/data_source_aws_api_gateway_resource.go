@@ -26,7 +26,7 @@ func dataSourceAwsApiGatewayResource() *schema.Resource {
 				Computed: true,
 			},
 			"parent_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -42,7 +42,7 @@ func dataSourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{
 
 	var matches []*apigateway.Resource
 	log.Printf("[DEBUG] Reading API Gateway Resources: %s", params)
-	err := conn.GetResourcesPages(params,func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
+	err := conn.GetResourcesPages(params, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
 		for _, resource := range page.Items {
 			if aws.StringValue(resource.Path) == target {
 				matches = append(matches, resource)
