@@ -40,12 +40,13 @@ func dataSourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{
 	target := d.Get("path").(string)
 	params := &apigateway.GetResourcesInput{RestApiId: aws.String(restApiId)}
 
-	var matches []*apigateway.Resource
+	var match *apigateway.Resource
 	log.Printf("[DEBUG] Reading API Gateway Resources: %s", params)
 	err := conn.GetResourcesPages(params, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
 		for _, resource := range page.Items {
 			if aws.StringValue(resource.Path) == target {
-				matches = append(matches, resource)
+				match = resource
+				return false
 			}
 		}
 		return !lastPage
@@ -54,14 +55,10 @@ func dataSourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error describing API Gateway Resources: %s", err)
 	}
 
-	if len(matches) == 0 {
+	if match == nil {
 		return fmt.Errorf("no Resources with path %q found for rest api %q", target, restApiId)
 	}
-	if len(matches) > 1 {
-		return fmt.Errorf("multiple Resources with path %q found for rest api %q", target, restApiId)
-	}
 
-	match := matches[0]
 	d.SetId(*match.Id)
 	d.Set("path_part", match.PathPart)
 	d.Set("parent_id", match.ParentId)
