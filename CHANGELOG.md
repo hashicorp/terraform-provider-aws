@@ -1,5 +1,9 @@
 ## 1.33.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_api_gateway_resource` [GH-5629]
+
 ENHANCEMENTS:
 
 * data-source/aws_storagegateway_local_disk: Add `disk_node` argument [GH-5595]
