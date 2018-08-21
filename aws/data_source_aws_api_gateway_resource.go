@@ -63,6 +63,8 @@ func dataSourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{
 
 	match := matches[0]
 	d.SetId(*match.Id)
+	d.Set("path_part", match.PathPart)
+	d.Set("parent_id", match.ParentId)
 
 	return nil
 }
