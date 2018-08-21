@@ -10,6 +10,8 @@ description: |-
 
 Use this data source to get a list of AMI IDs matching the specified criteria.
 
+~> **NOTE:** The `owners` argument will be **required** in the next major version.
+
 ## Example Usage
 
 ```hcl

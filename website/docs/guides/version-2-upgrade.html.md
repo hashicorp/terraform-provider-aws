@@ -19,6 +19,8 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Data Source: aws_ami](#data-source-aws_ami)
+- [Data Source: aws_ami_ids](#data-source-aws_ami_ids)
 - [Data Source: aws_iam_role](#data-source-aws_iam_role)
 - [Data Source: aws_kms_secret](#data-source-aws_kms_secret)
 - [Data Source: aws_region](#data-source-aws_region)
@@ -69,6 +71,18 @@ provider "aws" {
   version = "~> 2.0.0"
 }
 ```
+
+## Data Source: aws_ami
+
+### owners Argument Now Required
+
+The `owners` argument is now required. Specifying `owner-id` or `owner-alias` under `filter` does not satisfy this requirement.
+
+## Data Source: aws_ami_ids
+
+### owners Argument Now Required
+
+The `owners` argument is now required. Specifying `owner-id` or `owner-alias` under `filter` does not satisfy this requirement.
 
 ## Data Source: aws_iam_role
 
