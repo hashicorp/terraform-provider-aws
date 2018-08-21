@@ -24,7 +24,7 @@ func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
@@ -51,7 +51,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
@@ -64,7 +64,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
@@ -90,7 +90,7 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_interfaceWithoutSubnet,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.ec2", &endpoint),
@@ -116,7 +116,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_interfaceWithSubnet,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.ec2", &endpoint),
@@ -128,7 +128,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "private_dns_enabled", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_interfaceWithSubnetModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.ec2", &endpoint),
@@ -154,7 +154,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_interfaceNonAWSService(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.foo", &endpoint),
@@ -191,7 +191,7 @@ func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),

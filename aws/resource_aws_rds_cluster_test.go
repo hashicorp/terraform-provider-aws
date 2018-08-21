@@ -374,7 +374,7 @@ func TestAccAWSRDSCluster_backupsUpdate(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSClusterConfig_backupsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),

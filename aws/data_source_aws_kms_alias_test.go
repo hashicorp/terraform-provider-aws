@@ -19,7 +19,7 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsAlias_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(resourceName),
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsAlias_CMK(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(datasourceAliasResourceName),

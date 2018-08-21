@@ -122,11 +122,11 @@ func testAccConfigConfigRule_importAws(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigConfigRuleConfig_ownerAws(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -146,11 +146,11 @@ func testAccConfigConfigRule_importLambda(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigConfigRuleConfig_customLambda(rInt, path),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

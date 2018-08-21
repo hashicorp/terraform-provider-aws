@@ -23,7 +23,7 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafSqlInjectionMatchSetConfig(sqlInjectionMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafSqlInjectionMatchSetExists("aws_waf_sql_injection_match_set.sql_injection_match_set", &v),

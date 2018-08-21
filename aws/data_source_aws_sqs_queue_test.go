@@ -18,7 +18,7 @@ func TestAccDataSourceAwsSqsQueue(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsSqsQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName),

@@ -22,7 +22,7 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafGeoMatchSetConfig(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafGeoMatchSetExists("aws_waf_geo_match_set.geo_match_set", &v),

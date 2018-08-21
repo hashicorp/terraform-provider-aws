@@ -24,7 +24,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -38,7 +38,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfigModified(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -75,7 +75,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(

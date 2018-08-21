@@ -18,7 +18,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSQSPolicyConfig_basic(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists("aws_sqs_queue.q", &queueAttributes),
@@ -40,11 +40,11 @@ func TestAccAWSSQSQueuePolicy_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSQSPolicyConfig_basic(queueName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

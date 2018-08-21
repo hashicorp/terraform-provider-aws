@@ -60,11 +60,11 @@ func testAccAwsGuardDutyThreatintelset_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName, threatintelsetName, true),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

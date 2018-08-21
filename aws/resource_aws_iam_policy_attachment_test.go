@@ -32,14 +32,14 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSPolicyAttachConfig(userName, roleName, groupName, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPolicyAttachmentExists("aws_iam_policy_attachment.test-attach", 3, &out),
 					testAccCheckAWSPolicyAttachmentAttributes([]string{userName}, []string{roleName}, []string{groupName}, &out),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSPolicyAttachConfigUpdate(userName, userName2, userName3,
 					roleName, roleName2, roleName3,
 					groupName, groupName2, groupName3,
@@ -67,7 +67,7 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSPolicyPaginatedAttachConfig(userNamePrefix, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPolicyAttachmentExists("aws_iam_policy_attachment.test-paginated-attach", 101, &out),

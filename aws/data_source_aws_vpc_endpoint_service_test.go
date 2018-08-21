@@ -14,7 +14,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -52,7 +52,7 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -92,7 +92,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(

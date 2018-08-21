@@ -32,11 +32,11 @@ func TestAccAWSNetworkInterfaceSGAttachment(t *testing.T) {
 				PreCheck:  func() { testAccPreCheck(t) },
 				Providers: testAccProviders,
 				Steps: []resource.TestStep{
-					resource.TestStep{
+					{
 						Config: tc.Config(true),
 						Check:  checkSecurityGroupAttached(tc.ResourceAttr, true),
 					},
-					resource.TestStep{
+					{
 						Config: tc.Config(false),
 						Check:  checkSecurityGroupAttached(tc.ResourceAttr, false),
 					},
@@ -156,7 +156,7 @@ func TestAccAWSNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig(),
 				Check:  checkSecurityGroupAttachmentRace(),
 			},

@@ -30,7 +30,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

@@ -24,7 +24,7 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAccessKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
@@ -45,7 +45,7 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAccessKeyConfig_encrypted(rName, testPubAccessKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),

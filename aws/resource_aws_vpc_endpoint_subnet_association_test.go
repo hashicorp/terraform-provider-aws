@@ -19,7 +19,7 @@ func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointSubnetAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointSubnetAssociationExists(
@@ -38,7 +38,7 @@ func TestAccAWSVpcEndpointSubnetAssociation_multiple(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointSubnetAssociationConfig_multiple,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointSubnetAssociationExists(

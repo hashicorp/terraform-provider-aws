@@ -26,7 +26,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAccountConfig_updated(firstName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
@@ -34,7 +34,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_api_gateway_account.test", "cloudwatch_role_arn", expectedRoleArn_first),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAccountConfig_updated2(secondName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
@@ -42,7 +42,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_api_gateway_account.test", "cloudwatch_role_arn", expectedRoleArn_second),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAccountConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),

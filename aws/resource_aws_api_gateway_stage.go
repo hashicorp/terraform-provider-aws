@@ -397,7 +397,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 func diffVariablesOps(prefix string, oldVars, newVars map[string]interface{}) []*apigateway.PatchOperation {
 	ops := make([]*apigateway.PatchOperation, 0)
 
-	for k, _ := range oldVars {
+	for k := range oldVars {
 		if _, ok := newVars[k]; !ok {
 			ops = append(ops, &apigateway.PatchOperation{
 				Op:   aws.String("remove"),

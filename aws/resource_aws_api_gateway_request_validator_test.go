@@ -19,7 +19,7 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayRequestValidatorConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRequestValidatorExists("aws_api_gateway_request_validator.test", &conf),
@@ -31,7 +31,7 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_parameters", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayRequestValidatorUpdatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRequestValidatorExists("aws_api_gateway_request_validator.test", &conf),
