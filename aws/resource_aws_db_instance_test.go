@@ -259,6 +259,43 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_IsAlreadyBeingDeleted(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_MariaDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+			{
+				PreConfig: func() {
+					// Get Database Instance into deleting state
+					conn := testAccProvider.Meta().(*AWSClient).rdsconn
+					input := &rds.DeleteDBInstanceInput{
+						DBInstanceIdentifier: aws.String(rName),
+						SkipFinalSnapshot:    aws.Bool(true),
+					}
+					_, err := conn.DeleteDBInstance(input)
+					if err != nil {
+						t.Fatalf("error deleting Database Instance: %s", err)
+					}
+				},
+				Config:  testAccAWSDBInstanceConfig_MariaDB(rName),
+				Destroy: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_replica(t *testing.T) {
 	var s, r rds.DBInstance
 
@@ -2112,6 +2149,20 @@ data "template_file" "test" {
   }
 }
 `, rInt)
+}
+
+func testAccAWSDBInstanceConfig_MariaDB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = "mariadb"
+  identifier          = %q
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName)
 }
 
 func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Oracle(rName string) string {
