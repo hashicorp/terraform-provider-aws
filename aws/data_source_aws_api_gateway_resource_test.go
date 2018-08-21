@@ -89,12 +89,12 @@ resource "aws_api_gateway_resource" "example_v1_endpoint" {
 
 data "aws_api_gateway_resource" "example_v1" {
   rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-  path        = "/v1"
+  path        = "/${aws_api_gateway_resource.example_v1.path_part}"
 }
 
 data "aws_api_gateway_resource" "example_v1_endpoint" {
   rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-  path        = "/v1/endpoint"
+  path        = "/${aws_api_gateway_resource.example_v1.path_part}/${aws_api_gateway_resource.example_v1_endpoint.path_part}"
 }
 `, r)
 }
