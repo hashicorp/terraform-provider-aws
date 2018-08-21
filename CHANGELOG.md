@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_storagegateway_local_disk: Add `disk_node` argument [GH-5595]
 * resource/aws_api_gateway_base_path_mapping: Support resource import [GH-5566]
 * resource/aws_api_gateway_gateway_response: Support resource import [GH-5567]
+* resource/aws_api_gateway_integration: Support resource import [GH-5568]
 * resource/aws_api_gateway_model: Support resource import [GH-5572]
 * resource/aws_api_gateway_request_validator: Support resource import [GH-5573]
 * resource/aws_api_gateway_resource: Support resource import [GH-5574]
@@ -17,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_integration: Properly read `integration_http_method` into Terraform state [GH-5568]
 * resource/aws_cloudfront_distribution: Import into `ordered_cache_behavior` instead of deprecated `cache_behavior` [GH-5586]
 * resource/aws_db_instance: Prevent error when using `snapshot_identifier` with `multi_az` enabled and sqlserver `engine` [GH-5613]
 * resource/aws_db_instance: Prevent double apply when using `snapshot_identifier` parameters that require `ModifyDBInstance` during resource creation [GH-5613]
