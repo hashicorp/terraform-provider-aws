@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Disable AWS SDK retries faster by default for `connection refused` errors [GH-5614]
 * resource/aws_api_gateway_integration: Properly read `integration_http_method` into Terraform state [GH-5568]
 * resource/aws_cloudfront_distribution: Import into `ordered_cache_behavior` instead of deprecated `cache_behavior` [GH-5586]
 * resource/aws_db_instance: Prevent error when using `snapshot_identifier` with `multi_az` enabled and sqlserver `engine` [GH-5613]
