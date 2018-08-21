@@ -293,9 +293,11 @@ data "aws_ami" "test" {
   }
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_launch_template" "test" {
   image_id = "${data.aws_ami.test.id}"
-  name     = "%s"
+  name     = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -305,7 +307,22 @@ resource "aws_launch_template" "test" {
     }
   }
 }
-`, rName)
+
+# Creating an AutoScaling Group verifies the launch template
+# ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
+resource "aws_autoscaling_group" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size         = 0
+  min_size         = 0
+  name             = %q
+
+  launch_template {
+    id      = "${aws_launch_template.test.id}"
+    version = "${aws_launch_template.test.default_version}"
+  }
+}
+`, rName, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_data(rInt int) string {
