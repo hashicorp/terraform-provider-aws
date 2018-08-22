@@ -1146,8 +1146,11 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] DB Instance destroy configuration: %v", opts)
-	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		return err
+	_, err := conn.DeleteDBInstance(&opts)
+
+	// InvalidDBInstanceState: Instance XXX is already being deleted.
+	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
 	}
 
 	log.Println("[INFO] Waiting for DB Instance to be destroyed")
