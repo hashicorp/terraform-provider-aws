@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -65,6 +64,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "0"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "instance"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "stickiness.0.enabled", "true"),
@@ -415,6 +415,34 @@ func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	})
 }
 
+func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
+	var before, after elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_alb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName, 30),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &before),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "30"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &after),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "60"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSALBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -466,10 +494,10 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isTargetGroupNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking ALB destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking ALB destroyed: %s", err)
 		}
 	}
 
@@ -510,7 +538,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -549,7 +577,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -588,7 +616,7 @@ resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic-2"
   }
 }
 
@@ -596,7 +624,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -635,7 +663,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -675,7 +703,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -710,7 +738,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_basic"
+    Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
@@ -752,9 +780,49 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALBTargetGroup_stickiness"
+    Name = "terraform-testacc-alb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
+}
+
+func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slowStartDuration int) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
+  protocol = "HTTP"
+  vpc_id = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+  slow_start = %d
+
+  stickiness {
+    type = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+
+  tags {
+    TestName = "TestAccAWSALBTargetGroup_SlowStart"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-alb-target-group-slowstart"
+  }
+}`, targetGroupName, slowStartDuration)
 }
 
 const testAccAWSALBTargetGroupConfig_namePrefix = `
@@ -768,7 +836,7 @@ resource "aws_alb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupConfig_namePrefix"
+		Name = "terraform-testacc-alb-target-group-name-prefix"
 	}
 }
 `
@@ -783,7 +851,7 @@ resource "aws_alb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupConfig_generatedName"
+		Name = "terraform-testacc-alb-target-group-generated-name"
 	}
 }
 `

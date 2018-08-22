@@ -40,6 +40,10 @@ func testSweepVPNGateways(region string) error {
 	}
 	resp, err := conn.DescribeVpnGateways(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing VPN Gateways: %s", err)
 	}
 
@@ -88,7 +92,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(
@@ -96,7 +100,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfigChangeVPC,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(
@@ -116,12 +120,31 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfigWithAZ,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_vpn_gateway.foo", "availability_zone", "us-west-2a"),
+				),
+			},
+		},
+	})
+}
+func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
+	var v ec2.VpnGateway
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnGatewayConfigWithASN,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_vpn_gateway.foo", "amazon_side_asn", "4294967294"),
 				),
 			},
 		},
@@ -136,7 +159,7 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
@@ -192,7 +215,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigReattach,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists("aws_vpc.foo", &vpc1),
@@ -205,7 +228,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 					testAttachmentFunc(&vgw2, &vpc2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigReattachChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(
@@ -216,7 +239,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 					testAttachmentFunc(&vgw1, &vpc2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigReattach,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(
@@ -250,12 +273,12 @@ func TestAccAWSVpnGateway_delete(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &vpnGateway)),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNoVpnGatewayConfig,
 				Check:  resource.ComposeTestCheckFunc(testDeleted("aws_vpn_gateway.foo")),
 			},
@@ -272,14 +295,14 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
 					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-vpn-gateway-tags"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
@@ -420,150 +443,164 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 
 const testAccNoVpnGatewayConfig = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-removed"
+  }
 }
 `
 
 const testAccVpnGatewayConfig = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-basic"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-basic"
+  }
 }
 `
 
 const testAccVpnGatewayConfigChangeVPC = `
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-change-vpc"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-basic"
-	}
+  vpc_id = "${aws_vpc.bar.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-basic"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigTags = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-tags"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-tags-updated"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-tags-updated"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigReattach = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-foo"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 
 resource "aws_vpn_gateway" "bar" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.bar.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 `
 
 const testAccCheckVpnGatewayConfigReattachChange = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-foo"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.2.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.bar.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 
 resource "aws_vpn_gateway" "bar" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-reattach"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-reattach"
+  }
 }
 `
 
 const testAccVpnGatewayConfigWithAZ = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-vpn-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-az"
+  }
 }
 
 resource "aws_vpn_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	availability_zone = "us-west-2a"
-	tags {
-		Name = "terraform-testacc-vpn-gateway-with-az"
-	}
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-az"
+  }
+}
+`
+
+const testAccVpnGatewayConfigWithASN = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+  tags {
+    Name = "terraform-testacc-vpn-gateway-with-asn"
+  }
+}
+
+resource "aws_vpn_gateway" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  amazon_side_asn = 4294967294
 }
 `

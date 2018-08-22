@@ -15,7 +15,7 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			// Scaffold everything
-			resource.TestStep{
+			{
 				Config: testAccAWSSnapshotCreateVolumePermissionConfig(true),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.example_snapshot", "id", &snapshotId),
@@ -24,7 +24,7 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 				),
 			},
 			// Drop just create volume permission to test destruction
-			resource.TestStep{
+			{
 				Config: testAccAWSSnapshotCreateVolumePermissionConfig(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSSnapshotCreateVolumePermissionDestroyed(&accountId, &snapshotId),

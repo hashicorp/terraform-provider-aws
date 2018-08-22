@@ -113,14 +113,25 @@ func (b *ApplyGraphBuilder) Steps() []GraphTransformer {
 		// Add module variables
 		&ModuleVariableTransformer{Module: b.Module},
 
+		// Remove modules no longer present in the config
+		&RemovedModuleTransformer{Module: b.Module, State: b.State},
+
 		// Connect references so ordering is correct
 		&ReferenceTransformer{},
 
-		// Reverse the edges to outputs and locals, so that
+		// Handle destroy time transformations for output and local values.
+		// Reverse the edges from outputs and locals, so that
 		// interpolations don't fail during destroy.
+		// Create a destroy node for outputs to remove them from the state.
+		// Prune unreferenced values, which may have interpolations that can't
+		// be resolved.
 		GraphTransformIf(
 			func() bool { return b.Destroy },
-			&DestroyValueReferenceTransformer{},
+			GraphTransformMulti(
+				&DestroyValueReferenceTransformer{},
+				&DestroyOutputTransformer{},
+				&PruneUnusedValuesTransformer{},
+			),
 		),
 
 		// Add the node to fix the state count boundaries

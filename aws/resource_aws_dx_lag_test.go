@@ -11,16 +11,71 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxLag_basic(t *testing.T) {
+func TestAccAWSDxLag_basic(t *testing.T) {
+	lagName1 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
+	lagName2 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxLagConfig(acctest.RandString(5)),
+				Config: testAccDxLagConfig(lagName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName1),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "location", "EqSe2"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccDxLagConfig(lagName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName2),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "location", "EqSe2"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDxLag_tags(t *testing.T) {
+	lagName := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxLagConfig_tags(lagName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccDxLagConfig_tagsChanged(lagName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.Usage", "changed"),
+				),
+			},
+			{
+				Config: testAccDxLagConfig(lagName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName),
+					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
 				),
 			},
 		},
@@ -64,14 +119,44 @@ func testAccCheckAwsDxLagExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDxLagConfig(rName string) string {
+func testAccDxLagConfig(n string) string {
 	return fmt.Sprintf(`
-    resource "aws_dx_lag" "hoge" {
-      name = "tf-dx-lag-%s"
-      connections_bandwidth = "1Gbps"
-      location = "EqSe2"
-      number_of_connections = 2
-      force_destroy = true
-    }
-    `, rName)
+resource "aws_dx_lag" "hoge" {
+  name = "%s"
+  connections_bandwidth = "1Gbps"
+  location = "EqSe2"
+  force_destroy = true
+}
+`, n)
+}
+
+func testAccDxLagConfig_tags(n string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_lag" "hoge" {
+  name = "%s"
+  connections_bandwidth = "1Gbps"
+  location = "EqSe2"
+  force_destroy = true
+
+  tags {
+    Environment = "production"
+    Usage = "original"
+  }
+}
+`, n)
+}
+
+func testAccDxLagConfig_tagsChanged(n string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_lag" "hoge" {
+  name = "%s"
+  connections_bandwidth = "1Gbps"
+  location = "EqSe2"
+  force_destroy = true
+
+  tags {
+    Usage = "changed"
+  }
+}
+`, n)
 }

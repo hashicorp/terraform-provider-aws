@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsRoute53Record_importBasic(t *testing.T) {
+func TestAccAWSRoute53Record_importBasic(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.Test(t, resource.TestCase{
@@ -21,13 +21,13 @@ func TestAccAwsRoute53Record_importBasic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 		},
 	})
 }
 
-func TestAccAwsRoute53Record_importUnderscored(t *testing.T) {
+func TestAccAWSRoute53Record_importUnderscored(t *testing.T) {
 	resourceName := "aws_route53_record.underscore"
 
 	resource.Test(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccAwsRoute53Record_importUnderscored(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 		},
 	})

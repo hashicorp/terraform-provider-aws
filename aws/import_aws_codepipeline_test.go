@@ -20,11 +20,11 @@ func TestAccAWSCodePipeline_Import_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCodePipelineConfig_basic(name),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      "aws_codepipeline.bar",
 				ImportState:       true,
 				ImportStateVerify: true,

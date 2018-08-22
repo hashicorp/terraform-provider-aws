@@ -1,8 +1,13 @@
 dist: trusty
-sudo: false
+sudo: required
+services:
+  - docker
 language: go
 go:
 - 1.9.1
+
+git:
+  depth: 1
 
 install:
 # This script is used by the Travis build to install a cookie for
@@ -16,6 +21,7 @@ script:
 - make test
 - make vendor-status
 - make vet
+- make website-test
 
 branches:
   only:

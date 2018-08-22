@@ -7,18 +7,18 @@ import (
 )
 
 func TestAccAWSVpcEndpoint_importBasic(t *testing.T) {
-	resourceName := "aws_vpc_endpoint.second-private-s3"
+	resourceName := "aws_vpc_endpoint.s3"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccVpcEndpointWithRouteTableAndPolicyConfig,
+			{
+				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy,
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

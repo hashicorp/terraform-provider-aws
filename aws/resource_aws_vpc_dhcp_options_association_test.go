@@ -18,7 +18,7 @@ func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDHCPOptionsAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.foo", &d),
@@ -78,6 +78,9 @@ func testAccCheckDHCPOptionsAssociationExist(n string, vpc *ec2.Vpc) resource.Te
 const testAccDHCPOptionsAssociationConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-vpc-dhcp-options-association"
+	}
 }
 
 resource "aws_vpc_dhcp_options" "foo" {

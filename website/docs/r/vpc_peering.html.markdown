@@ -3,12 +3,20 @@ layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection"
 sidebar_current: "docs-aws-resource-vpc-peering"
 description: |-
-  Manage a VPC Peering Connection resource.
+  Provides a resource to manage a VPC peering connection.
 ---
 
 # aws_vpc_peering_connection
 
-Provides a resource to manage a VPC Peering Connection resource.
+Provides a resource to manage a VPC peering connection.
+
+~> **NOTE on VPC Peering Connections and VPC Peering Connection Options:** Terraform provides
+both a standalone [VPC Peering Connection Options](vpc_peering_options.html) and a VPC Peering Connection
+resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
+connection in both a VPC Peering Connection resource and a VPC Peering Connection Options resource.
+Doing so will cause a conflict of options and will overwrite the options.
+Using a VPC Peering Connection Options resource decouples management of the connection options from
+management of the VPC Peering Connection and allows options to be set correctly in cross-account scenarios.
 
 -> **Note:** For cross-account (requester's AWS account differs from the accepter's AWS account) or inter-region
 VPC Peering Connections use the `aws_vpc_peering_connection` resource to manage the requester's side of the
@@ -74,7 +82,6 @@ resource "aws_vpc_peering_connection" "foo" {
   peer_vpc_id   = "${aws_vpc.bar.id}"
   vpc_id        = "${aws_vpc.foo.id}"
   peer_region   = "us-east-1"
-  auto_accept   = true
 }
 
 resource "aws_vpc" "foo" {
@@ -128,17 +135,24 @@ to the remote VPC.
 instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
 connection.
 
+### Timeouts
+
+`aws_vpc_peering_connection` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `1 minute`) Used for creating a peering connection
+- `update` - (Default `1 minute`) Used for peering connection modifications
+- `delete` - (Default `1 minute`) Used for destroying peering connections
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.
 
 
 ## Notes
-
-AWS only supports VPC peering within the same AWS region.
 
 If both VPCs are not in the same AWS account do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource

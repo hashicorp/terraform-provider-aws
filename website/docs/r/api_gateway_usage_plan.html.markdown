@@ -64,7 +64,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 ### Top-Level Arguments
 
 * `name` - (Required) The name of the usage plan.
-* `description` - (Required) The description of a usage plan.
+* `description` - (Optional) The description of a usage plan.
 * `api_stages` - (Optional) The associated [API stages](#api-stages-arguments) of the usage plan.
 * `quota_settings` - (Optional) The [quota settings](#quota-settings-arguments) of the usage plan.
 * `throttle_settings` - (Optional) The [throttling limits](#throttling-settings-arguments) of the usage plan.
@@ -88,7 +88,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the API resource
 * `name` - The name of the usage plan.

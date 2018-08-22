@@ -31,6 +31,8 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "name", fmt.Sprintf("test_lambdafunction_logfilter_%s", rstring)),
 					resource.TestCheckResourceAttr(
 						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "log_group_name", fmt.Sprintf("example_lambda_name_%s", rstring)),
+					resource.TestCheckResourceAttr(
+						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "distribution", "Random"),
 				),
 			},
 		},
@@ -152,6 +154,7 @@ resource "aws_cloudwatch_log_subscription_filter" "test_lambdafunction_logfilter
   log_group_name  = "${aws_cloudwatch_log_group.logs.name}"
   filter_pattern  = "logtype test"
   destination_arn = "${aws_lambda_function.test_lambdafunction.arn}"
+  distribution    = "Random"
 }
 
 resource "aws_lambda_function" "test_lambdafunction" {

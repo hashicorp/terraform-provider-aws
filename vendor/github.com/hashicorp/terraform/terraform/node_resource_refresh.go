@@ -166,7 +166,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResource() EvalN
 			&EvalWriteState{
 				Name:         stateId,
 				ResourceType: n.ResourceState.Type,
-				Provider:     n.ResourceState.Provider,
+				Provider:     n.ResolvedProvider,
 				Dependencies: n.ResourceState.Dependencies,
 				State:        &state,
 			},
@@ -213,10 +213,16 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResourceNoState(
 	// Determine the dependencies for the state.
 	stateDeps := n.StateReferences()
 
+	// n.Config can be nil if the config and state don't match
+	var raw *config.RawConfig
+	if n.Config != nil {
+		raw = n.Config.RawConfig.Copy()
+	}
+
 	return &EvalSequence{
 		Nodes: []EvalNode{
 			&EvalInterpolate{
-				Config:   n.Config.RawConfig.Copy(),
+				Config:   raw,
 				Resource: resource,
 				Output:   &resourceConfig,
 			},
@@ -251,7 +257,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResourceNoState(
 			&EvalWriteState{
 				Name:         stateID,
 				ResourceType: n.Config.Type,
-				Provider:     n.Config.Provider,
+				Provider:     n.ResolvedProvider,
 				Dependencies: stateDeps,
 				State:        &state,
 			},

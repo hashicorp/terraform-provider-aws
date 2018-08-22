@@ -20,7 +20,7 @@ func TestAccAWSENI_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -48,7 +48,7 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -57,7 +57,7 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigUpdatedDescription,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -78,7 +78,7 @@ func TestAccAWSENI_attached(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigWithAttachment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -102,7 +102,7 @@ func TestAccAWSENI_ignoreExternalAttachment(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigExternalAttachment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -123,7 +123,7 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigWithSourceDestCheck,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -144,7 +144,7 @@ func TestAccAWSENI_computedIPs(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigWithNoPrivateIPs,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -302,15 +302,18 @@ const testAccAWSENIConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-		tags {
-			Name = "testAccAWSENIConfig"
-		}
+	tags {
+		Name = "terraform-testacc-network-interface"
+	}
 }
 
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-network-interface"
+    }
 }
 
 resource "aws_security_group" "foo" {
@@ -341,15 +344,18 @@ const testAccAWSENIConfigUpdatedDescription = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-		tags {
-			Name = "testAccAWSENIConfigUpdatedDescription"
-		}
+	tags {
+		Name = "terraform-testacc-network-interface-update-desc"
+	}
 }
 
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-network-interface-update-desc"
+    }
 }
 
 resource "aws_security_group" "foo" {
@@ -380,15 +386,18 @@ const testAccAWSENIConfigWithSourceDestCheck = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-		tags {
-			Name = "testAccAWSENIConfigWithSourceDestCheck"
-		}
+	tags {
+		Name = "terraform-testacc-network-interface-w-source-dest-check"
+	}
 }
 
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-network-interface-w-source-dest-check"
+    }
 }
 
 resource "aws_network_interface" "bar" {
@@ -402,15 +411,18 @@ const testAccAWSENIConfigWithNoPrivateIPs = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-		tags {
-			Name = "testAccAWSENIConfigWithNoPrivateIPs"
-		}
+	tags {
+		Name = "terraform-testacc-network-interface-w-no-private-ips"
+	}
 }
 
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
+    tags {
+        Name = "tf-acc-network-interface-w-no-private-ips"
+    }
 }
 
 resource "aws_network_interface" "bar" {
@@ -423,9 +435,9 @@ const testAccAWSENIConfigWithAttachment = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-        tags {
-            Name = "tf-eni-test"
-        }
+    tags {
+        Name = "terraform-testacc-network-interface-w-attachment"
+    }
 }
 
 resource "aws_subnet" "foo" {
@@ -433,7 +445,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
         tags {
-            Name = "tf-foo-eni-test"
+            Name = "tf-acc-network-interface-w-attachment-foo"
         }
 }
 
@@ -442,7 +454,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "172.16.11.0/24"
     availability_zone = "us-west-2a"
         tags {
-            Name = "tf-bar-eni-test"
+            Name = "tf-acc-network-interface-w-attachment-bar"
         }
 }
 
@@ -481,27 +493,27 @@ const testAccAWSENIConfigExternalAttachment = `
 resource "aws_vpc" "foo" {
 	cidr_block = "172.16.0.0/16"
 	enable_dns_hostnames = true
-        tags {
-            Name = "tf-eni-test"
-        }
+    tags {
+        Name = "terraform-testacc-network-interface-external-attachment"
+    }
 }
 
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
-        tags {
-            Name = "tf-eni-test"
-        }
+    tags {
+        Name = "tf-acc-network-interface-external-attachment-foo"
+    }
 }
 
 resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "172.16.11.0/24"
     availability_zone = "us-west-2a"
-        tags {
-            Name = "tf-eni-test"
-        }
+    tags {
+        Name = "tf-acc-network-interface-external-attachment-bar"
+    }
 }
 
 resource "aws_security_group" "foo" {

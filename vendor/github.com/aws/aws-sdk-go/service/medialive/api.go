@@ -3,6 +3,8 @@
 package medialive
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -12,7 +14,7 @@ const opCreateChannel = "CreateChannel"
 
 // CreateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -62,9 +64,9 @@ func (c *MediaLive) CreateChannelRequest(input *CreateChannelInput) (req *reques
 // API operation CreateChannel for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
-//
 //   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
 //
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //
@@ -104,7 +106,7 @@ const opCreateInput = "CreateInput"
 
 // CreateInputRequest generates a "aws/request.Request" representing the
 // client's request for the CreateInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -192,7 +194,7 @@ const opCreateInputSecurityGroup = "CreateInputSecurityGroup"
 
 // CreateInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -280,7 +282,7 @@ const opDeleteChannel = "DeleteChannel"
 
 // DeleteChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -372,7 +374,7 @@ const opDeleteInput = "DeleteInput"
 
 // DeleteInputRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -464,7 +466,7 @@ const opDeleteInputSecurityGroup = "DeleteInputSecurityGroup"
 
 // DeleteInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -522,6 +524,8 @@ func (c *MediaLive) DeleteInputSecurityGroupRequest(input *DeleteInputSecurityGr
 //
 //   * ErrCodeBadGatewayException "BadGatewayException"
 //
+//   * ErrCodeNotFoundException "NotFoundException"
+//
 //   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
@@ -548,11 +552,103 @@ func (c *MediaLive) DeleteInputSecurityGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opDeleteReservation = "DeleteReservation"
+
+// DeleteReservationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteReservation for more information on using the DeleteReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteReservationRequest method.
+//    req, resp := client.DeleteReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteReservation
+func (c *MediaLive) DeleteReservationRequest(input *DeleteReservationInput) (req *request.Request, output *DeleteReservationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteReservation,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/prod/reservations/{reservationId}",
+	}
+
+	if input == nil {
+		input = &DeleteReservationInput{}
+	}
+
+	output = &DeleteReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteReservation API operation for AWS Elemental MediaLive.
+//
+// Delete an expired reservation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DeleteReservation for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteReservation
+func (c *MediaLive) DeleteReservation(input *DeleteReservationInput) (*DeleteReservationOutput, error) {
+	req, out := c.DeleteReservationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteReservationWithContext is the same as DeleteReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DeleteReservationWithContext(ctx aws.Context, input *DeleteReservationInput, opts ...request.Option) (*DeleteReservationOutput, error) {
+	req, out := c.DeleteReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeChannel = "DescribeChannel"
 
 // DescribeChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -642,7 +738,7 @@ const opDescribeInput = "DescribeInput"
 
 // DescribeInputRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInput operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -732,7 +828,7 @@ const opDescribeInputSecurityGroup = "DescribeInputSecurityGroup"
 
 // DescribeInputSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInputSecurityGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -818,11 +914,191 @@ func (c *MediaLive) DescribeInputSecurityGroupWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+const opDescribeOffering = "DescribeOffering"
+
+// DescribeOfferingRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeOffering operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeOffering for more information on using the DescribeOffering
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeOfferingRequest method.
+//    req, resp := client.DescribeOfferingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeOffering
+func (c *MediaLive) DescribeOfferingRequest(input *DescribeOfferingInput) (req *request.Request, output *DescribeOfferingOutput) {
+	op := &request.Operation{
+		Name:       opDescribeOffering,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/offerings/{offeringId}",
+	}
+
+	if input == nil {
+		input = &DescribeOfferingInput{}
+	}
+
+	output = &DescribeOfferingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeOffering API operation for AWS Elemental MediaLive.
+//
+// Get details for an offering.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeOffering for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeOffering
+func (c *MediaLive) DescribeOffering(input *DescribeOfferingInput) (*DescribeOfferingOutput, error) {
+	req, out := c.DescribeOfferingRequest(input)
+	return out, req.Send()
+}
+
+// DescribeOfferingWithContext is the same as DescribeOffering with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeOffering for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeOfferingWithContext(ctx aws.Context, input *DescribeOfferingInput, opts ...request.Option) (*DescribeOfferingOutput, error) {
+	req, out := c.DescribeOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeReservation = "DescribeReservation"
+
+// DescribeReservationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeReservation for more information on using the DescribeReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeReservationRequest method.
+//    req, resp := client.DescribeReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeReservation
+func (c *MediaLive) DescribeReservationRequest(input *DescribeReservationInput) (req *request.Request, output *DescribeReservationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeReservation,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/reservations/{reservationId}",
+	}
+
+	if input == nil {
+		input = &DescribeReservationInput{}
+	}
+
+	output = &DescribeReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeReservation API operation for AWS Elemental MediaLive.
+//
+// Get details for a reservation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeReservation for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeReservation
+func (c *MediaLive) DescribeReservation(input *DescribeReservationInput) (*DescribeReservationOutput, error) {
+	req, out := c.DescribeReservationRequest(input)
+	return out, req.Send()
+}
+
+// DescribeReservationWithContext is the same as DescribeReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeReservationWithContext(ctx aws.Context, input *DescribeReservationInput, opts ...request.Option) (*DescribeReservationOutput, error) {
+	req, out := c.DescribeReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListChannels = "ListChannels"
 
 // ListChannelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListChannels operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -966,7 +1242,7 @@ const opListInputSecurityGroups = "ListInputSecurityGroups"
 
 // ListInputSecurityGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the ListInputSecurityGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1110,7 +1386,7 @@ const opListInputs = "ListInputs"
 
 // ListInputsRequest generates a "aws/request.Request" representing the
 // client's request for the ListInputs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1250,11 +1526,391 @@ func (c *MediaLive) ListInputsPagesWithContext(ctx aws.Context, input *ListInput
 	return p.Err()
 }
 
+const opListOfferings = "ListOfferings"
+
+// ListOfferingsRequest generates a "aws/request.Request" representing the
+// client's request for the ListOfferings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListOfferings for more information on using the ListOfferings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListOfferingsRequest method.
+//    req, resp := client.ListOfferingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListOfferings
+func (c *MediaLive) ListOfferingsRequest(input *ListOfferingsInput) (req *request.Request, output *ListOfferingsOutput) {
+	op := &request.Operation{
+		Name:       opListOfferings,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/offerings",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListOfferingsInput{}
+	}
+
+	output = &ListOfferingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListOfferings API operation for AWS Elemental MediaLive.
+//
+// List offerings available for purchase.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation ListOfferings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListOfferings
+func (c *MediaLive) ListOfferings(input *ListOfferingsInput) (*ListOfferingsOutput, error) {
+	req, out := c.ListOfferingsRequest(input)
+	return out, req.Send()
+}
+
+// ListOfferingsWithContext is the same as ListOfferings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListOfferings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListOfferingsWithContext(ctx aws.Context, input *ListOfferingsInput, opts ...request.Option) (*ListOfferingsOutput, error) {
+	req, out := c.ListOfferingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListOfferingsPages iterates over the pages of a ListOfferings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListOfferings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListOfferings operation.
+//    pageNum := 0
+//    err := client.ListOfferingsPages(params,
+//        func(page *ListOfferingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaLive) ListOfferingsPages(input *ListOfferingsInput, fn func(*ListOfferingsOutput, bool) bool) error {
+	return c.ListOfferingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListOfferingsPagesWithContext same as ListOfferingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListOfferingsPagesWithContext(ctx aws.Context, input *ListOfferingsInput, fn func(*ListOfferingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListOfferingsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListOfferingsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListOfferingsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListReservations = "ListReservations"
+
+// ListReservationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListReservations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListReservations for more information on using the ListReservations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListReservationsRequest method.
+//    req, resp := client.ListReservationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListReservations
+func (c *MediaLive) ListReservationsRequest(input *ListReservationsInput) (req *request.Request, output *ListReservationsOutput) {
+	op := &request.Operation{
+		Name:       opListReservations,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/reservations",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListReservationsInput{}
+	}
+
+	output = &ListReservationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListReservations API operation for AWS Elemental MediaLive.
+//
+// List purchased reservations.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation ListReservations for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListReservations
+func (c *MediaLive) ListReservations(input *ListReservationsInput) (*ListReservationsOutput, error) {
+	req, out := c.ListReservationsRequest(input)
+	return out, req.Send()
+}
+
+// ListReservationsWithContext is the same as ListReservations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListReservations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListReservationsWithContext(ctx aws.Context, input *ListReservationsInput, opts ...request.Option) (*ListReservationsOutput, error) {
+	req, out := c.ListReservationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListReservationsPages iterates over the pages of a ListReservations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListReservations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListReservations operation.
+//    pageNum := 0
+//    err := client.ListReservationsPages(params,
+//        func(page *ListReservationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaLive) ListReservationsPages(input *ListReservationsInput, fn func(*ListReservationsOutput, bool) bool) error {
+	return c.ListReservationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListReservationsPagesWithContext same as ListReservationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListReservationsPagesWithContext(ctx aws.Context, input *ListReservationsInput, fn func(*ListReservationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListReservationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListReservationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListReservationsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opPurchaseOffering = "PurchaseOffering"
+
+// PurchaseOfferingRequest generates a "aws/request.Request" representing the
+// client's request for the PurchaseOffering operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PurchaseOffering for more information on using the PurchaseOffering
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PurchaseOfferingRequest method.
+//    req, resp := client.PurchaseOfferingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/PurchaseOffering
+func (c *MediaLive) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req *request.Request, output *PurchaseOfferingOutput) {
+	op := &request.Operation{
+		Name:       opPurchaseOffering,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/offerings/{offeringId}/purchase",
+	}
+
+	if input == nil {
+		input = &PurchaseOfferingInput{}
+	}
+
+	output = &PurchaseOfferingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PurchaseOffering API operation for AWS Elemental MediaLive.
+//
+// Purchase an offering and create a reservation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation PurchaseOffering for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/PurchaseOffering
+func (c *MediaLive) PurchaseOffering(input *PurchaseOfferingInput) (*PurchaseOfferingOutput, error) {
+	req, out := c.PurchaseOfferingRequest(input)
+	return out, req.Send()
+}
+
+// PurchaseOfferingWithContext is the same as PurchaseOffering with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PurchaseOffering for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) PurchaseOfferingWithContext(ctx aws.Context, input *PurchaseOfferingInput, opts ...request.Option) (*PurchaseOfferingOutput, error) {
+	req, out := c.PurchaseOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStartChannel = "StartChannel"
 
 // StartChannelRequest generates a "aws/request.Request" representing the
 // client's request for the StartChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1346,7 +2002,7 @@ const opStopChannel = "StopChannel"
 
 // StopChannelRequest generates a "aws/request.Request" representing the
 // client's request for the StopChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1434,7 +2090,276 @@ func (c *MediaLive) StopChannelWithContext(ctx aws.Context, input *StopChannelIn
 	return out, req.Send()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AacSettings
+const opUpdateChannel = "UpdateChannel"
+
+// UpdateChannelRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateChannel operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateChannel for more information on using the UpdateChannel
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateChannelRequest method.
+//    req, resp := client.UpdateChannelRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannel
+func (c *MediaLive) UpdateChannelRequest(input *UpdateChannelInput) (req *request.Request, output *UpdateChannelOutput) {
+	op := &request.Operation{
+		Name:       opUpdateChannel,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/channels/{channelId}",
+	}
+
+	if input == nil {
+		input = &UpdateChannelInput{}
+	}
+
+	output = &UpdateChannelOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateChannel API operation for AWS Elemental MediaLive.
+//
+// Updates a channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateChannel for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannel
+func (c *MediaLive) UpdateChannel(input *UpdateChannelInput) (*UpdateChannelOutput, error) {
+	req, out := c.UpdateChannelRequest(input)
+	return out, req.Send()
+}
+
+// UpdateChannelWithContext is the same as UpdateChannel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateChannel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateChannelWithContext(ctx aws.Context, input *UpdateChannelInput, opts ...request.Option) (*UpdateChannelOutput, error) {
+	req, out := c.UpdateChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateInput = "UpdateInput"
+
+// UpdateInputRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateInput operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateInput for more information on using the UpdateInput
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateInputRequest method.
+//    req, resp := client.UpdateInputRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInput
+func (c *MediaLive) UpdateInputRequest(input *UpdateInputInput) (req *request.Request, output *UpdateInputOutput) {
+	op := &request.Operation{
+		Name:       opUpdateInput,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/inputs/{inputId}",
+	}
+
+	if input == nil {
+		input = &UpdateInputInput{}
+	}
+
+	output = &UpdateInputOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateInput API operation for AWS Elemental MediaLive.
+//
+// Updates an input.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateInput for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInput
+func (c *MediaLive) UpdateInput(input *UpdateInputInput) (*UpdateInputOutput, error) {
+	req, out := c.UpdateInputRequest(input)
+	return out, req.Send()
+}
+
+// UpdateInputWithContext is the same as UpdateInput with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateInput for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateInputWithContext(ctx aws.Context, input *UpdateInputInput, opts ...request.Option) (*UpdateInputOutput, error) {
+	req, out := c.UpdateInputRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateInputSecurityGroup = "UpdateInputSecurityGroup"
+
+// UpdateInputSecurityGroupRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateInputSecurityGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateInputSecurityGroup for more information on using the UpdateInputSecurityGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateInputSecurityGroupRequest method.
+//    req, resp := client.UpdateInputSecurityGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputSecurityGroup
+func (c *MediaLive) UpdateInputSecurityGroupRequest(input *UpdateInputSecurityGroupInput) (req *request.Request, output *UpdateInputSecurityGroupOutput) {
+	op := &request.Operation{
+		Name:       opUpdateInputSecurityGroup,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/inputSecurityGroups/{inputSecurityGroupId}",
+	}
+
+	if input == nil {
+		input = &UpdateInputSecurityGroupInput{}
+	}
+
+	output = &UpdateInputSecurityGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateInputSecurityGroup API operation for AWS Elemental MediaLive.
+//
+// Update an Input Security Group's Whilelists.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateInputSecurityGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputSecurityGroup
+func (c *MediaLive) UpdateInputSecurityGroup(input *UpdateInputSecurityGroupInput) (*UpdateInputSecurityGroupOutput, error) {
+	req, out := c.UpdateInputSecurityGroupRequest(input)
+	return out, req.Send()
+}
+
+// UpdateInputSecurityGroupWithContext is the same as UpdateInputSecurityGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateInputSecurityGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateInputSecurityGroupWithContext(ctx aws.Context, input *UpdateInputSecurityGroupInput, opts ...request.Option) (*UpdateInputSecurityGroupOutput, error) {
+	req, out := c.UpdateInputSecurityGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 type AacSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1542,7 +2467,6 @@ func (s *AacSettings) SetVbrQuality(v string) *AacSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Ac3Settings
 type Ac3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -1558,7 +2482,7 @@ type Ac3Settings struct {
 
 	// Sets the dialnorm for the output. If excluded and input audio is Dolby Digital,
 	// dialnorm will be passed through.
-	Dialnorm *int64 `locationName:"dialnorm" type:"integer"`
+	Dialnorm *int64 `locationName:"dialnorm" min:"1" type:"integer"`
 
 	// If set to filmStandard, adds dynamic range compression signaling to the output
 	// bitstream as defined in the Dolby Digital specification.
@@ -1582,6 +2506,19 @@ func (s Ac3Settings) String() string {
 // GoString returns the string representation
 func (s Ac3Settings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Ac3Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Ac3Settings"}
+	if s.Dialnorm != nil && *s.Dialnorm < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Dialnorm", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetBitrate sets the Bitrate field's value.
@@ -1626,7 +2563,6 @@ func (s *Ac3Settings) SetMetadataControl(v string) *Ac3Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ArchiveContainerSettings
 type ArchiveContainerSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1643,24 +2579,40 @@ func (s ArchiveContainerSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ArchiveContainerSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ArchiveContainerSettings"}
+	if s.M2tsSettings != nil {
+		if err := s.M2tsSettings.Validate(); err != nil {
+			invalidParams.AddNested("M2tsSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetM2tsSettings sets the M2tsSettings field's value.
 func (s *ArchiveContainerSettings) SetM2tsSettings(v *M2tsSettings) *ArchiveContainerSettings {
 	s.M2tsSettings = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ArchiveGroupSettings
 type ArchiveGroupSettings struct {
 	_ struct{} `type:"structure"`
 
 	// A directory and base filename where archive files should be written. If the
 	// base filename portion of the URI is left blank, the base filename of the
 	// first input will be automatically inserted.
-	Destination *OutputLocationRef `locationName:"destination" type:"structure"`
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
 
 	// Number of seconds to write to archive file before closing and starting a
 	// new one.
-	RolloverInterval *int64 `locationName:"rolloverInterval" type:"integer"`
+	RolloverInterval *int64 `locationName:"rolloverInterval" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -1671,6 +2623,22 @@ func (s ArchiveGroupSettings) String() string {
 // GoString returns the string representation
 func (s ArchiveGroupSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ArchiveGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ArchiveGroupSettings"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.RolloverInterval != nil && *s.RolloverInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("RolloverInterval", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDestination sets the Destination field's value.
@@ -1685,12 +2653,13 @@ func (s *ArchiveGroupSettings) SetRolloverInterval(v int64) *ArchiveGroupSetting
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ArchiveOutputSettings
 type ArchiveOutputSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Settings specific to the container type of the file.
-	ContainerSettings *ArchiveContainerSettings `locationName:"containerSettings" type:"structure"`
+	//
+	// ContainerSettings is a required field
+	ContainerSettings *ArchiveContainerSettings `locationName:"containerSettings" type:"structure" required:"true"`
 
 	// Output file extension. If excluded, this will be auto-selected from the container
 	// type.
@@ -1711,6 +2680,24 @@ func (s ArchiveOutputSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ArchiveOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ArchiveOutputSettings"}
+	if s.ContainerSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerSettings"))
+	}
+	if s.ContainerSettings != nil {
+		if err := s.ContainerSettings.Validate(); err != nil {
+			invalidParams.AddNested("ContainerSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetContainerSettings sets the ContainerSettings field's value.
 func (s *ArchiveOutputSettings) SetContainerSettings(v *ArchiveContainerSettings) *ArchiveOutputSettings {
 	s.ContainerSettings = v
@@ -1729,7 +2716,6 @@ func (s *ArchiveOutputSettings) SetNameModifier(v string) *ArchiveOutputSettings
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AribDestinationSettings
 type AribDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -1744,7 +2730,6 @@ func (s AribDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AribSourceSettings
 type AribSourceSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -1759,16 +2744,19 @@ func (s AribSourceSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioChannelMapping
 type AudioChannelMapping struct {
 	_ struct{} `type:"structure"`
 
 	// Indices and gain values for each input channel that should be remixed into
 	// this output channel.
-	InputChannelLevels []*InputChannelLevel `locationName:"inputChannelLevels" type:"list"`
+	//
+	// InputChannelLevels is a required field
+	InputChannelLevels []*InputChannelLevel `locationName:"inputChannelLevels" type:"list" required:"true"`
 
 	// The index of the output channel being produced.
-	OutputChannel *int64 `locationName:"outputChannel" type:"integer"`
+	//
+	// OutputChannel is a required field
+	OutputChannel *int64 `locationName:"outputChannel" type:"integer" required:"true"`
 }
 
 // String returns the string representation
@@ -1779,6 +2767,32 @@ func (s AudioChannelMapping) String() string {
 // GoString returns the string representation
 func (s AudioChannelMapping) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioChannelMapping) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioChannelMapping"}
+	if s.InputChannelLevels == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputChannelLevels"))
+	}
+	if s.OutputChannel == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputChannel"))
+	}
+	if s.InputChannelLevels != nil {
+		for i, v := range s.InputChannelLevels {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "InputChannelLevels", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetInputChannelLevels sets the InputChannelLevels field's value.
@@ -1793,7 +2807,6 @@ func (s *AudioChannelMapping) SetOutputChannel(v int64) *AudioChannelMapping {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioCodecSettings
 type AudioCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -1816,6 +2829,26 @@ func (s AudioCodecSettings) String() string {
 // GoString returns the string representation
 func (s AudioCodecSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioCodecSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioCodecSettings"}
+	if s.Ac3Settings != nil {
+		if err := s.Ac3Settings.Validate(); err != nil {
+			invalidParams.AddNested("Ac3Settings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Eac3Settings != nil {
+		if err := s.Eac3Settings.Validate(); err != nil {
+			invalidParams.AddNested("Eac3Settings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAacSettings sets the AacSettings field's value.
@@ -1848,7 +2881,6 @@ func (s *AudioCodecSettings) SetPassThroughSettings(v *PassThroughSettings) *Aud
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioDescription
 type AudioDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -1856,7 +2888,9 @@ type AudioDescription struct {
 	AudioNormalizationSettings *AudioNormalizationSettings `locationName:"audioNormalizationSettings" type:"structure"`
 
 	// The name of the AudioSelector used as the source for this AudioDescription.
-	AudioSelectorName *string `locationName:"audioSelectorName" type:"string"`
+	//
+	// AudioSelectorName is a required field
+	AudioSelectorName *string `locationName:"audioSelectorName" type:"string" required:"true"`
 
 	// Applies only if audioTypeControl is useConfigured. The values for audioType
 	// are defined in ISO-IEC 13818-1.
@@ -1875,7 +2909,7 @@ type AudioDescription struct {
 
 	// Indicates the language of the audio output track. Only used if languageControlMode
 	// is useConfigured, or there is no ISO 639 language code specified in the input.
-	LanguageCode *string `locationName:"languageCode" type:"string"`
+	LanguageCode *string `locationName:"languageCode" min:"3" type:"string"`
 
 	// Choosing followInput will cause the ISO 639 language code of the output to
 	// follow the ISO 639 language code of the input. The languageCode will be used
@@ -1886,7 +2920,9 @@ type AudioDescription struct {
 	// The name of this AudioDescription. Outputs will use this name to uniquely
 	// identify this AudioDescription. Description names should be unique within
 	// this Live Event.
-	Name *string `locationName:"name" type:"string"`
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
 
 	// Settings that control how input audio channels are remixed into the output
 	// audio channels.
@@ -1905,6 +2941,35 @@ func (s AudioDescription) String() string {
 // GoString returns the string representation
 func (s AudioDescription) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioDescription) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioDescription"}
+	if s.AudioSelectorName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AudioSelectorName"))
+	}
+	if s.LanguageCode != nil && len(*s.LanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("LanguageCode", 3))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.CodecSettings != nil {
+		if err := s.CodecSettings.Validate(); err != nil {
+			invalidParams.AddNested("CodecSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RemixSettings != nil {
+		if err := s.RemixSettings.Validate(); err != nil {
+			invalidParams.AddNested("RemixSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAudioNormalizationSettings sets the AudioNormalizationSettings field's value.
@@ -1967,12 +3032,13 @@ func (s *AudioDescription) SetStreamName(v string) *AudioDescription {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioLanguageSelection
 type AudioLanguageSelection struct {
 	_ struct{} `type:"structure"`
 
 	// Selects a specific three-letter language code from within an audio source.
-	LanguageCode *string `locationName:"languageCode" type:"string"`
+	//
+	// LanguageCode is a required field
+	LanguageCode *string `locationName:"languageCode" type:"string" required:"true"`
 
 	// When set to "strict", the transport stream demux strictly identifies audio
 	// streams by their language descriptor. If a PMT update occurs such that an
@@ -1993,6 +3059,19 @@ func (s AudioLanguageSelection) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioLanguageSelection) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioLanguageSelection"}
+	if s.LanguageCode == nil {
+		invalidParams.Add(request.NewErrParamRequired("LanguageCode"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetLanguageCode sets the LanguageCode field's value.
 func (s *AudioLanguageSelection) SetLanguageCode(v string) *AudioLanguageSelection {
 	s.LanguageCode = &v
@@ -2005,7 +3084,6 @@ func (s *AudioLanguageSelection) SetLanguageSelectionPolicy(v string) *AudioLang
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioNormalizationSettings
 type AudioNormalizationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2052,7 +3130,6 @@ func (s *AudioNormalizationSettings) SetTargetLkfs(v float64) *AudioNormalizatio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioOnlyHlsSettings
 type AudioOnlyHlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2092,6 +3169,21 @@ func (s AudioOnlyHlsSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioOnlyHlsSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioOnlyHlsSettings"}
+	if s.AudioOnlyImage != nil {
+		if err := s.AudioOnlyImage.Validate(); err != nil {
+			invalidParams.AddNested("AudioOnlyImage", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAudioGroupId sets the AudioGroupId field's value.
 func (s *AudioOnlyHlsSettings) SetAudioGroupId(v string) *AudioOnlyHlsSettings {
 	s.AudioGroupId = &v
@@ -2110,12 +3202,13 @@ func (s *AudioOnlyHlsSettings) SetAudioTrackType(v string) *AudioOnlyHlsSettings
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioPidSelection
 type AudioPidSelection struct {
 	_ struct{} `type:"structure"`
 
 	// Selects a specific PID from within a source.
-	Pid *int64 `locationName:"pid" type:"integer"`
+	//
+	// Pid is a required field
+	Pid *int64 `locationName:"pid" type:"integer" required:"true"`
 }
 
 // String returns the string representation
@@ -2128,19 +3221,33 @@ func (s AudioPidSelection) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioPidSelection) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioPidSelection"}
+	if s.Pid == nil {
+		invalidParams.Add(request.NewErrParamRequired("Pid"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetPid sets the Pid field's value.
 func (s *AudioPidSelection) SetPid(v int64) *AudioPidSelection {
 	s.Pid = &v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioSelector
 type AudioSelector struct {
 	_ struct{} `type:"structure"`
 
 	// The name of this AudioSelector. AudioDescriptions will use this name to uniquely
 	// identify this Selector. Selector names should be unique per input.
-	Name *string `locationName:"name" type:"string"`
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
 
 	// The audio selector settings.
 	SelectorSettings *AudioSelectorSettings `locationName:"selectorSettings" type:"structure"`
@@ -2156,6 +3263,24 @@ func (s AudioSelector) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioSelector) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioSelector"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.SelectorSettings != nil {
+		if err := s.SelectorSettings.Validate(); err != nil {
+			invalidParams.AddNested("SelectorSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetName sets the Name field's value.
 func (s *AudioSelector) SetName(v string) *AudioSelector {
 	s.Name = &v
@@ -2168,7 +3293,6 @@ func (s *AudioSelector) SetSelectorSettings(v *AudioSelectorSettings) *AudioSele
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AudioSelectorSettings
 type AudioSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2187,6 +3311,26 @@ func (s AudioSelectorSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioSelectorSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioSelectorSettings"}
+	if s.AudioLanguageSelection != nil {
+		if err := s.AudioLanguageSelection.Validate(); err != nil {
+			invalidParams.AddNested("AudioLanguageSelection", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.AudioPidSelection != nil {
+		if err := s.AudioPidSelection.Validate(); err != nil {
+			invalidParams.AddNested("AudioPidSelection", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAudioLanguageSelection sets the AudioLanguageSelection field's value.
 func (s *AudioSelectorSettings) SetAudioLanguageSelection(v *AudioLanguageSelection) *AudioSelectorSettings {
 	s.AudioLanguageSelection = v
@@ -2199,7 +3343,6 @@ func (s *AudioSelectorSettings) SetAudioPidSelection(v *AudioPidSelection) *Audi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AvailBlanking
 type AvailBlanking struct {
 	_ struct{} `type:"structure"`
 
@@ -2222,6 +3365,21 @@ func (s AvailBlanking) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AvailBlanking) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AvailBlanking"}
+	if s.AvailBlankingImage != nil {
+		if err := s.AvailBlankingImage.Validate(); err != nil {
+			invalidParams.AddNested("AvailBlankingImage", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAvailBlankingImage sets the AvailBlankingImage field's value.
 func (s *AvailBlanking) SetAvailBlankingImage(v *InputLocation) *AvailBlanking {
 	s.AvailBlankingImage = v
@@ -2234,7 +3392,6 @@ func (s *AvailBlanking) SetState(v string) *AvailBlanking {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AvailConfiguration
 type AvailConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -2252,13 +3409,27 @@ func (s AvailConfiguration) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AvailConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AvailConfiguration"}
+	if s.AvailSettings != nil {
+		if err := s.AvailSettings.Validate(); err != nil {
+			invalidParams.AddNested("AvailSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAvailSettings sets the AvailSettings field's value.
 func (s *AvailConfiguration) SetAvailSettings(v *AvailSettings) *AvailConfiguration {
 	s.AvailSettings = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/AvailSettings
 type AvailSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2277,6 +3448,26 @@ func (s AvailSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AvailSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AvailSettings"}
+	if s.Scte35SpliceInsert != nil {
+		if err := s.Scte35SpliceInsert.Validate(); err != nil {
+			invalidParams.AddNested("Scte35SpliceInsert", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Scte35TimeSignalApos != nil {
+		if err := s.Scte35TimeSignalApos.Validate(); err != nil {
+			invalidParams.AddNested("Scte35TimeSignalApos", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetScte35SpliceInsert sets the Scte35SpliceInsert field's value.
 func (s *AvailSettings) SetScte35SpliceInsert(v *Scte35SpliceInsert) *AvailSettings {
 	s.Scte35SpliceInsert = v
@@ -2289,7 +3480,6 @@ func (s *AvailSettings) SetScte35TimeSignalApos(v *Scte35TimeSignalApos) *AvailS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BlackoutSlate
 type BlackoutSlate struct {
 	_ struct{} `type:"structure"`
 
@@ -2310,7 +3500,7 @@ type BlackoutSlate struct {
 	NetworkEndBlackoutImage *InputLocation `locationName:"networkEndBlackoutImage" type:"structure"`
 
 	// Provides Network ID that matches EIDR ID format (e.g., "10.XXXX/XXXX-XXXX-XXXX-XXXX-XXXX-C").
-	NetworkId *string `locationName:"networkId" type:"string"`
+	NetworkId *string `locationName:"networkId" min:"34" type:"string"`
 
 	// When set to enabled, causes video, audio and captions to be blanked when
 	// indicated by program metadata.
@@ -2325,6 +3515,29 @@ func (s BlackoutSlate) String() string {
 // GoString returns the string representation
 func (s BlackoutSlate) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BlackoutSlate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BlackoutSlate"}
+	if s.NetworkId != nil && len(*s.NetworkId) < 34 {
+		invalidParams.Add(request.NewErrParamMinLen("NetworkId", 34))
+	}
+	if s.BlackoutSlateImage != nil {
+		if err := s.BlackoutSlateImage.Validate(); err != nil {
+			invalidParams.AddNested("BlackoutSlateImage", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NetworkEndBlackoutImage != nil {
+		if err := s.NetworkEndBlackoutImage.Validate(); err != nil {
+			invalidParams.AddNested("NetworkEndBlackoutImage", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetBlackoutSlateImage sets the BlackoutSlateImage field's value.
@@ -2357,7 +3570,6 @@ func (s *BlackoutSlate) SetState(v string) *BlackoutSlate {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BurnInDestinationSettings
 type BurnInDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2398,7 +3610,7 @@ type BurnInDestinationSettings struct {
 
 	// Font resolution in DPI (dots per inch); default is 96 dpi. All burn-in and
 	// DVB-Sub font settings must match.
-	FontResolution *int64 `locationName:"fontResolution" type:"integer"`
+	FontResolution *int64 `locationName:"fontResolution" min:"96" type:"integer"`
 
 	// When set to 'auto' fontSize will scale depending on the size of the output.
 	// Giving a positive integer will specify the exact font size in points. All
@@ -2463,6 +3675,24 @@ func (s BurnInDestinationSettings) String() string {
 // GoString returns the string representation
 func (s BurnInDestinationSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BurnInDestinationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BurnInDestinationSettings"}
+	if s.FontResolution != nil && *s.FontResolution < 96 {
+		invalidParams.Add(request.NewErrParamMinValue("FontResolution", 96))
+	}
+	if s.Font != nil {
+		if err := s.Font.Validate(); err != nil {
+			invalidParams.AddNested("Font", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAlignment sets the Alignment field's value.
@@ -2569,13 +3799,14 @@ func (s *BurnInDestinationSettings) SetYPosition(v int64) *BurnInDestinationSett
 
 // Output groups for this Live Event. Output groups contain information about
 // where streams should be distributed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionDescription
 type CaptionDescription struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies which input caption selector to use as a caption source when generating
 	// output captions. This field should match a captionSelector name.
-	CaptionSelectorName *string `locationName:"captionSelectorName" type:"string"`
+	//
+	// CaptionSelectorName is a required field
+	CaptionSelectorName *string `locationName:"captionSelectorName" type:"string" required:"true"`
 
 	// Additional settings for captions destination that depend on the destination
 	// type.
@@ -2590,7 +3821,9 @@ type CaptionDescription struct {
 
 	// Name of the caption description. Used to associate a caption description
 	// with an output. Names must be unique within an event.
-	Name *string `locationName:"name" type:"string"`
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2601,6 +3834,27 @@ func (s CaptionDescription) String() string {
 // GoString returns the string representation
 func (s CaptionDescription) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CaptionDescription) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CaptionDescription"}
+	if s.CaptionSelectorName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CaptionSelectorName"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.DestinationSettings != nil {
+		if err := s.DestinationSettings.Validate(); err != nil {
+			invalidParams.AddNested("DestinationSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCaptionSelectorName sets the CaptionSelectorName field's value.
@@ -2633,7 +3887,6 @@ func (s *CaptionDescription) SetName(v string) *CaptionDescription {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionDestinationSettings
 type CaptionDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2646,6 +3899,8 @@ type CaptionDestinationSettings struct {
 	EmbeddedDestinationSettings *EmbeddedDestinationSettings `locationName:"embeddedDestinationSettings" type:"structure"`
 
 	EmbeddedPlusScte20DestinationSettings *EmbeddedPlusScte20DestinationSettings `locationName:"embeddedPlusScte20DestinationSettings" type:"structure"`
+
+	RtmpCaptionInfoDestinationSettings *RtmpCaptionInfoDestinationSettings `locationName:"rtmpCaptionInfoDestinationSettings" type:"structure"`
 
 	Scte20PlusEmbeddedDestinationSettings *Scte20PlusEmbeddedDestinationSettings `locationName:"scte20PlusEmbeddedDestinationSettings" type:"structure"`
 
@@ -2668,6 +3923,26 @@ func (s CaptionDestinationSettings) String() string {
 // GoString returns the string representation
 func (s CaptionDestinationSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CaptionDestinationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CaptionDestinationSettings"}
+	if s.BurnInDestinationSettings != nil {
+		if err := s.BurnInDestinationSettings.Validate(); err != nil {
+			invalidParams.AddNested("BurnInDestinationSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DvbSubDestinationSettings != nil {
+		if err := s.DvbSubDestinationSettings.Validate(); err != nil {
+			invalidParams.AddNested("DvbSubDestinationSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAribDestinationSettings sets the AribDestinationSettings field's value.
@@ -2697,6 +3972,12 @@ func (s *CaptionDestinationSettings) SetEmbeddedDestinationSettings(v *EmbeddedD
 // SetEmbeddedPlusScte20DestinationSettings sets the EmbeddedPlusScte20DestinationSettings field's value.
 func (s *CaptionDestinationSettings) SetEmbeddedPlusScte20DestinationSettings(v *EmbeddedPlusScte20DestinationSettings) *CaptionDestinationSettings {
 	s.EmbeddedPlusScte20DestinationSettings = v
+	return s
+}
+
+// SetRtmpCaptionInfoDestinationSettings sets the RtmpCaptionInfoDestinationSettings field's value.
+func (s *CaptionDestinationSettings) SetRtmpCaptionInfoDestinationSettings(v *RtmpCaptionInfoDestinationSettings) *CaptionDestinationSettings {
+	s.RtmpCaptionInfoDestinationSettings = v
 	return s
 }
 
@@ -2738,19 +4019,24 @@ func (s *CaptionDestinationSettings) SetWebvttDestinationSettings(v *WebvttDesti
 
 // Maps a caption channel to an ISO 693-2 language code (http://www.loc.gov/standards/iso639-2),
 // with an optional description.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionLanguageMapping
 type CaptionLanguageMapping struct {
 	_ struct{} `type:"structure"`
 
-	// Channel to insert closed captions. Each channel mapping must have a unique
-	// channel number (maximum of 4)
-	CaptionChannel *int64 `locationName:"captionChannel" type:"integer"`
+	// The closed caption channel being described by this CaptionLanguageMapping.
+	// Each channel mapping must have a unique channel number (maximum of 4)
+	//
+	// CaptionChannel is a required field
+	CaptionChannel *int64 `locationName:"captionChannel" min:"1" type:"integer" required:"true"`
 
 	// Three character ISO 639-2 language code (see http://www.loc.gov/standards/iso639-2)
-	LanguageCode *string `locationName:"languageCode" type:"string"`
+	//
+	// LanguageCode is a required field
+	LanguageCode *string `locationName:"languageCode" min:"3" type:"string" required:"true"`
 
 	// Textual description of language
-	LanguageDescription *string `locationName:"languageDescription" type:"string"`
+	//
+	// LanguageDescription is a required field
+	LanguageDescription *string `locationName:"languageDescription" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2761,6 +4047,34 @@ func (s CaptionLanguageMapping) String() string {
 // GoString returns the string representation
 func (s CaptionLanguageMapping) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CaptionLanguageMapping) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CaptionLanguageMapping"}
+	if s.CaptionChannel == nil {
+		invalidParams.Add(request.NewErrParamRequired("CaptionChannel"))
+	}
+	if s.CaptionChannel != nil && *s.CaptionChannel < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CaptionChannel", 1))
+	}
+	if s.LanguageCode == nil {
+		invalidParams.Add(request.NewErrParamRequired("LanguageCode"))
+	}
+	if s.LanguageCode != nil && len(*s.LanguageCode) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("LanguageCode", 3))
+	}
+	if s.LanguageDescription == nil {
+		invalidParams.Add(request.NewErrParamRequired("LanguageDescription"))
+	}
+	if s.LanguageDescription != nil && len(*s.LanguageDescription) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LanguageDescription", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCaptionChannel sets the CaptionChannel field's value.
@@ -2783,7 +4097,6 @@ func (s *CaptionLanguageMapping) SetLanguageDescription(v string) *CaptionLangua
 
 // Output groups for this Live Event. Output groups contain information about
 // where streams should be distributed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionSelector
 type CaptionSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -2794,7 +4107,9 @@ type CaptionSelector struct {
 	// Name identifier for a caption selector. This name is used to associate this
 	// caption selector with one or more caption descriptions. Names must be unique
 	// within an event.
-	Name *string `locationName:"name" type:"string"`
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
 
 	// Caption selector settings.
 	SelectorSettings *CaptionSelectorSettings `locationName:"selectorSettings" type:"structure"`
@@ -2808,6 +4123,24 @@ func (s CaptionSelector) String() string {
 // GoString returns the string representation
 func (s CaptionSelector) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CaptionSelector) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CaptionSelector"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.SelectorSettings != nil {
+		if err := s.SelectorSettings.Validate(); err != nil {
+			invalidParams.AddNested("SelectorSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetLanguageCode sets the LanguageCode field's value.
@@ -2828,7 +4161,6 @@ func (s *CaptionSelector) SetSelectorSettings(v *CaptionSelectorSettings) *Capti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CaptionSelectorSettings
 type CaptionSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2853,6 +4185,36 @@ func (s CaptionSelectorSettings) String() string {
 // GoString returns the string representation
 func (s CaptionSelectorSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CaptionSelectorSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CaptionSelectorSettings"}
+	if s.DvbSubSourceSettings != nil {
+		if err := s.DvbSubSourceSettings.Validate(); err != nil {
+			invalidParams.AddNested("DvbSubSourceSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.EmbeddedSourceSettings != nil {
+		if err := s.EmbeddedSourceSettings.Validate(); err != nil {
+			invalidParams.AddNested("EmbeddedSourceSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Scte20SourceSettings != nil {
+		if err := s.Scte20SourceSettings.Validate(); err != nil {
+			invalidParams.AddNested("Scte20SourceSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Scte27SourceSettings != nil {
+		if err := s.Scte27SourceSettings.Validate(); err != nil {
+			invalidParams.AddNested("Scte27SourceSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAribSourceSettings sets the AribSourceSettings field's value.
@@ -2891,7 +4253,6 @@ func (s *CaptionSelectorSettings) SetTeletextSourceSettings(v *TeletextSourceSet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Channel
 type Channel struct {
 	_ struct{} `type:"structure"`
 
@@ -2913,6 +4274,11 @@ type Channel struct {
 
 	// List of input attachments for channel.
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	// The log level being written to CloudWatch Logs.
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
@@ -2972,6 +4338,18 @@ func (s *Channel) SetInputAttachments(v []*InputAttachment) *Channel {
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *Channel) SetInputSpecification(v *InputSpecification) *Channel {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *Channel) SetLogLevel(v string) *Channel {
+	s.LogLevel = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *Channel) SetName(v string) *Channel {
 	s.Name = &v
@@ -2996,7 +4374,6 @@ func (s *Channel) SetState(v string) *Channel {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ChannelEgressEndpoint
 type ChannelEgressEndpoint struct {
 	_ struct{} `type:"structure"`
 
@@ -3020,7 +4397,6 @@ func (s *ChannelEgressEndpoint) SetSourceIp(v string) *ChannelEgressEndpoint {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ChannelSummary
 type ChannelSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -3040,6 +4416,11 @@ type ChannelSummary struct {
 
 	// List of input attachments for channel.
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	// The log level being written to CloudWatch Logs.
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
@@ -3093,6 +4474,18 @@ func (s *ChannelSummary) SetInputAttachments(v []*InputAttachment) *ChannelSumma
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *ChannelSummary) SetInputSpecification(v *InputSpecification) *ChannelSummary {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *ChannelSummary) SetLogLevel(v string) *ChannelSummary {
+	s.LogLevel = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *ChannelSummary) SetName(v string) *ChannelSummary {
 	s.Name = &v
@@ -3117,7 +4510,6 @@ func (s *ChannelSummary) SetState(v string) *ChannelSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateChannelRequest
 type CreateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3127,11 +4519,15 @@ type CreateChannelInput struct {
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
 
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
 
-	Reserved *string `locationName:"reserved" type:"string"`
+	Reserved *string `locationName:"reserved" deprecated:"true" type:"string"`
 
 	RoleArn *string `locationName:"roleArn" type:"string"`
 }
@@ -3144,6 +4540,31 @@ func (s CreateChannelInput) String() string {
 // GoString returns the string representation
 func (s CreateChannelInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateChannelInput"}
+	if s.EncoderSettings != nil {
+		if err := s.EncoderSettings.Validate(); err != nil {
+			invalidParams.AddNested("EncoderSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.InputAttachments != nil {
+		for i, v := range s.InputAttachments {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "InputAttachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDestinations sets the Destinations field's value.
@@ -3161,6 +4582,18 @@ func (s *CreateChannelInput) SetEncoderSettings(v *EncoderSettings) *CreateChann
 // SetInputAttachments sets the InputAttachments field's value.
 func (s *CreateChannelInput) SetInputAttachments(v []*InputAttachment) *CreateChannelInput {
 	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *CreateChannelInput) SetInputSpecification(v *InputSpecification) *CreateChannelInput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *CreateChannelInput) SetLogLevel(v string) *CreateChannelInput {
+	s.LogLevel = &v
 	return s
 }
 
@@ -3188,7 +4621,6 @@ func (s *CreateChannelInput) SetRoleArn(v string) *CreateChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateChannelResponse
 type CreateChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3211,7 +4643,6 @@ func (s *CreateChannelOutput) SetChannel(v *Channel) *CreateChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputRequest
 type CreateInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3274,7 +4705,6 @@ func (s *CreateInputInput) SetType(v string) *CreateInputInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputResponse
 type CreateInputOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3297,7 +4727,6 @@ func (s *CreateInputOutput) SetInput(v *Input) *CreateInputOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputSecurityGroupRequest
 type CreateInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3320,7 +4749,6 @@ func (s *CreateInputSecurityGroupInput) SetWhitelistRules(v []*InputWhitelistRul
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputSecurityGroupResponse
 type CreateInputSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3344,7 +4772,6 @@ func (s *CreateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup)
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteChannelRequest
 type DeleteChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3381,7 +4808,6 @@ func (s *DeleteChannelInput) SetChannelId(v string) *DeleteChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteChannelResponse
 type DeleteChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3396,6 +4822,10 @@ type DeleteChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -3452,6 +4882,18 @@ func (s *DeleteChannelOutput) SetInputAttachments(v []*InputAttachment) *DeleteC
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *DeleteChannelOutput) SetInputSpecification(v *InputSpecification) *DeleteChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *DeleteChannelOutput) SetLogLevel(v string) *DeleteChannelOutput {
+	s.LogLevel = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DeleteChannelOutput) SetName(v string) *DeleteChannelOutput {
 	s.Name = &v
@@ -3476,7 +4918,6 @@ func (s *DeleteChannelOutput) SetState(v string) *DeleteChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputRequest
 type DeleteInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3513,7 +4954,6 @@ func (s *DeleteInputInput) SetInputId(v string) *DeleteInputInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputResponse
 type DeleteInputOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3528,7 +4968,6 @@ func (s DeleteInputOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputSecurityGroupRequest
 type DeleteInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3565,7 +5004,6 @@ func (s *DeleteInputSecurityGroupInput) SetInputSecurityGroupId(v string) *Delet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputSecurityGroupResponse
 type DeleteInputSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3580,7 +5018,196 @@ func (s DeleteInputSecurityGroupOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeChannelRequest
+type DeleteReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	// ReservationId is a required field
+	ReservationId *string `location:"uri" locationName:"reservationId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteReservationInput"}
+	if s.ReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *DeleteReservationInput) SetReservationId(v string) *DeleteReservationInput {
+	s.ReservationId = &v
+	return s
+}
+
+type DeleteReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	Count *int64 `locationName:"count" type:"integer"`
+
+	CurrencyCode *string `locationName:"currencyCode" type:"string"`
+
+	Duration *int64 `locationName:"duration" type:"integer"`
+
+	// Units for duration, e.g. 'MONTHS'
+	DurationUnits *string `locationName:"durationUnits" type:"string" enum:"OfferingDurationUnits"`
+
+	End *string `locationName:"end" type:"string"`
+
+	FixedPrice *float64 `locationName:"fixedPrice" type:"double"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	OfferingDescription *string `locationName:"offeringDescription" type:"string"`
+
+	OfferingId *string `locationName:"offeringId" type:"string"`
+
+	// Offering type, e.g. 'NO_UPFRONT'
+	OfferingType *string `locationName:"offeringType" type:"string" enum:"OfferingType"`
+
+	Region *string `locationName:"region" type:"string"`
+
+	ReservationId *string `locationName:"reservationId" type:"string"`
+
+	// Resource configuration (codec, resolution, bitrate, ...)
+	ResourceSpecification *ReservationResourceSpecification `locationName:"resourceSpecification" type:"structure"`
+
+	Start *string `locationName:"start" type:"string"`
+
+	// Current reservation state
+	State *string `locationName:"state" type:"string" enum:"ReservationState"`
+
+	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
+}
+
+// String returns the string representation
+func (s DeleteReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteReservationOutput) SetArn(v string) *DeleteReservationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCount sets the Count field's value.
+func (s *DeleteReservationOutput) SetCount(v int64) *DeleteReservationOutput {
+	s.Count = &v
+	return s
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *DeleteReservationOutput) SetCurrencyCode(v string) *DeleteReservationOutput {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *DeleteReservationOutput) SetDuration(v int64) *DeleteReservationOutput {
+	s.Duration = &v
+	return s
+}
+
+// SetDurationUnits sets the DurationUnits field's value.
+func (s *DeleteReservationOutput) SetDurationUnits(v string) *DeleteReservationOutput {
+	s.DurationUnits = &v
+	return s
+}
+
+// SetEnd sets the End field's value.
+func (s *DeleteReservationOutput) SetEnd(v string) *DeleteReservationOutput {
+	s.End = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *DeleteReservationOutput) SetFixedPrice(v float64) *DeleteReservationOutput {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteReservationOutput) SetName(v string) *DeleteReservationOutput {
+	s.Name = &v
+	return s
+}
+
+// SetOfferingDescription sets the OfferingDescription field's value.
+func (s *DeleteReservationOutput) SetOfferingDescription(v string) *DeleteReservationOutput {
+	s.OfferingDescription = &v
+	return s
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *DeleteReservationOutput) SetOfferingId(v string) *DeleteReservationOutput {
+	s.OfferingId = &v
+	return s
+}
+
+// SetOfferingType sets the OfferingType field's value.
+func (s *DeleteReservationOutput) SetOfferingType(v string) *DeleteReservationOutput {
+	s.OfferingType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *DeleteReservationOutput) SetRegion(v string) *DeleteReservationOutput {
+	s.Region = &v
+	return s
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *DeleteReservationOutput) SetReservationId(v string) *DeleteReservationOutput {
+	s.ReservationId = &v
+	return s
+}
+
+// SetResourceSpecification sets the ResourceSpecification field's value.
+func (s *DeleteReservationOutput) SetResourceSpecification(v *ReservationResourceSpecification) *DeleteReservationOutput {
+	s.ResourceSpecification = v
+	return s
+}
+
+// SetStart sets the Start field's value.
+func (s *DeleteReservationOutput) SetStart(v string) *DeleteReservationOutput {
+	s.Start = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DeleteReservationOutput) SetState(v string) *DeleteReservationOutput {
+	s.State = &v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *DeleteReservationOutput) SetUsagePrice(v float64) *DeleteReservationOutput {
+	s.UsagePrice = &v
+	return s
+}
+
 type DescribeChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3617,7 +5244,6 @@ func (s *DescribeChannelInput) SetChannelId(v string) *DescribeChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeChannelResponse
 type DescribeChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3632,6 +5258,10 @@ type DescribeChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -3688,6 +5318,18 @@ func (s *DescribeChannelOutput) SetInputAttachments(v []*InputAttachment) *Descr
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *DescribeChannelOutput) SetInputSpecification(v *InputSpecification) *DescribeChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *DescribeChannelOutput) SetLogLevel(v string) *DescribeChannelOutput {
+	s.LogLevel = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DescribeChannelOutput) SetName(v string) *DescribeChannelOutput {
 	s.Name = &v
@@ -3712,7 +5354,6 @@ func (s *DescribeChannelOutput) SetState(v string) *DescribeChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputRequest
 type DescribeInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3749,7 +5390,6 @@ func (s *DescribeInputInput) SetInputId(v string) *DescribeInputInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputResponse
 type DescribeInputOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3836,7 +5476,6 @@ func (s *DescribeInputOutput) SetType(v string) *DescribeInputOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputSecurityGroupRequest
 type DescribeInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3873,13 +5512,16 @@ func (s *DescribeInputSecurityGroupInput) SetInputSecurityGroupId(v string) *Des
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputSecurityGroupResponse
 type DescribeInputSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
 	Id *string `locationName:"id" type:"string"`
+
+	Inputs []*string `locationName:"inputs" type:"list"`
+
+	State *string `locationName:"state" type:"string" enum:"InputSecurityGroupState"`
 
 	WhitelistRules []*InputWhitelistRule `locationName:"whitelistRules" type:"list"`
 }
@@ -3906,27 +5548,373 @@ func (s *DescribeInputSecurityGroupOutput) SetId(v string) *DescribeInputSecurit
 	return s
 }
 
+// SetInputs sets the Inputs field's value.
+func (s *DescribeInputSecurityGroupOutput) SetInputs(v []*string) *DescribeInputSecurityGroupOutput {
+	s.Inputs = v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeInputSecurityGroupOutput) SetState(v string) *DescribeInputSecurityGroupOutput {
+	s.State = &v
+	return s
+}
+
 // SetWhitelistRules sets the WhitelistRules field's value.
 func (s *DescribeInputSecurityGroupOutput) SetWhitelistRules(v []*InputWhitelistRule) *DescribeInputSecurityGroupOutput {
 	s.WhitelistRules = v
 	return s
 }
 
+type DescribeOfferingInput struct {
+	_ struct{} `type:"structure"`
+
+	// OfferingId is a required field
+	OfferingId *string `location:"uri" locationName:"offeringId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeOfferingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOfferingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeOfferingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeOfferingInput"}
+	if s.OfferingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OfferingId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *DescribeOfferingInput) SetOfferingId(v string) *DescribeOfferingInput {
+	s.OfferingId = &v
+	return s
+}
+
+type DescribeOfferingOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	CurrencyCode *string `locationName:"currencyCode" type:"string"`
+
+	Duration *int64 `locationName:"duration" type:"integer"`
+
+	// Units for duration, e.g. 'MONTHS'
+	DurationUnits *string `locationName:"durationUnits" type:"string" enum:"OfferingDurationUnits"`
+
+	FixedPrice *float64 `locationName:"fixedPrice" type:"double"`
+
+	OfferingDescription *string `locationName:"offeringDescription" type:"string"`
+
+	OfferingId *string `locationName:"offeringId" type:"string"`
+
+	// Offering type, e.g. 'NO_UPFRONT'
+	OfferingType *string `locationName:"offeringType" type:"string" enum:"OfferingType"`
+
+	Region *string `locationName:"region" type:"string"`
+
+	// Resource configuration (codec, resolution, bitrate, ...)
+	ResourceSpecification *ReservationResourceSpecification `locationName:"resourceSpecification" type:"structure"`
+
+	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
+}
+
+// String returns the string representation
+func (s DescribeOfferingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOfferingOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeOfferingOutput) SetArn(v string) *DescribeOfferingOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *DescribeOfferingOutput) SetCurrencyCode(v string) *DescribeOfferingOutput {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *DescribeOfferingOutput) SetDuration(v int64) *DescribeOfferingOutput {
+	s.Duration = &v
+	return s
+}
+
+// SetDurationUnits sets the DurationUnits field's value.
+func (s *DescribeOfferingOutput) SetDurationUnits(v string) *DescribeOfferingOutput {
+	s.DurationUnits = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *DescribeOfferingOutput) SetFixedPrice(v float64) *DescribeOfferingOutput {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetOfferingDescription sets the OfferingDescription field's value.
+func (s *DescribeOfferingOutput) SetOfferingDescription(v string) *DescribeOfferingOutput {
+	s.OfferingDescription = &v
+	return s
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *DescribeOfferingOutput) SetOfferingId(v string) *DescribeOfferingOutput {
+	s.OfferingId = &v
+	return s
+}
+
+// SetOfferingType sets the OfferingType field's value.
+func (s *DescribeOfferingOutput) SetOfferingType(v string) *DescribeOfferingOutput {
+	s.OfferingType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *DescribeOfferingOutput) SetRegion(v string) *DescribeOfferingOutput {
+	s.Region = &v
+	return s
+}
+
+// SetResourceSpecification sets the ResourceSpecification field's value.
+func (s *DescribeOfferingOutput) SetResourceSpecification(v *ReservationResourceSpecification) *DescribeOfferingOutput {
+	s.ResourceSpecification = v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *DescribeOfferingOutput) SetUsagePrice(v float64) *DescribeOfferingOutput {
+	s.UsagePrice = &v
+	return s
+}
+
+type DescribeReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	// ReservationId is a required field
+	ReservationId *string `location:"uri" locationName:"reservationId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeReservationInput"}
+	if s.ReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *DescribeReservationInput) SetReservationId(v string) *DescribeReservationInput {
+	s.ReservationId = &v
+	return s
+}
+
+type DescribeReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	Count *int64 `locationName:"count" type:"integer"`
+
+	CurrencyCode *string `locationName:"currencyCode" type:"string"`
+
+	Duration *int64 `locationName:"duration" type:"integer"`
+
+	// Units for duration, e.g. 'MONTHS'
+	DurationUnits *string `locationName:"durationUnits" type:"string" enum:"OfferingDurationUnits"`
+
+	End *string `locationName:"end" type:"string"`
+
+	FixedPrice *float64 `locationName:"fixedPrice" type:"double"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	OfferingDescription *string `locationName:"offeringDescription" type:"string"`
+
+	OfferingId *string `locationName:"offeringId" type:"string"`
+
+	// Offering type, e.g. 'NO_UPFRONT'
+	OfferingType *string `locationName:"offeringType" type:"string" enum:"OfferingType"`
+
+	Region *string `locationName:"region" type:"string"`
+
+	ReservationId *string `locationName:"reservationId" type:"string"`
+
+	// Resource configuration (codec, resolution, bitrate, ...)
+	ResourceSpecification *ReservationResourceSpecification `locationName:"resourceSpecification" type:"structure"`
+
+	Start *string `locationName:"start" type:"string"`
+
+	// Current reservation state
+	State *string `locationName:"state" type:"string" enum:"ReservationState"`
+
+	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
+}
+
+// String returns the string representation
+func (s DescribeReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeReservationOutput) SetArn(v string) *DescribeReservationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCount sets the Count field's value.
+func (s *DescribeReservationOutput) SetCount(v int64) *DescribeReservationOutput {
+	s.Count = &v
+	return s
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *DescribeReservationOutput) SetCurrencyCode(v string) *DescribeReservationOutput {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *DescribeReservationOutput) SetDuration(v int64) *DescribeReservationOutput {
+	s.Duration = &v
+	return s
+}
+
+// SetDurationUnits sets the DurationUnits field's value.
+func (s *DescribeReservationOutput) SetDurationUnits(v string) *DescribeReservationOutput {
+	s.DurationUnits = &v
+	return s
+}
+
+// SetEnd sets the End field's value.
+func (s *DescribeReservationOutput) SetEnd(v string) *DescribeReservationOutput {
+	s.End = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *DescribeReservationOutput) SetFixedPrice(v float64) *DescribeReservationOutput {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeReservationOutput) SetName(v string) *DescribeReservationOutput {
+	s.Name = &v
+	return s
+}
+
+// SetOfferingDescription sets the OfferingDescription field's value.
+func (s *DescribeReservationOutput) SetOfferingDescription(v string) *DescribeReservationOutput {
+	s.OfferingDescription = &v
+	return s
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *DescribeReservationOutput) SetOfferingId(v string) *DescribeReservationOutput {
+	s.OfferingId = &v
+	return s
+}
+
+// SetOfferingType sets the OfferingType field's value.
+func (s *DescribeReservationOutput) SetOfferingType(v string) *DescribeReservationOutput {
+	s.OfferingType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *DescribeReservationOutput) SetRegion(v string) *DescribeReservationOutput {
+	s.Region = &v
+	return s
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *DescribeReservationOutput) SetReservationId(v string) *DescribeReservationOutput {
+	s.ReservationId = &v
+	return s
+}
+
+// SetResourceSpecification sets the ResourceSpecification field's value.
+func (s *DescribeReservationOutput) SetResourceSpecification(v *ReservationResourceSpecification) *DescribeReservationOutput {
+	s.ResourceSpecification = v
+	return s
+}
+
+// SetStart sets the Start field's value.
+func (s *DescribeReservationOutput) SetStart(v string) *DescribeReservationOutput {
+	s.Start = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeReservationOutput) SetState(v string) *DescribeReservationOutput {
+	s.State = &v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *DescribeReservationOutput) SetUsagePrice(v float64) *DescribeReservationOutput {
+	s.UsagePrice = &v
+	return s
+}
+
 // DVB Network Information Table (NIT)
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbNitSettings
 type DvbNitSettings struct {
 	_ struct{} `type:"structure"`
 
 	// The numeric value placed in the Network Information Table (NIT).
-	NetworkId *int64 `locationName:"networkId" type:"integer"`
+	//
+	// NetworkId is a required field
+	NetworkId *int64 `locationName:"networkId" type:"integer" required:"true"`
 
 	// The network name text placed in the networkNameDescriptor inside the Network
 	// Information Table. Maximum length is 256 characters.
-	NetworkName *string `locationName:"networkName" type:"string"`
+	//
+	// NetworkName is a required field
+	NetworkName *string `locationName:"networkName" min:"1" type:"string" required:"true"`
 
 	// The number of milliseconds between instances of this table in the output
 	// transport stream.
-	RepInterval *int64 `locationName:"repInterval" type:"integer"`
+	RepInterval *int64 `locationName:"repInterval" min:"25" type:"integer"`
 }
 
 // String returns the string representation
@@ -3937,6 +5925,28 @@ func (s DvbNitSettings) String() string {
 // GoString returns the string representation
 func (s DvbNitSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DvbNitSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DvbNitSettings"}
+	if s.NetworkId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NetworkId"))
+	}
+	if s.NetworkName == nil {
+		invalidParams.Add(request.NewErrParamRequired("NetworkName"))
+	}
+	if s.NetworkName != nil && len(*s.NetworkName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NetworkName", 1))
+	}
+	if s.RepInterval != nil && *s.RepInterval < 25 {
+		invalidParams.Add(request.NewErrParamMinValue("RepInterval", 25))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetNetworkId sets the NetworkId field's value.
@@ -3958,7 +5968,6 @@ func (s *DvbNitSettings) SetRepInterval(v int64) *DvbNitSettings {
 }
 
 // DVB Service Description Table (SDT)
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbSdtSettings
 type DvbSdtSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3972,15 +5981,15 @@ type DvbSdtSettings struct {
 
 	// The number of milliseconds between instances of this table in the output
 	// transport stream.
-	RepInterval *int64 `locationName:"repInterval" type:"integer"`
+	RepInterval *int64 `locationName:"repInterval" min:"25" type:"integer"`
 
 	// The service name placed in the serviceDescriptor in the Service Description
 	// Table. Maximum length is 256 characters.
-	ServiceName *string `locationName:"serviceName" type:"string"`
+	ServiceName *string `locationName:"serviceName" min:"1" type:"string"`
 
 	// The service provider name placed in the serviceDescriptor in the Service
 	// Description Table. Maximum length is 256 characters.
-	ServiceProviderName *string `locationName:"serviceProviderName" type:"string"`
+	ServiceProviderName *string `locationName:"serviceProviderName" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -3991,6 +6000,25 @@ func (s DvbSdtSettings) String() string {
 // GoString returns the string representation
 func (s DvbSdtSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DvbSdtSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DvbSdtSettings"}
+	if s.RepInterval != nil && *s.RepInterval < 25 {
+		invalidParams.Add(request.NewErrParamMinValue("RepInterval", 25))
+	}
+	if s.ServiceName != nil && len(*s.ServiceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceName", 1))
+	}
+	if s.ServiceProviderName != nil && len(*s.ServiceProviderName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceProviderName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetOutputSdt sets the OutputSdt field's value.
@@ -4017,7 +6045,6 @@ func (s *DvbSdtSettings) SetServiceProviderName(v string) *DvbSdtSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbSubDestinationSettings
 type DvbSubDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4060,7 +6087,7 @@ type DvbSubDestinationSettings struct {
 
 	// Font resolution in DPI (dots per inch); default is 96 dpi. All burn-in and
 	// DVB-Sub font settings must match.
-	FontResolution *int64 `locationName:"fontResolution" type:"integer"`
+	FontResolution *int64 `locationName:"fontResolution" min:"96" type:"integer"`
 
 	// When set to auto fontSize will scale depending on the size of the output.
 	// Giving a positive integer will specify the exact font size in points. All
@@ -4129,6 +6156,24 @@ func (s DvbSubDestinationSettings) String() string {
 // GoString returns the string representation
 func (s DvbSubDestinationSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DvbSubDestinationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DvbSubDestinationSettings"}
+	if s.FontResolution != nil && *s.FontResolution < 96 {
+		invalidParams.Add(request.NewErrParamMinValue("FontResolution", 96))
+	}
+	if s.Font != nil {
+		if err := s.Font.Validate(); err != nil {
+			invalidParams.AddNested("Font", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAlignment sets the Alignment field's value.
@@ -4233,14 +6278,13 @@ func (s *DvbSubDestinationSettings) SetYPosition(v int64) *DvbSubDestinationSett
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbSubSourceSettings
 type DvbSubSourceSettings struct {
 	_ struct{} `type:"structure"`
 
 	// When using DVB-Sub with Burn-In or SMPTE-TT, use this PID for the source
 	// content. Unused for DVB-Sub passthrough. All DVB-Sub content is passed through,
 	// regardless of selectors.
-	Pid *int64 `locationName:"pid" type:"integer"`
+	Pid *int64 `locationName:"pid" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -4253,6 +6297,19 @@ func (s DvbSubSourceSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DvbSubSourceSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DvbSubSourceSettings"}
+	if s.Pid != nil && *s.Pid < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Pid", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetPid sets the Pid field's value.
 func (s *DvbSubSourceSettings) SetPid(v int64) *DvbSubSourceSettings {
 	s.Pid = &v
@@ -4260,13 +6317,12 @@ func (s *DvbSubSourceSettings) SetPid(v int64) *DvbSubSourceSettings {
 }
 
 // DVB Time and Date Table (SDT)
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DvbTdtSettings
 type DvbTdtSettings struct {
 	_ struct{} `type:"structure"`
 
 	// The number of milliseconds between instances of this table in the output
 	// transport stream.
-	RepInterval *int64 `locationName:"repInterval" type:"integer"`
+	RepInterval *int64 `locationName:"repInterval" min:"1000" type:"integer"`
 }
 
 // String returns the string representation
@@ -4279,13 +6335,25 @@ func (s DvbTdtSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DvbTdtSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DvbTdtSettings"}
+	if s.RepInterval != nil && *s.RepInterval < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("RepInterval", 1000))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetRepInterval sets the RepInterval field's value.
 func (s *DvbTdtSettings) SetRepInterval(v int64) *DvbTdtSettings {
 	s.RepInterval = &v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Eac3Settings
 type Eac3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -4308,7 +6376,7 @@ type Eac3Settings struct {
 
 	// Sets the dialnorm for the output. If blank and input audio is Dolby Digital
 	// Plus, dialnorm will be passed through.
-	Dialnorm *int64 `locationName:"dialnorm" type:"integer"`
+	Dialnorm *int64 `locationName:"dialnorm" min:"1" type:"integer"`
 
 	// Sets the Dolby dynamic range compression profile.
 	DrcLine *string `locationName:"drcLine" type:"string" enum:"Eac3DrcLine"`
@@ -4371,6 +6439,19 @@ func (s Eac3Settings) String() string {
 // GoString returns the string representation
 func (s Eac3Settings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Eac3Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Eac3Settings"}
+	if s.Dialnorm != nil && *s.Dialnorm < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Dialnorm", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAttenuationControl sets the AttenuationControl field's value.
@@ -4493,7 +6574,6 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EmbeddedDestinationSettings
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -4508,7 +6588,6 @@ func (s EmbeddedDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EmbeddedPlusScte20DestinationSettings
 type EmbeddedPlusScte20DestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -4523,7 +6602,6 @@ func (s EmbeddedPlusScte20DestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EmbeddedSourceSettings
 type EmbeddedSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4538,10 +6616,10 @@ type EmbeddedSourceSettings struct {
 
 	// Specifies the 608/708 channel number within the video track from which to
 	// extract captions. Unused for passthrough.
-	Source608ChannelNumber *int64 `locationName:"source608ChannelNumber" type:"integer"`
+	Source608ChannelNumber *int64 `locationName:"source608ChannelNumber" min:"1" type:"integer"`
 
 	// This field is unused and deprecated.
-	Source608TrackNumber *int64 `locationName:"source608TrackNumber" type:"integer"`
+	Source608TrackNumber *int64 `locationName:"source608TrackNumber" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -4552,6 +6630,22 @@ func (s EmbeddedSourceSettings) String() string {
 // GoString returns the string representation
 func (s EmbeddedSourceSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EmbeddedSourceSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EmbeddedSourceSettings"}
+	if s.Source608ChannelNumber != nil && *s.Source608ChannelNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Source608ChannelNumber", 1))
+	}
+	if s.Source608TrackNumber != nil && *s.Source608TrackNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Source608TrackNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetConvert608To708 sets the Convert608To708 field's value.
@@ -4578,11 +6672,11 @@ func (s *EmbeddedSourceSettings) SetSource608TrackNumber(v int64) *EmbeddedSourc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/EncoderSettings
 type EncoderSettings struct {
 	_ struct{} `type:"structure"`
 
-	AudioDescriptions []*AudioDescription `locationName:"audioDescriptions" type:"list"`
+	// AudioDescriptions is a required field
+	AudioDescriptions []*AudioDescription `locationName:"audioDescriptions" type:"list" required:"true"`
 
 	// Settings for ad avail blanking.
 	AvailBlanking *AvailBlanking `locationName:"availBlanking" type:"structure"`
@@ -4599,12 +6693,16 @@ type EncoderSettings struct {
 	// Configuration settings that apply to the event as a whole.
 	GlobalConfiguration *GlobalConfiguration `locationName:"globalConfiguration" type:"structure"`
 
-	OutputGroups []*OutputGroup `locationName:"outputGroups" type:"list"`
+	// OutputGroups is a required field
+	OutputGroups []*OutputGroup `locationName:"outputGroups" type:"list" required:"true"`
 
 	// Contains settings used to acquire and adjust timecode information from inputs.
-	TimecodeConfig *TimecodeConfig `locationName:"timecodeConfig" type:"structure"`
+	//
+	// TimecodeConfig is a required field
+	TimecodeConfig *TimecodeConfig `locationName:"timecodeConfig" type:"structure" required:"true"`
 
-	VideoDescriptions []*VideoDescription `locationName:"videoDescriptions" type:"list"`
+	// VideoDescriptions is a required field
+	VideoDescriptions []*VideoDescription `locationName:"videoDescriptions" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -4615,6 +6713,93 @@ func (s EncoderSettings) String() string {
 // GoString returns the string representation
 func (s EncoderSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncoderSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncoderSettings"}
+	if s.AudioDescriptions == nil {
+		invalidParams.Add(request.NewErrParamRequired("AudioDescriptions"))
+	}
+	if s.OutputGroups == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputGroups"))
+	}
+	if s.TimecodeConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("TimecodeConfig"))
+	}
+	if s.VideoDescriptions == nil {
+		invalidParams.Add(request.NewErrParamRequired("VideoDescriptions"))
+	}
+	if s.AudioDescriptions != nil {
+		for i, v := range s.AudioDescriptions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AudioDescriptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.AvailBlanking != nil {
+		if err := s.AvailBlanking.Validate(); err != nil {
+			invalidParams.AddNested("AvailBlanking", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.AvailConfiguration != nil {
+		if err := s.AvailConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("AvailConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.BlackoutSlate != nil {
+		if err := s.BlackoutSlate.Validate(); err != nil {
+			invalidParams.AddNested("BlackoutSlate", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.CaptionDescriptions != nil {
+		for i, v := range s.CaptionDescriptions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CaptionDescriptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.GlobalConfiguration != nil {
+		if err := s.GlobalConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("GlobalConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.OutputGroups != nil {
+		for i, v := range s.OutputGroups {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OutputGroups", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.TimecodeConfig != nil {
+		if err := s.TimecodeConfig.Validate(); err != nil {
+			invalidParams.AddNested("TimecodeConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.VideoDescriptions != nil {
+		for i, v := range s.VideoDescriptions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "VideoDescriptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAudioDescriptions sets the AudioDescriptions field's value.
@@ -4671,14 +6856,13 @@ func (s *EncoderSettings) SetVideoDescriptions(v []*VideoDescription) *EncoderSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/FecOutputSettings
 type FecOutputSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Parameter D from SMPTE 2022-1. The height of the FEC protection matrix. The
 	// number of transport stream packets per column error correction packet. Must
 	// be between 4 and 20, inclusive.
-	ColumnDepth *int64 `locationName:"columnDepth" type:"integer"`
+	ColumnDepth *int64 `locationName:"columnDepth" min:"4" type:"integer"`
 
 	// Enables column only or column and row based FEC
 	IncludeFec *string `locationName:"includeFec" type:"string" enum:"FecOutputIncludeFec"`
@@ -4689,7 +6873,7 @@ type FecOutputSettings struct {
 	// stream packets per row error correction packet, and the value must be between
 	// 4 and 20, inclusive, if includeFec is columnAndRow. If includeFec is column,
 	// this value must be 1 to 20, inclusive.
-	RowLength *int64 `locationName:"rowLength" type:"integer"`
+	RowLength *int64 `locationName:"rowLength" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -4700,6 +6884,22 @@ func (s FecOutputSettings) String() string {
 // GoString returns the string representation
 func (s FecOutputSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FecOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FecOutputSettings"}
+	if s.ColumnDepth != nil && *s.ColumnDepth < 4 {
+		invalidParams.Add(request.NewErrParamMinValue("ColumnDepth", 4))
+	}
+	if s.RowLength != nil && *s.RowLength < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("RowLength", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetColumnDepth sets the ColumnDepth field's value.
@@ -4720,7 +6920,6 @@ func (s *FecOutputSettings) SetRowLength(v int64) *FecOutputSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/GlobalConfiguration
 type GlobalConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -4760,6 +6959,24 @@ func (s GlobalConfiguration) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GlobalConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GlobalConfiguration"}
+	if s.InitialAudioGain != nil && *s.InitialAudioGain < -60 {
+		invalidParams.Add(request.NewErrParamMinValue("InitialAudioGain", -60))
+	}
+	if s.InputLossBehavior != nil {
+		if err := s.InputLossBehavior.Validate(); err != nil {
+			invalidParams.AddNested("InputLossBehavior", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetInitialAudioGain sets the InitialAudioGain field's value.
 func (s *GlobalConfiguration) SetInitialAudioGain(v int64) *GlobalConfiguration {
 	s.InitialAudioGain = &v
@@ -4790,7 +7007,6 @@ func (s *GlobalConfiguration) SetSupportLowFramerateInputs(v string) *GlobalConf
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/H264Settings
 type H264Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -4807,7 +7023,7 @@ type H264Settings struct {
 	// Average bitrate in bits/second. Required for VBR, CBR, and ABR. For MS Smooth
 	// outputs, bitrates must be unique when rounded down to the nearest multiple
 	// of 1000.
-	Bitrate *int64 `locationName:"bitrate" type:"integer"`
+	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
 
 	// Percentage of the buffer that should initially be filled (HRD buffer model).
 	BufFillPct *int64 `locationName:"bufFillPct" type:"integer"`
@@ -4871,7 +7087,7 @@ type H264Settings struct {
 	LookAheadRateControl *string `locationName:"lookAheadRateControl" type:"string" enum:"H264LookAheadRateControl"`
 
 	// Maximum bitrate in bits/second (for VBR mode only).
-	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
+	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
 
 	// Only meaningful if sceneChangeDetect is set to enabled. Enforces separation
 	// between repeated (cadence) I-frames and I-frames inserted by Scene Change
@@ -4884,7 +7100,7 @@ type H264Settings struct {
 
 	// Number of reference frames to use. The encoder may use more than requested
 	// if using B-frames and/or interlaced encoding.
-	NumRefFrames *int64 `locationName:"numRefFrames" type:"integer"`
+	NumRefFrames *int64 `locationName:"numRefFrames" min:"1" type:"integer"`
 
 	// This field indicates how the output pixel aspect ratio is specified. If "specified"
 	// is selected then the output video pixel aspect ratio is determined by parNumerator
@@ -4894,7 +7110,7 @@ type H264Settings struct {
 	ParControl *string `locationName:"parControl" type:"string" enum:"H264ParControl"`
 
 	// Pixel Aspect Ratio denominator.
-	ParDenominator *int64 `locationName:"parDenominator" type:"integer"`
+	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
 	// Pixel Aspect Ratio numerator.
 	ParNumerator *int64 `locationName:"parNumerator" type:"integer"`
@@ -4916,7 +7132,7 @@ type H264Settings struct {
 	// the number of macroblock rows for interlaced pictures.This field is optional;
 	// when no value is specified the encoder will choose the number of slices based
 	// on encode resolution.
-	Slices *int64 `locationName:"slices" type:"integer"`
+	Slices *int64 `locationName:"slices" min:"1" type:"integer"`
 
 	// Softness. Selects quantizer matrix, larger values reduce high-frequency content
 	// in the encoded image.
@@ -4947,6 +7163,31 @@ func (s H264Settings) String() string {
 // GoString returns the string representation
 func (s H264Settings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *H264Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "H264Settings"}
+	if s.Bitrate != nil && *s.Bitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 1000))
+	}
+	if s.MaxBitrate != nil && *s.MaxBitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxBitrate", 1000))
+	}
+	if s.NumRefFrames != nil && *s.NumRefFrames < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumRefFrames", 1))
+	}
+	if s.ParDenominator != nil && *s.ParDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParDenominator", 1))
+	}
+	if s.Slices != nil && *s.Slices < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Slices", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAdaptiveQuantization sets the AdaptiveQuantization field's value.
@@ -5159,7 +7400,6 @@ func (s *H264Settings) SetTimecodeInsertion(v string) *H264Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsAkamaiSettings
 type HlsAkamaiSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5241,7 +7481,6 @@ func (s *HlsAkamaiSettings) SetToken(v string) *HlsAkamaiSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsBasicPutSettings
 type HlsBasicPutSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5295,7 +7534,6 @@ func (s *HlsBasicPutSettings) SetRestartDelay(v int64) *HlsBasicPutSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsCdnSettings
 type HlsCdnSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5342,7 +7580,6 @@ func (s *HlsCdnSettings) SetHlsWebdavSettings(v *HlsWebdavSettings) *HlsCdnSetti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsGroupSettings
 type HlsGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5386,11 +7623,13 @@ type HlsGroupSettings struct {
 	// For use with encryptionType. This is a 128-bit, 16-byte hex value represented
 	// by a 32-character text string. If ivSource is set to "explicit" then this
 	// parameter is required and is used as the IV for encryption.
-	ConstantIv *string `locationName:"constantIv" type:"string"`
+	ConstantIv *string `locationName:"constantIv" min:"32" type:"string"`
 
 	// A directory or HTTP destination for the HLS segments, manifest files, and
 	// encryption keys (if enabled).
-	Destination *OutputLocationRef `locationName:"destination" type:"structure"`
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
 
 	// Place segments in subdirectories.
 	DirectoryStructure *string `locationName:"directoryStructure" type:"string" enum:"HlsDirectoryStructure"`
@@ -5402,10 +7641,10 @@ type HlsGroupSettings struct {
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
 
-	// Number of segments to keep in the playlist (.m3u8) file. mode must be "vod"
-	// for this setting to have an effect, and this number should be less than or
-	// equal to keepSegments.
-	IndexNSegments *int64 `locationName:"indexNSegments" type:"integer"`
+	// If mode is "live", the number of segments to retain in the manifest (.m3u8)
+	// file. This number must be less than or equal to keepSegments. If mode is
+	// "vod", this parameter has no effect.
+	IndexNSegments *int64 `locationName:"indexNSegments" min:"3" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
 	InputLossAction *string `locationName:"inputLossAction" type:"string" enum:"InputLossActionForHlsOut"`
@@ -5422,9 +7661,9 @@ type HlsGroupSettings struct {
 	// constantIv value.
 	IvSource *string `locationName:"ivSource" type:"string" enum:"HlsIvSource"`
 
-	// Number of segments to retain in the destination directory. mode must be "live"
-	// for this setting to have an effect.
-	KeepSegments *int64 `locationName:"keepSegments" type:"integer"`
+	// If mode is "live", the number of TS segments to retain in the destination
+	// directory. If mode is "vod", this parameter has no effect.
+	KeepSegments *int64 `locationName:"keepSegments" min:"1" type:"integer"`
 
 	// The value specifies how the key is represented in the resource identified
 	// by the URI. If parameter is absent, an implicit value of "identity" is used.
@@ -5450,9 +7689,12 @@ type HlsGroupSettings struct {
 	// needed.
 	MinSegmentLength *int64 `locationName:"minSegmentLength" type:"integer"`
 
-	// If set to "vod", keeps and indexes all segments starting with the first segment.
-	// If set to "live" segments will age out and only the last keepSegments number
-	// of segments will be retained.
+	// If "vod", all segments are indexed and kept permanently in the destination
+	// and manifest. If "live", only the number segments specified in keepSegments
+	// and indexNSegments are kept; newer segments replace older segments, which
+	// may prevent players from rewinding all the way to the beginning of the event.VOD
+	// mode uses HLS EXT-X-PLAYLIST-TYPE of EVENT while the channel is running,
+	// converting it to a "VOD" type manifest on completion of the stream.
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
 	// Generates the .m3u8 playlist file for this HLS output group. The segmentsOnly
@@ -5471,7 +7713,7 @@ type HlsGroupSettings struct {
 	// Length of MPEG-2 Transport Stream segments to create (in seconds). Note that
 	// segments will end on the next keyframe after this number of seconds, so actual
 	// segment length may be longer.
-	SegmentLength *int64 `locationName:"segmentLength" type:"integer"`
+	SegmentLength *int64 `locationName:"segmentLength" min:"1" type:"integer"`
 
 	// When set to useInputSegmentation, the output segment or fragment points are
 	// set by the RAI markers from the input streams.
@@ -5480,7 +7722,7 @@ type HlsGroupSettings struct {
 	// Number of segments to write to a subdirectory before starting a new one.
 	// directoryStructure must be subdirectoryPerStream for this setting to have
 	// an effect.
-	SegmentsPerSubdirectory *int64 `locationName:"segmentsPerSubdirectory" type:"integer"`
+	SegmentsPerSubdirectory *int64 `locationName:"segmentsPerSubdirectory" min:"1" type:"integer"`
 
 	// Include or exclude RESOLUTION attribute for video in EXT-X-STREAM-INF tag
 	// of variant manifest.
@@ -5509,6 +7751,49 @@ func (s HlsGroupSettings) String() string {
 // GoString returns the string representation
 func (s HlsGroupSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsGroupSettings"}
+	if s.ConstantIv != nil && len(*s.ConstantIv) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("ConstantIv", 32))
+	}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.IndexNSegments != nil && *s.IndexNSegments < 3 {
+		invalidParams.Add(request.NewErrParamMinValue("IndexNSegments", 3))
+	}
+	if s.KeepSegments != nil && *s.KeepSegments < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("KeepSegments", 1))
+	}
+	if s.SegmentLength != nil && *s.SegmentLength < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("SegmentLength", 1))
+	}
+	if s.SegmentsPerSubdirectory != nil && *s.SegmentsPerSubdirectory < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("SegmentsPerSubdirectory", 1))
+	}
+	if s.CaptionLanguageMappings != nil {
+		for i, v := range s.CaptionLanguageMappings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CaptionLanguageMappings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.KeyProviderSettings != nil {
+		if err := s.KeyProviderSettings.Validate(); err != nil {
+			invalidParams.AddNested("KeyProviderSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAdMarkers sets the AdMarkers field's value.
@@ -5721,7 +8006,6 @@ func (s *HlsGroupSettings) SetTsFileMode(v string) *HlsGroupSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsInputSettings
 type HlsInputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5779,7 +8063,6 @@ func (s *HlsInputSettings) SetRetryInterval(v int64) *HlsInputSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsMediaStoreSettings
 type HlsMediaStoreSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5843,17 +8126,18 @@ func (s *HlsMediaStoreSettings) SetRestartDelay(v int64) *HlsMediaStoreSettings 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsOutputSettings
 type HlsOutputSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Settings regarding the underlying stream. These settings are different for
 	// audio-only outputs.
-	HlsSettings *HlsSettings `locationName:"hlsSettings" type:"structure"`
+	//
+	// HlsSettings is a required field
+	HlsSettings *HlsSettings `locationName:"hlsSettings" type:"structure" required:"true"`
 
 	// String concatenated to the end of the destination filename. Accepts \"Format
 	// Identifiers\":#formatIdentifierParameters.
-	NameModifier *string `locationName:"nameModifier" type:"string"`
+	NameModifier *string `locationName:"nameModifier" min:"1" type:"string"`
 
 	// String concatenated to end of segment filenames.
 	SegmentModifier *string `locationName:"segmentModifier" type:"string"`
@@ -5867,6 +8151,27 @@ func (s HlsOutputSettings) String() string {
 // GoString returns the string representation
 func (s HlsOutputSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsOutputSettings"}
+	if s.HlsSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("HlsSettings"))
+	}
+	if s.NameModifier != nil && len(*s.NameModifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NameModifier", 1))
+	}
+	if s.HlsSettings != nil {
+		if err := s.HlsSettings.Validate(); err != nil {
+			invalidParams.AddNested("HlsSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetHlsSettings sets the HlsSettings field's value.
@@ -5887,7 +8192,6 @@ func (s *HlsOutputSettings) SetSegmentModifier(v string) *HlsOutputSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsSettings
 type HlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5906,6 +8210,26 @@ func (s HlsSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsSettings"}
+	if s.AudioOnlyHlsSettings != nil {
+		if err := s.AudioOnlyHlsSettings.Validate(); err != nil {
+			invalidParams.AddNested("AudioOnlyHlsSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StandardHlsSettings != nil {
+		if err := s.StandardHlsSettings.Validate(); err != nil {
+			invalidParams.AddNested("StandardHlsSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAudioOnlyHlsSettings sets the AudioOnlyHlsSettings field's value.
 func (s *HlsSettings) SetAudioOnlyHlsSettings(v *AudioOnlyHlsSettings) *HlsSettings {
 	s.AudioOnlyHlsSettings = v
@@ -5918,7 +8242,6 @@ func (s *HlsSettings) SetStandardHlsSettings(v *StandardHlsSettings) *HlsSetting
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/HlsWebdavSettings
 type HlsWebdavSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -5981,30 +8304,29 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Input
 type Input struct {
 	_ struct{} `type:"structure"`
 
-	// Unique ARN of input (generated, immutable)
+	// The Unique ARN of the input (generated, immutable).
 	Arn *string `locationName:"arn" type:"string"`
 
-	// List of channel IDs that that input is attached to (currently an input can
-	// only be attached to one channel)
+	// A list of channel IDs that that input is attached to (currently an input
+	// can only be attached to one channel).
 	AttachedChannels []*string `locationName:"attachedChannels" type:"list"`
 
-	// List of destinations of input (PULL-type)
+	// A list of the destinations of the input (PUSH-type).
 	Destinations []*InputDestination `locationName:"destinations" type:"list"`
 
-	// generated ID of input (unique for user account, immutable)
+	// The generated ID of the input (unique for user account, immutable).
 	Id *string `locationName:"id" type:"string"`
 
-	// user-assigned name (mutable)
+	// The user-assigned name (This is a mutable value).
 	Name *string `locationName:"name" type:"string"`
 
-	// List of IDs for all the security groups attached to the input.
+	// A list of IDs for all the security groups attached to the input.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
-	// List of sources of input (PULL-type)
+	// A list of the sources of the input (PULL-type).
 	Sources []*InputSource `locationName:"sources" type:"list"`
 
 	State *string `locationName:"state" type:"string" enum:"InputState"`
@@ -6076,7 +8398,6 @@ func (s *Input) SetType(v string) *Input {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputAttachment
 type InputAttachment struct {
 	_ struct{} `type:"structure"`
 
@@ -6097,6 +8418,21 @@ func (s InputAttachment) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputAttachment) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputAttachment"}
+	if s.InputSettings != nil {
+		if err := s.InputSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetInputId sets the InputId field's value.
 func (s *InputAttachment) SetInputId(v string) *InputAttachment {
 	s.InputId = &v
@@ -6109,16 +8445,19 @@ func (s *InputAttachment) SetInputSettings(v *InputSettings) *InputAttachment {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputChannelLevel
 type InputChannelLevel struct {
 	_ struct{} `type:"structure"`
 
 	// Remixing value. Units are in dB and acceptable values are within the range
 	// from -60 (mute) and 6 dB.
-	Gain *int64 `locationName:"gain" type:"integer"`
+	//
+	// Gain is a required field
+	Gain *int64 `locationName:"gain" type:"integer" required:"true"`
 
 	// The index of the input channel used as a source.
-	InputChannel *int64 `locationName:"inputChannel" type:"integer"`
+	//
+	// InputChannel is a required field
+	InputChannel *int64 `locationName:"inputChannel" type:"integer" required:"true"`
 }
 
 // String returns the string representation
@@ -6129,6 +8468,25 @@ func (s InputChannelLevel) String() string {
 // GoString returns the string representation
 func (s InputChannelLevel) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputChannelLevel) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputChannelLevel"}
+	if s.Gain == nil {
+		invalidParams.Add(request.NewErrParamRequired("Gain"))
+	}
+	if s.Gain != nil && *s.Gain < -60 {
+		invalidParams.Add(request.NewErrParamMinValue("Gain", -60))
+	}
+	if s.InputChannel == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputChannel"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetGain sets the Gain field's value.
@@ -6143,16 +8501,15 @@ func (s *InputChannelLevel) SetInputChannel(v int64) *InputChannelLevel {
 	return s
 }
 
-// Settings for a PUSH type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputDestination
+// The settings for a PUSH type input.
 type InputDestination struct {
 	_ struct{} `type:"structure"`
 
-	// system-generated static IP address of endpoint.Remains fixed for the lifetime
-	// of the input
+	// The system-generated static IP address of endpoint.It remains fixed for the
+	// lifetime of the input.
 	Ip *string `locationName:"ip" type:"string"`
 
-	// port for input
+	// The port number for the input.
 	Port *string `locationName:"port" type:"string"`
 
 	// This represents the endpoint that the customer stream will bepushed to.
@@ -6187,8 +8544,7 @@ func (s *InputDestination) SetUrl(v string) *InputDestination {
 	return s
 }
 
-// Endpoint settings for a PUSH type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputDestinationRequest
+// Endpoint settings for a PUSH type input.
 type InputDestinationRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -6212,7 +8568,6 @@ func (s *InputDestinationRequest) SetStreamName(v string) *InputDestinationReque
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputLocation
 type InputLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -6221,8 +8576,10 @@ type InputLocation struct {
 
 	// Uniform Resource Identifier - This should be a path to a file accessible
 	// to the Live system (eg. a http:// URI) depending on the output type. For
-	// example, a rtmpEndpoint should have a uri simliar to: "rtmp://fmsserver/live".
-	Uri *string `locationName:"uri" type:"string"`
+	// example, a RTMP destination should have a uri simliar to: "rtmp://fmsserver/live".
+	//
+	// Uri is a required field
+	Uri *string `locationName:"uri" type:"string" required:"true"`
 
 	// Username if credentials are required to access a file or publishing point.
 	// This can be either a plaintext username, or a reference to an AWS parameter
@@ -6239,6 +8596,19 @@ func (s InputLocation) String() string {
 // GoString returns the string representation
 func (s InputLocation) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputLocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputLocation"}
+	if s.Uri == nil {
+		invalidParams.Add(request.NewErrParamRequired("Uri"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetPasswordParam sets the PasswordParam field's value.
@@ -6259,7 +8629,6 @@ func (s *InputLocation) SetUsername(v string) *InputLocation {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputLossBehavior
 type InputLossBehavior struct {
 	_ struct{} `type:"structure"`
 
@@ -6271,7 +8640,7 @@ type InputLossBehavior struct {
 
 	// When input loss image type is "color" this field specifies the color to use.
 	// Value: 6 hex characters representing the values of RGB.
-	InputLossImageColor *string `locationName:"inputLossImageColor" type:"string"`
+	InputLossImageColor *string `locationName:"inputLossImageColor" min:"6" type:"string"`
 
 	// When input loss image type is "slate" these fields specify the parameters
 	// for accessing the slate.
@@ -6295,6 +8664,24 @@ func (s InputLossBehavior) String() string {
 // GoString returns the string representation
 func (s InputLossBehavior) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputLossBehavior) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputLossBehavior"}
+	if s.InputLossImageColor != nil && len(*s.InputLossImageColor) < 6 {
+		invalidParams.Add(request.NewErrParamMinLen("InputLossImageColor", 6))
+	}
+	if s.InputLossImageSlate != nil {
+		if err := s.InputLossImageSlate.Validate(); err != nil {
+			invalidParams.AddNested("InputLossImageSlate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetBlackFrameMsec sets the BlackFrameMsec field's value.
@@ -6328,7 +8715,6 @@ func (s *InputLossBehavior) SetRepeatFrameMsec(v int64) *InputLossBehavior {
 }
 
 // An Input Security Group
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSecurityGroup
 type InputSecurityGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -6337,6 +8723,12 @@ type InputSecurityGroup struct {
 
 	// The Id of the Input Security Group
 	Id *string `locationName:"id" type:"string"`
+
+	// The list of inputs currently using this Input Security Group.
+	Inputs []*string `locationName:"inputs" type:"list"`
+
+	// The current state of the Input Security Group.
+	State *string `locationName:"state" type:"string" enum:"InputSecurityGroupState"`
 
 	// Whitelist rules and their sync status
 	WhitelistRules []*InputWhitelistRule `locationName:"whitelistRules" type:"list"`
@@ -6364,6 +8756,18 @@ func (s *InputSecurityGroup) SetId(v string) *InputSecurityGroup {
 	return s
 }
 
+// SetInputs sets the Inputs field's value.
+func (s *InputSecurityGroup) SetInputs(v []*string) *InputSecurityGroup {
+	s.Inputs = v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *InputSecurityGroup) SetState(v string) *InputSecurityGroup {
+	s.State = &v
+	return s
+}
+
 // SetWhitelistRules sets the WhitelistRules field's value.
 func (s *InputSecurityGroup) SetWhitelistRules(v []*InputWhitelistRule) *InputSecurityGroup {
 	s.WhitelistRules = v
@@ -6372,7 +8776,6 @@ func (s *InputSecurityGroup) SetWhitelistRules(v []*InputWhitelistRule) *InputSe
 
 // Live Event input parameters. There can be multiple inputs in a single Live
 // Event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSettings
 type InputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6389,7 +8792,7 @@ type InputSettings struct {
 	DenoiseFilter *string `locationName:"denoiseFilter" type:"string" enum:"InputDenoiseFilter"`
 
 	// Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
-	FilterStrength *int64 `locationName:"filterStrength" type:"integer"`
+	FilterStrength *int64 `locationName:"filterStrength" min:"1" type:"integer"`
 
 	// Turns on the filter for this input. MPEG-2 inputs have the deblocking filter
 	// enabled by default.1) auto - filtering will be applied depending on input
@@ -6416,6 +8819,39 @@ func (s InputSettings) String() string {
 // GoString returns the string representation
 func (s InputSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputSettings"}
+	if s.FilterStrength != nil && *s.FilterStrength < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FilterStrength", 1))
+	}
+	if s.AudioSelectors != nil {
+		for i, v := range s.AudioSelectors {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AudioSelectors", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.CaptionSelectors != nil {
+		for i, v := range s.CaptionSelectors {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CaptionSelectors", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAudioSelectors sets the AudioSelectors field's value.
@@ -6472,18 +8908,17 @@ func (s *InputSettings) SetVideoSelector(v *VideoSelector) *InputSettings {
 	return s
 }
 
-// Settings for a PULL type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSource
+// The settings for a PULL type input.
 type InputSource struct {
 	_ struct{} `type:"structure"`
 
-	// key used to extract the password from EC2 Parameter store
+	// The key used to extract the password from EC2 Parameter store.
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
 	// This represents the customer's source URL where stream ispulled from.
 	Url *string `locationName:"url" type:"string"`
 
-	// username for input source
+	// The username for the input source.
 	Username *string `locationName:"username" type:"string"`
 }
 
@@ -6515,18 +8950,17 @@ func (s *InputSource) SetUsername(v string) *InputSource {
 	return s
 }
 
-// Settings for for a PULL type input
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputSourceRequest
+// Settings for for a PULL type input.
 type InputSourceRequest struct {
 	_ struct{} `type:"structure"`
 
-	// key used to extract the password from EC2 Parameter store
+	// The key used to extract the password from EC2 Parameter store.
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
 
 	// This represents the customer's source URL where stream ispulled from.
 	Url *string `locationName:"url" type:"string"`
 
-	// username for input source
+	// The username for the input source.
 	Username *string `locationName:"username" type:"string"`
 }
 
@@ -6558,8 +8992,48 @@ func (s *InputSourceRequest) SetUsername(v string) *InputSourceRequest {
 	return s
 }
 
+type InputSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Input codec
+	Codec *string `locationName:"codec" type:"string" enum:"InputCodec"`
+
+	// Maximum input bitrate, categorized coarsely
+	MaximumBitrate *string `locationName:"maximumBitrate" type:"string" enum:"InputMaximumBitrate"`
+
+	// Input resolution, categorized coarsely
+	Resolution *string `locationName:"resolution" type:"string" enum:"InputResolution"`
+}
+
+// String returns the string representation
+func (s InputSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputSpecification) GoString() string {
+	return s.String()
+}
+
+// SetCodec sets the Codec field's value.
+func (s *InputSpecification) SetCodec(v string) *InputSpecification {
+	s.Codec = &v
+	return s
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *InputSpecification) SetMaximumBitrate(v string) *InputSpecification {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetResolution sets the Resolution field's value.
+func (s *InputSpecification) SetResolution(v string) *InputSpecification {
+	s.Resolution = &v
+	return s
+}
+
 // Whitelist rule
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputWhitelistRule
 type InputWhitelistRule struct {
 	_ struct{} `type:"structure"`
 
@@ -6584,11 +9058,10 @@ func (s *InputWhitelistRule) SetCidr(v string) *InputWhitelistRule {
 }
 
 // An IPv4 CIDR to whitelist.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/InputWhitelistRuleCidr
 type InputWhitelistRuleCidr struct {
 	_ struct{} `type:"structure"`
 
-	// The IPv4 CIDR to whitelist
+	// The IPv4 CIDR to whitelist.
 	Cidr *string `locationName:"cidr" type:"string"`
 }
 
@@ -6608,7 +9081,6 @@ func (s *InputWhitelistRuleCidr) SetCidr(v string) *InputWhitelistRuleCidr {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/KeyProviderSettings
 type KeyProviderSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6625,13 +9097,27 @@ func (s KeyProviderSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *KeyProviderSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "KeyProviderSettings"}
+	if s.StaticKeySettings != nil {
+		if err := s.StaticKeySettings.Validate(); err != nil {
+			invalidParams.AddNested("StaticKeySettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetStaticKeySettings sets the StaticKeySettings field's value.
 func (s *KeyProviderSettings) SetStaticKeySettings(v *StaticKeySettings) *KeyProviderSettings {
 	s.StaticKeySettings = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListChannelsRequest
 type ListChannelsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6675,7 +9161,6 @@ func (s *ListChannelsInput) SetNextToken(v string) *ListChannelsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListChannelsResponse
 type ListChannelsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6706,7 +9191,6 @@ func (s *ListChannelsOutput) SetNextToken(v string) *ListChannelsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputSecurityGroupsRequest
 type ListInputSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6750,7 +9234,6 @@ func (s *ListInputSecurityGroupsInput) SetNextToken(v string) *ListInputSecurity
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputSecurityGroupsResponse
 type ListInputSecurityGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6781,7 +9264,6 @@ func (s *ListInputSecurityGroupsOutput) SetNextToken(v string) *ListInputSecurit
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputsRequest
 type ListInputsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6825,7 +9307,6 @@ func (s *ListInputsInput) SetNextToken(v string) *ListInputsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputsResponse
 type ListInputsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6856,7 +9337,272 @@ func (s *ListInputsOutput) SetNextToken(v string) *ListInputsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/M2tsSettings
+type ListOfferingsInput struct {
+	_ struct{} `type:"structure"`
+
+	ChannelConfiguration *string `location:"querystring" locationName:"channelConfiguration" type:"string"`
+
+	Codec *string `location:"querystring" locationName:"codec" type:"string"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	MaximumBitrate *string `location:"querystring" locationName:"maximumBitrate" type:"string"`
+
+	MaximumFramerate *string `location:"querystring" locationName:"maximumFramerate" type:"string"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	Resolution *string `location:"querystring" locationName:"resolution" type:"string"`
+
+	ResourceType *string `location:"querystring" locationName:"resourceType" type:"string"`
+
+	SpecialFeature *string `location:"querystring" locationName:"specialFeature" type:"string"`
+
+	VideoQuality *string `location:"querystring" locationName:"videoQuality" type:"string"`
+}
+
+// String returns the string representation
+func (s ListOfferingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOfferingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListOfferingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListOfferingsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelConfiguration sets the ChannelConfiguration field's value.
+func (s *ListOfferingsInput) SetChannelConfiguration(v string) *ListOfferingsInput {
+	s.ChannelConfiguration = &v
+	return s
+}
+
+// SetCodec sets the Codec field's value.
+func (s *ListOfferingsInput) SetCodec(v string) *ListOfferingsInput {
+	s.Codec = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListOfferingsInput) SetMaxResults(v int64) *ListOfferingsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *ListOfferingsInput) SetMaximumBitrate(v string) *ListOfferingsInput {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetMaximumFramerate sets the MaximumFramerate field's value.
+func (s *ListOfferingsInput) SetMaximumFramerate(v string) *ListOfferingsInput {
+	s.MaximumFramerate = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListOfferingsInput) SetNextToken(v string) *ListOfferingsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResolution sets the Resolution field's value.
+func (s *ListOfferingsInput) SetResolution(v string) *ListOfferingsInput {
+	s.Resolution = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ListOfferingsInput) SetResourceType(v string) *ListOfferingsInput {
+	s.ResourceType = &v
+	return s
+}
+
+// SetSpecialFeature sets the SpecialFeature field's value.
+func (s *ListOfferingsInput) SetSpecialFeature(v string) *ListOfferingsInput {
+	s.SpecialFeature = &v
+	return s
+}
+
+// SetVideoQuality sets the VideoQuality field's value.
+func (s *ListOfferingsInput) SetVideoQuality(v string) *ListOfferingsInput {
+	s.VideoQuality = &v
+	return s
+}
+
+type ListOfferingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	Offerings []*Offering `locationName:"offerings" type:"list"`
+}
+
+// String returns the string representation
+func (s ListOfferingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOfferingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListOfferingsOutput) SetNextToken(v string) *ListOfferingsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOfferings sets the Offerings field's value.
+func (s *ListOfferingsOutput) SetOfferings(v []*Offering) *ListOfferingsOutput {
+	s.Offerings = v
+	return s
+}
+
+type ListReservationsInput struct {
+	_ struct{} `type:"structure"`
+
+	Codec *string `location:"querystring" locationName:"codec" type:"string"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	MaximumBitrate *string `location:"querystring" locationName:"maximumBitrate" type:"string"`
+
+	MaximumFramerate *string `location:"querystring" locationName:"maximumFramerate" type:"string"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	Resolution *string `location:"querystring" locationName:"resolution" type:"string"`
+
+	ResourceType *string `location:"querystring" locationName:"resourceType" type:"string"`
+
+	SpecialFeature *string `location:"querystring" locationName:"specialFeature" type:"string"`
+
+	VideoQuality *string `location:"querystring" locationName:"videoQuality" type:"string"`
+}
+
+// String returns the string representation
+func (s ListReservationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListReservationsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListReservationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListReservationsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCodec sets the Codec field's value.
+func (s *ListReservationsInput) SetCodec(v string) *ListReservationsInput {
+	s.Codec = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListReservationsInput) SetMaxResults(v int64) *ListReservationsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *ListReservationsInput) SetMaximumBitrate(v string) *ListReservationsInput {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetMaximumFramerate sets the MaximumFramerate field's value.
+func (s *ListReservationsInput) SetMaximumFramerate(v string) *ListReservationsInput {
+	s.MaximumFramerate = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListReservationsInput) SetNextToken(v string) *ListReservationsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResolution sets the Resolution field's value.
+func (s *ListReservationsInput) SetResolution(v string) *ListReservationsInput {
+	s.Resolution = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ListReservationsInput) SetResourceType(v string) *ListReservationsInput {
+	s.ResourceType = &v
+	return s
+}
+
+// SetSpecialFeature sets the SpecialFeature field's value.
+func (s *ListReservationsInput) SetSpecialFeature(v string) *ListReservationsInput {
+	s.SpecialFeature = &v
+	return s
+}
+
+// SetVideoQuality sets the VideoQuality field's value.
+func (s *ListReservationsInput) SetVideoQuality(v string) *ListReservationsInput {
+	s.VideoQuality = &v
+	return s
+}
+
+type ListReservationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	Reservations []*Reservation `locationName:"reservations" type:"list"`
+}
+
+// String returns the string representation
+func (s ListReservationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListReservationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListReservationsOutput) SetNextToken(v string) *ListReservationsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReservations sets the Reservations field's value.
+func (s *ListReservationsOutput) SetReservations(v []*Reservation) *ListReservationsOutput {
+	s.Reservations = v
+	return s
+}
+
 type M2tsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6955,9 +9701,7 @@ type M2tsSettings struct {
 	// EBP markers will be placed on only the video PID.
 	EbpPlacement *string `locationName:"ebpPlacement" type:"string" enum:"M2tsEbpPlacement"`
 
-	// Packet Identifier (PID) for ECM in the transport stream. Only enabled when
-	// Simulcrypt is enabled. Can be entered as a decimal or hexadecimal value.
-	// Valid values are 32 (or 0x20)..8182 (or 0x1ff6).
+	// This field is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
 	// Include or exclude the ES Rate field in the PES header.
@@ -7092,6 +9836,31 @@ func (s M2tsSettings) String() string {
 // GoString returns the string representation
 func (s M2tsSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *M2tsSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "M2tsSettings"}
+	if s.DvbNitSettings != nil {
+		if err := s.DvbNitSettings.Validate(); err != nil {
+			invalidParams.AddNested("DvbNitSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DvbSdtSettings != nil {
+		if err := s.DvbSdtSettings.Validate(); err != nil {
+			invalidParams.AddNested("DvbSdtSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DvbTdtSettings != nil {
+		if err := s.DvbTdtSettings.Validate(); err != nil {
+			invalidParams.AddNested("DvbTdtSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAbsentInputAudioBehavior sets the AbsentInputAudioBehavior field's value.
@@ -7371,7 +10140,6 @@ func (s *M2tsSettings) SetVideoPid(v string) *M2tsSettings {
 }
 
 // Settings information for the .m3u8 container
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/M3u8Settings
 type M3u8Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -7383,10 +10151,7 @@ type M3u8Settings struct {
 	// by comma separation. Can be entered as decimal or hexadecimal values.
 	AudioPids *string `locationName:"audioPids" type:"string"`
 
-	// ThePlatform-protected transport streams using 'microsoft' as Target Client
-	// include an ECM stream. This ECM stream contains the size, IV, and PTS of
-	// every sample in the transport stream. This stream PID is specified here.
-	// This PID has no effect on non ThePlatform-protected streams.
+	// This parameter is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
 	// The number of milliseconds between instances of this table in the output
@@ -7428,6 +10193,11 @@ type M3u8Settings struct {
 
 	// When set to passthrough, timed metadata is passed through from input to output.
 	TimedMetadataBehavior *string `locationName:"timedMetadataBehavior" type:"string" enum:"M3u8TimedMetadataBehavior"`
+
+	// Packet Identifier (PID) of the timed metadata stream in the transport stream.
+	// Can be entered as a decimal or hexadecimal value. Valid values are 32 (or
+	// 0x20)..8182 (or 0x1ff6).
+	TimedMetadataPid *string `locationName:"timedMetadataPid" type:"string"`
 
 	// The value of the transport stream ID field in the Program Map Table.
 	TransportStreamId *int64 `locationName:"transportStreamId" type:"integer"`
@@ -7525,6 +10295,12 @@ func (s *M3u8Settings) SetTimedMetadataBehavior(v string) *M3u8Settings {
 	return s
 }
 
+// SetTimedMetadataPid sets the TimedMetadataPid field's value.
+func (s *M3u8Settings) SetTimedMetadataPid(v string) *M3u8Settings {
+	s.TimedMetadataPid = &v
+	return s
+}
+
 // SetTransportStreamId sets the TransportStreamId field's value.
 func (s *M3u8Settings) SetTransportStreamId(v int64) *M3u8Settings {
 	s.TransportStreamId = &v
@@ -7537,7 +10313,6 @@ func (s *M3u8Settings) SetVideoPid(v string) *M3u8Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Mp2Settings
 type Mp2Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -7580,7 +10355,6 @@ func (s *Mp2Settings) SetSampleRate(v float64) *Mp2Settings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/MsSmoothGroupSettings
 type MsSmoothGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7595,8 +10369,7 @@ type MsSmoothGroupSettings struct {
 
 	// If set to verifyAuthenticity, verify the https certificate chain to a trusted
 	// Certificate Authority (CA). This will cause https outputs to self-signed
-	// certificates to fail unless those certificates are manually added to the
-	// OS trusted keystore.
+	// certificates to fail.
 	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"SmoothGroupCertificateMode"`
 
 	// Number of seconds to wait before retrying connection to the IIS server if
@@ -7606,7 +10379,9 @@ type MsSmoothGroupSettings struct {
 
 	// Smooth Streaming publish point on an IIS server. Elemental Live acts as a
 	// "Push" encoder to IIS.
-	Destination *OutputLocationRef `locationName:"destination" type:"structure"`
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
 
 	// MS Smooth event ID to be sent to the IIS server.Should only be specified
 	// if eventIdMode is set to useConfigured.
@@ -7628,7 +10403,7 @@ type MsSmoothGroupSettings struct {
 
 	// Length of mp4 fragments to generate (in seconds). Fragment length must be
 	// compatible with GOP size and framerate.
-	FragmentLength *int64 `locationName:"fragmentLength" type:"integer"`
+	FragmentLength *int64 `locationName:"fragmentLength" min:"1" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
 	InputLossAction *string `locationName:"inputLossAction" type:"string" enum:"InputLossActionForMsSmoothOut"`
@@ -7681,6 +10456,22 @@ func (s MsSmoothGroupSettings) String() string {
 // GoString returns the string representation
 func (s MsSmoothGroupSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MsSmoothGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MsSmoothGroupSettings"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.FragmentLength != nil && *s.FragmentLength < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FragmentLength", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAcquisitionPointId sets the AcquisitionPointId field's value.
@@ -7797,7 +10588,6 @@ func (s *MsSmoothGroupSettings) SetTimestampOffsetMode(v string) *MsSmoothGroupS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/MsSmoothOutputSettings
 type MsSmoothOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7824,7 +10614,6 @@ func (s *MsSmoothOutputSettings) SetNameModifier(v string) *MsSmoothOutputSettin
 
 // Network source to transcode. Must be accessible to the Elemental Live node
 // that is running the live event through a network connection.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/NetworkInputSettings
 type NetworkInputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7862,8 +10651,122 @@ func (s *NetworkInputSettings) SetServerValidation(v string) *NetworkInputSettin
 	return s
 }
 
+// Reserved resources available for purchase
+type Offering struct {
+	_ struct{} `type:"structure"`
+
+	// Unique offering ARN, e.g. 'arn:aws:medialive:us-west-2:123456789012:offering:87654321'
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Currency code for usagePrice and fixedPrice in ISO-4217 format, e.g. 'USD'
+	CurrencyCode *string `locationName:"currencyCode" type:"string"`
+
+	// Lease duration, e.g. '12'
+	Duration *int64 `locationName:"duration" type:"integer"`
+
+	// Units for duration, e.g. 'MONTHS'
+	DurationUnits *string `locationName:"durationUnits" type:"string" enum:"OfferingDurationUnits"`
+
+	// One-time charge for each reserved resource, e.g. '0.0' for a NO_UPFRONT offering
+	FixedPrice *float64 `locationName:"fixedPrice" type:"double"`
+
+	// Offering description, e.g. 'HD AVC output at 10-20 Mbps, 30 fps, and standard
+	// VQ in US West (Oregon)'
+	OfferingDescription *string `locationName:"offeringDescription" type:"string"`
+
+	// Unique offering ID, e.g. '87654321'
+	OfferingId *string `locationName:"offeringId" type:"string"`
+
+	// Offering type, e.g. 'NO_UPFRONT'
+	OfferingType *string `locationName:"offeringType" type:"string" enum:"OfferingType"`
+
+	// AWS region, e.g. 'us-west-2'
+	Region *string `locationName:"region" type:"string"`
+
+	// Resource configuration details
+	ResourceSpecification *ReservationResourceSpecification `locationName:"resourceSpecification" type:"structure"`
+
+	// Recurring usage charge for each reserved resource, e.g. '157.0'
+	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
+}
+
+// String returns the string representation
+func (s Offering) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Offering) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Offering) SetArn(v string) *Offering {
+	s.Arn = &v
+	return s
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *Offering) SetCurrencyCode(v string) *Offering {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *Offering) SetDuration(v int64) *Offering {
+	s.Duration = &v
+	return s
+}
+
+// SetDurationUnits sets the DurationUnits field's value.
+func (s *Offering) SetDurationUnits(v string) *Offering {
+	s.DurationUnits = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *Offering) SetFixedPrice(v float64) *Offering {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetOfferingDescription sets the OfferingDescription field's value.
+func (s *Offering) SetOfferingDescription(v string) *Offering {
+	s.OfferingDescription = &v
+	return s
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *Offering) SetOfferingId(v string) *Offering {
+	s.OfferingId = &v
+	return s
+}
+
+// SetOfferingType sets the OfferingType field's value.
+func (s *Offering) SetOfferingType(v string) *Offering {
+	s.OfferingType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *Offering) SetRegion(v string) *Offering {
+	s.Region = &v
+	return s
+}
+
+// SetResourceSpecification sets the ResourceSpecification field's value.
+func (s *Offering) SetResourceSpecification(v *ReservationResourceSpecification) *Offering {
+	s.ResourceSpecification = v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *Offering) SetUsagePrice(v float64) *Offering {
+	s.UsagePrice = &v
+	return s
+}
+
 // Output settings. There can be multiple outputs within a group.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Output
 type Output struct {
 	_ struct{} `type:"structure"`
 
@@ -7874,10 +10777,12 @@ type Output struct {
 	CaptionDescriptionNames []*string `locationName:"captionDescriptionNames" type:"list"`
 
 	// The name used to identify an output.
-	OutputName *string `locationName:"outputName" type:"string"`
+	OutputName *string `locationName:"outputName" min:"1" type:"string"`
 
 	// Output type-specific settings.
-	OutputSettings *OutputSettings `locationName:"outputSettings" type:"structure"`
+	//
+	// OutputSettings is a required field
+	OutputSettings *OutputSettings `locationName:"outputSettings" type:"structure" required:"true"`
 
 	// The name of the VideoDescription used as the source for this output.
 	VideoDescriptionName *string `locationName:"videoDescriptionName" type:"string"`
@@ -7891,6 +10796,27 @@ func (s Output) String() string {
 // GoString returns the string representation
 func (s Output) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Output) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Output"}
+	if s.OutputName != nil && len(*s.OutputName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OutputName", 1))
+	}
+	if s.OutputSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputSettings"))
+	}
+	if s.OutputSettings != nil {
+		if err := s.OutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("OutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAudioDescriptionNames sets the AudioDescriptionNames field's value.
@@ -7923,7 +10849,6 @@ func (s *Output) SetVideoDescriptionName(v string) *Output {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputDestination
 type OutputDestination struct {
 	_ struct{} `type:"structure"`
 
@@ -7956,12 +10881,14 @@ func (s *OutputDestination) SetSettings(v []*OutputDestinationSettings) *OutputD
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputDestinationSettings
 type OutputDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
 	// key used to extract the password from EC2 Parameter store
 	PasswordParam *string `locationName:"passwordParam" type:"string"`
+
+	// Stream name for RTMP destinations (URLs of type rtmp://)
+	StreamName *string `locationName:"streamName" type:"string"`
 
 	// A URL specifying a destination
 	Url *string `locationName:"url" type:"string"`
@@ -7986,6 +10913,12 @@ func (s *OutputDestinationSettings) SetPasswordParam(v string) *OutputDestinatio
 	return s
 }
 
+// SetStreamName sets the StreamName field's value.
+func (s *OutputDestinationSettings) SetStreamName(v string) *OutputDestinationSettings {
+	s.StreamName = &v
+	return s
+}
+
 // SetUrl sets the Url field's value.
 func (s *OutputDestinationSettings) SetUrl(v string) *OutputDestinationSettings {
 	s.Url = &v
@@ -8000,7 +10933,6 @@ func (s *OutputDestinationSettings) SetUsername(v string) *OutputDestinationSett
 
 // Output groups for this Live Event. Output groups contain information about
 // where streams should be distributed.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputGroup
 type OutputGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -8009,9 +10941,12 @@ type OutputGroup struct {
 	Name *string `locationName:"name" type:"string"`
 
 	// Settings associated with the output group.
-	OutputGroupSettings *OutputGroupSettings `locationName:"outputGroupSettings" type:"structure"`
+	//
+	// OutputGroupSettings is a required field
+	OutputGroupSettings *OutputGroupSettings `locationName:"outputGroupSettings" type:"structure" required:"true"`
 
-	Outputs []*Output `locationName:"outputs" type:"list"`
+	// Outputs is a required field
+	Outputs []*Output `locationName:"outputs" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -8022,6 +10957,37 @@ func (s OutputGroup) String() string {
 // GoString returns the string representation
 func (s OutputGroup) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OutputGroup) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OutputGroup"}
+	if s.OutputGroupSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputGroupSettings"))
+	}
+	if s.Outputs == nil {
+		invalidParams.Add(request.NewErrParamRequired("Outputs"))
+	}
+	if s.OutputGroupSettings != nil {
+		if err := s.OutputGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("OutputGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Outputs != nil {
+		for i, v := range s.Outputs {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Outputs", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetName sets the Name field's value.
@@ -8042,7 +11008,6 @@ func (s *OutputGroup) SetOutputs(v []*Output) *OutputGroup {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputGroupSettings
 type OutputGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8051,6 +11016,8 @@ type OutputGroupSettings struct {
 	HlsGroupSettings *HlsGroupSettings `locationName:"hlsGroupSettings" type:"structure"`
 
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
+
+	RtmpGroupSettings *RtmpGroupSettings `locationName:"rtmpGroupSettings" type:"structure"`
 
 	UdpGroupSettings *UdpGroupSettings `locationName:"udpGroupSettings" type:"structure"`
 }
@@ -8063,6 +11030,36 @@ func (s OutputGroupSettings) String() string {
 // GoString returns the string representation
 func (s OutputGroupSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OutputGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OutputGroupSettings"}
+	if s.ArchiveGroupSettings != nil {
+		if err := s.ArchiveGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("ArchiveGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.HlsGroupSettings != nil {
+		if err := s.HlsGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("HlsGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.MsSmoothGroupSettings != nil {
+		if err := s.MsSmoothGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("MsSmoothGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RtmpGroupSettings != nil {
+		if err := s.RtmpGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("RtmpGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetArchiveGroupSettings sets the ArchiveGroupSettings field's value.
@@ -8083,6 +11080,12 @@ func (s *OutputGroupSettings) SetMsSmoothGroupSettings(v *MsSmoothGroupSettings)
 	return s
 }
 
+// SetRtmpGroupSettings sets the RtmpGroupSettings field's value.
+func (s *OutputGroupSettings) SetRtmpGroupSettings(v *RtmpGroupSettings) *OutputGroupSettings {
+	s.RtmpGroupSettings = v
+	return s
+}
+
 // SetUdpGroupSettings sets the UdpGroupSettings field's value.
 func (s *OutputGroupSettings) SetUdpGroupSettings(v *UdpGroupSettings) *OutputGroupSettings {
 	s.UdpGroupSettings = v
@@ -8090,7 +11093,6 @@ func (s *OutputGroupSettings) SetUdpGroupSettings(v *UdpGroupSettings) *OutputGr
 }
 
 // Reference to an OutputDestination ID defined in the channel
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputLocationRef
 type OutputLocationRef struct {
 	_ struct{} `type:"structure"`
 
@@ -8113,7 +11115,6 @@ func (s *OutputLocationRef) SetDestinationRefId(v string) *OutputLocationRef {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/OutputSettings
 type OutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8122,6 +11123,8 @@ type OutputSettings struct {
 	HlsOutputSettings *HlsOutputSettings `locationName:"hlsOutputSettings" type:"structure"`
 
 	MsSmoothOutputSettings *MsSmoothOutputSettings `locationName:"msSmoothOutputSettings" type:"structure"`
+
+	RtmpOutputSettings *RtmpOutputSettings `locationName:"rtmpOutputSettings" type:"structure"`
 
 	UdpOutputSettings *UdpOutputSettings `locationName:"udpOutputSettings" type:"structure"`
 }
@@ -8134,6 +11137,36 @@ func (s OutputSettings) String() string {
 // GoString returns the string representation
 func (s OutputSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OutputSettings"}
+	if s.ArchiveOutputSettings != nil {
+		if err := s.ArchiveOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("ArchiveOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.HlsOutputSettings != nil {
+		if err := s.HlsOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("HlsOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RtmpOutputSettings != nil {
+		if err := s.RtmpOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("RtmpOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.UdpOutputSettings != nil {
+		if err := s.UdpOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("UdpOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetArchiveOutputSettings sets the ArchiveOutputSettings field's value.
@@ -8154,13 +11187,18 @@ func (s *OutputSettings) SetMsSmoothOutputSettings(v *MsSmoothOutputSettings) *O
 	return s
 }
 
+// SetRtmpOutputSettings sets the RtmpOutputSettings field's value.
+func (s *OutputSettings) SetRtmpOutputSettings(v *RtmpOutputSettings) *OutputSettings {
+	s.RtmpOutputSettings = v
+	return s
+}
+
 // SetUdpOutputSettings sets the UdpOutputSettings field's value.
 func (s *OutputSettings) SetUdpOutputSettings(v *UdpOutputSettings) *OutputSettings {
 	s.UdpOutputSettings = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/PassThroughSettings
 type PassThroughSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8175,18 +11213,105 @@ func (s PassThroughSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/RemixSettings
+type PurchaseOfferingInput struct {
+	_ struct{} `type:"structure"`
+
+	Count *int64 `locationName:"count" min:"1" type:"integer"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	// OfferingId is a required field
+	OfferingId *string `location:"uri" locationName:"offeringId" type:"string" required:"true"`
+
+	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
+}
+
+// String returns the string representation
+func (s PurchaseOfferingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PurchaseOfferingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PurchaseOfferingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PurchaseOfferingInput"}
+	if s.Count != nil && *s.Count < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Count", 1))
+	}
+	if s.OfferingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OfferingId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCount sets the Count field's value.
+func (s *PurchaseOfferingInput) SetCount(v int64) *PurchaseOfferingInput {
+	s.Count = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *PurchaseOfferingInput) SetName(v string) *PurchaseOfferingInput {
+	s.Name = &v
+	return s
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *PurchaseOfferingInput) SetOfferingId(v string) *PurchaseOfferingInput {
+	s.OfferingId = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *PurchaseOfferingInput) SetRequestId(v string) *PurchaseOfferingInput {
+	s.RequestId = &v
+	return s
+}
+
+type PurchaseOfferingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved resources available to use
+	Reservation *Reservation `locationName:"reservation" type:"structure"`
+}
+
+// String returns the string representation
+func (s PurchaseOfferingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PurchaseOfferingOutput) GoString() string {
+	return s.String()
+}
+
+// SetReservation sets the Reservation field's value.
+func (s *PurchaseOfferingOutput) SetReservation(v *Reservation) *PurchaseOfferingOutput {
+	s.Reservation = v
+	return s
+}
+
 type RemixSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Mapping of input channels to output channels, with appropriate gain adjustments.
-	ChannelMappings []*AudioChannelMapping `locationName:"channelMappings" type:"list"`
+	//
+	// ChannelMappings is a required field
+	ChannelMappings []*AudioChannelMapping `locationName:"channelMappings" type:"list" required:"true"`
 
 	// Number of input channels to be used.
-	ChannelsIn *int64 `locationName:"channelsIn" type:"integer"`
+	ChannelsIn *int64 `locationName:"channelsIn" min:"1" type:"integer"`
 
 	// Number of output channels to be produced.Valid values: 1, 2, 4, 6, 8
-	ChannelsOut *int64 `locationName:"channelsOut" type:"integer"`
+	ChannelsOut *int64 `locationName:"channelsOut" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -8197,6 +11322,35 @@ func (s RemixSettings) String() string {
 // GoString returns the string representation
 func (s RemixSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemixSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemixSettings"}
+	if s.ChannelMappings == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelMappings"))
+	}
+	if s.ChannelsIn != nil && *s.ChannelsIn < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ChannelsIn", 1))
+	}
+	if s.ChannelsOut != nil && *s.ChannelsOut < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ChannelsOut", 1))
+	}
+	if s.ChannelMappings != nil {
+		for i, v := range s.ChannelMappings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ChannelMappings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetChannelMappings sets the ChannelMappings field's value.
@@ -8217,7 +11371,423 @@ func (s *RemixSettings) SetChannelsOut(v int64) *RemixSettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte20PlusEmbeddedDestinationSettings
+// Reserved resources available to use
+type Reservation struct {
+	_ struct{} `type:"structure"`
+
+	// Unique reservation ARN, e.g. 'arn:aws:medialive:us-west-2:123456789012:reservation:1234567'
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Number of reserved resources
+	Count *int64 `locationName:"count" type:"integer"`
+
+	// Currency code for usagePrice and fixedPrice in ISO-4217 format, e.g. 'USD'
+	CurrencyCode *string `locationName:"currencyCode" type:"string"`
+
+	// Lease duration, e.g. '12'
+	Duration *int64 `locationName:"duration" type:"integer"`
+
+	// Units for duration, e.g. 'MONTHS'
+	DurationUnits *string `locationName:"durationUnits" type:"string" enum:"OfferingDurationUnits"`
+
+	// Reservation UTC end date and time in ISO-8601 format, e.g. '2019-03-01T00:00:00'
+	End *string `locationName:"end" type:"string"`
+
+	// One-time charge for each reserved resource, e.g. '0.0' for a NO_UPFRONT offering
+	FixedPrice *float64 `locationName:"fixedPrice" type:"double"`
+
+	// User specified reservation name
+	Name *string `locationName:"name" type:"string"`
+
+	// Offering description, e.g. 'HD AVC output at 10-20 Mbps, 30 fps, and standard
+	// VQ in US West (Oregon)'
+	OfferingDescription *string `locationName:"offeringDescription" type:"string"`
+
+	// Unique offering ID, e.g. '87654321'
+	OfferingId *string `locationName:"offeringId" type:"string"`
+
+	// Offering type, e.g. 'NO_UPFRONT'
+	OfferingType *string `locationName:"offeringType" type:"string" enum:"OfferingType"`
+
+	// AWS region, e.g. 'us-west-2'
+	Region *string `locationName:"region" type:"string"`
+
+	// Unique reservation ID, e.g. '1234567'
+	ReservationId *string `locationName:"reservationId" type:"string"`
+
+	// Resource configuration details
+	ResourceSpecification *ReservationResourceSpecification `locationName:"resourceSpecification" type:"structure"`
+
+	// Reservation UTC start date and time in ISO-8601 format, e.g. '2018-03-01T00:00:00'
+	Start *string `locationName:"start" type:"string"`
+
+	// Current state of reservation, e.g. 'ACTIVE'
+	State *string `locationName:"state" type:"string" enum:"ReservationState"`
+
+	// Recurring usage charge for each reserved resource, e.g. '157.0'
+	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
+}
+
+// String returns the string representation
+func (s Reservation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Reservation) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Reservation) SetArn(v string) *Reservation {
+	s.Arn = &v
+	return s
+}
+
+// SetCount sets the Count field's value.
+func (s *Reservation) SetCount(v int64) *Reservation {
+	s.Count = &v
+	return s
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *Reservation) SetCurrencyCode(v string) *Reservation {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *Reservation) SetDuration(v int64) *Reservation {
+	s.Duration = &v
+	return s
+}
+
+// SetDurationUnits sets the DurationUnits field's value.
+func (s *Reservation) SetDurationUnits(v string) *Reservation {
+	s.DurationUnits = &v
+	return s
+}
+
+// SetEnd sets the End field's value.
+func (s *Reservation) SetEnd(v string) *Reservation {
+	s.End = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *Reservation) SetFixedPrice(v float64) *Reservation {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Reservation) SetName(v string) *Reservation {
+	s.Name = &v
+	return s
+}
+
+// SetOfferingDescription sets the OfferingDescription field's value.
+func (s *Reservation) SetOfferingDescription(v string) *Reservation {
+	s.OfferingDescription = &v
+	return s
+}
+
+// SetOfferingId sets the OfferingId field's value.
+func (s *Reservation) SetOfferingId(v string) *Reservation {
+	s.OfferingId = &v
+	return s
+}
+
+// SetOfferingType sets the OfferingType field's value.
+func (s *Reservation) SetOfferingType(v string) *Reservation {
+	s.OfferingType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *Reservation) SetRegion(v string) *Reservation {
+	s.Region = &v
+	return s
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *Reservation) SetReservationId(v string) *Reservation {
+	s.ReservationId = &v
+	return s
+}
+
+// SetResourceSpecification sets the ResourceSpecification field's value.
+func (s *Reservation) SetResourceSpecification(v *ReservationResourceSpecification) *Reservation {
+	s.ResourceSpecification = v
+	return s
+}
+
+// SetStart sets the Start field's value.
+func (s *Reservation) SetStart(v string) *Reservation {
+	s.Start = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *Reservation) SetState(v string) *Reservation {
+	s.State = &v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *Reservation) SetUsagePrice(v float64) *Reservation {
+	s.UsagePrice = &v
+	return s
+}
+
+// Resource configuration (codec, resolution, bitrate, ...)
+type ReservationResourceSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Codec, e.g. 'AVC'
+	Codec *string `locationName:"codec" type:"string" enum:"ReservationCodec"`
+
+	// Maximum bitrate, e.g. 'MAX_20_MBPS'
+	MaximumBitrate *string `locationName:"maximumBitrate" type:"string" enum:"ReservationMaximumBitrate"`
+
+	// Maximum framerate, e.g. 'MAX_30_FPS' (Outputs only)
+	MaximumFramerate *string `locationName:"maximumFramerate" type:"string" enum:"ReservationMaximumFramerate"`
+
+	// Resolution, e.g. 'HD'
+	Resolution *string `locationName:"resolution" type:"string" enum:"ReservationResolution"`
+
+	// Resource type, 'INPUT', 'OUTPUT', or 'CHANNEL'
+	ResourceType *string `locationName:"resourceType" type:"string" enum:"ReservationResourceType"`
+
+	// Special feature, e.g. 'AUDIO_NORMALIZATION' (Channels only)
+	SpecialFeature *string `locationName:"specialFeature" type:"string" enum:"ReservationSpecialFeature"`
+
+	// Video quality, e.g. 'STANDARD' (Outputs only)
+	VideoQuality *string `locationName:"videoQuality" type:"string" enum:"ReservationVideoQuality"`
+}
+
+// String returns the string representation
+func (s ReservationResourceSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReservationResourceSpecification) GoString() string {
+	return s.String()
+}
+
+// SetCodec sets the Codec field's value.
+func (s *ReservationResourceSpecification) SetCodec(v string) *ReservationResourceSpecification {
+	s.Codec = &v
+	return s
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *ReservationResourceSpecification) SetMaximumBitrate(v string) *ReservationResourceSpecification {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetMaximumFramerate sets the MaximumFramerate field's value.
+func (s *ReservationResourceSpecification) SetMaximumFramerate(v string) *ReservationResourceSpecification {
+	s.MaximumFramerate = &v
+	return s
+}
+
+// SetResolution sets the Resolution field's value.
+func (s *ReservationResourceSpecification) SetResolution(v string) *ReservationResourceSpecification {
+	s.Resolution = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ReservationResourceSpecification) SetResourceType(v string) *ReservationResourceSpecification {
+	s.ResourceType = &v
+	return s
+}
+
+// SetSpecialFeature sets the SpecialFeature field's value.
+func (s *ReservationResourceSpecification) SetSpecialFeature(v string) *ReservationResourceSpecification {
+	s.SpecialFeature = &v
+	return s
+}
+
+// SetVideoQuality sets the VideoQuality field's value.
+func (s *ReservationResourceSpecification) SetVideoQuality(v string) *ReservationResourceSpecification {
+	s.VideoQuality = &v
+	return s
+}
+
+type RtmpCaptionInfoDestinationSettings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RtmpCaptionInfoDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RtmpCaptionInfoDestinationSettings) GoString() string {
+	return s.String()
+}
+
+type RtmpGroupSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Authentication scheme to use when connecting with CDN
+	AuthenticationScheme *string `locationName:"authenticationScheme" type:"string" enum:"AuthenticationScheme"`
+
+	// Controls behavior when content cache fills up. If remote origin server stalls
+	// the RTMP connection and does not accept content fast enough the 'Media Cache'
+	// will fill up. When the cache reaches the duration specified by cacheLength
+	// the cache will stop accepting new content. If set to disconnectImmediately,
+	// the RTMP output will force a disconnect. Clear the media cache, and reconnect
+	// after restartDelay seconds. If set to waitForServer, the RTMP output will
+	// wait up to 5 minutes to allow the origin server to begin accepting data again.
+	CacheFullBehavior *string `locationName:"cacheFullBehavior" type:"string" enum:"RtmpCacheFullBehavior"`
+
+	// Cache length, in seconds, is used to calculate buffer size.
+	CacheLength *int64 `locationName:"cacheLength" min:"30" type:"integer"`
+
+	// Controls the types of data that passes to onCaptionInfo outputs. If set to
+	// 'all' then 608 and 708 carried DTVCC data will be passed. If set to 'field1AndField2608'
+	// then DTVCC data will be stripped out, but 608 data from both fields will
+	// be passed. If set to 'field1608' then only the data carried in 608 from field
+	// 1 video will be passed.
+	CaptionData *string `locationName:"captionData" type:"string" enum:"RtmpCaptionData"`
+
+	// If a streaming output fails, number of seconds to wait until a restart is
+	// initiated. A value of 0 means never restart.
+	RestartDelay *int64 `locationName:"restartDelay" type:"integer"`
+}
+
+// String returns the string representation
+func (s RtmpGroupSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RtmpGroupSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RtmpGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RtmpGroupSettings"}
+	if s.CacheLength != nil && *s.CacheLength < 30 {
+		invalidParams.Add(request.NewErrParamMinValue("CacheLength", 30))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthenticationScheme sets the AuthenticationScheme field's value.
+func (s *RtmpGroupSettings) SetAuthenticationScheme(v string) *RtmpGroupSettings {
+	s.AuthenticationScheme = &v
+	return s
+}
+
+// SetCacheFullBehavior sets the CacheFullBehavior field's value.
+func (s *RtmpGroupSettings) SetCacheFullBehavior(v string) *RtmpGroupSettings {
+	s.CacheFullBehavior = &v
+	return s
+}
+
+// SetCacheLength sets the CacheLength field's value.
+func (s *RtmpGroupSettings) SetCacheLength(v int64) *RtmpGroupSettings {
+	s.CacheLength = &v
+	return s
+}
+
+// SetCaptionData sets the CaptionData field's value.
+func (s *RtmpGroupSettings) SetCaptionData(v string) *RtmpGroupSettings {
+	s.CaptionData = &v
+	return s
+}
+
+// SetRestartDelay sets the RestartDelay field's value.
+func (s *RtmpGroupSettings) SetRestartDelay(v int64) *RtmpGroupSettings {
+	s.RestartDelay = &v
+	return s
+}
+
+type RtmpOutputSettings struct {
+	_ struct{} `type:"structure"`
+
+	// If set to verifyAuthenticity, verify the tls certificate chain to a trusted
+	// Certificate Authority (CA). This will cause rtmps outputs with self-signed
+	// certificates to fail.
+	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"RtmpOutputCertificateMode"`
+
+	// Number of seconds to wait before retrying a connection to the Flash Media
+	// server if the connection is lost.
+	ConnectionRetryInterval *int64 `locationName:"connectionRetryInterval" min:"1" type:"integer"`
+
+	// The RTMP endpoint excluding the stream name (eg. rtmp://host/appname). For
+	// connection to Akamai, a username and password must be supplied. URI fields
+	// accept format identifiers.
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
+
+	// Number of retry attempts.
+	NumRetries *int64 `locationName:"numRetries" type:"integer"`
+}
+
+// String returns the string representation
+func (s RtmpOutputSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RtmpOutputSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RtmpOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RtmpOutputSettings"}
+	if s.ConnectionRetryInterval != nil && *s.ConnectionRetryInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConnectionRetryInterval", 1))
+	}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateMode sets the CertificateMode field's value.
+func (s *RtmpOutputSettings) SetCertificateMode(v string) *RtmpOutputSettings {
+	s.CertificateMode = &v
+	return s
+}
+
+// SetConnectionRetryInterval sets the ConnectionRetryInterval field's value.
+func (s *RtmpOutputSettings) SetConnectionRetryInterval(v int64) *RtmpOutputSettings {
+	s.ConnectionRetryInterval = &v
+	return s
+}
+
+// SetDestination sets the Destination field's value.
+func (s *RtmpOutputSettings) SetDestination(v *OutputLocationRef) *RtmpOutputSettings {
+	s.Destination = v
+	return s
+}
+
+// SetNumRetries sets the NumRetries field's value.
+func (s *RtmpOutputSettings) SetNumRetries(v int64) *RtmpOutputSettings {
+	s.NumRetries = &v
+	return s
+}
+
 type Scte20PlusEmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8232,7 +11802,6 @@ func (s Scte20PlusEmbeddedDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte20SourceSettings
 type Scte20SourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8243,7 +11812,7 @@ type Scte20SourceSettings struct {
 
 	// Specifies the 608/708 channel number within the video track from which to
 	// extract captions. Unused for passthrough.
-	Source608ChannelNumber *int64 `locationName:"source608ChannelNumber" type:"integer"`
+	Source608ChannelNumber *int64 `locationName:"source608ChannelNumber" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -8254,6 +11823,19 @@ func (s Scte20SourceSettings) String() string {
 // GoString returns the string representation
 func (s Scte20SourceSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte20SourceSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte20SourceSettings"}
+	if s.Source608ChannelNumber != nil && *s.Source608ChannelNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Source608ChannelNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetConvert608To708 sets the Convert608To708 field's value.
@@ -8268,7 +11850,6 @@ func (s *Scte20SourceSettings) SetSource608ChannelNumber(v int64) *Scte20SourceS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte27DestinationSettings
 type Scte27DestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8283,7 +11864,6 @@ func (s Scte27DestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte27SourceSettings
 type Scte27SourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8294,7 +11874,7 @@ type Scte27SourceSettings struct {
 	// language, whichever PID that happens to be. - Omit PID and omit Language:
 	// Valid only if source is DVB-Sub that is being passed through; all languages
 	// will be passed through.
-	Pid *int64 `locationName:"pid" type:"integer"`
+	Pid *int64 `locationName:"pid" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -8307,13 +11887,25 @@ func (s Scte27SourceSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte27SourceSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte27SourceSettings"}
+	if s.Pid != nil && *s.Pid < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Pid", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetPid sets the Pid field's value.
 func (s *Scte27SourceSettings) SetPid(v int64) *Scte27SourceSettings {
 	s.Pid = &v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte35SpliceInsert
 type Scte35SpliceInsert struct {
 	_ struct{} `type:"structure"`
 
@@ -8341,6 +11933,19 @@ func (s Scte35SpliceInsert) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35SpliceInsert) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35SpliceInsert"}
+	if s.AdAvailOffset != nil && *s.AdAvailOffset < -1000 {
+		invalidParams.Add(request.NewErrParamMinValue("AdAvailOffset", -1000))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAdAvailOffset sets the AdAvailOffset field's value.
 func (s *Scte35SpliceInsert) SetAdAvailOffset(v int64) *Scte35SpliceInsert {
 	s.AdAvailOffset = &v
@@ -8359,7 +11964,6 @@ func (s *Scte35SpliceInsert) SetWebDeliveryAllowedFlag(v string) *Scte35SpliceIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/Scte35TimeSignalApos
 type Scte35TimeSignalApos struct {
 	_ struct{} `type:"structure"`
 
@@ -8387,6 +11991,19 @@ func (s Scte35TimeSignalApos) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35TimeSignalApos) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35TimeSignalApos"}
+	if s.AdAvailOffset != nil && *s.AdAvailOffset < -1000 {
+		invalidParams.Add(request.NewErrParamMinValue("AdAvailOffset", -1000))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAdAvailOffset sets the AdAvailOffset field's value.
 func (s *Scte35TimeSignalApos) SetAdAvailOffset(v int64) *Scte35TimeSignalApos {
 	s.AdAvailOffset = &v
@@ -8405,7 +12022,6 @@ func (s *Scte35TimeSignalApos) SetWebDeliveryAllowedFlag(v string) *Scte35TimeSi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/SmpteTtDestinationSettings
 type SmpteTtDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8420,7 +12036,6 @@ func (s SmpteTtDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StandardHlsSettings
 type StandardHlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8429,7 +12044,9 @@ type StandardHlsSettings struct {
 	AudioRenditionSets *string `locationName:"audioRenditionSets" type:"string"`
 
 	// Settings information for the .m3u8 container
-	M3u8Settings *M3u8Settings `locationName:"m3u8Settings" type:"structure"`
+	//
+	// M3u8Settings is a required field
+	M3u8Settings *M3u8Settings `locationName:"m3u8Settings" type:"structure" required:"true"`
 }
 
 // String returns the string representation
@@ -8440,6 +12057,19 @@ func (s StandardHlsSettings) String() string {
 // GoString returns the string representation
 func (s StandardHlsSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StandardHlsSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StandardHlsSettings"}
+	if s.M3u8Settings == nil {
+		invalidParams.Add(request.NewErrParamRequired("M3u8Settings"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAudioRenditionSets sets the AudioRenditionSets field's value.
@@ -8454,7 +12084,6 @@ func (s *StandardHlsSettings) SetM3u8Settings(v *M3u8Settings) *StandardHlsSetti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartChannelRequest
 type StartChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8491,7 +12120,6 @@ func (s *StartChannelInput) SetChannelId(v string) *StartChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartChannelResponse
 type StartChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8506,6 +12134,10 @@ type StartChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -8562,6 +12194,18 @@ func (s *StartChannelOutput) SetInputAttachments(v []*InputAttachment) *StartCha
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *StartChannelOutput) SetInputSpecification(v *InputSpecification) *StartChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *StartChannelOutput) SetLogLevel(v string) *StartChannelOutput {
+	s.LogLevel = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *StartChannelOutput) SetName(v string) *StartChannelOutput {
 	s.Name = &v
@@ -8586,15 +12230,18 @@ func (s *StartChannelOutput) SetState(v string) *StartChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StaticKeySettings
 type StaticKeySettings struct {
 	_ struct{} `type:"structure"`
 
 	// The URL of the license server used for protecting content.
-	KeyProviderServer *InputLocation `locationName:"keyProviderServer" type:"structure"`
+	//
+	// KeyProviderServer is a required field
+	KeyProviderServer *InputLocation `locationName:"keyProviderServer" type:"structure" required:"true"`
 
 	// Static key value as a 32 character hexadecimal string.
-	StaticKeyValue *string `locationName:"staticKeyValue" type:"string"`
+	//
+	// StaticKeyValue is a required field
+	StaticKeyValue *string `locationName:"staticKeyValue" min:"32" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -8605,6 +12252,30 @@ func (s StaticKeySettings) String() string {
 // GoString returns the string representation
 func (s StaticKeySettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StaticKeySettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StaticKeySettings"}
+	if s.KeyProviderServer == nil {
+		invalidParams.Add(request.NewErrParamRequired("KeyProviderServer"))
+	}
+	if s.StaticKeyValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("StaticKeyValue"))
+	}
+	if s.StaticKeyValue != nil && len(*s.StaticKeyValue) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("StaticKeyValue", 32))
+	}
+	if s.KeyProviderServer != nil {
+		if err := s.KeyProviderServer.Validate(); err != nil {
+			invalidParams.AddNested("KeyProviderServer", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetKeyProviderServer sets the KeyProviderServer field's value.
@@ -8619,7 +12290,6 @@ func (s *StaticKeySettings) SetStaticKeyValue(v string) *StaticKeySettings {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopChannelRequest
 type StopChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8656,7 +12326,6 @@ func (s *StopChannelInput) SetChannelId(v string) *StopChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopChannelResponse
 type StopChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8671,6 +12340,10 @@ type StopChannelOutput struct {
 	Id *string `locationName:"id" type:"string"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
 
@@ -8727,6 +12400,18 @@ func (s *StopChannelOutput) SetInputAttachments(v []*InputAttachment) *StopChann
 	return s
 }
 
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *StopChannelOutput) SetInputSpecification(v *InputSpecification) *StopChannelOutput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *StopChannelOutput) SetLogLevel(v string) *StopChannelOutput {
+	s.LogLevel = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *StopChannelOutput) SetName(v string) *StopChannelOutput {
 	s.Name = &v
@@ -8751,7 +12436,6 @@ func (s *StopChannelOutput) SetState(v string) *StopChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TeletextDestinationSettings
 type TeletextDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -8766,7 +12450,6 @@ func (s TeletextDestinationSettings) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TeletextSourceSettings
 type TeletextSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8792,7 +12475,6 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TimecodeConfig
 type TimecodeConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -8802,13 +12484,15 @@ type TimecodeConfig struct {
 	// system falls back to using "Start at 0" (zerobased).-System Clock (systemclock):
 	// Use the UTC time.-Start at 0 (zerobased): The time of the first frame of
 	// the event will be 00:00:00:00.
-	Source *string `locationName:"source" type:"string" enum:"TimecodeConfigSource"`
+	//
+	// Source is a required field
+	Source *string `locationName:"source" type:"string" required:"true" enum:"TimecodeConfigSource"`
 
 	// Threshold in frames beyond which output timecode is resynchronized to the
 	// input timecode. Discrepancies below this threshold are permitted to avoid
 	// unnecessary discontinuities in the output timecode. No timecode sync when
 	// this is not specified.
-	SyncThreshold *int64 `locationName:"syncThreshold" type:"integer"`
+	SyncThreshold *int64 `locationName:"syncThreshold" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -8819,6 +12503,22 @@ func (s TimecodeConfig) String() string {
 // GoString returns the string representation
 func (s TimecodeConfig) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TimecodeConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TimecodeConfig"}
+	if s.Source == nil {
+		invalidParams.Add(request.NewErrParamRequired("Source"))
+	}
+	if s.SyncThreshold != nil && *s.SyncThreshold < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("SyncThreshold", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetSource sets the Source field's value.
@@ -8833,7 +12533,6 @@ func (s *TimecodeConfig) SetSyncThreshold(v int64) *TimecodeConfig {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/TtmlDestinationSettings
 type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8859,7 +12558,6 @@ func (s *TtmlDestinationSettings) SetStyleControl(v string) *TtmlDestinationSett
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UdpContainerSettings
 type UdpContainerSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8876,13 +12574,27 @@ func (s UdpContainerSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UdpContainerSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UdpContainerSettings"}
+	if s.M2tsSettings != nil {
+		if err := s.M2tsSettings.Validate(); err != nil {
+			invalidParams.AddNested("M2tsSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetM2tsSettings sets the M2tsSettings field's value.
 func (s *UdpContainerSettings) SetM2tsSettings(v *M2tsSettings) *UdpContainerSettings {
 	s.M2tsSettings = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UdpGroupSettings
 type UdpGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8930,7 +12642,6 @@ func (s *UdpGroupSettings) SetTimedMetadataId3Period(v int64) *UdpGroupSettings 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UdpOutputSettings
 type UdpOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8940,11 +12651,14 @@ type UdpOutputSettings struct {
 	// switching, input disruptions, picture reordering, etc.
 	BufferMsec *int64 `locationName:"bufferMsec" type:"integer"`
 
-	ContainerSettings *UdpContainerSettings `locationName:"containerSettings" type:"structure"`
+	// ContainerSettings is a required field
+	ContainerSettings *UdpContainerSettings `locationName:"containerSettings" type:"structure" required:"true"`
 
 	// Destination address and port number for RTP or UDP packets. Can be unicast
 	// or multicast RTP or UDP (eg. rtp://239.10.10.10:5001 or udp://10.100.100.100:5002).
-	Destination *OutputLocationRef `locationName:"destination" type:"structure"`
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
 
 	// Settings for enabling and adjusting Forward Error Correction on UDP outputs.
 	FecOutputSettings *FecOutputSettings `locationName:"fecOutputSettings" type:"structure"`
@@ -8958,6 +12672,32 @@ func (s UdpOutputSettings) String() string {
 // GoString returns the string representation
 func (s UdpOutputSettings) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UdpOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UdpOutputSettings"}
+	if s.ContainerSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerSettings"))
+	}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.ContainerSettings != nil {
+		if err := s.ContainerSettings.Validate(); err != nil {
+			invalidParams.AddNested("ContainerSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.FecOutputSettings != nil {
+		if err := s.FecOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("FecOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetBufferMsec sets the BufferMsec field's value.
@@ -8984,7 +12724,292 @@ func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ValidationError
+type UpdateChannelInput struct {
+	_ struct{} `type:"structure"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+
+	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
+
+	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
+
+	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
+
+	InputSpecification *InputSpecification `locationName:"inputSpecification" type:"structure"`
+
+	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	RoleArn *string `locationName:"roleArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateChannelInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateChannelInput"}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.EncoderSettings != nil {
+		if err := s.EncoderSettings.Validate(); err != nil {
+			invalidParams.AddNested("EncoderSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.InputAttachments != nil {
+		for i, v := range s.InputAttachments {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "InputAttachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *UpdateChannelInput) SetChannelId(v string) *UpdateChannelInput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *UpdateChannelInput) SetDestinations(v []*OutputDestination) *UpdateChannelInput {
+	s.Destinations = v
+	return s
+}
+
+// SetEncoderSettings sets the EncoderSettings field's value.
+func (s *UpdateChannelInput) SetEncoderSettings(v *EncoderSettings) *UpdateChannelInput {
+	s.EncoderSettings = v
+	return s
+}
+
+// SetInputAttachments sets the InputAttachments field's value.
+func (s *UpdateChannelInput) SetInputAttachments(v []*InputAttachment) *UpdateChannelInput {
+	s.InputAttachments = v
+	return s
+}
+
+// SetInputSpecification sets the InputSpecification field's value.
+func (s *UpdateChannelInput) SetInputSpecification(v *InputSpecification) *UpdateChannelInput {
+	s.InputSpecification = v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *UpdateChannelInput) SetLogLevel(v string) *UpdateChannelInput {
+	s.LogLevel = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateChannelInput) SetName(v string) *UpdateChannelInput {
+	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *UpdateChannelInput) SetRoleArn(v string) *UpdateChannelInput {
+	s.RoleArn = &v
+	return s
+}
+
+type UpdateChannelOutput struct {
+	_ struct{} `type:"structure"`
+
+	Channel *Channel `locationName:"channel" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateChannelOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannel sets the Channel field's value.
+func (s *UpdateChannelOutput) SetChannel(v *Channel) *UpdateChannelOutput {
+	s.Channel = v
+	return s
+}
+
+type UpdateInputInput struct {
+	_ struct{} `type:"structure"`
+
+	Destinations []*InputDestinationRequest `locationName:"destinations" type:"list"`
+
+	// InputId is a required field
+	InputId *string `location:"uri" locationName:"inputId" type:"string" required:"true"`
+
+	InputSecurityGroups []*string `locationName:"inputSecurityGroups" type:"list"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	Sources []*InputSourceRequest `locationName:"sources" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateInputInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateInputInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateInputInput"}
+	if s.InputId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *UpdateInputInput) SetDestinations(v []*InputDestinationRequest) *UpdateInputInput {
+	s.Destinations = v
+	return s
+}
+
+// SetInputId sets the InputId field's value.
+func (s *UpdateInputInput) SetInputId(v string) *UpdateInputInput {
+	s.InputId = &v
+	return s
+}
+
+// SetInputSecurityGroups sets the InputSecurityGroups field's value.
+func (s *UpdateInputInput) SetInputSecurityGroups(v []*string) *UpdateInputInput {
+	s.InputSecurityGroups = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateInputInput) SetName(v string) *UpdateInputInput {
+	s.Name = &v
+	return s
+}
+
+// SetSources sets the Sources field's value.
+func (s *UpdateInputInput) SetSources(v []*InputSourceRequest) *UpdateInputInput {
+	s.Sources = v
+	return s
+}
+
+type UpdateInputOutput struct {
+	_ struct{} `type:"structure"`
+
+	Input *Input `locationName:"input" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateInputOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputOutput) GoString() string {
+	return s.String()
+}
+
+// SetInput sets the Input field's value.
+func (s *UpdateInputOutput) SetInput(v *Input) *UpdateInputOutput {
+	s.Input = v
+	return s
+}
+
+type UpdateInputSecurityGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// InputSecurityGroupId is a required field
+	InputSecurityGroupId *string `location:"uri" locationName:"inputSecurityGroupId" type:"string" required:"true"`
+
+	WhitelistRules []*InputWhitelistRuleCidr `locationName:"whitelistRules" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateInputSecurityGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputSecurityGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateInputSecurityGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateInputSecurityGroupInput"}
+	if s.InputSecurityGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputSecurityGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputSecurityGroupId sets the InputSecurityGroupId field's value.
+func (s *UpdateInputSecurityGroupInput) SetInputSecurityGroupId(v string) *UpdateInputSecurityGroupInput {
+	s.InputSecurityGroupId = &v
+	return s
+}
+
+// SetWhitelistRules sets the WhitelistRules field's value.
+func (s *UpdateInputSecurityGroupInput) SetWhitelistRules(v []*InputWhitelistRuleCidr) *UpdateInputSecurityGroupInput {
+	s.WhitelistRules = v
+	return s
+}
+
+type UpdateInputSecurityGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An Input Security Group
+	SecurityGroup *InputSecurityGroup `locationName:"securityGroup" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateInputSecurityGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputSecurityGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetSecurityGroup sets the SecurityGroup field's value.
+func (s *UpdateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup) *UpdateInputSecurityGroupOutput {
+	s.SecurityGroup = v
+	return s
+}
+
 type ValidationError struct {
 	_ struct{} `type:"structure"`
 
@@ -9015,7 +13040,6 @@ func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoCodecSettings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9032,6 +13056,21 @@ func (s VideoCodecSettings) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VideoCodecSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VideoCodecSettings"}
+	if s.H264Settings != nil {
+		if err := s.H264Settings.Validate(); err != nil {
+			invalidParams.AddNested("H264Settings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetH264Settings sets the H264Settings field's value.
 func (s *VideoCodecSettings) SetH264Settings(v *H264Settings) *VideoCodecSettings {
 	s.H264Settings = v
@@ -9039,7 +13078,6 @@ func (s *VideoCodecSettings) SetH264Settings(v *H264Settings) *VideoCodecSetting
 }
 
 // Video settings for this stream.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoDescription
 type VideoDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -9053,7 +13091,9 @@ type VideoDescription struct {
 	// The name of this VideoDescription. Outputs will use this name to uniquely
 	// identify this Description. Description names should be unique within this
 	// Live Event.
-	Name *string `locationName:"name" type:"string"`
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
 
 	// Indicates how to respond to the AFD values in the input stream. Setting to
 	// "respond" causes input video to be clipped, depending on AFD value, input
@@ -9084,6 +13124,24 @@ func (s VideoDescription) String() string {
 // GoString returns the string representation
 func (s VideoDescription) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VideoDescription) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VideoDescription"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.CodecSettings != nil {
+		if err := s.CodecSettings.Validate(); err != nil {
+			invalidParams.AddNested("CodecSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCodecSettings sets the CodecSettings field's value.
@@ -9130,7 +13188,6 @@ func (s *VideoDescription) SetWidth(v int64) *VideoDescription {
 
 // Specifies a particular video stream within an input source. An input may
 // have only a single video selector.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelector
 type VideoSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -9180,7 +13237,6 @@ func (s *VideoSelector) SetSelectorSettings(v *VideoSelectorSettings) *VideoSele
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelectorPid
 type VideoSelectorPid struct {
 	_ struct{} `type:"structure"`
 
@@ -9204,7 +13260,6 @@ func (s *VideoSelectorPid) SetPid(v int64) *VideoSelectorPid {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelectorProgramId
 type VideoSelectorProgramId struct {
 	_ struct{} `type:"structure"`
 
@@ -9230,7 +13285,6 @@ func (s *VideoSelectorProgramId) SetProgramId(v int64) *VideoSelectorProgramId {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/VideoSelectorSettings
 type VideoSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9261,7 +13315,6 @@ func (s *VideoSelectorSettings) SetVideoSelectorProgramId(v *VideoSelectorProgra
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/WebvttDestinationSettings
 type WebvttDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -9488,6 +13541,14 @@ const (
 
 	// AudioTypeVisualImpairedCommentary is a AudioType enum value
 	AudioTypeVisualImpairedCommentary = "VISUAL_IMPAIRED_COMMENTARY"
+)
+
+const (
+	// AuthenticationSchemeAkamai is a AuthenticationScheme enum value
+	AuthenticationSchemeAkamai = "AKAMAI"
+
+	// AuthenticationSchemeCommon is a AuthenticationScheme enum value
+	AuthenticationSchemeCommon = "COMMON"
 )
 
 const (
@@ -10344,6 +14405,18 @@ const (
 	HlsWebdavHttpTransferModeNonChunked = "NON_CHUNKED"
 )
 
+// codec in increasing order of complexity
+const (
+	// InputCodecMpeg2 is a InputCodec enum value
+	InputCodecMpeg2 = "MPEG2"
+
+	// InputCodecAvc is a InputCodec enum value
+	InputCodecAvc = "AVC"
+
+	// InputCodecHevc is a InputCodec enum value
+	InputCodecHevc = "HEVC"
+)
+
 const (
 	// InputDeblockFilterDisabled is a InputDeblockFilter enum value
 	InputDeblockFilterDisabled = "DISABLED"
@@ -10406,6 +14479,46 @@ const (
 	InputLossImageTypeSlate = "SLATE"
 )
 
+// Maximum input bitrate in megabits per second. Bitrates up to 50 Mbps are
+// supported currently.
+const (
+	// InputMaximumBitrateMax10Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax10Mbps = "MAX_10_MBPS"
+
+	// InputMaximumBitrateMax20Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax20Mbps = "MAX_20_MBPS"
+
+	// InputMaximumBitrateMax50Mbps is a InputMaximumBitrate enum value
+	InputMaximumBitrateMax50Mbps = "MAX_50_MBPS"
+)
+
+// Input resolution based on lines of vertical resolution in the input; SD is
+// less than 720 lines, HD is 720 to 1080 lines, UHD is greater than 1080 lines
+const (
+	// InputResolutionSd is a InputResolution enum value
+	InputResolutionSd = "SD"
+
+	// InputResolutionHd is a InputResolution enum value
+	InputResolutionHd = "HD"
+
+	// InputResolutionUhd is a InputResolution enum value
+	InputResolutionUhd = "UHD"
+)
+
+const (
+	// InputSecurityGroupStateIdle is a InputSecurityGroupState enum value
+	InputSecurityGroupStateIdle = "IDLE"
+
+	// InputSecurityGroupStateInUse is a InputSecurityGroupState enum value
+	InputSecurityGroupStateInUse = "IN_USE"
+
+	// InputSecurityGroupStateUpdating is a InputSecurityGroupState enum value
+	InputSecurityGroupStateUpdating = "UPDATING"
+
+	// InputSecurityGroupStateDeleted is a InputSecurityGroupState enum value
+	InputSecurityGroupStateDeleted = "DELETED"
+)
+
 const (
 	// InputSourceEndBehaviorContinue is a InputSourceEndBehavior enum value
 	InputSourceEndBehaviorContinue = "CONTINUE"
@@ -10446,6 +14559,23 @@ const (
 
 	// InputTypeUrlPull is a InputType enum value
 	InputTypeUrlPull = "URL_PULL"
+)
+
+const (
+	// LogLevelError is a LogLevel enum value
+	LogLevelError = "ERROR"
+
+	// LogLevelWarning is a LogLevel enum value
+	LogLevelWarning = "WARNING"
+
+	// LogLevelInfo is a LogLevel enum value
+	LogLevelInfo = "INFO"
+
+	// LogLevelDebug is a LogLevel enum value
+	LogLevelDebug = "DEBUG"
+
+	// LogLevelDisabled is a LogLevel enum value
+	LogLevelDisabled = "DISABLED"
 )
 
 const (
@@ -10642,6 +14772,142 @@ const (
 
 	// NetworkInputServerValidationCheckCryptographyOnly is a NetworkInputServerValidation enum value
 	NetworkInputServerValidationCheckCryptographyOnly = "CHECK_CRYPTOGRAPHY_ONLY"
+)
+
+// Units for duration, e.g. 'MONTHS'
+const (
+	// OfferingDurationUnitsMonths is a OfferingDurationUnits enum value
+	OfferingDurationUnitsMonths = "MONTHS"
+)
+
+// Offering type, e.g. 'NO_UPFRONT'
+const (
+	// OfferingTypeNoUpfront is a OfferingType enum value
+	OfferingTypeNoUpfront = "NO_UPFRONT"
+)
+
+// Codec, 'MPEG2', 'AVC', 'HEVC', or 'AUDIO'
+const (
+	// ReservationCodecMpeg2 is a ReservationCodec enum value
+	ReservationCodecMpeg2 = "MPEG2"
+
+	// ReservationCodecAvc is a ReservationCodec enum value
+	ReservationCodecAvc = "AVC"
+
+	// ReservationCodecHevc is a ReservationCodec enum value
+	ReservationCodecHevc = "HEVC"
+
+	// ReservationCodecAudio is a ReservationCodec enum value
+	ReservationCodecAudio = "AUDIO"
+)
+
+// Maximum bitrate in megabits per second
+const (
+	// ReservationMaximumBitrateMax10Mbps is a ReservationMaximumBitrate enum value
+	ReservationMaximumBitrateMax10Mbps = "MAX_10_MBPS"
+
+	// ReservationMaximumBitrateMax20Mbps is a ReservationMaximumBitrate enum value
+	ReservationMaximumBitrateMax20Mbps = "MAX_20_MBPS"
+
+	// ReservationMaximumBitrateMax50Mbps is a ReservationMaximumBitrate enum value
+	ReservationMaximumBitrateMax50Mbps = "MAX_50_MBPS"
+)
+
+// Maximum framerate in frames per second (Outputs only)
+const (
+	// ReservationMaximumFramerateMax30Fps is a ReservationMaximumFramerate enum value
+	ReservationMaximumFramerateMax30Fps = "MAX_30_FPS"
+
+	// ReservationMaximumFramerateMax60Fps is a ReservationMaximumFramerate enum value
+	ReservationMaximumFramerateMax60Fps = "MAX_60_FPS"
+)
+
+// Resolution based on lines of vertical resolution; SD is less than 720 lines,
+// HD is 720 to 1080 lines, UHD is greater than 1080 lines
+const (
+	// ReservationResolutionSd is a ReservationResolution enum value
+	ReservationResolutionSd = "SD"
+
+	// ReservationResolutionHd is a ReservationResolution enum value
+	ReservationResolutionHd = "HD"
+
+	// ReservationResolutionUhd is a ReservationResolution enum value
+	ReservationResolutionUhd = "UHD"
+)
+
+// Resource type, 'INPUT', 'OUTPUT', or 'CHANNEL'
+const (
+	// ReservationResourceTypeInput is a ReservationResourceType enum value
+	ReservationResourceTypeInput = "INPUT"
+
+	// ReservationResourceTypeOutput is a ReservationResourceType enum value
+	ReservationResourceTypeOutput = "OUTPUT"
+
+	// ReservationResourceTypeChannel is a ReservationResourceType enum value
+	ReservationResourceTypeChannel = "CHANNEL"
+)
+
+// Special features, 'ADVANCED_AUDIO' or 'AUDIO_NORMALIZATION'
+const (
+	// ReservationSpecialFeatureAdvancedAudio is a ReservationSpecialFeature enum value
+	ReservationSpecialFeatureAdvancedAudio = "ADVANCED_AUDIO"
+
+	// ReservationSpecialFeatureAudioNormalization is a ReservationSpecialFeature enum value
+	ReservationSpecialFeatureAudioNormalization = "AUDIO_NORMALIZATION"
+)
+
+// Current reservation state
+const (
+	// ReservationStateActive is a ReservationState enum value
+	ReservationStateActive = "ACTIVE"
+
+	// ReservationStateExpired is a ReservationState enum value
+	ReservationStateExpired = "EXPIRED"
+
+	// ReservationStateCanceled is a ReservationState enum value
+	ReservationStateCanceled = "CANCELED"
+
+	// ReservationStateDeleted is a ReservationState enum value
+	ReservationStateDeleted = "DELETED"
+)
+
+// Video quality, e.g. 'STANDARD' (Outputs only)
+const (
+	// ReservationVideoQualityStandard is a ReservationVideoQuality enum value
+	ReservationVideoQualityStandard = "STANDARD"
+
+	// ReservationVideoQualityEnhanced is a ReservationVideoQuality enum value
+	ReservationVideoQualityEnhanced = "ENHANCED"
+
+	// ReservationVideoQualityPremium is a ReservationVideoQuality enum value
+	ReservationVideoQualityPremium = "PREMIUM"
+)
+
+const (
+	// RtmpCacheFullBehaviorDisconnectImmediately is a RtmpCacheFullBehavior enum value
+	RtmpCacheFullBehaviorDisconnectImmediately = "DISCONNECT_IMMEDIATELY"
+
+	// RtmpCacheFullBehaviorWaitForServer is a RtmpCacheFullBehavior enum value
+	RtmpCacheFullBehaviorWaitForServer = "WAIT_FOR_SERVER"
+)
+
+const (
+	// RtmpCaptionDataAll is a RtmpCaptionData enum value
+	RtmpCaptionDataAll = "ALL"
+
+	// RtmpCaptionDataField1608 is a RtmpCaptionData enum value
+	RtmpCaptionDataField1608 = "FIELD1_608"
+
+	// RtmpCaptionDataField1AndField2608 is a RtmpCaptionData enum value
+	RtmpCaptionDataField1AndField2608 = "FIELD1_AND_FIELD2_608"
+)
+
+const (
+	// RtmpOutputCertificateModeSelfSigned is a RtmpOutputCertificateMode enum value
+	RtmpOutputCertificateModeSelfSigned = "SELF_SIGNED"
+
+	// RtmpOutputCertificateModeVerifyAuthenticity is a RtmpOutputCertificateMode enum value
+	RtmpOutputCertificateModeVerifyAuthenticity = "VERIFY_AUTHENTICITY"
 )
 
 const (

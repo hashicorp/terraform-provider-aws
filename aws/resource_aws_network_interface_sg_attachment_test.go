@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
+func TestAccAWSNetworkInterfaceSGAttachment(t *testing.T) {
 	cases := []struct {
 		Name         string
 		ResourceAttr string
@@ -32,11 +32,11 @@ func TestAccAwsNetworkInterfaceSGAttachment(t *testing.T) {
 				PreCheck:  func() { testAccPreCheck(t) },
 				Providers: testAccProviders,
 				Steps: []resource.TestStep{
-					resource.TestStep{
+					{
 						Config: tc.Config(true),
 						Check:  checkSecurityGroupAttached(tc.ResourceAttr, true),
 					},
-					resource.TestStep{
+					{
 						Config: tc.Config(false),
 						Check:  checkSecurityGroupAttached(tc.ResourceAttr, false),
 					},
@@ -151,12 +151,12 @@ resource "aws_network_interface_sg_attachment" "sg_attachment" {
 `, attachmentEnabled)
 }
 
-func TestAccAwsNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
+func TestAccAWSNetworkInterfaceSGAttachmentRaceCheck(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsNetworkInterfaceSGAttachmentRaceCheckConfig(),
 				Check:  checkSecurityGroupAttachmentRace(),
 			},

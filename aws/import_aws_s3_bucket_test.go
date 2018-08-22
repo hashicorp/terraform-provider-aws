@@ -35,6 +35,7 @@ func TestAccAWSS3Bucket_importBasic(t *testing.T) {
 
 func TestAccAWSS3Bucket_importWithPolicy(t *testing.T) {
 	rInt := acctest.RandInt()
+	partition := testAccGetPartition()
 
 	checkFn := func(s []*terraform.InstanceState) error {
 		// Expect 2: bucket + policy
@@ -64,7 +65,7 @@ func TestAccAWSS3Bucket_importWithPolicy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketConfigWithPolicy(rInt),
+				Config: testAccAWSS3BucketConfigWithPolicy(rInt, partition),
 			},
 
 			{

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSecurityGroupRule() *schema.Resource {
@@ -29,11 +30,14 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Description:  "Type of rule, ingress (inbound) or egress (outbound).",
-				ValidateFunc: validateSecurityRuleType,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Type of rule, ingress (inbound) or egress (outbound).",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ingress",
+					"egress",
+				}, false),
 			},
 
 			"from_port": {
@@ -350,8 +354,6 @@ func resourceAwsSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	d.SetId("")
-
 	return nil
 }
 
@@ -581,7 +583,7 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 		perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, len(groups))
 		// build string list of group name/ids
 		var gl []string
-		for k, _ := range groups {
+		for k := range groups {
 			gl = append(gl, k)
 		}
 

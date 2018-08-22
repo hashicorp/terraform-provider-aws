@@ -11,16 +11,52 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxConnection_basic(t *testing.T) {
+func TestAccAWSDxConnection_basic(t *testing.T) {
+	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfig(acctest.RandString(5)),
+				Config: testAccDxConnectionConfig(connectionName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxConnectionExists("aws_dx_connection.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "name", connectionName),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "location", "EqSe2"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDxConnection_tags(t *testing.T) {
+	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxConnectionConfig_tags(connectionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxConnectionExists("aws_dx_connection.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "name", connectionName),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccDxConnectionConfig_tagsChanged(connectionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxConnectionExists("aws_dx_connection.hoge"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "name", connectionName),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.Usage", "changed"),
 				),
 			},
 		},
@@ -63,12 +99,41 @@ func testAccCheckAwsDxConnectionExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDxConnectionConfig(rName string) string {
+func testAccDxConnectionConfig(n string) string {
 	return fmt.Sprintf(`
-    resource "aws_dx_connection" "hoge" {
-      name = "tf-dx-%s"
-      bandwidth = "1Gbps"
-      location = "EqSe2"
-    }
-    `, rName)
+resource "aws_dx_connection" "hoge" {
+  name = "%s"
+  bandwidth = "1Gbps"
+  location = "EqSe2"
+}
+`, n)
+}
+
+func testAccDxConnectionConfig_tags(n string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_connection" "hoge" {
+  name = "%s"
+  bandwidth = "1Gbps"
+  location = "EqSe2"
+
+  tags {
+    Environment = "production"
+    Usage = "original"
+  }
+}
+`, n)
+}
+
+func testAccDxConnectionConfig_tagsChanged(n string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_connection" "hoge" {
+  name = "%s"
+  bandwidth = "1Gbps"
+  location = "EqSe2"
+
+  tags {
+    Usage = "changed"
+  }
+}
+`, n)
 }

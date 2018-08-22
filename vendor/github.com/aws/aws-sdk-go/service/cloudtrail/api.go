@@ -15,7 +15,7 @@ const opAddTags = "AddTags"
 
 // AddTagsRequest generates a "aws/request.Request" representing the
 // client's request for the AddTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -73,7 +73,7 @@ func (c *CloudTrail) AddTagsRequest(input *AddTagsInput) (req *request.Request, 
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   This exception is thrown when the specified resource is not found.
 //
-//   * ErrCodeARNInvalidException "ARNInvalidException"
+//   * ErrCodeARNInvalidException "CloudTrailARNInvalidException"
 //   This exception is thrown when an operation is called with an invalid trail
 //   ARN. The format of a trail ARN is:
 //
@@ -139,7 +139,7 @@ const opCreateTrail = "CreateTrail"
 
 // CreateTrailRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrail operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -297,7 +297,7 @@ const opDeleteTrail = "DeleteTrail"
 
 // DeleteTrailRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTrail operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -398,7 +398,7 @@ const opDescribeTrails = "DescribeTrails"
 
 // DescribeTrailsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTrails operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -481,7 +481,7 @@ const opGetEventSelectors = "GetEventSelectors"
 
 // GetEventSelectorsRequest generates a "aws/request.Request" representing the
 // client's request for the GetEventSelectors operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -594,7 +594,7 @@ const opGetTrailStatus = "GetTrailStatus"
 
 // GetTrailStatusRequest generates a "aws/request.Request" representing the
 // client's request for the GetTrailStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -693,7 +693,7 @@ const opListPublicKeys = "ListPublicKeys"
 
 // ListPublicKeysRequest generates a "aws/request.Request" representing the
 // client's request for the ListPublicKeys operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -789,7 +789,7 @@ const opListTags = "ListTags"
 
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -842,7 +842,7 @@ func (c *CloudTrail) ListTagsRequest(input *ListTagsInput) (req *request.Request
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   This exception is thrown when the specified resource is not found.
 //
-//   * ErrCodeARNInvalidException "ARNInvalidException"
+//   * ErrCodeARNInvalidException "CloudTrailARNInvalidException"
 //   This exception is thrown when an operation is called with an invalid trail
 //   ARN. The format of a trail ARN is:
 //
@@ -903,7 +903,7 @@ const opLookupEvents = "LookupEvents"
 
 // LookupEventsRequest generates a "aws/request.Request" representing the
 // client's request for the LookupEvents operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1074,7 +1074,7 @@ const opPutEventSelectors = "PutEventSelectors"
 
 // PutEventSelectorsRequest generates a "aws/request.Request" representing the
 // client's request for the PutEventSelectors operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1218,7 +1218,7 @@ const opRemoveTags = "RemoveTags"
 
 // RemoveTagsRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTags operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1271,7 +1271,7 @@ func (c *CloudTrail) RemoveTagsRequest(input *RemoveTagsInput) (req *request.Req
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   This exception is thrown when the specified resource is not found.
 //
-//   * ErrCodeARNInvalidException "ARNInvalidException"
+//   * ErrCodeARNInvalidException "CloudTrailARNInvalidException"
 //   This exception is thrown when an operation is called with an invalid trail
 //   ARN. The format of a trail ARN is:
 //
@@ -1333,7 +1333,7 @@ const opStartLogging = "StartLogging"
 
 // StartLoggingRequest generates a "aws/request.Request" representing the
 // client's request for the StartLogging operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1436,7 +1436,7 @@ const opStopLogging = "StopLogging"
 
 // StopLoggingRequest generates a "aws/request.Request" representing the
 // client's request for the StopLogging operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1541,7 +1541,7 @@ const opUpdateTrail = "UpdateTrail"
 
 // UpdateTrailRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTrail operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1700,7 +1700,6 @@ func (c *CloudTrail) UpdateTrailWithContext(ctx aws.Context, input *UpdateTrailI
 }
 
 // Specifies the tags to add to a trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/AddTagsRequest
 type AddTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1763,7 +1762,6 @@ func (s *AddTagsInput) SetTagsList(v []*Tag) *AddTagsInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/AddTagsResponse
 type AddTagsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1779,7 +1777,6 @@ func (s AddTagsOutput) GoString() string {
 }
 
 // Specifies the settings for each trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/CreateTrailRequest
 type CreateTrailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1950,7 +1947,6 @@ func (s *CreateTrailInput) SetSnsTopicName(v string) *CreateTrailInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/CreateTrailResponse
 type CreateTrailOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2107,7 +2103,6 @@ func (s *CreateTrailOutput) SetTrailARN(v string) *CreateTrailOutput {
 //
 // The event occurs on an object in an S3 bucket that you didn't specify in
 // the event selector. The trail doesn’t log the event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/DataResource
 type DataResource struct {
 	_ struct{} `type:"structure"`
 
@@ -2150,7 +2145,6 @@ func (s *DataResource) SetValues(v []*string) *DataResource {
 }
 
 // The request that specifies the name of a trail to delete.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/DeleteTrailRequest
 type DeleteTrailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2192,7 +2186,6 @@ func (s *DeleteTrailInput) SetName(v string) *DeleteTrailInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/DeleteTrailResponse
 type DeleteTrailOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2208,7 +2201,6 @@ func (s DeleteTrailOutput) GoString() string {
 }
 
 // Returns information about the trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/DescribeTrailsRequest
 type DescribeTrailsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2263,7 +2255,6 @@ func (s *DescribeTrailsInput) SetTrailNameList(v []*string) *DescribeTrailsInput
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/DescribeTrailsResponse
 type DescribeTrailsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2289,7 +2280,6 @@ func (s *DescribeTrailsOutput) SetTrailList(v []*Trail) *DescribeTrailsOutput {
 
 // Contains information about an event that was returned by a lookup request.
 // The result includes a representation of a CloudTrail event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/Event
 type Event struct {
 	_ struct{} `type:"structure"`
 
@@ -2306,7 +2296,7 @@ type Event struct {
 	EventSource *string `type:"string"`
 
 	// The date and time of the event returned.
-	EventTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	EventTime *time.Time `type:"timestamp"`
 
 	// A list of resources referenced by the event returned.
 	Resources []*Resource `type:"list"`
@@ -2375,7 +2365,6 @@ func (s *Event) SetUsername(v string) *Event {
 // match any event selector, the trail doesn't log the event.
 //
 // You can configure up to five event selectors for a trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/EventSelector
 type EventSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -2431,7 +2420,6 @@ func (s *EventSelector) SetReadWriteType(v string) *EventSelector {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/GetEventSelectorsRequest
 type GetEventSelectorsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2487,7 +2475,6 @@ func (s *GetEventSelectorsInput) SetTrailName(v string) *GetEventSelectorsInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/GetEventSelectorsResponse
 type GetEventSelectorsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2521,7 +2508,6 @@ func (s *GetEventSelectorsOutput) SetTrailARN(v string) *GetEventSelectorsOutput
 }
 
 // The name of a trail about which you want the current status.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/GetTrailStatusRequest
 type GetTrailStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2566,7 +2552,6 @@ func (s *GetTrailStatusInput) SetName(v string) *GetTrailStatusInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/GetTrailStatusResponse
 type GetTrailStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2579,7 +2564,7 @@ type GetTrailStatusOutput struct {
 
 	// Displays the most recent date and time when CloudTrail delivered logs to
 	// CloudWatch Logs.
-	LatestCloudWatchLogsDeliveryTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LatestCloudWatchLogsDeliveryTime *time.Time `type:"timestamp"`
 
 	// This field is deprecated.
 	LatestDeliveryAttemptSucceeded *string `type:"string"`
@@ -2600,7 +2585,7 @@ type GetTrailStatusOutput struct {
 
 	// Specifies the date and time that CloudTrail last delivered log files to an
 	// account's Amazon S3 bucket.
-	LatestDeliveryTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LatestDeliveryTime *time.Time `type:"timestamp"`
 
 	// Displays any Amazon S3 error that CloudTrail encountered when attempting
 	// to deliver a digest file to the designated bucket. For more information see
@@ -2615,7 +2600,7 @@ type GetTrailStatusOutput struct {
 
 	// Specifies the date and time that CloudTrail last delivered a digest file
 	// to an account's Amazon S3 bucket.
-	LatestDigestDeliveryTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LatestDigestDeliveryTime *time.Time `type:"timestamp"`
 
 	// This field is deprecated.
 	LatestNotificationAttemptSucceeded *string `type:"string"`
@@ -2630,15 +2615,15 @@ type GetTrailStatusOutput struct {
 
 	// Specifies the date and time of the most recent Amazon SNS notification that
 	// CloudTrail has written a new log file to an account's Amazon S3 bucket.
-	LatestNotificationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LatestNotificationTime *time.Time `type:"timestamp"`
 
 	// Specifies the most recent date and time when CloudTrail started recording
 	// API calls for an AWS account.
-	StartLoggingTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartLoggingTime *time.Time `type:"timestamp"`
 
 	// Specifies the most recent date and time when CloudTrail stopped recording
 	// API calls for an AWS account.
-	StopLoggingTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StopLoggingTime *time.Time `type:"timestamp"`
 
 	// This field is deprecated.
 	TimeLoggingStarted *string `type:"string"`
@@ -2760,13 +2745,12 @@ func (s *GetTrailStatusOutput) SetTimeLoggingStopped(v string) *GetTrailStatusOu
 }
 
 // Requests the public keys for a specified time range.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/ListPublicKeysRequest
 type ListPublicKeysInput struct {
 	_ struct{} `type:"structure"`
 
 	// Optionally specifies, in UTC, the end of the time range to look up public
 	// keys for CloudTrail digest files. If not specified, the current time is used.
-	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `type:"timestamp"`
 
 	// Reserved for future use.
 	NextToken *string `type:"string"`
@@ -2774,7 +2758,7 @@ type ListPublicKeysInput struct {
 	// Optionally specifies, in UTC, the start of the time range to look up public
 	// keys for CloudTrail digest files. If not specified, the current time is used,
 	// and the current public key is returned.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -2807,7 +2791,6 @@ func (s *ListPublicKeysInput) SetStartTime(v time.Time) *ListPublicKeysInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/ListPublicKeysResponse
 type ListPublicKeysOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2843,7 +2826,6 @@ func (s *ListPublicKeysOutput) SetPublicKeyList(v []*PublicKey) *ListPublicKeysO
 }
 
 // Specifies a list of trail tags to return.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/ListTagsRequest
 type ListTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2896,7 +2878,6 @@ func (s *ListTagsInput) SetResourceIdList(v []*string) *ListTagsInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/ListTagsResponse
 type ListTagsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2930,7 +2911,6 @@ func (s *ListTagsOutput) SetResourceTagList(v []*ResourceTag) *ListTagsOutput {
 }
 
 // Specifies an attribute and value that filter the events returned.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/LookupAttribute
 type LookupAttribute struct {
 	_ struct{} `type:"structure"`
 
@@ -2984,14 +2964,13 @@ func (s *LookupAttribute) SetAttributeValue(v string) *LookupAttribute {
 }
 
 // Contains a request for LookupEvents.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/LookupEventsRequest
 type LookupEventsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies that only events that occur before or at the specified time are
 	// returned. If the specified end time is before the specified start time, an
 	// error is returned.
-	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `type:"timestamp"`
 
 	// Contains a list of lookup attributes. Currently the list can contain only
 	// one item.
@@ -3011,7 +2990,7 @@ type LookupEventsInput struct {
 	// Specifies that only events that occur after or at the specified time are
 	// returned. If the specified start time is after the specified end time, an
 	// error is returned.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -3078,7 +3057,6 @@ func (s *LookupEventsInput) SetStartTime(v time.Time) *LookupEventsInput {
 }
 
 // Contains a response to a LookupEvents action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/LookupEventsResponse
 type LookupEventsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3118,7 +3096,6 @@ func (s *LookupEventsOutput) SetNextToken(v string) *LookupEventsOutput {
 }
 
 // Contains information about a returned public key.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/PublicKey
 type PublicKey struct {
 	_ struct{} `type:"structure"`
 
@@ -3126,10 +3103,10 @@ type PublicKey struct {
 	Fingerprint *string `type:"string"`
 
 	// The ending time of validity of the public key.
-	ValidityEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ValidityEndTime *time.Time `type:"timestamp"`
 
 	// The starting time of validity of the public key.
-	ValidityStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ValidityStartTime *time.Time `type:"timestamp"`
 
 	// The DER encoded public key value in PKCS#1 format.
 	//
@@ -3171,7 +3148,6 @@ func (s *PublicKey) SetValue(v []byte) *PublicKey {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/PutEventSelectorsRequest
 type PutEventSelectorsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3242,7 +3218,6 @@ func (s *PutEventSelectorsInput) SetTrailName(v string) *PutEventSelectorsInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/PutEventSelectorsResponse
 type PutEventSelectorsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3279,7 +3254,6 @@ func (s *PutEventSelectorsOutput) SetTrailARN(v string) *PutEventSelectorsOutput
 }
 
 // Specifies the tags to remove from a trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/RemoveTagsRequest
 type RemoveTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3342,7 +3316,6 @@ func (s *RemoveTagsInput) SetTagsList(v []*Tag) *RemoveTagsInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/RemoveTagsResponse
 type RemoveTagsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3358,7 +3331,6 @@ func (s RemoveTagsOutput) GoString() string {
 }
 
 // Specifies the type and name of a resource referenced by an event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/Resource
 type Resource struct {
 	_ struct{} `type:"structure"`
 
@@ -3399,7 +3371,6 @@ func (s *Resource) SetResourceType(v string) *Resource {
 }
 
 // A resource tag.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/ResourceTag
 type ResourceTag struct {
 	_ struct{} `type:"structure"`
 
@@ -3433,7 +3404,6 @@ func (s *ResourceTag) SetTagsList(v []*Tag) *ResourceTag {
 }
 
 // The request to CloudTrail to start logging AWS API calls for an account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/StartLoggingRequest
 type StartLoggingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3477,7 +3447,6 @@ func (s *StartLoggingInput) SetName(v string) *StartLoggingInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/StartLoggingResponse
 type StartLoggingOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3494,7 +3463,6 @@ func (s StartLoggingOutput) GoString() string {
 
 // Passes the request to CloudTrail to stop logging AWS API calls for the specified
 // account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/StopLoggingRequest
 type StopLoggingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3538,7 +3506,6 @@ func (s *StopLoggingInput) SetName(v string) *StopLoggingInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/StopLoggingResponse
 type StopLoggingOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3554,7 +3521,6 @@ func (s StopLoggingOutput) GoString() string {
 }
 
 // A custom key-value pair associated with a resource such as a CloudTrail trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -3605,7 +3571,6 @@ func (s *Tag) SetValue(v string) *Tag {
 }
 
 // The settings for a trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/Trail
 type Trail struct {
 	_ struct{} `type:"structure"`
 
@@ -3762,7 +3727,6 @@ func (s *Trail) SetTrailARN(v string) *Trail {
 }
 
 // Specifies settings to update for the trail.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/UpdateTrailRequest
 type UpdateTrailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3936,7 +3900,6 @@ func (s *UpdateTrailInput) SetSnsTopicName(v string) *UpdateTrailInput {
 
 // Returns the objects or data listed below if successful. Otherwise, returns
 // an error.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudtrail-2013-11-01/UpdateTrailResponse
 type UpdateTrailOutput struct {
 	_ struct{} `type:"structure"`
 

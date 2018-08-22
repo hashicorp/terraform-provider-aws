@@ -137,7 +137,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags {
-    Name = "terraform-testacc-data-source"
+    Name = "terraform-testacc-route-table-data-source"
   }
 }
 
@@ -145,7 +145,7 @@ resource "aws_subnet" "test" {
   cidr_block = "172.16.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
   tags {
-    Name = "terraform-testacc-data-source"
+    Name = "tf-acc-route-table-data-source"
   }
 }
 
@@ -197,7 +197,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags {
-    Name = "terraform-testacc-data-source"
+    Name = "terraform-testacc-route-table-data-source-main-route"
   }
 }
 

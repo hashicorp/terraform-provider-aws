@@ -22,6 +22,7 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.single"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.single", "target_key_arn"),
 				),
 			},
 			{
@@ -46,6 +47,7 @@ func TestAccAWSKmsAlias_name_prefix(t *testing.T) {
 				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.name_prefix"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.name_prefix", "target_key_arn"),
 				),
 			},
 		},
@@ -64,6 +66,7 @@ func TestAccAWSKmsAlias_no_name(t *testing.T) {
 				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.nothing"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.nothing", "target_key_arn"),
 				),
 			},
 		},
@@ -82,8 +85,34 @@ func TestAccAWSKmsAlias_multiple(t *testing.T) {
 				Config: testAccAWSKmsMultipleAliases(rInt, kmsAliasTimestamp),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.one"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.one", "target_key_arn"),
 					testAccCheckAWSKmsAliasExists("aws_kms_alias.two"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.two", "target_key_arn"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
+	rInt := acctest.RandInt()
+	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsArnDiffSuppress(rInt, kmsAliasTimestamp),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsAliasExists("aws_kms_alias.bar"),
+					resource.TestCheckResourceAttrSet("aws_kms_alias.bar", "target_key_arn"),
+				),
+			},
+			{
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+				Config:             testAccAWSKmsArnDiffSuppress(rInt, kmsAliasTimestamp),
 			},
 		},
 	})
@@ -180,4 +209,17 @@ resource "aws_kms_alias" "two" {
     name = "alias/tf-acc-alias-two-%d"
     target_key_id = "${aws_kms_key.single.key_id}"
 }`, timestamp, rInt, rInt)
+}
+
+func testAccAWSKmsArnDiffSuppress(rInt int, timestamp string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test foo %s"
+    deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "bar" {
+	name = "alias/tf-acc-key-alias-%d"
+	target_key_id = "${aws_kms_key.foo.arn}"
+}`, timestamp, rInt)
 }

@@ -52,7 +52,10 @@ func TestValidateIamGroupName(t *testing.T) {
 
 func TestAccAWSIAMGroup_basic(t *testing.T) {
 	var conf iam.GetGroupOutput
-	rInt := acctest.RandInt()
+
+	rString := acctest.RandString(8)
+	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
+	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -60,17 +63,17 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGroupConfig(rInt),
+				Config: testAccAWSGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
-					testAccCheckAWSGroupAttributes(&conf, fmt.Sprintf("test-group-%d", rInt), "/"),
+					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
-				Config: testAccAWSGroupConfig2(rInt),
+				Config: testAccAWSGroupConfig2(groupName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupExists("aws_iam_group.group2", &conf),
-					testAccCheckAWSGroupAttributes(&conf, fmt.Sprintf("test-group-%d-2", rInt), "/funnypath/"),
+					testAccCheckAWSGroupAttributes(&conf, groupName2, "/funnypath/"),
 				),
 			},
 		},
@@ -146,18 +149,18 @@ func testAccCheckAWSGroupAttributes(group *iam.GetGroupOutput, name string, path
 	}
 }
 
-func testAccAWSGroupConfig(rInt int) string {
+func testAccAWSGroupConfig(groupName string) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_group" "group" {
-		name = "test-group-%d"
-		path = "/"
-	}`, rInt)
+resource "aws_iam_group" "group" {
+	name = "%s"
+	path = "/"
+}`, groupName)
 }
 
-func testAccAWSGroupConfig2(rInt int) string {
+func testAccAWSGroupConfig2(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group2" {
-	name = "test-group-%d-2"
+	name = "%s"
 	path = "/funnypath/"
-}`, rInt)
+}`, groupName)
 }

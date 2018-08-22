@@ -15,7 +15,7 @@ const opAddIpRoutes = "AddIpRoutes"
 
 // AddIpRoutesRequest generates a "aws/request.Request" representing the
 // client's request for the AddIpRoutes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -122,7 +122,7 @@ const opAddTagsToResource = "AddTagsToResource"
 
 // AddTagsToResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -215,7 +215,7 @@ const opCancelSchemaExtension = "CancelSchemaExtension"
 
 // CancelSchemaExtensionRequest generates a "aws/request.Request" representing the
 // client's request for the CancelSchemaExtension operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -303,7 +303,7 @@ const opConnectDirectory = "ConnectDirectory"
 
 // ConnectDirectoryRequest generates a "aws/request.Request" representing the
 // client's request for the ConnectDirectory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -398,7 +398,7 @@ const opCreateAlias = "CreateAlias"
 
 // CreateAliasRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAlias operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -494,7 +494,7 @@ const opCreateComputer = "CreateComputer"
 
 // CreateComputerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateComputer operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -595,7 +595,7 @@ const opCreateConditionalForwarder = "CreateConditionalForwarder"
 
 // CreateConditionalForwarderRequest generates a "aws/request.Request" representing the
 // client's request for the CreateConditionalForwarder operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -694,7 +694,7 @@ const opCreateDirectory = "CreateDirectory"
 
 // CreateDirectoryRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDirectory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -789,7 +789,7 @@ const opCreateMicrosoftAD = "CreateMicrosoftAD"
 
 // CreateMicrosoftADRequest generates a "aws/request.Request" representing the
 // client's request for the CreateMicrosoftAD operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -887,7 +887,7 @@ const opCreateSnapshot = "CreateSnapshot"
 
 // CreateSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CreateSnapshot operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -982,7 +982,7 @@ const opCreateTrust = "CreateTrust"
 
 // CreateTrustRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrust operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1083,7 +1083,7 @@ const opDeleteConditionalForwarder = "DeleteConditionalForwarder"
 
 // DeleteConditionalForwarderRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteConditionalForwarder operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1177,7 +1177,7 @@ const opDeleteDirectory = "DeleteDirectory"
 
 // DeleteDirectoryRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDirectory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1267,7 +1267,7 @@ const opDeleteSnapshot = "DeleteSnapshot"
 
 // DeleteSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSnapshot operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1355,7 +1355,7 @@ const opDeleteTrust = "DeleteTrust"
 
 // DeleteTrustRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTrust operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1447,7 +1447,7 @@ const opDeregisterEventTopic = "DeregisterEventTopic"
 
 // DeregisterEventTopicRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterEventTopic operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1535,7 +1535,7 @@ const opDescribeConditionalForwarders = "DescribeConditionalForwarders"
 
 // DescribeConditionalForwardersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeConditionalForwarders operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1632,7 +1632,7 @@ const opDescribeDirectories = "DescribeDirectories"
 
 // DescribeDirectoriesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDirectories operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1734,7 +1734,7 @@ const opDescribeDomainControllers = "DescribeDomainControllers"
 
 // DescribeDomainControllersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDomainControllers operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1884,7 +1884,7 @@ const opDescribeEventTopics = "DescribeEventTopics"
 
 // DescribeEventTopicsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEventTopics operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1976,7 +1976,7 @@ const opDescribeSnapshots = "DescribeSnapshots"
 
 // DescribeSnapshotsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeSnapshots operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2074,7 +2074,7 @@ const opDescribeTrusts = "DescribeTrusts"
 
 // DescribeTrustsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTrusts operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2171,7 +2171,7 @@ const opDisableRadius = "DisableRadius"
 
 // DisableRadiusRequest generates a "aws/request.Request" representing the
 // client's request for the DisableRadius operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2257,7 +2257,7 @@ const opDisableSso = "DisableSso"
 
 // DisableSsoRequest generates a "aws/request.Request" representing the
 // client's request for the DisableSso operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2348,7 +2348,7 @@ const opEnableRadius = "EnableRadius"
 
 // EnableRadiusRequest generates a "aws/request.Request" representing the
 // client's request for the EnableRadius operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2440,7 +2440,7 @@ const opEnableSso = "EnableSso"
 
 // EnableSsoRequest generates a "aws/request.Request" representing the
 // client's request for the EnableSso operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2531,7 +2531,7 @@ const opGetDirectoryLimits = "GetDirectoryLimits"
 
 // GetDirectoryLimitsRequest generates a "aws/request.Request" representing the
 // client's request for the GetDirectoryLimits operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2616,7 +2616,7 @@ const opGetSnapshotLimits = "GetSnapshotLimits"
 
 // GetSnapshotLimitsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSnapshotLimits operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2701,7 +2701,7 @@ const opListIpRoutes = "ListIpRoutes"
 
 // ListIpRoutesRequest generates a "aws/request.Request" representing the
 // client's request for the ListIpRoutes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2792,7 +2792,7 @@ const opListSchemaExtensions = "ListSchemaExtensions"
 
 // ListSchemaExtensionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListSchemaExtensions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2880,7 +2880,7 @@ const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2971,7 +2971,7 @@ const opRegisterEventTopic = "RegisterEventTopic"
 
 // RegisterEventTopicRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterEventTopic operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3064,7 +3064,7 @@ const opRemoveIpRoutes = "RemoveIpRoutes"
 
 // RemoveIpRoutesRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveIpRoutes operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3155,7 +3155,7 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 
 // RemoveTagsFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3239,11 +3239,110 @@ func (c *DirectoryService) RemoveTagsFromResourceWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+const opResetUserPassword = "ResetUserPassword"
+
+// ResetUserPasswordRequest generates a "aws/request.Request" representing the
+// client's request for the ResetUserPassword operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResetUserPassword for more information on using the ResetUserPassword
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResetUserPasswordRequest method.
+//    req, resp := client.ResetUserPasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ResetUserPassword
+func (c *DirectoryService) ResetUserPasswordRequest(input *ResetUserPasswordInput) (req *request.Request, output *ResetUserPasswordOutput) {
+	op := &request.Operation{
+		Name:       opResetUserPassword,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ResetUserPasswordInput{}
+	}
+
+	output = &ResetUserPasswordOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ResetUserPassword API operation for AWS Directory Service.
+//
+// Resets the password for any user in your AWS Managed Microsoft AD or Simple
+// AD directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation ResetUserPassword for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   The specified directory is unavailable or could not be found.
+//
+//   * ErrCodeUserDoesNotExistException "UserDoesNotExistException"
+//   The user provided a username that does not exist in your directory.
+//
+//   * ErrCodeInvalidPasswordException "InvalidPasswordException"
+//   The new password provided by the user does not meet the password complexity
+//   requirements defined in your directory.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   The specified entity could not be found.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ResetUserPassword
+func (c *DirectoryService) ResetUserPassword(input *ResetUserPasswordInput) (*ResetUserPasswordOutput, error) {
+	req, out := c.ResetUserPasswordRequest(input)
+	return out, req.Send()
+}
+
+// ResetUserPasswordWithContext is the same as ResetUserPassword with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResetUserPassword for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) ResetUserPasswordWithContext(ctx aws.Context, input *ResetUserPasswordInput, opts ...request.Option) (*ResetUserPasswordOutput, error) {
+	req, out := c.ResetUserPasswordRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRestoreFromSnapshot = "RestoreFromSnapshot"
 
 // RestoreFromSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreFromSnapshot operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3339,7 +3438,7 @@ const opStartSchemaExtension = "StartSchemaExtension"
 
 // StartSchemaExtensionRequest generates a "aws/request.Request" representing the
 // client's request for the StartSchemaExtension operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3435,7 +3534,7 @@ const opUpdateConditionalForwarder = "UpdateConditionalForwarder"
 
 // UpdateConditionalForwarderRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateConditionalForwarder operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3529,7 +3628,7 @@ const opUpdateNumberOfDomainControllers = "UpdateNumberOfDomainControllers"
 
 // UpdateNumberOfDomainControllersRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateNumberOfDomainControllers operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3632,7 +3731,7 @@ const opUpdateRadius = "UpdateRadius"
 
 // UpdateRadiusRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRadius operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3721,7 +3820,7 @@ const opVerifyTrust = "VerifyTrust"
 
 // VerifyTrustRequest generates a "aws/request.Request" representing the
 // client's request for the VerifyTrust operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3812,7 +3911,6 @@ func (c *DirectoryService) VerifyTrustWithContext(ctx aws.Context, input *Verify
 	return out, req.Send()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AddIpRoutesRequest
 type AddIpRoutesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3917,7 +4015,6 @@ func (s *AddIpRoutesInput) SetUpdateSecurityGroupForDirectoryControllers(v bool)
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AddIpRoutesResult
 type AddIpRoutesOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3932,7 +4029,6 @@ func (s AddIpRoutesOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AddTagsToResourceRequest
 type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3995,7 +4091,6 @@ func (s *AddTagsToResourceInput) SetTags(v []*Tag) *AddTagsToResourceInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AddTagsToResourceResult
 type AddTagsToResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4011,7 +4106,6 @@ func (s AddTagsToResourceOutput) GoString() string {
 }
 
 // Represents a named directory attribute.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/Attribute
 type Attribute struct {
 	_ struct{} `type:"structure"`
 
@@ -4057,7 +4151,6 @@ func (s *Attribute) SetValue(v string) *Attribute {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CancelSchemaExtensionRequest
 type CancelSchemaExtensionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4110,7 +4203,6 @@ func (s *CancelSchemaExtensionInput) SetSchemaExtensionId(v string) *CancelSchem
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CancelSchemaExtensionResult
 type CancelSchemaExtensionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4126,7 +4218,6 @@ func (s CancelSchemaExtensionOutput) GoString() string {
 }
 
 // Contains information about a computer account in a directory.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/Computer
 type Computer struct {
 	_ struct{} `type:"structure"`
 
@@ -4172,7 +4263,6 @@ func (s *Computer) SetComputerName(v string) *Computer {
 // Points to a remote domain with which you are setting up a trust relationship.
 // Conditional forwarders are required in order to set up a trust relationship
 // with another domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ConditionalForwarder
 type ConditionalForwarder struct {
 	_ struct{} `type:"structure"`
 
@@ -4220,7 +4310,6 @@ func (s *ConditionalForwarder) SetReplicationScope(v string) *ConditionalForward
 }
 
 // Contains the inputs for the ConnectDirectory operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ConnectDirectoryRequest
 type ConnectDirectoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4329,7 +4418,6 @@ func (s *ConnectDirectoryInput) SetSize(v string) *ConnectDirectoryInput {
 }
 
 // Contains the results of the ConnectDirectory operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ConnectDirectoryResult
 type ConnectDirectoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4354,7 +4442,6 @@ func (s *ConnectDirectoryOutput) SetDirectoryId(v string) *ConnectDirectoryOutpu
 }
 
 // Contains the inputs for the CreateAlias operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateAliasRequest
 type CreateAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4414,7 +4501,6 @@ func (s *CreateAliasInput) SetDirectoryId(v string) *CreateAliasInput {
 }
 
 // Contains the results of the CreateAlias operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateAliasResult
 type CreateAliasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4448,7 +4534,6 @@ func (s *CreateAliasOutput) SetDirectoryId(v string) *CreateAliasOutput {
 }
 
 // Contains the inputs for the CreateComputer operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateComputerRequest
 type CreateComputerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4556,7 +4641,6 @@ func (s *CreateComputerInput) SetPassword(v string) *CreateComputerInput {
 }
 
 // Contains the results for the CreateComputer operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateComputerResult
 type CreateComputerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4583,7 +4667,6 @@ func (s *CreateComputerOutput) SetComputer(v *Computer) *CreateComputerOutput {
 // Initiates the creation of a conditional forwarder for your AWS Directory
 // Service for Microsoft Active Directory. Conditional forwarders are required
 // in order to set up a trust relationship with another domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateConditionalForwarderRequest
 type CreateConditionalForwarderInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4653,7 +4736,6 @@ func (s *CreateConditionalForwarderInput) SetRemoteDomainName(v string) *CreateC
 }
 
 // The result of a CreateConditinalForwarder request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateConditionalForwarderResult
 type CreateConditionalForwarderOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4669,7 +4751,6 @@ func (s CreateConditionalForwarderOutput) GoString() string {
 }
 
 // Contains the inputs for the CreateDirectory operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateDirectoryRequest
 type CreateDirectoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4772,7 +4853,6 @@ func (s *CreateDirectoryInput) SetVpcSettings(v *DirectoryVpcSettings) *CreateDi
 }
 
 // Contains the results of the CreateDirectory operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateDirectoryResult
 type CreateDirectoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4797,7 +4877,6 @@ func (s *CreateDirectoryOutput) SetDirectoryId(v string) *CreateDirectoryOutput 
 }
 
 // Creates a Microsoft AD in the AWS cloud.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateMicrosoftADRequest
 type CreateMicrosoftADInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4903,7 +4982,6 @@ func (s *CreateMicrosoftADInput) SetVpcSettings(v *DirectoryVpcSettings) *Create
 }
 
 // Result of a CreateMicrosoftAD request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateMicrosoftADResult
 type CreateMicrosoftADOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4928,7 +5006,6 @@ func (s *CreateMicrosoftADOutput) SetDirectoryId(v string) *CreateMicrosoftADOut
 }
 
 // Contains the inputs for the CreateSnapshot operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateSnapshotRequest
 type CreateSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4977,7 +5054,6 @@ func (s *CreateSnapshotInput) SetName(v string) *CreateSnapshotInput {
 }
 
 // Contains the results of the CreateSnapshot operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateSnapshotResult
 type CreateSnapshotOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5009,7 +5085,6 @@ func (s *CreateSnapshotOutput) SetSnapshotId(v string) *CreateSnapshotOutput {
 //
 // This action initiates the creation of the AWS side of a trust relationship
 // between a Microsoft AD in the AWS cloud and an external domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateTrustRequest
 type CreateTrustInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5115,7 +5190,6 @@ func (s *CreateTrustInput) SetTrustType(v string) *CreateTrustInput {
 }
 
 // The result of a CreateTrust request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateTrustResult
 type CreateTrustOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5140,7 +5214,6 @@ func (s *CreateTrustOutput) SetTrustId(v string) *CreateTrustOutput {
 }
 
 // Deletes a conditional forwarder.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteConditionalForwarderRequest
 type DeleteConditionalForwarderInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5195,7 +5268,6 @@ func (s *DeleteConditionalForwarderInput) SetRemoteDomainName(v string) *DeleteC
 }
 
 // The result of a DeleteConditionalForwarder request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteConditionalForwarderResult
 type DeleteConditionalForwarderOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5211,7 +5283,6 @@ func (s DeleteConditionalForwarderOutput) GoString() string {
 }
 
 // Contains the inputs for the DeleteDirectory operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteDirectoryRequest
 type DeleteDirectoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5251,7 +5322,6 @@ func (s *DeleteDirectoryInput) SetDirectoryId(v string) *DeleteDirectoryInput {
 }
 
 // Contains the results of the DeleteDirectory operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteDirectoryResult
 type DeleteDirectoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5276,7 +5346,6 @@ func (s *DeleteDirectoryOutput) SetDirectoryId(v string) *DeleteDirectoryOutput 
 }
 
 // Contains the inputs for the DeleteSnapshot operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteSnapshotRequest
 type DeleteSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5316,7 +5385,6 @@ func (s *DeleteSnapshotInput) SetSnapshotId(v string) *DeleteSnapshotInput {
 }
 
 // Contains the results of the DeleteSnapshot operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteSnapshotResult
 type DeleteSnapshotOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5342,7 +5410,6 @@ func (s *DeleteSnapshotOutput) SetSnapshotId(v string) *DeleteSnapshotOutput {
 
 // Deletes the local side of an existing trust relationship between the Microsoft
 // AD in the AWS cloud and the external domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteTrustRequest
 type DeleteTrustInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5391,7 +5458,6 @@ func (s *DeleteTrustInput) SetTrustId(v string) *DeleteTrustInput {
 }
 
 // The result of a DeleteTrust request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteTrustResult
 type DeleteTrustOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5416,7 +5482,6 @@ func (s *DeleteTrustOutput) SetTrustId(v string) *DeleteTrustOutput {
 }
 
 // Removes the specified directory as a publisher to the specified SNS topic.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeregisterEventTopicRequest
 type DeregisterEventTopicInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5474,7 +5539,6 @@ func (s *DeregisterEventTopicInput) SetTopicName(v string) *DeregisterEventTopic
 }
 
 // The result of a DeregisterEventTopic request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeregisterEventTopicResult
 type DeregisterEventTopicOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5490,7 +5554,6 @@ func (s DeregisterEventTopicOutput) GoString() string {
 }
 
 // Describes a conditional forwarder.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeConditionalForwardersRequest
 type DescribeConditionalForwardersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5541,7 +5604,6 @@ func (s *DescribeConditionalForwardersInput) SetRemoteDomainNames(v []*string) *
 }
 
 // The result of a DescribeConditionalForwarder request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeConditionalForwardersResult
 type DescribeConditionalForwardersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5566,7 +5628,6 @@ func (s *DescribeConditionalForwardersOutput) SetConditionalForwarders(v []*Cond
 }
 
 // Contains the inputs for the DescribeDirectories operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeDirectoriesRequest
 type DescribeDirectoriesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5615,7 +5676,6 @@ func (s *DescribeDirectoriesInput) SetNextToken(v string) *DescribeDirectoriesIn
 }
 
 // Contains the results of the DescribeDirectories operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeDirectoriesResult
 type DescribeDirectoriesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5655,7 +5715,6 @@ func (s *DescribeDirectoriesOutput) SetNextToken(v string) *DescribeDirectoriesO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeDomainControllersRequest
 type DescribeDomainControllersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5723,7 +5782,6 @@ func (s *DescribeDomainControllersInput) SetNextToken(v string) *DescribeDomainC
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeDomainControllersResult
 type DescribeDomainControllersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5759,7 +5817,6 @@ func (s *DescribeDomainControllersOutput) SetNextToken(v string) *DescribeDomain
 }
 
 // Describes event topics.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeEventTopicsRequest
 type DescribeEventTopicsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5797,7 +5854,6 @@ func (s *DescribeEventTopicsInput) SetTopicNames(v []*string) *DescribeEventTopi
 }
 
 // The result of a DescribeEventTopic request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeEventTopicsResult
 type DescribeEventTopicsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5823,7 +5879,6 @@ func (s *DescribeEventTopicsOutput) SetEventTopics(v []*EventTopic) *DescribeEve
 }
 
 // Contains the inputs for the DescribeSnapshots operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeSnapshotsRequest
 type DescribeSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5878,7 +5933,6 @@ func (s *DescribeSnapshotsInput) SetSnapshotIds(v []*string) *DescribeSnapshotsI
 }
 
 // Contains the results of the DescribeSnapshots operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeSnapshotsResult
 type DescribeSnapshotsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5920,7 +5974,6 @@ func (s *DescribeSnapshotsOutput) SetSnapshots(v []*Snapshot) *DescribeSnapshots
 // Describes the trust relationships for a particular Microsoft AD in the AWS
 // cloud. If no input parameters are are provided, such as directory ID or trust
 // ID, this request describes all the trust relationships.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeTrustsRequest
 type DescribeTrustsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5978,7 +6031,6 @@ func (s *DescribeTrustsInput) SetTrustIds(v []*string) *DescribeTrustsInput {
 }
 
 // The result of a DescribeTrust request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeTrustsResult
 type DescribeTrustsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6020,7 +6072,6 @@ func (s *DescribeTrustsOutput) SetTrusts(v []*Trust) *DescribeTrustsOutput {
 
 // Contains information for the ConnectDirectory operation when an AD Connector
 // directory is being created.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DirectoryConnectSettings
 type DirectoryConnectSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6113,7 +6164,6 @@ func (s *DirectoryConnectSettings) SetVpcId(v string) *DirectoryConnectSettings 
 }
 
 // Contains information about an AD Connector directory.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DirectoryConnectSettingsDescription
 type DirectoryConnectSettingsDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -6183,7 +6233,6 @@ func (s *DirectoryConnectSettingsDescription) SetVpcId(v string) *DirectoryConne
 }
 
 // Contains information about an AWS Directory Service directory.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DirectoryDescription
 type DirectoryDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -6222,7 +6271,7 @@ type DirectoryDescription struct {
 	Edition *string `type:"string" enum:"DirectoryEdition"`
 
 	// Specifies when the directory was created.
-	LaunchTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LaunchTime *time.Time `type:"timestamp"`
 
 	// The fully-qualified name of the directory.
 	Name *string `type:"string"`
@@ -6248,7 +6297,7 @@ type DirectoryDescription struct {
 	Stage *string `type:"string" enum:"DirectoryStage"`
 
 	// The date and time that the stage was last updated.
-	StageLastUpdatedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StageLastUpdatedDateTime *time.Time `type:"timestamp"`
 
 	// Additional information about the directory stage.
 	StageReason *string `type:"string"`
@@ -6393,7 +6442,6 @@ func (s *DirectoryDescription) SetVpcSettings(v *DirectoryVpcSettingsDescription
 }
 
 // Contains directory limit information for a region.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DirectoryLimits
 type DirectoryLimits struct {
 	_ struct{} `type:"structure"`
 
@@ -6490,7 +6538,6 @@ func (s *DirectoryLimits) SetConnectedDirectoriesLimitReached(v bool) *Directory
 }
 
 // Contains VPC information for the CreateDirectory or CreateMicrosoftAD operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DirectoryVpcSettings
 type DirectoryVpcSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -6546,7 +6593,6 @@ func (s *DirectoryVpcSettings) SetVpcId(v string) *DirectoryVpcSettings {
 }
 
 // Contains information about the directory.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DirectoryVpcSettingsDescription
 type DirectoryVpcSettingsDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -6598,7 +6644,6 @@ func (s *DirectoryVpcSettingsDescription) SetVpcId(v string) *DirectoryVpcSettin
 }
 
 // Contains the inputs for the DisableRadius operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableRadiusRequest
 type DisableRadiusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6638,7 +6683,6 @@ func (s *DisableRadiusInput) SetDirectoryId(v string) *DisableRadiusInput {
 }
 
 // Contains the results of the DisableRadius operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableRadiusResult
 type DisableRadiusOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6654,7 +6698,6 @@ func (s DisableRadiusOutput) GoString() string {
 }
 
 // Contains the inputs for the DisableSso operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableSsoRequest
 type DisableSsoInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6728,7 +6771,6 @@ func (s *DisableSsoInput) SetUserName(v string) *DisableSsoInput {
 }
 
 // Contains the results of the DisableSso operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableSsoResult
 type DisableSsoOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6744,7 +6786,6 @@ func (s DisableSsoOutput) GoString() string {
 }
 
 // Contains information about the domain controllers for a specified directory.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DomainController
 type DomainController struct {
 	_ struct{} `type:"structure"`
 
@@ -6761,13 +6802,13 @@ type DomainController struct {
 	DomainControllerId *string `type:"string"`
 
 	// Specifies when the domain controller was created.
-	LaunchTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LaunchTime *time.Time `type:"timestamp"`
 
 	// The status of the domain controller.
 	Status *string `type:"string" enum:"DomainControllerStatus"`
 
 	// The date and time that the status was last updated.
-	StatusLastUpdatedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StatusLastUpdatedDateTime *time.Time `type:"timestamp"`
 
 	// A description of the domain controller state.
 	StatusReason *string `type:"string"`
@@ -6850,7 +6891,6 @@ func (s *DomainController) SetVpcId(v string) *DomainController {
 }
 
 // Contains the inputs for the EnableRadius operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableRadiusRequest
 type EnableRadiusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6909,7 +6949,6 @@ func (s *EnableRadiusInput) SetRadiusSettings(v *RadiusSettings) *EnableRadiusIn
 }
 
 // Contains the results of the EnableRadius operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableRadiusResult
 type EnableRadiusOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6925,7 +6964,6 @@ func (s EnableRadiusOutput) GoString() string {
 }
 
 // Contains the inputs for the EnableSso operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableSsoRequest
 type EnableSsoInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6999,7 +7037,6 @@ func (s *EnableSsoInput) SetUserName(v string) *EnableSsoInput {
 }
 
 // Contains the results of the EnableSso operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableSsoResult
 type EnableSsoOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7015,12 +7052,11 @@ func (s EnableSsoOutput) GoString() string {
 }
 
 // Information about SNS topic and AWS Directory Service directory associations.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EventTopic
 type EventTopic struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time of when you associated your directory with the SNS topic.
-	CreatedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedDateTime *time.Time `type:"timestamp"`
 
 	// The Directory ID of an AWS Directory Service directory that will publish
 	// status messages to an SNS topic.
@@ -7077,7 +7113,6 @@ func (s *EventTopic) SetTopicName(v string) *EventTopic {
 }
 
 // Contains the inputs for the GetDirectoryLimits operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/GetDirectoryLimitsRequest
 type GetDirectoryLimitsInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7093,7 +7128,6 @@ func (s GetDirectoryLimitsInput) GoString() string {
 }
 
 // Contains the results of the GetDirectoryLimits operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/GetDirectoryLimitsResult
 type GetDirectoryLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7119,7 +7153,6 @@ func (s *GetDirectoryLimitsOutput) SetDirectoryLimits(v *DirectoryLimits) *GetDi
 }
 
 // Contains the inputs for the GetSnapshotLimits operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/GetSnapshotLimitsRequest
 type GetSnapshotLimitsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7159,7 +7192,6 @@ func (s *GetSnapshotLimitsInput) SetDirectoryId(v string) *GetSnapshotLimitsInpu
 }
 
 // Contains the results of the GetSnapshotLimits operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/GetSnapshotLimitsResult
 type GetSnapshotLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7186,7 +7218,6 @@ func (s *GetSnapshotLimitsOutput) SetSnapshotLimits(v *SnapshotLimits) *GetSnaps
 
 // IP address block. This is often the address block of the DNS server used
 // for your on-premises domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/IpRoute
 type IpRoute struct {
 	_ struct{} `type:"structure"`
 
@@ -7222,12 +7253,11 @@ func (s *IpRoute) SetDescription(v string) *IpRoute {
 }
 
 // Information about one or more IP address blocks.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/IpRouteInfo
 type IpRouteInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the address block was added to the directory.
-	AddedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	AddedDateTime *time.Time `type:"timestamp"`
 
 	// IP address block in the IpRoute.
 	CidrIp *string `type:"string"`
@@ -7291,7 +7321,6 @@ func (s *IpRouteInfo) SetIpRouteStatusReason(v string) *IpRouteInfo {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListIpRoutesRequest
 type ListIpRoutesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7350,7 +7379,6 @@ func (s *ListIpRoutesInput) SetNextToken(v string) *ListIpRoutesInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListIpRoutesResult
 type ListIpRoutesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7385,7 +7413,6 @@ func (s *ListIpRoutesOutput) SetNextToken(v string) *ListIpRoutesOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListSchemaExtensionsRequest
 type ListSchemaExtensionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7444,7 +7471,6 @@ func (s *ListSchemaExtensionsInput) SetNextToken(v string) *ListSchemaExtensions
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListSchemaExtensionsResult
 type ListSchemaExtensionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7479,7 +7505,6 @@ func (s *ListSchemaExtensionsOutput) SetSchemaExtensionsInfo(v []*SchemaExtensio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListTagsForResourceRequest
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7536,7 +7561,6 @@ func (s *ListTagsForResourceInput) SetResourceId(v string) *ListTagsForResourceI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListTagsForResourceResult
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7571,7 +7595,6 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 
 // Contains information about a Remote Authentication Dial In User Service (RADIUS)
 // server.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RadiusSettings
 type RadiusSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7685,7 +7708,6 @@ func (s *RadiusSettings) SetUseSameUsername(v bool) *RadiusSettings {
 }
 
 // Registers a new event topic.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RegisterEventTopicRequest
 type RegisterEventTopicInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7743,7 +7765,6 @@ func (s *RegisterEventTopicInput) SetTopicName(v string) *RegisterEventTopicInpu
 }
 
 // The result of a RegisterEventTopic request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RegisterEventTopicResult
 type RegisterEventTopicOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7758,7 +7779,6 @@ func (s RegisterEventTopicOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RemoveIpRoutesRequest
 type RemoveIpRoutesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7811,7 +7831,6 @@ func (s *RemoveIpRoutesInput) SetDirectoryId(v string) *RemoveIpRoutesInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RemoveIpRoutesResult
 type RemoveIpRoutesOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7826,7 +7845,6 @@ func (s RemoveIpRoutesOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RemoveTagsFromResourceRequest
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7879,7 +7897,6 @@ func (s *RemoveTagsFromResourceInput) SetTagKeys(v []*string) *RemoveTagsFromRes
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RemoveTagsFromResourceResult
 type RemoveTagsFromResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7894,8 +7911,94 @@ func (s RemoveTagsFromResourceOutput) GoString() string {
 	return s.String()
 }
 
+type ResetUserPasswordInput struct {
+	_ struct{} `type:"structure"`
+
+	// Identifier of the AWS Managed Microsoft AD or Simple AD directory in which
+	// the user resides.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The new password that will be reset.
+	//
+	// NewPassword is a required field
+	NewPassword *string `min:"1" type:"string" required:"true"`
+
+	// The username of the user whose password will be reset.
+	//
+	// UserName is a required field
+	UserName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResetUserPasswordInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetUserPasswordInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResetUserPasswordInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResetUserPasswordInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.NewPassword == nil {
+		invalidParams.Add(request.NewErrParamRequired("NewPassword"))
+	}
+	if s.NewPassword != nil && len(*s.NewPassword) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NewPassword", 1))
+	}
+	if s.UserName == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *ResetUserPasswordInput) SetDirectoryId(v string) *ResetUserPasswordInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetNewPassword sets the NewPassword field's value.
+func (s *ResetUserPasswordInput) SetNewPassword(v string) *ResetUserPasswordInput {
+	s.NewPassword = &v
+	return s
+}
+
+// SetUserName sets the UserName field's value.
+func (s *ResetUserPasswordInput) SetUserName(v string) *ResetUserPasswordInput {
+	s.UserName = &v
+	return s
+}
+
+type ResetUserPasswordOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ResetUserPasswordOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetUserPasswordOutput) GoString() string {
+	return s.String()
+}
+
 // An object representing the inputs for the RestoreFromSnapshot operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RestoreFromSnapshotRequest
 type RestoreFromSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7935,7 +8038,6 @@ func (s *RestoreFromSnapshotInput) SetSnapshotId(v string) *RestoreFromSnapshotI
 }
 
 // Contains the results of the RestoreFromSnapshot operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RestoreFromSnapshotResult
 type RestoreFromSnapshotOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7951,7 +8053,6 @@ func (s RestoreFromSnapshotOutput) GoString() string {
 }
 
 // Information about a schema extension.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/SchemaExtensionInfo
 type SchemaExtensionInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -7962,7 +8063,7 @@ type SchemaExtensionInfo struct {
 	DirectoryId *string `type:"string"`
 
 	// The date and time that the schema extension was completed.
-	EndDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	EndDateTime *time.Time `type:"timestamp"`
 
 	// The identifier of the schema extension.
 	SchemaExtensionId *string `type:"string"`
@@ -7975,7 +8076,7 @@ type SchemaExtensionInfo struct {
 
 	// The date and time that the schema extension started being applied to the
 	// directory.
-	StartDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartDateTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8031,7 +8132,6 @@ func (s *SchemaExtensionInfo) SetStartDateTime(v time.Time) *SchemaExtensionInfo
 }
 
 // Describes a directory snapshot.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/Snapshot
 type Snapshot struct {
 	_ struct{} `type:"structure"`
 
@@ -8045,7 +8145,7 @@ type Snapshot struct {
 	SnapshotId *string `type:"string"`
 
 	// The date and time that the snapshot was taken.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 
 	// The snapshot status.
 	Status *string `type:"string" enum:"SnapshotStatus"`
@@ -8101,7 +8201,6 @@ func (s *Snapshot) SetType(v string) *Snapshot {
 }
 
 // Contains manual snapshot limit information for a directory.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/SnapshotLimits
 type SnapshotLimits struct {
 	_ struct{} `type:"structure"`
 
@@ -8143,7 +8242,6 @@ func (s *SnapshotLimits) SetManualSnapshotsLimitReached(v bool) *SnapshotLimits 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/StartSchemaExtensionRequest
 type StartSchemaExtensionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8231,7 +8329,6 @@ func (s *StartSchemaExtensionInput) SetLdifContent(v string) *StartSchemaExtensi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/StartSchemaExtensionResult
 type StartSchemaExtensionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8256,7 +8353,6 @@ func (s *StartSchemaExtensionOutput) SetSchemaExtensionId(v string) *StartSchema
 }
 
 // Metadata assigned to a directory consisting of a key-value pair.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -8318,25 +8414,24 @@ func (s *Tag) SetValue(v string) *Tag {
 
 // Describes a trust relationship between an Microsoft AD in the AWS cloud and
 // an external domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/Trust
 type Trust struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time that the trust relationship was created.
-	CreatedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedDateTime *time.Time `type:"timestamp"`
 
 	// The Directory ID of the AWS directory involved in the trust relationship.
 	DirectoryId *string `type:"string"`
 
 	// The date and time that the trust relationship was last updated.
-	LastUpdatedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDateTime *time.Time `type:"timestamp"`
 
 	// The Fully Qualified Domain Name (FQDN) of the external domain involved in
 	// the trust relationship.
 	RemoteDomainName *string `type:"string"`
 
 	// The date and time that the TrustState was last updated.
-	StateLastUpdatedDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StateLastUpdatedDateTime *time.Time `type:"timestamp"`
 
 	// The trust relationship direction.
 	TrustDirection *string `type:"string" enum:"TrustDirection"`
@@ -8425,7 +8520,6 @@ func (s *Trust) SetTrustType(v string) *Trust {
 }
 
 // Updates a conditional forwarder.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateConditionalForwarderRequest
 type UpdateConditionalForwarderInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8496,7 +8590,6 @@ func (s *UpdateConditionalForwarderInput) SetRemoteDomainName(v string) *UpdateC
 }
 
 // The result of an UpdateConditionalForwarder request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateConditionalForwarderResult
 type UpdateConditionalForwarderOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8511,7 +8604,6 @@ func (s UpdateConditionalForwarderOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateNumberOfDomainControllersRequest
 type UpdateNumberOfDomainControllersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8568,7 +8660,6 @@ func (s *UpdateNumberOfDomainControllersInput) SetDirectoryId(v string) *UpdateN
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateNumberOfDomainControllersResult
 type UpdateNumberOfDomainControllersOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8584,7 +8675,6 @@ func (s UpdateNumberOfDomainControllersOutput) GoString() string {
 }
 
 // Contains the inputs for the UpdateRadius operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateRadiusRequest
 type UpdateRadiusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8643,7 +8733,6 @@ func (s *UpdateRadiusInput) SetRadiusSettings(v *RadiusSettings) *UpdateRadiusIn
 }
 
 // Contains the results of the UpdateRadius operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateRadiusResult
 type UpdateRadiusOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8660,7 +8749,6 @@ func (s UpdateRadiusOutput) GoString() string {
 
 // Initiates the verification of an existing trust relationship between a Microsoft
 // AD in the AWS cloud and an external domain.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/VerifyTrustRequest
 type VerifyTrustInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8700,7 +8788,6 @@ func (s *VerifyTrustInput) SetTrustId(v string) *VerifyTrustInput {
 }
 
 // Result of a VerifyTrust request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/VerifyTrustResult
 type VerifyTrustOutput struct {
 	_ struct{} `type:"structure"`
 

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -32,6 +33,11 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"with_decryption": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -41,25 +47,19 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	paramInput := &ssm.GetParametersInput{
-		Names: []*string{
-			aws.String(name),
-		},
-		WithDecryption: aws.Bool(true),
+	paramInput := &ssm.GetParameterInput{
+		Name:           aws.String(name),
+		WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
 	}
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", paramInput)
-	resp, err := ssmconn.GetParameters(paramInput)
+	resp, err := ssmconn.GetParameter(paramInput)
 
 	if err != nil {
 		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
 	}
 
-	if len(resp.InvalidParameters) > 0 {
-		return fmt.Errorf("[ERROR] SSM Parameter %s is invalid", name)
-	}
-
-	param := resp.Parameters[0]
+	param := resp.Parameter
 	d.SetId(*param.Name)
 
 	arn := arn.ARN{
@@ -67,10 +67,9 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 		Region:    meta.(*AWSClient).region,
 		Service:   "ssm",
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("parameter/%s", d.Id()),
+		Resource:  fmt.Sprintf("parameter/%s", strings.TrimPrefix(d.Id(), "/")),
 	}
 	d.Set("arn", arn.String())
-
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)

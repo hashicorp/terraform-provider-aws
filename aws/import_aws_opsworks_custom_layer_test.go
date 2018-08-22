@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSOpsworksCustomLayerImportBasic(t *testing.T) {
+func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
@@ -17,11 +17,11 @@ func TestAccAWSOpsworksCustomLayerImportBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

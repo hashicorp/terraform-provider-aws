@@ -38,7 +38,7 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).ec2conn
 	securityGroupOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("group-name"),
 				Values: []*string{aws.String("default")},
 			},
@@ -101,7 +101,6 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsDefaultSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default Security Group. Terraform will remove this resource from the state file, however resources may remain.")
-	d.SetId("")
 	return nil
 }
 

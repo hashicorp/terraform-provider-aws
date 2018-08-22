@@ -109,6 +109,14 @@ const (
 	// Lambda function access policy is limited to 20 KB.
 	ErrCodePolicyLengthExceededException = "PolicyLengthExceededException"
 
+	// ErrCodePreconditionFailedException for service response error code
+	// "PreconditionFailedException".
+	//
+	// The RevisionId provided does not match the latest RevisionId for the Lambda
+	// function or alias. Call the GetFunction or the GetAlias API to retrieve the
+	// latest RevisionId for your resource.
+	ErrCodePreconditionFailedException = "PreconditionFailedException"
+
 	// ErrCodeRequestTooLargeException for service response error code
 	// "RequestTooLargeException".
 	//
@@ -121,6 +129,14 @@ const (
 	//
 	// The resource already exists.
 	ErrCodeResourceConflictException = "ResourceConflictException"
+
+	// ErrCodeResourceInUseException for service response error code
+	// "ResourceInUseException".
+	//
+	// The operation conflicts with the resource's availability. For example, you
+	// attempted to update an EventSoure Mapping in CREATING, or tried to delete
+	// a EventSoure mapping currently in the UPDATING state.
+	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
@@ -144,15 +160,6 @@ const (
 
 	// ErrCodeTooManyRequestsException for service response error code
 	// "TooManyRequestsException".
-	//
-	// You will get this exception for the following reasons. ConcurrentInvocationLimitExceeded
-	// is returned if you have no functions with reserved-concurrency and have exceeded
-	// your account concurrent limit or if a function without reserved concurrency
-	// exceeds the account's unreserved concurrency limit. ReservedFunctionConcurrentInvocationLimitExceeded
-	// is returned when a function with reserved concurrency exceeds its configured
-	// concurrent limit. CallerRateLimitExceeded is returned when your account limit
-	// is exceeded and you have not reserved concurrency on any function. For more
-	// information, see concurrent-executions
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 
 	// ErrCodeUnsupportedMediaTypeException for service response error code

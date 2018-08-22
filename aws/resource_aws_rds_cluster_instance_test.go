@@ -29,6 +29,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:[^:]+:db:.+`)),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_backup_window"),
@@ -44,6 +45,26 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_az(t *testing.T) {
+	var v rds.DBInstance
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfig_az(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
+					testAccCheckAWSDBClusterInstanceAttributes(&v),
+					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
 				),
 			},
 		},
@@ -141,8 +162,8 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" {
-			return fmt.Errorf("bad engine, expected \"aurora\" or \"aurora-postgresql\": %#v", *v.Engine)
+		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" && *v.Engine != "aurora-mysql" {
+			return fmt.Errorf("bad engine, expected \"aurora\", \"aurora-mysql\" or \"aurora-postgresql\": %#v", *v.Engine)
 		}
 
 		if !strings.HasPrefix(*v.DBClusterIdentifier, "tf-aurora-cluster") {
@@ -329,6 +350,45 @@ resource "aws_db_parameter_group" "bar" {
 `, n, n, n)
 }
 
+func testAccAWSClusterInstanceConfig_az(n int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-test-%d"
+  availability_zones = ["${data.aws_availability_zones.available.names}"]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "cluster_instances" {
+  identifier              = "tf-cluster-instance-%d"
+  cluster_identifier      = "${aws_rds_cluster.default.id}"
+  instance_class          = "db.t2.small"
+  db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
+  promotion_tier          = "3"
+  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_db_parameter_group" "bar" {
+  name   = "tfcluster-test-group-%d"
+  family = "aurora5.6"
+
+  parameter {
+    name         = "back_log"
+    value        = "32767"
+    apply_method = "pending-reboot"
+  }
+
+  tags {
+    foo = "bar"
+  }
+}
+`, n, n, n)
+}
+
 func testAccAWSClusterInstanceConfig_namePrefix(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
@@ -348,7 +408,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSClusterInstanceConfig_namePrefix"
+		Name = "terraform-testacc-rds-cluster-instance-name-prefix"
 	}
 }
 
@@ -356,12 +416,18 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-rds-cluster-instance-name-prefix-a"
+  }
 }
 
 resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-rds-cluster-instance-name-prefix-b"
+  }
 }
 
 resource "aws_db_subnet_group" "test" {
@@ -389,7 +455,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSClusterInstanceConfig_generatedName"
+		Name = "terraform-testacc-rds-cluster-instance-generated-name"
 	}
 }
 
@@ -397,12 +463,18 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+  tags {
+    Name = "tf-acc-rds-cluster-instance-generated-name-a"
+  }
 }
 
 resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+  tags {
+    Name = "tf-acc-rds-cluster-instance-generated-name-b"
+  }
 }
 
 resource "aws_db_subnet_group" "test" {

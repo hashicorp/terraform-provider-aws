@@ -114,7 +114,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-data-source-basic"
   }
 }
 
@@ -126,7 +126,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-data-source-basic"
   }
 }
 
@@ -189,7 +189,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "terraform-testacc-lb-data-source-bc"
   }
 }
 
@@ -201,7 +201,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags {
-    TestName = "TestAccAWSALB_basic"
+    Name = "tf-acc-lb-data-source-bc"
   }
 }
 

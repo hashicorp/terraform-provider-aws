@@ -28,7 +28,7 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The canonical user ID associated with the AWS account.
 
