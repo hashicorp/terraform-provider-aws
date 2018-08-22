@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_integration: Support resource import [GH-5568]
 * resource/aws_api_gateway_integration_response: Support resource import [GH-5569]
 * resource/aws_api_gateway_method: Support resource import [GH-5571]
+* resource/aws_api_gateway_method_response: Support resource import [GH-5570]
 * resource/aws_api_gateway_model: Support resource import [GH-5572]
 * resource/aws_api_gateway_request_validator: Support resource import [GH-5573]
 * resource/aws_api_gateway_resource: Support resource import [GH-5574]
