@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: Add retries for target group attachment [GH-3535]
 * resource/aws_lb_listener: Add support for 'redirect' and 'fixed-response' actions [GH-5430]
 * resource/aws_lb_listener_rule: Add support for 'redirect' and 'fixed-response' actions [GH-5430]
+* resource/aws_secretsmanager_secret: Support `ForceDeleteWithoutRecovery` (via `recovery_window_in_days = 0`) and secret recreation after immediate deletion [GH-5583]
 
 BUG FIXES:
 
