@@ -572,7 +572,7 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 }
 
 func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
-	var v rds.DBInstance
+	var vBefore, vAfter rds.DBInstance
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -583,8 +583,8 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 			{
 				Config: testAccAWSDBMSSQLDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
-					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &v),
+					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vBefore),
+					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &vBefore),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -594,12 +594,37 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 			{
 				Config: testAccAWSDBMSSQLUpdateDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
-					testAccCheckAWSDBInstanceDomainAttributes("bar.somedomain.com", &v),
+					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vAfter),
+					testAccCheckAWSDBInstanceDomainAttributes("bar.somedomain.com", &vAfter),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain"),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain_iam_role_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
+	var v, vRestoredInstance rds.DBInstance
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBMSSQLDomainSnapshotRestore(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql_restore", &vRestoredInstance),
+					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
+					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &vRestoredInstance),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.mssql_restore", "domain"),
+					resource.TestCheckResourceAttrSet(
+						"aws_db_instance.mssql_restore", "domain_iam_role_name"),
 				),
 			},
 		},
@@ -2065,6 +2090,142 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
 `, rInt, rInt, rInt)
+}
+
+func testAccAWSDBMSSQLDomainSnapshotRestore(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+  tags {
+    Name = "terraform-testacc-db-instance-mssql-domain"
+  }
+}
+
+resource "aws_db_subnet_group" "rds_one" {
+  name        = "tf_acc_test_%d"
+  description = "db subnets for rds_one"
+
+  subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
+}
+
+resource "aws_subnet" "main" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+  cidr_block        = "10.1.1.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-domain-main"
+  }
+}
+
+resource "aws_subnet" "other" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2b"
+  cidr_block        = "10.1.2.0/24"
+  tags {
+    Name = "tf-acc-db-instance-mssql-domain-other"
+  }
+}
+
+resource "aws_db_instance" "mssql" {
+  identifier = "tf-test-mssql-%d"
+
+  db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
+
+  instance_class          = "db.t2.micro"
+  allocated_storage       = 20
+  username                = "somecrazyusername"
+  password                = "somecrazypassword"
+  engine                  = "sqlserver-ex"
+  backup_retention_period = 0
+  skip_final_snapshot = true
+
+  domain                  = "${aws_directory_service_directory.foo.id}"
+  domain_iam_role_name    = "${aws_iam_role.role.name}"
+
+  vpc_security_group_ids = ["${aws_security_group.rds-mssql.id}"]
+}
+
+resource "aws_db_snapshot" "mssql-snap" {
+  db_instance_identifier = "${aws_db_instance.mssql.id}"
+  db_snapshot_identifier = "mssql-snap"
+}
+
+resource "aws_db_instance" "mssql_restore" {
+  identifier              = "tf-test-mssql-%d-restore"
+
+  db_subnet_group_name    = "${aws_db_subnet_group.rds_one.name}"
+
+  instance_class          = "db.t2.micro"
+  allocated_storage       = 20
+  username                = "somecrazyusername"
+  password                = "somecrazypassword"
+  engine                  = "sqlserver-ex"
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+  snapshot_identifier = "${aws_db_snapshot.mssql-snap.id}"
+
+  domain                  = "${aws_directory_service_directory.foo.id}"
+  domain_iam_role_name    = "${aws_iam_role.role.name}"
+
+  apply_immediately = true
+  vpc_security_group_ids = ["${aws_security_group.rds-mssql.id}"]
+}
+
+resource "aws_security_group" "rds-mssql" {
+  name = "tf-rds-mssql-test-%d"
+
+  description = "TF Testing"
+  vpc_id      = "${aws_vpc.foo.id}"
+}
+
+resource "aws_security_group_rule" "rds-mssql-1" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = "${aws_security_group.rds-mssql.id}"
+}
+
+resource "aws_directory_service_directory" "foo" {
+  name     = "foo.somedomain.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = "${aws_vpc.foo.id}"
+    subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
+  }
+}
+
+resource "aws_iam_role" "role" {
+  name = "tf-acc-db-instance-mssql-domain-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "attatch-policy" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 var testAccAWSDBInstanceConfigAutoMinorVersion = fmt.Sprintf(`

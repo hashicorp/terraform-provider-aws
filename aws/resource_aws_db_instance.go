@@ -704,6 +704,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("domain"); ok {
+			opts.Domain = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
+			opts.DomainIAMRoleName = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
 			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
