@@ -16,5 +16,7 @@
     "Sort": [
         "path",
         "line"
-    ]
+    ],
+    "Vendor": true,
+    "WarnUnmatchedDirective": true
 }

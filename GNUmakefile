@@ -25,8 +25,7 @@ fmt:
 
 # Currently required by tf-deploy compile
 fmtcheck:
-	@echo "==> Checking source code against gofmt..."
-	@gofmt -l -s ./$(PKG_NAME)
+	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
 lint:
 	@echo "==> Checking source code against linters..."
