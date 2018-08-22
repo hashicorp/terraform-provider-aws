@@ -672,13 +672,13 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		var requiresModifyDbInstance bool
 
 		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                    tags,
-			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
 		if attr, ok := d.GetOk("name"); ok {
@@ -696,6 +696,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
+		if _, ok := d.GetOk("backup_retention_period"); ok {
+			requiresModifyDbInstance = true
+		}
+
+		if _, ok := d.GetOk("backup_window"); ok {
+			requiresModifyDbInstance = true
+		}
+
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
@@ -708,12 +716,28 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.Engine = aws.String(attr.(string))
 		}
 
+		if _, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			requiresModifyDbInstance = true
+		}
+
 		if attr, ok := d.GetOk("iops"); ok {
 			opts.Iops = aws.Int64(int64(attr.(int)))
 		}
 
 		if attr, ok := d.GetOk("license_model"); ok {
 			opts.LicenseModel = aws.String(attr.(string))
+		}
+
+		if _, ok := d.GetOk("maintenance_window"); ok {
+			requiresModifyDbInstance = true
+		}
+
+		if _, ok := d.GetOk("monitoring_interval"); ok {
+			requiresModifyDbInstance = true
+		}
+
+		if _, ok := d.GetOk("monitoring_role_arn"); ok {
+			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("multi_az"); ok {
@@ -732,7 +756,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("option_group_name"); ok {
 			opts.OptionGroupName = aws.String(attr.(string))
+		}
 
+		if _, ok := d.GetOk("parameter_group_name"); ok {
+			requiresModifyDbInstance = true
 		}
 
 		if _, ok := d.GetOk("password"); ok {
