@@ -15,12 +15,12 @@ install:
 # packages that live there.
 # See: https://github.com/golang/go/issues/12933
 - bash scripts/gogetcookie.sh
-- go get github.com/kardianos/govendor
+- make tools
 
 script:
+- make lint
 - make test
 - make vendor-status
-- make vet
 - make website-test
 
 branches:
