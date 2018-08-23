@@ -38,6 +38,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"encryption_disabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -393,7 +397,8 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	data := configs[0].(map[string]interface{})
 
 	projectArtifacts := codebuild.ProjectArtifacts{
-		Type: aws.String(data["type"].(string)),
+		EncryptionDisabled: aws.Bool(data["encryption_disabled"].(bool)),
+		Type:               aws.String(data["type"].(string)),
 	}
 
 	if data["location"].(string) != "" {
@@ -712,6 +717,7 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 
 	values := map[string]interface{}{}
 
+	values["encryption_disabled"] = *artifacts.EncryptionDisabled
 	values["type"] = *artifacts.Type
 
 	if artifacts.Location != nil {
@@ -805,9 +811,10 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	artifactType := m["type"].(string)
-
-	buf.WriteString(fmt.Sprintf("%s-", artifactType))
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	if v, ok := m["encryption_disabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
+	}
 
 	return hashcode.String(buf.String())
 }
