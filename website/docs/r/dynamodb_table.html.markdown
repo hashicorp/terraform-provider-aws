@@ -147,7 +147,10 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 #### `server_side_encryption`
 
-* `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`.
+* `enabled` - (Optional) Whether to enable encryption at rest. Defaults to `false`.
+* `sse_type` - (Optional) Server-side encryption type. The only valid value is the default value, `KMS`.
+* `kms_master_key_id` - (Optional) The KMS Master Key (CMK) which should be used for the KMS encryption.
+  Note that you should only provide this parameter if the key is different from the default DynamoDB KMS Master Key `alias/aws/dynamodb`.
 
 #### `point_in_time_recovery`
 

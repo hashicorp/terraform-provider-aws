@@ -416,6 +416,8 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "hash_key", "TestTableHashKey"),
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "attribute.2990477658.name", "TestTableHashKey"),
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "attribute.2990477658.type", "S"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.enabled", "false"),
 				),
 			},
 		},
@@ -853,8 +855,8 @@ func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckF
 	}
 }
 
-func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
-	var confEncEnabled, confEncDisabled, confBasic dynamodb.DescribeTableOutput
+func TestAccAWSDynamoDbTable_encryptionDefault(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
 
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
 
@@ -864,42 +866,51 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigInitialStateWithEncryption(rName, true),
+				Config: testAccAWSDynamoDbConfigWithDefaultSSE(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &confEncEnabled),
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.sse_type", "KMS"),
+					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.kms_master_key_id"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbConfigInitialStateWithEncryption(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &confEncDisabled),
-					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "0"),
-					func(s *terraform.State) error {
-						if confEncDisabled.Table.CreationDateTime.Equal(*confEncEnabled.Table.CreationDateTime) {
-							return fmt.Errorf("DynamoDB table not recreated when changing SSE")
-						}
-						return nil
-					},
-				),
+				Config:             testAccAWSDynamoDbConfigWithDefaultSSE(rName, false),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
+		},
+	})
+}
+
+/*
+Customer managed CMKs not yet supported.
+
+func TestAccAWSDynamoDbTable_encryptionKMS(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfig_basic(rName),
+				Config: testAccAWSDynamoDbConfigWithKMSSSE(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &confBasic),
-					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "0"),
-					func(s *terraform.State) error {
-						if !confBasic.Table.CreationDateTime.Equal(*confEncDisabled.Table.CreationDateTime) {
-							return fmt.Errorf("DynamoDB table was recreated unexpectedly")
-						}
-						return nil
-					},
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.sse_type", "KMS"),
+					resource.TestCheckResourceAttrSet("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.0.kms_master_key_id"),
 				),
 			},
 		},
 	})
 }
+*/
 
 func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
@@ -1233,7 +1244,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 `, rName)
 }
 
-func testAccAWSDynamoDbConfigInitialStateWithEncryption(rName string, enabled bool) string {
+func testAccAWSDynamoDbConfigWithDefaultSSE(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "%s"
@@ -1252,6 +1263,37 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 `, rName, enabled)
 }
+
+/*
+Customer managed CMKs not yet supported.
+
+func testAccAWSDynamoDbConfigWithKMSSSE(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "arbitrary" {
+  description             = "KMS Key for %s"
+  deletion_window_in_days = 10
+}
+
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  server_side_encryption {
+		enabled           = true
+		sse_type          = "KMS"
+		kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
+  }
+}
+`, rName, rName)
+}
+*/
 
 func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`

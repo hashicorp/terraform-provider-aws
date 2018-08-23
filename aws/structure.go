@@ -4251,13 +4251,15 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		return err
 	}
 
-	sseOptions := []map[string]interface{}{}
-	if table.SSEDescription != nil {
-		m := map[string]interface{}{}
-		m["enabled"] = aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled
-		sseOptions = []map[string]interface{}{m}
+	sseOptions := map[string]interface{}{
+		"enabled": false,
 	}
-	err = d.Set("server_side_encryption", sseOptions)
+	if table.SSEDescription != nil {
+		sseOptions["enabled"] = (aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled)
+		sseOptions["sse_type"] = aws.StringValue(table.SSEDescription.SSEType)
+		sseOptions["kms_master_key_id"] = aws.StringValue(table.SSEDescription.KMSMasterKeyArn)
+	}
+	err = d.Set("server_side_encryption", []map[string]interface{}{sseOptions})
 	if err != nil {
 		return err
 	}
@@ -4350,14 +4352,17 @@ func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaE
 	return keySchema
 }
 
-func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSESpecification {
-	options := dynamodb.SSESpecification{}
-
-	if v, ok := m["enabled"]; ok {
-		options.Enabled = aws.Bool(v.(bool))
+func expandDynamoDbEncryptAtRestOptions(data map[string]interface{}) *dynamodb.SSESpecification {
+	sseSpec := dynamodb.SSESpecification{
+		Enabled: aws.Bool(data["enabled"].(bool)),
+		SSEType: aws.String(data["sse_type"].(string)),
 	}
 
-	return &options
+	if v, ok := data["kms_master_key_id"].(string); ok && v != "" {
+		sseSpec.KMSMasterKeyId = aws.String(v)
+	}
+
+	return &sseSpec
 }
 
 func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {

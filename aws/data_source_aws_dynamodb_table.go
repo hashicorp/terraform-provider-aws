@@ -15,12 +15,28 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsDynamoDbTableRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			"hash_key": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"range_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"read_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"write_capacity": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"attribute": {
@@ -35,6 +51,54 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+					return hashcode.String(buf.String())
+				},
+			},
+			"ttl": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attribute_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"local_secondary_index": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"range_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"projection_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"non_key_attributes": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -82,59 +146,8 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					},
 				},
 			},
-			"hash_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"local_secondary_index": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"projection_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
-				},
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"stream_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"stream_enabled": {
 				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"stream_view_type": {
@@ -145,31 +158,38 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					return strings.ToUpper(value)
 				},
 			},
-			"tags": tagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeSet,
+			"stream_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"stream_label": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"server_side_encryption": {
+				Type:     schema.TypeList,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"attribute_name": {
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"sse_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
-							Type:     schema.TypeBool,
+						"kms_master_key_id": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"write_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"server_side_encryption": {
+			"tags": tagsSchemaComputed(),
+			"point_in_time_recovery": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -221,6 +241,14 @@ func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 	d.Set("tags", tags)
+
+	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+		TableName: aws.String(d.Id()),
+	})
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+		return err
+	}
+	d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut))
 
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -45,6 +46,29 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					o, n := diff.GetChange("server_side_encryption")
 					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
 						return diff.Clear("server_side_encryption")
+					}
+
+					// Ensure that no diff is shown if the persisted KMS key ID is the default DynamoDB KMS Master Key.
+					if !isDynamoDbTableOptionDisabled(o) && !isDynamoDbTableOptionDisabled(n) {
+						oldKeyType := o.([]interface{})[0].(map[string]interface{})["sse_type"].(string)
+						newKeyType := n.([]interface{})[0].(map[string]interface{})["sse_type"].(string)
+						if oldKeyType == newKeyType && oldKeyType == dynamodb.SSETypeKms {
+							const defaultKmsKeyAlias = "alias/aws/dynamodb"
+							oldKmsKeyId := o.([]interface{})[0].(map[string]interface{})["kms_master_key_id"].(string)
+							newKmsKeyId := n.([]interface{})[0].(map[string]interface{})["kms_master_key_id"].(string)
+							if newKmsKeyId == "" || newKmsKeyId == defaultKmsKeyAlias {
+								resp, err := v.(*AWSClient).kmsconn.DescribeKey(&kms.DescribeKeyInput{
+									KeyId: aws.String(defaultKmsKeyAlias),
+								})
+								if err != nil {
+									return err
+								}
+
+								if oldKmsKeyId == aws.StringValue(resp.KeyMetadata.Arn) {
+									return diff.Clear("server_side_encryption")
+								}
+							}
+						}
 					}
 				}
 				return nil
@@ -241,7 +265,24 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Default:  false,
+							ForceNew: true,
+						},
+						"sse_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  dynamodb.SSETypeKms,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								// "One or more parameter values were invalid: SSEType AES256 is not supported"
+								// dynamodb.SSETypeAes256,
+								dynamodb.SSETypeKms,
+							}, false),
+						},
+						"kms_master_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 							ForceNew: true,
 						},
 					},
@@ -315,14 +356,9 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if v, ok := d.GetOk("server_side_encryption"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside server_side_encryption")
-		}
-
-		s := options[0].(map[string]interface{})
-		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(s)
+	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]interface{})) > 0 {
+		sseOptions := v.([]interface{})
+		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(sseOptions[0].(map[string]interface{}))
 	}
 
 	var output *dynamodb.CreateTableOutput
