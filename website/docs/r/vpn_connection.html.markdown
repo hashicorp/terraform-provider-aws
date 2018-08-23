@@ -55,10 +55,11 @@ The following arguments are supported:
 * `tunnel2_inside_cidr` - (Optional) The CIDR block of the second IP addresses for the first VPN tunnel.
 * `tunnel1_preshared_key` - (Optional) The preshared key of the first VPN tunnel.
 * `tunnel2_preshared_key` - (Optional) The preshared key of the second VPN tunnel.
+~> **Note:** The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_).
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The amazon-assigned ID of the VPN connection.
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).

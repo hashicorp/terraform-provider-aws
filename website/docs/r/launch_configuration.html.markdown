@@ -158,7 +158,7 @@ The following arguments are supported:
   instance.  See [Block Devices](#block-devices) below for details.
 * `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
   "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
-* `spot_price` - (Optional) The price to use for reserving spot instances.
+* `spot_price` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
 * `placement_tenancy` - (Optional) The tenancy of the instance. Valid values are
   `"default"` or `"dedicated"`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html)
   for more details
@@ -220,7 +220,7 @@ configuration, resource recreation can be manually triggered by using the
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the launch configuration.
 * `name` - The name of the launch configuration.

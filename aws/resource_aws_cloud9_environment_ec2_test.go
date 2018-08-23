@@ -26,7 +26,7 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -36,7 +36,7 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(uEnvName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -67,7 +67,7 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(envName, description, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -78,7 +78,7 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(uEnvName, uDescription, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -104,10 +104,10 @@ func TestAccAWSCloud9EnvironmentEc2_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(name),
 			},
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,

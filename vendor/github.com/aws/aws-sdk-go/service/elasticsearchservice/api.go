@@ -756,6 +756,637 @@ func (c *ElasticsearchService) DescribeElasticsearchInstanceTypeLimitsWithContex
 	return out, req.Send()
 }
 
+const opDescribeReservedElasticsearchInstanceOfferings = "DescribeReservedElasticsearchInstanceOfferings"
+
+// DescribeReservedElasticsearchInstanceOfferingsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeReservedElasticsearchInstanceOfferings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeReservedElasticsearchInstanceOfferings for more information on using the DescribeReservedElasticsearchInstanceOfferings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeReservedElasticsearchInstanceOfferingsRequest method.
+//    req, resp := client.DescribeReservedElasticsearchInstanceOfferingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsRequest(input *DescribeReservedElasticsearchInstanceOfferingsInput) (req *request.Request, output *DescribeReservedElasticsearchInstanceOfferingsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeReservedElasticsearchInstanceOfferings,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/es/reservedInstanceOfferings",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeReservedElasticsearchInstanceOfferingsInput{}
+	}
+
+	output = &DescribeReservedElasticsearchInstanceOfferingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeReservedElasticsearchInstanceOfferings API operation for Amazon Elasticsearch Service.
+//
+// Lists available reserved Elasticsearch instance offerings.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DescribeReservedElasticsearchInstanceOfferings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferings(input *DescribeReservedElasticsearchInstanceOfferingsInput) (*DescribeReservedElasticsearchInstanceOfferingsOutput, error) {
+	req, out := c.DescribeReservedElasticsearchInstanceOfferingsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeReservedElasticsearchInstanceOfferingsWithContext is the same as DescribeReservedElasticsearchInstanceOfferings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeReservedElasticsearchInstanceOfferings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsWithContext(ctx aws.Context, input *DescribeReservedElasticsearchInstanceOfferingsInput, opts ...request.Option) (*DescribeReservedElasticsearchInstanceOfferingsOutput, error) {
+	req, out := c.DescribeReservedElasticsearchInstanceOfferingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeReservedElasticsearchInstanceOfferingsPages iterates over the pages of a DescribeReservedElasticsearchInstanceOfferings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeReservedElasticsearchInstanceOfferings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeReservedElasticsearchInstanceOfferings operation.
+//    pageNum := 0
+//    err := client.DescribeReservedElasticsearchInstanceOfferingsPages(params,
+//        func(page *DescribeReservedElasticsearchInstanceOfferingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsPages(input *DescribeReservedElasticsearchInstanceOfferingsInput, fn func(*DescribeReservedElasticsearchInstanceOfferingsOutput, bool) bool) error {
+	return c.DescribeReservedElasticsearchInstanceOfferingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeReservedElasticsearchInstanceOfferingsPagesWithContext same as DescribeReservedElasticsearchInstanceOfferingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsPagesWithContext(ctx aws.Context, input *DescribeReservedElasticsearchInstanceOfferingsInput, fn func(*DescribeReservedElasticsearchInstanceOfferingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeReservedElasticsearchInstanceOfferingsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeReservedElasticsearchInstanceOfferingsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opDescribeReservedElasticsearchInstances = "DescribeReservedElasticsearchInstances"
+
+// DescribeReservedElasticsearchInstancesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeReservedElasticsearchInstances operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeReservedElasticsearchInstances for more information on using the DescribeReservedElasticsearchInstances
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeReservedElasticsearchInstancesRequest method.
+//    req, resp := client.DescribeReservedElasticsearchInstancesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesRequest(input *DescribeReservedElasticsearchInstancesInput) (req *request.Request, output *DescribeReservedElasticsearchInstancesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeReservedElasticsearchInstances,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/es/reservedInstances",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeReservedElasticsearchInstancesInput{}
+	}
+
+	output = &DescribeReservedElasticsearchInstancesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeReservedElasticsearchInstances API operation for Amazon Elasticsearch Service.
+//
+// Returns information about reserved Elasticsearch instances for this account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DescribeReservedElasticsearchInstances for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstances(input *DescribeReservedElasticsearchInstancesInput) (*DescribeReservedElasticsearchInstancesOutput, error) {
+	req, out := c.DescribeReservedElasticsearchInstancesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeReservedElasticsearchInstancesWithContext is the same as DescribeReservedElasticsearchInstances with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeReservedElasticsearchInstances for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesWithContext(ctx aws.Context, input *DescribeReservedElasticsearchInstancesInput, opts ...request.Option) (*DescribeReservedElasticsearchInstancesOutput, error) {
+	req, out := c.DescribeReservedElasticsearchInstancesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeReservedElasticsearchInstancesPages iterates over the pages of a DescribeReservedElasticsearchInstances operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeReservedElasticsearchInstances method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeReservedElasticsearchInstances operation.
+//    pageNum := 0
+//    err := client.DescribeReservedElasticsearchInstancesPages(params,
+//        func(page *DescribeReservedElasticsearchInstancesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesPages(input *DescribeReservedElasticsearchInstancesInput, fn func(*DescribeReservedElasticsearchInstancesOutput, bool) bool) error {
+	return c.DescribeReservedElasticsearchInstancesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeReservedElasticsearchInstancesPagesWithContext same as DescribeReservedElasticsearchInstancesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesPagesWithContext(ctx aws.Context, input *DescribeReservedElasticsearchInstancesInput, fn func(*DescribeReservedElasticsearchInstancesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeReservedElasticsearchInstancesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeReservedElasticsearchInstancesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opGetCompatibleElasticsearchVersions = "GetCompatibleElasticsearchVersions"
+
+// GetCompatibleElasticsearchVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the GetCompatibleElasticsearchVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCompatibleElasticsearchVersions for more information on using the GetCompatibleElasticsearchVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCompatibleElasticsearchVersionsRequest method.
+//    req, resp := client.GetCompatibleElasticsearchVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) GetCompatibleElasticsearchVersionsRequest(input *GetCompatibleElasticsearchVersionsInput) (req *request.Request, output *GetCompatibleElasticsearchVersionsOutput) {
+	op := &request.Operation{
+		Name:       opGetCompatibleElasticsearchVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/es/compatibleVersions",
+	}
+
+	if input == nil {
+		input = &GetCompatibleElasticsearchVersionsInput{}
+	}
+
+	output = &GetCompatibleElasticsearchVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCompatibleElasticsearchVersions API operation for Amazon Elasticsearch Service.
+//
+// Returns a list of upgrade compatible Elastisearch versions. You can optionally
+// pass a DomainName to get all upgrade compatible Elasticsearch versions for
+// that specific domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation GetCompatibleElasticsearchVersions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+func (c *ElasticsearchService) GetCompatibleElasticsearchVersions(input *GetCompatibleElasticsearchVersionsInput) (*GetCompatibleElasticsearchVersionsOutput, error) {
+	req, out := c.GetCompatibleElasticsearchVersionsRequest(input)
+	return out, req.Send()
+}
+
+// GetCompatibleElasticsearchVersionsWithContext is the same as GetCompatibleElasticsearchVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCompatibleElasticsearchVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) GetCompatibleElasticsearchVersionsWithContext(ctx aws.Context, input *GetCompatibleElasticsearchVersionsInput, opts ...request.Option) (*GetCompatibleElasticsearchVersionsOutput, error) {
+	req, out := c.GetCompatibleElasticsearchVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetUpgradeHistory = "GetUpgradeHistory"
+
+// GetUpgradeHistoryRequest generates a "aws/request.Request" representing the
+// client's request for the GetUpgradeHistory operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetUpgradeHistory for more information on using the GetUpgradeHistory
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetUpgradeHistoryRequest method.
+//    req, resp := client.GetUpgradeHistoryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) GetUpgradeHistoryRequest(input *GetUpgradeHistoryInput) (req *request.Request, output *GetUpgradeHistoryOutput) {
+	op := &request.Operation{
+		Name:       opGetUpgradeHistory,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/es/upgradeDomain/{DomainName}/history",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &GetUpgradeHistoryInput{}
+	}
+
+	output = &GetUpgradeHistoryOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetUpgradeHistory API operation for Amazon Elasticsearch Service.
+//
+// Retrieves the complete history of the last 10 upgrades that were performed
+// on the domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation GetUpgradeHistory for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+func (c *ElasticsearchService) GetUpgradeHistory(input *GetUpgradeHistoryInput) (*GetUpgradeHistoryOutput, error) {
+	req, out := c.GetUpgradeHistoryRequest(input)
+	return out, req.Send()
+}
+
+// GetUpgradeHistoryWithContext is the same as GetUpgradeHistory with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUpgradeHistory for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) GetUpgradeHistoryWithContext(ctx aws.Context, input *GetUpgradeHistoryInput, opts ...request.Option) (*GetUpgradeHistoryOutput, error) {
+	req, out := c.GetUpgradeHistoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// GetUpgradeHistoryPages iterates over the pages of a GetUpgradeHistory operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetUpgradeHistory method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetUpgradeHistory operation.
+//    pageNum := 0
+//    err := client.GetUpgradeHistoryPages(params,
+//        func(page *GetUpgradeHistoryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) GetUpgradeHistoryPages(input *GetUpgradeHistoryInput, fn func(*GetUpgradeHistoryOutput, bool) bool) error {
+	return c.GetUpgradeHistoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetUpgradeHistoryPagesWithContext same as GetUpgradeHistoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) GetUpgradeHistoryPagesWithContext(ctx aws.Context, input *GetUpgradeHistoryInput, fn func(*GetUpgradeHistoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetUpgradeHistoryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetUpgradeHistoryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opGetUpgradeStatus = "GetUpgradeStatus"
+
+// GetUpgradeStatusRequest generates a "aws/request.Request" representing the
+// client's request for the GetUpgradeStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetUpgradeStatus for more information on using the GetUpgradeStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetUpgradeStatusRequest method.
+//    req, resp := client.GetUpgradeStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) GetUpgradeStatusRequest(input *GetUpgradeStatusInput) (req *request.Request, output *GetUpgradeStatusOutput) {
+	op := &request.Operation{
+		Name:       opGetUpgradeStatus,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/es/upgradeDomain/{DomainName}/status",
+	}
+
+	if input == nil {
+		input = &GetUpgradeStatusInput{}
+	}
+
+	output = &GetUpgradeStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetUpgradeStatus API operation for Amazon Elasticsearch Service.
+//
+// Retrieves the latest status of the last upgrade or upgrade eligibility check
+// that was performed on the domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation GetUpgradeStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+func (c *ElasticsearchService) GetUpgradeStatus(input *GetUpgradeStatusInput) (*GetUpgradeStatusOutput, error) {
+	req, out := c.GetUpgradeStatusRequest(input)
+	return out, req.Send()
+}
+
+// GetUpgradeStatusWithContext is the same as GetUpgradeStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUpgradeStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) GetUpgradeStatusWithContext(ctx aws.Context, input *GetUpgradeStatusInput, opts ...request.Option) (*GetUpgradeStatusOutput, error) {
+	req, out := c.GetUpgradeStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListDomainNames = "ListDomainNames"
 
 // ListDomainNamesRequest generates a "aws/request.Request" representing the
@@ -1216,6 +1847,104 @@ func (c *ElasticsearchService) ListTagsWithContext(ctx aws.Context, input *ListT
 	return out, req.Send()
 }
 
+const opPurchaseReservedElasticsearchInstanceOffering = "PurchaseReservedElasticsearchInstanceOffering"
+
+// PurchaseReservedElasticsearchInstanceOfferingRequest generates a "aws/request.Request" representing the
+// client's request for the PurchaseReservedElasticsearchInstanceOffering operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PurchaseReservedElasticsearchInstanceOffering for more information on using the PurchaseReservedElasticsearchInstanceOffering
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PurchaseReservedElasticsearchInstanceOfferingRequest method.
+//    req, resp := client.PurchaseReservedElasticsearchInstanceOfferingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) PurchaseReservedElasticsearchInstanceOfferingRequest(input *PurchaseReservedElasticsearchInstanceOfferingInput) (req *request.Request, output *PurchaseReservedElasticsearchInstanceOfferingOutput) {
+	op := &request.Operation{
+		Name:       opPurchaseReservedElasticsearchInstanceOffering,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/purchaseReservedInstanceOffering",
+	}
+
+	if input == nil {
+		input = &PurchaseReservedElasticsearchInstanceOfferingInput{}
+	}
+
+	output = &PurchaseReservedElasticsearchInstanceOfferingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PurchaseReservedElasticsearchInstanceOffering API operation for Amazon Elasticsearch Service.
+//
+// Allows you to purchase reserved Elasticsearch instances.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation PurchaseReservedElasticsearchInstanceOffering for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   An exception for creating a resource that already exists. Gives http status
+//   code of 400.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   An exception for trying to create more than allowed resources or sub-resources.
+//   Gives http status code of 409.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+func (c *ElasticsearchService) PurchaseReservedElasticsearchInstanceOffering(input *PurchaseReservedElasticsearchInstanceOfferingInput) (*PurchaseReservedElasticsearchInstanceOfferingOutput, error) {
+	req, out := c.PurchaseReservedElasticsearchInstanceOfferingRequest(input)
+	return out, req.Send()
+}
+
+// PurchaseReservedElasticsearchInstanceOfferingWithContext is the same as PurchaseReservedElasticsearchInstanceOffering with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PurchaseReservedElasticsearchInstanceOffering for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) PurchaseReservedElasticsearchInstanceOfferingWithContext(ctx aws.Context, input *PurchaseReservedElasticsearchInstanceOfferingInput, opts ...request.Option) (*PurchaseReservedElasticsearchInstanceOfferingOutput, error) {
+	req, out := c.PurchaseReservedElasticsearchInstanceOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRemoveTags = "RemoveTags"
 
 // RemoveTagsRequest generates a "aws/request.Request" representing the
@@ -1396,6 +2125,104 @@ func (c *ElasticsearchService) UpdateElasticsearchDomainConfig(input *UpdateElas
 // for more information on using Contexts.
 func (c *ElasticsearchService) UpdateElasticsearchDomainConfigWithContext(ctx aws.Context, input *UpdateElasticsearchDomainConfigInput, opts ...request.Option) (*UpdateElasticsearchDomainConfigOutput, error) {
 	req, out := c.UpdateElasticsearchDomainConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpgradeElasticsearchDomain = "UpgradeElasticsearchDomain"
+
+// UpgradeElasticsearchDomainRequest generates a "aws/request.Request" representing the
+// client's request for the UpgradeElasticsearchDomain operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpgradeElasticsearchDomain for more information on using the UpgradeElasticsearchDomain
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpgradeElasticsearchDomainRequest method.
+//    req, resp := client.UpgradeElasticsearchDomainRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) UpgradeElasticsearchDomainRequest(input *UpgradeElasticsearchDomainInput) (req *request.Request, output *UpgradeElasticsearchDomainOutput) {
+	op := &request.Operation{
+		Name:       opUpgradeElasticsearchDomain,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/upgradeDomain",
+	}
+
+	if input == nil {
+		input = &UpgradeElasticsearchDomainInput{}
+	}
+
+	output = &UpgradeElasticsearchDomainOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpgradeElasticsearchDomain API operation for Amazon Elasticsearch Service.
+//
+// Allows you to either upgrade your domain or perform an Upgrade eligibility
+// check to a compatible Elasticsearch version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation UpgradeElasticsearchDomain for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   An exception for creating a resource that already exists. Gives http status
+//   code of 400.
+//
+//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+func (c *ElasticsearchService) UpgradeElasticsearchDomain(input *UpgradeElasticsearchDomainInput) (*UpgradeElasticsearchDomainOutput, error) {
+	req, out := c.UpgradeElasticsearchDomainRequest(input)
+	return out, req.Send()
+}
+
+// UpgradeElasticsearchDomainWithContext is the same as UpgradeElasticsearchDomain with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpgradeElasticsearchDomain for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) UpgradeElasticsearchDomainWithContext(ctx aws.Context, input *UpgradeElasticsearchDomainInput, opts ...request.Option) (*UpgradeElasticsearchDomainOutput, error) {
+	req, out := c.UpgradeElasticsearchDomainRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1715,6 +2542,40 @@ func (s *CognitoOptionsStatus) SetOptions(v *CognitoOptions) *CognitoOptionsStat
 // SetStatus sets the Status field's value.
 func (s *CognitoOptionsStatus) SetStatus(v *OptionStatus) *CognitoOptionsStatus {
 	s.Status = v
+	return s
+}
+
+// A map from an ElasticsearchVersion to a list of compatible ElasticsearchVersion
+// s to which the domain can be upgraded.
+type CompatibleVersionsMap struct {
+	_ struct{} `type:"structure"`
+
+	// The current version of Elasticsearch on which a domain is.
+	SourceVersion *string `type:"string"`
+
+	// List of supported elastic search versions.
+	TargetVersions []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s CompatibleVersionsMap) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CompatibleVersionsMap) GoString() string {
+	return s.String()
+}
+
+// SetSourceVersion sets the SourceVersion field's value.
+func (s *CompatibleVersionsMap) SetSourceVersion(v string) *CompatibleVersionsMap {
+	s.SourceVersion = &v
+	return s
+}
+
+// SetTargetVersions sets the TargetVersions field's value.
+func (s *CompatibleVersionsMap) SetTargetVersions(v []*string) *CompatibleVersionsMap {
+	s.TargetVersions = v
 	return s
 }
 
@@ -2299,6 +3160,163 @@ func (s *DescribeElasticsearchInstanceTypeLimitsOutput) SetLimitsByRole(v map[st
 	return s
 }
 
+// Container for parameters to DescribeReservedElasticsearchInstanceOfferings
+type DescribeReservedElasticsearchInstanceOfferingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Set this value to limit the number of results returned. If not specified,
+	// defaults to 100.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+
+	// NextToken should be sent in case if earlier API call produced result containing
+	// NextToken. It is used for pagination.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// The offering identifier filter value. Use this parameter to show only the
+	// available offering that matches the specified reservation identifier.
+	ReservedElasticsearchInstanceOfferingId *string `location:"querystring" locationName:"offeringId" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeReservedElasticsearchInstanceOfferingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReservedElasticsearchInstanceOfferingsInput) GoString() string {
+	return s.String()
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeReservedElasticsearchInstanceOfferingsInput) SetMaxResults(v int64) *DescribeReservedElasticsearchInstanceOfferingsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeReservedElasticsearchInstanceOfferingsInput) SetNextToken(v string) *DescribeReservedElasticsearchInstanceOfferingsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceOfferingId sets the ReservedElasticsearchInstanceOfferingId field's value.
+func (s *DescribeReservedElasticsearchInstanceOfferingsInput) SetReservedElasticsearchInstanceOfferingId(v string) *DescribeReservedElasticsearchInstanceOfferingsInput {
+	s.ReservedElasticsearchInstanceOfferingId = &v
+	return s
+}
+
+// Container for results from DescribeReservedElasticsearchInstanceOfferings
+type DescribeReservedElasticsearchInstanceOfferingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Provides an identifier to allow retrieval of paginated results.
+	NextToken *string `type:"string"`
+
+	// List of reserved Elasticsearch instance offerings
+	ReservedElasticsearchInstanceOfferings []*ReservedElasticsearchInstanceOffering `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeReservedElasticsearchInstanceOfferingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReservedElasticsearchInstanceOfferingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeReservedElasticsearchInstanceOfferingsOutput) SetNextToken(v string) *DescribeReservedElasticsearchInstanceOfferingsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceOfferings sets the ReservedElasticsearchInstanceOfferings field's value.
+func (s *DescribeReservedElasticsearchInstanceOfferingsOutput) SetReservedElasticsearchInstanceOfferings(v []*ReservedElasticsearchInstanceOffering) *DescribeReservedElasticsearchInstanceOfferingsOutput {
+	s.ReservedElasticsearchInstanceOfferings = v
+	return s
+}
+
+// Container for parameters to DescribeReservedElasticsearchInstances
+type DescribeReservedElasticsearchInstancesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Set this value to limit the number of results returned. If not specified,
+	// defaults to 100.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+
+	// NextToken should be sent in case if earlier API call produced result containing
+	// NextToken. It is used for pagination.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// The reserved instance identifier filter value. Use this parameter to show
+	// only the reservation that matches the specified reserved Elasticsearch instance
+	// ID.
+	ReservedElasticsearchInstanceId *string `location:"querystring" locationName:"reservationId" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeReservedElasticsearchInstancesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReservedElasticsearchInstancesInput) GoString() string {
+	return s.String()
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeReservedElasticsearchInstancesInput) SetMaxResults(v int64) *DescribeReservedElasticsearchInstancesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeReservedElasticsearchInstancesInput) SetNextToken(v string) *DescribeReservedElasticsearchInstancesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceId sets the ReservedElasticsearchInstanceId field's value.
+func (s *DescribeReservedElasticsearchInstancesInput) SetReservedElasticsearchInstanceId(v string) *DescribeReservedElasticsearchInstancesInput {
+	s.ReservedElasticsearchInstanceId = &v
+	return s
+}
+
+// Container for results from DescribeReservedElasticsearchInstances
+type DescribeReservedElasticsearchInstancesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Provides an identifier to allow retrieval of paginated results.
+	NextToken *string `type:"string"`
+
+	// List of reserved Elasticsearch instances.
+	ReservedElasticsearchInstances []*ReservedElasticsearchInstance `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeReservedElasticsearchInstancesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReservedElasticsearchInstancesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeReservedElasticsearchInstancesOutput) SetNextToken(v string) *DescribeReservedElasticsearchInstancesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReservedElasticsearchInstances sets the ReservedElasticsearchInstances field's value.
+func (s *DescribeReservedElasticsearchInstancesOutput) SetReservedElasticsearchInstances(v []*ReservedElasticsearchInstance) *DescribeReservedElasticsearchInstancesOutput {
+	s.ReservedElasticsearchInstances = v
+	return s
+}
+
 type DomainInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -2710,6 +3728,10 @@ type ElasticsearchDomainStatus struct {
 	// Specifies the status of the SnapshotOptions
 	SnapshotOptions *SnapshotOptions `type:"structure"`
 
+	// The status of an Elasticsearch domain version upgrade. True if Amazon Elasticsearch
+	// Service is undergoing a version upgrade. False if the configuration is active.
+	UpgradeProcessing *bool `type:"boolean"`
+
 	// The VPCOptions for the specified domain. For more information, see VPC Endpoints
 	// for Amazon Elasticsearch Service Domains (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
 	VPCOptions *VPCDerivedInfo `type:"structure"`
@@ -2824,6 +3846,12 @@ func (s *ElasticsearchDomainStatus) SetProcessing(v bool) *ElasticsearchDomainSt
 // SetSnapshotOptions sets the SnapshotOptions field's value.
 func (s *ElasticsearchDomainStatus) SetSnapshotOptions(v *SnapshotOptions) *ElasticsearchDomainStatus {
 	s.SnapshotOptions = v
+	return s
+}
+
+// SetUpgradeProcessing sets the UpgradeProcessing field's value.
+func (s *ElasticsearchDomainStatus) SetUpgradeProcessing(v bool) *ElasticsearchDomainStatus {
+	s.UpgradeProcessing = &v
 	return s
 }
 
@@ -2955,6 +3983,266 @@ func (s *EncryptionAtRestOptionsStatus) SetOptions(v *EncryptionAtRestOptions) *
 // SetStatus sets the Status field's value.
 func (s *EncryptionAtRestOptionsStatus) SetStatus(v *OptionStatus) *EncryptionAtRestOptionsStatus {
 	s.Status = v
+	return s
+}
+
+// Container for request parameters to GetCompatibleElasticsearchVersions operation.
+type GetCompatibleElasticsearchVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	DomainName *string `location:"querystring" locationName:"domainName" min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCompatibleElasticsearchVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCompatibleElasticsearchVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCompatibleElasticsearchVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCompatibleElasticsearchVersionsInput"}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *GetCompatibleElasticsearchVersionsInput) SetDomainName(v string) *GetCompatibleElasticsearchVersionsInput {
+	s.DomainName = &v
+	return s
+}
+
+// Container for response returned by GetCompatibleElasticsearchVersions operation.
+type GetCompatibleElasticsearchVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A map of compatible Elasticsearch versions returned as part of the GetCompatibleElasticsearchVersions
+	// operation.
+	CompatibleElasticsearchVersions []*CompatibleVersionsMap `type:"list"`
+}
+
+// String returns the string representation
+func (s GetCompatibleElasticsearchVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCompatibleElasticsearchVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleElasticsearchVersions sets the CompatibleElasticsearchVersions field's value.
+func (s *GetCompatibleElasticsearchVersionsOutput) SetCompatibleElasticsearchVersions(v []*CompatibleVersionsMap) *GetCompatibleElasticsearchVersionsOutput {
+	s.CompatibleElasticsearchVersions = v
+	return s
+}
+
+// Container for request parameters to GetUpgradeHistory operation.
+type GetUpgradeHistoryInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	//
+	// DomainName is a required field
+	DomainName *string `location:"uri" locationName:"DomainName" min:"3" type:"string" required:"true"`
+
+	// Set this value to limit the number of results returned.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+
+	// Paginated APIs accepts NextToken input to returns next page results and provides
+	// a NextToken output in the response which can be used by the client to retrieve
+	// more results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetUpgradeHistoryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUpgradeHistoryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetUpgradeHistoryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetUpgradeHistoryInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *GetUpgradeHistoryInput) SetDomainName(v string) *GetUpgradeHistoryInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetUpgradeHistoryInput) SetMaxResults(v int64) *GetUpgradeHistoryInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetUpgradeHistoryInput) SetNextToken(v string) *GetUpgradeHistoryInput {
+	s.NextToken = &v
+	return s
+}
+
+// Container for response returned by GetUpgradeHistory operation.
+type GetUpgradeHistoryOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Pagination token that needs to be supplied to the next call to get the next
+	// page of results
+	NextToken *string `type:"string"`
+
+	// A list of UpgradeHistory objects corresponding to each Upgrade or Upgrade
+	// Eligibility Check performed on a domain returned as part of GetUpgradeHistoryResponse
+	// object.
+	UpgradeHistories []*UpgradeHistory `type:"list"`
+}
+
+// String returns the string representation
+func (s GetUpgradeHistoryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUpgradeHistoryOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetUpgradeHistoryOutput) SetNextToken(v string) *GetUpgradeHistoryOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetUpgradeHistories sets the UpgradeHistories field's value.
+func (s *GetUpgradeHistoryOutput) SetUpgradeHistories(v []*UpgradeHistory) *GetUpgradeHistoryOutput {
+	s.UpgradeHistories = v
+	return s
+}
+
+// Container for request parameters to GetUpgradeStatus operation.
+type GetUpgradeStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	//
+	// DomainName is a required field
+	DomainName *string `location:"uri" locationName:"DomainName" min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetUpgradeStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUpgradeStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetUpgradeStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetUpgradeStatusInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *GetUpgradeStatusInput) SetDomainName(v string) *GetUpgradeStatusInput {
+	s.DomainName = &v
+	return s
+}
+
+// Container for response returned by GetUpgradeStatus operation.
+type GetUpgradeStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// One of 4 statuses that a step can go through returned as part of the GetUpgradeStatusResponse
+	// object. The status can take one of the following values: In Progress
+	// Succeeded
+	// Succeeded with Issues
+	// Failed
+	StepStatus *string `type:"string" enum:"UpgradeStatus"`
+
+	// A string that describes the update briefly
+	UpgradeName *string `type:"string"`
+
+	// Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does
+	// through: PreUpgradeCheck
+	// Snapshot
+	// Upgrade
+	UpgradeStep *string `type:"string" enum:"UpgradeStep"`
+}
+
+// String returns the string representation
+func (s GetUpgradeStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUpgradeStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetStepStatus sets the StepStatus field's value.
+func (s *GetUpgradeStatusOutput) SetStepStatus(v string) *GetUpgradeStatusOutput {
+	s.StepStatus = &v
+	return s
+}
+
+// SetUpgradeName sets the UpgradeName field's value.
+func (s *GetUpgradeStatusOutput) SetUpgradeName(v string) *GetUpgradeStatusOutput {
+	s.UpgradeName = &v
+	return s
+}
+
+// SetUpgradeStep sets the UpgradeStep field's value.
+func (s *GetUpgradeStatusOutput) SetUpgradeStep(v string) *GetUpgradeStatusOutput {
+	s.UpgradeStep = &v
 	return s
 }
 
@@ -3432,7 +4720,7 @@ type OptionStatus struct {
 	// Timestamp which tells the creation date for the entity.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `type:"timestamp" required:"true"`
 
 	// Indicates whether the Elasticsearch domain is being deleted.
 	PendingDeletion *bool `type:"boolean"`
@@ -3445,7 +4733,7 @@ type OptionStatus struct {
 	// Timestamp which tells the last updated time for the entity.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	UpdateDate *time.Time `type:"timestamp" required:"true"`
 
 	// Specifies the latest version for the entity.
 	UpdateVersion *int64 `type:"integer"`
@@ -3488,6 +4776,142 @@ func (s *OptionStatus) SetUpdateDate(v time.Time) *OptionStatus {
 // SetUpdateVersion sets the UpdateVersion field's value.
 func (s *OptionStatus) SetUpdateVersion(v int64) *OptionStatus {
 	s.UpdateVersion = &v
+	return s
+}
+
+// Container for parameters to PurchaseReservedElasticsearchInstanceOffering
+type PurchaseReservedElasticsearchInstanceOfferingInput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of Elasticsearch instances to reserve.
+	InstanceCount *int64 `min:"1" type:"integer"`
+
+	// A customer-specified identifier to track this reservation.
+	//
+	// ReservationName is a required field
+	ReservationName *string `min:"5" type:"string" required:"true"`
+
+	// The ID of the reserved Elasticsearch instance offering to purchase.
+	//
+	// ReservedElasticsearchInstanceOfferingId is a required field
+	ReservedElasticsearchInstanceOfferingId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PurchaseReservedElasticsearchInstanceOfferingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PurchaseReservedElasticsearchInstanceOfferingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PurchaseReservedElasticsearchInstanceOfferingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PurchaseReservedElasticsearchInstanceOfferingInput"}
+	if s.InstanceCount != nil && *s.InstanceCount < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("InstanceCount", 1))
+	}
+	if s.ReservationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservationName"))
+	}
+	if s.ReservationName != nil && len(*s.ReservationName) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("ReservationName", 5))
+	}
+	if s.ReservedElasticsearchInstanceOfferingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservedElasticsearchInstanceOfferingId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInstanceCount sets the InstanceCount field's value.
+func (s *PurchaseReservedElasticsearchInstanceOfferingInput) SetInstanceCount(v int64) *PurchaseReservedElasticsearchInstanceOfferingInput {
+	s.InstanceCount = &v
+	return s
+}
+
+// SetReservationName sets the ReservationName field's value.
+func (s *PurchaseReservedElasticsearchInstanceOfferingInput) SetReservationName(v string) *PurchaseReservedElasticsearchInstanceOfferingInput {
+	s.ReservationName = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceOfferingId sets the ReservedElasticsearchInstanceOfferingId field's value.
+func (s *PurchaseReservedElasticsearchInstanceOfferingInput) SetReservedElasticsearchInstanceOfferingId(v string) *PurchaseReservedElasticsearchInstanceOfferingInput {
+	s.ReservedElasticsearchInstanceOfferingId = &v
+	return s
+}
+
+// Represents the output of a PurchaseReservedElasticsearchInstanceOffering
+// operation.
+type PurchaseReservedElasticsearchInstanceOfferingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The customer-specified identifier used to track this reservation.
+	ReservationName *string `min:"5" type:"string"`
+
+	// Details of the reserved Elasticsearch instance which was purchased.
+	ReservedElasticsearchInstanceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PurchaseReservedElasticsearchInstanceOfferingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PurchaseReservedElasticsearchInstanceOfferingOutput) GoString() string {
+	return s.String()
+}
+
+// SetReservationName sets the ReservationName field's value.
+func (s *PurchaseReservedElasticsearchInstanceOfferingOutput) SetReservationName(v string) *PurchaseReservedElasticsearchInstanceOfferingOutput {
+	s.ReservationName = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceId sets the ReservedElasticsearchInstanceId field's value.
+func (s *PurchaseReservedElasticsearchInstanceOfferingOutput) SetReservedElasticsearchInstanceId(v string) *PurchaseReservedElasticsearchInstanceOfferingOutput {
+	s.ReservedElasticsearchInstanceId = &v
+	return s
+}
+
+// Contains the specific price and frequency of a recurring charges for a reserved
+// Elasticsearch instance, or for a reserved Elasticsearch instance offering.
+type RecurringCharge struct {
+	_ struct{} `type:"structure"`
+
+	// The monetary amount of the recurring charge.
+	RecurringChargeAmount *float64 `type:"double"`
+
+	// The frequency of the recurring charge.
+	RecurringChargeFrequency *string `type:"string"`
+}
+
+// String returns the string representation
+func (s RecurringCharge) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RecurringCharge) GoString() string {
+	return s.String()
+}
+
+// SetRecurringChargeAmount sets the RecurringChargeAmount field's value.
+func (s *RecurringCharge) SetRecurringChargeAmount(v float64) *RecurringCharge {
+	s.RecurringChargeAmount = &v
+	return s
+}
+
+// SetRecurringChargeFrequency sets the RecurringChargeFrequency field's value.
+func (s *RecurringCharge) SetRecurringChargeFrequency(v string) *RecurringCharge {
+	s.RecurringChargeFrequency = &v
 	return s
 }
 
@@ -3560,6 +4984,232 @@ func (s RemoveTagsOutput) String() string {
 // GoString returns the string representation
 func (s RemoveTagsOutput) GoString() string {
 	return s.String()
+}
+
+// Details of a reserved Elasticsearch instance.
+type ReservedElasticsearchInstance struct {
+	_ struct{} `type:"structure"`
+
+	// The currency code for the reserved Elasticsearch instance offering.
+	CurrencyCode *string `type:"string"`
+
+	// The duration, in seconds, for which the Elasticsearch instance is reserved.
+	Duration *int64 `type:"integer"`
+
+	// The number of Elasticsearch instances that have been reserved.
+	ElasticsearchInstanceCount *int64 `type:"integer"`
+
+	// The Elasticsearch instance type offered by the reserved instance offering.
+	ElasticsearchInstanceType *string `type:"string" enum:"ESPartitionInstanceType"`
+
+	// The upfront fixed charge you will paid to purchase the specific reserved
+	// Elasticsearch instance offering.
+	FixedPrice *float64 `type:"double"`
+
+	// The payment option as defined in the reserved Elasticsearch instance offering.
+	PaymentOption *string `type:"string" enum:"ReservedElasticsearchInstancePaymentOption"`
+
+	// The charge to your account regardless of whether you are creating any domains
+	// using the instance offering.
+	RecurringCharges []*RecurringCharge `type:"list"`
+
+	// The customer-specified identifier to track this reservation.
+	ReservationName *string `min:"5" type:"string"`
+
+	// The unique identifier for the reservation.
+	ReservedElasticsearchInstanceId *string `type:"string"`
+
+	// The offering identifier.
+	ReservedElasticsearchInstanceOfferingId *string `type:"string"`
+
+	// The time the reservation started.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The state of the reserved Elasticsearch instance.
+	State *string `type:"string"`
+
+	// The rate you are charged for each hour for the domain that is using this
+	// reserved instance.
+	UsagePrice *float64 `type:"double"`
+}
+
+// String returns the string representation
+func (s ReservedElasticsearchInstance) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReservedElasticsearchInstance) GoString() string {
+	return s.String()
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *ReservedElasticsearchInstance) SetCurrencyCode(v string) *ReservedElasticsearchInstance {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *ReservedElasticsearchInstance) SetDuration(v int64) *ReservedElasticsearchInstance {
+	s.Duration = &v
+	return s
+}
+
+// SetElasticsearchInstanceCount sets the ElasticsearchInstanceCount field's value.
+func (s *ReservedElasticsearchInstance) SetElasticsearchInstanceCount(v int64) *ReservedElasticsearchInstance {
+	s.ElasticsearchInstanceCount = &v
+	return s
+}
+
+// SetElasticsearchInstanceType sets the ElasticsearchInstanceType field's value.
+func (s *ReservedElasticsearchInstance) SetElasticsearchInstanceType(v string) *ReservedElasticsearchInstance {
+	s.ElasticsearchInstanceType = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *ReservedElasticsearchInstance) SetFixedPrice(v float64) *ReservedElasticsearchInstance {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetPaymentOption sets the PaymentOption field's value.
+func (s *ReservedElasticsearchInstance) SetPaymentOption(v string) *ReservedElasticsearchInstance {
+	s.PaymentOption = &v
+	return s
+}
+
+// SetRecurringCharges sets the RecurringCharges field's value.
+func (s *ReservedElasticsearchInstance) SetRecurringCharges(v []*RecurringCharge) *ReservedElasticsearchInstance {
+	s.RecurringCharges = v
+	return s
+}
+
+// SetReservationName sets the ReservationName field's value.
+func (s *ReservedElasticsearchInstance) SetReservationName(v string) *ReservedElasticsearchInstance {
+	s.ReservationName = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceId sets the ReservedElasticsearchInstanceId field's value.
+func (s *ReservedElasticsearchInstance) SetReservedElasticsearchInstanceId(v string) *ReservedElasticsearchInstance {
+	s.ReservedElasticsearchInstanceId = &v
+	return s
+}
+
+// SetReservedElasticsearchInstanceOfferingId sets the ReservedElasticsearchInstanceOfferingId field's value.
+func (s *ReservedElasticsearchInstance) SetReservedElasticsearchInstanceOfferingId(v string) *ReservedElasticsearchInstance {
+	s.ReservedElasticsearchInstanceOfferingId = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ReservedElasticsearchInstance) SetStartTime(v time.Time) *ReservedElasticsearchInstance {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ReservedElasticsearchInstance) SetState(v string) *ReservedElasticsearchInstance {
+	s.State = &v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *ReservedElasticsearchInstance) SetUsagePrice(v float64) *ReservedElasticsearchInstance {
+	s.UsagePrice = &v
+	return s
+}
+
+// Details of a reserved Elasticsearch instance offering.
+type ReservedElasticsearchInstanceOffering struct {
+	_ struct{} `type:"structure"`
+
+	// The currency code for the reserved Elasticsearch instance offering.
+	CurrencyCode *string `type:"string"`
+
+	// The duration, in seconds, for which the offering will reserve the Elasticsearch
+	// instance.
+	Duration *int64 `type:"integer"`
+
+	// The Elasticsearch instance type offered by the reserved instance offering.
+	ElasticsearchInstanceType *string `type:"string" enum:"ESPartitionInstanceType"`
+
+	// The upfront fixed charge you will pay to purchase the specific reserved Elasticsearch
+	// instance offering.
+	FixedPrice *float64 `type:"double"`
+
+	// Payment option for the reserved Elasticsearch instance offering
+	PaymentOption *string `type:"string" enum:"ReservedElasticsearchInstancePaymentOption"`
+
+	// The charge to your account regardless of whether you are creating any domains
+	// using the instance offering.
+	RecurringCharges []*RecurringCharge `type:"list"`
+
+	// The Elasticsearch reserved instance offering identifier.
+	ReservedElasticsearchInstanceOfferingId *string `type:"string"`
+
+	// The rate you are charged for each hour the domain that is using the offering
+	// is running.
+	UsagePrice *float64 `type:"double"`
+}
+
+// String returns the string representation
+func (s ReservedElasticsearchInstanceOffering) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReservedElasticsearchInstanceOffering) GoString() string {
+	return s.String()
+}
+
+// SetCurrencyCode sets the CurrencyCode field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetCurrencyCode(v string) *ReservedElasticsearchInstanceOffering {
+	s.CurrencyCode = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetDuration(v int64) *ReservedElasticsearchInstanceOffering {
+	s.Duration = &v
+	return s
+}
+
+// SetElasticsearchInstanceType sets the ElasticsearchInstanceType field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetElasticsearchInstanceType(v string) *ReservedElasticsearchInstanceOffering {
+	s.ElasticsearchInstanceType = &v
+	return s
+}
+
+// SetFixedPrice sets the FixedPrice field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetFixedPrice(v float64) *ReservedElasticsearchInstanceOffering {
+	s.FixedPrice = &v
+	return s
+}
+
+// SetPaymentOption sets the PaymentOption field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetPaymentOption(v string) *ReservedElasticsearchInstanceOffering {
+	s.PaymentOption = &v
+	return s
+}
+
+// SetRecurringCharges sets the RecurringCharges field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetRecurringCharges(v []*RecurringCharge) *ReservedElasticsearchInstanceOffering {
+	s.RecurringCharges = v
+	return s
+}
+
+// SetReservedElasticsearchInstanceOfferingId sets the ReservedElasticsearchInstanceOfferingId field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetReservedElasticsearchInstanceOfferingId(v string) *ReservedElasticsearchInstanceOffering {
+	s.ReservedElasticsearchInstanceOfferingId = &v
+	return s
+}
+
+// SetUsagePrice sets the UsagePrice field's value.
+func (s *ReservedElasticsearchInstanceOffering) SetUsagePrice(v float64) *ReservedElasticsearchInstanceOffering {
+	s.UsagePrice = &v
+	return s
 }
 
 // Specifies the time, in UTC format, when the service takes a daily automated
@@ -3932,6 +5582,238 @@ func (s *UpdateElasticsearchDomainConfigOutput) SetDomainConfig(v *Elasticsearch
 	return s
 }
 
+// Container for request parameters to UpgradeElasticsearchDomain operation.
+type UpgradeElasticsearchDomainInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	//
+	// DomainName is a required field
+	DomainName *string `min:"3" type:"string" required:"true"`
+
+	// This flag, when set to True, indicates that an Upgrade Eligibility Check
+	// needs to be performed. This will not actually perform the Upgrade.
+	PerformCheckOnly *bool `type:"boolean"`
+
+	// The version of Elasticsearch that you intend to upgrade the domain to.
+	//
+	// TargetVersion is a required field
+	TargetVersion *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpgradeElasticsearchDomainInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpgradeElasticsearchDomainInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpgradeElasticsearchDomainInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpgradeElasticsearchDomainInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+	if s.TargetVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetVersion"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *UpgradeElasticsearchDomainInput) SetDomainName(v string) *UpgradeElasticsearchDomainInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetPerformCheckOnly sets the PerformCheckOnly field's value.
+func (s *UpgradeElasticsearchDomainInput) SetPerformCheckOnly(v bool) *UpgradeElasticsearchDomainInput {
+	s.PerformCheckOnly = &v
+	return s
+}
+
+// SetTargetVersion sets the TargetVersion field's value.
+func (s *UpgradeElasticsearchDomainInput) SetTargetVersion(v string) *UpgradeElasticsearchDomainInput {
+	s.TargetVersion = &v
+	return s
+}
+
+// Container for response returned by UpgradeElasticsearchDomain operation.
+type UpgradeElasticsearchDomainOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	DomainName *string `min:"3" type:"string"`
+
+	// This flag, when set to True, indicates that an Upgrade Eligibility Check
+	// needs to be performed. This will not actually perform the Upgrade.
+	PerformCheckOnly *bool `type:"boolean"`
+
+	// The version of Elasticsearch that you intend to upgrade the domain to.
+	TargetVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UpgradeElasticsearchDomainOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpgradeElasticsearchDomainOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *UpgradeElasticsearchDomainOutput) SetDomainName(v string) *UpgradeElasticsearchDomainOutput {
+	s.DomainName = &v
+	return s
+}
+
+// SetPerformCheckOnly sets the PerformCheckOnly field's value.
+func (s *UpgradeElasticsearchDomainOutput) SetPerformCheckOnly(v bool) *UpgradeElasticsearchDomainOutput {
+	s.PerformCheckOnly = &v
+	return s
+}
+
+// SetTargetVersion sets the TargetVersion field's value.
+func (s *UpgradeElasticsearchDomainOutput) SetTargetVersion(v string) *UpgradeElasticsearchDomainOutput {
+	s.TargetVersion = &v
+	return s
+}
+
+// History of the last 10 Upgrades and Upgrade Eligibility Checks.
+type UpgradeHistory struct {
+	_ struct{} `type:"structure"`
+
+	// UTC Timestamp at which the Upgrade API call was made in "yyyy-MM-ddTHH:mm:ssZ"
+	// format.
+	StartTimestamp *time.Time `type:"timestamp"`
+
+	// A list of UpgradeStepItem s representing information about each step performed
+	// as pard of a specific Upgrade or Upgrade Eligibility Check.
+	StepsList []*UpgradeStepItem `type:"list"`
+
+	// A string that describes the update briefly
+	UpgradeName *string `type:"string"`
+
+	// The overall status of the update. The status can take one of the following
+	// values: In Progress
+	// Succeeded
+	// Succeeded with Issues
+	// Failed
+	UpgradeStatus *string `type:"string" enum:"UpgradeStatus"`
+}
+
+// String returns the string representation
+func (s UpgradeHistory) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpgradeHistory) GoString() string {
+	return s.String()
+}
+
+// SetStartTimestamp sets the StartTimestamp field's value.
+func (s *UpgradeHistory) SetStartTimestamp(v time.Time) *UpgradeHistory {
+	s.StartTimestamp = &v
+	return s
+}
+
+// SetStepsList sets the StepsList field's value.
+func (s *UpgradeHistory) SetStepsList(v []*UpgradeStepItem) *UpgradeHistory {
+	s.StepsList = v
+	return s
+}
+
+// SetUpgradeName sets the UpgradeName field's value.
+func (s *UpgradeHistory) SetUpgradeName(v string) *UpgradeHistory {
+	s.UpgradeName = &v
+	return s
+}
+
+// SetUpgradeStatus sets the UpgradeStatus field's value.
+func (s *UpgradeHistory) SetUpgradeStatus(v string) *UpgradeHistory {
+	s.UpgradeStatus = &v
+	return s
+}
+
+// Represents a single step of the Upgrade or Upgrade Eligibility Check workflow.
+type UpgradeStepItem struct {
+	_ struct{} `type:"structure"`
+
+	// A list of strings containing detailed information about the errors encountered
+	// in a particular step.
+	Issues []*string `type:"list"`
+
+	// The Floating point value representing progress percentage of a particular
+	// step.
+	ProgressPercent *float64 `type:"double"`
+
+	// Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does
+	// through: PreUpgradeCheck
+	// Snapshot
+	// Upgrade
+	UpgradeStep *string `type:"string" enum:"UpgradeStep"`
+
+	// The status of a particular step during an upgrade. The status can take one
+	// of the following values: In Progress
+	// Succeeded
+	// Succeeded with Issues
+	// Failed
+	UpgradeStepStatus *string `type:"string" enum:"UpgradeStatus"`
+}
+
+// String returns the string representation
+func (s UpgradeStepItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpgradeStepItem) GoString() string {
+	return s.String()
+}
+
+// SetIssues sets the Issues field's value.
+func (s *UpgradeStepItem) SetIssues(v []*string) *UpgradeStepItem {
+	s.Issues = v
+	return s
+}
+
+// SetProgressPercent sets the ProgressPercent field's value.
+func (s *UpgradeStepItem) SetProgressPercent(v float64) *UpgradeStepItem {
+	s.ProgressPercent = &v
+	return s
+}
+
+// SetUpgradeStep sets the UpgradeStep field's value.
+func (s *UpgradeStepItem) SetUpgradeStep(v string) *UpgradeStepItem {
+	s.UpgradeStep = &v
+	return s
+}
+
+// SetUpgradeStepStatus sets the UpgradeStepStatus field's value.
+func (s *UpgradeStepItem) SetUpgradeStepStatus(v string) *UpgradeStepItem {
+	s.UpgradeStepStatus = &v
+	return s
+}
+
 // Options to specify the subnets and security groups for VPC endpoint. For
 // more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
 // (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
@@ -4182,16 +6064,22 @@ const (
 )
 
 // Type of Log File, it can be one of the following: INDEX_SLOW_LOGS: Index
-// slow logs contains insert requests that took more time than configured index
+// slow logs contain insert requests that took more time than configured index
 // query log threshold to execute.
-// SEARCH_SLOW_LOGS: Search slow logs contains search queries that took more
+// SEARCH_SLOW_LOGS: Search slow logs contain search queries that took more
 // time than configured search query log threshold to execute.
+// ES_APPLICATION_LOGS: Elasticsearch application logs contain information about
+// errors and warnings raised during the operation of the service and can be
+// useful for troubleshooting.
 const (
 	// LogTypeIndexSlowLogs is a LogType enum value
 	LogTypeIndexSlowLogs = "INDEX_SLOW_LOGS"
 
 	// LogTypeSearchSlowLogs is a LogType enum value
 	LogTypeSearchSlowLogs = "SEARCH_SLOW_LOGS"
+
+	// LogTypeEsApplicationLogs is a LogType enum value
+	LogTypeEsApplicationLogs = "ES_APPLICATION_LOGS"
 )
 
 // The state of a requested change. One of the following:
@@ -4208,6 +6096,42 @@ const (
 
 	// OptionStateActive is a OptionState enum value
 	OptionStateActive = "Active"
+)
+
+const (
+	// ReservedElasticsearchInstancePaymentOptionAllUpfront is a ReservedElasticsearchInstancePaymentOption enum value
+	ReservedElasticsearchInstancePaymentOptionAllUpfront = "ALL_UPFRONT"
+
+	// ReservedElasticsearchInstancePaymentOptionPartialUpfront is a ReservedElasticsearchInstancePaymentOption enum value
+	ReservedElasticsearchInstancePaymentOptionPartialUpfront = "PARTIAL_UPFRONT"
+
+	// ReservedElasticsearchInstancePaymentOptionNoUpfront is a ReservedElasticsearchInstancePaymentOption enum value
+	ReservedElasticsearchInstancePaymentOptionNoUpfront = "NO_UPFRONT"
+)
+
+const (
+	// UpgradeStatusInProgress is a UpgradeStatus enum value
+	UpgradeStatusInProgress = "IN_PROGRESS"
+
+	// UpgradeStatusSucceeded is a UpgradeStatus enum value
+	UpgradeStatusSucceeded = "SUCCEEDED"
+
+	// UpgradeStatusSucceededWithIssues is a UpgradeStatus enum value
+	UpgradeStatusSucceededWithIssues = "SUCCEEDED_WITH_ISSUES"
+
+	// UpgradeStatusFailed is a UpgradeStatus enum value
+	UpgradeStatusFailed = "FAILED"
+)
+
+const (
+	// UpgradeStepPreUpgradeCheck is a UpgradeStep enum value
+	UpgradeStepPreUpgradeCheck = "PRE_UPGRADE_CHECK"
+
+	// UpgradeStepSnapshot is a UpgradeStep enum value
+	UpgradeStepSnapshot = "SNAPSHOT"
+
+	// UpgradeStepUpgrade is a UpgradeStep enum value
+	UpgradeStepUpgrade = "UPGRADE"
 )
 
 // The type of EBS volume, standard, gp2, or io1. See Configuring EBS-based

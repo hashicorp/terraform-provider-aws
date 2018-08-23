@@ -21,8 +21,26 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleS3ActionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
 				),
@@ -39,7 +57,7 @@ func TestAccAWSSESReceiptRule_order(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleOrderConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleOrder("aws_ses_receipt_rule.second"),
@@ -57,7 +75,7 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleActionsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleActions("aws_ses_receipt_rule.actions"),
@@ -244,6 +262,32 @@ resource "aws_ses_receipt_rule" "basic" {
 }
 `, srrsRandomInt)
 
+var testAccAWSSESReceiptRuleS3ActionConfig = fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+    rule_set_name = "test-me-%d"
+}
+
+resource "aws_s3_bucket" "emails" {
+    bucket = "ses-terraform-emails-%d"
+    acl = "public-read-write"
+    force_destroy = "true"
+}
+
+resource "aws_ses_receipt_rule" "basic" {
+    name = "basic"
+    rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+    recipients = ["test@example.com"]
+    enabled = true
+    scan_enabled = true
+    tls_policy = "Require"
+
+    s3_action {
+    	bucket_name = "${aws_s3_bucket.emails.id}"
+    	position = 1
+  	}
+}
+`, srrsRandomInt, srrsRandomInt)
+
 var testAccAWSSESReceiptRuleOrderConfig = fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
     rule_set_name = "test-me-%d"
@@ -262,10 +306,6 @@ resource "aws_ses_receipt_rule" "first" {
 `, srrsRandomInt)
 
 var testAccAWSSESReceiptRuleActionsConfig = fmt.Sprintf(`
-resource "aws_s3_bucket" "emails" {
-    bucket = "ses-terraform-emails"
-}
-
 resource "aws_ses_receipt_rule_set" "test" {
     rule_set_name = "test-me-%d"
 }

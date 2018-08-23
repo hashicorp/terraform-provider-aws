@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_db_snapshot"
 sidebar_current: "docs-aws-resource-db-snapshot"
 description: |-
-  Provides an DB Instance.
+  Manages a RDS database instance snapshot.
 ---
 
 # aws_db_snapshot
 
-Creates a Snapshot of an DB Instance.
+Manages a RDS database instance snapshot. For managing RDS database cluster snapshots, see the [`aws_db_cluster_snapshot` resource](/docs/providers/aws/r/db_cluster_snapshot.html).
 
 ## Example Usage
 
@@ -43,7 +43,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.

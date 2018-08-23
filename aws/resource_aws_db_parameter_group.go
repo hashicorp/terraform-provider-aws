@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
@@ -28,11 +27,11 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -40,39 +39,40 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateDbParamGroupName,
 			},
-			"name_prefix": &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateDbParamGroupNamePrefix,
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateDbParamGroupNamePrefix,
 			},
-			"family": &schema.Schema{
+			"family": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"parameter": &schema.Schema{
+			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": &schema.Schema{
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"apply_method": &schema.Schema{
+						"apply_method": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "immediate",
@@ -109,7 +109,7 @@ func resourceAwsDbParameterGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Create DB Parameter Group: %#v", createOpts)
-	_, err := rdsconn.CreateDBParameterGroup(&createOpts)
+	resp, err := rdsconn.CreateDBParameterGroup(&createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating DB Parameter Group: %s", err)
 	}
@@ -120,7 +120,8 @@ func resourceAwsDbParameterGroupCreate(d *schema.ResourceData, meta interface{})
 	d.SetPartial("description")
 	d.Partial(false)
 
-	d.SetId(*createOpts.DBParameterGroupName)
+	d.SetId(aws.StringValue(resp.DBParameterGroup.DBParameterGroupName))
+	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
 	log.Printf("[INFO] DB Parameter Group ID: %s", d.Id())
 
 	return resourceAwsDbParameterGroupUpdate(d, meta)
@@ -227,14 +228,9 @@ func resourceAwsDbParameterGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting 'parameter' in state: %#v", err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("pg:%s", d.Id()),
-	}.String()
+	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
 	d.Set("arn", arn)
+
 	resp, err := rdsconn.ListTagsForResource(&rds.ListTagsForResourceInput{
 		ResourceName: aws.String(arn),
 	})
@@ -301,14 +297,7 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("pg:%s", d.Id()),
-	}.String()
-	if err := setTagsRDS(rdsconn, d, arn); err != nil {
+	if err := setTagsRDS(rdsconn, d, d.Get("arn").(string)); err != nil {
 		return err
 	} else {
 		d.SetPartial("tags")

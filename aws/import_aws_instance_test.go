@@ -17,11 +17,11 @@ func TestAccAWSInstance_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccInstanceConfigVPC,
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -40,11 +40,11 @@ func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccInstanceConfigInDefaultVpcBySgName(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -62,11 +62,11 @@ func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccInstanceConfigInDefaultVpcBySgId(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -89,11 +89,11 @@ func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccInstanceConfigInEc2Classic(rInt),
 			},
 
-			resource.TestStep{
+			{
 				Config:                  testAccInstanceConfigInEc2Classic(rInt),
 				ResourceName:            resourceName,
 				ImportState:             true,

@@ -54,8 +54,18 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The AZ to start the instance in.
 * `placement_group` - (Optional) The Placement Group to start the instance in.
 * `tenancy` - (Optional) The tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
-* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be
-     EBS-optimized.
+* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is 
+  only supported on creation of instance type that support CPU Options 
+  [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
+* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set)  If set to to 1, hyperthreading is disabled on the launcehd instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
+
+-> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
+
+* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
+     Note that if this is not set on an instance type that is optimized by default then
+     this will show as disabled but if the instance type is optimized by default then
+     there is no need to set this and there is no effect to disabling it.
+     See the [EBS Optimized section](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html) of the AWS User Guide for more information.
 * `disable_api_termination` - (Optional) If true, enables [EC2 Instance
      Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the
@@ -63,12 +73,15 @@ instance. Amazon defaults this to `stop` for EBS-backed instances and
 `terminate` for instance-store instances. Cannot be set on instance-store
 instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
 * `instance_type` - (Required) The type of instance to start. Updates to this field will trigger a stop/start of the EC2 instance.
-* `key_name` - (Optional) The key name to use for the instance.
+* `key_name` - (Optional) The key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
+
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
-* `security_groups` - (Optional) A list of security group names to associate with.
-   If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
-* `vpc_security_group_ids` - (Optional) A list of security group IDs to associate with.
+* `security_groups` - (Optional, EC2-Classic and default VPC only) A list of security group names to associate with.
+
+-> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
+
+* `vpc_security_group_ids` - (Optional, VPC only) A list of security group IDs to associate with.
 * `subnet_id` - (Optional) The VPC Subnet ID to launch in.
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.  Boolean value.
 * `private_ip` - (Optional) Private IP address to associate with the
@@ -175,7 +188,7 @@ Each `network_interface` block supports the following:
 
 * `device_index` - (Required) The integer index of the network interface attachment. Limited by instance type.
 * `network_interface_id` - (Required) The ID of the network interface to attach.
-* `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`.
+* `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 
 ### Credit Specification
 
@@ -224,9 +237,10 @@ resource "aws_instance" "foo" {
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The instance ID.
+* `arn` - The ARN of the instance.
 * `availability_zone` - The availability zone of the instance.
 * `placement_group` - The placement group of the instance.
 * `key_name` - The key name of the instance

@@ -39,6 +39,10 @@ func testSweepNatGateways(region string) error {
 	}
 	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing NAT Gateways: %s", err)
 	}
 
@@ -70,7 +74,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -88,7 +92,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -97,7 +101,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),

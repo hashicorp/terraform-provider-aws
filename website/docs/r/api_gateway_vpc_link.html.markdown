@@ -40,6 +40,14 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the VpcLink.
+
+## Import
+
+API Gateway VPC Link can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_api_gateway_vpc_link.example <vpc_link_id>
+```

@@ -17,7 +17,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegion(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsVPCPeeringConnectionAccepterSameRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -42,7 +42,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegion(t *testing.T) {
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsVPCPeeringConnectionAccepterDifferentRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(

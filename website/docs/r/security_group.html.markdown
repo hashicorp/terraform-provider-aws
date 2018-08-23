@@ -157,7 +157,7 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the security group
 * `arn` - The ARN of the security group

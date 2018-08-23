@@ -166,6 +166,33 @@ func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_changeRouteTable(t *testing.T) {
+	var before ec2.Route
+	var after ec2.Route
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.bar", &before),
+				),
+			},
+			{
+				Config: testAccAWSRouteNewRouteTable,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.bar", &after),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_changeCidr(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
@@ -799,5 +826,59 @@ resource "aws_vpc_endpoint" "baz" {
   vpc_id          = "${aws_vpc.foo.id}"
   service_name    = "com.amazonaws.us-west-2.s3"
   route_table_ids = ["${aws_route_table.foo.id}"]
+}
+`)
+
+var testAccAWSRouteNewRouteTable = fmt.Sprint(`
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-basic"
+	}
+}
+
+resource "aws_vpc" "bar" {
+	cidr_block = "10.2.0.0/16"
+	tags {
+		Name = "terraform-testacc-route-new-route-table"
+	}
+}
+
+resource "aws_internet_gateway" "foo" {
+	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-basic"
+	}
+}
+
+resource "aws_internet_gateway" "bar" {
+	vpc_id = "${aws_vpc.bar.id}"
+
+	tags {
+		Name = "terraform-testacc-route-new-route-table"
+	}
+}
+
+resource "aws_route_table" "foo" {
+	vpc_id = "${aws_vpc.foo.id}"
+
+	tags {
+		Name = "terraform-testacc-route-basic"
+	}
+}
+
+resource "aws_route_table" "bar" {
+	vpc_id = "${aws_vpc.bar.id}"
+
+	tags {
+		Name = "terraform-testacc-route-new-route-table"
+	}
+}
+
+resource "aws_route" "bar" {
+	route_table_id = "${aws_route_table.bar.id}"
+	destination_cidr_block = "10.4.0.0/16"
+	gateway_id = "${aws_internet_gateway.bar.id}"
 }
 `)

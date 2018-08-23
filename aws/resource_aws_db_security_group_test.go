@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,11 +28,12 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBSecurityGroupExists("aws_db_security_group.bar", &v),
 					testAccCheckAWSDBSecurityGroupAttributes(&v),
+					resource.TestMatchResourceAttr("aws_db_security_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:secgrp:.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_db_security_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(

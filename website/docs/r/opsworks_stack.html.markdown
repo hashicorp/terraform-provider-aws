@@ -79,7 +79,7 @@ The `custom_cookbooks_source` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the stack.
 

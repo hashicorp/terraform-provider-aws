@@ -28,6 +28,10 @@ func testSweepLambdaFunctions(region string) error {
 
 	resp, err := lambdaconn.ListFunctions(&lambda.ListFunctionsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Lambda Function sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Lambda functions: %s", err)
 	}
 
@@ -74,11 +78,11 @@ func TestAccAWSLambdaFunction_importLocalFile(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -102,11 +106,11 @@ func TestAccAWSLambdaFunction_importLocalFile_VPC(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -129,11 +133,11 @@ func TestAccAWSLambdaFunction_importS3(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSLambdaConfigS3(bucketName, roleName, funcName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,

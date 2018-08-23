@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -34,16 +37,22 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateLaunchTemplateName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateLaunchTemplateName,
 			},
 
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"default_version": {
@@ -89,11 +98,13 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Computed: true,
 										Optional: true,
 									},
 									"kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -102,10 +113,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -158,8 +171,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"iam_instance_profile.0.name"},
+							ValidateFunc:  validateArn,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -219,6 +234,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"valid_until": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.ValidateRFC3339TimeString,
 									},
 								},
@@ -362,15 +378,17 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
 
 			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"security_group_names"},
 			},
 
 			"tag_specifications": {
@@ -381,6 +399,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"resource_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"instance",
+								"volume",
+							}, false),
 						},
 						"tags": tagsSchema(),
 					},
@@ -391,7 +413,23 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("latest_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+				for _, changedKey := range diff.GetChangedKeysPrefix("") {
+					switch changedKey {
+					case "name", "name_prefix", "description", "default_version", "latest_version":
+						continue
+					default:
+						return true
+					}
+				}
+				return false
+			}),
+		),
 	}
 }
 
@@ -463,6 +501,16 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("tags", tagsToMap(lt.Tags))
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
@@ -493,8 +541,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
-		return err
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
@@ -549,6 +599,16 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	d.Partial(true)
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
+
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
 
@@ -597,7 +657,7 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
 
-			mapping["ebs"] = ebs
+			mapping["ebs"] = []interface{}{ebs}
 		}
 		s = append(s, mapping)
 	}
@@ -649,7 +709,7 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
 				"max_price":                      aws.StringValue(so.MaxPrice),
 				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
-				"valid_until":                    aws.TimeValue(so.ValidUntil),
+				"valid_until":                    aws.TimeValue(so.ValidUntil).Format(time.RFC3339),
 			})
 			mo["spot_options"] = spot
 		}
@@ -702,7 +762,17 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		}
 
 		if len(v.Groups) > 0 {
-			networkInterface["security_groups"] = aws.StringValueSlice(v.Groups)
+			raw, ok := networkInterface["security_groups"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+			list := raw.(*schema.Set)
+
+			for _, group := range v.Groups {
+				list.Add(aws.StringValue(group))
+			}
+
+			networkInterface["security_groups"] = list
 		}
 
 		s = append(s, networkInterface)
@@ -749,8 +819,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.InstanceInitiatedShutdownBehavior = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
-		opts.InstanceType = aws.String(v.(string))
+	instanceType := d.Get("instance_type").(string)
+	if instanceType != "" {
+		opts.InstanceType = aws.String(instanceType)
 	}
 
 	if v, ok := d.GetOk("kernel_id"); ok {
@@ -791,7 +862,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok {
+	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 {
@@ -882,16 +953,16 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v := bdm["device_name"]; v != nil {
-		blockDeviceMapping.DeviceName = aws.String(v.(string))
+	if v := bdm["device_name"].(string); v != "" {
+		blockDeviceMapping.DeviceName = aws.String(v)
 	}
 
-	if v := bdm["no_device"]; v != nil {
-		blockDeviceMapping.NoDevice = aws.String(v.(string))
+	if v := bdm["no_device"].(string); v != "" {
+		blockDeviceMapping.NoDevice = aws.String(v)
 	}
 
-	if v := bdm["virtual_name"]; v != nil {
-		blockDeviceMapping.VirtualName = aws.String(v.(string))
+	if v := bdm["virtual_name"].(string); v != "" {
+		blockDeviceMapping.VirtualName = aws.String(v)
 	}
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
@@ -916,24 +987,24 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v := ebs["iops"]; v != nil {
-		ebsDevice.Iops = aws.Int64(int64(v.(int)))
+	if v := ebs["iops"].(int); v > 0 {
+		ebsDevice.Iops = aws.Int64(int64(v))
 	}
 
-	if v := ebs["kms_key_id"]; v != nil {
-		ebsDevice.KmsKeyId = aws.String(v.(string))
+	if v := ebs["kms_key_id"].(string); v != "" {
+		ebsDevice.KmsKeyId = aws.String(v)
 	}
 
-	if v := ebs["snapshot_id"]; v != nil {
-		ebsDevice.SnapshotId = aws.String(v.(string))
+	if v := ebs["snapshot_id"].(string); v != "" {
+		ebsDevice.SnapshotId = aws.String(v)
 	}
 
 	if v := ebs["volume_size"]; v != nil {
 		ebsDevice.VolumeSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := ebs["volume_type"]; v != nil {
-		ebsDevice.VolumeType = aws.String(v.(string))
+	if v := ebs["volume_type"].(string); v != "" {
+		ebsDevice.VolumeType = aws.String(v)
 	}
 
 	return ebsDevice
@@ -943,21 +1014,24 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
 	var privateIpAddress string
-	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
-		AssociatePublicIpAddress: aws.Bool(ni["associate_public_ip_address"].(bool)),
-		DeleteOnTermination:      aws.Bool(ni["delete_on_termination"].(bool)),
+	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
+
+	if v, ok := ni["delete_on_termination"]; ok {
+		networkInterface.DeleteOnTermination = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["description"].(string); ok && v != "" {
 		networkInterface.Description = aws.String(v)
 	}
 
-	if v, ok := ni["device_index"].(int); ok && v != 0 {
+	if v, ok := ni["device_index"].(int); ok {
 		networkInterface.DeviceIndex = aws.Int64(int64(v))
 	}
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	} else if v, ok := ni["associate_public_ip_address"]; ok {
+		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
@@ -969,14 +1043,23 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.SubnetId = aws.String(v)
 	}
 
+	if v := ni["security_groups"].(*schema.Set); v.Len() > 0 {
+		for _, v := range v.List() {
+			networkInterface.Groups = append(networkInterface.Groups, aws.String(v.(string)))
+		}
+	}
+
 	ipv6AddressList := ni["ipv6_addresses"].(*schema.Set).List()
 	for _, address := range ipv6AddressList {
 		ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
 			Ipv6Address: aws.String(address.(string)),
 		})
 	}
-	networkInterface.Ipv6AddressCount = aws.Int64(int64(len(ipv6AddressList)))
 	networkInterface.Ipv6Addresses = ipv6Addresses
+
+	if v := ni["ipv6_address_count"].(int); v > 0 {
+		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
+	}
 
 	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
 	for _, address := range ipv4AddressList {
@@ -986,8 +1069,11 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		}
 		ipv4Addresses = append(ipv4Addresses, privateIp)
 	}
-	networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(len(ipv4AddressList)))
 	networkInterface.PrivateIpAddresses = ipv4Addresses
+
+	if v := ni["ipv4_address_count"].(int); v > 0 {
+		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	}
 
 	return networkInterface
 }
@@ -1055,11 +1141,13 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 				spotOptions.SpotInstanceType = aws.String(v)
 			}
 
-			t, err := time.Parse(time.RFC3339, so["valid_until"].(string))
-			if err != nil {
-				return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+			if v, ok := so["valid_until"].(string); ok && v != "" {
+				t, err := time.Parse(time.RFC3339, v)
+				if err != nil {
+					return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+				}
+				spotOptions.ValidUntil = aws.Time(t)
 			}
-			spotOptions.ValidUntil = aws.Time(t)
 		}
 		instanceMarketOptions.SpotOptions = spotOptions
 	}

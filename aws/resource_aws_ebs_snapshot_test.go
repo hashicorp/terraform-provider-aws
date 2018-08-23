@@ -40,8 +40,9 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotConfigBasic(rName),
@@ -67,8 +68,9 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotConfigWithDescription(rName),
@@ -86,8 +88,9 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", acctest.RandString(7))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotConfigWithKms(rName),
@@ -127,6 +130,32 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 		}
 		return fmt.Errorf("Error finding EC2 Snapshot %s", rs.Primary.ID)
 	}
+}
+
+func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ebs_snapshot" {
+			continue
+		}
+		input := &ec2.DescribeSnapshotsInput{
+			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
+		}
+
+		output, err := conn.DescribeSnapshots(input)
+		if err != nil {
+			if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+				continue
+			}
+			return err
+		}
+		if output != nil && len(output.Snapshots) > 0 && aws.StringValue(output.Snapshots[0].SnapshotId) == rs.Primary.ID {
+			return fmt.Errorf("EBS Snapshot %q still exists", rs.Primary.ID)
+		}
+	}
+
+	return nil
 }
 
 func testAccAwsEbsSnapshotConfigBasic(rName string) string {

@@ -11,7 +11,7 @@ description: |-
 This resource represents a successful validation of an ACM certificate in concert
 with other resources.
 
-Most commonly, this resource is used to together with [`aws_route53_record`](route53_record.html) and
+Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
 [`aws_acm_certificate`](acm_certificate.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
@@ -44,6 +44,64 @@ resource "aws_route53_record" "cert_validation" {
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
+}
+
+resource "aws_lb_listener" "front_end" {
+  # [...]
+  certificate_arn   = "${aws_acm_certificate_validation.cert.certificate_arn}"
+}
+```
+
+### Alternative Domains DNS Validation with Route 53
+
+```hcl
+resource "aws_acm_certificate" "cert" {
+  domain_name = "example.com"
+  subject_alternative_names = ["www.example.com","example.org"]
+  validation_method = "DNS"
+}
+
+data "aws_route53_zone" "zone" {
+  name = "example.com."
+  private_zone = false
+}
+
+data "aws_route53_zone" "zone_alt" {
+  name = "example.org."
+  private_zone = false
+}
+
+resource "aws_route53_record" "cert_validation" {
+  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
+  ttl = 60
+}
+
+resource "aws_route53_record" "cert_validation_alt1" {
+  name = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.1.resource_record_value}"]
+  ttl = 60
+}
+
+resource "aws_route53_record" "cert_validation_alt2" {
+  name = "${aws_acm_certificate.cert.domain_validation_options.2.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.2.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone_alt.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.2.resource_record_value}"]
+  ttl = 60
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
+  validation_record_fqdns = [
+    "${aws_route53_record.cert_validation.fqdn}",
+    "${aws_route53_record.cert_validation_alt1.fqdn}",
+    "${aws_route53_record.cert_validation_alt2.fqdn}"
+  ]
 }
 
 resource "aws_lb_listener" "front_end" {

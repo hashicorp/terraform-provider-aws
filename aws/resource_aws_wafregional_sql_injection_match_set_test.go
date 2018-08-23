@@ -21,7 +21,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalSqlInjectionMatchSetConfig(sqlInjectionMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalSqlInjectionMatchSetExists("aws_wafregional_sql_injection_match_set.sql_injection_match_set", &v),

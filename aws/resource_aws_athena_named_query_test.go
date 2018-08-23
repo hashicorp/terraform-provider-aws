@@ -35,11 +35,11 @@ func TestAccAWSAthenaNamedQuery_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAthenaNamedQueryConfig(acctest.RandInt(), acctest.RandString(5)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

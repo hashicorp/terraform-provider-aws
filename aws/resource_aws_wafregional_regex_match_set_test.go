@@ -31,6 +31,10 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	req := &waf.ListRegexMatchSetsInput{}
 	resp, err := conn.ListRegexMatchSets(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regional Regex Match Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing WAF Regional Regex Match Sets: %s", err)
 	}
 
@@ -109,7 +113,7 @@ func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &matchSet),

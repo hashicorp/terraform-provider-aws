@@ -11,6 +11,7 @@ description: |-
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
 ~> **NOTE:** This data source does not apply to snapshots created on Aurora DB clusters.
+See the [`aws_db_cluster_snapshot` data source](/docs/providers/aws/d/db_cluster_snapshot.html) for DB Cluster snapshots.
 
 ## Example Usage
 
@@ -68,7 +69,7 @@ copied or restored by any AWS account, otherwise set this value to false. The de
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The snapshot ID.
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
@@ -85,5 +86,5 @@ The following attributes are exported:
 * `source_region` - The region that the DB snapshot was created in or copied from.
 * `status` - Specifies the status of this DB snapshot.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
-* `vpc_id` - Specifies the storage type associated with DB snapshot.
+* `vpc_id` - Specifies the ID of the VPC associated with the DB snapshot.
 * `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).

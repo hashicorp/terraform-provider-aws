@@ -38,6 +38,10 @@ func testSweepBatchComputeEnvironments(region string) error {
 
 	out, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Batch Compute Environment sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Batch Compute Environments: %s", err)
 	}
 	for _, computeEnvironment := range out.ComputeEnvironments {

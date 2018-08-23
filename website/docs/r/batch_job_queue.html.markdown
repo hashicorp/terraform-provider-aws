@@ -31,11 +31,11 @@ The following arguments are supported:
     in the list will dictate the order. You can associate up to 3 compute environments
     with a job queue.
 * `priority` - (Required) The priority of the job queue. Job queues with a higher priority
-    are evaluated first when associated with same compute environment.
+    are evaluated first when associated with the same compute environment.
 * `state` - (Required) The state of the job queue. Must be one of: `ENABLED` or `DISABLED`
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of the job queue.

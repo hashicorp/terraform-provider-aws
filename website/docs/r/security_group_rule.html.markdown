@@ -79,7 +79,7 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the security group rule
 * `type` - The type of rule, `ingress` or `egress`

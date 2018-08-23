@@ -61,6 +61,10 @@ func testSweepGlueJobs(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Glue Jobs: %s", err)
 	}
 
@@ -87,6 +91,7 @@ func TestAccAWSGlueJob_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
 				),
 			},
 			{
@@ -111,11 +116,7 @@ func TestAccAWSGlueJob_AllocatedCapacity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSGlueJobConfig_AllocatedCapacity(rName, 1),
-				ExpectError: regexp.MustCompile(`expected allocated_capacity to be in the range`),
-			},
-			{
-				Config:      testAccAWSGlueJobConfig_AllocatedCapacity(rName, 101),
-				ExpectError: regexp.MustCompile(`expected allocated_capacity to be in the range`),
+				ExpectError: regexp.MustCompile(`expected allocated_capacity to be at least`),
 			},
 			{
 				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 2),
@@ -125,10 +126,10 @@ func TestAccAWSGlueJob_AllocatedCapacity(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 100),
+				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "allocated_capacity", "100"),
+					resource.TestCheckResourceAttr(resourceName, "allocated_capacity", "3"),
 				),
 			},
 			{
@@ -261,11 +262,7 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSGlueJobConfig_ExecutionProperty(rName, 0),
-				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be in the range`),
-			},
-			{
-				Config:      testAccAWSGlueJobConfig_ExecutionProperty(rName, 4),
-				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be in the range`),
+				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
 			},
 			{
 				Config: testAccAWSGlueJobConfig_ExecutionProperty(rName, 1),
@@ -319,6 +316,40 @@ func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueJob_Timeout(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_Timeout(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_Timeout(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
 				),
 			},
 			{
@@ -555,4 +586,22 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
+}
+
+func testAccAWSGlueJobConfig_Timeout(rName string, timeout int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name        = "%s"
+  role_arn    = "${aws_iam_role.test.arn}"
+  timeout     = %d
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, timeout)
 }

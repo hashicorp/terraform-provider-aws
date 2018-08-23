@@ -31,6 +31,10 @@ func testSweepWafRegionalRuleGroups(region string) error {
 	req := &waf.ListRuleGroupsInput{}
 	resp, err := conn.ListRuleGroups(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing WAF Regional Rule Groups: %s", err)
 	}
 
@@ -73,7 +77,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),

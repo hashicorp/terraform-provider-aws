@@ -52,9 +52,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -209,7 +210,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set(terraformAttrName, attrmap[snsAttrName])
 		}
 	} else {
-		for terraformAttrName, _ := range SNSAttributeMap {
+		for terraformAttrName := range SNSAttributeMap {
 			d.Set(terraformAttrName, "")
 		}
 	}

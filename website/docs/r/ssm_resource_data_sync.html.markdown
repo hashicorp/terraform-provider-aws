@@ -6,7 +6,7 @@ description: |-
   Provides a SSM resource data sync.
 ---
 
-# aws_athena_database
+# aws_ssm_resource_data_sync
 
 Provides a SSM resource data sync.
 
@@ -47,10 +47,9 @@ resource "aws_s3_bucket_policy" "hoge" {
                 }
             }
         }
-      ]
-  }
-  EOF
+    ]
 }
+EOF
 
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"

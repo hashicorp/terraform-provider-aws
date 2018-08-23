@@ -10,8 +10,6 @@ description: |-
 
 Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 
--> **Note:** All arguments are optional except for either `name`, or `name_prefix`.
-
 ## Example Usage
 
 ```hcl
@@ -19,7 +17,10 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    device_name = "test"
+    device_name = "/dev/sda1"
+    ebs {
+      volume_size = 20
+    }
   }
 
   credit_specification {
@@ -74,6 +75,8 @@ resource "aws_launch_template" "foo" {
       Name = "test"
     }
   }
+  
+  user_data = "${base64encode(...)}"
 }
 ```
 
@@ -112,13 +115,16 @@ The following arguments are supported:
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tags](#tags) below for more details.
-* `user_data` - The user data to provide when launching the instance.
+* `tags` - (Optional) A mapping of tags to assign to the launch template.
+* `user_data` - The Base64-encoded user data to provide when launching the instance.
 
 ### Block devices
 
 Configure additional volumes of the instance besides specified by the AMI. It's a good idea to familiarize yourself with
   [AWS's Block Device Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
   to understand the implications of using these attributes.
+
+To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI ec2 describe-images command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
 
 Each `block_device_mappings` supports the following:
 
@@ -197,6 +203,8 @@ The `monitoring` block supports the following:
 
 Attaches one or more [Network Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) to the instance.
 
+Check limitations for autoscaling group in [Creating an Auto Scaling Group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
+
 Each `network_interfaces` block supports the following:
 
 * `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
@@ -204,8 +212,10 @@ Each `network_interfaces` block supports the following:
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet.
+* `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.
 * `private_ip_address` - The primary private IPv4 address.
+* `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface.
 * `ipv4_addresses` - One or more private IPv4 addresses to associate.
 * `security_groups` - A list of security group IDs to associate.
 * `subnet_id` - The VPC Subnet ID to associate.
@@ -225,11 +235,11 @@ The `placement` block supports the following:
 
 ### Tags
 
-The tags to apply to the resources during launch. You can tag instances and volumes.
+The tags to apply to the resources during launch. You can tag instances and volumes. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag.
+* `resource_type` - The type of resource to tag. Valid values are `instance` and `volume`.
 * `tags` - A mapping of tags to assign to the resource.
 
 
@@ -237,6 +247,7 @@ Each `tag_specifications` block supports the following:
 
 The following attributes are exported along with all argument references:
 
+* `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
 * `default_version` - The default version of the launch template.
 * `latest_version` - The latest version of the launch template.

@@ -73,13 +73,14 @@ func (self *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]interface{}{}
 
-	// As a special case, IAM considers the string value "*" to be
-	// equivalent to "AWS": "*", and normalizes policies as such.
-	// We'll follow their lead and do the same normalization here.
-	// IAM also considers {"*": "*"} to be equivalent to this.
+	// Although IAM documentation says, that "*" and {"AWS": "*"} are equivalent
+	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html),
+	// in practice they are not for IAM roles. IAM will return an error if trust
+	// policy have "*" or {"*": "*"} as principal, but will accept {"AWS": "*"}.
+	// Only {"*": "*"} should be normalized to "*".
 	if len(ps) == 1 {
 		p := ps[0]
-		if p.Type == "AWS" || p.Type == "*" {
+		if p.Type == "*" {
 			if sv, ok := p.Identifiers.(string); ok && sv == "*" {
 				return []byte(`"*"`), nil
 			}

@@ -14,7 +14,7 @@ Provides an OpsWorks instance resource.
 
 ```hcl
 resource "aws_opsworks_instance" "my-instance" {
-  stack_id = "${aws_opsworks_stack.my-stack.id}"
+  stack_id = "${aws_opsworks_stack.main.id}"
 
   layer_ids = [
     "${aws_opsworks_custom_layer.my-layer.id}",
@@ -115,7 +115,7 @@ using the [`taint` command](/docs/commands/taint.html).
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the OpsWorks instance.
 * `agent_version` - The AWS OpsWorks agent version.

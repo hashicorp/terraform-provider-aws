@@ -56,9 +56,10 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ValidateFunc:  validateSQSQueueName,
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"delay_seconds": {
 				Type:     schema.TypeInt,
@@ -134,15 +135,20 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
 	var name string
+
+	fq := d.Get("fifo_queue").(bool)
+
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
 		name = resource.PrefixedUniqueId(v.(string))
+		if fq {
+			name += ".fifo"
+		}
 	} else {
 		name = resource.UniqueId()
 	}
 
-	fq := d.Get("fifo_queue").(bool)
 	cbd := d.Get("content_based_deduplication").(bool)
 
 	if fq {
@@ -367,7 +373,7 @@ func setTagsSQS(conn *sqs.SQS, d *schema.ResourceData) error {
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
 			keys := make([]*string, 0, len(remove))
-			for k, _ := range remove {
+			for k := range remove {
 				keys = append(keys, aws.String(k))
 			}
 

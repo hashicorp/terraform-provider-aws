@@ -23,20 +23,20 @@ func resourceAwsEcrRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"registry_id": &schema.Schema{
+			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_url": &schema.Schema{
+			"repository_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,6 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	})
 	if err != nil {
 		if ecrerr, ok := err.(awserr.Error); ok && ecrerr.Code() == "RepositoryNotFoundException" {
-			d.SetId("")
 			return nil
 		}
 		return err
@@ -145,7 +144,6 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.SetId("")
 	log.Printf("[DEBUG] repository %q deleted.", d.Get("name").(string))
 
 	return nil

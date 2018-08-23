@@ -354,8 +354,6 @@ func resourceAwsSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	d.SetId("")
-
 	return nil
 }
 
@@ -585,7 +583,7 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 		perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, len(groups))
 		// build string list of group name/ids
 		var gl []string
-		for k, _ := range groups {
+		for k := range groups {
 			gl = append(gl, k)
 		}
 

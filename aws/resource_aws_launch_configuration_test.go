@@ -3,11 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -34,6 +32,10 @@ func testSweepLaunchConfigurations(region string) error {
 
 	resp, err := autoscalingconn.DescribeLaunchConfigurations(&autoscaling.DescribeLaunchConfigurationsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping AutoScaling Launch Configuration sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving launch configuration: %s", err)
 	}
 
@@ -534,7 +536,7 @@ resource "aws_launch_configuration" "bar" {
     virtual_name = "ephemeral0"
   }
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+`, acctest.RandInt())
 }
 
 func testAccAWSLaunchConfigurationWithSpotPriceConfig() string {
@@ -545,7 +547,7 @@ resource "aws_launch_configuration" "bar" {
   instance_type = "t2.micro"
   spot_price = "0.01"
 }
-`, rand.New(rand.NewSource(time.Now().UnixNano())).Int())
+`, acctest.RandInt())
 }
 
 func testAccAWSLaunchConfigurationNoNameConfig() string {

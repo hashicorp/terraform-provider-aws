@@ -35,7 +35,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db subnet group name.
 * `arn` - The ARN of the db subnet group.

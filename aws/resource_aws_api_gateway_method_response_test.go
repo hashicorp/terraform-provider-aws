@@ -19,7 +19,7 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodResponseDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayMethodResponseConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodResponseExists("aws_api_gateway_method_response.error", &conf),
@@ -31,7 +31,7 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayMethodResponseConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodResponseExists("aws_api_gateway_method_response.error", &conf),
@@ -41,6 +41,12 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_api_gateway_method_response.error", "response_models.application/json", "Empty"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_method_response.error",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodResponseImportStateIdFunc("aws_api_gateway_method_response.error"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -150,6 +156,17 @@ func testAccCheckAWSAPIGatewayMethodResponseDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAPIGatewayMethodResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"], rs.Primary.Attributes["status_code"]), nil
+	}
 }
 
 const testAccAWSAPIGatewayMethodResponseConfig = `

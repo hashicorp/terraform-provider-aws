@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -23,6 +24,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"ami": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -234,6 +239,10 @@ func dataSourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+			"disable_api_termination": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -312,6 +321,16 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.Set("password_data", passwordData)
 	}
+
+	// ARN
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ec2",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("instance/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 
 	return nil
 }
@@ -403,7 +422,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	{
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
-		if err != nil {
+		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
 			return err
 		}
 		if err := d.Set("credit_specification", creditSpecifications); err != nil {

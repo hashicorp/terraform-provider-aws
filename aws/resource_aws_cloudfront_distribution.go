@@ -702,10 +702,25 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 		},
 	}
 
-	resp, err := conn.CreateDistributionWithTags(params)
+	var resp *cloudfront.CreateDistributionWithTagsOutput
+	// Handle eventual consistency issues
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.CreateDistributionWithTags(params)
+		if err != nil {
+			// ACM and IAM certificate eventual consistency
+			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudFront Distribution: %s", err)
 	}
+
 	d.SetId(*resp.Distribution.Id)
 	return resourceAwsCloudFrontDistributionRead(d, meta)
 }
@@ -733,7 +748,6 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 	// Update other attributes outside of DistributionConfig
-	d.SetId(*resp.Distribution.Id)
 	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
 	if err != nil {
 		return err
@@ -769,9 +783,22 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 		DistributionConfig: expandDistributionConfig(d),
 		IfMatch:            aws.String(d.Get("etag").(string)),
 	}
-	_, err := conn.UpdateDistribution(params)
+
+	// Handle eventual consistency issues
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.UpdateDistribution(params)
+		if err != nil {
+			// ACM and IAM certificate eventual consistency
+			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
 	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {
@@ -794,7 +821,6 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	// skip delete if retain_on_delete is enabled
 	if d.Get("retain_on_delete").(bool) {
 		log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
-		d.SetId("")
 		return nil
 	}
 
@@ -825,8 +851,6 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("CloudFront Distribution %s cannot be deleted: %s", d.Id(), err)
 	}
 
-	// Done
-	d.SetId("")
 	return nil
 }
 
