@@ -594,7 +594,7 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.1580844383.encryption_disabled", "true"),
 				),
 			},
 		},

@@ -812,9 +812,7 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	m := v.(map[string]interface{})
 
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-	if v, ok := m["encryption_disabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
-	}
+	buf.WriteString(fmt.Sprintf("%t-", m["encryption_disabled"].(bool)))
 
 	return hashcode.String(buf.String())
 }
