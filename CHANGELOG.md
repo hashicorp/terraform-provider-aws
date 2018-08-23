@@ -1,4 +1,9 @@
 ## 1.34.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_dax_cluster: Properly recreate cluster when updating `server_side_encryption` [GH-5664]
+
 ## 1.33.0 (August 22, 2018)
 
 FEATURES:
