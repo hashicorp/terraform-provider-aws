@@ -60,7 +60,6 @@ resource "aws_iam_role_policy_attachment" "extra-policy-attach" {
     policy_arn = "${aws_iam_policy.extra-policy.arn}"
 }
 
-
 resource "aws_security_group" "demo-cluster" {
   name        = "terraform-eks-demo-cluster"
   description = "Cluster communication with worker nodes"
