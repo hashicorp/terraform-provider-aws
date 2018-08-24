@@ -40,6 +40,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.location", ""),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.name", ""),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.namespace_type", ""),
@@ -594,7 +595,7 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifacts.1580844383.encryption_disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.537882814.encryption_disabled", "true"),
 				),
 			},
 		},
