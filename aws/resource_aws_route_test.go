@@ -392,7 +392,7 @@ func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		r, err := findResourceRoute(
+		r, err := resourceAwsRouteFindRoute(
 			conn,
 			rs.Primary.Attributes["route_table_id"],
 			rs.Primary.Attributes["destination_cidr_block"],
@@ -420,7 +420,7 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		route, err := findResourceRoute(
+		route, err := resourceAwsRouteFindRoute(
 			conn,
 			rs.Primary.Attributes["route_table_id"],
 			rs.Primary.Attributes["destination_cidr_block"],
