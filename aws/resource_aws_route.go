@@ -28,6 +28,24 @@ func resourceAwsRoute() *schema.Resource {
 		Update: resourceAwsRouteUpdate,
 		Delete: resourceAwsRouteDelete,
 		Exists: resourceAwsRouteExists,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "_")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", d.Id())
+				}
+				routeTableID := idParts[0]
+				destination := idParts[1]
+				d.Set("route_table_id", routeTableID)
+				if strings.Contains(destination, ":") {
+					d.Set("destination_ipv6_cidr_block", destination)
+				} else {
+					d.Set("destination_cidr_block", destination)
+				}
+				d.SetId(fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination)))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
@@ -472,7 +490,7 @@ func resourceAwsRouteExists(d *schema.ResourceData, meta interface{}) (bool, err
 	return false, nil
 }
 
-// Create an ID for a route
+// Helper: Create an ID for a route
 func routeIDHash(d *schema.ResourceData, r *ec2.Route) string {
 
 	if r.DestinationIpv6CidrBlock != nil && *r.DestinationIpv6CidrBlock != "" {
