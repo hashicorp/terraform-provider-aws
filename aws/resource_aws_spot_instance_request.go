@@ -118,8 +118,8 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	spotOpts := &ec2.RequestSpotInstancesInput{
-		SpotPrice: aws.String(d.Get("spot_price").(string)),
-		Type:      aws.String(d.Get("spot_type").(string)),
+		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
+		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
 
 		// Though the AWS API supports creating spot instance requests for multiple
