@@ -294,8 +294,9 @@ resource "aws_cloudfront_distribution" "example" {
     # ... other configuration ...
 
     lambda_function_association {
-      event_type = "viewer-request"
-      lambda_arn = "${aws_lambda_function.example.qualified_arn}"
+      event_type   = "viewer-request"
+      lambda_arn   = "${aws_lambda_function.example.qualified_arn}"
+      include_body = false
     }
   }
 }
@@ -305,6 +306,7 @@ resource "aws_cloudfront_distribution" "example" {
   Valid values: `viewer-request`, `origin-request`, `viewer-response`,
   `origin-response`
 * `lambda_arn` (Required) - ARN of the Lambda function.
+* `include_body` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
 
 ##### Cookies Arguments
 
