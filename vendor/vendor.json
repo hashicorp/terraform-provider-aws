@@ -1085,13 +1085,6 @@
 			"revisionTime": "2016-10-29T20:57:26Z"
 		},
 		{
-			"checksumSHA1": "BCv50o5pDkoSG3vYKOSai1Z8p3w=",
-			"path": "github.com/fsouza/go-dockerclient",
-			"revision": "1d4f4ae73768d3ca16a6fb964694f58dc5eba601",
-			"revisionTime": "2016-04-27T17:25:47Z",
-			"tree": true
-		},
-		{
 			"checksumSHA1": "1K+xrZ1PBez190iGt5OnMtGdih4=",
 			"comment": "v1.8.6",
 			"path": "github.com/go-ini/ini",
