@@ -1055,10 +1055,12 @@
 			"versionExact": "v1.15.21"
 		},
 		{
-			"checksumSHA1": "usT4LCSQItkFvFOQT7cBlkCuGaE=",
+			"checksumSHA1": "yBBHqv7DvZNsZdF00SO8PbEQAKU=",
 			"path": "github.com/beevik/etree",
-			"revision": "af219c0c7ea1b67ec263c0b1b1b96d284a9181ce",
-			"revisionTime": "2017-10-15T22:09:51Z"
+			"revision": "9d7e8feddccb4ed1b8afb54e368bd323d2ff652c",
+			"revisionTime": "2018-05-06T21:45:57Z",
+			"version": "v1.0.1",
+			"versionExact": "v1.0.1"
 		},
 		{
 			"checksumSHA1": "nqw2Qn5xUklssHTubS5HDvEL9L4=",
@@ -1076,20 +1078,15 @@
 			"checksumSHA1": "OT4XN9z5k69e2RsMSpwW74B+yk4=",
 			"path": "github.com/blang/semver",
 			"revision": "2ee87856327ba09384cabd113bc6b5d174e9ec0f",
-			"revisionTime": "2017-07-27T06:48:18Z"
+			"revisionTime": "2017-07-27T06:48:18Z",
+			"version": "v3.5.1",
+			"versionExact": "v3.5.1"
 		},
 		{
 			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
 			"revisionTime": "2016-10-29T20:57:26Z"
-		},
-		{
-			"checksumSHA1": "BCv50o5pDkoSG3vYKOSai1Z8p3w=",
-			"path": "github.com/fsouza/go-dockerclient",
-			"revision": "1d4f4ae73768d3ca16a6fb964694f58dc5eba601",
-			"revisionTime": "2016-04-27T17:25:47Z",
-			"tree": true
 		},
 		{
 			"checksumSHA1": "VvZKmbuBN1QAG699KduTdmSPwA4=",
@@ -1128,6 +1125,12 @@
 			"path": "github.com/golang/protobuf/ptypes/timestamp",
 			"revision": "1e59b77b52bf8e4b449a57e6f79f21226d571845",
 			"revisionTime": "2017-11-13T18:07:20Z"
+		},
+		{
+			"checksumSHA1": "h1d2lPZf6j2dW/mIqVnd1RdykDo=",
+			"path": "github.com/golang/snappy",
+			"revision": "2e65f85255dbc3072edf28d6b5b8efc472979f5a",
+			"revisionTime": "2018-05-18T05:39:59Z"
 		},
 		{
 			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
@@ -1500,22 +1503,28 @@
 			"revisionTime": "2018-08-10T18:32:07Z"
 		},
 		{
-			"checksumSHA1": "ft77GtqeZEeCXioGpF/s6DlGm/U=",
+			"checksumSHA1": "bSdPFOHaTwEvM4PIvn0PZfn75jM=",
 			"path": "github.com/hashicorp/vault/helper/compressutil",
-			"revision": "9a60bf2a50e4dd1ba4b929a3ccf8072435cbdd0a",
-			"revisionTime": "2016-10-29T21:01:49Z"
+			"revision": "e21712a687889de1125e0a12a980420b1a4f72d3",
+			"revisionTime": "2018-07-25T14:15:52Z",
+			"version": "v0.10.4",
+			"versionExact": "v0.10.4"
 		},
 		{
-			"checksumSHA1": "yUiSTPf0QUuL2r/81sjuytqBoeQ=",
+			"checksumSHA1": "POgkM3GrjRFw6H3sw95YNEs552A=",
 			"path": "github.com/hashicorp/vault/helper/jsonutil",
-			"revision": "9a60bf2a50e4dd1ba4b929a3ccf8072435cbdd0a",
-			"revisionTime": "2016-10-29T21:01:49Z"
+			"revision": "e21712a687889de1125e0a12a980420b1a4f72d3",
+			"revisionTime": "2018-07-25T14:15:52Z",
+			"version": "v0.10.4",
+			"versionExact": "v0.10.4"
 		},
 		{
-			"checksumSHA1": "YmXAnTwbzhLLBZM+1tQrJiG3qpc=",
+			"checksumSHA1": "EPOFuDrCcLPwHZNgaCve5N7i2wU=",
 			"path": "github.com/hashicorp/vault/helper/pgpkeys",
-			"revision": "9a60bf2a50e4dd1ba4b929a3ccf8072435cbdd0a",
-			"revisionTime": "2016-10-29T21:01:49Z"
+			"revision": "e21712a687889de1125e0a12a980420b1a4f72d3",
+			"revisionTime": "2018-07-25T14:15:52Z",
+			"version": "v0.10.4",
+			"versionExact": "v0.10.4"
 		},
 		{
 			"checksumSHA1": "ZhK6IO2XN81Y+3RAjTcVm1Ic7oU=",
@@ -1666,18 +1675,6 @@
 			"path": "github.com/posener/complete/match",
 			"revision": "f4461a52b6329c11190f11fe3384ec8aa964e21c",
 			"revisionTime": "2017-07-30T19:30:24Z"
-		},
-		{
-			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
-			"path": "github.com/satori/go.uuid",
-			"revision": "b061729afc07e77a8aa4fad0a2fd840958f1942a",
-			"revisionTime": "2016-09-27T10:08:44Z"
-		},
-		{
-			"checksumSHA1": "iqUXcP3VA+G1/gVLRpQpBUt/BuA=",
-			"path": "github.com/satori/uuid",
-			"revision": "b061729afc07e77a8aa4fad0a2fd840958f1942a",
-			"revisionTime": "2016-09-27T10:08:44Z"
 		},
 		{
 			"checksumSHA1": "EUR26b2t3XDPxiEMwDBtn8Ajp8A=",
@@ -2062,10 +2059,12 @@
 			"revisionTime": "2017-10-25T22:59:19Z"
 		},
 		{
-			"checksumSHA1": "fALlQNY1fM99NesfLJ50KguWsio=",
+			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
 			"path": "gopkg.in/yaml.v2",
-			"revision": "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b",
-			"revisionTime": "2017-04-07T17:21:22Z"
+			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
+			"revisionTime": "2018-03-28T19:50:20Z",
+			"version": "v2.2.1",
+			"versionExact": "v2.2.1"
 		}
 	],
 	"rootPath": "github.com/terraform-providers/terraform-provider-aws"
