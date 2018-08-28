@@ -1055,10 +1055,12 @@
 			"versionExact": "v1.15.21"
 		},
 		{
-			"checksumSHA1": "usT4LCSQItkFvFOQT7cBlkCuGaE=",
+			"checksumSHA1": "yBBHqv7DvZNsZdF00SO8PbEQAKU=",
 			"path": "github.com/beevik/etree",
-			"revision": "af219c0c7ea1b67ec263c0b1b1b96d284a9181ce",
-			"revisionTime": "2017-10-15T22:09:51Z"
+			"revision": "9d7e8feddccb4ed1b8afb54e368bd323d2ff652c",
+			"revisionTime": "2018-05-06T21:45:57Z",
+			"version": "v1.0.1",
+			"versionExact": "v1.0.1"
 		},
 		{
 			"checksumSHA1": "nqw2Qn5xUklssHTubS5HDvEL9L4=",
