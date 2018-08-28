@@ -40,6 +40,7 @@ Upgrade topics:
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
+- [Resource: aws_route_table](#resource-aws_route_table)
 - [Resource: aws_wafregional_byte_match_set](#resource-aws_wafregional_byte_match_set)
 
 <!-- /TOC -->
@@ -590,6 +591,14 @@ resource "aws_redshift_cluster" "example" {
   }
 }
 ```
+
+## Resource: aws_route_table
+
+### Import Change
+
+Previously, importing this resource resulted in an `aws_route` resource for each route, in
+addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
+resource, with in-line routes, to the state.
 
 ## Resource: aws_wafregional_byte_match_set
 
