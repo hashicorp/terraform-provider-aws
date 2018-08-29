@@ -200,6 +200,9 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 		if associatedVPC == nil {
 			return fmt.Errorf("[DEBUG] VPC: %v is not associated with Zone: %v", d.Get("vpc_id"), d.Id())
 		}
+
+		// update vpc region in tf state to match
+		d.Set("vpc_region", *associatedVPC.VPCRegion)
 	}
 
 	if zone.DelegationSet != nil && zone.DelegationSet.Id != nil {

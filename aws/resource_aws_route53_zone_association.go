@@ -104,6 +104,9 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 
 	for _, vpc := range zone.VPCs {
 		if vpc_id == *vpc.VPCId {
+			// update vpc region in tf state to match
+			d.Set("vpc_region", *vpc.VPCRegion)
+
 			// association is there, return
 			return nil
 		}
