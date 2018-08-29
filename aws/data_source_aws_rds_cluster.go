@@ -182,6 +182,7 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 	for _, c := range resp.DBClusters {
 		if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
 			dbc = c
+			break
 		}
 	}
 
