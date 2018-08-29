@@ -24,6 +24,7 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateCloudFrontPublicKeyName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -31,6 +32,7 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateCloudFrontPublicKeyNamePrefix,
 			},
 			"encoded_key": {
 				Type:     schema.TypeString,
