@@ -10,6 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_rds_cluster: Prevent error setting `engine_mode` and `scaling_configuration` [GH-5660]
 * resource/aws_dax_cluster: Properly recreate cluster when updating `server_side_encryption` [GH-5664]
 * resource/aws_ssm_document: Properly handle deletion of privately shared documents [GH-5668]
 
