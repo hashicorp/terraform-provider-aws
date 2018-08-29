@@ -136,7 +136,7 @@ func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interf
 		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags: dmsTagsFromMap(d.Get("tags").(map[string]interface{})),
+		Tags:                          dmsTagsFromMap(d.Get("tags").(map[string]interface{})),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional

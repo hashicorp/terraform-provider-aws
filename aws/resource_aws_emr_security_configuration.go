@@ -65,7 +65,7 @@ func resourceAwsEmrSecurityConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	resp, err := conn.CreateSecurityConfiguration(&emr.CreateSecurityConfigurationInput{
-		Name: aws.String(emrSCName),
+		Name:                  aws.String(emrSCName),
 		SecurityConfiguration: aws.String(d.Get("configuration").(string)),
 	})
 
