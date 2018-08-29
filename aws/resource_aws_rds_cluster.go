@@ -852,44 +852,59 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
+	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if "DBClusterNotFoundFault" == awsErr.Code() {
-				d.SetId("")
-				log.Printf("[DEBUG] RDS Cluster (%s) not found", d.Id())
-				return nil
-			}
-		}
-		log.Printf("[DEBUG] Error describing RDS Cluster (%s)", d.Id())
-		return err
 	}
 
-	var dbc *rds.DBCluster
-	for _, c := range resp.DBClusters {
-		if *c.DBClusterIdentifier == d.Id() {
-			dbc = c
-		}
-	}
+	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
+	resp, err := conn.DescribeDBClusters(input)
 
-	if dbc == nil {
-		log.Printf("[WARN] RDS Cluster (%s) not found", d.Id())
+	if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	return flattenAwsRdsClusterResource(d, meta, dbc)
-}
+	if err != nil {
+		return fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err)
+	}
 
-func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc *rds.DBCluster) error {
-	conn := meta.(*AWSClient).rdsconn
+	if resp == nil {
+		return fmt.Errorf("Error retrieving RDS cluster: empty response for: %s", input)
+	}
+
+	var dbc *rds.DBCluster
+	for _, c := range resp.DBClusters {
+		if aws.StringValue(c.DBClusterIdentifier) == d.Id() {
+			dbc = c
+			break
+		}
+	}
+
+	if dbc == nil {
+		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving AvailabilityZones to state for RDS Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting availability_zones: %s", err)
 	}
+
+	d.Set("arn", dbc.DBClusterArn)
+	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
+	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+
+	var cm []string
+	for _, m := range dbc.DBClusterMembers {
+		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
+	}
+	if err := d.Set("cluster_members", cm); err != nil {
+		return fmt.Errorf("error setting cluster_members: %s", err)
+	}
+
+	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
@@ -899,19 +914,28 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 		d.Set("database_name", dbc.DatabaseName)
 	}
 
-	d.Set("arn", dbc.DBClusterArn)
-	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
-	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
-	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+
+	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+	}
+
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+
+	var roles []string
+	for _, r := range dbc.AssociatedRoles {
+		roles = append(roles, aws.StringValue(r.RoleArn))
+	}
+	if err := d.Set("iam_roles", roles); err != nil {
+		return fmt.Errorf("error setting iam_roles: %s", err)
+	}
+
 	d.Set("kms_key_id", dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("port", dbc.Port)
@@ -919,43 +943,24 @@ func flattenAwsRdsClusterResource(d *schema.ResourceData, meta interface{}, dbc 
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
+
 	if err := d.Set("scaling_configuration", flattenRdsScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
 		return fmt.Errorf("error setting scaling_configuration: %s", err)
 	}
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
 
-	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(dbc.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
-	}
+	d.Set("storage_encrypted", dbc.StorageEncrypted)
 
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
-		vpcg = append(vpcg, *g.VpcSecurityGroupId)
+		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
 	}
 	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving VPC Security Group IDs to state for RDS Cluster (%s): %s", d.Id(), err)
-	}
-
-	var cm []string
-	for _, m := range dbc.DBClusterMembers {
-		cm = append(cm, *m.DBInstanceIdentifier)
-	}
-	if err := d.Set("cluster_members", cm); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving RDS Cluster Members to state for RDS Cluster (%s): %s", d.Id(), err)
-	}
-
-	var roles []string
-	for _, r := range dbc.AssociatedRoles {
-		roles = append(roles, *r.RoleArn)
-	}
-
-	if err := d.Set("iam_roles", roles); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving IAM Roles to state for RDS Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
 	// Fetch and save tags
 	if err := saveTagsRDS(conn, d, aws.StringValue(dbc.DBClusterArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", *dbc.DBClusterIdentifier, err)
+		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
 	}
 
 	return nil
