@@ -81,6 +81,36 @@ func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface
 	return resourceAwsCloudFrontPublicKeyRead(d, meta)
 }
 
+func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudfrontconn
+	request := &cloudfront.GetPublicKeyInput{
+		Id: aws.String(d.Id()),
+	}
+
+	output, err := conn.GetPublicKey(request)
+	if err != nil {
+		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	var publicKeyConfig *cloudfront.PublicKeyConfig
+	publicKeyConfig = output.PublicKey.PublicKeyConfig
+
+	d.Set("encoded_key", publicKeyConfig.EncodedKey)
+	d.Set("name", publicKeyConfig.Name)
+	if publicKeyConfig.Comment != nil {
+		d.Set("comment", publicKeyConfig.Comment)
+	}
+
+	d.Set("etag", output.ETag)
+
+	return nil
+}
+
 func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
 	publicKeyConfig := &cloudfront.PublicKeyConfig{
 		CallerReference: aws.String(resource.UniqueId()),
