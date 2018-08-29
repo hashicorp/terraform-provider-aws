@@ -108,6 +108,47 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_permission_change(t *testing.T) {
+	name := acctest.RandString(10)
+	idsInitial := "123456789012,123456789013"
+	idsRemove := "123456789012"
+	idsAdd := "123456789012,123456789014"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsInitial),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsInitial),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsRemove),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsRemove),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsAdd),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsAdd),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_params(t *testing.T) {
 	name := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
