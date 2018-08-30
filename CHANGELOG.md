@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * provider: `NO_PROXY` environment variable can accept CIDR notation and port
 * data-source/aws_ip_ranges: Add `ipv6_cidr_blocks` attribute [GH-5675]
+* resource/aws_codebuild_project: Add `artifacts` `encryption_disabled` argument [GH-5678]
 * resource/aws_route: Support route import [GH-5687]
 
 BUG FIXES:
