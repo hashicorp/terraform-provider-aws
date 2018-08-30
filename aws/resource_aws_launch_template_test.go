@@ -64,6 +64,47 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeleteOnTermination(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeleteOnTermination(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
@@ -293,9 +334,11 @@ data "aws_ami" "test" {
   }
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_launch_template" "test" {
   image_id = "${data.aws_ami.test.id}"
-  name     = "%s"
+  name     = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -305,7 +348,72 @@ resource "aws_launch_template" "test" {
     }
   }
 }
-`, rName)
+
+# Creating an AutoScaling Group verifies the launch template
+# ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
+resource "aws_autoscaling_group" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size         = 0
+  min_size         = 0
+  name             = %q
+
+  launch_template {
+    id      = "${aws_launch_template.test.id}"
+    version = "${aws_launch_template.test.default_version}"
+  }
+}
+`, rName, rName)
+}
+
+func testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeleteOnTermination(rName string, deleteOnTermination bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_launch_template" "test" {
+  image_id = "${data.aws_ami.test.id}"
+  name     = %q
+
+  block_device_mappings {
+    device_name = "/dev/sda1"
+
+    ebs {
+      delete_on_termination = %t
+      volume_size           = 15
+    }
+  }
+}
+
+# Creating an AutoScaling Group verifies the launch template
+# ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
+resource "aws_autoscaling_group" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  max_size         = 0
+  min_size         = 0
+  name             = %q
+
+  launch_template {
+    id      = "${aws_launch_template.test.id}"
+    version = "${aws_launch_template.test.default_version}"
+  }
+}
+`, rName, deleteOnTermination, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_data(rInt int) string {

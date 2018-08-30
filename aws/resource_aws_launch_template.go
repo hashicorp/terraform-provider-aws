@@ -89,12 +89,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"encrypted": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -638,14 +650,18 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			"virtual_name": aws.StringValue(v.VirtualName),
 		}
 		if v.NoDevice != nil {
-			mapping["no_device"] = *v.NoDevice
+			mapping["no_device"] = aws.StringValue(v.NoDevice)
 		}
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": aws.BoolValue(v.Ebs.DeleteOnTermination),
-				"encrypted":             aws.BoolValue(v.Ebs.Encrypted),
-				"volume_size":           int(aws.Int64Value(v.Ebs.VolumeSize)),
-				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
+				"volume_size": int(aws.Int64Value(v.Ebs.VolumeSize)),
+				"volume_type": aws.StringValue(v.Ebs.VolumeType),
+			}
+			if v.Ebs.DeleteOnTermination != nil {
+				ebs["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination))
+			}
+			if v.Ebs.Encrypted != nil {
+				ebs["encrypted"] = strconv.FormatBool(aws.BoolValue(v.Ebs.Encrypted))
 			}
 			if v.Ebs.Iops != nil {
 				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
@@ -857,7 +873,11 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
-			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{})))
+			blockDeviceMapping, err := readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
 		}
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
@@ -950,7 +970,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	return opts, nil
 }
 
-func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
+func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) (*ec2.LaunchTemplateBlockDeviceMappingRequest, error) {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
 	if v := bdm["device_name"].(string); v != "" {
@@ -967,24 +987,36 @@ func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTem
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
 		ebs := v.([]interface{})
-		if len(ebs) > 0 {
-			ebsData := ebs[0]
-			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}))
+		if len(ebs) > 0 && ebs[0] != nil {
+			ebsData := ebs[0].(map[string]interface{})
+			launchTemplateEbsBlockDeviceRequest, err := readEbsBlockDeviceFromConfig(ebsData)
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMapping.Ebs = launchTemplateEbsBlockDeviceRequest
 		}
 	}
 
-	return blockDeviceMapping
+	return blockDeviceMapping, nil
 }
 
-func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplateEbsBlockDeviceRequest {
+func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTemplateEbsBlockDeviceRequest, error) {
 	ebsDevice := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v := ebs["delete_on_termination"]; v != nil {
-		ebsDevice.DeleteOnTermination = aws.Bool(v.(bool))
+	if v, ok := ebs["delete_on_termination"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.DeleteOnTermination = aws.Bool(vBool)
 	}
 
-	if v := ebs["encrypted"]; v != nil {
-		ebsDevice.Encrypted = aws.Bool(v.(bool))
+	if v, ok := ebs["encrypted"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting encrypted %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.Encrypted = aws.Bool(vBool)
 	}
 
 	if v := ebs["iops"].(int); v > 0 {
@@ -1007,7 +1039,7 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.VolumeType = aws.String(v)
 	}
 
-	return ebsDevice
+	return ebsDevice, nil
 }
 
 func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
