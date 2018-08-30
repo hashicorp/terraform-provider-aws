@@ -2754,6 +2754,7 @@ func flattenIoTRuleFirehoseActions(actions []*iot.Action) []map[string]interface
 		if v != nil {
 			result["role_arn"] = *v.RoleArn
 			result["delivery_stream_name"] = *v.DeliveryStreamName
+			result["separator"] = *v.Separator
 
 			results = append(results, result)
 		}
