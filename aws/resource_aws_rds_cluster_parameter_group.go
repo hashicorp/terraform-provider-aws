@@ -224,6 +224,26 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 			}
 			d.SetPartial("parameter")
 		}
+
+		// Reset parameters that have been removed
+		parameters, err = expandParameters(os.Difference(ns).List())
+		if err != nil {
+			return err
+		}
+		if len(parameters) > 0 {
+			parameterGroupName := d.Get("name").(string)
+			resetOpts := rds.ResetDBClusterParameterGroupInput{
+				DBClusterParameterGroupName: aws.String(parameterGroupName),
+				Parameters:                  parameters,
+			}
+
+			log.Printf("[DEBUG] Reset DB Cluster Parameter Group: %s", resetOpts)
+			_, err = rdsconn.ResetDBClusterParameterGroup(&resetOpts)
+			if err != nil {
+				return fmt.Errorf("Error resetting DB Cluster Parameter Group: %s", err)
+			}
+			d.SetPartial("parameter")
+		}
 	}
 
 	if d.HasChange("tags") {
