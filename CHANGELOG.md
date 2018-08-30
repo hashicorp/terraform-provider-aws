@@ -7,6 +7,7 @@ NOTES:
 ENHANCEMENTS:
 
 * provider: `NO_PROXY` environment variable can accept CIDR notation and port
+* resource/aws_route: Support route import [GH-5687]
 
 BUG FIXES:
 
