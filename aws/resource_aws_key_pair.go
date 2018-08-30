@@ -85,7 +85,8 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error import KeyPair: %s", err)
 	}
-
+	
+        d.Set("fingerprint", *resp.KeyFingerprint)
 	d.SetId(*resp.KeyName)
 	return nil
 }
