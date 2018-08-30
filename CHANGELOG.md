@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_rds_cluster: Prevent error setting `engine_mode` and `scaling_configuration` [GH-5660]
+* resource/aws_autoscaling_group: Retry creation for eventual consistency with launch template IAM instance profile [GH-5633]
 * resource/aws_dax_cluster: Properly recreate cluster when updating `server_side_encryption` [GH-5664]
 * resource/aws_lambda_event_source_mapping: Prevent perpetual difference when using function name with `function_name` (argument accepts both name and ARN) [GH-5454]
 * resource/aws_db_instance: Prevent double apply when using `replicate_source_db` parameters that require `ModifyDBInstance` during resource creation [GH-5672]
