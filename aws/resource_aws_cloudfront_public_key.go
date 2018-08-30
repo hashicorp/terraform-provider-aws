@@ -113,6 +113,7 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
+
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
 		PublicKeyConfig: expandPublicKeyConfig(d),
@@ -125,6 +126,27 @@ func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface
 	}
 
 	return resourceAwsCloudFrontPublicKeyRead(d, meta)
+}
+
+func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudfrontconn
+
+	request := &cloudfront.DeletePublicKeyInput{
+		Id:      aws.String(d.Id()),
+		IfMatch: aws.String(d.Get("etag").(string)),
+	}
+
+	_, err := conn.DeletePublicKey(request)
+	if err != nil {
+		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	return nil
 }
 
 func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
