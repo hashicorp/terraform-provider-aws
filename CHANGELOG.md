@@ -1,4 +1,4 @@
-## 1.34.0 (Unreleased)
+## 1.34.0 (August 30, 2018)
 
 NOTES:
 
@@ -7,23 +7,23 @@ NOTES:
 ENHANCEMENTS:
 
 * provider: `NO_PROXY` environment variable can accept CIDR notation and port
-* data-source/aws_ip_ranges: Add `ipv6_cidr_blocks` attribute [GH-5675]
-* resource/aws_codebuild_project: Add `artifacts` `encryption_disabled` argument [GH-5678]
-* resource/aws_route: Support route import [GH-5687]
+* data-source/aws_ip_ranges: Add `ipv6_cidr_blocks` attribute ([#5675](https://github.com/terraform-providers/terraform-provider-aws/issues/5675))
+* resource/aws_codebuild_project: Add `artifacts` `encryption_disabled` argument ([#5678](https://github.com/terraform-providers/terraform-provider-aws/issues/5678))
+* resource/aws_route: Support route import ([#5687](https://github.com/terraform-providers/terraform-provider-aws/issues/5687))
 
 BUG FIXES:
 
-* data-source/aws_rds_cluster: Prevent error setting `engine_mode` and `scaling_configuration` [GH-5660]
-* resource/aws_autoscaling_group: Retry creation for eventual consistency with launch template IAM instance profile [GH-5633]
-* resource/aws_dax_cluster: Properly recreate cluster when updating `server_side_encryption` [GH-5664]
-* resource/aws_db_instance: Prevent double apply when using `replicate_source_db` parameters that require `ModifyDBInstance` during resource creation [GH-5672]
-* resource/aws_db_instance: Prevent `pending-reboot` parameter group status on creation with `parameter_group_name` [GH-5672]
-* resource/aws_lambda_event_source_mapping: Prevent perpetual difference when using function name with `function_name` (argument accepts both name and ARN) [GH-5454]
-* resource/aws_launch_template: Prevent encrypted flag cannot be specified error with `block_device_mappings` `ebs` argument [GH-5632]
-* resource/aws_key_pair: Ensure `fingerprint` attribute is saved in Terraform state during creation [GH-5732]
-* resource/aws_ssm_association: Properly handle updates when multiple arguments are used [GH-5537]
-* resource/aws_ssm_document: Properly handle deletion of privately shared documents [GH-5668]
-* resource/aws_ssm_document: Properly update `permissions.account_ids` [GH-5685]
+* data-source/aws_rds_cluster: Prevent error setting `engine_mode` and `scaling_configuration` ([#5660](https://github.com/terraform-providers/terraform-provider-aws/issues/5660))
+* resource/aws_autoscaling_group: Retry creation for eventual consistency with launch template IAM instance profile ([#5633](https://github.com/terraform-providers/terraform-provider-aws/issues/5633))
+* resource/aws_dax_cluster: Properly recreate cluster when updating `server_side_encryption` ([#5664](https://github.com/terraform-providers/terraform-provider-aws/issues/5664))
+* resource/aws_db_instance: Prevent double apply when using `replicate_source_db` parameters that require `ModifyDBInstance` during resource creation ([#5672](https://github.com/terraform-providers/terraform-provider-aws/issues/5672))
+* resource/aws_db_instance: Prevent `pending-reboot` parameter group status on creation with `parameter_group_name` ([#5672](https://github.com/terraform-providers/terraform-provider-aws/issues/5672))
+* resource/aws_lambda_event_source_mapping: Prevent perpetual difference when using function name with `function_name` (argument accepts both name and ARN) ([#5454](https://github.com/terraform-providers/terraform-provider-aws/issues/5454))
+* resource/aws_launch_template: Prevent encrypted flag cannot be specified error with `block_device_mappings` `ebs` argument ([#5632](https://github.com/terraform-providers/terraform-provider-aws/issues/5632))
+* resource/aws_key_pair: Ensure `fingerprint` attribute is saved in Terraform state during creation ([#5732](https://github.com/terraform-providers/terraform-provider-aws/issues/5732))
+* resource/aws_ssm_association: Properly handle updates when multiple arguments are used ([#5537](https://github.com/terraform-providers/terraform-provider-aws/issues/5537))
+* resource/aws_ssm_document: Properly handle deletion of privately shared documents ([#5668](https://github.com/terraform-providers/terraform-provider-aws/issues/5668))
+* resource/aws_ssm_document: Properly update `permissions.account_ids` ([#5685](https://github.com/terraform-providers/terraform-provider-aws/issues/5685))
 
 ## 1.33.0 (August 22, 2018)
 
