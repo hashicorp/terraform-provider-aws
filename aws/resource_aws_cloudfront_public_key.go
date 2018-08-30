@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -19,31 +20,35 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				//ForceNew:      true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateCloudFrontPublicKeyName,
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				//ForceNew:      true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateCloudFrontPublicKeyNamePrefix,
 			},
 			"encoded_key": {
 				Type:     schema.TypeString,
 				Required: true,
-				//ForceNew: true,
+				ForceNew: true,
 			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,8 +103,13 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("name", publicKeyConfig.Name)
+
 	if publicKeyConfig.Comment != nil {
 		d.Set("comment", publicKeyConfig.Comment)
+	}
+
+	if publicKeyConfig.CallerReference != nil {
+		d.Set("caller_reference", publicKeyConfig.CallerReference)
 	}
 
 	d.Set("etag", output.ETag)
@@ -147,13 +157,18 @@ func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface
 
 func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
 	publicKeyConfig := &cloudfront.PublicKeyConfig{
-		CallerReference: aws.String(resource.UniqueId()),
-		EncodedKey:      aws.String(d.Get("encoded_key").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		EncodedKey: aws.String(d.Get("encoded_key").(string)),
+		Name:       aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		publicKeyConfig.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("caller_reference"); ok {
+		publicKeyConfig.CallerReference = aws.String(v.(string))
+	} else {
+		publicKeyConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
 	}
 
 	return publicKeyConfig
