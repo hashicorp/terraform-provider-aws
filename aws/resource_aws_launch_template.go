@@ -93,26 +93,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										// since TypeBool only has true/false with false default.
 										// The conversion from bare true/false values in
 										// configurations to TypeString value is currently safe.
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"",
-											"false",
-											"true",
-										}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"encrypted": {
 										// Use TypeString to allow an "unspecified" value,
 										// since TypeBool only has true/false with false default.
 										// The conversion from bare true/false values in
 										// configurations to TypeString value is currently safe.
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"",
-											"false",
-											"true",
-										}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
