@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -30,6 +31,9 @@ func resourceAwsRouteTableImportState(
 	results := make([]*schema.ResourceData, 1,
 		2+len(table.Associations)+len(table.Routes))
 	results[0] = d
+	log.Print("[WARN] RouteTable imports will be handled differently in a future version.")
+	log.Printf("[WARN] This import will create %d resources (aws_route_table, aws_route, aws_route_table_association).", len(results))
+	log.Print("[WARN] In the future, only 1 aws_route_table resource will be created with inline routes.")
 
 	{
 		// Construct the routes
