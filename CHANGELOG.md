@@ -17,6 +17,7 @@ BUG FIXES:
 * resource/aws_launch_template: Prevent encrypted flag cannot be specified error with `block_device_mappings` `ebs` argument [GH-5632]
 * resource/aws_db_instance: Prevent double apply when using `replicate_source_db` parameters that require `ModifyDBInstance` during resource creation [GH-5672]
 * resource/aws_db_instance: Prevent `pending-reboot` parameter group status on creation with `parameter_group_name` [GH-5672]
+* resource/aws_key_pair: Ensure `fingerprint` attribute is saved in Terraform state during creation [GH-5732]
 * resource/aws_ssm_association: Properly handle updates when multiple arguments are used [GH-5537]
 * resource/aws_ssm_document: Properly handle deletion of privately shared documents [GH-5668]
 * resource/aws_ssm_document: Properly update `permissions.account_ids` [GH-5685]
