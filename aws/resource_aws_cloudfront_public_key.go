@@ -19,6 +19,23 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 		Delete: resourceAwsCloudFrontPublicKeyDelete,
 
 		Schema: map[string]*schema.Schema{
+			"caller_reference": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"comment": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"encoded_key": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -34,23 +51,6 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateCloudFrontPublicKeyNamePrefix,
-			},
-			"encoded_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
