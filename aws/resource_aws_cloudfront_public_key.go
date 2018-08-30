@@ -19,25 +19,25 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				//ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateCloudFrontPublicKeyName,
 			},
 			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				//ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateCloudFrontPublicKeyNamePrefix,
 			},
 			"encoded_key": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				//ForceNew: true,
 			},
 			"comment": {
 				Type:     schema.TypeString,
@@ -109,6 +109,22 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 	d.Set("etag", output.ETag)
 
 	return nil
+}
+
+func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudfrontconn
+	request := &cloudfront.UpdatePublicKeyInput{
+		Id:              aws.String(d.Id()),
+		PublicKeyConfig: expandPublicKeyConfig(d),
+		IfMatch:         aws.String(d.Get("etag").(string)),
+	}
+
+	_, err := conn.UpdatePublicKey(request)
+	if err != nil {
+		return fmt.Errorf("error updating CloudFront PublicKey (%s): %s", d.Id(), err)
+	}
+
+	return resourceAwsCloudFrontPublicKeyRead(d, meta)
 }
 
 func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
