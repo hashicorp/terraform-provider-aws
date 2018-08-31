@@ -750,6 +750,15 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // home page from the notebook instance. The console uses this API to get the
 // URL and show the page.
 //
+// You can restrict access to this API and to the URL that it returns to a list
+// of IP addresses that you specify. To restrict access, attach an IAM policy
+// that denies access to this API unless the call comes from an IP address in
+// the specified list to every AWS Identity and Access Management user, group,
+// or role used to access the notebook instance. Use the NotIpAddress condition
+// operator and the aws:SourceIP condition context key to specify the list of
+// IP addresses that you want to have access to the notebook instance. For more
+// information, see nbi-ip-filter.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4416,7 +4425,7 @@ type Channel struct {
 	// algorithm requires the RecordIO format, in which case, Amazon SageMaker wraps
 	// each individual S3 object in a RecordIO record. If the input data is already
 	// in RecordIO format, you don't need to set this attribute. For more information,
-	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/how_to/recordio.html?highlight=im2rec)
+	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/architecture/note_data_loading.html#data-format)
 	RecordWrapperType *string `type:"string" enum:"RecordWrapper"`
 }
 
@@ -12120,6 +12129,11 @@ type TransformResources struct {
 	//
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TransformInstanceType"`
+
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
+	// instance(s) that run the batch transform job.
+	VolumeKmsKeyId *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12160,6 +12174,12 @@ func (s *TransformResources) SetInstanceCount(v int64) *TransformResources {
 // SetInstanceType sets the InstanceType field's value.
 func (s *TransformResources) SetInstanceType(v string) *TransformResources {
 	s.InstanceType = &v
+	return s
+}
+
+// SetVolumeKmsKeyId sets the VolumeKmsKeyId field's value.
+func (s *TransformResources) SetVolumeKmsKeyId(v string) *TransformResources {
+	s.VolumeKmsKeyId = &v
 	return s
 }
 
@@ -12734,6 +12754,9 @@ const (
 
 	// EndpointStatusUpdating is a EndpointStatus enum value
 	EndpointStatusUpdating = "Updating"
+
+	// EndpointStatusSystemUpdating is a EndpointStatus enum value
+	EndpointStatusSystemUpdating = "SystemUpdating"
 
 	// EndpointStatusRollingBack is a EndpointStatus enum value
 	EndpointStatusRollingBack = "RollingBack"
