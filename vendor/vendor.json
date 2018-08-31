@@ -1182,9 +1182,12 @@
 			"revisionTime": "2018-03-26T21:11:50Z"
 		},
 		{
-			"checksumSHA1": "85XUnluYJL7F55ptcwdmN8eSOsk=",
+			"checksumSHA1": "Kjansj6ZDJrWKNS1BJpg+z7OBnI=",
 			"path": "github.com/hashicorp/go-uuid",
-			"revision": "36289988d83ca270bc07c234c36f364b0dd9c9a7"
+			"revision": "de160f5c59f693fed329e73e291bb751fe4ea4dc",
+			"revisionTime": "2018-08-30T03:27:00Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "r0pj5dMHCghpaQZ3f1BRGoKiSWw=",
