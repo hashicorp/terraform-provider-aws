@@ -1,5 +1,9 @@
 ## 1.35.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument [GH-5740]
+
 BUG FIXES:
 
 * resource/aws_ecr_repository: Use `RepositoryUri` instead of our building our own URI for the `repository_url` attribute (AWS China fix) [GH-5748]
