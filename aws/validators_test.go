@@ -81,6 +81,54 @@ func TestValidateRFC3339TimeString(t *testing.T) {
 	}
 }
 
+func TestValidateTypeStringNullableBoolean(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "",
+		},
+		{
+			val: "0",
+		},
+		{
+			val: "1",
+		},
+		{
+			val:         "invalid",
+			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := validateTypeStringNullableBoolean(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
+
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
@@ -2232,23 +2280,23 @@ func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testin
 	}{
 		{
 			AmbiguousRoleResolution: nil,
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 1,
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                1,
 		},
 		{
 			AmbiguousRoleResolution: "foo",
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 0, // 0 as it should be defined, the value isn't validated here
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                0, // 0 as it should be defined, the value isn't validated here
 		},
 		{
 			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 0,
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                0,
 		},
 		{
 			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 0,
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                0,
 		},
 	}
 
@@ -2352,9 +2400,9 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 
 func TestValidateCognitoRoles(t *testing.T) {
 	validValues := []map[string]interface{}{
-		map[string]interface{}{"authenticated": "hoge"},
-		map[string]interface{}{"unauthenticated": "hoge"},
-		map[string]interface{}{"authenticated": "hoge", "unauthenticated": "hoge"},
+		{"authenticated": "hoge"},
+		{"unauthenticated": "hoge"},
+		{"authenticated": "hoge", "unauthenticated": "hoge"},
 	}
 
 	for _, s := range validValues {
@@ -2365,8 +2413,8 @@ func TestValidateCognitoRoles(t *testing.T) {
 	}
 
 	invalidValues := []map[string]interface{}{
-		map[string]interface{}{},
-		map[string]interface{}{"invalid": "hoge"},
+		{},
+		{"invalid": "hoge"},
 	}
 
 	for _, s := range invalidValues {

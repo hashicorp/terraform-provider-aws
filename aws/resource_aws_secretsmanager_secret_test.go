@@ -43,8 +43,8 @@ func testSweepSecretsManagerSecrets(region string) error {
 			}
 			log.Printf("[INFO] Deleting Secrets Manager Secret: %s", name)
 			input := &secretsmanager.DeleteSecretInput{
-				RecoveryWindowInDays: aws.Int64(7),
-				SecretId:             aws.String(name),
+				ForceDeleteWithoutRecovery: aws.Bool(true),
+				SecretId:                   aws.String(name),
 			}
 
 			_, err := conn.DeleteSecret(input)
@@ -160,6 +160,41 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+			},
+		},
+	})
+}
+
+func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) {
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
+				),
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
+				),
+				Taint: []string{resourceName},
 			},
 			{
 				ResourceName:            resourceName,
@@ -492,6 +527,15 @@ resource "aws_secretsmanager_secret" "test" {
   name       = "%s"
 }
 `, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName string, recoveryWindowInDays int) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %q
+  recovery_window_in_days = %d
+}
+`, rName, recoveryWindowInDays)
 }
 
 func testAccAwsSecretsManagerSecretConfig_RotationLambdaARN(rName string) string {

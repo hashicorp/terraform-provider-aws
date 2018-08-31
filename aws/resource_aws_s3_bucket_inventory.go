@@ -95,7 +95,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"sse_kms": &schema.Schema{
+												"sse_kms": {
 													Type:          schema.TypeList,
 													Optional:      true,
 													MaxItems:      1,
@@ -110,7 +110,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 														},
 													},
 												},
-												"sse_s3": &schema.Schema{
+												"sse_s3": {
 													Type:          schema.TypeList,
 													Optional:      true,
 													MaxItems:      1,
@@ -221,8 +221,8 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	input := &s3.PutBucketInventoryConfigurationInput{
-		Bucket: aws.String(bucket),
-		Id:     aws.String(name),
+		Bucket:                 aws.String(bucket),
+		Id:                     aws.String(name),
 		InventoryConfiguration: inventoryConfiguration,
 	}
 

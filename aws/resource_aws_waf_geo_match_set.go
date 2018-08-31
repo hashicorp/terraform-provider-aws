@@ -18,12 +18,12 @@ func resourceAwsWafGeoMatchSet() *schema.Resource {
 		Delete: resourceAwsWafGeoMatchSetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"geo_match_constraint": &schema.Schema{
+			"geo_match_constraint": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{

@@ -23,7 +23,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafXssMatchSetConfig(xssMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists("aws_waf_xss_match_set.xss_match_set", &v),

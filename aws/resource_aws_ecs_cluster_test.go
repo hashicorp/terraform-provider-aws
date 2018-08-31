@@ -21,7 +21,7 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEcsCluster(clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists("aws_ecs_cluster.foo"),
@@ -44,10 +44,10 @@ func TestAccAWSEcsCluster_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEcsCluster(clusterName),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportStateId:     clusterName,
 				ImportState:       true,

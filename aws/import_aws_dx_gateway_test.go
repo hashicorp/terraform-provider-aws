@@ -17,11 +17,11 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -43,11 +43,11 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDxGatewayAssociationConfig_multiVgws(acctest.RandString(5), randIntRange(64512, 65534)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      "aws_dx_gateway.test",
 				ImportState:       true,
 				ImportStateCheck:  checkFn,

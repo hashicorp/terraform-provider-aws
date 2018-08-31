@@ -77,7 +77,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),

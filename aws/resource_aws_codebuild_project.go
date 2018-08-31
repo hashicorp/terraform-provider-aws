@@ -38,6 +38,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"encryption_disabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -392,8 +397,16 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	configs := d.Get("artifacts").(*schema.Set).List()
 	data := configs[0].(map[string]interface{})
 
+	artifactType := data["type"].(string)
+
 	projectArtifacts := codebuild.ProjectArtifacts{
-		Type: aws.String(data["type"].(string)),
+		Type: aws.String(artifactType),
+	}
+
+	// Only valid for S3 and CODEPIPELINE artifacts types
+	// InvalidInputException: Invalid artifacts: artifact type NO_ARTIFACTS should have null encryptionDisabled
+	if artifactType == codebuild.ArtifactsTypeS3 || artifactType == codebuild.ArtifactsTypeCodepipeline {
+		projectArtifacts.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
 	}
 
 	if data["location"].(string) != "" {
@@ -714,6 +727,9 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 
 	values["type"] = *artifacts.Type
 
+	if artifacts.EncryptionDisabled != nil {
+		values["encryption_disabled"] = *artifacts.EncryptionDisabled
+	}
 	if artifacts.Location != nil {
 		values["location"] = *artifacts.Location
 	}
@@ -805,9 +821,7 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	artifactType := m["type"].(string)
-
-	buf.WriteString(fmt.Sprintf("%s-", artifactType))
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 
 	return hashcode.String(buf.String())
 }

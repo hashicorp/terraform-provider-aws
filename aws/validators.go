@@ -32,6 +32,28 @@ func validateRFC3339TimeString(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
+// validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
+// Some arguments require three values: true, false, and "" (unspecified).
+// This ValidateFunc returns a custom message since the message with
+// validation.StringInSlice([]string{"", "false", "true"}, false) is confusing:
+// to be one of [ false true], got 1
+func validateTypeStringNullableBoolean(v interface{}, k string) (ws []string, es []error) {
+	value, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	for _, str := range []string{"", "0", "1"} {
+		if value == str {
+			return
+		}
+	}
+
+	es = append(es, fmt.Errorf("expected %s to be one of [\"\", false, true], got %s", k, value))
+	return
+}
+
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {

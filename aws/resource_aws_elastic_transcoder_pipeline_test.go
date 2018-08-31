@@ -78,7 +78,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 			},
 
 			// update and check that we have 1 less notification
-			resource.TestStep{
+			{
 				Config: awsElasticTranscoderNotifications_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists("aws_elastictranscoder_pipeline.bar", &pipeline),

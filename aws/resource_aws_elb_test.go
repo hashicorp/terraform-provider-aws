@@ -246,7 +246,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSELB_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists("aws_elb.test", &conf),
@@ -586,7 +586,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
-							&elb.Listener{
+							{
 								InstancePort:     aws.Int64(int64(22)),
 								InstanceProtocol: aws.String("tcp"),
 								LoadBalancerPort: aws.Int64(int64(22)),

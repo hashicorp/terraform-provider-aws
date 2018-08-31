@@ -240,7 +240,7 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
-			"AZ": []*string{
+			"AZ": {
 				aws.String("us-east-2"),
 			},
 		},
@@ -275,7 +275,7 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
-			"AZ": []*string{
+			"AZ": {
 				aws.String("us-east-1"),
 			},
 		},

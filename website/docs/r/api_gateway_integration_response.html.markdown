@@ -84,3 +84,11 @@ The following arguments are supported:
   For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`,
 * `response_parameters_in_json` - **Deprecated**, use `response_parameters` instead.
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
+
+## Import
+
+`aws_api_gateway_integration_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.
+
+```
+$ terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
+```

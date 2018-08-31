@@ -113,7 +113,7 @@ func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &matchSet),

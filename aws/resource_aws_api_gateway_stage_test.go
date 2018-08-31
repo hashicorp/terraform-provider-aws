@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
@@ -40,7 +40,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 				ImportStateIdFunc: testAccAWSAPIGatewayStageImportStateIdFunc("aws_api_gateway_stage.test"),
 				ImportStateVerify: true,
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayStageConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),
@@ -49,7 +49,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayStageExists("aws_api_gateway_stage.test", &conf),

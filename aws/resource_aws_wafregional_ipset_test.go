@@ -27,7 +27,7 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalIPSetConfig(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &v),
@@ -222,15 +222,15 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
 			ExpectedUpdates: [][]*waf.IPSetUpdate{
-				[]*waf.IPSetUpdate{
-					&waf.IPSetUpdate{
+				{
+					{
 						Action: aws.String(wafregional.ChangeActionDelete),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),
 							Value: aws.String("192.0.7.0/24"),
 						},
 					},
-					&waf.IPSetUpdate{
+					{
 						Action: aws.String(wafregional.ChangeActionInsert),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),
@@ -249,22 +249,22 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "10.0.3.0/24"},
 			},
 			ExpectedUpdates: [][]*waf.IPSetUpdate{
-				[]*waf.IPSetUpdate{
-					&waf.IPSetUpdate{
+				{
+					{
 						Action: aws.String(wafregional.ChangeActionInsert),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),
 							Value: aws.String("10.0.1.0/24"),
 						},
 					},
-					&waf.IPSetUpdate{
+					{
 						Action: aws.String(wafregional.ChangeActionInsert),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),
 							Value: aws.String("10.0.2.0/24"),
 						},
 					},
-					&waf.IPSetUpdate{
+					{
 						Action: aws.String(wafregional.ChangeActionInsert),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),
@@ -282,15 +282,15 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 			},
 			New: []interface{}{},
 			ExpectedUpdates: [][]*waf.IPSetUpdate{
-				[]*waf.IPSetUpdate{
-					&waf.IPSetUpdate{
+				{
+					{
 						Action: aws.String(wafregional.ChangeActionDelete),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),
 							Value: aws.String("192.0.7.0/24"),
 						},
 					},
-					&waf.IPSetUpdate{
+					{
 						Action: aws.String(wafregional.ChangeActionDelete),
 						IPSetDescriptor: &waf.IPSetDescriptor{
 							Type:  aws.String("IPV4"),

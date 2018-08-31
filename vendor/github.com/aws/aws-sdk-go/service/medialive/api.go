@@ -10,6 +10,98 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 )
 
+const opBatchUpdateSchedule = "BatchUpdateSchedule"
+
+// BatchUpdateScheduleRequest generates a "aws/request.Request" representing the
+// client's request for the BatchUpdateSchedule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchUpdateSchedule for more information on using the BatchUpdateSchedule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchUpdateScheduleRequest method.
+//    req, resp := client.BatchUpdateScheduleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchUpdateSchedule
+func (c *MediaLive) BatchUpdateScheduleRequest(input *BatchUpdateScheduleInput) (req *request.Request, output *BatchUpdateScheduleOutput) {
+	op := &request.Operation{
+		Name:       opBatchUpdateSchedule,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/channels/{channelId}/schedule",
+	}
+
+	if input == nil {
+		input = &BatchUpdateScheduleInput{}
+	}
+
+	output = &BatchUpdateScheduleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchUpdateSchedule API operation for AWS Elemental MediaLive.
+//
+// Update a channel schedule
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation BatchUpdateSchedule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchUpdateSchedule
+func (c *MediaLive) BatchUpdateSchedule(input *BatchUpdateScheduleInput) (*BatchUpdateScheduleOutput, error) {
+	req, out := c.BatchUpdateScheduleRequest(input)
+	return out, req.Send()
+}
+
+// BatchUpdateScheduleWithContext is the same as BatchUpdateSchedule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchUpdateSchedule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) BatchUpdateScheduleWithContext(ctx aws.Context, input *BatchUpdateScheduleInput, opts ...request.Option) (*BatchUpdateScheduleOutput, error) {
+	req, out := c.BatchUpdateScheduleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateChannel = "CreateChannel"
 
 // CreateChannelRequest generates a "aws/request.Request" representing the
@@ -1092,6 +1184,152 @@ func (c *MediaLive) DescribeReservationWithContext(ctx aws.Context, input *Descr
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opDescribeSchedule = "DescribeSchedule"
+
+// DescribeScheduleRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeSchedule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeSchedule for more information on using the DescribeSchedule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeScheduleRequest method.
+//    req, resp := client.DescribeScheduleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeSchedule
+func (c *MediaLive) DescribeScheduleRequest(input *DescribeScheduleInput) (req *request.Request, output *DescribeScheduleOutput) {
+	op := &request.Operation{
+		Name:       opDescribeSchedule,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/channels/{channelId}/schedule",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeScheduleInput{}
+	}
+
+	output = &DescribeScheduleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeSchedule API operation for AWS Elemental MediaLive.
+//
+// Get a channel schedule
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeSchedule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeSchedule
+func (c *MediaLive) DescribeSchedule(input *DescribeScheduleInput) (*DescribeScheduleOutput, error) {
+	req, out := c.DescribeScheduleRequest(input)
+	return out, req.Send()
+}
+
+// DescribeScheduleWithContext is the same as DescribeSchedule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeSchedule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeScheduleWithContext(ctx aws.Context, input *DescribeScheduleInput, opts ...request.Option) (*DescribeScheduleOutput, error) {
+	req, out := c.DescribeScheduleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeSchedulePages iterates over the pages of a DescribeSchedule operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeSchedule method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeSchedule operation.
+//    pageNum := 0
+//    err := client.DescribeSchedulePages(params,
+//        func(page *DescribeScheduleOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaLive) DescribeSchedulePages(input *DescribeScheduleInput, fn func(*DescribeScheduleOutput, bool) bool) error {
+	return c.DescribeSchedulePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeSchedulePagesWithContext same as DescribeSchedulePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeSchedulePagesWithContext(ctx aws.Context, input *DescribeScheduleInput, fn func(*DescribeScheduleOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeScheduleInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeScheduleRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeScheduleOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListChannels = "ListChannels"
@@ -3477,6 +3715,243 @@ func (s *AvailSettings) SetScte35SpliceInsert(v *Scte35SpliceInsert) *AvailSetti
 // SetScte35TimeSignalApos sets the Scte35TimeSignalApos field's value.
 func (s *AvailSettings) SetScte35TimeSignalApos(v *Scte35TimeSignalApos) *AvailSettings {
 	s.Scte35TimeSignalApos = v
+	return s
+}
+
+// A list of schedule actions to create.
+type BatchScheduleActionCreateRequest struct {
+	_ struct{} `type:"structure"`
+
+	// A list of schedule actions to create.
+	//
+	// ScheduleActions is a required field
+	ScheduleActions []*ScheduleAction `locationName:"scheduleActions" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchScheduleActionCreateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchScheduleActionCreateRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchScheduleActionCreateRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchScheduleActionCreateRequest"}
+	if s.ScheduleActions == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduleActions"))
+	}
+	if s.ScheduleActions != nil {
+		for i, v := range s.ScheduleActions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ScheduleActions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScheduleActions sets the ScheduleActions field's value.
+func (s *BatchScheduleActionCreateRequest) SetScheduleActions(v []*ScheduleAction) *BatchScheduleActionCreateRequest {
+	s.ScheduleActions = v
+	return s
+}
+
+// Returned list of created schedule actions.
+type BatchScheduleActionCreateResult struct {
+	_ struct{} `type:"structure"`
+
+	// Returned list of created schedule actions.
+	//
+	// ScheduleActions is a required field
+	ScheduleActions []*ScheduleAction `locationName:"scheduleActions" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchScheduleActionCreateResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchScheduleActionCreateResult) GoString() string {
+	return s.String()
+}
+
+// SetScheduleActions sets the ScheduleActions field's value.
+func (s *BatchScheduleActionCreateResult) SetScheduleActions(v []*ScheduleAction) *BatchScheduleActionCreateResult {
+	s.ScheduleActions = v
+	return s
+}
+
+// A list of schedule actions to delete.
+type BatchScheduleActionDeleteRequest struct {
+	_ struct{} `type:"structure"`
+
+	// A list of schedule actions to delete, identified by unique name.
+	//
+	// ActionNames is a required field
+	ActionNames []*string `locationName:"actionNames" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchScheduleActionDeleteRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchScheduleActionDeleteRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchScheduleActionDeleteRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchScheduleActionDeleteRequest"}
+	if s.ActionNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionNames sets the ActionNames field's value.
+func (s *BatchScheduleActionDeleteRequest) SetActionNames(v []*string) *BatchScheduleActionDeleteRequest {
+	s.ActionNames = v
+	return s
+}
+
+// Returned list of deleted schedule actions.
+type BatchScheduleActionDeleteResult struct {
+	_ struct{} `type:"structure"`
+
+	// Returned list of deleted schedule actions.
+	//
+	// ScheduleActions is a required field
+	ScheduleActions []*ScheduleAction `locationName:"scheduleActions" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchScheduleActionDeleteResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchScheduleActionDeleteResult) GoString() string {
+	return s.String()
+}
+
+// SetScheduleActions sets the ScheduleActions field's value.
+func (s *BatchScheduleActionDeleteResult) SetScheduleActions(v []*ScheduleAction) *BatchScheduleActionDeleteResult {
+	s.ScheduleActions = v
+	return s
+}
+
+// A schedule update, including actions to insert, and action names to delete.
+type BatchUpdateScheduleInput struct {
+	_ struct{} `type:"structure"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+
+	// Schedule actions to create in the schedule.
+	Creates *BatchScheduleActionCreateRequest `locationName:"creates" type:"structure"`
+
+	// Schedule actions to delete from the schedule.
+	Deletes *BatchScheduleActionDeleteRequest `locationName:"deletes" type:"structure"`
+}
+
+// String returns the string representation
+func (s BatchUpdateScheduleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdateScheduleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchUpdateScheduleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchUpdateScheduleInput"}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.Creates != nil {
+		if err := s.Creates.Validate(); err != nil {
+			invalidParams.AddNested("Creates", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Deletes != nil {
+		if err := s.Deletes.Validate(); err != nil {
+			invalidParams.AddNested("Deletes", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *BatchUpdateScheduleInput) SetChannelId(v string) *BatchUpdateScheduleInput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetCreates sets the Creates field's value.
+func (s *BatchUpdateScheduleInput) SetCreates(v *BatchScheduleActionCreateRequest) *BatchUpdateScheduleInput {
+	s.Creates = v
+	return s
+}
+
+// SetDeletes sets the Deletes field's value.
+func (s *BatchUpdateScheduleInput) SetDeletes(v *BatchScheduleActionDeleteRequest) *BatchUpdateScheduleInput {
+	s.Deletes = v
+	return s
+}
+
+type BatchUpdateScheduleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returned list of created schedule actions.
+	Creates *BatchScheduleActionCreateResult `locationName:"creates" type:"structure"`
+
+	// Returned list of deleted schedule actions.
+	Deletes *BatchScheduleActionDeleteResult `locationName:"deletes" type:"structure"`
+}
+
+// String returns the string representation
+func (s BatchUpdateScheduleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdateScheduleOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreates sets the Creates field's value.
+func (s *BatchUpdateScheduleOutput) SetCreates(v *BatchScheduleActionCreateResult) *BatchUpdateScheduleOutput {
+	s.Creates = v
+	return s
+}
+
+// SetDeletes sets the Deletes field's value.
+func (s *BatchUpdateScheduleOutput) SetDeletes(v *BatchScheduleActionDeleteResult) *BatchUpdateScheduleOutput {
+	s.Deletes = v
 	return s
 }
 
@@ -5897,6 +6372,91 @@ func (s *DescribeReservationOutput) SetUsagePrice(v float64) *DescribeReservatio
 	return s
 }
 
+type DescribeScheduleInput struct {
+	_ struct{} `type:"structure"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeScheduleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeScheduleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeScheduleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeScheduleInput"}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *DescribeScheduleInput) SetChannelId(v string) *DescribeScheduleInput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeScheduleInput) SetMaxResults(v int64) *DescribeScheduleInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeScheduleInput) SetNextToken(v string) *DescribeScheduleInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeScheduleOutput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	ScheduleActions []*ScheduleAction `locationName:"scheduleActions" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeScheduleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeScheduleOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeScheduleOutput) SetNextToken(v string) *DescribeScheduleOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetScheduleActions sets the ScheduleActions field's value.
+func (s *DescribeScheduleOutput) SetScheduleActions(v []*ScheduleAction) *DescribeScheduleOutput {
+	s.ScheduleActions = v
+	return s
+}
+
 // DVB Network Information Table (NIT)
 type DvbNitSettings struct {
 	_ struct{} `type:"structure"`
@@ -6917,6 +7477,30 @@ func (s *FecOutputSettings) SetIncludeFec(v string) *FecOutputSettings {
 // SetRowLength sets the RowLength field's value.
 func (s *FecOutputSettings) SetRowLength(v int64) *FecOutputSettings {
 	s.RowLength = &v
+	return s
+}
+
+// Fixed mode schedule action start settings
+type FixedModeScheduleActionStartSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Fixed timestamp action start. Conforms to ISO-8601.
+	Time *string `locationName:"time" type:"string"`
+}
+
+// String returns the string representation
+func (s FixedModeScheduleActionStartSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FixedModeScheduleActionStartSettings) GoString() string {
+	return s.String()
+}
+
+// SetTime sets the Time field's value.
+func (s *FixedModeScheduleActionStartSettings) SetTime(v string) *FixedModeScheduleActionStartSettings {
+	s.Time = &v
 	return s
 }
 
@@ -11788,6 +12372,192 @@ func (s *RtmpOutputSettings) SetNumRetries(v int64) *RtmpOutputSettings {
 	return s
 }
 
+// A single schedule action.
+type ScheduleAction struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the action, must be unique within the schedule.
+	//
+	// ActionName is a required field
+	ActionName *string `locationName:"actionName" type:"string" required:"true"`
+
+	// Settings for this schedule action.
+	//
+	// ScheduleActionSettings is a required field
+	ScheduleActionSettings *ScheduleActionSettings `locationName:"scheduleActionSettings" type:"structure" required:"true"`
+
+	// When the action takes effect.
+	//
+	// ScheduleActionStartSettings is a required field
+	ScheduleActionStartSettings *ScheduleActionStartSettings `locationName:"scheduleActionStartSettings" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ScheduleAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduleAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ScheduleAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ScheduleAction"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ScheduleActionSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduleActionSettings"))
+	}
+	if s.ScheduleActionStartSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduleActionStartSettings"))
+	}
+	if s.ScheduleActionSettings != nil {
+		if err := s.ScheduleActionSettings.Validate(); err != nil {
+			invalidParams.AddNested("ScheduleActionSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *ScheduleAction) SetActionName(v string) *ScheduleAction {
+	s.ActionName = &v
+	return s
+}
+
+// SetScheduleActionSettings sets the ScheduleActionSettings field's value.
+func (s *ScheduleAction) SetScheduleActionSettings(v *ScheduleActionSettings) *ScheduleAction {
+	s.ScheduleActionSettings = v
+	return s
+}
+
+// SetScheduleActionStartSettings sets the ScheduleActionStartSettings field's value.
+func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSettings) *ScheduleAction {
+	s.ScheduleActionStartSettings = v
+	return s
+}
+
+// Settings for a single schedule action.
+type ScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// SCTE-35 Return to Network Settings
+	Scte35ReturnToNetworkSettings *Scte35ReturnToNetworkScheduleActionSettings `locationName:"scte35ReturnToNetworkSettings" type:"structure"`
+
+	// SCTE-35 Splice Insert Settings
+	Scte35SpliceInsertSettings *Scte35SpliceInsertScheduleActionSettings `locationName:"scte35SpliceInsertSettings" type:"structure"`
+
+	// SCTE-35 Time Signal Settings
+	Scte35TimeSignalSettings *Scte35TimeSignalScheduleActionSettings `locationName:"scte35TimeSignalSettings" type:"structure"`
+
+	// Static Image Activate
+	StaticImageActivateSettings *StaticImageActivateScheduleActionSettings `locationName:"staticImageActivateSettings" type:"structure"`
+
+	// Static Image Deactivate
+	StaticImageDeactivateSettings *StaticImageDeactivateScheduleActionSettings `locationName:"staticImageDeactivateSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s ScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ScheduleActionSettings"}
+	if s.Scte35ReturnToNetworkSettings != nil {
+		if err := s.Scte35ReturnToNetworkSettings.Validate(); err != nil {
+			invalidParams.AddNested("Scte35ReturnToNetworkSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Scte35SpliceInsertSettings != nil {
+		if err := s.Scte35SpliceInsertSettings.Validate(); err != nil {
+			invalidParams.AddNested("Scte35SpliceInsertSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Scte35TimeSignalSettings != nil {
+		if err := s.Scte35TimeSignalSettings.Validate(); err != nil {
+			invalidParams.AddNested("Scte35TimeSignalSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StaticImageActivateSettings != nil {
+		if err := s.StaticImageActivateSettings.Validate(); err != nil {
+			invalidParams.AddNested("StaticImageActivateSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScte35ReturnToNetworkSettings sets the Scte35ReturnToNetworkSettings field's value.
+func (s *ScheduleActionSettings) SetScte35ReturnToNetworkSettings(v *Scte35ReturnToNetworkScheduleActionSettings) *ScheduleActionSettings {
+	s.Scte35ReturnToNetworkSettings = v
+	return s
+}
+
+// SetScte35SpliceInsertSettings sets the Scte35SpliceInsertSettings field's value.
+func (s *ScheduleActionSettings) SetScte35SpliceInsertSettings(v *Scte35SpliceInsertScheduleActionSettings) *ScheduleActionSettings {
+	s.Scte35SpliceInsertSettings = v
+	return s
+}
+
+// SetScte35TimeSignalSettings sets the Scte35TimeSignalSettings field's value.
+func (s *ScheduleActionSettings) SetScte35TimeSignalSettings(v *Scte35TimeSignalScheduleActionSettings) *ScheduleActionSettings {
+	s.Scte35TimeSignalSettings = v
+	return s
+}
+
+// SetStaticImageActivateSettings sets the StaticImageActivateSettings field's value.
+func (s *ScheduleActionSettings) SetStaticImageActivateSettings(v *StaticImageActivateScheduleActionSettings) *ScheduleActionSettings {
+	s.StaticImageActivateSettings = v
+	return s
+}
+
+// SetStaticImageDeactivateSettings sets the StaticImageDeactivateSettings field's value.
+func (s *ScheduleActionSettings) SetStaticImageDeactivateSettings(v *StaticImageDeactivateScheduleActionSettings) *ScheduleActionSettings {
+	s.StaticImageDeactivateSettings = v
+	return s
+}
+
+// When the schedule action starts.
+type ScheduleActionStartSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Fixed timestamp action start. Conforms to ISO-8601.
+	FixedModeScheduleActionStartSettings *FixedModeScheduleActionStartSettings `locationName:"fixedModeScheduleActionStartSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s ScheduleActionStartSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduleActionStartSettings) GoString() string {
+	return s.String()
+}
+
+// SetFixedModeScheduleActionStartSettings sets the FixedModeScheduleActionStartSettings field's value.
+func (s *ScheduleActionStartSettings) SetFixedModeScheduleActionStartSettings(v *FixedModeScheduleActionStartSettings) *ScheduleActionStartSettings {
+	s.FixedModeScheduleActionStartSettings = v
+	return s
+}
+
 type Scte20PlusEmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -11906,6 +12676,354 @@ func (s *Scte27SourceSettings) SetPid(v int64) *Scte27SourceSettings {
 	return s
 }
 
+// SCTE-35 Delivery Restrictions.
+type Scte35DeliveryRestrictions struct {
+	_ struct{} `type:"structure"`
+
+	// SCTE-35 segmentation_descriptor archive_allowed_flag.
+	//
+	// ArchiveAllowedFlag is a required field
+	ArchiveAllowedFlag *string `locationName:"archiveAllowedFlag" type:"string" required:"true" enum:"Scte35ArchiveAllowedFlag"`
+
+	// SCTE-35 segmentation_descriptor web_delivery_allowed_flag.
+	//
+	// DeviceRestrictions is a required field
+	DeviceRestrictions *string `locationName:"deviceRestrictions" type:"string" required:"true" enum:"Scte35DeviceRestrictions"`
+
+	// SCTE-35 segmentation_descriptor no_regional_blackout_flag.
+	//
+	// NoRegionalBlackoutFlag is a required field
+	NoRegionalBlackoutFlag *string `locationName:"noRegionalBlackoutFlag" type:"string" required:"true" enum:"Scte35NoRegionalBlackoutFlag"`
+
+	// SCTE-35 segmentation_descriptor web_delivery_allowed_flag.
+	//
+	// WebDeliveryAllowedFlag is a required field
+	WebDeliveryAllowedFlag *string `locationName:"webDeliveryAllowedFlag" type:"string" required:"true" enum:"Scte35WebDeliveryAllowedFlag"`
+}
+
+// String returns the string representation
+func (s Scte35DeliveryRestrictions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35DeliveryRestrictions) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35DeliveryRestrictions) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35DeliveryRestrictions"}
+	if s.ArchiveAllowedFlag == nil {
+		invalidParams.Add(request.NewErrParamRequired("ArchiveAllowedFlag"))
+	}
+	if s.DeviceRestrictions == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceRestrictions"))
+	}
+	if s.NoRegionalBlackoutFlag == nil {
+		invalidParams.Add(request.NewErrParamRequired("NoRegionalBlackoutFlag"))
+	}
+	if s.WebDeliveryAllowedFlag == nil {
+		invalidParams.Add(request.NewErrParamRequired("WebDeliveryAllowedFlag"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArchiveAllowedFlag sets the ArchiveAllowedFlag field's value.
+func (s *Scte35DeliveryRestrictions) SetArchiveAllowedFlag(v string) *Scte35DeliveryRestrictions {
+	s.ArchiveAllowedFlag = &v
+	return s
+}
+
+// SetDeviceRestrictions sets the DeviceRestrictions field's value.
+func (s *Scte35DeliveryRestrictions) SetDeviceRestrictions(v string) *Scte35DeliveryRestrictions {
+	s.DeviceRestrictions = &v
+	return s
+}
+
+// SetNoRegionalBlackoutFlag sets the NoRegionalBlackoutFlag field's value.
+func (s *Scte35DeliveryRestrictions) SetNoRegionalBlackoutFlag(v string) *Scte35DeliveryRestrictions {
+	s.NoRegionalBlackoutFlag = &v
+	return s
+}
+
+// SetWebDeliveryAllowedFlag sets the WebDeliveryAllowedFlag field's value.
+func (s *Scte35DeliveryRestrictions) SetWebDeliveryAllowedFlag(v string) *Scte35DeliveryRestrictions {
+	s.WebDeliveryAllowedFlag = &v
+	return s
+}
+
+// SCTE-35 Descriptor.
+type Scte35Descriptor struct {
+	_ struct{} `type:"structure"`
+
+	// SCTE-35 Descriptor Settings.
+	//
+	// Scte35DescriptorSettings is a required field
+	Scte35DescriptorSettings *Scte35DescriptorSettings `locationName:"scte35DescriptorSettings" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s Scte35Descriptor) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35Descriptor) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35Descriptor) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35Descriptor"}
+	if s.Scte35DescriptorSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("Scte35DescriptorSettings"))
+	}
+	if s.Scte35DescriptorSettings != nil {
+		if err := s.Scte35DescriptorSettings.Validate(); err != nil {
+			invalidParams.AddNested("Scte35DescriptorSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScte35DescriptorSettings sets the Scte35DescriptorSettings field's value.
+func (s *Scte35Descriptor) SetScte35DescriptorSettings(v *Scte35DescriptorSettings) *Scte35Descriptor {
+	s.Scte35DescriptorSettings = v
+	return s
+}
+
+// SCTE-35 Descriptor settings.
+type Scte35DescriptorSettings struct {
+	_ struct{} `type:"structure"`
+
+	// SCTE-35 Segmentation Descriptor.
+	//
+	// SegmentationDescriptorScte35DescriptorSettings is a required field
+	SegmentationDescriptorScte35DescriptorSettings *Scte35SegmentationDescriptor `locationName:"segmentationDescriptorScte35DescriptorSettings" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s Scte35DescriptorSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35DescriptorSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35DescriptorSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35DescriptorSettings"}
+	if s.SegmentationDescriptorScte35DescriptorSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("SegmentationDescriptorScte35DescriptorSettings"))
+	}
+	if s.SegmentationDescriptorScte35DescriptorSettings != nil {
+		if err := s.SegmentationDescriptorScte35DescriptorSettings.Validate(); err != nil {
+			invalidParams.AddNested("SegmentationDescriptorScte35DescriptorSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSegmentationDescriptorScte35DescriptorSettings sets the SegmentationDescriptorScte35DescriptorSettings field's value.
+func (s *Scte35DescriptorSettings) SetSegmentationDescriptorScte35DescriptorSettings(v *Scte35SegmentationDescriptor) *Scte35DescriptorSettings {
+	s.SegmentationDescriptorScte35DescriptorSettings = v
+	return s
+}
+
+// SCTE-35 Return to Network Settings.
+type Scte35ReturnToNetworkScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The splice_event_id for the SCTE-35 splice_insert, as defined in SCTE-35.
+	//
+	// SpliceEventId is a required field
+	SpliceEventId *int64 `locationName:"spliceEventId" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s Scte35ReturnToNetworkScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35ReturnToNetworkScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35ReturnToNetworkScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35ReturnToNetworkScheduleActionSettings"}
+	if s.SpliceEventId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SpliceEventId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSpliceEventId sets the SpliceEventId field's value.
+func (s *Scte35ReturnToNetworkScheduleActionSettings) SetSpliceEventId(v int64) *Scte35ReturnToNetworkScheduleActionSettings {
+	s.SpliceEventId = &v
+	return s
+}
+
+// SCTE-35 Segmentation Descriptor.
+type Scte35SegmentationDescriptor struct {
+	_ struct{} `type:"structure"`
+
+	// SCTE-35 delivery restrictions.
+	DeliveryRestrictions *Scte35DeliveryRestrictions `locationName:"deliveryRestrictions" type:"structure"`
+
+	// SCTE-35 segmentation_descriptor segment_num.
+	SegmentNum *int64 `locationName:"segmentNum" type:"integer"`
+
+	// SCTE-35 segmentation_descriptor segmentation_event_cancel_indicator.
+	//
+	// SegmentationCancelIndicator is a required field
+	SegmentationCancelIndicator *string `locationName:"segmentationCancelIndicator" type:"string" required:"true" enum:"Scte35SegmentationCancelIndicator"`
+
+	// SCTE-35 segmentation_descriptor segmentation_duration specified in 90 KHz
+	// clock ticks.
+	SegmentationDuration *int64 `locationName:"segmentationDuration" type:"long"`
+
+	// SCTE-35 segmentation_descriptor segmentation_event_id.
+	//
+	// SegmentationEventId is a required field
+	SegmentationEventId *int64 `locationName:"segmentationEventId" type:"long" required:"true"`
+
+	// SCTE-35 segmentation_descriptor segmentation_type_id.
+	SegmentationTypeId *int64 `locationName:"segmentationTypeId" type:"integer"`
+
+	// SCTE-35 segmentation_descriptor segmentation_upid as a hex string.
+	SegmentationUpid *string `locationName:"segmentationUpid" type:"string"`
+
+	// SCTE-35 segmentation_descriptor segmentation_upid_type.
+	SegmentationUpidType *int64 `locationName:"segmentationUpidType" type:"integer"`
+
+	// SCTE-35 segmentation_descriptor segments_expected.
+	SegmentsExpected *int64 `locationName:"segmentsExpected" type:"integer"`
+
+	// SCTE-35 segmentation_descriptor sub_segment_num.
+	SubSegmentNum *int64 `locationName:"subSegmentNum" type:"integer"`
+
+	// SCTE-35 segmentation_descriptor sub_segments_expected.
+	SubSegmentsExpected *int64 `locationName:"subSegmentsExpected" type:"integer"`
+}
+
+// String returns the string representation
+func (s Scte35SegmentationDescriptor) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35SegmentationDescriptor) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35SegmentationDescriptor) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35SegmentationDescriptor"}
+	if s.SegmentationCancelIndicator == nil {
+		invalidParams.Add(request.NewErrParamRequired("SegmentationCancelIndicator"))
+	}
+	if s.SegmentationEventId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SegmentationEventId"))
+	}
+	if s.DeliveryRestrictions != nil {
+		if err := s.DeliveryRestrictions.Validate(); err != nil {
+			invalidParams.AddNested("DeliveryRestrictions", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDeliveryRestrictions sets the DeliveryRestrictions field's value.
+func (s *Scte35SegmentationDescriptor) SetDeliveryRestrictions(v *Scte35DeliveryRestrictions) *Scte35SegmentationDescriptor {
+	s.DeliveryRestrictions = v
+	return s
+}
+
+// SetSegmentNum sets the SegmentNum field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentNum(v int64) *Scte35SegmentationDescriptor {
+	s.SegmentNum = &v
+	return s
+}
+
+// SetSegmentationCancelIndicator sets the SegmentationCancelIndicator field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentationCancelIndicator(v string) *Scte35SegmentationDescriptor {
+	s.SegmentationCancelIndicator = &v
+	return s
+}
+
+// SetSegmentationDuration sets the SegmentationDuration field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentationDuration(v int64) *Scte35SegmentationDescriptor {
+	s.SegmentationDuration = &v
+	return s
+}
+
+// SetSegmentationEventId sets the SegmentationEventId field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentationEventId(v int64) *Scte35SegmentationDescriptor {
+	s.SegmentationEventId = &v
+	return s
+}
+
+// SetSegmentationTypeId sets the SegmentationTypeId field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentationTypeId(v int64) *Scte35SegmentationDescriptor {
+	s.SegmentationTypeId = &v
+	return s
+}
+
+// SetSegmentationUpid sets the SegmentationUpid field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentationUpid(v string) *Scte35SegmentationDescriptor {
+	s.SegmentationUpid = &v
+	return s
+}
+
+// SetSegmentationUpidType sets the SegmentationUpidType field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentationUpidType(v int64) *Scte35SegmentationDescriptor {
+	s.SegmentationUpidType = &v
+	return s
+}
+
+// SetSegmentsExpected sets the SegmentsExpected field's value.
+func (s *Scte35SegmentationDescriptor) SetSegmentsExpected(v int64) *Scte35SegmentationDescriptor {
+	s.SegmentsExpected = &v
+	return s
+}
+
+// SetSubSegmentNum sets the SubSegmentNum field's value.
+func (s *Scte35SegmentationDescriptor) SetSubSegmentNum(v int64) *Scte35SegmentationDescriptor {
+	s.SubSegmentNum = &v
+	return s
+}
+
+// SetSubSegmentsExpected sets the SubSegmentsExpected field's value.
+func (s *Scte35SegmentationDescriptor) SetSubSegmentsExpected(v int64) *Scte35SegmentationDescriptor {
+	s.SubSegmentsExpected = &v
+	return s
+}
+
 type Scte35SpliceInsert struct {
 	_ struct{} `type:"structure"`
 
@@ -11964,6 +13082,56 @@ func (s *Scte35SpliceInsert) SetWebDeliveryAllowedFlag(v string) *Scte35SpliceIn
 	return s
 }
 
+// SCTE-35 Splice Insert Settings.
+type Scte35SpliceInsertScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The duration for the SCTE-35 splice_insert specified in 90KHz clock ticks.
+	// When duration is not specified the expectation is that a Scte35ReturnToNetwork
+	// action will be scheduled.
+	Duration *int64 `locationName:"duration" type:"long"`
+
+	// The splice_event_id for the SCTE-35 splice_insert, as defined in SCTE-35.
+	//
+	// SpliceEventId is a required field
+	SpliceEventId *int64 `locationName:"spliceEventId" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s Scte35SpliceInsertScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35SpliceInsertScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35SpliceInsertScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35SpliceInsertScheduleActionSettings"}
+	if s.SpliceEventId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SpliceEventId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDuration sets the Duration field's value.
+func (s *Scte35SpliceInsertScheduleActionSettings) SetDuration(v int64) *Scte35SpliceInsertScheduleActionSettings {
+	s.Duration = &v
+	return s
+}
+
+// SetSpliceEventId sets the SpliceEventId field's value.
+func (s *Scte35SpliceInsertScheduleActionSettings) SetSpliceEventId(v int64) *Scte35SpliceInsertScheduleActionSettings {
+	s.SpliceEventId = &v
+	return s
+}
+
 type Scte35TimeSignalApos struct {
 	_ struct{} `type:"structure"`
 
@@ -12019,6 +13187,55 @@ func (s *Scte35TimeSignalApos) SetNoRegionalBlackoutFlag(v string) *Scte35TimeSi
 // SetWebDeliveryAllowedFlag sets the WebDeliveryAllowedFlag field's value.
 func (s *Scte35TimeSignalApos) SetWebDeliveryAllowedFlag(v string) *Scte35TimeSignalApos {
 	s.WebDeliveryAllowedFlag = &v
+	return s
+}
+
+// SCTE-35 Time Signal Settings.
+type Scte35TimeSignalScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The list of SCTE-35 descriptors accompanying the SCTE-35 time_signal.
+	//
+	// Scte35Descriptors is a required field
+	Scte35Descriptors []*Scte35Descriptor `locationName:"scte35Descriptors" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s Scte35TimeSignalScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scte35TimeSignalScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Scte35TimeSignalScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Scte35TimeSignalScheduleActionSettings"}
+	if s.Scte35Descriptors == nil {
+		invalidParams.Add(request.NewErrParamRequired("Scte35Descriptors"))
+	}
+	if s.Scte35Descriptors != nil {
+		for i, v := range s.Scte35Descriptors {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Scte35Descriptors", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScte35Descriptors sets the Scte35Descriptors field's value.
+func (s *Scte35TimeSignalScheduleActionSettings) SetScte35Descriptors(v []*Scte35Descriptor) *Scte35TimeSignalScheduleActionSettings {
+	s.Scte35Descriptors = v
 	return s
 }
 
@@ -12227,6 +13444,182 @@ func (s *StartChannelOutput) SetRoleArn(v string) *StartChannelOutput {
 // SetState sets the State field's value.
 func (s *StartChannelOutput) SetState(v string) *StartChannelOutput {
 	s.State = &v
+	return s
+}
+
+// Static image activate.
+type StaticImageActivateScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The duration in milliseconds for the image to remain in the video. If omitted
+	// or set to 0, duration is infinite and image will remain until explicitly
+	// deactivated.
+	Duration *int64 `locationName:"duration" type:"integer"`
+
+	// The time in milliseconds for the image to fade in. Defaults to 0.
+	FadeIn *int64 `locationName:"fadeIn" type:"integer"`
+
+	// The time in milliseconds for the image to fade out. Defaults to 0.
+	FadeOut *int64 `locationName:"fadeOut" type:"integer"`
+
+	// The height of the image when inserted into the video. Defaults to the native
+	// height of the image.
+	Height *int64 `locationName:"height" min:"1" type:"integer"`
+
+	// The image to overlay on the video. Must be a 32 bit BMP, PNG, or TGA file.
+	// Must not be larger than the input video.
+	//
+	// Image is a required field
+	Image *InputLocation `locationName:"image" type:"structure" required:"true"`
+
+	// Placement of the left edge of the image on the horizontal axis in pixels.
+	// 0 is the left edge of the frame. Defaults to 0.
+	ImageX *int64 `locationName:"imageX" type:"integer"`
+
+	// Placement of the top edge of the image on the vertical axis in pixels. 0
+	// is the top edge of the frame. Defaults to 0.
+	ImageY *int64 `locationName:"imageY" type:"integer"`
+
+	// The Z order of the inserted image. Images with higher layer values will be
+	// inserted on top of images with lower layer values. Permitted values are 0-7
+	// inclusive. Defaults to 0.
+	Layer *int64 `locationName:"layer" type:"integer"`
+
+	// Opacity of image where 0 is transparent and 100 is fully opaque. Defaults
+	// to 100.
+	Opacity *int64 `locationName:"opacity" type:"integer"`
+
+	// The width of the image when inserted into the video. Defaults to the native
+	// width of the image.
+	Width *int64 `locationName:"width" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s StaticImageActivateScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StaticImageActivateScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StaticImageActivateScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StaticImageActivateScheduleActionSettings"}
+	if s.Height != nil && *s.Height < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Height", 1))
+	}
+	if s.Image == nil {
+		invalidParams.Add(request.NewErrParamRequired("Image"))
+	}
+	if s.Width != nil && *s.Width < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Width", 1))
+	}
+	if s.Image != nil {
+		if err := s.Image.Validate(); err != nil {
+			invalidParams.AddNested("Image", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDuration sets the Duration field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetDuration(v int64) *StaticImageActivateScheduleActionSettings {
+	s.Duration = &v
+	return s
+}
+
+// SetFadeIn sets the FadeIn field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetFadeIn(v int64) *StaticImageActivateScheduleActionSettings {
+	s.FadeIn = &v
+	return s
+}
+
+// SetFadeOut sets the FadeOut field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetFadeOut(v int64) *StaticImageActivateScheduleActionSettings {
+	s.FadeOut = &v
+	return s
+}
+
+// SetHeight sets the Height field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetHeight(v int64) *StaticImageActivateScheduleActionSettings {
+	s.Height = &v
+	return s
+}
+
+// SetImage sets the Image field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetImage(v *InputLocation) *StaticImageActivateScheduleActionSettings {
+	s.Image = v
+	return s
+}
+
+// SetImageX sets the ImageX field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetImageX(v int64) *StaticImageActivateScheduleActionSettings {
+	s.ImageX = &v
+	return s
+}
+
+// SetImageY sets the ImageY field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetImageY(v int64) *StaticImageActivateScheduleActionSettings {
+	s.ImageY = &v
+	return s
+}
+
+// SetLayer sets the Layer field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetLayer(v int64) *StaticImageActivateScheduleActionSettings {
+	s.Layer = &v
+	return s
+}
+
+// SetOpacity sets the Opacity field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetOpacity(v int64) *StaticImageActivateScheduleActionSettings {
+	s.Opacity = &v
+	return s
+}
+
+// SetWidth sets the Width field's value.
+func (s *StaticImageActivateScheduleActionSettings) SetWidth(v int64) *StaticImageActivateScheduleActionSettings {
+	s.Width = &v
+	return s
+}
+
+// Static image deactivate.
+type StaticImageDeactivateScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The time in milliseconds for the image to fade out. Defaults to 0.
+	FadeOut *int64 `locationName:"fadeOut" type:"integer"`
+
+	// The Z order of the inserted image. Images with higher layer values will be
+	// inserted on top of images with lower layer values. Permitted values are 0-7
+	// inclusive. Defaults to 0.
+	Layer *int64 `locationName:"layer" type:"integer"`
+}
+
+// String returns the string representation
+func (s StaticImageDeactivateScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StaticImageDeactivateScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// SetFadeOut sets the FadeOut field's value.
+func (s *StaticImageDeactivateScheduleActionSettings) SetFadeOut(v int64) *StaticImageDeactivateScheduleActionSettings {
+	s.FadeOut = &v
+	return s
+}
+
+// SetLayer sets the Layer field's value.
+func (s *StaticImageDeactivateScheduleActionSettings) SetLayer(v int64) *StaticImageDeactivateScheduleActionSettings {
+	s.Layer = &v
 	return s
 }
 
@@ -14934,6 +16327,48 @@ const (
 	Scte35AposWebDeliveryAllowedBehaviorIgnore = "IGNORE"
 )
 
+// SCTE-35 segmentation_descriptor archive_allowed_flag.
+const (
+	// Scte35ArchiveAllowedFlagArchiveNotAllowed is a Scte35ArchiveAllowedFlag enum value
+	Scte35ArchiveAllowedFlagArchiveNotAllowed = "ARCHIVE_NOT_ALLOWED"
+
+	// Scte35ArchiveAllowedFlagArchiveAllowed is a Scte35ArchiveAllowedFlag enum value
+	Scte35ArchiveAllowedFlagArchiveAllowed = "ARCHIVE_ALLOWED"
+)
+
+// SCTE-35 Device Restrictions.
+const (
+	// Scte35DeviceRestrictionsNone is a Scte35DeviceRestrictions enum value
+	Scte35DeviceRestrictionsNone = "NONE"
+
+	// Scte35DeviceRestrictionsRestrictGroup0 is a Scte35DeviceRestrictions enum value
+	Scte35DeviceRestrictionsRestrictGroup0 = "RESTRICT_GROUP0"
+
+	// Scte35DeviceRestrictionsRestrictGroup1 is a Scte35DeviceRestrictions enum value
+	Scte35DeviceRestrictionsRestrictGroup1 = "RESTRICT_GROUP1"
+
+	// Scte35DeviceRestrictionsRestrictGroup2 is a Scte35DeviceRestrictions enum value
+	Scte35DeviceRestrictionsRestrictGroup2 = "RESTRICT_GROUP2"
+)
+
+// SCTE-35 segmentation_descriptor no_regional_blackout_flag.
+const (
+	// Scte35NoRegionalBlackoutFlagRegionalBlackout is a Scte35NoRegionalBlackoutFlag enum value
+	Scte35NoRegionalBlackoutFlagRegionalBlackout = "REGIONAL_BLACKOUT"
+
+	// Scte35NoRegionalBlackoutFlagNoRegionalBlackout is a Scte35NoRegionalBlackoutFlag enum value
+	Scte35NoRegionalBlackoutFlagNoRegionalBlackout = "NO_REGIONAL_BLACKOUT"
+)
+
+// SCTE-35 segmentation_descriptor segmentation_event_cancel_indicator.
+const (
+	// Scte35SegmentationCancelIndicatorSegmentationEventNotCanceled is a Scte35SegmentationCancelIndicator enum value
+	Scte35SegmentationCancelIndicatorSegmentationEventNotCanceled = "SEGMENTATION_EVENT_NOT_CANCELED"
+
+	// Scte35SegmentationCancelIndicatorSegmentationEventCanceled is a Scte35SegmentationCancelIndicator enum value
+	Scte35SegmentationCancelIndicatorSegmentationEventCanceled = "SEGMENTATION_EVENT_CANCELED"
+)
+
 const (
 	// Scte35SpliceInsertNoRegionalBlackoutBehaviorFollow is a Scte35SpliceInsertNoRegionalBlackoutBehavior enum value
 	Scte35SpliceInsertNoRegionalBlackoutBehaviorFollow = "FOLLOW"
@@ -14948,6 +16383,15 @@ const (
 
 	// Scte35SpliceInsertWebDeliveryAllowedBehaviorIgnore is a Scte35SpliceInsertWebDeliveryAllowedBehavior enum value
 	Scte35SpliceInsertWebDeliveryAllowedBehaviorIgnore = "IGNORE"
+)
+
+// SCTE-35 segmentation_descriptor web_delivery_allowed_flag.
+const (
+	// Scte35WebDeliveryAllowedFlagWebDeliveryNotAllowed is a Scte35WebDeliveryAllowedFlag enum value
+	Scte35WebDeliveryAllowedFlagWebDeliveryNotAllowed = "WEB_DELIVERY_NOT_ALLOWED"
+
+	// Scte35WebDeliveryAllowedFlagWebDeliveryAllowed is a Scte35WebDeliveryAllowedFlag enum value
+	Scte35WebDeliveryAllowedFlagWebDeliveryAllowed = "WEB_DELIVERY_ALLOWED"
 )
 
 const (

@@ -15,7 +15,7 @@ func TestAccDataSourceAwsArn_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsArnConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsArn(resourceName),

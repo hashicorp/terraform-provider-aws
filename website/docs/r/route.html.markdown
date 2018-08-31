@@ -89,3 +89,19 @@ will be exported as an attribute once the resource is created.
 
 - `create` - (Default `2 minutes`) Used for route creation
 - `delete` - (Default `5 minutes`) Used for route deletion
+
+## Import
+
+Individual routes can be imported using `ROUTETABLEID_DESTINATION`.
+
+For example, import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16` like this:
+
+```console
+$ terraform import aws_route.my_route rtb-656C65616E6F72_10.42.0.0/16
+```
+
+Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR of `2620:0:2d0:200::8/125` similarly:
+
+```console
+$ terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
+```

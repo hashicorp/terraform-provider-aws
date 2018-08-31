@@ -24,7 +24,7 @@ func TestAwsServiceDiscoveryServiceMigrateState(t *testing.T) {
 				"dns_config.0.dns_records.#":      "1",
 				"dns_config.0.dns_records.0.ttl":  "10",
 				"dns_config.0.dns_records.0.type": "A",
-				"arn": "arn",
+				"arn":                             "arn",
 			},
 			Expected: map[string]string{
 				"name":                            "test-name",
@@ -34,7 +34,7 @@ func TestAwsServiceDiscoveryServiceMigrateState(t *testing.T) {
 				"dns_config.0.dns_records.#":      "1",
 				"dns_config.0.dns_records.0.ttl":  "10",
 				"dns_config.0.dns_records.0.type": "A",
-				"arn": "arn",
+				"arn":                             "arn",
 			},
 		},
 	}
