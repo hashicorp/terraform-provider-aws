@@ -17,7 +17,7 @@ func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:                    testAccCheckAwsCloudformationExportConfig(rName),
+				Config: testAccCheckAwsCloudformationExportConfig(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_export.waiter", "value", "waiter"),

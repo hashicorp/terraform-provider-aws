@@ -221,8 +221,8 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	input := &s3.PutBucketInventoryConfigurationInput{
-		Bucket:                 aws.String(bucket),
-		Id:                     aws.String(name),
+		Bucket: aws.String(bucket),
+		Id:     aws.String(name),
 		InventoryConfiguration: inventoryConfiguration,
 	}
 

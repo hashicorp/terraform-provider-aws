@@ -1563,6 +1563,66 @@ func TestValidateElbNamePrefix(t *testing.T) {
 	}
 }
 
+func TestValidateNeptuneEventSubscriptionName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(256),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateNeptuneEventSubscriptionName(tc.Value, "aws_neptune_event_subscription")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Neptune Event Subscription Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateNeptuneEventSubscriptionNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(254),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateNeptuneEventSubscriptionNamePrefix(tc.Value, "aws_neptune_event_subscription")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Neptune Event Subscription Name Prefix to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
 func TestValidateDbSubnetGroupName(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -2280,23 +2340,23 @@ func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testin
 	}{
 		{
 			AmbiguousRoleResolution: nil,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
-			ErrCount:                1,
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 1,
 		},
 		{
 			AmbiguousRoleResolution: "foo",
-			Type:                    cognitoidentity.RoleMappingTypeToken,
-			ErrCount:                0, // 0 as it should be defined, the value isn't validated here
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 0, // 0 as it should be defined, the value isn't validated here
 		},
 		{
 			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
-			ErrCount:                0,
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 0,
 		},
 		{
 			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
-			ErrCount:                0,
+			Type:     cognitoidentity.RoleMappingTypeToken,
+			ErrCount: 0,
 		},
 	}
 
