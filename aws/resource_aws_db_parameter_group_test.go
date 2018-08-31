@@ -359,6 +359,15 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter.748684209.value", "REPEATABLE-READ"),
 				),
 			},
+			{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
+					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
+					testAccCheckAWSDBParameterNotUserDefined("aws_db_parameter_group.bar", "collation_connection"),
+					testAccCheckAWSDBParameterNotUserDefined("aws_db_parameter_group.bar", "collation_server"),
+				),
+			},
 		},
 	})
 }
@@ -625,6 +634,55 @@ func testAccCheckAWSDBParameterGroupExists(n string, v *rds.DBParameterGroup) re
 
 		return nil
 	}
+}
+
+func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DB Parameter Group ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		opts := rds.DescribeDBParametersInput{
+			DBParameterGroupName: aws.String(rs.Primary.ID),
+			Source:               aws.String("user"),
+		}
+		fmt.Printf("test: %s\n", rs.Primary.ID)
+
+		userDefined := false
+		conn.DescribeDBParametersPages(&opts, func(page *rds.DescribeDBParametersOutput, lastPage bool) bool {
+			for _, param := range page.Parameters {
+				fmt.Printf("param: %s %s\n", *param.ParameterName, *param.Source)
+				if *param.ParameterName == paramName {
+					userDefined = true
+					return false
+				}
+			}
+			return true
+		})
+
+		if userDefined {
+			return fmt.Errorf("DB Parameter is user defined")
+		}
+
+		return nil
+	}
+}
+
+func randomString(strlen int) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	const chars = "abcdefghijklmnopqrstuvwxyz"
+	result := make([]byte, strlen)
+	for i := 0; i < strlen; i++ {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
 }
 
 func testAccAWSDBParameterGroupConfig(n string) string {
