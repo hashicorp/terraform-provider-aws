@@ -154,7 +154,7 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 	// Only include user customized parameters as there's hundreds of system/default ones
 	describeParametersOpts := neptune.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
-		Source: aws.String("user"),
+		Source:                      aws.String("user"),
 	}
 
 	describeParametersResp, err := conn.DescribeDBClusterParameters(&describeParametersOpts)
