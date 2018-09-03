@@ -106,7 +106,7 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
 * `family` - The family of the Task Definition.

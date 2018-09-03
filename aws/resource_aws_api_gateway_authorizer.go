@@ -56,7 +56,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 			"authorizer_result_ttl_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateIntegerInRange(0, 3600),
+				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 			"identity_validation_expression": {
 				Type:     schema.TypeString,

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 // Mutable attributes
@@ -26,10 +27,10 @@ var SNSAttributeMap = map[string]string{
 	"lambda_failure_feedback_role_arn":    "LambdaFailureFeedbackRoleArn",
 	"lambda_success_feedback_role_arn":    "LambdaSuccessFeedbackRoleArn",
 	"lambda_success_feedback_sample_rate": "LambdaSuccessFeedbackSampleRate",
-	"policy":                           "Policy",
-	"sqs_failure_feedback_role_arn":    "SQSFailureFeedbackRoleArn",
-	"sqs_success_feedback_role_arn":    "SQSSuccessFeedbackRoleArn",
-	"sqs_success_feedback_sample_rate": "SQSSuccessFeedbackSampleRate",
+	"policy":                              "Policy",
+	"sqs_failure_feedback_role_arn":       "SQSFailureFeedbackRoleArn",
+	"sqs_success_feedback_role_arn":       "SQSSuccessFeedbackRoleArn",
+	"sqs_success_feedback_sample_rate":    "SQSSuccessFeedbackSampleRate",
 }
 
 func resourceAwsSnsTopic() *schema.Resource {
@@ -51,9 +52,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -88,7 +90,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 			"application_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateIntegerInRange(0, 100),
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"application_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
@@ -101,7 +103,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 			"http_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateIntegerInRange(0, 100),
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"http_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
@@ -114,7 +116,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 			"lambda_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateIntegerInRange(0, 100),
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"lambda_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
@@ -127,7 +129,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 			"sqs_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateIntegerInRange(0, 100),
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"sqs_failure_feedback_role_arn": {
 				Type:     schema.TypeString,
@@ -208,7 +210,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set(terraformAttrName, attrmap[snsAttrName])
 		}
 	} else {
-		for terraformAttrName, _ := range SNSAttributeMap {
+		for terraformAttrName := range SNSAttributeMap {
 			d.Set(terraformAttrName, "")
 		}
 	}

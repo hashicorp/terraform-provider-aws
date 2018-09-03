@@ -21,7 +21,7 @@ const (
 	// ErrCodeBlockedException for service response error code
 	// "BlockedException".
 	//
-	// Your AWS account has been blocked. Contact AWS Customer Support (http://aws.amazon.com/contact-us/)
+	// Your AWS account has been blocked. Contact AWS Support (http://aws.amazon.com/contact-us/)
 	// for more information.
 	ErrCodeBlockedException = "BlockedException"
 
@@ -89,7 +89,7 @@ const (
 	// ErrCodePlatformTaskDefinitionIncompatibilityException for service response error code
 	// "PlatformTaskDefinitionIncompatibilityException".
 	//
-	// The specified platform version does not satisfy the task definition’s required
+	// The specified platform version does not satisfy the task definition's required
 	// capabilities.
 	ErrCodePlatformTaskDefinitionIncompatibilityException = "PlatformTaskDefinitionIncompatibilityException"
 

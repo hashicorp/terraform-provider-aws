@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -161,10 +160,10 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isTargetGroupNotFound(err) || isInvalidTarget(err) {
+		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || isAWSErr(err, elbv2.ErrCodeInvalidTargetException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking LB destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)
 		}
 	}
 
@@ -209,6 +208,9 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-without-port"
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -258,6 +260,9 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-basic"
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -307,6 +312,9 @@ resource "aws_alb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-bc"
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -354,6 +362,9 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-with-ip-address"
+  }
 }
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

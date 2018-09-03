@@ -38,6 +38,10 @@ func testSweepBeanstalkEnvironments(region string) error {
 	})
 
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elastic Beanstalk Environment sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving beanstalk environment: %s", err)
 	}
 
@@ -455,13 +459,13 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkEnvApplicationVersionConfig(bucketName, appName, appVersionName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed("aws_elastic_beanstalk_environment.default", &app),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkEnvApplicationVersionConfig(bucketName, appName, uAppVersionName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed("aws_elastic_beanstalk_environment.default", &app),
@@ -488,7 +492,7 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkEnvSettingJsonValue(appName, queueName, keyPairName, instanceProfileName, roleName, policyName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.default", &app),
@@ -1053,6 +1057,9 @@ resource "aws_route" "r" {
 resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.tf_b_test.id}"
   cidr_block = "10.0.0.0/24"
+  tags {
+    Name = "tf-acc-elastic-beanstalk-env-vpc"
+  }
 }
 
 resource "aws_security_group" "default" {

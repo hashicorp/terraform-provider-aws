@@ -17,19 +17,19 @@ func resourceAwsEcrLifecyclePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"repository": &schema.Schema{
+			"repository": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateFunc:     validateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
-			"registry_id": &schema.Schema{
+			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,11 +91,9 @@ func resourceAwsEcrLifecyclePolicyDelete(d *schema.ResourceData, meta interface{
 	_, err := conn.DeleteLifecyclePolicy(input)
 	if err != nil {
 		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
-			d.SetId("")
 			return nil
 		}
 		if isAWSErr(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
-			d.SetId("")
 			return nil
 		}
 		return err

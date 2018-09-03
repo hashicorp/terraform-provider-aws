@@ -24,7 +24,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceBasicConfig(lb1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
@@ -33,7 +33,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "allowed_principals.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
@@ -67,7 +67,7 @@ func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
@@ -171,7 +171,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-service-1"
   }
 }
 
@@ -181,7 +181,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-service-2"
   }
 }
 
@@ -254,7 +254,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-service-1"
   }
 }
 
@@ -264,7 +264,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-service-2"
   }
 }
 

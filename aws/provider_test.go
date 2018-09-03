@@ -1,9 +1,16 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/organizations"
+
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -73,12 +80,65 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+// testAccAwsProviderAccountID returns the account ID of an AWS provider
+func testAccAwsProviderAccountID(provider *schema.Provider) string {
+	if provider == nil {
+		log.Print("[DEBUG] Unable to read account ID from test provider: empty provider")
+		return ""
+	}
+	if provider.Meta() == nil {
+		log.Print("[DEBUG] Unable to read account ID from test provider: unconfigured provider")
+		return ""
+	}
+	client, ok := provider.Meta().(*AWSClient)
+	if !ok {
+		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured AWS provider")
+		return ""
+	}
+	return client.accountid
+}
+
+// testAccCheckResourceAttrRegionalARN ensures the Terraform state exactly matches a formatted ARN with region
+func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
+// testAccGetAccountID returns the account ID of testAccProvider
+// Must be used returned within a resource.TestCheckFunc
+func testAccGetAccountID() string {
+	return testAccAwsProviderAccountID(testAccProvider)
+}
+
 func testAccGetRegion() string {
 	v := os.Getenv("AWS_DEFAULT_REGION")
 	if v == "" {
 		return "us-west-2"
 	}
 	return v
+}
+
+func testAccGetPartition() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
+func testAccGetServiceEndpoint(service string) string {
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(service, testAccGetRegion())
+	if err != nil {
+		return ""
+	}
+	return strings.TrimPrefix(endpoint.URL, "https://")
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {
@@ -89,6 +149,35 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 		t.Skipf("This test can only run in EC2 Classic, platforms available in %s: %q",
 			region, platforms)
 	}
+}
+
+func testAccHasServicePreCheck(service string, t *testing.T) {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		if _, ok := partition.Services()[service]; !ok {
+			t.Skip(fmt.Sprintf("skipping tests; partition does not support %s service", service))
+		}
+	}
+}
+
+func testAccMultipleRegionsPreCheck(t *testing.T) {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		if len(partition.Regions()) < 2 {
+			t.Skip("skipping tests; partition only includes a single region")
+		}
+	}
+}
+
+func testAccOrganizationsAccountPreCheck(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	input := &organizations.DescribeOrganizationInput{}
+	_, err := conn.DescribeOrganization(input)
+	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		return
+	}
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
@@ -145,4 +234,23 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 		}
 		return nil
 	}
+}
+
+// Check sweeper API call error for reasons to skip sweeping
+// These include missing API endpoints and unsupported API calls
+func testSweepSkipSweepError(err error) bool {
+	// Ignore missing API endpoints
+	if isAWSErr(err, "RequestError", "send request failed") {
+		return true
+	}
+	// Ignore unsupported API calls
+	if isAWSErr(err, "UnsupportedOperation", "") {
+		return true
+	}
+	// Ignore more unsupported API calls
+	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
+	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
+	return false
 }

@@ -21,7 +21,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists("aws_elasticache_subnet_group.bar", &csg),
@@ -45,7 +45,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(rn, &csg),
@@ -53,7 +53,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(rn, &csg),
@@ -153,7 +153,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
     tags {
-        Name = "tf-test"
+        Name = "tf-acc-elasticache-subnet-group"
     }
 }
 
@@ -178,7 +178,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.0.1.0/24"
     availability_zone = "us-west-2a"
     tags {
-        Name = "tf-test"
+        Name = "tf-acc-elasticache-subnet-group-update-foo"
     }
 }
 
@@ -202,7 +202,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.0.1.0/24"
     availability_zone = "us-west-2a"
     tags {
-        Name = "tf-test"
+        Name = "tf-acc-elasticache-subnet-group-update-foo"
     }
 }
 
@@ -211,7 +211,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "10.0.2.0/24"
     availability_zone = "us-west-2a"
     tags {
-        Name = "tf-test-foo-update"
+        Name = "tf-acc-elasticache-subnet-group-update-bar"
     }
 }
 

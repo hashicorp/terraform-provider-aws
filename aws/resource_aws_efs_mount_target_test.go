@@ -24,7 +24,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -38,7 +38,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfigModified(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -75,7 +75,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -243,6 +243,9 @@ resource "aws_subnet" "alpha" {
 	vpc_id = "${aws_vpc.foo.id}"
 	availability_zone = "us-west-2a"
 	cidr_block = "10.0.1.0/24"
+	tags {
+		Name = "tf-acc-efs-mount-target-alpha"
+	}
 }
 `, ct)
 }
@@ -274,12 +277,18 @@ resource "aws_subnet" "alpha" {
 	vpc_id = "${aws_vpc.foo.id}"
 	availability_zone = "us-west-2a"
 	cidr_block = "10.0.1.0/24"
+	tags {
+		Name = "tf-acc-efs-mount-target-alpha"
+	}
 }
 
 resource "aws_subnet" "beta" {
 	vpc_id = "${aws_vpc.foo.id}"
 	availability_zone = "us-west-2b"
 	cidr_block = "10.0.2.0/24"
+	tags {
+		Name = "tf-acc-efs-mount-target-beta"
+	}
 }
 `, ct)
 }

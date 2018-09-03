@@ -12,8 +12,16 @@ description: |-
 ## Example Usage
 
 ```hcl
+variable "domain" {
+  default = "tf-test"
+}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_elasticsearch_domain" "es" {
-  domain_name           = "tf-test"
+  domain_name           = "${var.domain}"
   elasticsearch_version = "1.5"
   cluster_config {
     instance_type = "r3.large.elasticsearch"
@@ -31,6 +39,7 @@ resource "aws_elasticsearch_domain" "es" {
 			"Action": "es:*",
 			"Principal": "*",
 			"Effect": "Allow",
+			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
 			"Condition": {
 				"IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
 			}
@@ -56,6 +65,9 @@ The following arguments are supported:
 * `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options.
+   Note that the values for these configuration options must be strings (wrapped in quotes) or they
+   may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch
+   domain on every apply.
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
@@ -104,13 +116,22 @@ Security Groups and Subnets referenced in these attributes must all be within th
 
 **log_publishing_options** supports the following attribute:
 
-* `log_type` - (Required) A type of Elasticsearch log. Valid values: INDEX_SLOW_LOGS, SEARCH_SLOW_LOGS
+* `log_type` - (Required) A type of Elasticsearch log. Valid values: INDEX_SLOW_LOGS, SEARCH_SLOW_LOGS, ES_APPLICATION_LOGS
 * `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Specifies whether given log publishing option is enabled or not.
 
+**cognito_options** supports the following attribute:
+
+AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html)
+
+* `enabled` - (Optional, Default: false) Specifies whether Amazon Cognito authentication with Kibana is enabled or not
+* `user_pool_id` - (Required) ID of the Cognito User Pool to use
+* `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use
+* `role_arn` - (Required) ARN of the IAM role that has the AmazonESCognitoAccess policy attached
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the domain.
 * `domain_id` - Unique identifier for the domain.

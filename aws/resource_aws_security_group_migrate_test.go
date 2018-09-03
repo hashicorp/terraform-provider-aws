@@ -19,7 +19,7 @@ func TestAWSSecurityGroupMigrateState(t *testing.T) {
 				"name": "test",
 			},
 			Expected: map[string]string{
-				"name": "test",
+				"name":                   "test",
 				"revoke_rules_on_delete": "false",
 			},
 		},

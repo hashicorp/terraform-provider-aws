@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -111,7 +110,7 @@ func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeListenerCertificates(input)
 		if err != nil {
-			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == "ListenerNotFound" {
+			if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -119,11 +118,11 @@ func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
 
 		for _, cert := range resp.Certificates {
 			// We only care about additional certificates.
-			if *cert.IsDefault {
+			if aws.BoolValue(cert.IsDefault) {
 				continue
 			}
 
-			if *cert.CertificateArn == rs.Primary.Attributes["certificate_arn"] {
+			if aws.StringValue(cert.CertificateArn) == rs.Primary.Attributes["certificate_arn"] {
 				return errors.New("LB listener certificate not destroyed")
 			}
 		}
@@ -424,6 +423,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+  tags {
+  	Name = "terraform-testacc-lb-listener-certificate"
+  }
 }
 
 variable "subnets" {
@@ -435,6 +437,9 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "${element(var.subnets, count.index)}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  tags {
+    Name = "tf-acc-lb-listener-certificate-${count.index}"
+  }
 }`, rName, suffix, suffix, suffix, suffix)
 }
 

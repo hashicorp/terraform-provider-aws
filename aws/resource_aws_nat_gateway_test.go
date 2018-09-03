@@ -39,6 +39,10 @@ func testSweepNatGateways(region string) error {
 	}
 	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing NAT Gateways: %s", err)
 	}
 
@@ -70,7 +74,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -88,7 +92,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -97,7 +101,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -188,12 +192,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-basic-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-basic-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -257,12 +267,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-tags-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-tags-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -327,12 +343,18 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
+  tags {
+    Name = "tf-acc-nat-gw-tags-private"
+  }
 }
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
+  tags {
+    Name = "tf-acc-nat-gw-tags-public"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {

@@ -22,7 +22,7 @@ func TestAccAWSSesTemplate_Basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplate("aws_ses_template.test", &template),
@@ -45,7 +45,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplate("aws_ses_template.test", &template),
@@ -55,7 +55,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ses_template.test", "text", ""),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic2(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplate("aws_ses_template.test", &template),
@@ -65,7 +65,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ses_template.test", "text", "text"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic3(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplate("aws_ses_template.test", &template),
@@ -89,11 +89,11 @@ func TestAccAWSSesTemplate_Import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(name),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

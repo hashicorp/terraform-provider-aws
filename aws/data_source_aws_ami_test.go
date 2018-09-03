@@ -285,6 +285,23 @@ const testAccCheckAwsAmiDataSourceEmptyOwnersConfig = `
 data "aws_ami" "amazon_ami" {
   most_recent = true
   owners = [""]
+
+  # we need to test the owners = [""] for regressions but we want to filter the results
+  # beyond all public AWS AMIs :)
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
 }
 `
 

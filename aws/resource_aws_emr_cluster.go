@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -41,6 +42,17 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Required: false,
 				Optional: true,
 				ForceNew: true,
+			},
+			"additional_info": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"core_instance_type": {
 				Type:     schema.TypeString,
@@ -100,34 +112,42 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"key_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"additional_slave_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_master_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"emr_managed_slave_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"instance_profile": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"service_access_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -198,7 +218,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateAwsEmrEbsVolumeType,
+										ValidateFunc: validateAwsEmrEbsVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -224,9 +244,13 @@ func resourceAwsEMRCluster() *schema.Resource {
 							},
 						},
 						"instance_role": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateAwsEmrInstanceGroupRole,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								emr.InstanceFleetTypeMaster,
+								emr.InstanceFleetTypeCore,
+								emr.InstanceFleetTypeTask,
+							}, false),
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -264,11 +288,81 @@ func resourceAwsEMRCluster() *schema.Resource {
 					},
 				},
 			},
+			"step": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action_on_failure": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								emr.ActionOnFailureCancelAndWait,
+								emr.ActionOnFailureContinue,
+								emr.ActionOnFailureTerminateCluster,
+								emr.ActionOnFailureTerminateJobFlow,
+							}, false),
+						},
+						"hadoop_jar_step": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"args": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"jar": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"main_class": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"properties": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 			"configurations": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"configurations_json"},
+			},
+			"configurations_json": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"configurations"},
+				ValidateFunc:     validateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"service_role": {
 				Type:     schema.TypeString,
@@ -290,7 +384,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"autoscaling_role": &schema.Schema{
+			"autoscaling_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -322,7 +416,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	applications := d.Get("applications").(*schema.Set).List()
 
 	keepJobFlowAliveWhenNoSteps := true
-	if v, ok := d.GetOk("keep_job_flow_alive_when_no_steps"); ok {
+	if v, ok := d.GetOkExists("keep_job_flow_alive_when_no_steps"); ok {
 		keepJobFlowAliveWhenNoSteps = v.(bool)
 	}
 
@@ -409,6 +503,14 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 	}
 
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		params.AdditionalInfo = aws.String(info)
+	}
+
 	if v, ok := d.GetOk("log_uri"); ok {
 		params.LogUri = aws.String(v.(string))
 	}
@@ -441,6 +543,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		bootstrapActions := v.(*schema.Set).List()
 		params.BootstrapActions = expandBootstrapActions(bootstrapActions)
 	}
+	if v, ok := d.GetOk("step"); ok {
+		steps := v.([]interface{})
+		params.Steps = expandEmrStepConfigs(steps)
+	}
 	if v, ok := d.GetOk("tags"); ok {
 		tagsIn := v.(map[string]interface{})
 		params.Tags = expandTags(tagsIn)
@@ -448,6 +554,17 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("configurations"); ok {
 		confUrl := v.(string)
 		params.Configurations = expandConfigures(confUrl)
+	}
+
+	if v, ok := d.GetOk("configurations_json"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("configurations_json contains an invalid JSON: %v", err)
+		}
+		params.Configurations, err = expandConfigurationJson(info)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
+		}
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes"); ok {
@@ -482,8 +599,14 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	log.Println("[INFO] Waiting for EMR Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"STARTING", "BOOTSTRAPPING"},
-		Target:     []string{"WAITING", "RUNNING"},
+		Pending: []string{
+			emr.ClusterStateBootstrapping,
+			emr.ClusterStateStarting,
+		},
+		Target: []string{
+			emr.ClusterStateRunning,
+			emr.ClusterStateWaiting,
+		},
 		Refresh:    resourceAwsEMRClusterStateRefreshFunc(d, meta),
 		Timeout:    75 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -519,19 +642,15 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	cluster := resp.Cluster
 
 	if cluster.Status != nil {
-		if *cluster.Status.State == "TERMINATED" {
-			log.Printf("[DEBUG] EMR Cluster (%s) was TERMINATED already", d.Id())
+		state := aws.StringValue(cluster.Status.State)
+
+		if state == emr.ClusterStateTerminated || state == emr.ClusterStateTerminatedWithErrors {
+			log.Printf("[WARN] EMR Cluster (%s) was %s already, removing from state", d.Id(), state)
 			d.SetId("")
 			return nil
 		}
 
-		if *cluster.Status.State == "TERMINATED_WITH_ERRORS" {
-			log.Printf("[DEBUG] EMR Cluster (%s) was TERMINATED_WITH_ERRORS already", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		d.Set("cluster_state", cluster.Status.State)
+		d.Set("cluster_state", state)
 	}
 
 	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
@@ -572,6 +691,16 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting EMR configurations for cluster (%s): %s", d.Id(), err)
 	}
 
+	if _, ok := d.GetOk("configurations_json"); ok {
+		configOut, err := flattenConfigurationJson(cluster.Configurations)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR cluster configurations: %s", err)
+		}
+		if err := d.Set("configurations_json", configOut); err != nil {
+			return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
+		}
+	}
+
 	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
 		log.Printf("[ERR] Error setting EMR Ec2 Attributes: %s", err)
 	}
@@ -589,6 +718,33 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("bootstrap_action", flattenBootstrapArguments(respBootstraps.BootstrapActions)); err != nil {
 		log.Printf("[WARN] Error setting Bootstrap Actions: %s", err)
+	}
+
+	var stepSummaries []*emr.StepSummary
+	listStepsInput := &emr.ListStepsInput{
+		ClusterId: aws.String(d.Id()),
+	}
+	err = emrconn.ListStepsPages(listStepsInput, func(page *emr.ListStepsOutput, lastPage bool) bool {
+		// ListSteps returns steps in reverse order (newest first)
+		for _, step := range page.Steps {
+			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("error listing steps: %s", err)
+	}
+	if err := d.Set("step", flattenEmrStepSummaries(stepSummaries)); err != nil {
+		return fmt.Errorf("error setting step: %s", err)
+	}
+
+	// AWS provides no other way to read back the additional_info
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		d.Set("additional_info", info)
 	}
 
 	return nil
@@ -633,8 +789,14 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Println("[INFO] Waiting for EMR Cluster to be available")
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"STARTING", "BOOTSTRAPPING"},
-			Target:     []string{"WAITING", "RUNNING"},
+			Pending: []string{
+				emr.ClusterStateBootstrapping,
+				emr.ClusterStateStarting,
+			},
+			Target: []string{
+				emr.ClusterStateRunning,
+				emr.ClusterStateWaiting,
+			},
 			Refresh:    resourceAwsEMRClusterStateRefreshFunc(d, meta),
 			Timeout:    40 * time.Minute,
 			MinTimeout: 10 * time.Second,
@@ -718,7 +880,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		var terminated []string
 		for j, i := range resp.Instances {
 			if i.Status != nil {
-				if *i.Status.State == "TERMINATED" {
+				if aws.StringValue(i.Status.State) == emr.InstanceStateTerminated {
 					terminated = append(terminated, *i.Ec2InstanceId)
 				}
 			} else {
@@ -736,7 +898,6 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[ERR] Error waiting for EMR Cluster (%s) Instances to drain", d.Id())
 	}
 
-	d.SetId("")
 	return nil
 }
 
@@ -831,6 +992,49 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 	l = append(l, m)
 
 	return l
+}
+
+func flattenEmrHadoopStepConfig(config *emr.HadoopStepConfig) map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"args":       aws.StringValueSlice(config.Args),
+		"jar":        aws.StringValue(config.Jar),
+		"main_class": aws.StringValue(config.MainClass),
+		"properties": aws.StringValueMap(config.Properties),
+	}
+
+	return m
+}
+
+func flattenEmrStepSummaries(stepSummaries []*emr.StepSummary) []map[string]interface{} {
+	l := make([]map[string]interface{}, 0)
+
+	if len(stepSummaries) == 0 {
+		return l
+	}
+
+	for _, stepSummary := range stepSummaries {
+		l = append(l, flattenEmrStepSummary(stepSummary))
+	}
+
+	return l
+}
+
+func flattenEmrStepSummary(stepSummary *emr.StepSummary) map[string]interface{} {
+	if stepSummary == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"action_on_failure": aws.StringValue(stepSummary.ActionOnFailure),
+		"hadoop_jar_step":   []map[string]interface{}{flattenEmrHadoopStepConfig(stepSummary.Config)},
+		"name":              aws.StringValue(stepSummary.Name),
+	}
+
+	return m
 }
 
 func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
@@ -1014,6 +1218,40 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 	return actionsOut
 }
 
+func expandEmrHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepConfig {
+	hadoopJarStepConfig := &emr.HadoopJarStepConfig{
+		Jar: aws.String(m["jar"].(string)),
+	}
+
+	if v, ok := m["args"]; ok {
+		hadoopJarStepConfig.Args = expandStringList(v.([]interface{}))
+	}
+
+	if v, ok := m["main_class"]; ok {
+		hadoopJarStepConfig.MainClass = aws.String(v.(string))
+	}
+
+	if v, ok := m["properties"]; ok {
+		hadoopJarStepConfig.Properties = expandEmrKeyValues(v.(map[string]interface{}))
+	}
+
+	return hadoopJarStepConfig
+}
+
+func expandEmrKeyValues(m map[string]interface{}) []*emr.KeyValue {
+	keyValues := make([]*emr.KeyValue, 0)
+
+	for k, v := range m {
+		keyValue := &emr.KeyValue{
+			Key:   aws.String(k),
+			Value: aws.String(v.(string)),
+		}
+		keyValues = append(keyValues, keyValue)
+	}
+
+	return keyValues
+}
+
 func expandEmrKerberosAttributes(m map[string]interface{}) *emr.KerberosAttributes {
 	kerberosAttributes := &emr.KerberosAttributes{
 		KdcAdminPassword: aws.String(m["kdc_admin_password"].(string)),
@@ -1029,6 +1267,30 @@ func expandEmrKerberosAttributes(m map[string]interface{}) *emr.KerberosAttribut
 		kerberosAttributes.CrossRealmTrustPrincipalPassword = aws.String(v.(string))
 	}
 	return kerberosAttributes
+}
+
+func expandEmrStepConfig(m map[string]interface{}) *emr.StepConfig {
+	hadoopJarStepList := m["hadoop_jar_step"].([]interface{})
+	hadoopJarStepMap := hadoopJarStepList[0].(map[string]interface{})
+
+	stepConfig := &emr.StepConfig{
+		ActionOnFailure: aws.String(m["action_on_failure"].(string)),
+		HadoopJarStep:   expandEmrHadoopJarStepConfig(hadoopJarStepMap),
+		Name:            aws.String(m["name"].(string)),
+	}
+
+	return stepConfig
+}
+
+func expandEmrStepConfigs(l []interface{}) []*emr.StepConfig {
+	stepConfigs := []*emr.StepConfig{}
+
+	for _, raw := range l {
+		m := raw.(map[string]interface{})
+		stepConfigs = append(stepConfigs, expandEmrStepConfig(m))
+	}
+
+	return stepConfigs
 }
 
 func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) []*emr.InstanceGroupConfig {
@@ -1111,6 +1373,25 @@ func expandAutoScalingPolicy(rawDefinitions string) (*emr.AutoScalingPolicy, err
 	return policy, nil
 }
 
+func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
+	configsOut := []*emr.Configuration{}
+	err := json.Unmarshal([]byte(input), &configsOut)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] Expanded EMR Configurations %s", configsOut)
+
+	return configsOut, nil
+}
+
+func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
+	out, err := jsonutil.BuildJSON(config)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
 func expandConfigures(input string) []*emr.Configuration {
 	configsOut := []*emr.Configuration{}
 	if strings.HasPrefix(input, "http") {
@@ -1182,23 +1463,25 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 			return nil, "", err
 		}
 
-		emrc := resp.Cluster
-
-		if emrc == nil {
+		if resp.Cluster == nil {
 			return 42, "destroyed", nil
 		}
 
-		if resp.Cluster.Status != nil {
-			log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), *resp.Cluster.Status)
+		if resp.Cluster.Status == nil {
+			return resp.Cluster, "", fmt.Errorf("cluster status not provided")
 		}
 
-		status := emrc.Status
-		if *status.State == "TERMINATING" || *status.State == "TERMINATED_WITH_ERRORS" {
-			reason := *status.StateChangeReason
-			return emrc, *status.State, fmt.Errorf("%s: %s",
-				*reason.Code, *reason.Message)
+		state := aws.StringValue(resp.Cluster.Status.State)
+		log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), state)
+
+		if state == emr.ClusterStateTerminating || state == emr.ClusterStateTerminatedWithErrors {
+			reason := resp.Cluster.Status.StateChangeReason
+			if reason == nil {
+				return resp.Cluster, state, fmt.Errorf("%s: reason code and message not provided", state)
+			}
+			return resp.Cluster, state, fmt.Errorf("%s: %s: %s", state, aws.StringValue(reason.Code), aws.StringValue(reason.Message))
 		}
 
-		return emrc, *status.State, nil
+		return resp.Cluster, state, nil
 	}
 }

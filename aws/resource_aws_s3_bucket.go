@@ -11,13 +11,16 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsS3Bucket() *schema.Resource {
@@ -39,12 +42,18 @@ func resourceAwsS3Bucket() *schema.Resource {
 				ConflictsWith: []string{"bucket_prefix"},
 			},
 			"bucket_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"bucket"},
 			},
 
 			"bucket_domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -215,7 +224,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateS3BucketLifecycleRuleId,
+							ValidateFunc: validateMaxLength(255),
 						},
 						"prefix": {
 							Type:     schema.TypeString,
@@ -244,7 +253,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"days": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validateS3BucketLifecycleExpirationDays,
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"expired_object_delete_marker": {
 										Type:     schema.TypeBool,
@@ -262,7 +271,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"days": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validateS3BucketLifecycleExpirationDays,
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 								},
 							},
@@ -281,12 +290,12 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"days": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validateS3BucketLifecycleTransitionDays,
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketLifecycleStorageClass,
+										ValidateFunc: validateS3BucketLifecycleStorageClass(),
 									},
 								},
 							},
@@ -300,12 +309,12 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"days": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validateS3BucketLifecycleTransitionDays,
+										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketLifecycleStorageClass,
+										ValidateFunc: validateS3BucketLifecycleStorageClass(),
 									},
 								},
 							},
@@ -321,17 +330,23 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acceleration_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateS3BucketAccelerationStatus,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.BucketAccelerateStatusEnabled,
+					s3.BucketAccelerateStatusSuspended,
+				}, false),
 			},
 
 			"request_payer": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateS3BucketRequestPayerType,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.PayerRequester,
+					s3.PayerBucketOwner,
+				}, false),
 			},
 
 			"replication_configuration": {
@@ -353,7 +368,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateS3BucketReplicationRuleId,
+										ValidateFunc: validateMaxLength(255),
 									},
 									"destination": {
 										Type:     schema.TypeSet,
@@ -369,9 +384,14 @@ func resourceAwsS3Bucket() *schema.Resource {
 													ValidateFunc: validateArn,
 												},
 												"storage_class": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateS3BucketReplicationDestinationStorageClass,
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														s3.StorageClassStandard,
+														s3.StorageClassOnezoneIa,
+														s3.StorageClassStandardIa,
+														s3.StorageClassReducedRedundancy,
+													}, false),
 												},
 												"replica_kms_key_id": {
 													Type:     schema.TypeString,
@@ -409,12 +429,15 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"prefix": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketReplicationRulePrefix,
+										ValidateFunc: validateMaxLength(1024),
 									},
 									"status": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateS3BucketReplicationRuleStatus,
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											s3.ReplicationRuleStatusEnabled,
+											s3.ReplicationRuleStatusDisabled,
+										}, false),
 									},
 								},
 							},
@@ -446,9 +469,12 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 												},
 												"sse_algorithm": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateS3BucketServerSideEncryptionAlgorithm,
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														s3.ServerSideEncryptionAes256,
+														s3.ServerSideEncryptionAwsKms,
+													}, false),
 												},
 											},
 										},
@@ -563,7 +589,7 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	if d.HasChange("acl") {
+	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
 			return err
 		}
@@ -671,14 +697,18 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	cors := corsResponse.(*s3.GetBucketCorsOutput)
 	if err != nil {
 		// An S3 Bucket might not have CORS configuration set.
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() != "NoSuchCORSConfiguration" {
+				return err
+			}
+			log.Printf("[WARN] S3 bucket: %s, no CORS configuration could be found.", d.Id())
+		} else {
 			return err
 		}
-		log.Printf("[WARN] S3 bucket: %s, no CORS configuration could be found.", d.Id())
 	}
+	cors := corsResponse.(*s3.GetBucketCorsOutput)
 	log.Printf("[DEBUG] S3 bucket: %s, read CORS: %v", d.Id(), cors)
 	if cors.CORSRules != nil {
 		rules := make([]map[string]interface{}, 0, len(cors.CORSRules))
@@ -697,6 +727,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			rules = append(rules, rule)
 		}
 		if err := d.Set("cors_rule", rules); err != nil {
+			return err
+		}
+	} else {
+		log.Printf("[DEBUG] S3 bucket: %s, read CORS: %v", d.Id(), cors)
+		if err := d.Set("cors_rule", make([]map[string]interface{}, 0)); err != nil {
 			return err
 		}
 	}
@@ -873,14 +908,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	lifecycle := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput)
 	if err != nil {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() != 404 {
 			return err
 		}
 	}
-	log.Printf("[DEBUG] S3 Bucket: %s, lifecycle: %v", d.Id(), lifecycle)
-	if len(lifecycle.Rules) > 0 {
+	if lifecycle, ok := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput); ok && len(lifecycle.Rules) > 0 {
+		log.Printf("[DEBUG] S3 Bucket: %s, lifecycle: %v", d.Id(), lifecycle)
 		rules := make([]map[string]interface{}, 0, len(lifecycle.Rules))
 
 		for _, lifecycleRule := range lifecycle.Rules {
@@ -1060,6 +1094,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Add the bucket_regional_domain_name as an attribute
+	regionalEndpoint, err := BucketRegionalDomainName(d.Get("bucket").(string), region)
+	if err != nil {
+		return err
+	}
+	d.Set("bucket_regional_domain_name", regionalEndpoint)
+
 	// Add the hosted zone ID for this bucket's region as an attribute
 	hostedZoneID, err := HostedZoneIDForRegion(region)
 	if err != nil {
@@ -1091,7 +1132,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("arn", fmt.Sprintf("arn:%s:s3:::%s", meta.(*AWSClient).partition, d.Id()))
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "s3",
+		Resource:  d.Id(),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -1236,8 +1282,9 @@ func resourceAwsS3BucketCorsUpdate(s3conn *s3.S3, d *schema.ResourceData) error 
 				} else {
 					vMap := make([]*string, len(v.([]interface{})))
 					for i, vv := range v.([]interface{}) {
-						str := vv.(string)
-						vMap[i] = aws.String(str)
+						if str, ok := vv.(string); ok {
+							vMap[i] = aws.String(str)
+						}
 					}
 					switch k {
 					case "allowed_headers":
@@ -1415,6 +1462,20 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 
 func bucketDomainName(bucket string) string {
 	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
+}
+
+// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+func BucketRegionalDomainName(bucket string, region string) (string, error) {
+	// Return a default AWS Commercial domain name if no region is provided
+	// Otherwise EndpointFor() will return BUCKET.s3..amazonaws.com
+	if region == "" {
+		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil
+	}
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s.%s", bucket, strings.TrimPrefix(endpoint.URL, "https://")), nil
 }
 
 func WebsiteEndpoint(bucket string, region string) *S3Website {
@@ -1639,7 +1700,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 
 	rc.Rules = rules
 	i := &s3.PutBucketEncryptionInput{
-		Bucket: aws.String(bucket),
+		Bucket:                            aws.String(bucket),
 		ServerSideEncryptionConfiguration: rc,
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
@@ -1746,7 +1807,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 
 	rc.Rules = rules
 	i := &s3.PutBucketReplicationInput{
-		Bucket: aws.String(bucket),
+		Bucket:                   aws.String(bucket),
 		ReplicationConfiguration: rc,
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
@@ -2053,28 +2114,6 @@ func normalizeRegion(region string) string {
 	}
 
 	return region
-}
-
-func validateS3BucketAccelerationStatus(v interface{}, k string) (ws []string, errors []error) {
-	validTypes := map[string]struct{}{
-		"Enabled":   struct{}{},
-		"Suspended": struct{}{},
-	}
-
-	if _, ok := validTypes[v.(string)]; !ok {
-		errors = append(errors, fmt.Errorf("S3 Bucket Acceleration Status %q is invalid, must be %q or %q", v.(string), "Enabled", "Suspended"))
-	}
-	return
-}
-
-func validateS3BucketRequestPayerType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.PayerRequester && value != s3.PayerBucketOwner {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Request Payer type %q. Valid types are either %q or %q",
-			k, value, s3.PayerRequester, s3.PayerBucketOwner))
-	}
-	return
 }
 
 // validateS3BucketName validates any S3 bucket name that is not inside the us-east-1 region.

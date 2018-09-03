@@ -20,7 +20,7 @@ func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionRouteDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsVpnConnectionRouteConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionRoute(
@@ -31,7 +31,7 @@ func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionRoute(
@@ -56,11 +56,11 @@ func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
 		cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(rs.Primary.ID)
 
 		routeFilters := []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("route.destination-cidr-block"),
 				Values: []*string{aws.String(cidrBlock)},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("vpn-connection-id"),
 				Values: []*string{aws.String(vpnConnectionId)},
 			},
@@ -122,11 +122,11 @@ func testAccAwsVpnConnectionRoute(
 		cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(route.Primary.ID)
 
 		routeFilters := []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("route.destination-cidr-block"),
 				Values: []*string{aws.String(cidrBlock)},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("vpn-connection-id"),
 				Values: []*string{aws.String(vpnConnectionId)},
 			},

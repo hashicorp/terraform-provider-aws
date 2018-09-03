@@ -20,7 +20,7 @@ func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultSecurityGroupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDefaultSecurityGroupExists("aws_default_security_group.web", &group),
@@ -52,7 +52,7 @@ func TestAccAWSDefaultSecurityGroup_classic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDefaultSecurityGroupConfig_classic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDefaultSecurityGroupExists("aws_default_security_group.web", &group),
@@ -115,7 +115,7 @@ func testAccCheckAWSDefaultSecurityGroupAttributes(group *ec2.SecurityGroup) res
 			FromPort:   aws.Int64(80),
 			ToPort:     aws.Int64(8000),
 			IpProtocol: aws.String("tcp"),
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("10.0.0.0/8")}},
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("10.0.0.0/8")}},
 		}
 
 		if *group.GroupName != "default" {

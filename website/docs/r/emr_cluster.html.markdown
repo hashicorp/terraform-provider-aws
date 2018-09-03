@@ -19,6 +19,14 @@ resource "aws_emr_cluster" "emr-test-cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
+  additional_info = <<EOF
+{
+  "instanceAwsClientConfiguration": {
+    "proxyPort": 8099,
+    "proxyHost": "myproxy.example.com"
+  }
+}
+EOF
 
   termination_protection = false
   keep_job_flow_alive_when_no_steps = true
@@ -91,7 +99,34 @@ EOF
     args = ["instance.isMaster=true", "echo running on master node"]
   }
 
-  configurations = "test-fixtures/emr_configurations.json"
+  configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    {
+      "Classification": "spark-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF  
 
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
@@ -105,6 +140,34 @@ Started](https://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr
 guide for more information on these IAM roles. There is also a fully-bootable
 example Terraform configuration at the bottom of this page.
 
+### Enable Debug Logging
+
+[Debug logging in EMR](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-debugging.html)
+is implemented as a step. It is highly recommended to utilize the
+[lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other
+steps are being managed outside of Terraform.
+
+```hcl
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  step {
+    action = "TERMINATE_CLUSTER"
+    name   = "Setup Hadoop Debugging"
+
+    hadoop_jar_step {
+      jar  = "command-runner.jar"
+      args = ["state-pusher-script"]
+    }
+  }
+
+  # Optional: ignore outside changes to running cluster steps
+  lifecycle {
+    ignore_changes = ["step"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -113,6 +176,7 @@ The following arguments are supported:
 * `release_label` - (Required) The release label for the Amazon EMR release
 * `master_instance_type` - (Optional) The EC2 instance type of the master node. Exactly one of `master_instance_type` and `instance_group` must be specified.
 * `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized. 
+* `additional_info` - (Optional) A JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
 * `core_instance_type` - (Optional) The EC2 instance type of the slave nodes. Cannot be specified if `instance_groups` is set
@@ -131,8 +195,33 @@ flow. Defined below
 * `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
+* `configurations_json` - (Optional) A JSON string for supplying list of configurations for the EMR cluster.
+
+~> **NOTE on configurations_json:** If the `Configurations` value is empty then you should skip
+the `Configurations` field instead of providing empty list as value `"Configurations": []`.
+
+```hcl
+configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
+```
+
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`
 * `autoscaling_role` - (Optional) An IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
+* `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform.
 * `tags` - (Optional) list of tags to apply to the EMR Cluster
 
 
@@ -193,7 +282,7 @@ Attributes for each task instance group in the cluster
 Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
 
 * `size` - (Required) The volume size, in gibibytes (GiB).
-* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, and `standard`.
+* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, `standard` and `st1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 * `iops` - (Optional) The number of I/O operations per second (IOPS) that the volume supports
 * `volumes_per_instance` - (Optional) The number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1)
 
@@ -204,9 +293,26 @@ Attributes for the EBS volumes attached to each EC2 instance in the `instance_gr
 * `path` - (Required) Location of the script to run during a bootstrap action. Can be either a location in Amazon S3 or on a local file system
 * `args` - (Optional) List of command line arguments to pass to the bootstrap action script
 
+## step
+
+Attributes for step configuration
+
+* `action_on_failure` - (Required) The action to take if the step fails. Valid values: `TERMINATE_JOB_FLOW`, `TERMINATE_CLUSTER`, `CANCEL_AND_WAIT`, and `CONTINUE`
+* `hadoop_jar_step` - (Required) The JAR file used for the step. Defined below.
+* `name` - (Required) The name of the step.
+
+### hadoop_jar_step
+
+Attributes for Hadoop job step configuration
+
+* `args` - (Optional) List of command line arguments passed to the JAR file's main function when executed.
+* `jar` - (Required) Path to a JAR file run during the step.
+* `main_class` - (Optional) Name of the main class in the specified Java file. If not specified, the JAR file should specify a Main-Class in its manifest file.
+* `properties` - (Optional) Key-Value map of Java properties that are set when the step runs. You can use these properties to pass key value pairs to your main function.
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the EMR Cluster
 * `name` - The name of the cluster.
@@ -266,7 +372,34 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     args = ["instance.isMaster=true", "echo running on master node"]
   }
 
-  configurations = "test-fixtures/emr_configurations.json"
+  configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    {
+      "Classification": "spark-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
 
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }

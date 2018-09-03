@@ -63,6 +63,7 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/2694
 func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	var def ecs.TaskDefinition
+	var service ecs.Service
 
 	rString := acctest.RandString(8)
 	clusterName := fmt.Sprintf("tf_acc_cluster_with_ecs_service_%s", rString)
@@ -78,14 +79,14 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinitionWithEcsService(clusterName, svcName, tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
-					testAccCheckAWSEcsServiceExists("aws_ecs_service.sleep-svc"),
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.sleep-svc", &service),
 				),
 			},
 			{
 				Config: testAccAWSEcsTaskDefinitionWithEcsServiceModified(clusterName, svcName, tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
-					testAccCheckAWSEcsServiceExists("aws_ecs_service.sleep-svc"),
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.sleep-svc", &service),
 				),
 			},
 		},
@@ -261,6 +262,40 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
+func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
+
+	markTaskDefinitionInactive := func() {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+		conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
+			TaskDefinition: aws.String(fmt.Sprintf("%s:1", tdName)),
+		})
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinition(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
+				),
+			},
+			{
+				Config:    testAccAWSEcsTaskDefinition(tdName),
+				PreConfig: markTaskDefinitionInactive,
+				Check:     resource.TestCheckResourceAttr("aws_ecs_task_definition.jenkins", "revision", "2"), // should get re-created
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -279,31 +314,6 @@ func testAccCheckAWSTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) reso
 		return nil
 	}
 }
-func TestValidateAwsEcsTaskDefinitionNetworkMode(t *testing.T) {
-	validNames := []string{
-		"bridge",
-		"host",
-		"none",
-	}
-	for _, v := range validNames {
-		_, errors := validateAwsEcsTaskDefinitionNetworkMode(v, "network_mode")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid AWS ECS Task Definition Network Mode: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"bridged",
-		"-docker",
-	}
-	for _, v := range invalidNames {
-		_, errors := validateAwsEcsTaskDefinitionNetworkMode(v, "network_mode")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid AWS ECS Task Definition Network Mode", v)
-		}
-	}
-}
-
 func TestValidateAwsEcsTaskDefinitionContainerDefinitions(t *testing.T) {
 	validDefinitions := []string{
 		testValidateAwsEcsTaskDefinitionValidContainerDefinitions,

@@ -1,7 +1,7 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_organizations_organization
-sidebar_current: "docs-aws-resource-organizations-organization|"
+page_title: "AWS: aws_organizations_organization"
+sidebar_current: "docs-aws-resource-organizations-organization"
 description: |-
   Provides a resource to create an organization.
 ---
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the organization
 * `id` - Identifier of the organization

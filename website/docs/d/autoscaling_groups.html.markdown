@@ -48,6 +48,6 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `names` - A list of the Autoscaling Groups in the current region.

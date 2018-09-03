@@ -22,7 +22,7 @@ func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConnectionNotificationBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointConnectionNotificationExists("aws_vpc_endpoint_connection_notification.foo"),
@@ -31,7 +31,7 @@ func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "notification_type", "Topic"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConnectionNotificationModifiedConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointConnectionNotificationExists("aws_vpc_endpoint_connection_notification.foo"),
@@ -134,7 +134,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags {
-    Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet1"
+    Name = "tf-acc-vpc-endpoint-connection-notification-1"
   }
 }
 
@@ -144,7 +144,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags {
-    Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet2"
+    Name = "tf-acc-vpc-endpoint-connection-notification-2"
   }
 }
 
@@ -223,7 +223,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			availability_zone = "us-west-2a"
 
 			tags {
-				Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet1"
+				Name = "tf-acc-vpc-endpoint-connection-notification-1"
 			}
 		}
 
@@ -233,7 +233,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			availability_zone = "us-west-2b"
 
 			tags {
-				Name = "testAccVpcEndpointConnectionNotificationBasicConfig_subnet2"
+				Name = "tf-acc-vpc-endpoint-connection-notification-2"
 			}
 		}
 
