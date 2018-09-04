@@ -41876,7 +41876,9 @@ type DescribeVolumeAttributeInput struct {
 	_ struct{} `type:"structure"`
 
 	// The attribute of the volume. This parameter is required.
-	Attribute *string `type:"string" enum:"VolumeAttributeName"`
+	//
+	// Attribute is a required field
+	Attribute *string `type:"string" required:"true" enum:"VolumeAttributeName"`
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
@@ -41903,6 +41905,9 @@ func (s DescribeVolumeAttributeInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeVolumeAttributeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeVolumeAttributeInput"}
+	if s.Attribute == nil {
+		invalidParams.Add(request.NewErrParamRequired("Attribute"))
+	}
 	if s.VolumeId == nil {
 		invalidParams.Add(request.NewErrParamRequired("VolumeId"))
 	}
@@ -70713,6 +70718,27 @@ const (
 
 	// InstanceTypeT22xlarge is a InstanceType enum value
 	InstanceTypeT22xlarge = "t2.2xlarge"
+
+	// InstanceTypeT3Nano is a InstanceType enum value
+	InstanceTypeT3Nano = "t3.nano"
+
+	// InstanceTypeT3Micro is a InstanceType enum value
+	InstanceTypeT3Micro = "t3.micro"
+
+	// InstanceTypeT3Small is a InstanceType enum value
+	InstanceTypeT3Small = "t3.small"
+
+	// InstanceTypeT3Medium is a InstanceType enum value
+	InstanceTypeT3Medium = "t3.medium"
+
+	// InstanceTypeT3Large is a InstanceType enum value
+	InstanceTypeT3Large = "t3.large"
+
+	// InstanceTypeT3Xlarge is a InstanceType enum value
+	InstanceTypeT3Xlarge = "t3.xlarge"
+
+	// InstanceTypeT32xlarge is a InstanceType enum value
+	InstanceTypeT32xlarge = "t3.2xlarge"
 
 	// InstanceTypeM1Small is a InstanceType enum value
 	InstanceTypeM1Small = "m1.small"

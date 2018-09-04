@@ -19,7 +19,7 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayRequestValidatorConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRequestValidatorExists("aws_api_gateway_request_validator.test", &conf),
@@ -31,7 +31,7 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_parameters", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayRequestValidatorUpdatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRequestValidatorExists("aws_api_gateway_request_validator.test", &conf),
@@ -42,6 +42,12 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(&conf, true),
 					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_parameters", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_request_validator.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayRequestValidatorImportStateIdFunc("aws_api_gateway_request_validator.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -141,6 +147,17 @@ func testAccCheckAWSAPIGatewayRequestValidatorDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.ID), nil
+	}
 }
 
 const testAccAWSAPIGatewayRequestValidatorConfig_base = `

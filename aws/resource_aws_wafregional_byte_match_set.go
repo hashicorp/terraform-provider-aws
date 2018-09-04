@@ -19,12 +19,12 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 		Delete: resourceAwsWafRegionalByteMatchSetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"byte_match_tuple": &schema.Schema{
+			"byte_match_tuple": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"byte_match_tuples"},
@@ -48,22 +48,22 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 								},
 							},
 						},
-						"positional_constraint": &schema.Schema{
+						"positional_constraint": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"target_string": &schema.Schema{
+						"target_string": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"text_transformation": &schema.Schema{
+						"text_transformation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"byte_match_tuples": &schema.Schema{
+			"byte_match_tuples": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -85,15 +85,15 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 								},
 							},
 						},
-						"positional_constraint": &schema.Schema{
+						"positional_constraint": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"target_string": &schema.Schema{
+						"target_string": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"text_transformation": &schema.Schema{
+						"text_transformation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},

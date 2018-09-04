@@ -262,6 +262,40 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
+func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
+
+	markTaskDefinitionInactive := func() {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+		conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
+			TaskDefinition: aws.String(fmt.Sprintf("%s:1", tdName)),
+		})
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinition(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
+				),
+			},
+			{
+				Config:    testAccAWSEcsTaskDefinition(tdName),
+				PreConfig: markTaskDefinitionInactive,
+				Check:     resource.TestCheckResourceAttr("aws_ecs_task_definition.jenkins", "revision", "2"), // should get re-created
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

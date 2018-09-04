@@ -74,7 +74,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -92,7 +92,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
@@ -101,7 +101,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),

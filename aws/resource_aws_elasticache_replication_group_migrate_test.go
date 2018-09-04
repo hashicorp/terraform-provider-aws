@@ -16,7 +16,7 @@ func TestAwsElasticacheReplicationGroupMigrateState(t *testing.T) {
 		"v0Tov1": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"cluster_mode.#":                                  "1",
+				"cluster_mode.#": "1",
 				"cluster_mode.4170186206.num_node_groups":         "2",
 				"cluster_mode.4170186206.replicas_per_node_group": "1",
 			},

@@ -19891,7 +19891,7 @@ func (s *DescribeDefaultAuthorizerOutput) SetAuthorizerDescription(v *Authorizer
 type DescribeEndpointInput struct {
 	_ struct{} `type:"structure"`
 
-	// The endpoint type.
+	// The endpoint type (such as iot:Data, iot:CredentialProvider and iot:Jobs).
 	EndpointType *string `location:"querystring" locationName:"endpointType" type:"string"`
 }
 
@@ -22072,6 +22072,9 @@ func (s GetIndexingConfigurationInput) GoString() string {
 type GetIndexingConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The index configuration.
+	ThingGroupIndexingConfiguration *ThingGroupIndexingConfiguration `locationName:"thingGroupIndexingConfiguration" type:"structure"`
+
 	// Thing indexing configuration.
 	ThingIndexingConfiguration *ThingIndexingConfiguration `locationName:"thingIndexingConfiguration" type:"structure"`
 }
@@ -22084,6 +22087,12 @@ func (s GetIndexingConfigurationOutput) String() string {
 // GoString returns the string representation
 func (s GetIndexingConfigurationOutput) GoString() string {
 	return s.String()
+}
+
+// SetThingGroupIndexingConfiguration sets the ThingGroupIndexingConfiguration field's value.
+func (s *GetIndexingConfigurationOutput) SetThingGroupIndexingConfiguration(v *ThingGroupIndexingConfiguration) *GetIndexingConfigurationOutput {
+	s.ThingGroupIndexingConfiguration = v
+	return s
 }
 
 // SetThingIndexingConfiguration sets the ThingIndexingConfiguration field's value.
@@ -29143,6 +29152,9 @@ type SearchIndexOutput struct {
 	// results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
+	// The thing groups that match the search query.
+	ThingGroups []*ThingGroupDocument `locationName:"thingGroups" type:"list"`
+
 	// The things that match the search query.
 	Things []*ThingDocument `locationName:"things" type:"list"`
 }
@@ -29160,6 +29172,12 @@ func (s SearchIndexOutput) GoString() string {
 // SetNextToken sets the NextToken field's value.
 func (s *SearchIndexOutput) SetNextToken(v string) *SearchIndexOutput {
 	s.NextToken = &v
+	return s
+}
+
+// SetThingGroups sets the ThingGroups field's value.
+func (s *SearchIndexOutput) SetThingGroups(v []*ThingGroupDocument) *SearchIndexOutput {
+	s.ThingGroups = v
 	return s
 }
 
@@ -30703,6 +30721,105 @@ func (s *ThingDocument) SetThingTypeName(v string) *ThingDocument {
 	return s
 }
 
+// The thing group search index document.
+type ThingGroupDocument struct {
+	_ struct{} `type:"structure"`
+
+	// The thing group attributes.
+	Attributes map[string]*string `locationName:"attributes" type:"map"`
+
+	// Parent group names.
+	ParentGroupNames []*string `locationName:"parentGroupNames" type:"list"`
+
+	// The thing group description.
+	ThingGroupDescription *string `locationName:"thingGroupDescription" type:"string"`
+
+	// The thing group ID.
+	ThingGroupId *string `locationName:"thingGroupId" min:"1" type:"string"`
+
+	// The thing group name.
+	ThingGroupName *string `locationName:"thingGroupName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ThingGroupDocument) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThingGroupDocument) GoString() string {
+	return s.String()
+}
+
+// SetAttributes sets the Attributes field's value.
+func (s *ThingGroupDocument) SetAttributes(v map[string]*string) *ThingGroupDocument {
+	s.Attributes = v
+	return s
+}
+
+// SetParentGroupNames sets the ParentGroupNames field's value.
+func (s *ThingGroupDocument) SetParentGroupNames(v []*string) *ThingGroupDocument {
+	s.ParentGroupNames = v
+	return s
+}
+
+// SetThingGroupDescription sets the ThingGroupDescription field's value.
+func (s *ThingGroupDocument) SetThingGroupDescription(v string) *ThingGroupDocument {
+	s.ThingGroupDescription = &v
+	return s
+}
+
+// SetThingGroupId sets the ThingGroupId field's value.
+func (s *ThingGroupDocument) SetThingGroupId(v string) *ThingGroupDocument {
+	s.ThingGroupId = &v
+	return s
+}
+
+// SetThingGroupName sets the ThingGroupName field's value.
+func (s *ThingGroupDocument) SetThingGroupName(v string) *ThingGroupDocument {
+	s.ThingGroupName = &v
+	return s
+}
+
+// Thing group indexing configuration.
+type ThingGroupIndexingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Thing group indexing mode.
+	//
+	// ThingGroupIndexingMode is a required field
+	ThingGroupIndexingMode *string `locationName:"thingGroupIndexingMode" type:"string" required:"true" enum:"ThingGroupIndexingMode"`
+}
+
+// String returns the string representation
+func (s ThingGroupIndexingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThingGroupIndexingConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ThingGroupIndexingConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ThingGroupIndexingConfiguration"}
+	if s.ThingGroupIndexingMode == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingGroupIndexingMode"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetThingGroupIndexingMode sets the ThingGroupIndexingMode field's value.
+func (s *ThingGroupIndexingConfiguration) SetThingGroupIndexingMode(v string) *ThingGroupIndexingConfiguration {
+	s.ThingGroupIndexingMode = &v
+	return s
+}
+
 // Thing group metadata.
 type ThingGroupMetadata struct {
 	_ struct{} `type:"structure"`
@@ -30790,7 +30907,9 @@ type ThingIndexingConfiguration struct {
 	//    data.
 	//
 	//    * OFF - Thing indexing is disabled.
-	ThingIndexingMode *string `locationName:"thingIndexingMode" type:"string" enum:"ThingIndexingMode"`
+	//
+	// ThingIndexingMode is a required field
+	ThingIndexingMode *string `locationName:"thingIndexingMode" type:"string" required:"true" enum:"ThingIndexingMode"`
 }
 
 // String returns the string representation
@@ -30801,6 +30920,19 @@ func (s ThingIndexingConfiguration) String() string {
 // GoString returns the string representation
 func (s ThingIndexingConfiguration) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ThingIndexingConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ThingIndexingConfiguration"}
+	if s.ThingIndexingMode == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingIndexingMode"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetThingIndexingMode sets the ThingIndexingMode field's value.
@@ -31772,6 +31904,9 @@ func (s UpdateEventConfigurationsOutput) GoString() string {
 type UpdateIndexingConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
+	// Thing group indexing configuration.
+	ThingGroupIndexingConfiguration *ThingGroupIndexingConfiguration `locationName:"thingGroupIndexingConfiguration" type:"structure"`
+
 	// Thing indexing configuration.
 	ThingIndexingConfiguration *ThingIndexingConfiguration `locationName:"thingIndexingConfiguration" type:"structure"`
 }
@@ -31784,6 +31919,32 @@ func (s UpdateIndexingConfigurationInput) String() string {
 // GoString returns the string representation
 func (s UpdateIndexingConfigurationInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateIndexingConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateIndexingConfigurationInput"}
+	if s.ThingGroupIndexingConfiguration != nil {
+		if err := s.ThingGroupIndexingConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("ThingGroupIndexingConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ThingIndexingConfiguration != nil {
+		if err := s.ThingIndexingConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("ThingIndexingConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetThingGroupIndexingConfiguration sets the ThingGroupIndexingConfiguration field's value.
+func (s *UpdateIndexingConfigurationInput) SetThingGroupIndexingConfiguration(v *ThingGroupIndexingConfiguration) *UpdateIndexingConfigurationInput {
+	s.ThingGroupIndexingConfiguration = v
+	return s
 }
 
 // SetThingIndexingConfiguration sets the ThingIndexingConfiguration field's value.
@@ -33191,6 +33352,14 @@ const (
 
 	// TargetSelectionSnapshot is a TargetSelection enum value
 	TargetSelectionSnapshot = "SNAPSHOT"
+)
+
+const (
+	// ThingGroupIndexingModeOff is a ThingGroupIndexingMode enum value
+	ThingGroupIndexingModeOff = "OFF"
+
+	// ThingGroupIndexingModeOn is a ThingGroupIndexingMode enum value
+	ThingGroupIndexingModeOn = "ON"
 )
 
 const (

@@ -485,10 +485,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -544,10 +544,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -604,10 +604,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -662,10 +662,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},

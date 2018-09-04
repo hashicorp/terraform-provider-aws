@@ -88,7 +88,7 @@ func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -107,7 +107,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -117,7 +117,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfigWithMaxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -130,7 +130,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3", "true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfigWithMaxCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -143,7 +143,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),

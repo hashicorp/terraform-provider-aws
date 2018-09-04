@@ -21,7 +21,7 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
@@ -38,7 +38,7 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 						"aws_elasticache_parameter_group.bar", "parameter.283487565.value", "yes"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupAddParametersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
@@ -72,7 +72,7 @@ func TestAccAWSElasticacheParameterGroup_only(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupOnlyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
@@ -133,7 +133,7 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupConfig_UppercaseName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),

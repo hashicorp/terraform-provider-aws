@@ -45,6 +45,12 @@ func TestAccAWSRoute_basic(t *testing.T) {
 					testCheck,
 				),
 			},
+			{
+				ResourceName:      "aws_route.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -82,6 +88,12 @@ func TestAccAWSRoute_ipv6Support(t *testing.T) {
 					testCheck,
 				),
 			},
+			{
+				ResourceName:      "aws_route.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -101,6 +113,12 @@ func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.igw", &route),
 				),
+			},
+			{
+				ResourceName:      "aws_route.igw",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.igw"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -122,6 +140,12 @@ func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
 					testAccCheckAWSRouteExists("aws_route.internal-default-route-ipv6", &route),
 				),
 			},
+			{
+				ResourceName:      "aws_route.internal-default-route-ipv6",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.internal-default-route-ipv6"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -142,6 +166,12 @@ func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
 					testAccCheckAWSRouteExists("aws_route.internal-default-route-ipv6", &route),
 				),
 			},
+			{
+				ResourceName:      "aws_route.internal-default-route-ipv6",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.internal-default-route-ipv6"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -161,6 +191,12 @@ func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.pc", &route),
 				),
+			},
+			{
+				ResourceName:      "aws_route.pc",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.pc"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -188,6 +224,12 @@ func TestAccAWSRoute_changeRouteTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.bar", &after),
 				),
+			},
+			{
+				ResourceName:      "aws_route.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -260,6 +302,12 @@ func TestAccAWSRoute_changeCidr(t *testing.T) {
 					testCheckChange,
 				),
 			},
+			{
+				ResourceName:      "aws_route.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -298,6 +346,12 @@ func TestAccAWSRoute_noopdiff(t *testing.T) {
 					testCheckChange,
 				),
 			},
+			{
+				ResourceName:      "aws_route.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -316,6 +370,12 @@ func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 					testAccCheckAWSRouteExists("aws_route.bar", &route),
 				),
 			},
+			{
+				ResourceName:      "aws_route.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -332,7 +392,7 @@ func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		r, err := findResourceRoute(
+		r, err := resourceAwsRouteFindRoute(
 			conn,
 			rs.Primary.Attributes["route_table_id"],
 			rs.Primary.Attributes["destination_cidr_block"],
@@ -360,7 +420,7 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		route, err := findResourceRoute(
+		route, err := resourceAwsRouteFindRoute(
 			conn,
 			rs.Primary.Attributes["route_table_id"],
 			rs.Primary.Attributes["destination_cidr_block"],
@@ -373,6 +433,22 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		destination := rs.Primary.Attributes["destination_cidr_block"]
+		if _, ok := rs.Primary.Attributes["destination_ipv6_cidr_block"]; ok {
+			destination = rs.Primary.Attributes["destination_ipv6_cidr_block"]
+		}
+
+		return fmt.Sprintf("%s_%s", rs.Primary.Attributes["route_table_id"], destination), nil
+	}
 }
 
 var testAccAWSRouteBasicConfig = fmt.Sprint(`

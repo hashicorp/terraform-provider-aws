@@ -244,9 +244,16 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Received task definition %s", out)
+	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
+		aws.StringValue(out.TaskDefinition.Status), out)
 
 	taskDefinition := out.TaskDefinition
+
+	if aws.StringValue(taskDefinition.Status) == "INACTIVE" {
+		log.Printf("[DEBUG] Removing ECS task definition %s because it's INACTIVE", aws.StringValue(out.TaskDefinition.Family))
+		d.SetId("")
+		return nil
+	}
 
 	d.SetId(*taskDefinition.Family)
 	d.Set("arn", taskDefinition.TaskDefinitionArn)

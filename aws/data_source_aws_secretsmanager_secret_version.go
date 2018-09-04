@@ -14,7 +14,7 @@ func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
 		Read: dataSourceAwsSecretsManagerSecretVersionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

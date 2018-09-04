@@ -39,7 +39,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 	params := &elbv2.AddListenerCertificatesInput{
 		ListenerArn: aws.String(d.Get("listener_arn").(string)),
 		Certificates: []*elbv2.Certificate{
-			&elbv2.Certificate{
+			{
 				CertificateArn: aws.String(d.Get("certificate_arn").(string)),
 			},
 		},
@@ -105,7 +105,7 @@ func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interfa
 	params := &elbv2.RemoveListenerCertificatesInput{
 		ListenerArn: aws.String(d.Get("listener_arn").(string)),
 		Certificates: []*elbv2.Certificate{
-			&elbv2.Certificate{
+			{
 				CertificateArn: aws.String(d.Get("certificate_arn").(string)),
 			},
 		},

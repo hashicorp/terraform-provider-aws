@@ -19,9 +19,13 @@ func dataSourceAwsStorageGatewayLocalDisk() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"disk_node": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"disk_path": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"gateway_arn": {
 				Type:         schema.TypeString,
@@ -49,12 +53,16 @@ func dataSourceAwsStorageGatewayLocalDiskRead(d *schema.ResourceData, meta inter
 		return errors.New("no results found for query, try adjusting your search criteria")
 	}
 
-	diskPath := d.Get("disk_path").(string)
 	var matchingDisks []*storagegateway.Disk
 
 	for _, disk := range output.Disks {
-		if aws.StringValue(disk.DiskPath) == diskPath {
+		if v, ok := d.GetOk("disk_node"); ok && v.(string) == aws.StringValue(disk.DiskNode) {
 			matchingDisks = append(matchingDisks, disk)
+			continue
+		}
+		if v, ok := d.GetOk("disk_path"); ok && v.(string) == aws.StringValue(disk.DiskPath) {
+			matchingDisks = append(matchingDisks, disk)
+			continue
 		}
 	}
 
@@ -70,6 +78,7 @@ func dataSourceAwsStorageGatewayLocalDiskRead(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(disk.DiskId))
 	d.Set("disk_id", disk.DiskId)
+	d.Set("disk_node", disk.DiskNode)
 	d.Set("disk_path", disk.DiskPath)
 
 	return nil
