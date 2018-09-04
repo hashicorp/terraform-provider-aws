@@ -166,11 +166,7 @@ func resourceAwsCodePipeline() *schema.Resource {
 }
 
 func validateAwsCodePipelineStageActionConfiguration(v interface{}, k string) (ws []string, errors []error) {
-	for k := range v.(map[string]interface{}) {
-		if k == "OAuthToken" {
-			errors = append(errors, fmt.Errorf("CodePipeline: OAuthToken should be set as environment variable 'GITHUB_TOKEN'"))
-		}
-	}
+
 	return
 }
 
@@ -339,11 +335,6 @@ func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaratio
 		}
 		if action.Configuration != nil {
 			config := flattenAwsCodePipelineStageActionConfiguration(action.Configuration)
-			_, ok := config["OAuthToken"]
-			actionProvider := *action.ActionTypeId.Provider
-			if ok && actionProvider == "GitHub" {
-				delete(config, "OAuthToken")
-			}
 			values["configuration"] = config
 		}
 
