@@ -6905,7 +6905,24 @@ func (c *Redshift) ResizeClusterRequest(input *ResizeClusterInput) (req *request
 
 // ResizeCluster API operation for Amazon Redshift.
 //
-// Changes the cluster's type, node type, or number of nodes.
+// Changes the size of the cluster. You can change the cluster's type, or change
+// the number or type of nodes. The default behavior is to use the elastic resize
+// method. With an elastic resize your cluster is avaialble for read and write
+// operations more quickly than with the classic resize method.
+//
+// Elastic resize operations have the following restrictions:
+//
+//    * You can only resize clusters of the following types:
+//
+// dc2.large
+//
+// dc2.8xlarge
+//
+// ds2.xlarge
+//
+// ds2.8xlarge
+//
+//    * The type of nodes you add must match the node type for the cluster.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16692,7 +16709,8 @@ type ResizeClusterInput struct {
 	_ struct{} `type:"structure"`
 
 	// A boolean value indicating whether the resize operation is using the classic
-	// resize process.
+	// resize process. If you don't provide this parameter or set the value to false
+	// the resize type is elastic.
 	Classic *bool `type:"boolean"`
 
 	// The unique identifier for the cluster to resize.
