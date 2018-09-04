@@ -91,7 +91,7 @@ func resourceAwsDbSecurityGroupCreate(d *schema.ResourceData, meta interface{}) 
 	opts := rds.CreateDBSecurityGroupInput{
 		DBSecurityGroupName:        aws.String(d.Get("name").(string)),
 		DBSecurityGroupDescription: aws.String(d.Get("description").(string)),
-		Tags:                       tags,
+		Tags: tags,
 	}
 
 	log.Printf("[DEBUG] DB Security Group create configuration: %#v", opts)

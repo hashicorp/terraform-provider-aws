@@ -243,22 +243,22 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	}
 
 	_, err := conn.PutIntegration(&apigateway.PutIntegrationInput{
-		HttpMethod:            aws.String(d.Get("http_method").(string)),
-		ResourceId:            aws.String(d.Get("resource_id").(string)),
-		RestApiId:             aws.String(d.Get("rest_api_id").(string)),
-		Type:                  aws.String(d.Get("type").(string)),
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		Type:       aws.String(d.Get("type").(string)),
 		IntegrationHttpMethod: integrationHttpMethod,
-		Uri:                   uri,
-		RequestParameters:     aws.StringMap(parameters),
-		RequestTemplates:      aws.StringMap(templates),
-		Credentials:           credentials,
-		CacheNamespace:        cacheNamespace,
-		CacheKeyParameters:    cacheKeyParameters,
-		PassthroughBehavior:   passthroughBehavior,
-		ContentHandling:       contentHandling,
-		ConnectionType:        connectionType,
-		ConnectionId:          connectionId,
-		TimeoutInMillis:       timeoutInMillis,
+		Uri:                 uri,
+		RequestParameters:   aws.StringMap(parameters),
+		RequestTemplates:    aws.StringMap(templates),
+		Credentials:         credentials,
+		CacheNamespace:      cacheNamespace,
+		CacheKeyParameters:  cacheKeyParameters,
+		PassthroughBehavior: passthroughBehavior,
+		ContentHandling:     contentHandling,
+		ConnectionType:      connectionType,
+		ConnectionId:        connectionId,
+		TimeoutInMillis:     timeoutInMillis,
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration: %s", err)

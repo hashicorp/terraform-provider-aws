@@ -228,11 +228,11 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		"cloudwatch_logging_options":           flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   aws.StringValue(description.CompressionFormat),
 		"data_format_conversion_configuration": flattenFirehoseDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
-		"prefix":                               aws.StringValue(description.Prefix),
-		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
-		"role_arn":                             aws.StringValue(description.RoleARN),
-		"s3_backup_configuration":              flattenFirehoseS3Configuration(description.S3BackupDescription),
-		"s3_backup_mode":                       aws.StringValue(description.S3BackupMode),
+		"prefix":                   aws.StringValue(description.Prefix),
+		"processing_configuration": flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"role_arn":                 aws.StringValue(description.RoleARN),
+		"s3_backup_configuration":  flattenFirehoseS3Configuration(description.S3BackupDescription),
+		"s3_backup_mode":           aws.StringValue(description.S3BackupMode),
 	}
 
 	if description.BufferingHints != nil {
