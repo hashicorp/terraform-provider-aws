@@ -313,6 +313,29 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_networkInterface_ipv6_count(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_ipv6_count(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -378,6 +401,23 @@ resource "aws_launch_template" "foo" {
 
   tags {
     foo = "bar"
+  }
+}
+`, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_ipv6_count(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+  name = "set_ipv6_count_foo_%d"
+
+  network_interfaces {
+    ipv6_address_count = 1
+  }
+
+  tags {
+    foo = "bar",
+    ipv6_count = "1",
   }
 }
 `, rInt)
