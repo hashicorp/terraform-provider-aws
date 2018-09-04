@@ -73,6 +73,7 @@ instance. Amazon defaults this to `stop` for EBS-backed instances and
 `terminate` for instance-store instances. Cannot be set on instance-store
 instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
 * `instance_type` - (Required) The type of instance to start. Updates to this field will trigger a stop/start of the EC2 instance.
+* `instance_state` - (Optional) The state of instance. Only `running` and `stopped` are available options.
 * `key_name` - (Optional) The key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
 
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
