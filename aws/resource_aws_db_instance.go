@@ -460,7 +460,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(v.(string)),
-			Tags:                       tags,
+			Tags: tags,
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {

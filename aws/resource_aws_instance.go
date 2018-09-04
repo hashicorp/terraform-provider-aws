@@ -505,12 +505,12 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Build the creation struct
 	runOpts := &ec2.RunInstancesInput{
-		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
-		DisableApiTermination:             instanceOpts.DisableAPITermination,
-		EbsOptimized:                      instanceOpts.EBSOptimized,
-		Monitoring:                        instanceOpts.Monitoring,
-		IamInstanceProfile:                instanceOpts.IAMInstanceProfile,
-		ImageId:                           instanceOpts.ImageID,
+		BlockDeviceMappings:   instanceOpts.BlockDeviceMappings,
+		DisableApiTermination: instanceOpts.DisableAPITermination,
+		EbsOptimized:          instanceOpts.EBSOptimized,
+		Monitoring:            instanceOpts.Monitoring,
+		IamInstanceProfile:    instanceOpts.IAMInstanceProfile,
+		ImageId:               instanceOpts.ImageID,
 		InstanceInitiatedShutdownBehavior: instanceOpts.InstanceInitiatedShutdownBehavior,
 		InstanceType:                      instanceOpts.InstanceType,
 		Ipv6AddressCount:                  instanceOpts.Ipv6AddressCount,
