@@ -25,6 +25,7 @@ func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAutoscalingGroups("data.aws_autoscaling_groups.group_list"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "names.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "arns.#", "3"),
 				),
 			},
 		},
