@@ -305,30 +305,12 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
+		config := v.([]interface{})[0].(map[string]interface{})
 
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if !ok {
-			return errors.New("vpc_config is <nil>")
-		}
-
-		if config != nil {
-			var subnetIds []*string
-			for _, id := range config["subnet_ids"].(*schema.Set).List() {
-				subnetIds = append(subnetIds, aws.String(id.(string)))
-			}
-
-			var securityGroupIds []*string
-			for _, id := range config["security_group_ids"].(*schema.Set).List() {
-				securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
-			}
-
-			params.VpcConfig = &lambda.VpcConfig{
-				SubnetIds:        subnetIds,
-				SecurityGroupIds: securityGroupIds,
-			}
+		params.VpcConfig = &lambda.VpcConfig{
+			SecurityGroupIds: expandStringSet(config["security_group_ids"].(*schema.Set)),
+			SubnetIds:        expandStringSet(config["subnet_ids"].(*schema.Set)),
 		}
 	}
 
@@ -680,29 +662,16 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 	if d.HasChange("vpc_config") {
-		vpcConfigRaw := d.Get("vpc_config").([]interface{})
-		vpcConfig, ok := vpcConfigRaw[0].(map[string]interface{})
-		if !ok {
-			return errors.New("vpc_config is <nil>")
+		configReq.VpcConfig = &lambda.VpcConfig{
+			SecurityGroupIds: []*string{},
+			SubnetIds:        []*string{},
 		}
-
-		if vpcConfig != nil {
-			var subnetIds []*string
-			for _, id := range vpcConfig["subnet_ids"].(*schema.Set).List() {
-				subnetIds = append(subnetIds, aws.String(id.(string)))
-			}
-
-			var securityGroupIds []*string
-			for _, id := range vpcConfig["security_group_ids"].(*schema.Set).List() {
-				securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
-			}
-
-			configReq.VpcConfig = &lambda.VpcConfig{
-				SubnetIds:        subnetIds,
-				SecurityGroupIds: securityGroupIds,
-			}
-			configUpdate = true
+		if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
+			vpcConfig := v.([]interface{})[0].(map[string]interface{})
+			configReq.VpcConfig.SecurityGroupIds = expandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
+			configReq.VpcConfig.SubnetIds = expandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
 		}
+		configUpdate = true
 	}
 
 	if d.HasChange("runtime") {
