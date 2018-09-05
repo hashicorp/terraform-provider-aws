@@ -1703,10 +1703,12 @@
 			"revisionTime": "2017-10-04T22:19:16Z"
 		},
 		{
-			"checksumSHA1": "L3leymg2RT8hFl5uL+5KP/LpBkg=",
+			"checksumSHA1": "2gW/SeTAbHsmAdoDes4DksvqTj4=",
 			"path": "github.com/mitchellh/go-wordwrap",
-			"revision": "ad45545899c7b13c020ea92b2072220eefad42b8",
-			"revisionTime": "2015-03-14T17:03:34Z"
+			"revision": "9e67c67572bc5dd02aef930e2b0ae3c02a4b5a5c",
+			"revisionTime": "2018-08-28T14:53:44Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "xyoJKalfQwTUN1qzZGQKWYAwl0A=",
