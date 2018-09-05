@@ -154,29 +154,22 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 
-				// Suppress diffs if the VPC configuration is empty.
+				// Suppress diffs if the VPC configuration is provided, but empty
+				// which is a valid Lambda function configuration. e.g.
+				//   vpc_config {
+				//     security_group_ids = []
+				//     subnet_ids         = []
+				//   }
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if v, ok := d.GetOk("vpc_config"); ok {
-						configs := v.([]interface{})
-						config, ok := configs[0].(map[string]interface{})
-
-						if !ok {
-							return true
-						}
-
-						if config == nil {
-							return true
-						}
-
-						securityGroups := config["security_group_ids"].(*schema.Set)
-						subnets := config["subnet_ids"].(*schema.Set)
-
-						if securityGroups.Len() == 0 && subnets.Len() == 0 {
-							return true
-						}
+					if d.Id() == "" || old == "1" || new == "0" {
+						return false
 					}
 
-					return false
+					if d.HasChange("vpc_config.0.security_group_ids") || d.HasChange("vpc_config.0.subnet_ids") {
+						return false
+					}
+
+					return true
 				},
 			},
 			"arn": {
