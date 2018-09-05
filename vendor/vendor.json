@@ -1697,10 +1697,12 @@
 			"revisionTime": "2017-05-25T01:39:02Z"
 		},
 		{
-			"checksumSHA1": "Li0PaRmaVBdibS/zs8myzc07L6o=",
+			"checksumSHA1": "a58zUNtDH/gEd6F6KI3FqT2iEo0=",
 			"path": "github.com/mitchellh/go-homedir",
-			"revision": "58046073cbffe2f25d425fe1331102f55cf719de",
-			"revisionTime": "2018-08-01T23:32:06Z"
+			"revision": "ae18d6b8b3205b561c79e8e5f69bff09736185f4",
+			"revisionTime": "2018-08-24T00:42:36Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "bDdhmDk8q6utWrccBhEOa6IoGkE=",
