@@ -54,6 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
   * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `endpoint` - The endpoint for your Kubernetes API server.
+* `platform_version` - The platform version for the cluster.
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Additional nested attributes:
   * `vpc_id` - The VPC associated with your cluster.
