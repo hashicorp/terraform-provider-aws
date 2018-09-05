@@ -21,10 +21,12 @@
 			"revisionTime": "2015-08-30T18:26:16Z"
 		},
 		{
-			"checksumSHA1": "FIL83loX9V9APvGQIjJpbxq53F0=",
+			"checksumSHA1": "nRnZ35uyYct3TL95z7DPJ/lSUNg=",
 			"path": "github.com/apparentlymart/go-cidr/cidr",
-			"revision": "7e4b007599d4e2076d9a81be723b3912852dda2c",
-			"revisionTime": "2017-04-18T07:21:50Z"
+			"revision": "b1115bf8e14a60131a196f908223e4506b0ddc35",
+			"revisionTime": "2018-08-15T15:04:34Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "Ffhtm8iHH7l2ynVVOIGJE3eiuLA=",
