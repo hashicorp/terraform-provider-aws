@@ -308,26 +308,28 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	if v, ok := d.GetOk("vpc_config"); ok {
 
 		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
+		if len(configs) == 1 {
+			config, ok := configs[0].(map[string]interface{})
 
-		if !ok {
-			return errors.New("vpc_config is <nil>")
-		}
-
-		if config != nil {
-			var subnetIds []*string
-			for _, id := range config["subnet_ids"].(*schema.Set).List() {
-				subnetIds = append(subnetIds, aws.String(id.(string)))
+			if !ok {
+				return errors.New("vpc_config is <nil>")
 			}
 
-			var securityGroupIds []*string
-			for _, id := range config["security_group_ids"].(*schema.Set).List() {
-				securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
-			}
+			if config != nil {
+				var subnetIds []*string
+				for _, id := range config["subnet_ids"].(*schema.Set).List() {
+					subnetIds = append(subnetIds, aws.String(id.(string)))
+				}
 
-			params.VpcConfig = &lambda.VpcConfig{
-				SubnetIds:        subnetIds,
-				SecurityGroupIds: securityGroupIds,
+				var securityGroupIds []*string
+				for _, id := range config["security_group_ids"].(*schema.Set).List() {
+					securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
+				}
+
+				params.VpcConfig = &lambda.VpcConfig{
+					SubnetIds:        subnetIds,
+					SecurityGroupIds: securityGroupIds,
+				}
 			}
 		}
 	}
@@ -681,27 +683,29 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("vpc_config") {
 		vpcConfigRaw := d.Get("vpc_config").([]interface{})
-		vpcConfig, ok := vpcConfigRaw[0].(map[string]interface{})
-		if !ok {
-			return errors.New("vpc_config is <nil>")
-		}
-
-		if vpcConfig != nil {
-			var subnetIds []*string
-			for _, id := range vpcConfig["subnet_ids"].(*schema.Set).List() {
-				subnetIds = append(subnetIds, aws.String(id.(string)))
+		if len(vpcConfigRaw) == 1 { // Schema guarantees either 0 or 1
+			vpcConfig, ok := vpcConfigRaw[0].(map[string]interface{})
+			if !ok {
+				return errors.New("vpc_config is <nil>")
 			}
 
-			var securityGroupIds []*string
-			for _, id := range vpcConfig["security_group_ids"].(*schema.Set).List() {
-				securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
-			}
+			if vpcConfig != nil {
+				var subnetIds []*string
+				for _, id := range vpcConfig["subnet_ids"].(*schema.Set).List() {
+					subnetIds = append(subnetIds, aws.String(id.(string)))
+				}
 
-			configReq.VpcConfig = &lambda.VpcConfig{
-				SubnetIds:        subnetIds,
-				SecurityGroupIds: securityGroupIds,
+				var securityGroupIds []*string
+				for _, id := range vpcConfig["security_group_ids"].(*schema.Set).List() {
+					securityGroupIds = append(securityGroupIds, aws.String(id.(string)))
+				}
+
+				configReq.VpcConfig = &lambda.VpcConfig{
+					SubnetIds:        subnetIds,
+					SecurityGroupIds: securityGroupIds,
+				}
+				configUpdate = true
 			}
-			configUpdate = true
 		}
 	}
 
