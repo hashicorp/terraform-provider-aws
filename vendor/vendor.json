@@ -33,10 +33,12 @@
 			"revisionTime": "2017-05-31T20:39:52Z"
 		},
 		{
-			"checksumSHA1": "GCTVJ1J/SGZstNZauuLAnTFOhGA=",
+			"checksumSHA1": "ZWu+JUivE3zS4FZvVktFAWhj3FQ=",
 			"path": "github.com/armon/go-radix",
-			"revision": "1fca145dffbcaa8fe914309b1ec0cfc67500fe61",
-			"revisionTime": "2017-07-27T15:54:43Z"
+			"revision": "1a2de0c21c94309923825da3df33a4381872c795",
+			"revisionTime": "2018-08-24T02:57:28Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "qO2na7vGPve58xAwBJziIc+BJb4=",
