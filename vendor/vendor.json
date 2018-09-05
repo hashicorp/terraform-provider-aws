@@ -1135,9 +1135,12 @@
 			"revisionTime": "2018-05-18T05:39:59Z"
 		},
 		{
-			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
+			"checksumSHA1": "ByRdQMv2yl16W6Tp9gUW1nNmpuI=",
 			"path": "github.com/hashicorp/errwrap",
-			"revision": "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+			"revision": "8a6fb523712970c966eefc6b39ed2c5e74880354",
+			"revisionTime": "2018-08-24T00:39:10Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "Ihile6rE76J6SivxECovHgMROxw=",
@@ -1166,10 +1169,12 @@
 			"revisionTime": "2017-10-05T15:17:51Z"
 		},
 		{
-			"checksumSHA1": "K395EgrkkWtEFyuAv3WvPF95WN8=",
+			"checksumSHA1": "cFcwn0Zxefithm9Q9DioRNcGbqg=",
 			"path": "github.com/hashicorp/go-multierror",
-			"revision": "3d5d8f294aa03d8e98859feac328afbdf1ae0703",
-			"revisionTime": "2018-07-17T15:01:48Z"
+			"revision": "886a7fbe3eb1c874d46f623bfa70af45f425b3d1",
+			"revisionTime": "2018-08-24T00:40:42Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "R6me0jVmcT/OPo80Fe0qo5fRwHc=",
