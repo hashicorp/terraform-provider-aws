@@ -448,13 +448,10 @@ func (c *Config) Client() (interface{}, error) {
 		var err error
 		client.accountid, client.partition, err = GetAccountIDAndPartition(client.iamconn, client.stsconn, cp.ProviderName)
 		if err != nil {
-			// DEPRECATED: Next major version of the provider should return the error instead of logging
-			//             if skip_request_account_id is not enabled.
-			log.Printf("[WARN] %s", fmt.Sprintf(
+			return nil, fmt.Errorf(
 				"AWS account ID not previously found and failed retrieving via all available methods. "+
-					"This will return an error in the next major version of the AWS provider. "+
 					"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for workaround and implications. "+
-					"Errors: %s", err))
+					"Errors: %s", err)
 		}
 	}
 
