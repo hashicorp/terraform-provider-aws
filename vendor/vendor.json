@@ -1178,10 +1178,12 @@
 			"revisionTime": "2017-08-16T15:18:19Z"
 		},
 		{
-			"checksumSHA1": "CduvzBFfTv77nhjtXPGdIjQQLMI=",
+			"checksumSHA1": "0daDqRBckum49dBVYduwjaoObgU=",
 			"path": "github.com/hashicorp/go-safetemp",
-			"revision": "b1a1dbde6fdc11e3ae79efd9039009e22d4ae240",
-			"revisionTime": "2018-03-26T21:11:50Z"
+			"revision": "c9a55de4fe06c920a71964b53cfe3dd293a3c743",
+			"revisionTime": "2018-08-28T16:41:30Z",
+			"version": "v1.0.0",
+			"versionExact": "v1.0.0"
 		},
 		{
 			"checksumSHA1": "Kjansj6ZDJrWKNS1BJpg+z7OBnI=",
