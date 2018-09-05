@@ -6,7 +6,9 @@
 			"checksumSHA1": "jQh1fnoKPKMURvKkpdRjN695nAQ=",
 			"path": "github.com/agext/levenshtein",
 			"revision": "5f10fee965225ac1eecdc234c09daf5cd9e7f7b6",
-			"revisionTime": "2017-02-17T06:30:20Z"
+			"revisionTime": "2017-02-17T06:30:20Z",
+			"version": "v1.2.1",
+			"versionExact": "v1.2.1"
 		},
 		{
 			"checksumSHA1": "LLVyR2dAgkihu0+HdZF+JK0gMMs=",
