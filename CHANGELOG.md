@@ -2,6 +2,8 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_eks_cluster: Add `platform_version` attribute [GH-5797]
+* resource/aws_eks_cluster: Add `platform_version` attribute [GH-5797]
 * resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument [GH-5740]
 
 BUG FIXES:
