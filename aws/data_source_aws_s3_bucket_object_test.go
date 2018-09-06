@@ -80,6 +80,38 @@ func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSS3BucketObject_readableBodyXX509CACert(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_readableBodyXX509CACert(rInt)
+
+	var rObj s3.GetObjectOutput
+	var dsObj s3.GetObjectOutput
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                  func() { testAccPreCheck(t) },
+		Providers:                 testAccProviders,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: resourceOnlyConf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &rObj),
+				),
+			},
+			resource.TestStep{
+				Config: conf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsS3ObjectDataSourceExists("data.aws_s3_bucket_object.obj", &dsObj),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "content_type", "application/x-x509-ca-cert"),
+					resource.TestMatchResourceAttr("data.aws_s3_bucket_object.obj", "last_modified",
+						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "body", "GSe9oYQC1/oMulk/e+F6mp"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAWSS3BucketObject_kmsEncrypted(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_kmsEncrypted(rInt)
@@ -233,6 +265,28 @@ resource "aws_s3_bucket_object" "object" {
 data "aws_s3_bucket_object" "obj" {
 	bucket = "tf-object-test-bucket-%d"
 	key = "tf-testing-obj-%d-readable"
+}`, resources, randInt, randInt)
+
+	return resources, both
+}
+
+func testAccAWSDataSourceS3ObjectConfig_readableBodyXX509CACert(randInt int) (string, string) {
+	resources := fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+	bucket = "tf-object-test-bucket-%d"
+}
+resource "aws_s3_bucket_object" "object" {
+	bucket = "${aws_s3_bucket.object_bucket.bucket}"
+	key = "tf-testing-obj-%d-readable.crt"
+	content = "GSe9oYQC1/oMulk/e+F6mp"
+	content_type = "application/x-x509-ca-cert"
+}
+`, randInt, randInt)
+
+	both := fmt.Sprintf(`%s
+data "aws_s3_bucket_object" "obj" {
+	bucket = "tf-object-test-bucket-%d"
+	key = "tf-testing-obj-%d-readable.crt"
 }`, resources, randInt, randInt)
 
 	return resources, both
