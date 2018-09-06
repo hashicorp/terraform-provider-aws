@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `enabled_cloudwatch_logs_exports` attribute [GH-5801]
+* resource/aws_db_instance: Add `domain` and `domain_iam_role_name` arguments (support for domain joining RDS instances) [GH-5378]
 
 BUG FIXES:
 
