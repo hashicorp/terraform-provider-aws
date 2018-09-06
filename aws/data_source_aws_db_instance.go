@@ -87,6 +87,12 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -271,6 +277,10 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("port", dbInstance.Endpoint.Port)
 	d.Set("hosted_zone_id", dbInstance.Endpoint.HostedZoneId)
 	d.Set("endpoint", fmt.Sprintf("%s:%d", *dbInstance.Endpoint.Address, *dbInstance.Endpoint.Port))
+
+	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbInstance.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %#v", err)
+	}
 
 	var optionGroups []string
 	for _, v := range dbInstance.OptionGroupMemberships {
