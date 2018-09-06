@@ -1,17 +1,17 @@
-## 1.35.0 (Unreleased)
+## 1.35.0 (September 06, 2018)
 
 ENHANCEMENTS:
 
-* data-source/aws_eks_cluster: Add `platform_version` attribute [GH-5797]
-* resource/aws_eks_cluster: Add `platform_version` attribute [GH-5797]
-* resource/aws_lambda_function: Allow empty lists for `vpc_config` `security_group_ids` and `subnet_ids` arguments to unconfigure VPC [GH-1341]
-* resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument [GH-5740]
+* data-source/aws_eks_cluster: Add `platform_version` attribute ([#5797](https://github.com/terraform-providers/terraform-provider-aws/issues/5797))
+* resource/aws_eks_cluster: Add `platform_version` attribute ([#5797](https://github.com/terraform-providers/terraform-provider-aws/issues/5797))
+* resource/aws_lambda_function: Allow empty lists for `vpc_config` `security_group_ids` and `subnet_ids` arguments to unconfigure VPC ([#1341](https://github.com/terraform-providers/terraform-provider-aws/issues/1341))
+* resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument ([#5740](https://github.com/terraform-providers/terraform-provider-aws/issues/5740))
 
 BUG FIXES:
 
-* resource/aws_ecr_repository: Use `RepositoryUri` instead of our building our own URI for the `repository_url` attribute (AWS China fix) [GH-5748]
-* resource/aws_lambda_function: Properly handle `vpc_config` removal [GH-5798]
-* resource/aws_redshift_cluster: Properly force new resource when updating `availability_zone` argument [GH-5758]
+* resource/aws_ecr_repository: Use `RepositoryUri` instead of our building our own URI for the `repository_url` attribute (AWS China fix) ([#5748](https://github.com/terraform-providers/terraform-provider-aws/issues/5748))
+* resource/aws_lambda_function: Properly handle `vpc_config` removal ([#5798](https://github.com/terraform-providers/terraform-provider-aws/issues/5798))
+* resource/aws_redshift_cluster: Properly force new resource when updating `availability_zone` argument ([#5758](https://github.com/terraform-providers/terraform-provider-aws/issues/5758))
 
 ## 1.34.0 (August 30, 2018)
 
