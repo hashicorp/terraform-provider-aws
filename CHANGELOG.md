@@ -1,4 +1,9 @@
 ## 1.36.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_db_instance: Add `enabled_cloudwatch_logs_exports` attribute [GH-5801]
+
 ## 1.35.0 (September 06, 2018)
 
 ENHANCEMENTS:
