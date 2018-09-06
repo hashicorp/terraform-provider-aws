@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `platform_version` attribute [GH-5797]
 * resource/aws_eks_cluster: Add `platform_version` attribute [GH-5797]
+* resource/aws_lambda_function: Allow empty lists for `vpc_config` `security_group_ids` and `subnet_ids` arguments to unconfigure VPC [GH-1341]
 * resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument [GH-5740]
 
 BUG FIXES:
