@@ -77,7 +77,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
-* `security_groups` - (Optional, EC2-Classic and default VPC only) A list of security group names to associate with.
+* `security_groups` - (Optional, EC2-Classic and default VPC only) A list of security group names (EC2-Classic) or IDs (default VPC) to associate with.
 
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
 
@@ -226,11 +226,14 @@ resource "aws_network_interface" "foo" {
 }
 
 resource "aws_instance" "foo" {
-	ami = "ami-22b9a343" # us-west-2
-	instance_type = "t2.micro"
-	network_interface {
-	 network_interface_id = "${aws_network_interface.foo.id}"
-	 device_index = 0
+  ami = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+  network_interface {
+    network_interface_id = "${aws_network_interface.foo.id}"
+    device_index = 0
+  }
+  credit_specification {
+    cpu_credits = "unlimited"
   }
 }
 ```
