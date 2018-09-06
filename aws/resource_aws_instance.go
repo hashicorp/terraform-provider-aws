@@ -1742,14 +1742,14 @@ func buildAwsInstanceOpts(
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
-		// Only T2 instances support T2 Unlimited
-		if strings.HasPrefix(instanceType, "t2") {
+		// Only T2 and T3 are burstable performance instance types and supports Unlimited
+		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
 			cs := v.([]interface{})[0].(map[string]interface{})
 			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
 				CpuCredits: aws.String(cs["cpu_credits"].(string)),
 			}
 		} else {
-			log.Print("[WARN] credit_specification is defined but instance type is not T2. Ignoring...")
+			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")
 		}
 	}
 
