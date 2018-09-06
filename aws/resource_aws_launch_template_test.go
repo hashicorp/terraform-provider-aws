@@ -29,6 +29,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
 					resource.TestCheckResourceAttrSet(resName, "arn"),
+					resource.TestCheckResourceAttr(resName, "ebs_optimized", ""),
 				),
 			},
 		},
@@ -122,6 +123,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "block_device_mappings.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "disable_api_termination"),
+					resource.TestCheckResourceAttr(resName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resName, "elastic_gpu_specifications.#", "1"),
 					resource.TestCheckResourceAttr(resName, "iam_instance_profile.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "image_id"),
@@ -431,7 +433,7 @@ resource "aws_launch_template" "foo" {
 
   disable_api_termination = true
 
-  ebs_optimized = true
+  ebs_optimized = false
 
   elastic_gpu_specifications {
     type = "test"
