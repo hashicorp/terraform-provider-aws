@@ -407,6 +407,16 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 
+			"domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"domain_iam_role_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -777,6 +787,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("domain"); ok {
+			opts.Domain = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
+			opts.DomainIAMRoleName = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
 			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
@@ -1003,6 +1021,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
+		if attr, ok := d.GetOk("domain"); ok {
+			opts.Domain = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
+			opts.DomainIAMRoleName = aws.String(attr.(string))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -1151,6 +1177,13 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+	}
+
+	d.Set("domain", "")
+	d.Set("domain_iam_role_name", "")
+	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
+		d.Set("domain", v.DomainMemberships[0].Domain)
+		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
 	}
 
 	// list tags for resource
@@ -1409,6 +1442,14 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("domain") || d.HasChange("domain_iam_role_name") {
+		d.SetPartial("domain")
+		d.SetPartial("domain_iam_role_name")
+		req.Domain = aws.String(d.Get("domain").(string))
+		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		requestUpdate = true
 	}
 
