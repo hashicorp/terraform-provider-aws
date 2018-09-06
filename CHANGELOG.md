@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `enabled_cloudwatch_logs_exports` attribute [GH-5801]
 
+BUG FIXES:
+
+* resource/aws_launch_template: Ensure `ebs_optimized` argument accepts "unspecified" value [GH-5627]
+
 ## 1.35.0 (September 06, 2018)
 
 ENHANCEMENTS:
