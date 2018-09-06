@@ -34,6 +34,32 @@ resource "aws_iam_role_policy_attachment" "demo-cluster-AmazonEKSServicePolicy" 
   role       = "${aws_iam_role.demo-cluster.name}"
 }
 
+resource "aws_iam_policy" "extra-policy" {
+  name = "eks-extra-policy"
+  description = "Allow for NLB creation"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:DescribeAccountAttributes",
+        "ec2:DescribeInternetGateways",
+        "iam:CreateServiceLinkedRole"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "extra-policy-attach" {
+    role       = "${aws_iam_role.demo-cluster.name}"
+    policy_arn = "${aws_iam_policy.extra-policy.arn}"
+}
+
 resource "aws_security_group" "demo-cluster" {
   name        = "terraform-eks-demo-cluster"
   description = "Cluster communication with worker nodes"
