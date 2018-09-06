@@ -2586,7 +2586,7 @@ resource "aws_directory_service_directory" "bar" {
 }
 
 resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role"
+  name = "tf-acc-db-instance-mssql-domain-role-%d"
 
   assume_role_policy = <<EOF
 {
@@ -2609,7 +2609,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = "${aws_iam_role.role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSDBMSSQLUpdateDomain(rInt int) string {
@@ -2709,7 +2709,7 @@ resource "aws_directory_service_directory" "bar" {
 }
 
 resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role"
+  name = "tf-acc-db-instance-mssql-domain-role-%d"
 
   assume_role_policy = <<EOF
 {
@@ -2732,7 +2732,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = "${aws_iam_role.role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSDBMSSQLDomainSnapshotRestore(rInt int) string {
@@ -2771,22 +2771,13 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  identifier = "tf-test-mssql-%d"
-
-  db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
-
-  instance_class          = "db.t2.micro"
-  allocated_storage       = 20
-  username                = "somecrazyusername"
-  password                = "somecrazypassword"
-  engine                  = "sqlserver-ex"
-  backup_retention_period = 0
+  allocated_storage   = 20
+  engine              = "sqlserver-ex"
+  identifier          = "tf-test-mssql-%d"
+  instance_class      = "db.t2.micro"
+  password            = "somecrazypassword"
   skip_final_snapshot = true
-
-  domain                  = "${aws_directory_service_directory.foo.id}"
-  domain_iam_role_name    = "${aws_iam_role.role.name}"
-
-  vpc_security_group_ids = ["${aws_security_group.rds-mssql.id}"]
+  username            = "somecrazyusername"
 }
 
 resource "aws_db_snapshot" "mssql-snap" {
@@ -2845,7 +2836,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role"
+  name = "tf-acc-db-instance-mssql-domain-role-%d"
 
   assume_role_policy = <<EOF
 {
@@ -2868,7 +2859,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = "${aws_iam_role.role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt, rInt)
 }
 
 var testAccAWSDBInstanceConfigAutoMinorVersion = fmt.Sprintf(`

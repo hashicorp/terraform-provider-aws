@@ -1179,6 +1179,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
 	}
 
+	d.Set("domain", "")
+	d.Set("domain_iam_role_name", "")
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		d.Set("domain", v.DomainMemberships[0].Domain)
 		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
@@ -1443,7 +1445,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
-	if (d.HasChange("domain") || d.HasChange("domain_iam_role_name")) && !d.IsNewResource() {
+	if d.HasChange("domain") || d.HasChange("domain_iam_role_name") {
 		d.SetPartial("domain")
 		d.SetPartial("domain_iam_role_name")
 		req.Domain = aws.String(d.Get("domain").(string))
