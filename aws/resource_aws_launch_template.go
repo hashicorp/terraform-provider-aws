@@ -553,6 +553,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
 	d.Set("user_data", ltData.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
+	d.Set("ebs_optimized", "")
 
 	if ltData.EbsOptimized != nil {
 		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
