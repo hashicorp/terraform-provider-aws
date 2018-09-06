@@ -504,6 +504,39 @@ func TestAccAWSRedshiftCluster_forceNewUsername(t *testing.T) {
 	})
 }
 
+func TestAccAWSRedshiftCluster_changeAvailabilityZone(t *testing.T) {
+	var first, second redshift.Cluster
+
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &first),
+					testAccCheckAWSRedshiftClusterAvailabilityZone(&first, "us-west-2a"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "availability_zone", "us-west-2a"),
+				),
+			},
+
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &second),
+					testAccCheckAWSRedshiftClusterAvailabilityZone(&second, "us-west-2b"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "availability_zone", "us-west-2b"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_cluster" {
@@ -624,6 +657,15 @@ func testAccCheckAWSRedshiftClusterMasterUsername(c *redshift.Cluster, value str
 	return func(s *terraform.State) error {
 		if *c.MasterUsername != value {
 			return fmt.Errorf("Expected cluster's MasterUsername: %q, given: %q", value, *c.MasterUsername)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSRedshiftClusterAvailabilityZone(c *redshift.Cluster, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *c.AvailabilityZone != value {
+			return fmt.Errorf("Expected cluster's AvailabilityZone: %q, given: %q", value, *c.AvailabilityZone)
 		}
 		return nil
 	}
@@ -1303,4 +1345,19 @@ resource "aws_redshift_cluster" "default" {
   allow_version_upgrade = false
   skip_final_snapshot = true
 }`, rInt)
+}
+
+func testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(rInt int) string {
+	return fmt.Sprintf(`
+	resource "aws_redshift_cluster" "default" {
+		cluster_identifier = "tf-redshift-cluster-%d"
+		availability_zone = "us-west-2b"
+		database_name = "mydb"
+		master_username = "foo_test"
+		master_password = "Mustbe8characters"
+		node_type = "dc1.large"
+		automated_snapshot_retention_period = 0
+		allow_version_upgrade = false
+		skip_final_snapshot = true
+	}`, rInt)
 }

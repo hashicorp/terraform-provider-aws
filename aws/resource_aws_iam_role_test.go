@@ -242,6 +242,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckAWSRolePermissionsBoundary(&role, permissionsBoundary1),
 				),
 			},
 			// Test update
@@ -250,6 +251,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
+					testAccCheckAWSRolePermissionsBoundary(&role, permissionsBoundary2),
 				),
 			},
 			// Test import
@@ -265,6 +267,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					testAccCheckAWSRolePermissionsBoundary(&role, ""),
 				),
 			},
 			// Test addition
@@ -273,6 +276,16 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckAWSRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test empty value
+			{
+				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					testAccCheckAWSRolePermissionsBoundary(&role, ""),
 				),
 			},
 		},
@@ -396,6 +409,22 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 
 		_, err := iamconn.PutRolePolicy(input)
 		return err
+	}
+}
+
+func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		actualPermissionsBoundaryArn := ""
+
+		if getRoleOutput.Role.PermissionsBoundary != nil {
+			actualPermissionsBoundaryArn = *getRoleOutput.Role.PermissionsBoundary.PermissionsBoundaryArn
+		}
+
+		if actualPermissionsBoundaryArn != expectedPermissionsBoundaryArn {
+			return fmt.Errorf("PermissionsBoundary: '%q', expected '%q'.", actualPermissionsBoundaryArn, expectedPermissionsBoundaryArn)
+		}
+
+		return nil
 	}
 }
 

@@ -113,6 +113,7 @@ const (
 	ImportexportServiceID                 = "importexport"                 // Importexport.
 	InspectorServiceID                    = "inspector"                    // Inspector.
 	IotServiceID                          = "iot"                          // Iot.
+	IotanalyticsServiceID                 = "iotanalytics"                 // Iotanalytics.
 	KinesisServiceID                      = "kinesis"                      // Kinesis.
 	KinesisanalyticsServiceID             = "kinesisanalytics"             // Kinesisanalytics.
 	KinesisvideoServiceID                 = "kinesisvideo"                 // Kinesisvideo.
@@ -1407,6 +1408,15 @@ var awsPartition = partition{
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-2":      endpoint{},
+			},
+		},
+		"iotanalytics": service{
+
+			Endpoints: endpoints{
+				"eu-west-1": endpoint{},
+				"us-east-1": endpoint{},
+				"us-east-2": endpoint{},
+				"us-west-2": endpoint{},
 			},
 		},
 		"kinesis": service{
