@@ -479,6 +479,13 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "standard",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if strings.HasPrefix(d.Get("instance_type").(string), "t3") &&
+									old == "unlimited" && new == "standard" {
+									return true
+								}
+								return false
+							},
 						},
 					},
 				},
@@ -1739,6 +1746,13 @@ func buildAwsInstanceOpts(
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageID:               aws.String(d.Get("ami").(string)),
 		InstanceType:          aws.String(instanceType),
+	}
+
+	// Set default cpu_credits as Unlimited for T3 instance type
+	if strings.HasPrefix(instanceType, "t3") {
+		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+			CpuCredits: aws.String("unlimited"),
+		}
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
