@@ -31,7 +31,6 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "invoke_arn"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "function_name", funcName),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "description", funcName),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "qualifier", "$LATEST"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "handler", "exports.example"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "memory_size", "128"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "runtime", "nodejs4.3"),
