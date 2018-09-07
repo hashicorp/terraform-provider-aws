@@ -108,6 +108,50 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+
+						"docker_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scope": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ecs.ScopeShared,
+											ecs.ScopeTask,
+										}, false),
+									},
+									"autoprovision": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+										Default:  false,
+									},
+									"driver": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+									},
+									"driver_opts": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+									"labels": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 				Set: resourceAwsEcsTaskDefinitionVolumeHash,
@@ -324,6 +368,5 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
-
 	return hashcode.String(buf.String())
 }

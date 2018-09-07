@@ -60,6 +60,78 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithDockerVolumes(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.scope", "shared"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.autoprovision", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver", "local"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver_opts.%", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver_opts.uid", "1000"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver_opts.device", "tmpfs"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.labels.%", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.labels.stack", "april"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.labels.environment", "test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithDockerVolumesMinimalConfig(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.scope", "task"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver", "local"),
+				),
+			},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/2694
 func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	var def ecs.TaskDefinition
@@ -761,6 +833,70 @@ TASK_DEFINITION
 
   volume {
     name = "database_scratch"
+  }
+}
+`, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithDockerVolumes(tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "sleep" {
+  family = "%s"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = "database_scratch"
+    docker_volume_configuration {
+        driver = "local"
+        scope  = "shared"
+        driver_opts {
+            device = "tmpfs"
+            uid    = "1000"
+        }
+        labels {
+            environment = "test"
+            stack       = "april"
+        }
+        autoprovision = true
+    }
+  }
+}
+`, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithDockerVolumesMinimalConfig(tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "sleep" {
+  family = "%s"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = "database_scratch"
+    docker_volume_configuration {
+        autoprovision = true
+    }
   }
 }
 `, tdName)
