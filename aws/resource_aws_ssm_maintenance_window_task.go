@@ -77,12 +77,14 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				ValidateFunc: validateAwsSSMMaintenanceWindowTaskName,
 			},
 
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				ValidateFunc: validateAwsSSMMaintenanceWindowTaskDescription,
 			},
 
 			"priority": {
