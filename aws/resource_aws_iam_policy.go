@@ -28,6 +28,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
+				Default:  "Managed by Terraform",
 			},
 			"path": {
 				Type:     schema.TypeString,
