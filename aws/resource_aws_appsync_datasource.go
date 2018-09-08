@@ -194,18 +194,16 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 	input := &appsync.UpdateDataSourceInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
 		Name:  aws.String(d.Get("name").(string)),
+		Type:  aws.String(d.Get("type").(string)),
+	}
+
+	if v, ok := d.GetOk("service_role_arn"); ok {
+		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
 	if d.HasChange("description") {
 		input.Description = aws.String(d.Get("description").(string))
 	}
-	if d.HasChange("service_role_arn") {
-		input.ServiceRoleArn = aws.String(d.Get("service_role_arn").(string))
-	}
-	if d.HasChange("type") {
-		input.Type = aws.String(d.Get("type").(string))
-	}
-
 	if d.HasChange("dynamodb_config") {
 		ddbconfig := d.Get("dynamodb_config").([]interface{})
 		if len(ddbconfig) > 0 {
