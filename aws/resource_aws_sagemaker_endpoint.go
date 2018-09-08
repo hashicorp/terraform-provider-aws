@@ -103,6 +103,10 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 
 	endpointRaw, _, err := SagemakerEndpointStateRefreshFunc(conn, d.Id())()
 	if err != nil {
+		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ValidationException" {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	if endpointRaw == nil {
