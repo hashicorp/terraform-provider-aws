@@ -62,7 +62,7 @@ func TestAccAwsAppsyncDatasource_lambda(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_update(t *testing.T) {
+func TestAccAwsAppsyncDatasource_updateType(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,6 +83,31 @@ func TestAccAwsAppsyncDatasource_update(t *testing.T) {
 					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
 					resource.TestCheckResourceAttrSet("aws_appsync_datasource.test", "arn"),
 					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "type", "AWS_LAMBDA"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsAppsyncDatasource_update(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfig_ddb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
+					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "description", "appsync datasource version1"),
+				),
+			},
+			{
+				Config: testAccAppsyncDatasourceConfig_update_ddb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
+					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "description", "appsync datasource version2"),
 				),
 			},
 		},
@@ -188,6 +213,7 @@ resource "aws_appsync_datasource" "test" {
   api_id = "${aws_appsync_graphql_api.test.id}"
   name = "tf_appsync_%s"
   type = "AMAZON_DYNAMODB"
+  description = "appsync datasource version1"
   dynamodb_config {
     region = "${data.aws_region.current.name}"
     table_name = "${aws_dynamodb_table.test.name}"
@@ -440,4 +466,79 @@ resource "aws_appsync_datasource" "test" {
   service_role_arn = "${aws_iam_role.test_applambda.arn}"
 }
 `, rName, rName, rName, rName, rName, rName)
+}
+
+func testAccAppsyncDatasourceConfig_update_ddb(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name = "tf_appsync_%s"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name = "tf-ddb1-%s"
+  read_capacity  = 10
+  write_capacity = 10
+  hash_key = "UserId"
+  attribute {
+    name = "UserId"
+    type = "S"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = "tf-role-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "appsync.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "tf-rolepolicy-%s"
+  role = "${aws_iam_role.test.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "dynamodb:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_dynamodb_table.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name = "tf_appsync_%s"
+  type = "AMAZON_DYNAMODB"
+  description = "appsync datasource version2"
+  dynamodb_config {
+    region = "${data.aws_region.current.name}"
+    table_name = "${aws_dynamodb_table.test.name}"
+  }
+  service_role_arn = "${aws_iam_role.test.arn}"
+}
+`, rName, rName, rName, rName, rName)
 }
