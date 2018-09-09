@@ -12269,6 +12269,9 @@ type CreateDeploymentInput struct {
 	// The name of the Stage resource for the Deployment resource to create.
 	StageName *string `locationName:"stageName" type:"string"`
 
+	// Specifies whether active tracing with X-ray is enabled for the Stage.
+	TracingEnabled *bool `locationName:"tracingEnabled" type:"boolean"`
+
 	// A map that defines the stage variables for the Stage resource that is associated
 	// with the new deployment. Variable names can have alphanumeric and underscore
 	// characters, and the values must match [A-Za-z0-9-._~:/?#&=,]+.
@@ -12337,6 +12340,12 @@ func (s *CreateDeploymentInput) SetStageDescription(v string) *CreateDeploymentI
 // SetStageName sets the StageName field's value.
 func (s *CreateDeploymentInput) SetStageName(v string) *CreateDeploymentInput {
 	s.StageName = &v
+	return s
+}
+
+// SetTracingEnabled sets the TracingEnabled field's value.
+func (s *CreateDeploymentInput) SetTracingEnabled(v bool) *CreateDeploymentInput {
+	s.TracingEnabled = &v
 	return s
 }
 
@@ -13000,6 +13009,9 @@ type CreateStageInput struct {
 	// tag value can be up to 256 characters.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
+	// Specifies whether active tracing with X-ray is enabled for the Stage.
+	TracingEnabled *bool `locationName:"tracingEnabled" type:"boolean"`
+
 	// A map that defines the stage variables for the new Stage resource. Variable
 	// names can have alphanumeric and underscore characters, and the values must
 	// match [A-Za-z0-9-._~:/?#&=,]+.
@@ -13086,6 +13098,12 @@ func (s *CreateStageInput) SetStageName(v string) *CreateStageInput {
 // SetTags sets the Tags field's value.
 func (s *CreateStageInput) SetTags(v map[string]*string) *CreateStageInput {
 	s.Tags = v
+	return s
+}
+
+// SetTracingEnabled sets the TracingEnabled field's value.
+func (s *CreateStageInput) SetTracingEnabled(v bool) *CreateStageInput {
+	s.TracingEnabled = &v
 	return s
 }
 
@@ -19932,12 +19950,12 @@ type MethodSetting struct {
 	// the value is a Boolean.
 	CachingEnabled *bool `locationName:"cachingEnabled" type:"boolean"`
 
-	// Specifies whether data trace logging is enabled for this method, which effects
+	// Specifies whether data trace logging is enabled for this method, which affects
 	// the log entries pushed to Amazon CloudWatch Logs. The PATCH path for this
 	// setting is /{method_setting_key}/logging/dataTrace, and the value is a Boolean.
 	DataTraceEnabled *bool `locationName:"dataTraceEnabled" type:"boolean"`
 
-	// Specifies the logging level for this method, which effects the log entries
+	// Specifies the logging level for this method, which affects the log entries
 	// pushed to Amazon CloudWatch Logs. The PATCH path for this setting is /{method_setting_key}/logging/loglevel,
 	// and the available levels are OFF, ERROR, and INFO.
 	LoggingLevel *string `locationName:"loggingLevel" type:"string"`
@@ -21528,6 +21546,9 @@ type Stage struct {
 	// The collection of tags. Each tag element is associated with a given resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
+	// Specifies whether active tracing with X-ray is enabled for the Stage.
+	TracingEnabled *bool `locationName:"tracingEnabled" type:"boolean"`
+
 	// A map that defines the stage variables for a Stage resource. Variable names
 	// can have alphanumeric and underscore characters, and the values must match
 	// [A-Za-z0-9-._~:/?#&=,]+.
@@ -21625,6 +21646,12 @@ func (s *Stage) SetStageName(v string) *Stage {
 // SetTags sets the Tags field's value.
 func (s *Stage) SetTags(v map[string]*string) *Stage {
 	s.Tags = v
+	return s
+}
+
+// SetTracingEnabled sets the TracingEnabled field's value.
+func (s *Stage) SetTracingEnabled(v bool) *Stage {
+	s.TracingEnabled = &v
 	return s
 }
 

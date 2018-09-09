@@ -5388,7 +5388,10 @@ type FilterLogEventsInput struct {
 	// not returned.
 	EndTime *int64 `locationName:"endTime" type:"long"`
 
-	// The filter pattern to use. If not provided, all the events are matched.
+	// The filter pattern to use. For more information, see Filter and Pattern Syntax
+	// (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
+	//
+	// If not provided, all the events are matched.
 	FilterPattern *string `locationName:"filterPattern" type:"string"`
 
 	// If the value is true, the operation makes a best effort to provide responses
@@ -5401,12 +5404,24 @@ type FilterLogEventsInput struct {
 	// The maximum number of events to return. The default is 10,000 events.
 	Limit *int64 `locationName:"limit" min:"1" type:"integer"`
 
-	// The name of the log group.
+	// The name of the log group to search.
 	//
 	// LogGroupName is a required field
 	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string" required:"true"`
 
-	// Optional list of log stream names.
+	// Filters the results to include only events from log streams that have names
+	// starting with this prefix.
+	//
+	// If you specify a value for both logStreamNamePrefix and logStreamNames, but
+	// the value for logStreamNamePrefix does not match any log stream names specified
+	// in logStreamNames, the action returns an InvalidParameterException error.
+	LogStreamNamePrefix *string `locationName:"logStreamNamePrefix" min:"1" type:"string"`
+
+	// Filters the results to only logs from the log streams in this list.
+	//
+	// If you specify a value for both logStreamNamePrefix and logStreamNames, but
+	// the value for logStreamNamePrefix does not match any log stream names specified
+	// in logStreamNames, the action returns an InvalidParameterException error.
 	LogStreamNames []*string `locationName:"logStreamNames" min:"1" type:"list"`
 
 	// The token for the next set of events to return. (You received this token
@@ -5440,6 +5455,9 @@ func (s *FilterLogEventsInput) Validate() error {
 	}
 	if s.LogGroupName != nil && len(*s.LogGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("LogGroupName", 1))
+	}
+	if s.LogStreamNamePrefix != nil && len(*s.LogStreamNamePrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LogStreamNamePrefix", 1))
 	}
 	if s.LogStreamNames != nil && len(s.LogStreamNames) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("LogStreamNames", 1))
@@ -5481,6 +5499,12 @@ func (s *FilterLogEventsInput) SetLimit(v int64) *FilterLogEventsInput {
 // SetLogGroupName sets the LogGroupName field's value.
 func (s *FilterLogEventsInput) SetLogGroupName(v string) *FilterLogEventsInput {
 	s.LogGroupName = &v
+	return s
+}
+
+// SetLogStreamNamePrefix sets the LogStreamNamePrefix field's value.
+func (s *FilterLogEventsInput) SetLogStreamNamePrefix(v string) *FilterLogEventsInput {
+	s.LogStreamNamePrefix = &v
 	return s
 }
 
