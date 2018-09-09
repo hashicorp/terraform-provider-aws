@@ -435,31 +435,9 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateDeploymentGroup(&input)
-		if err != nil {
-			retry := false
-			codedeployErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-			if codedeployErr.Code() == "InvalidRoleException" {
-				retry = true
-			}
-			if codedeployErr.Code() == "InvalidTriggerConfigException" {
-				r := regexp.MustCompile("^Topic ARN .+ is not valid$")
-				if r.MatchString(codedeployErr.Message()) {
-					retry = true
-				}
-			}
-			if retry {
-				log.Printf("[DEBUG] Trying to create deployment group again: %q",
-					codedeployErr.Message())
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-		return nil
+		return handleCreateError(err)
 	})
+
 	if err != nil {
 		return err
 	}
@@ -607,33 +585,11 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
-	// Retry to handle IAM role eventual consistency.
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.UpdateDeploymentGroup(&input)
-		if err != nil {
-			retry := false
-			codedeployErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-			if codedeployErr.Code() == "InvalidRoleException" {
-				retry = true
-			}
-			if codedeployErr.Code() == "InvalidTriggerConfigException" {
-				r := regexp.MustCompile("^Topic ARN .+ is not valid$")
-				if r.MatchString(codedeployErr.Message()) {
-					retry = true
-				}
-			}
-			if retry {
-				log.Printf("[DEBUG] Retrying Code Deployment Group Update: %q",
-					codedeployErr.Message())
-				return resource.RetryableError(err)
-			}
 
-			return resource.NonRetryableError(err)
-		}
-		return nil
+	var err error
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err = conn.UpdateDeploymentGroup(&input)
+		return handleUpdateError(err)
 	})
 
 	if err != nil {
@@ -656,6 +612,44 @@ func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func handleCreateError(err error) *resource.RetryError {
+	return handleCodeDeployApiError(err, "create")
+}
+
+func handleUpdateError(err error) *resource.RetryError {
+	return handleCodeDeployApiError(err, "update")
+}
+
+func handleCodeDeployApiError(err error, operation string) *resource.RetryError {
+	if err == nil {
+		return nil
+	}
+
+	retry := false
+	codedeployErr, ok := err.(awserr.Error)
+	if !ok {
+		return resource.NonRetryableError(err)
+	}
+
+	if codedeployErr.Code() == "InvalidRoleException" {
+		retry = true
+	}
+
+	if codedeployErr.Code() == "InvalidTriggerConfigException" {
+		r := regexp.MustCompile("^Topic ARN .+ is not valid$")
+		if r.MatchString(codedeployErr.Message()) {
+			retry = true
+		}
+	}
+
+	if retry {
+		log.Printf("[DEBUG] Trying to %s DeploymentGroup again: %q", operation, codedeployErr.Message())
+		return resource.RetryableError(err)
+	}
+
+	return resource.NonRetryableError(err)
 }
 
 // buildOnPremTagFilters converts raw schema lists into a list of
