@@ -65,6 +65,12 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"xray_tracing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -74,19 +80,29 @@ func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interfac
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
-	variables := make(map[string]string)
-	for k, v := range d.Get("variables").(map[string]interface{}) {
-		variables[k] = v.(string)
+	input := &apigateway.CreateDeploymentInput{
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 
-	var err error
-	deployment, err := conn.CreateDeployment(&apigateway.CreateDeploymentInput{
-		RestApiId:        aws.String(d.Get("rest_api_id").(string)),
-		StageName:        aws.String(d.Get("stage_name").(string)),
-		Description:      aws.String(d.Get("description").(string)),
-		StageDescription: aws.String(d.Get("stage_description").(string)),
-		Variables:        aws.StringMap(variables),
-	})
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("stage_description"); ok {
+		input.StageDescription = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("xray_tracing_enabled"); ok {
+		input.TracingEnabled = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("variables"); ok {
+		variables := make(map[string]string)
+		for k, v := range v.(map[string]interface{}) {
+			variables[k] = v.(string)
+		}
+		input.Variables = aws.StringMap(variables)
+	}
+
+	deployment, err := conn.CreateDeployment(input)
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Deployment: %s", err)
 	}
@@ -133,6 +149,21 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 
 	if err := d.Set("created_date", out.CreatedDate.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_date: %s", err)
+	}
+
+	input := &apigateway.GetStageInput{
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		StageName: aws.String(d.Get("stage_name").(string)),
+	}
+	stage, err := conn.GetStage(input)
+	if err != nil {
+		return err
+	}
+	d.Set("xray_tracing_enabled", stage.TracingEnabled)
+	d.Set("stage_description", stage.Description)
+	d.Set("stage_name", stage.StageName)
+	if err := d.Set("variables", aws.StringValueMap(stage.Variables)); err != nil {
+		return fmt.Errorf("error setting stage variables: %s", err)
 	}
 
 	return nil
