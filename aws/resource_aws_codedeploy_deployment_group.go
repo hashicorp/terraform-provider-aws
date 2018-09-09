@@ -544,7 +544,8 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		input.DeploymentConfigName = aws.String(n.(string))
 	}
 
-	if d.HasChange("autoscaling_groups") {
+	// include (original or new) autoscaling groups when blue_green_deployment_config changes
+	if d.HasChange("autoscaling_groups") || d.HasChange("blue_green_deployment_config") {
 		_, n := d.GetChange("autoscaling_groups")
 		input.AutoScalingGroups = expandStringList(n.(*schema.Set).List())
 	}
