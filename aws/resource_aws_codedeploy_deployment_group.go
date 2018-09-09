@@ -375,13 +375,15 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codedeployconn
 
-	application := d.Get("app_name").(string)
-	deploymentGroup := d.Get("deployment_group_name").(string)
+	// required fields
+	applicationName := d.Get("app_name").(string)
+	deploymentGroupName := d.Get("deployment_group_name").(string)
+	serviceRoleArn := d.Get("service_role_arn").(string)
 
 	input := codedeploy.CreateDeploymentGroupInput{
-		ApplicationName:     aws.String(application),
-		DeploymentGroupName: aws.String(deploymentGroup),
-		ServiceRoleArn:      aws.String(d.Get("service_role_arn").(string)),
+		ApplicationName:     aws.String(applicationName),
+		DeploymentGroupName: aws.String(deploymentGroupName),
+		ServiceRoleArn:      aws.String(serviceRoleArn),
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
@@ -430,7 +432,8 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfig(attr.([]interface{}))
 	}
 
-	// Retry to handle IAM role eventual consistency.
+	log.Printf("[DEBUG] Creating CodeDeploy DeploymentGroup %s", applicationName)
+
 	var resp *codedeploy.CreateDeploymentGroupOutput
 	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -451,10 +454,12 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).codedeployconn
 
 	log.Printf("[DEBUG] Reading CodeDeploy DeploymentGroup %s", d.Id())
+
 	resp, err := conn.GetDeploymentGroup(&codedeploy.GetDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
 	})
+
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "DeploymentGroupDoesNotExistException" {
 			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", d.Get("deployment_group_name").(string))
@@ -513,20 +518,15 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codedeployconn
 
+	// required fields
+	applicationName := d.Get("app_name").(string)
+	deploymentGroupName := d.Get("deployment_group_name").(string)
+	serviceRoleArn := d.Get("service_role_arn").(string)
+
 	input := codedeploy.UpdateDeploymentGroupInput{
-		ApplicationName:            aws.String(d.Get("app_name").(string)),
-		CurrentDeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
-		ServiceRoleArn:             aws.String(d.Get("service_role_arn").(string)),
-	}
-
-	if d.HasChange("autoscaling_groups") {
-		_, n := d.GetChange("autoscaling_groups")
-		input.AutoScalingGroups = expandStringList(n.(*schema.Set).List())
-	}
-
-	if d.HasChange("deployment_config_name") {
-		_, n := d.GetChange("deployment_config_name")
-		input.DeploymentConfigName = aws.String(n.(string))
+		ApplicationName:            aws.String(applicationName),
+		CurrentDeploymentGroupName: aws.String(deploymentGroupName),
+		ServiceRoleArn:             aws.String(serviceRoleArn),
 	}
 
 	if d.HasChange("deployment_group_name") {
@@ -537,6 +537,16 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 	if d.HasChange("deployment_style") {
 		_, n := d.GetChange("deployment_style")
 		input.DeploymentStyle = expandDeploymentStyle(n.([]interface{}))
+	}
+
+	if d.HasChange("deployment_config_name") {
+		_, n := d.GetChange("deployment_config_name")
+		input.DeploymentConfigName = aws.String(n.(string))
+	}
+
+	if d.HasChange("autoscaling_groups") {
+		_, n := d.GetChange("autoscaling_groups")
+		input.AutoScalingGroups = expandStringList(n.(*schema.Set).List())
 	}
 
 	// TagFilters aren't like tags. They don't append. They simply replace.
@@ -607,6 +617,7 @@ func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta int
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
 	})
+
 	if err != nil {
 		return err
 	}
