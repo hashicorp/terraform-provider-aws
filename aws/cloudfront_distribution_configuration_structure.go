@@ -195,11 +195,10 @@ func expandDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCac
 }
 
 func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) *schema.Set {
-	m := make(map[string]interface{})
 	var cb cloudfront.CacheBehavior
 
 	simpleCopyStruct(dcb, &cb)
-	m = flattenCacheBehaviorDeprecated(&cb)
+	m := flattenCacheBehaviorDeprecated(&cb)
 	return schema.NewSet(defaultCacheBehaviorHash, []interface{}{m})
 }
 

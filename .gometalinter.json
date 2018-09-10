@@ -3,6 +3,7 @@
     "Enable": [
         "errcheck",
         "gofmt",
+        "ineffassign",
         "interfacer",
         "structcheck",
         "vet"

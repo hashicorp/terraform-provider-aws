@@ -1064,6 +1064,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
 		})
+		if err != nil {
+			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
+		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
@@ -1095,6 +1098,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.StartInstances(&ec2.StartInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
 		})
+		if err != nil {
+			return fmt.Errorf("error starting instance (%s): %s", d.Id(), err)
+		}
 
 		stateConf = &resource.StateChangeConf{
 			Pending:    []string{"pending", "stopped"},

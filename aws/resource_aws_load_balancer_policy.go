@@ -163,6 +163,9 @@ func resourceAwsLoadBalancerPolicyUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	err = resourceAwsLoadBalancerPolicyCreate(d, meta)
+	if err != nil {
+		return err
+	}
 
 	for _, listenerAssignment := range reassignments.listenerPolicies {
 		if _, err := elbconn.SetLoadBalancerPoliciesOfListener(listenerAssignment); err != nil {

@@ -66,11 +66,14 @@ func testSweepWafRegexMatchSet(region string) error {
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRegexMatchSetInput{
 				ChangeToken:     token,
-				RegexMatchSetId: aws.String(*set.RegexMatchSetId),
+				RegexMatchSetId: set.RegexMatchSetId,
 			}
 			log.Printf("[INFO] Deleting WAF Regex Match Set: %s", req)
 			return conn.DeleteRegexMatchSet(req)
 		})
+		if err != nil {
+			return fmt.Errorf("error deleting WAF Regex Match Set (%s): %s", aws.StringValue(set.RegexMatchSetId), err)
+		}
 	}
 
 	return nil

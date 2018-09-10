@@ -214,7 +214,7 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.
 			for parameters != nil {
-				paramsToModify := make([]*rds.Parameter, 0)
+				var paramsToModify []*rds.Parameter
 				if len(parameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
 					paramsToModify, parameters = parameters[:], nil
 				} else {
