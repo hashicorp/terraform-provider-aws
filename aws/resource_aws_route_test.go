@@ -803,39 +803,6 @@ resource "aws_route" "bar" {
 }
 `)
 
-// Acceptance test if mixed inline and external routes are implemented
-var testAccAWSRouteMixConfig = fmt.Sprint(`
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-route-route-mix"
-	}
-}
-
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-
-	tags {
-		Name = "terraform-testacc-route-route-mix"
-	}
-}
-
-resource "aws_route_table" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-
-	route {
-		cidr_block = "10.2.0.0/16"
-		gateway_id = "${aws_internet_gateway.foo.id}"
-	}
-}
-
-resource "aws_route" "bar" {
-	route_table_id = "${aws_route_table.foo.id}"
-	destination_cidr_block = "0.0.0.0/0"
-	gateway_id = "${aws_internet_gateway.foo.id}"
-}
-`)
-
 var testAccAWSRouteNoopChange = fmt.Sprint(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"

@@ -677,34 +677,6 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigCNAMERecord = `
-resource "aws_route53_zone" "main" {
-	name = "notexample.com"
-}
-
-resource "aws_route53_record" "default" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
-	name = "host123.domain"
-	type = "CNAME"
-	ttl = "30"
-	records = ["1.2.3.4"]
-}
-`
-
-const testAccRoute53RecordConfigCNAMERecordUpdateToCNAME = `
-resource "aws_route53_zone" "main" {
-	name = "notexample.com"
-}
-
-resource "aws_route53_record" "default" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
-	name = "host123.domain"
-	type = "A"
-	ttl = "30"
-	records = ["1.2.3.4"]
-}
-`
-
 const testAccRoute53RecordConfig_fqdn = `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
@@ -738,12 +710,6 @@ resource "aws_route53_record" "default" {
   lifecycle {
     create_before_destroy = true
   }
-}
-`
-
-const testAccRoute53RecordNoConfig = `
-resource "aws_route53_zone" "main" {
-	name = "notexample.com"
 }
 `
 
@@ -1084,32 +1050,6 @@ resource "aws_elb" "main" {
     instance_protocol = "http"
     lb_port = 80
     lb_protocol = "http"
-  }
-}
-`
-
-const testAccRoute53AliasRecord = `
-resource "aws_route53_zone" "main" {
-  name = "notexample.com"
-}
-
-resource "aws_route53_record" "origin" {
-  zone_id = "${aws_route53_zone.main.zone_id}"
-  name = "origin"
-  type = "A"
-  ttl = 5
-  records = ["127.0.0.1"]
-}
-
-resource "aws_route53_record" "alias" {
-  zone_id = "${aws_route53_zone.main.zone_id}"
-  name = "www"
-  type = "A"
-
-  alias {
-    zone_id = "${aws_route53_zone.main.zone_id}"
-    name = "${aws_route53_record.origin.name}.${aws_route53_zone.main.name}"
-    evaluate_target_health = true
   }
 }
 `

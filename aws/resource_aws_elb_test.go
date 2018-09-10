@@ -1395,20 +1395,6 @@ resource "aws_instance" "foo" {
 }
 `
 
-const testAccAWSELBConfigListenerSSLCertificateId = `
-resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a"]
-
-  listener {
-    instance_port = 8000
-    instance_protocol = "http"
-    ssl_certificate_id = "%s"
-    lb_port = 443
-    lb_protocol = "https"
-  }
-}
-`
-
 const testAccAWSELBConfigHealthCheck = `
 resource "aws_elb" "bar" {
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]

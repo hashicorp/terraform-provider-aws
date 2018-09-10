@@ -5,6 +5,7 @@
         "gofmt",
         "interfacer",
         "structcheck",
+        "varcheck",
         "vet"
     ],
     "EnableGC": true,
