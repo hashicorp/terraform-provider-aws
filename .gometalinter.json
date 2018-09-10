@@ -5,6 +5,7 @@
         "gofmt",
         "interfacer",
         "structcheck",
+        "unconvert",
         "vet"
     ],
     "EnableGC": true,
