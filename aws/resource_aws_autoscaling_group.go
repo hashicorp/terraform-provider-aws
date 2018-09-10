@@ -49,6 +49,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				ValidateFunc: validateMaxLength(255 - resource.UniqueIDSuffixLength),
 			},
 
+			"id_tag": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"launch_configuration": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -524,7 +529,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
 
-	g, err := getAwsAutoscalingGroup(d.Id(), conn)
+	g, err := getAwsAutoscalingGroup(d, conn)
 	if err != nil {
 		return err
 	}
@@ -830,7 +835,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	// Read the autoscaling group first. If it doesn't exist, we're done.
 	// We need the group in order to check if there are instances attached.
 	// If so, we need to remove those first.
-	g, err := getAwsAutoscalingGroup(d.Id(), conn)
+	g, err := getAwsAutoscalingGroup(d, conn)
 	if err != nil {
 		return err
 	}
@@ -876,7 +881,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		if g, _ = getAwsAutoscalingGroup(d.Id(), conn); g != nil {
+		if g, _ = getAwsAutoscalingGroup(d, conn); g != nil {
 			return resource.RetryableError(
 				fmt.Errorf("Auto Scaling Group still exists"))
 		}
@@ -885,11 +890,27 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 }
 
 func getAwsAutoscalingGroup(
-	asgName string,
+	d *schema.ResourceData,
 	conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 
-	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{aws.String(asgName)},
+	asgName := d.Id()
+
+	var idTagKey, idTagValue interface{}
+	var hasIdTagKey, hasIdTagValue bool
+
+	if idTagKey, hasIdTagKey = d.GetOk("id_tag"); hasIdTagKey {
+		idTagValue, hasIdTagValue = getIdTagValue(d, idTagKey.(string))
+	}
+
+	var describeOpts autoscaling.DescribeAutoScalingGroupsInput
+
+	if hasIdTagValue {
+		// TODO: add paging support
+		describeOpts = autoscaling.DescribeAutoScalingGroupsInput{}
+	} else {
+		describeOpts = autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: []*string{aws.String(asgName)},
+		}
 	}
 
 	log.Printf("[DEBUG] AutoScaling Group describe configuration: %#v", describeOpts)
@@ -904,8 +925,31 @@ func getAwsAutoscalingGroup(
 	}
 
 	// Search for the autoscaling group
+	if hasIdTagValue {
+		for idx, asc := range describeGroups.AutoScalingGroups {
+
+			// Ignore autoscaling groups with a Status value
+			// This means it is being destroyed
+			if asc.Status == nil {
+				for _, tag := range asc.Tags {
+					if *tag.Key == idTagKey.(string) && *tag.Value == idTagValue.(string) {
+
+						// If autoscaling group name does not match current ID
+						// then update the ID value.
+						// This keeps things sane for other operations such as "destroy"
+						if *asc.AutoScalingGroupName != asgName {
+							d.SetId(*asc.AutoScalingGroupName)
+						}
+
+						return describeGroups.AutoScalingGroups[idx], nil
+					}
+				}
+			}
+		}
+	}
+
 	for idx, asc := range describeGroups.AutoScalingGroups {
-		if *asc.AutoScalingGroupName == asgName {
+		if *asc.AutoScalingGroupName == asgName && asc.Status == nil {
 			return describeGroups.AutoScalingGroups[idx], nil
 		}
 	}
@@ -936,7 +980,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 	// Next, wait for the autoscale group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		g, err := getAwsAutoscalingGroup(d.Id(), conn)
+		g, err := getAwsAutoscalingGroup(d, conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -1133,4 +1177,22 @@ func expandVpcZoneIdentifiers(list []interface{}) *string {
 		strs = append(strs, s.(string))
 	}
 	return aws.String(strings.Join(strs, ","))
+}
+
+func getIdTagValue(d *schema.ResourceData, key string) (interface{}, bool) {
+	tagMap := setToMapByKey(d.Get("tag").(*schema.Set), "key")
+	if v, ok := tagMap[key]; ok {
+		return v.(map[string]interface{})["value"], true
+	}
+
+	tagList := d.Get("tags").([]interface{})
+	for _, v := range tagList {
+		attr, _ := v.(map[string]interface{})
+
+		if attr["key"] == key {
+			return attr["value"], true
+		}
+	}
+
+	return nil, false
 }
