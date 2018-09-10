@@ -85,7 +85,7 @@ func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interf
 	})
 	if err != nil {
 		if isAWSErr(err, "InvalidRequestException", "does not exist") {
-			log.Printf("[WARN] EMR Security Configuraiton (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] EMR Security Configuration (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

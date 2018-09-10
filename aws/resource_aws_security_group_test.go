@@ -770,7 +770,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 }
 
 // This test should fail to destroy the Security Groups and VPC, due to a
-// dependency cycle added outside of terraform's managment. There is a sweeper
+// dependency cycle added outside of terraform's management. There is a sweeper
 // 'aws_vpc' and 'aws_security_group' that cleans these up, however, the test is
 // written to allow Terraform to clean it up because we do go and revoke the
 // cyclic rules that were added.
@@ -837,7 +837,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_true(t *testing.T) {
 				),
 			},
 			// Again try to apply the config with the sgs removed; it should work,
-			// because we've told the SGs to forecfully revoke their rules first
+			// because we've told the SGs to forcefully revoke their rules first
 			{
 				Config: testAccAWSSecurityGroupConfig_revoke_base_removed,
 			},

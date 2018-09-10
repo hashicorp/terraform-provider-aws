@@ -4,6 +4,7 @@
         "errcheck",
         "gofmt",
         "interfacer",
+        "misspell",
         "structcheck",
         "vet"
     ],

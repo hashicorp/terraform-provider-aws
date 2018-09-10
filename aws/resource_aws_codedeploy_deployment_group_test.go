@@ -882,7 +882,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 }
 
 // Without "Computed: true" on load_balancer_info, removing the resource
-// from configuration causes an error, becuase the remote resource still exists.
+// from configuration causes an error, because the remote resource still exists.
 func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 
@@ -1186,7 +1186,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 }
 
 // Without "Computed: true" on blue_green_deployment_config, removing the resource
-// from configuration causes an error, becuase the remote resource still exists.
+// from configuration causes an error, because the remote resource still exists.
 func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 

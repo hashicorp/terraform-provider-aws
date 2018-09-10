@@ -988,7 +988,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Because we're calling Update prior to Read, and the default value of `source_dest_check` is `true`,
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
-		// if a diff has occured, it's not because it's a new instance.
+		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
 			// SourceDestCheck can only be set on VPC instances
 			// AWS will return an error of InvalidParameterCombination if we attempt

@@ -339,7 +339,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch setTarget {
-	//instance_id is a special case due to the fact that AWS will "discover" the network_interace_id
+	//instance_id is a special case due to the fact that AWS will "discover" the network_interface_id
 	//when it creates the route and return that data.  In the case of an update, we should ignore the
 	//existing network_interface_id
 	case "instance_id":
