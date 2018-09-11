@@ -303,6 +303,9 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 		}
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("error getting S3 Bucket Inventory (%s): %s", d.Id(), err)
+	}
 
 	if output == nil || output.InventoryConfiguration == nil {
 		log.Printf("[WARN] %s S3 bucket inventory configuration not found, removing from state.", d.Id())

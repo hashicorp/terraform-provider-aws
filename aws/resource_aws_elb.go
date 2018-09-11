@@ -448,6 +448,9 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 	resp, err := elbconn.DescribeTags(&elb.DescribeTagsInput{
 		LoadBalancerNames: []*string{lb.LoadBalancerName},
 	})
+	if err != nil {
+		return fmt.Errorf("error describing tags for ELB (%s): %s", d.Id(), err)
+	}
 
 	var et []*elb.Tag
 	if len(resp.TagDescriptions) > 0 {

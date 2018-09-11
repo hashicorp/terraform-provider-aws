@@ -63,7 +63,7 @@ func TestAWSSecurityGroupMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	is, err = resourceAwsSecurityGroupMigrateState(0, is, meta)
+	_, err = resourceAwsSecurityGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

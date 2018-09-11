@@ -276,7 +276,7 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 			// we've got them all.
 			maxParams := 20
 			for parameters != nil {
-				paramsToModify := make([]*rds.Parameter, 0)
+				var paramsToModify []*rds.Parameter
 				if len(parameters) <= maxParams {
 					paramsToModify, parameters = parameters[:], nil
 				} else {

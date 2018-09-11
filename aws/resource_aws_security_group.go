@@ -1381,14 +1381,12 @@ func protocolForValue(v string) string {
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", and "all"
 func sgProtocolIntegers() map[string]int {
-	var protocolIntegers = make(map[string]int)
-	protocolIntegers = map[string]int{
+	return map[string]int{
 		"udp":  17,
 		"tcp":  6,
 		"icmp": 1,
 		"all":  -1,
 	}
-	return protocolIntegers
 }
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while

@@ -240,6 +240,9 @@ func testAccCheckAWSWafRegionalRuleGroupDisappears(group *waf.RuleGroup) resourc
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
+		if err != nil {
+			return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
+		}
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

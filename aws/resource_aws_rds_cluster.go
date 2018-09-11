@@ -399,19 +399,15 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	var identifier string
 	if v, ok := d.GetOk("cluster_identifier"); ok {
 		identifier = v.(string)
+	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
+		identifier = resource.PrefixedUniqueId(v.(string))
 	} else {
-		if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-			identifier = resource.PrefixedUniqueId(v.(string))
-		} else {
-			identifier = resource.PrefixedUniqueId("tf-")
-		}
-
-		d.Set("cluster_identifier", identifier)
+		identifier = resource.PrefixedUniqueId("tf-")
 	}
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
-			DBClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
+			DBClusterIdentifier:  aws.String(identifier),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
@@ -487,7 +483,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[INFO] RDS Cluster is restoring from snapshot with default db_cluster_parameter_group_name, backup_retention_period and vpc_security_group_ids" +
 				"but custom values should be set, will now update after snapshot is restored!")
 
-			d.SetId(d.Get("cluster_identifier").(string))
+			d.SetId(identifier)
 
 			log.Printf("[INFO] RDS Cluster ID: %s", d.Id())
 
@@ -515,7 +511,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
-			DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
+			DBClusterIdentifier:         aws.String(identifier),
 			Engine:                      aws.String(d.Get("engine").(string)),
 			EngineMode:                  aws.String(d.Get("engine_mode").(string)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
@@ -609,7 +605,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		s3_bucket := v.([]interface{})[0].(map[string]interface{})
 		createOpts := &rds.RestoreDBClusterFromS3Input{
-			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+			DBClusterIdentifier: aws.String(identifier),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
@@ -720,7 +716,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
-			DBClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
+			DBClusterIdentifier:  aws.String(identifier),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			MasterUserPassword:   aws.String(d.Get("master_password").(string)),
@@ -815,7 +811,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG]: RDS Cluster create response: %s", resp)
 	}
 
-	d.SetId(d.Get("cluster_identifier").(string))
+	d.SetId(identifier)
 
 	log.Printf("[INFO] RDS Cluster ID: %s", d.Id())
 
