@@ -227,13 +227,18 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionFargate(tdName),
+				Config: testAccAWSEcsTaskDefinitionFargate(tdName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "requires_compatibilities.#", "1"),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "cpu", "256"),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "memory", "512"),
 				),
+			},
+			{
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+				Config:             testAccAWSEcsTaskDefinitionFargate(tdName, `[{"protocol": "tcp", "containerPort": 8000, "hostPort": 8000}]`),
 			},
 		},
 	})
@@ -649,7 +654,7 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccAWSEcsTaskDefinitionFargate(tdName string) string {
+func testAccAWSEcsTaskDefinitionFargate(tdName, portMappings string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "fargate" {
   family                   = "%s"
@@ -665,12 +670,13 @@ resource "aws_ecs_task_definition" "fargate" {
     "cpu": 10,
     "command": ["sleep","360"],
     "memory": 10,
-    "essential": true
+    "essential": true,
+    "portMappings": %s
   }
 ]
 TASK_DEFINITION
 }
-`, tdName)
+`, tdName, portMappings)
 }
 
 func testAccAWSEcsTaskDefinitionExecutionRole(roleName, policyName, tdName string) string {
