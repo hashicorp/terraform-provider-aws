@@ -6,6 +6,7 @@
         "ineffassign",
         "interfacer",
         "structcheck",
+        "varcheck",
         "vet"
     ],
     "EnableGC": true,
