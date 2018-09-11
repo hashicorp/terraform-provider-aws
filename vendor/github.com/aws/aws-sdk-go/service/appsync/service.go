@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "appsync"   // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "AppSync"   // ServiceID is a unique identifer of a specific service
+	ServiceName = "appsync"   // Name of service.
+	EndpointsID = ServiceName // ID to lookup a service endpoint with.
+	ServiceID   = "AppSync"   // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the AppSync client with a session.

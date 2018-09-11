@@ -1282,6 +1282,8 @@ type CreateDeliveryStreamInput struct {
 	RedshiftDestinationConfiguration *RedshiftDestinationConfiguration `type:"structure"`
 
 	// [Deprecated] The destination in Amazon S3. You can specify only one destination.
+	//
+	// Deprecated: S3DestinationConfiguration has been deprecated
 	S3DestinationConfiguration *S3DestinationConfiguration `deprecated:"true" type:"structure"`
 
 	// The destination in Splunk. You can specify only one destination.
@@ -1549,7 +1551,7 @@ type DeliveryStreamDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time that the delivery stream was created.
-	CreateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTimestamp *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the delivery stream. For more information,
 	// see Amazon Resource Names (ARNs) and AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
@@ -1588,7 +1590,7 @@ type DeliveryStreamDescription struct {
 	HasMoreDestinations *bool `type:"boolean" required:"true"`
 
 	// The date and time that the delivery stream was last updated.
-	LastUpdateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdateTimestamp *time.Time `type:"timestamp"`
 
 	// If the DeliveryStreamType parameter is KinesisStreamAsSource, a SourceDescription
 	// object describing the source Kinesis data stream.
@@ -3131,7 +3133,7 @@ type KinesisStreamSourceDescription struct {
 
 	// Kinesis Data Firehose starts retrieving records from the Kinesis data stream
 	// starting with this time stamp.
-	DeliveryStartTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	DeliveryStartTimestamp *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the source Kinesis data stream. For more
 	// information, see Amazon Kinesis Data Streams ARN Format (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kinesis-streams).
@@ -5822,6 +5824,8 @@ type UpdateDestinationInput struct {
 	RedshiftDestinationUpdate *RedshiftDestinationUpdate `type:"structure"`
 
 	// [Deprecated] Describes an update for a destination in Amazon S3.
+	//
+	// Deprecated: S3DestinationUpdate has been deprecated
 	S3DestinationUpdate *S3DestinationUpdate `deprecated:"true" type:"structure"`
 
 	// Describes an update for a destination in Splunk.

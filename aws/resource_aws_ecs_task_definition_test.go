@@ -227,13 +227,18 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionFargate(tdName),
+				Config: testAccAWSEcsTaskDefinitionFargate(tdName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.fargate", &conf),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "requires_compatibilities.#", "1"),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "cpu", "256"),
 					resource.TestCheckResourceAttr("aws_ecs_task_definition.fargate", "memory", "512"),
 				),
+			},
+			{
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+				Config:             testAccAWSEcsTaskDefinitionFargate(tdName, `[{"protocol": "tcp", "containerPort": 8000, "hostPort": 8000}]`),
 			},
 		},
 	})
@@ -262,6 +267,40 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
+func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
+
+	markTaskDefinitionInactive := func() {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+		conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
+			TaskDefinition: aws.String(fmt.Sprintf("%s:1", tdName)),
+		})
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinition(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
+				),
+			},
+			{
+				Config:    testAccAWSEcsTaskDefinition(tdName),
+				PreConfig: markTaskDefinitionInactive,
+				Check:     resource.TestCheckResourceAttr("aws_ecs_task_definition.jenkins", "revision", "2"), // should get re-created
+			},
+		},
+	})
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -280,31 +319,6 @@ func testAccCheckAWSTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) reso
 		return nil
 	}
 }
-func TestValidateAwsEcsTaskDefinitionNetworkMode(t *testing.T) {
-	validNames := []string{
-		"bridge",
-		"host",
-		"none",
-	}
-	for _, v := range validNames {
-		_, errors := validateAwsEcsTaskDefinitionNetworkMode(v, "network_mode")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid AWS ECS Task Definition Network Mode: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"bridged",
-		"-docker",
-	}
-	for _, v := range invalidNames {
-		_, errors := validateAwsEcsTaskDefinitionNetworkMode(v, "network_mode")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid AWS ECS Task Definition Network Mode", v)
-		}
-	}
-}
-
 func TestValidateAwsEcsTaskDefinitionContainerDefinitions(t *testing.T) {
 	validDefinitions := []string{
 		testValidateAwsEcsTaskDefinitionValidContainerDefinitions,
@@ -640,7 +654,7 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccAWSEcsTaskDefinitionFargate(tdName string) string {
+func testAccAWSEcsTaskDefinitionFargate(tdName, portMappings string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "fargate" {
   family                   = "%s"
@@ -656,12 +670,13 @@ resource "aws_ecs_task_definition" "fargate" {
     "cpu": 10,
     "command": ["sleep","360"],
     "memory": 10,
-    "essential": true
+    "essential": true,
+    "portMappings": %s
   }
 ]
 TASK_DEFINITION
 }
-`, tdName)
+`, tdName, portMappings)
 }
 
 func testAccAWSEcsTaskDefinitionExecutionRole(roleName, policyName, tdName string) string {

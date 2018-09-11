@@ -11,14 +11,14 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudTrailServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.main", "id", "113285607260"),
 					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.main", "arn", "arn:aws:iam::113285607260:root"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudTrailServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.regional", "id", "282025262664"),

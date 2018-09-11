@@ -60,11 +60,11 @@ func testAccAwsGuardDutyIpset_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName, true),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

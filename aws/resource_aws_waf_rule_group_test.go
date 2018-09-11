@@ -77,7 +77,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test", &rule),
@@ -263,6 +263,9 @@ func testAccCheckAWSWafRuleGroupDisappears(group *waf.RuleGroup) resource.TestCh
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
+		if err != nil {
+			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
+		}
 
 		wr := newWafRetryer(conn, "global")
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

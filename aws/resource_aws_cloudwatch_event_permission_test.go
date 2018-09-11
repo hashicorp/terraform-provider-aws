@@ -178,14 +178,14 @@ func TestAccAWSCloudWatchEventPermission_Import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
 				),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

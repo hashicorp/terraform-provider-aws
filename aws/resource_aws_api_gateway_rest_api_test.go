@@ -106,6 +106,11 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 
 			{
 				Config: testAccAWSAPIGatewayRestAPIUpdateConfig,
@@ -153,6 +158,11 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "REGIONAL"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
@@ -205,6 +215,58 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
+	var restApi apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					// Ensure region supports PRIVATE endpoint
+					// This can eventually be moved to a PreCheck function
+					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
+						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
+						EndpointConfiguration: &apigateway.EndpointConfiguration{
+							Types: []*string{aws.String("PRIVATE")},
+						},
+					})
+					if err != nil {
+						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
+							t.Skip("Region does not support PRIVATE endpoint type")
+						}
+						t.Fatal(err)
+					}
+
+					// Be kind and rewind. :)
+					_, err = conn.DeleteRestApi(&apigateway.DeleteRestApiInput{
+						RestApiId: output.Id,
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "PRIVATE"),
+				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 	expectedAPIKeySource := "HEADER"
 	expectedUpdateAPIKeySource := "AUTHORIZER"
@@ -218,6 +280,11 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource,
@@ -248,6 +315,11 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", expectedPolicyText),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy,
@@ -286,7 +358,12 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
 			},
-
+			{
+				ResourceName:            "aws_api_gateway_rest_api.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI,
 				Check: resource.ComposeTestCheckFunc(

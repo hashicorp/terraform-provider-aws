@@ -33,35 +33,9 @@ resource "aws_iam_role" "example" {
 EOF
 }
 
-resource "aws_iam_role_policy" "example" {
-  name = "example-policy"
-  role = "${aws_iam_role.example.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "autoscaling:CompleteLifecycleAction",
-        "autoscaling:DeleteLifecycleHook",
-        "autoscaling:DescribeAutoScalingGroups",
-        "autoscaling:DescribeLifecycleHooks",
-        "autoscaling:PutLifecycleHook",
-        "autoscaling:RecordLifecycleActionHeartbeat",
-        "codedeploy:*",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
-        "tag:GetTags",
-        "tag:GetResources",
-        "sns:Publish"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+  role       = "${aws_iam_role.example.name}"
 }
 
 resource "aws_codedeploy_app" "example" {
@@ -260,7 +234,7 @@ You can configure how instances will be added to the replacement environment in 
 * `action` - (Optional) The method used to add instances to a replacement environment.
 
   * `DISCOVER_EXISTING`: Use instances that already exist or will be created manually.
-  * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specifed_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscaling_groups` to specify the Auto Scaling group.
+  * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscaling_groups` to specify the Auto Scaling group.
 
 You can configure how instances in the original environment are terminated when a blue/green deployment is successful. `terminate_blue_instances_on_deployment_success` supports the following:
 

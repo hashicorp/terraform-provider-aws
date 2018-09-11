@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -43,6 +44,11 @@ func resourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"associate_public_ip_address": {
@@ -119,6 +125,15 @@ func resourceAwsInstance() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
+					// echo -n "" | shasum
+					if (old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "") ||
+						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
+						return true
+					}
+					return false
+				},
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
@@ -267,6 +282,20 @@ func resourceAwsInstance() *schema.Resource {
 
 			"tenancy": {
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"cpu_core_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"cpu_threads_per_core": {
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -476,12 +505,12 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Build the creation struct
 	runOpts := &ec2.RunInstancesInput{
-		BlockDeviceMappings:   instanceOpts.BlockDeviceMappings,
-		DisableApiTermination: instanceOpts.DisableAPITermination,
-		EbsOptimized:          instanceOpts.EBSOptimized,
-		Monitoring:            instanceOpts.Monitoring,
-		IamInstanceProfile:    instanceOpts.IAMInstanceProfile,
-		ImageId:               instanceOpts.ImageID,
+		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
+		DisableApiTermination:             instanceOpts.DisableAPITermination,
+		EbsOptimized:                      instanceOpts.EBSOptimized,
+		Monitoring:                        instanceOpts.Monitoring,
+		IamInstanceProfile:                instanceOpts.IAMInstanceProfile,
+		ImageId:                           instanceOpts.ImageID,
 		InstanceInitiatedShutdownBehavior: instanceOpts.InstanceInitiatedShutdownBehavior,
 		InstanceType:                      instanceOpts.InstanceType,
 		Ipv6AddressCount:                  instanceOpts.Ipv6AddressCount,
@@ -497,6 +526,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:                          instanceOpts.SubnetID,
 		UserData:                          instanceOpts.UserData64,
 		CreditSpecification:               instanceOpts.CreditSpecification,
+		CpuOptions:                        instanceOpts.CpuOptions,
 	}
 
 	_, ipv6CountOk := d.GetOk("ipv6_address_count")
@@ -506,8 +536,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified")
 	}
 
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 	if !restricted {
+
 		tagsSpec := make([]*ec2.TagSpecification, 0)
 
 		if v, ok := d.GetOk("tags"); ok {
@@ -663,6 +694,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("tenancy", instance.Placement.Tenancy)
 	}
 
+	if instance.CpuOptions != nil {
+		d.Set("cpu_core_count", instance.CpuOptions.CoreCount)
+		d.Set("cpu_threads_per_core", instance.CpuOptions.ThreadsPerCore)
+	}
+
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
@@ -773,6 +809,17 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ephemeral_block_device", []interface{}{})
 	}
 
+	// ARN
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ec2",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("instance/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
+
 	// Instance attributes
 	{
 		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
@@ -833,8 +880,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)
-
-	restricted := meta.(*AWSClient).IsGovCloud() || meta.(*AWSClient).IsChinaCloud()
+	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	if d.HasChange("tags") {
 		if !d.IsNewResource() || restricted {
@@ -846,7 +892,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if d.HasChange("volume_tags") {
-		if !d.IsNewResource() || !restricted {
+		if !d.IsNewResource() || restricted {
 			if err := setVolumeTags(conn, d); err != nil {
 				return err
 			} else {
@@ -942,7 +988,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Because we're calling Update prior to Read, and the default value of `source_dest_check` is `true`,
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
-		// if a diff has occured, it's not because it's a new instance.
+		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
 			// SourceDestCheck can only be set on VPC instances
 			// AWS will return an error of InvalidParameterCombination if we attempt
@@ -1018,6 +1064,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
 		})
+		if err != nil {
+			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
+		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
@@ -1049,6 +1098,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.StartInstances(&ec2.StartInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
 		})
+		if err != nil {
+			return fmt.Errorf("error starting instance (%s): %s", d.Id(), err)
+		}
 
 		stateConf = &resource.StateChangeConf{
 			Pending:    []string{"pending", "stopped"},
@@ -1067,7 +1119,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("disable_api_termination") {
+	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
 		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			DisableApiTermination: &ec2.AttributeBooleanValue{
@@ -1110,7 +1162,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("credit_specification") {
+	if d.HasChange("credit_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("credit_specification"); ok {
 			creditSpecification := v.([]interface{})[0].(map[string]interface{})
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
@@ -1139,7 +1191,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := awsTerminateInstance(conn, d.Id(), d); err != nil {
+	if err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return err
 	}
 
@@ -1680,23 +1732,30 @@ type awsInstanceOpts struct {
 	SubnetID                          *string
 	UserData64                        *string
 	CreditSpecification               *ec2.CreditSpecificationRequest
+	CpuOptions                        *ec2.CpuOptionsRequest
 }
 
 func buildAwsInstanceOpts(
 	d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*AWSClient).ec2conn
 
+	instanceType := d.Get("instance_type").(string)
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageID:               aws.String(d.Get("ami").(string)),
-		InstanceType:          aws.String(d.Get("instance_type").(string)),
+		InstanceType:          aws.String(instanceType),
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok {
-		cs := v.([]interface{})[0].(map[string]interface{})
-		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-			CpuCredits: aws.String(cs["cpu_credits"].(string)),
+		// Only T2 instances support T2 Unlimited
+		if strings.HasPrefix(instanceType, "t2") {
+			cs := v.([]interface{})[0].(map[string]interface{})
+			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+				CpuCredits: aws.String(cs["cpu_credits"].(string)),
+			}
+		} else {
+			log.Print("[WARN] credit_specification is defined but instance type is not T2. Ignoring...")
 		}
 	}
 
@@ -1739,6 +1798,17 @@ func buildAwsInstanceOpts(
 
 	if v := d.Get("tenancy").(string); v != "" {
 		opts.Placement.Tenancy = aws.String(v)
+	}
+
+	if v := d.Get("cpu_core_count").(int); v > 0 {
+		tc := d.Get("cpu_threads_per_core").(int)
+		if tc < 0 {
+			tc = 2
+		}
+		opts.CpuOptions = &ec2.CpuOptionsRequest{
+			CoreCount:      aws.Int64(int64(v)),
+			ThreadsPerCore: aws.Int64(int64(tc)),
+		}
 	}
 
 	var groups []*string
@@ -1816,7 +1886,7 @@ func buildAwsInstanceOpts(
 	return opts, nil
 }
 
-func awsTerminateInstance(conn *ec2.EC2, id string, d *schema.ResourceData) error {
+func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[INFO] Terminating instance: %s", id)
 	req := &ec2.TerminateInstancesInput{
 		InstanceIds: []*string{aws.String(id)},
@@ -1831,7 +1901,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, d *schema.ResourceData) erro
 		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
 		Target:     []string{"terminated"},
 		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

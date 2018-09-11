@@ -51,7 +51,7 @@ func resourceAwsSecurityGroupImportState(
 
 func resourceAwsSecurityGroupImportStatePerm(sg *ec2.SecurityGroup, ruleType string, perm *ec2.IpPermission) ([]*schema.ResourceData, error) {
 	/*
-	   Create a seperate Security Group Rule for:
+	   Create a separate Security Group Rule for:
 	   * The collection of IpRanges (cidr_blocks)
 	   * The collection of Ipv6Ranges (ipv6_cidr_blocks)
 	   * Each individual UserIdGroupPair (source_security_group_id)

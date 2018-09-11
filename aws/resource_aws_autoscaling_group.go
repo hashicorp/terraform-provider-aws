@@ -34,7 +34,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -42,7 +42,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateMaxLength(255),
 			},
-			"name_prefix": &schema.Schema{
+			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -269,7 +269,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 
 			"tag": autoscalingTagSchema(),
 
-			"tags": &schema.Schema{
+			"tags": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeMap},
@@ -464,7 +464,22 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] AutoScaling Group create configuration: %#v", createOpts)
-	_, err := conn.CreateAutoScalingGroup(&createOpts)
+
+	// Retry for IAM eventual consistency
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.CreateAutoScalingGroup(&createOpts)
+
+		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
+		if isAWSErr(err, "ValidationError", "Invalid IAM Instance Profile") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error creating AutoScaling Group: %s", err)
 	}

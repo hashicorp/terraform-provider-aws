@@ -22,7 +22,7 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAppautoscalingPolicyConfig(randClusterName, randPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.foobar_simple", &policy),
@@ -53,7 +53,7 @@ func TestAccAWSAppautoScalingPolicy_nestedSchema(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAppautoscalingPolicyNestedSchemaConfig(randClusterName, randPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.foobar_simple", &policy),
@@ -140,7 +140,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.test", &policy),
@@ -165,7 +165,7 @@ func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAppautoscalingPolicyDynamoDB(randPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.dynamo_test", &policy),
@@ -191,7 +191,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAppautoscalingPolicy_multiplePoliciesSameName(tableName1, tableName2, namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.read1", &readPolicy1),
@@ -223,7 +223,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAppautoscalingPolicy_multiplePoliciesSameResource(tableName, namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.read", &readPolicy),

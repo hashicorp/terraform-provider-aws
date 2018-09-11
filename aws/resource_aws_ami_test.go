@@ -32,6 +32,8 @@ func TestAccAWSAMI_basic(t *testing.T) {
 						"aws_ami.foo", "name", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestMatchResourceAttr(
 						"aws_ami.foo", "root_snapshot_id", regexp.MustCompile("^snap-")),
+					resource.TestCheckResourceAttr(
+						"aws_ami.foo", "ena_support", "true"),
 				),
 			},
 		},
@@ -231,6 +233,7 @@ resource "aws_ami" "foo" {
     device_name = "/dev/sda1"
     snapshot_id = "${aws_ebs_snapshot.foo.id}"
   }
+  ena_support = true
 }
 	`, rInt)
 }

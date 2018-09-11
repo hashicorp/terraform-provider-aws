@@ -8914,6 +8914,8 @@ type CreateInstancesInput struct {
 	//
 	// In releases prior to June 12, 2017, this parameter was ignored by the API.
 	// It is now deprecated.
+	//
+	// Deprecated: CustomImageName has been deprecated
 	CustomImageName *string `locationName:"customImageName" deprecated:"true" type:"string"`
 
 	// The names to use for your new Lightsail instances. Separate multiple values
@@ -10163,15 +10165,19 @@ type Disk struct {
 	// In releases prior to November 14, 2017, this parameter returned attached
 	// for system disks in the API response. It is now deprecated, but still included
 	// in the response. Use isAttached instead.
+	//
+	// Deprecated: AttachmentState has been deprecated
 	AttachmentState *string `locationName:"attachmentState" deprecated:"true" type:"string"`
 
 	// The date when the disk was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// (Deprecated) The number of GB in use by the disk.
 	//
 	// In releases prior to November 14, 2017, this parameter was not included in
 	// the API response. It is now deprecated.
+	//
+	// Deprecated: GbInUse has been deprecated
 	GbInUse *int64 `locationName:"gbInUse" deprecated:"true" type:"integer"`
 
 	// The input/output operations per second (IOPS) of the disk.
@@ -10349,7 +10355,7 @@ type DiskSnapshot struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The date when the disk snapshot was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the source disk from which you are creating
 	// the disk snapshot.
@@ -10466,7 +10472,7 @@ type Domain struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The date when the domain recordset was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// An array of key-value pairs containing information about the domain entries.
 	DomainEntries []*DomainEntry `locationName:"domainEntries" type:"list"`
@@ -10558,6 +10564,8 @@ type DomainEntry struct {
 	//
 	// In releases prior to November 29, 2017, this parameter was not included in
 	// the API response. It is now deprecated.
+	//
+	// Deprecated: Options has been deprecated
 	Options map[string]*string `locationName:"options" deprecated:"true" type:"map"`
 
 	// The target AWS name server (e.g., ns-111.awsdns-22.com.).
@@ -11325,7 +11333,7 @@ type GetInstanceMetricDataInput struct {
 	// The end time of the time period.
 	//
 	// EndTime is a required field
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix" required:"true"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" required:"true"`
 
 	// The name of the instance for which you want to get metrics data.
 	//
@@ -11345,7 +11353,7 @@ type GetInstanceMetricDataInput struct {
 	// The start time of the time period.
 	//
 	// StartTime is a required field
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" required:"true"`
 
 	// The instance statistics.
 	//
@@ -11961,7 +11969,7 @@ type GetLoadBalancerMetricDataInput struct {
 	// The end time of the period.
 	//
 	// EndTime is a required field
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix" required:"true"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" required:"true"`
 
 	// The name of the load balancer.
 	//
@@ -12061,7 +12069,7 @@ type GetLoadBalancerMetricDataInput struct {
 	// The start time of the period.
 	//
 	// StartTime is a required field
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" required:"true"`
 
 	// An array of statistics that you want to request metrics for. Valid values
 	// are listed below.
@@ -12548,6 +12556,8 @@ type GetOperationsForResourceOutput struct {
 	//
 	// In releases prior to June 12, 2017, this parameter returned null by the API.
 	// It is now deprecated, and the API returns the nextPageToken parameter instead.
+	//
+	// Deprecated: NextPageCount has been deprecated
 	NextPageCount *string `locationName:"nextPageCount" deprecated:"true" type:"string"`
 
 	// An identifier that was returned from the previous call to this operation,
@@ -12906,7 +12916,7 @@ type Instance struct {
 	BundleId *string `locationName:"bundleId" type:"string"`
 
 	// The timestamp when the instance was created (e.g., 1479734909.17).
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The size of the vCPU and the amount of RAM for the instance.
 	Hardware *InstanceHardware `locationName:"hardware" type:"structure"`
@@ -13080,7 +13090,7 @@ type InstanceAccessDetails struct {
 	CertKey *string `locationName:"certKey" type:"string"`
 
 	// For SSH access, the date on which the temporary keys expire.
-	ExpiresAt *time.Time `locationName:"expiresAt" type:"timestamp" timestampFormat:"unix"`
+	ExpiresAt *time.Time `locationName:"expiresAt" type:"timestamp"`
 
 	// The name of this Amazon Lightsail instance.
 	InstanceName *string `locationName:"instanceName" type:"string"`
@@ -13519,7 +13529,7 @@ type InstanceSnapshot struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The timestamp when the snapshot was created (e.g., 1479907467.024).
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// An array of disk objects containing information about all block storage disks.
 	FromAttachedDisks []*Disk `locationName:"fromAttachedDisks" type:"list"`
@@ -13735,7 +13745,7 @@ type KeyPair struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The timestamp when the key pair was created (e.g., 1479816991.349).
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The RSA fingerprint of the key pair.
 	Fingerprint *string `locationName:"fingerprint" type:"string"`
@@ -13819,7 +13829,7 @@ type LoadBalancer struct {
 	ConfigurationOptions map[string]*string `locationName:"configurationOptions" type:"map"`
 
 	// The date when your load balancer was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The DNS name of your Lightsail load balancer.
 	DnsName *string `locationName:"dnsName" type:"string"`
@@ -13979,7 +13989,7 @@ type LoadBalancerTlsCertificate struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// The time when you created your SSL/TLS certificate.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The domain name for your SSL/TLS certificate.
 	DomainName *string `locationName:"domainName" type:"string"`
@@ -13995,7 +14005,7 @@ type LoadBalancerTlsCertificate struct {
 	IsAttached *bool `locationName:"isAttached" type:"boolean"`
 
 	// The time when the SSL/TLS certificate was issued.
-	IssuedAt *time.Time `locationName:"issuedAt" type:"timestamp" timestampFormat:"unix"`
+	IssuedAt *time.Time `locationName:"issuedAt" type:"timestamp"`
 
 	// The issuer of the certificate.
 	Issuer *string `locationName:"issuer" type:"string"`
@@ -14014,10 +14024,10 @@ type LoadBalancerTlsCertificate struct {
 	Name *string `locationName:"name" type:"string"`
 
 	// The timestamp when the SSL/TLS certificate expires.
-	NotAfter *time.Time `locationName:"notAfter" type:"timestamp" timestampFormat:"unix"`
+	NotAfter *time.Time `locationName:"notAfter" type:"timestamp"`
 
 	// The timestamp when the SSL/TLS certificate is first valid.
-	NotBefore *time.Time `locationName:"notBefore" type:"timestamp" timestampFormat:"unix"`
+	NotBefore *time.Time `locationName:"notBefore" type:"timestamp"`
 
 	// An object containing information about the status of Lightsail's managed
 	// renewal for the certificate.
@@ -14051,7 +14061,7 @@ type LoadBalancerTlsCertificate struct {
 	RevocationReason *string `locationName:"revocationReason" type:"string" enum:"LoadBalancerTlsCertificateRevocationReason"`
 
 	// The timestamp when the SSL/TLS certificate was revoked.
-	RevokedAt *time.Time `locationName:"revokedAt" type:"timestamp" timestampFormat:"unix"`
+	RevokedAt *time.Time `locationName:"revokedAt" type:"timestamp"`
 
 	// The serial number of the certificate.
 	Serial *string `locationName:"serial" type:"string"`
@@ -14418,7 +14428,7 @@ type MetricDatapoint struct {
 	Sum *float64 `locationName:"sum" type:"double"`
 
 	// The timestamp (e.g., 1479816991.349).
-	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" timestampFormat:"unix"`
+	Timestamp *time.Time `locationName:"timestamp" type:"timestamp"`
 
 	// The unit.
 	Unit *string `locationName:"unit" type:"string" enum:"MetricUnit"`
@@ -14581,7 +14591,7 @@ type Operation struct {
 	_ struct{} `type:"structure"`
 
 	// The timestamp when the operation was initialized (e.g., 1479816991.349).
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The error code.
 	ErrorCode *string `locationName:"errorCode" type:"string"`
@@ -14614,7 +14624,7 @@ type Operation struct {
 	Status *string `locationName:"status" type:"string" enum:"OperationStatus"`
 
 	// The timestamp when the status was changed (e.g., 1479816991.349).
-	StatusChangedAt *time.Time `locationName:"statusChangedAt" type:"timestamp" timestampFormat:"unix"`
+	StatusChangedAt *time.Time `locationName:"statusChangedAt" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -15194,7 +15204,7 @@ type StaticIp struct {
 	AttachedTo *string `locationName:"attachedTo" type:"string"`
 
 	// The timestamp when the static IP was created (e.g., 1479735304.222).
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The static IP address.
 	IpAddress *string `locationName:"ipAddress" type:"string"`

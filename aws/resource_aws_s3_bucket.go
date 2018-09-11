@@ -42,9 +42,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 				ConflictsWith: []string{"bucket_prefix"},
 			},
 			"bucket_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"bucket"},
 			},
 
 			"bucket_domain_name": {
@@ -588,7 +589,7 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	if d.HasChange("acl") {
+	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
 			return err
 		}
@@ -726,6 +727,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			rules = append(rules, rule)
 		}
 		if err := d.Set("cors_rule", rules); err != nil {
+			return err
+		}
+	} else {
+		log.Printf("[DEBUG] S3 bucket: %s, read CORS: %v", d.Id(), cors)
+		if err := d.Set("cors_rule", make([]map[string]interface{}, 0)); err != nil {
 			return err
 		}
 	}
@@ -1694,7 +1700,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 
 	rc.Rules = rules
 	i := &s3.PutBucketEncryptionInput{
-		Bucket: aws.String(bucket),
+		Bucket:                            aws.String(bucket),
 		ServerSideEncryptionConfiguration: rc,
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
@@ -1801,7 +1807,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 
 	rc.Rules = rules
 	i := &s3.PutBucketReplicationInput{
-		Bucket: aws.String(bucket),
+		Bucket:                   aws.String(bucket),
 		ReplicationConfiguration: rc,
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)

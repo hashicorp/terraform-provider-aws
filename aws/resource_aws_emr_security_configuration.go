@@ -28,10 +28,11 @@ func resourceAwsEMRSecurityConfiguration() *schema.Resource {
 				ValidateFunc:  validateMaxLength(10280),
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateMaxLength(10280 - resource.UniqueIDSuffixLength),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateMaxLength(10280 - resource.UniqueIDSuffixLength),
 			},
 
 			"configuration": {
@@ -64,7 +65,7 @@ func resourceAwsEmrSecurityConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	resp, err := conn.CreateSecurityConfiguration(&emr.CreateSecurityConfigurationInput{
-		Name: aws.String(emrSCName),
+		Name:                  aws.String(emrSCName),
 		SecurityConfiguration: aws.String(d.Get("configuration").(string)),
 	})
 
@@ -84,7 +85,7 @@ func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interf
 	})
 	if err != nil {
 		if isAWSErr(err, "InvalidRequestException", "does not exist") {
-			log.Printf("[WARN] EMR Security Configuraiton (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] EMR Security Configuration (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

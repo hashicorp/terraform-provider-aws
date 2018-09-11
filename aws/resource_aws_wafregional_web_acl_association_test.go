@@ -18,7 +18,7 @@ func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
@@ -34,7 +34,7 @@ func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),

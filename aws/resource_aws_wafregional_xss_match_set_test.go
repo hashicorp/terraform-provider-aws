@@ -22,7 +22,7 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalXssMatchSetConfig(xssMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &v),

@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "mediaconvert" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName    // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "MediaConvert" // ServiceID is a unique identifer of a specific service
+	ServiceName = "mediaconvert" // Name of service.
+	EndpointsID = ServiceName    // ID to lookup a service endpoint with.
+	ServiceID   = "MediaConvert" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the MediaConvert client with a session.

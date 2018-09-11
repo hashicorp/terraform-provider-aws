@@ -15,11 +15,11 @@ func TestAccAWSDxLag_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDxLagConfig(acctest.RandString(5)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,

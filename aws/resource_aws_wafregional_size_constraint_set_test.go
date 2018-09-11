@@ -23,7 +23,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),

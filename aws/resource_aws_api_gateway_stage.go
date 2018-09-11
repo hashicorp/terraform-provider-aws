@@ -20,6 +20,20 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 		Read:   resourceAwsApiGatewayStageRead,
 		Update: resourceAwsApiGatewayStageUpdate,
 		Delete: resourceAwsApiGatewayStageDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME", d.Id())
+				}
+				restApiID := idParts[0]
+				stageName := idParts[1]
+				d.Set("stage_name", stageName)
+				d.Set("rest_api_id", restApiID)
+				d.SetId(fmt.Sprintf("ags-%s-%s", restApiID, stageName))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"access_log_settings": {
@@ -219,8 +233,14 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	d.Set("variables", aws.StringValueMap(stage.Variables))
-	d.Set("tags", aws.StringValueMap(stage.Tags))
+
+	if err := d.Set("tags", aws.StringValueMap(stage.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("variables", aws.StringValueMap(stage.Variables)); err != nil {
+		return fmt.Errorf("error setting variables: %s", err)
+	}
 
 	region := meta.(*AWSClient).region
 	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
@@ -377,7 +397,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 func diffVariablesOps(prefix string, oldVars, newVars map[string]interface{}) []*apigateway.PatchOperation {
 	ops := make([]*apigateway.PatchOperation, 0)
 
-	for k, _ := range oldVars {
+	for k := range oldVars {
 		if _, ok := newVars[k]; !ok {
 			ops = append(ops, &apigateway.PatchOperation{
 				Op:   aws.String("remove"),

@@ -14,6 +14,10 @@ func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
 		Read: dataSourceAwsSecretsManagerSecretVersionRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"secret_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -78,6 +82,7 @@ func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta i
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
+	d.Set("arn", output.ARN)
 
 	if err := d.Set("version_stages", flattenStringList(output.VersionStages)); err != nil {
 		return fmt.Errorf("error setting version_stages: %s", err)

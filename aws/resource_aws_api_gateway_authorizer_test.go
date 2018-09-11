@@ -29,7 +29,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
@@ -49,7 +49,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "identity_validation_expression", ""),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
@@ -84,14 +84,14 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"-cognito"),
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "provider_arns.#", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_cognitoUpdate(apiGatewayName, authorizerName, cognitoName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"-cognito-update"),
@@ -118,7 +118,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName),
@@ -127,7 +127,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_credentials", expectedCreds),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"-cognito"),
@@ -135,7 +135,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "provider_arns.#", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"_modified"),
@@ -160,15 +160,15 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationDefaultToken(apiGatewayName, authorizerName, lambdaName),
 				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationRequest(apiGatewayName, authorizerName, lambdaName),
 				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationCognito(apiGatewayName, authorizerName, cognitoName),
 				ExpectError: regexp.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
 			},

@@ -246,7 +246,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSELB_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists("aws_elb.test", &conf),
@@ -586,7 +586,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
-							&elb.Listener{
+							{
 								InstancePort:     aws.Int64(int64(22)),
 								InstanceProtocol: aws.String("tcp"),
 								LoadBalancerPort: aws.Int64(int64(22)),
@@ -914,57 +914,6 @@ func TestResourceAWSELB_validateAccessLogsInterval(t *testing.T) {
 		}
 	}
 
-}
-
-func TestResourceAWSELB_validateListenerProtocol(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-		{
-			Value:    "incorrect",
-			ErrCount: 1,
-		},
-		{
-			Value:    "HTTP:",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    "TCP",
-			ErrCount: 0,
-		},
-		{
-			Value:    "ssl",
-			ErrCount: 0,
-		},
-		{
-			Value:    "HTTP",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateListenerProtocol(tc.Value, "protocol")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
 }
 
 func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
@@ -1443,20 +1392,6 @@ resource "aws_instance" "foo" {
 	# us-west-2
 	ami = "ami-043a5034"
 	instance_type = "t1.micro"
-}
-`
-
-const testAccAWSELBConfigListenerSSLCertificateId = `
-resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a"]
-
-  listener {
-    instance_port = 8000
-    instance_protocol = "http"
-    ssl_certificate_id = "%s"
-    lb_port = 443
-    lb_protocol = "https"
-  }
 }
 `
 

@@ -58,7 +58,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 The following arguments are supported:
 
 * `allocated_storage` - (Required unless a `snapshot_identifier` or
-`replicate_source_db` is provided) The allocated storage in gigabytes.
+`replicate_source_db` is provided) The allocated storage in gibibytes.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
@@ -90,14 +90,21 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it needs to be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additonal read replica contraints.
-* `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
-   Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
+for additional read replica contraints.
+* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
+* `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
+* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`): `alert`, `audit`, `error`, `general`, `listener`, `slowquery`, `trace`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
+For information on the difference between the available Aurora MySQL engines
+see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
+in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
 is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
 this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
+For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. If omitted, no final snapshot will be made.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or
@@ -225,7 +232,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 
 In addition to all arguments above, the following attributes are exported:
 
-* `address` - The address of the RDS instance.
+* `address` - The hostname of the RDS instance. See also `endpoint` and `port`.
 * `arn` - The ARN of the RDS instance.
 * `allocated_storage` - The amount of allocated storage.
 * `availability_zone` - The availability zone of the instance.
@@ -233,7 +240,9 @@ In addition to all arguments above, the following attributes are exported:
 * `backup_window` - The backup window.
 * `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
 DB instance.
-* `endpoint` - The connection endpoint.
+* `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
+* `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
+* `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
 * `engine_version` - The database engine version.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used

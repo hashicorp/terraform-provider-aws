@@ -79,13 +79,13 @@ The following arguments are supported:
 * `http_method` - (Required) The HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
 * `authorization` - (Required) The type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`, `COGNITO_USER_POOLS`)
 * `authorizer_id` - (Optional) The authorizer id to be used when the authorization is `CUSTOM` or `COGNITO_USER_POOLS`
+* `authorization_scopes` - (Optional) The authorization scopes used when the authorization is `COGNITO_USER_POOLS`
 * `api_key_required` - (Optional) Specify if the method requires an API key
 * `request_models` - (Optional) A map of the API models used for the request's content type
   where key is the content type (e.g. `application/json`)
   and value is either `Error`, `Empty` (built-in models) or `aws_api_gateway_model`'s `name`.
 * `request_validator_id` - (Optional) The ID of a `aws_api_gateway_request_validator`
 * `request_parameters` - (Optional) A map of request query string parameters and headers that should be passed to the integration.
-* `authorization_scopes` - (Optional) The authorization scopes used when the authorization is `COGNITO_USER_POOLS`
   For example:
 ```hcl
 request_parameters = {
@@ -95,3 +95,11 @@ request_parameters = {
 ```
 would define that the header `X-Some-Header` and the query string `some-query-param` must be provided on the request, or
 * `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
+
+## Import
+
+`aws_api_gateway_method` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`, e.g.
+
+```
+$ terraform import aws_api_gateway_method.example 12345abcde/67890fghij/GET
+```

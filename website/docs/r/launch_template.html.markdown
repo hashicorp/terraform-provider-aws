@@ -75,6 +75,8 @@ resource "aws_launch_template" "foo" {
       Name = "test"
     }
   }
+  
+  user_data = "${base64encode(...)}"
 }
 ```
 
@@ -113,6 +115,7 @@ The following arguments are supported:
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tags](#tags) below for more details.
+* `tags` - (Optional) A mapping of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 
 ### Block devices
@@ -232,11 +235,11 @@ The `placement` block supports the following:
 
 ### Tags
 
-The tags to apply to the resources during launch. You can tag instances and volumes.
+The tags to apply to the resources during launch. You can tag instances and volumes. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag.
+* `resource_type` - The type of resource to tag. Valid values are `instance` and `volume`.
 * `tags` - A mapping of tags to assign to the resource.
 
 
@@ -244,6 +247,7 @@ Each `tag_specifications` block supports the following:
 
 The following attributes are exported along with all argument references:
 
+* `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
 * `default_version` - The default version of the launch template.
 * `latest_version` - The latest version of the launch template.

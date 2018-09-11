@@ -52,6 +52,7 @@ The following arguments are supported:
 * `document_format` - (Optional, defaults to JSON) The format of the document. Valid document types include: `JSON` and `YAML`
 * `document_type` - (Required) The type of the document. Valid document types include: `Command`, `Policy` and `Automation`
 * `permissions` - (Optional) Additional Permissions to attach to the document. See [Permissions](#permissions) below for details.
+* `tags` - (Optional) A mapping of tags to assign to the object.
 
 ## Attributes Reference
 

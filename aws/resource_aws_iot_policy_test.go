@@ -21,7 +21,7 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSIoTPolicyConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iot_policy.pubsub", "name", rName),

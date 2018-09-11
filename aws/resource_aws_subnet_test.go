@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,6 +30,7 @@ func init() {
 			"aws_elasticache_replication_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",
+			"aws_instance",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
@@ -111,6 +113,10 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 					testAccCheckSubnetExists(
 						"aws_subnet.foo", &v),
 					testCheck,
+					resource.TestMatchResourceAttr(
+						"aws_subnet.foo",
+						"arn",
+						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)),
 				),
 			},
 		},

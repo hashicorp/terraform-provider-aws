@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -34,16 +37,22 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateLaunchTemplateName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateLaunchTemplateName,
 			},
 
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"default_version": {
@@ -80,12 +89,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"encrypted": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -138,8 +159,14 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				// Use TypeString to allow an "unspecified" value,
+				// since TypeBool only has true/false with false default.
+				// The conversion from bare true/false values in
+				// configurations to TypeString value is currently safe.
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+				ValidateFunc:     validateTypeStringNullableBoolean,
 			},
 
 			"elastic_gpu_specifications": {
@@ -225,6 +252,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"valid_until": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.ValidateRFC3339TimeString,
 									},
 								},
@@ -375,9 +403,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"security_group_names"},
 			},
 
 			"tag_specifications": {
@@ -388,6 +417,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"resource_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"instance",
+								"volume",
+							}, false),
 						},
 						"tags": tagsSchema(),
 					},
@@ -398,7 +431,23 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("latest_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+				for _, changedKey := range diff.GetChangedKeysPrefix("") {
+					switch changedKey {
+					case "name", "name_prefix", "description", "default_version", "latest_version":
+						continue
+					default:
+						return true
+					}
+				}
+				return false
+			}),
+		),
 	}
 }
 
@@ -470,6 +519,16 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("tags", tagsToMap(lt.Tags))
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
@@ -485,7 +544,6 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
 	d.Set("disable_api_termination", ltData.DisableApiTermination)
-	d.Set("ebs_optimized", ltData.EbsOptimized)
 	d.Set("image_id", ltData.ImageId)
 	d.Set("instance_initiated_shutdown_behavior", ltData.InstanceInitiatedShutdownBehavior)
 	d.Set("instance_type", ltData.InstanceType)
@@ -495,13 +553,20 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
 	d.Set("user_data", ltData.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
+	d.Set("ebs_optimized", "")
+
+	if ltData.EbsOptimized != nil {
+		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
+	}
 
 	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
 		return err
 	}
 
-	if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
-		return err
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
@@ -556,6 +621,16 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	d.Partial(true)
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	} else {
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
+
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
 
@@ -585,14 +660,18 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			"virtual_name": aws.StringValue(v.VirtualName),
 		}
 		if v.NoDevice != nil {
-			mapping["no_device"] = *v.NoDevice
+			mapping["no_device"] = aws.StringValue(v.NoDevice)
 		}
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": aws.BoolValue(v.Ebs.DeleteOnTermination),
-				"encrypted":             aws.BoolValue(v.Ebs.Encrypted),
-				"volume_size":           int(aws.Int64Value(v.Ebs.VolumeSize)),
-				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
+				"volume_size": int(aws.Int64Value(v.Ebs.VolumeSize)),
+				"volume_type": aws.StringValue(v.Ebs.VolumeType),
+			}
+			if v.Ebs.DeleteOnTermination != nil {
+				ebs["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination))
+			}
+			if v.Ebs.Encrypted != nil {
+				ebs["encrypted"] = strconv.FormatBool(aws.BoolValue(v.Ebs.Encrypted))
 			}
 			if v.Ebs.Iops != nil {
 				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
@@ -656,7 +735,7 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
 				"max_price":                      aws.StringValue(so.MaxPrice),
 				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
-				"valid_until":                    aws.TimeValue(so.ValidUntil),
+				"valid_until":                    aws.TimeValue(so.ValidUntil).Format(time.RFC3339),
 			})
 			mo["spot_options"] = spot
 		}
@@ -766,8 +845,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.InstanceInitiatedShutdownBehavior = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
-		opts.InstanceType = aws.String(v.(string))
+	instanceType := d.Get("instance_type").(string)
+	if instanceType != "" {
+		opts.InstanceType = aws.String(instanceType)
 	}
 
 	if v, ok := d.GetOk("kernel_id"); ok {
@@ -786,8 +866,12 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("ebs_optimized"); ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting ebs_optimized %q from string to boolean: %s", v.(string), err)
+		}
+		opts.EbsOptimized = aws.Bool(vBool)
 	}
 
 	if v, ok := d.GetOk("security_group_names"); ok {
@@ -803,12 +887,16 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
-			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{})))
+			blockDeviceMapping, err := readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
 		}
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok {
+	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 {
@@ -896,7 +984,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	return opts, nil
 }
 
-func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
+func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) (*ec2.LaunchTemplateBlockDeviceMappingRequest, error) {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
 	if v := bdm["device_name"].(string); v != "" {
@@ -913,24 +1001,36 @@ func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTem
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
 		ebs := v.([]interface{})
-		if len(ebs) > 0 {
-			ebsData := ebs[0]
-			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}))
+		if len(ebs) > 0 && ebs[0] != nil {
+			ebsData := ebs[0].(map[string]interface{})
+			launchTemplateEbsBlockDeviceRequest, err := readEbsBlockDeviceFromConfig(ebsData)
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMapping.Ebs = launchTemplateEbsBlockDeviceRequest
 		}
 	}
 
-	return blockDeviceMapping
+	return blockDeviceMapping, nil
 }
 
-func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplateEbsBlockDeviceRequest {
+func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTemplateEbsBlockDeviceRequest, error) {
 	ebsDevice := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v := ebs["delete_on_termination"]; v != nil {
-		ebsDevice.DeleteOnTermination = aws.Bool(v.(bool))
+	if v, ok := ebs["delete_on_termination"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.DeleteOnTermination = aws.Bool(vBool)
 	}
 
-	if v := ebs["encrypted"]; v != nil {
-		ebsDevice.Encrypted = aws.Bool(v.(bool))
+	if v, ok := ebs["encrypted"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting encrypted %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.Encrypted = aws.Bool(vBool)
 	}
 
 	if v := ebs["iops"].(int); v > 0 {
@@ -953,16 +1053,17 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.VolumeType = aws.String(v)
 	}
 
-	return ebsDevice
+	return ebsDevice, nil
 }
 
 func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
 	var privateIpAddress string
-	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
-		AssociatePublicIpAddress: aws.Bool(ni["associate_public_ip_address"].(bool)),
-		DeleteOnTermination:      aws.Bool(ni["delete_on_termination"].(bool)),
+	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
+
+	if v, ok := ni["delete_on_termination"]; ok {
+		networkInterface.DeleteOnTermination = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["description"].(string); ok && v != "" {
@@ -975,6 +1076,8 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	} else if v, ok := ni["associate_public_ip_address"]; ok {
+		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
@@ -1084,11 +1187,13 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 				spotOptions.SpotInstanceType = aws.String(v)
 			}
 
-			t, err := time.Parse(time.RFC3339, so["valid_until"].(string))
-			if err != nil {
-				return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+			if v, ok := so["valid_until"].(string); ok && v != "" {
+				t, err := time.Parse(time.RFC3339, v)
+				if err != nil {
+					return nil, fmt.Errorf("Error Parsing Launch Template Spot Options valid until: %s", err.Error())
+				}
+				spotOptions.ValidUntil = aws.Time(t)
 			}
-			spotOptions.ValidUntil = aws.Time(t)
 		}
 		instanceMarketOptions.SpotOptions = spotOptions
 	}

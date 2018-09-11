@@ -25,6 +25,8 @@ var ssmPatchOSs = []string{
 	ssm.OperatingSystemUbuntu,
 	ssm.OperatingSystemRedhatEnterpriseLinux,
 	ssm.OperatingSystemCentos,
+	ssm.OperatingSystemAmazonLinux2,
+	ssm.OperatingSystemSuse,
 }
 
 func resourceAwsSsmPatchBaseline() *schema.Resource {
@@ -145,7 +147,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	params := &ssm.CreatePatchBaselineInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name:                           aws.String(d.Get("name").(string)),
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
 	}
@@ -216,6 +218,11 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 
 	_, err := ssmconn.UpdatePatchBaseline(params)
 	if err != nil {
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -230,6 +237,11 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := ssmconn.GetPatchBaseline(params)
 	if err != nil {
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 

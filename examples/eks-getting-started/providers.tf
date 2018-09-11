@@ -6,8 +6,10 @@ provider "aws" {
   region = "us-west-2"
 }
 
-# Using this data source allows the configuration to be
+# Using these data sources allows the configuration to be
 # generic for any region.
+data "aws_region" "current" {}
+
 data "aws_availability_zones" "available" {}
 
 # Not required: currently used in conjuction with using

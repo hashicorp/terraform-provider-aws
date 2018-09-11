@@ -90,6 +90,8 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
+						"aws_elasticache_replication_group.bar", "member_clusters.#", "2"),
+					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "auto_minor_version_upgrade", "false"),
 				),
 			},
@@ -230,8 +232,8 @@ func TestAccAWSElasticacheReplicationGroup_updateParameterGroup(t *testing.T) {
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "parameter_group_name", "default.redis3.2"),
+					resource.TestMatchResourceAttr(
+						"aws_elasticache_replication_group.bar", "parameter_group_name", regexp.MustCompile(`^default.redis.+`)),
 				),
 			},
 
@@ -783,7 +785,6 @@ resource "aws_elasticache_replication_group" "bar" {
     node_type = "cache.m1.small"
     number_cache_clusters = 2
     port = 6379
-    parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
     auto_minor_version_upgrade = false
@@ -831,7 +832,6 @@ resource "aws_elasticache_replication_group" "bar" {
     node_type = "cache.m1.small"
     number_cache_clusters = 2
     port = 6379
-    parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
     auto_minor_version_upgrade = false
@@ -865,7 +865,9 @@ resource "aws_elasticache_security_group" "bar" {
 
 resource "aws_elasticache_parameter_group" "bar" {
     name = "allkeys-lru-%d"
-    family = "redis3.2"
+    # We do not have a data source for "latest" Elasticache family
+    # so unfortunately we must hardcode this for now
+    family = "redis4.0"
 
     parameter {
         name = "maxmemory-policy"
@@ -913,7 +915,6 @@ resource "aws_elasticache_replication_group" "bar" {
     node_type = "cache.m1.small"
     number_cache_clusters = 2
     port = 6379
-    parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
     auto_minor_version_upgrade = true
@@ -948,7 +949,6 @@ resource "aws_elasticache_replication_group" "bar" {
     node_type = "cache.m1.small"
     number_cache_clusters = 2
     port = 6379
-    parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
     auto_minor_version_upgrade = true
@@ -985,7 +985,6 @@ resource "aws_elasticache_replication_group" "bar" {
     node_type = "cache.m1.medium"
     number_cache_clusters = 2
     port = 6379
-    parameter_group_name = "default.redis3.2"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
 }`, rName, rName, rName)
@@ -1034,7 +1033,6 @@ resource "aws_elasticache_replication_group" "bar" {
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
-    parameter_group_name = "default.redis3.2"
     availability_zones = ["us-west-2a"]
     auto_minor_version_upgrade = false
 }
@@ -1096,7 +1094,6 @@ resource "aws_elasticache_replication_group" "bar" {
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
-    parameter_group_name = "default.redis3.2"
     availability_zones = ["us-west-2a","us-west-2b"]
     automatic_failover_enabled = true
     snapshot_window = "02:00-03:00"
@@ -1159,9 +1156,8 @@ resource "aws_elasticache_replication_group" "bar" {
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
-    parameter_group_name = "default.redis3.2.cluster.on"
     availability_zones = ["us-west-2a","us-west-2b"]
-    automatic_failover_enabled = true
+    automatic_failover_enabled = false
     snapshot_window = "02:00-03:00"
     snapshot_retention_limit = 7
     engine_version = "3.2.4"
@@ -1224,7 +1220,6 @@ resource "aws_elasticache_replication_group" "bar" {
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
-    parameter_group_name = "default.redis3.2.cluster.on"
     automatic_failover_enabled = true
     cluster_mode {
       replicas_per_node_group = 1
@@ -1289,7 +1284,6 @@ resource "aws_elasticache_replication_group" "bar" {
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
     security_group_ids = ["${aws_security_group.bar.id}"]
-    parameter_group_name = "default.redis3.2.cluster.on"
     automatic_failover_enabled = true
     cluster_mode {
       num_node_groups         = %d
@@ -1440,7 +1434,6 @@ resource "aws_elasticache_replication_group" "test" {
   automatic_failover_enabled    = %[2]t
   node_type                     = "cache.m3.medium"
   number_cache_clusters         = %[3]d
-  parameter_group_name          = "default.redis3.2"
   replication_group_id          = "%[1]s"
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
   subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"

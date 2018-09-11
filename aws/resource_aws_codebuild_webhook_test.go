@@ -29,15 +29,15 @@ func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
-					// Checking secret value can be flakey, we may need to wait for its generation
-					// resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, "url", regexp.MustCompile(`^https://`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
@@ -54,21 +54,38 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName),
+				Config: testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName, "dev"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
-					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
-					// Checking secret value can be flakey, we may need to wait for its generation
-					// resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, "url", ""),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName, "master"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
+					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
+					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "url", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
@@ -99,9 +116,10 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
@@ -179,7 +197,7 @@ resource "aws_codebuild_webhook" "test" {
 `)
 }
 
-func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string) string {
+func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string, branchFilter string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = "%s"
@@ -202,9 +220,10 @@ resource "aws_codebuild_project" "test" {
 }
 
 resource "aws_codebuild_webhook" "test" {
-  project_name = "${aws_codebuild_project.test.name}"
+  project_name  = "${aws_codebuild_project.test.name}"
+  branch_filter = "%s"
 }
-`, rName)
+`, rName, branchFilter)
 }
 
 func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) string {

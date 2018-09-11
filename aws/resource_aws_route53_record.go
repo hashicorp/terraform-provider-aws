@@ -541,8 +541,8 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 		name := normalizeAwsAliasName(*alias.DNSName)
 		d.Set("alias", []interface{}{
 			map[string]interface{}{
-				"zone_id": *alias.HostedZoneId,
-				"name":    name,
+				"zone_id":                *alias.HostedZoneId,
+				"name":                   name,
 				"evaluate_target_health": *alias.EvaluateTargetHealth,
 			},
 		})
@@ -929,7 +929,7 @@ func expandRecordName(name, zone string) string {
 		if len(name) == 0 {
 			rn = zone
 		} else {
-			rn = strings.Join([]string{name, zone}, ".")
+			rn = strings.Join([]string{rn, zone}, ".")
 		}
 	}
 	return rn

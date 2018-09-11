@@ -60,6 +60,22 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 }
 ```
 
+### Server Side Encryption with AWS-Managed Key
+
+```hcl
+resource "aws_s3_bucket" "examplebucket" {
+  bucket = "examplebuckettftest"
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_object" "examplebucket_object" {
+  key                    = "someobject"
+  bucket                 = "${aws_s3_bucket.examplebucket.id}"
+  source                 = "index.html"
+  server_side_encryption = "AES256"
+}
+```
+
 ## Argument Reference
 
 -> **Note:** If you specify `content_encoding` you are responsible for encoding the body appropriately. `source`, `content`, and `content_base64` all expect already encoded/compressed bytes.
@@ -81,7 +97,7 @@ The following arguments are supported:
 * `storage_class` - (Optional) Specifies the desired [Storage Class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
 for the object. Can be either "`STANDARD`", "`REDUCED_REDUNDANCY`", "`ONEZONE_IA`", or "`STANDARD_IA`". Defaults to "`STANDARD`".
 * `etag` - (Optional) Used to trigger updates. The only meaningful value is `${md5(file("path/to/file"))}`.
-This attribute is not compatible with `kms_key_id`.
+This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"`.
 * `server_side_encryption` - (Optional) Specifies server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
 * `kms_key_id` - (Optional) Specifies the AWS KMS Key ARN to use for object encryption.
 This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`,
@@ -97,6 +113,6 @@ These two arguments are mutually-exclusive.
 The following attributes are exported
 
 * `id` - the `key` of the resource supplied above
-* `etag` - the ETag generated for the object (an MD5 sum of the object content).
+* `etag` - the ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `version_id` - A unique version ID value for the object, if bucket versioning
 is enabled.

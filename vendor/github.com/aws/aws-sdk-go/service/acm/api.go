@@ -1332,7 +1332,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was requested. This value exists only when
 	// the certificate type is AMAZON_ISSUED.
-	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `type:"timestamp"`
 
 	// The fully qualified domain name for the certificate, such as www.example.com
 	// or example.com.
@@ -1356,7 +1356,7 @@ type CertificateDetail struct {
 
 	// The date and time at which the certificate was imported. This value exists
 	// only when the certificate type is IMPORTED.
-	ImportedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ImportedAt *time.Time `type:"timestamp"`
 
 	// A list of ARNs for the AWS resources that are using the certificate. A certificate
 	// can be used by multiple AWS resources.
@@ -1364,7 +1364,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was issued. This value exists only when
 	// the certificate type is AMAZON_ISSUED.
-	IssuedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	IssuedAt *time.Time `type:"timestamp"`
 
 	// The name of the certificate authority that issued and signed the certificate.
 	Issuer *string `type:"string"`
@@ -1379,10 +1379,10 @@ type CertificateDetail struct {
 	KeyUsages []*KeyUsage `type:"list"`
 
 	// The time after which the certificate is not valid.
-	NotAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	NotAfter *time.Time `type:"timestamp"`
 
 	// The time before which the certificate is not valid.
-	NotBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	NotBefore *time.Time `type:"timestamp"`
 
 	// Value that specifies whether to add the certificate to a transparency log.
 	// Certificate transparency makes it possible to detect SSL certificates that
@@ -1405,7 +1405,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was revoked. This value exists only when
 	// the certificate status is REVOKED.
-	RevokedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	RevokedAt *time.Time `type:"timestamp"`
 
 	// The serial number of the certificate.
 	Serial *string `type:"string"`

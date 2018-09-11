@@ -22,7 +22,7 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccASGNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
@@ -43,7 +43,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccASGNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
@@ -51,7 +51,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccASGNotificationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName, "barfoo-terraform-test-" + rName}, &asgn),
@@ -70,7 +70,7 @@ func TestAccAWSASGNotification_Pagination(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccASGNotificationConfig_pagination,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example",
@@ -184,13 +184,13 @@ func testAccCheckAWSASGNotificationAttributes(n string, asgn *autoscaling.Descri
 
 		// Grab the keys here as the list of Groups
 		var gList []string
-		for k, _ := range gRaw {
+		for k := range gRaw {
 			gList = append(gList, k)
 		}
 
 		// Grab the keys here as the list of Types
 		var nList []string
-		for k, _ := range nRaw {
+		for k := range nRaw {
 			nList = append(nList, k)
 		}
 

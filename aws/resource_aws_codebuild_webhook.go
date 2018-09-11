@@ -34,8 +34,9 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				Computed: true,
 			},
 			"secret": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -48,7 +49,7 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	_, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
+	resp, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
 		BranchFilter: aws.String(d.Get("branch_filter").(string)),
 	})
@@ -56,6 +57,8 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	// Secret is only returned on create, so capture it at the start
+	d.Set("secret", resp.Webhook.Secret)
 	d.SetId(d.Get("project_name").(string))
 
 	return resourceAwsCodeBuildWebhookRead(d, meta)
@@ -81,11 +84,18 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	project := resp.Projects[0]
+
+	if project.Webhook == nil {
+		log.Printf("[WARN] CodeBuild Project %q webhook not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("branch_filter", project.Webhook.BranchFilter)
 	d.Set("payload_url", project.Webhook.PayloadUrl)
 	d.Set("project_name", project.Name)
-	d.Set("secret", project.Webhook.Secret)
 	d.Set("url", project.Webhook.Url)
+	// The secret is never returned after creation, so don't set it here
 
 	return nil
 }
