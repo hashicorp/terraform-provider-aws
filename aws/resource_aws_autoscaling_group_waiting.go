@@ -46,6 +46,9 @@ func waitForASGCapacity(
 			return nil
 		}
 		elbis, err := getELBInstanceStates(g, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 		albis, err := getTargetGroupInstanceStates(g, meta)
 		if err != nil {
 			return resource.NonRetryableError(err)

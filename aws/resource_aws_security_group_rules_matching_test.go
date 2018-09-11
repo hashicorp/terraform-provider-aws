@@ -636,11 +636,11 @@ func TestRulesMixedMatching(t *testing.T) {
 
 				// skip early
 				if numExpectedSGs != numRemoteSGs {
-					log.Printf("\n\ncontinuning on numRemoteSGs \n\n")
+					log.Printf("\n\ncontinuing on numRemoteSGs \n\n")
 					continue
 				}
 				if numExpectedCidrs != numRemoteCidrs {
-					log.Printf("\n\ncontinuning numRemoteCidrs\n\n")
+					log.Printf("\n\ncontinuing numRemoteCidrs\n\n")
 					continue
 				}
 

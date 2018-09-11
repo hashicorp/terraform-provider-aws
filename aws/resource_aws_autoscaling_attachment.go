@@ -78,7 +78,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 	asgconn := meta.(*AWSClient).autoscalingconn
 	asgName := d.Get("autoscaling_group_name").(string)
 
-	// Retrieve the ASG properites to get list of associated ELBs
+	// Retrieve the ASG properties to get list of associated ELBs
 	asg, err := getAwsAutoscalingGroup(asgName, asgconn)
 
 	if err != nil {
@@ -101,7 +101,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 		}
 
 		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG assocation", v.(string))
+			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
 			d.SetId("")
 		}
 	}
@@ -117,7 +117,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 		}
 
 		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG assocation", v.(string))
+			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
 			d.SetId("")
 		}
 	}

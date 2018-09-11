@@ -135,16 +135,6 @@ data "aws_vpc_endpoint_service" "ec2" {
 }
 `
 
-const testAccDataSourceAwsVpcEndpointServiceConfig_custom = `
-provider "aws" {
-  region = "us-west-2"
-}
-
-data "aws_vpc_endpoint_service" "ec2" {
-  service = "ec2"
-}
-`
-
 func testAccDataSourceAwsVpcEndpointServiceCustomConfig(lbName string) string {
 	return fmt.Sprintf(
 		`

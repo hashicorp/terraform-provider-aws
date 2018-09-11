@@ -988,7 +988,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Because we're calling Update prior to Read, and the default value of `source_dest_check` is `true`,
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
-		// if a diff has occured, it's not because it's a new instance.
+		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
 			// SourceDestCheck can only be set on VPC instances
 			// AWS will return an error of InvalidParameterCombination if we attempt
@@ -1064,6 +1064,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
 		})
+		if err != nil {
+			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
+		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
@@ -1095,6 +1098,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.StartInstances(&ec2.StartInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
 		})
+		if err != nil {
+			return fmt.Errorf("error starting instance (%s): %s", d.Id(), err)
+		}
 
 		stateConf = &resource.StateChangeConf{
 			Pending:    []string{"pending", "stopped"},
@@ -1185,7 +1191,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := awsTerminateInstance(conn, d.Id(), d); err != nil {
+	if err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return err
 	}
 
@@ -1880,7 +1886,7 @@ func buildAwsInstanceOpts(
 	return opts, nil
 }
 
-func awsTerminateInstance(conn *ec2.EC2, id string, d *schema.ResourceData) error {
+func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[INFO] Terminating instance: %s", id)
 	req := &ec2.TerminateInstancesInput{
 		InstanceIds: []*string{aws.String(id)},
@@ -1895,7 +1901,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, d *schema.ResourceData) erro
 		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
 		Target:     []string{"terminated"},
 		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

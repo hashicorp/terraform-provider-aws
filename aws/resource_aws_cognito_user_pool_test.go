@@ -1097,7 +1097,7 @@ resource "aws_cognito_user_pool" "pool" {
   sms_verification_message   = "{####} Baz"
 
   # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
-  # will implicitely set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
+  # will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"

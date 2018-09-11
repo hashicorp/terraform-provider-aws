@@ -2,9 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -16,6 +19,63 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_instance", &resource.Sweeper{
+		Name: "aws_instance",
+		F:    testSweepInstances,
+	})
+}
+
+func testSweepInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	err = conn.DescribeInstancesPages(&ec2.DescribeInstancesInput{}, func(page *ec2.DescribeInstancesOutput, isLast bool) bool {
+		if len(page.Reservations) == 0 {
+			log.Print("[DEBUG] No EC2 Instances to sweep")
+			return false
+		}
+
+		for _, reservation := range page.Reservations {
+			for _, instance := range reservation.Instances {
+				var nameTag string
+				id := aws.StringValue(instance.InstanceId)
+
+				for _, instanceTag := range instance.Tags {
+					if aws.StringValue(instanceTag.Key) == "Name" {
+						nameTag = aws.StringValue(instanceTag.Value)
+						break
+					}
+				}
+
+				if !strings.HasPrefix(nameTag, "tf-acc-test-") {
+					log.Printf("[INFO] Skipping EC2 Instance: %s", id)
+					continue
+				}
+
+				log.Printf("[INFO] Terminating EC2 Instance: %s", id)
+				err := awsTerminateInstance(conn, id, 5*time.Minute)
+				if err != nil {
+					log.Printf("[ERROR] Error terminating EC2 Instance (%s): %s", id, err)
+				}
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving EC2 Instances: %s", err)
+	}
+
+	return nil
+}
 
 func TestFetchRootDevice(t *testing.T) {
 	cases := []struct {

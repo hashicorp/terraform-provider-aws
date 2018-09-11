@@ -206,7 +206,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.
 			for parameters != nil {
-				paramsToModify := make([]*neptune.Parameter, 0)
+				var paramsToModify []*neptune.Parameter
 				if len(parameters) <= neptuneClusterParameterGroupMaxParamsBulkEdit {
 					paramsToModify, parameters = parameters[:], nil
 				} else {

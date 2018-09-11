@@ -3,9 +3,12 @@
     "Enable": [
         "errcheck",
         "gofmt",
+        "ineffassign",
         "interfacer",
+        "misspell",
         "structcheck",
         "unconvert",
+        "varcheck",
         "vet"
     ],
     "EnableGC": true,
