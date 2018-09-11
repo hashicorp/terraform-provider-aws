@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -60,14 +61,25 @@ func testSweepVPCs(region string) error {
 	}
 
 	for _, vpc := range resp.Vpcs {
-		// delete the vpc
-		_, err := conn.DeleteVpc(&ec2.DeleteVpcInput{
+		input := &ec2.DeleteVpcInput{
 			VpcId: vpc.VpcId,
+		}
+		log.Printf("[DEBUG] Deleting VPC: %s", input)
+
+		// Handle EC2 eventual consistency
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteVpc(input)
+			if isAWSErr(err, "DependencyViolation", "") {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
 		})
+
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting VPC (%s): %s",
-				*vpc.VpcId, err)
+			return fmt.Errorf("Error deleting VPC (%s): %s", aws.StringValue(vpc.VpcId), err)
 		}
 	}
 
