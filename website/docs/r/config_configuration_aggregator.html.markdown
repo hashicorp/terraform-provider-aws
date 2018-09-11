@@ -89,7 +89,7 @@ Either `regions` or `all_regions` (as true) must be specified.
 
 * `all_regions` - (Optional) If true, aggregate existing AWS Config regions and future regions.
 * `regions` - (Optional) List of source regions being aggregated.
-* `role_arn` - (Required) ARN of the IAM role used to retreive AWS Organization details associated with the aggregator account.
+* `role_arn` - (Required) ARN of the IAM role used to retrieve AWS Organization details associated with the aggregator account.
 
 Either `regions` or `all_regions` (as true) must be specified.
 

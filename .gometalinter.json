@@ -5,6 +5,7 @@
         "gofmt",
         "ineffassign",
         "interfacer",
+        "misspell",
         "structcheck",
         "varcheck",
         "vet"

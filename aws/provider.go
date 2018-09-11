@@ -671,7 +671,7 @@ func Provider() terraform.ResourceProvider {
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
 			// back to the old ALB version. IF the Terraform supported aliases for resources
-			// this would be a whole lot simplier
+			// this would be a whole lot simpler
 			"aws_alb":                         resourceAwsLb(),
 			"aws_lb":                          resourceAwsLb(),
 			"aws_alb_listener":                resourceAwsLbListener(),
