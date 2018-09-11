@@ -275,17 +275,16 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
 		request.ServerName = aws.String(d.Get("server_name").(string))
 		request.Username = aws.String(d.Get("username").(string))
-
 		if v, ok := d.GetOk("database_name"); ok {
 			request.DatabaseName = aws.String(v.(string))
-		}
-		if v, ok := d.GetOk("kms_key_arn"); ok {
-			request.KmsKeyId = aws.String(v.(string))
 		}
 	}
 
 	if v, ok := d.GetOk("extra_connection_attributes"); ok {
 		request.ExtraConnectionAttributes = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		request.KmsKeyId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("certificate_arn"); ok {
 		request.CertificateArn = aws.String(v.(string))
