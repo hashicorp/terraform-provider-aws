@@ -387,6 +387,7 @@ resource "aws_iot_topic_rule" "rule" {
   firehose {
     delivery_stream_name = "mystream"
     role_arn             = "${aws_iam_role.iot_role.arn}"
+    separator            = "\n"
   }
 }
 `, rName)
