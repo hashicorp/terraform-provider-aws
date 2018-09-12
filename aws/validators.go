@@ -2009,3 +2009,30 @@ func validateNeptuneEventSubscriptionNamePrefix(v interface{}, k string) (ws []s
 	}
 	return
 }
+
+func validateCloudFrontPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 128 characters", k))
+	}
+	return
+}
+
+func validateCloudFrontPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	prefixMaxLength := 128 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
+}
