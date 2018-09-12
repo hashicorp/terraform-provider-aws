@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -27,6 +26,7 @@ func TestAWSPolicy_namePrefix(t *testing.T) {
 					testAccCheckAWSPolicyExists("aws_iam_policy.policy", &out),
 					testAccCheckAWSPolicyGeneratedNamePrefix(
 						"aws_iam_policy.policy", "test-policy-"),
+					resource.TestCheckResourceAttr("aws_iam_policy.policy", "description", ""),
 				),
 			},
 		},
@@ -42,26 +42,6 @@ func TestAWSPolicy_invalidJson(t *testing.T) {
 			{
 				Config:      testAccAWSPolicyInvalidJsonConfig,
 				ExpectError: regexp.MustCompile("invalid JSON"),
-			},
-		},
-	})
-}
-
-func TestAWSPolicy_checkDescription(t *testing.T) {
-	var out iam.GetPolicyOutput
-	rName := acctest.RandString(10)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSPolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSPolicyDescriptionCheckConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPolicyExists("aws_iam_policy.policy", &out),
-					resource.TestCheckResourceAttrSet("aws_iam_policy.policy", "description"),
-				),
 			},
 		},
 	})
@@ -150,26 +130,3 @@ resource "aws_iam_policy" "policy" {
   EOF
 }
 `
-
-func testAccAWSPolicyDescriptionCheckConfig(rName string) string {
-	return fmt.Sprintf(`
-  resource "aws_iam_policy" "policy" {
-    name_prefix = "test-policy-%s"
-    path = "/"
-    policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-`, rName)
-}
