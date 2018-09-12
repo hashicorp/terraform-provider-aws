@@ -3,7 +3,7 @@ layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
 sidebar_current: "docs-aws-resource-elasticsearch-domain"
 description: |-
-  Provides an ElasticSearch Domain.
+  Provides an Elasticsearch Domain.
 ---
 
 # aws_elasticsearch_domain
@@ -74,7 +74,7 @@ The following arguments are supported:
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
 * `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
-* `elasticsearch_version` - (Optional) The version of ElasticSearch to deploy. Defaults to `1.5`
+* `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
@@ -135,6 +135,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the domain.
 * `domain_id` - Unique identifier for the domain.
+* `domain_name` - The name of the Elasticsearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
@@ -142,7 +143,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElasticSearch domains can be imported using the `domain_name`, e.g.
+Elasticsearch domains can be imported using the `domain_name`, e.g.
 
 ```
 $ terraform import aws_elasticsearch_domain.example domain_name
