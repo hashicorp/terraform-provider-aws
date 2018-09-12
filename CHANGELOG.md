@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_db_instance: Add `enabled_cloudwatch_logs_exports` attribute [GH-5801]
 * resource/aws_db_instance: Add `domain` and `domain_iam_role_name` arguments (support for domain joining RDS instances) [GH-5378]
 * resource/aws_ecs_task_definition: Suppress `container_definition` differences for equivalent port and host mappings [GH-5833]
+* resource/aws_launch_template: Allow `network_interface` `ipv4_address_count` configuration [GH-5830]
 * resource/aws_ssm_document: Add support for `Session` `document_type` [GH-5850]
 
 BUG FIXES:
