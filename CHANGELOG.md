@@ -1,5 +1,9 @@
 ## 1.36.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudfront_public_key` [GH-5737]
+
 ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `enabled_cloudwatch_logs_exports` attribute [GH-5801]
