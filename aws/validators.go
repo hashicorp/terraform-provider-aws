@@ -1657,7 +1657,7 @@ func validateIoTTopicRuleFirehoseSeparator(v interface{}, s string) ([]string, [
 		return nil, nil
 	}
 
-	return nil, []error{fmt.Errorf("Separator must be one of ',' (comma), '\t' (tab) '\n' (newline) or '\r\n' (Windows newline)")}
+	return nil, []error{fmt.Errorf("Separator must be one of ',' (comma), '\\t' (tab) '\\n' (newline) or '\\r\\n' (Windows newline)")}
 }
 
 func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
