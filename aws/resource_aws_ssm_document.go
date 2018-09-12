@@ -58,6 +58,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 					ssm.DocumentTypeCommand,
 					ssm.DocumentTypePolicy,
 					ssm.DocumentTypeAutomation,
+					ssm.DocumentTypeSession,
 				}, false),
 			},
 			"schema_version": {
