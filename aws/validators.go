@@ -1647,6 +1647,19 @@ func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []st
 	return
 }
 
+func validateIoTTopicRuleFirehoseSeparator(v interface{}, s string) ([]string, []error) {
+	switch v.(string) {
+	case
+		",",
+		"\t",
+		"\n",
+		"\r\n":
+		return nil, nil
+	}
+
+	return nil, []error{fmt.Errorf("Separator must be one of ',' (comma), '\\t' (tab) '\\n' (newline) or '\\r\\n' (Windows newline)")}
+}
+
 func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
 	t := v["type"].(string)
 	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
