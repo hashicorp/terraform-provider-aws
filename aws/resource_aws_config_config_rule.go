@@ -146,12 +146,8 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 	name := d.Get("name").(string)
 	ruleInput := configservice.ConfigRule{
 		ConfigRuleName: aws.String(name),
+		Scope:          expandConfigRuleScope(d.Get("scope").([]interface{})),
 		Source:         expandConfigRuleSource(d.Get("source").([]interface{})),
-	}
-
-	scopes := d.Get("scope").([]interface{})
-	if len(scopes) > 0 {
-		ruleInput.Scope = expandConfigRuleScope(scopes[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
