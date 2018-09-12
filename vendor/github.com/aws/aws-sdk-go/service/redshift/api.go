@@ -13264,6 +13264,12 @@ type DescribeResizeOutput struct {
 	// Valid Values: multi-node | single-node
 	TargetClusterType *string `type:"string"`
 
+	// The type of encryption for the cluster after the resize is complete.
+	//
+	// Possible values are KMS and None. In the China region possible values are:
+	// Legacy and None.
+	TargetEncryptionType *string `type:"string"`
+
 	// The node type that the cluster will have after the resize operation is complete.
 	TargetNodeType *string `type:"string"`
 
@@ -13349,6 +13355,12 @@ func (s *DescribeResizeOutput) SetStatus(v string) *DescribeResizeOutput {
 // SetTargetClusterType sets the TargetClusterType field's value.
 func (s *DescribeResizeOutput) SetTargetClusterType(v string) *DescribeResizeOutput {
 	s.TargetClusterType = &v
+	return s
+}
+
+// SetTargetEncryptionType sets the TargetEncryptionType field's value.
+func (s *DescribeResizeOutput) SetTargetEncryptionType(v string) *DescribeResizeOutput {
+	s.TargetEncryptionType = &v
 	return s
 }
 
@@ -15304,6 +15316,13 @@ type ModifyClusterInput struct {
 	// in the Amazon Redshift Cluster Management Guide.
 	ElasticIp *string `type:"string"`
 
+	// Indicates whether the cluster is encrypted. If the cluster is encrypted and
+	// you provide a value for the KmsKeyId parameter, we will encrypt the cluster
+	// with the provided KmsKeyId. If you don't provide a KmsKeyId, we will encrypt
+	// with the default key. In the China region we will use legacy encryption if
+	// you specify that the cluster is encrypted.
+	Encrypted *bool `type:"boolean"`
+
 	// An option that specifies whether to create the cluster with enhanced VPC
 	// routing enabled. To create a cluster that uses enhanced VPC routing, the
 	// cluster must be in a VPC. For more information, see Enhanced VPC Routing
@@ -15322,6 +15341,10 @@ type ModifyClusterInput struct {
 	// Specifies the name of the HSM configuration that contains the information
 	// the Amazon Redshift cluster can use to retrieve and store keys in an HSM.
 	HsmConfigurationIdentifier *string `type:"string"`
+
+	// The AWS Key Management Service (KMS) key ID of the encryption key that you
+	// want to use to encrypt data in the cluster.
+	KmsKeyId *string `type:"string"`
 
 	// The name for the maintenance track that you want to assign for the cluster.
 	// This name change is asynchronous. The new track name stays in the PendingModifiedValues
@@ -15499,6 +15522,12 @@ func (s *ModifyClusterInput) SetElasticIp(v string) *ModifyClusterInput {
 	return s
 }
 
+// SetEncrypted sets the Encrypted field's value.
+func (s *ModifyClusterInput) SetEncrypted(v bool) *ModifyClusterInput {
+	s.Encrypted = &v
+	return s
+}
+
 // SetEnhancedVpcRouting sets the EnhancedVpcRouting field's value.
 func (s *ModifyClusterInput) SetEnhancedVpcRouting(v bool) *ModifyClusterInput {
 	s.EnhancedVpcRouting = &v
@@ -15514,6 +15543,12 @@ func (s *ModifyClusterInput) SetHsmClientCertificateIdentifier(v string) *Modify
 // SetHsmConfigurationIdentifier sets the HsmConfigurationIdentifier field's value.
 func (s *ModifyClusterInput) SetHsmConfigurationIdentifier(v string) *ModifyClusterInput {
 	s.HsmConfigurationIdentifier = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ModifyClusterInput) SetKmsKeyId(v string) *ModifyClusterInput {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -16127,6 +16162,10 @@ type PendingModifiedValues struct {
 	// The pending or in-progress change of the service version.
 	ClusterVersion *string `type:"string"`
 
+	// The encryption type for a cluster. Possible values are: KMS and None. For
+	// the China region the possible values are None, and Legacy.
+	EncryptionType *string `type:"string"`
+
 	// An option that specifies whether to create the cluster with enhanced VPC
 	// routing enabled. To create a cluster that uses enhanced VPC routing, the
 	// cluster must be in a VPC. For more information, see Enhanced VPC Routing
@@ -16187,6 +16226,12 @@ func (s *PendingModifiedValues) SetClusterType(v string) *PendingModifiedValues 
 // SetClusterVersion sets the ClusterVersion field's value.
 func (s *PendingModifiedValues) SetClusterVersion(v string) *PendingModifiedValues {
 	s.ClusterVersion = &v
+	return s
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *PendingModifiedValues) SetEncryptionType(v string) *PendingModifiedValues {
+	s.EncryptionType = &v
 	return s
 }
 
