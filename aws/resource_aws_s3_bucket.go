@@ -743,6 +743,15 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 	ws := wsResponse.(*s3.GetBucketWebsiteOutput)
+
+	if err != nil {
+		if !isAWSErr(err, "NotImplemented", "") && !isAWSErr(err, "NoSuchWebsiteConfiguration", "") {
+			return err
+		}
+		log.Printf("[WARN] S3 bucket: %s, website configuration not supported by storage server.", d.Id())
+		return nil
+	}
+
 	var websites []map[string]interface{}
 	if err == nil {
 		w := make(map[string]interface{})
