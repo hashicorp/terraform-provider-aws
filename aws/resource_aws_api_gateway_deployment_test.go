@@ -7,14 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	var conf apigateway.Deployment
-	rName := acctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +20,7 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDeploymentConfig(rName),
+				Config: testAccAWSAPIGatewayDeploymentConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists("aws_api_gateway_deployment.test", &conf),
 					resource.TestCheckResourceAttr(
@@ -33,8 +31,6 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_deployment.test", "xray_tracing_enabled", "true"),
 				),
 			},
 		},
@@ -107,10 +103,9 @@ func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayDeploymentConfig(rName string) string {
-	return fmt.Sprintf(`
+const testAccAWSAPIGatewayDeploymentConfig = `
 resource "aws_api_gateway_rest_api" "test" {
-  name = "tf-test-%s"
+  name = "test"
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -156,11 +151,9 @@ resource "aws_api_gateway_deployment" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "test"
   description = "This is a test"
-  xray_tracing_enabled = true
 
   variables = {
     "a" = "2"
   }
 }
-`, rName)
-}
+`
