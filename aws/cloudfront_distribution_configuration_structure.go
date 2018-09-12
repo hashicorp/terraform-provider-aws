@@ -525,6 +525,7 @@ func lambdaFunctionAssociationHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s", m["lambda_arn"].(string)))
+	buf.WriteString(fmt.Sprintf("%t", m["include_body"].(bool)))
 	return hashcode.String(buf.String())
 }
 
@@ -553,6 +554,9 @@ func expandLambdaFunctionAssociation(lf map[string]interface{}) *cloudfront.Lamb
 	if v, ok := lf["lambda_arn"]; ok {
 		lfa.LambdaFunctionARN = aws.String(v.(string))
 	}
+	if v, ok := lf["include_body"]; ok {
+		lfa.IncludeBody = aws.Bool(v.(bool))
+	}
 	return &lfa
 }
 
@@ -569,6 +573,7 @@ func flattenLambdaFunctionAssociation(lfa *cloudfront.LambdaFunctionAssociation)
 	if lfa != nil {
 		m["event_type"] = *lfa.EventType
 		m["lambda_arn"] = *lfa.LambdaFunctionARN
+		m["include_body"] = *lfa.IncludeBody
 	}
 	return m
 }

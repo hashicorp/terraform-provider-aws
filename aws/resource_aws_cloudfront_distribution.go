@@ -124,6 +124,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 								},
 							},
 							Set: lambdaFunctionAssociationHash,
@@ -248,6 +253,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"lambda_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -403,6 +413,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"lambda_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
