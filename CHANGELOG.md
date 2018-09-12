@@ -10,6 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_lambda_function: Retry on `InvalidParameterValueException` errors relating to KMS-backed environment variables [GH-5849]
 * resource/aws_launch_template: Ensure `ebs_optimized` argument accepts "unspecified" value [GH-5627]
 
 ## 1.35.0 (September 06, 2018)
