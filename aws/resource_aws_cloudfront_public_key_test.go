@@ -117,9 +117,13 @@ func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.GetPublicKey(params)
-		if err == nil {
-			return fmt.Errorf("CloudFront PublicKey was not deleted")
+		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+			continue
 		}
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("CloudFront PublicKey (%s) was not deleted", rs.Primary.ID)
 	}
 
 	return nil

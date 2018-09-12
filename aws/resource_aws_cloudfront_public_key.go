@@ -98,20 +98,17 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	var publicKeyConfig *cloudfront.PublicKeyConfig
-	publicKeyConfig = output.PublicKey.PublicKeyConfig
+	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
+		log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	publicKeyConfig := output.PublicKey.PublicKeyConfig
 
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("name", publicKeyConfig.Name)
-
-	if publicKeyConfig.Comment != nil {
-		d.Set("comment", publicKeyConfig.Comment)
-	}
-
-	if publicKeyConfig.CallerReference != nil {
-		d.Set("caller_reference", publicKeyConfig.CallerReference)
-	}
-
+	d.Set("comment", publicKeyConfig.Comment)
+	d.Set("caller_reference", publicKeyConfig.CallerReference)
 	d.Set("etag", output.ETag)
 
 	return nil
@@ -145,8 +142,6 @@ func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeletePublicKey(request)
 	if err != nil {
 		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
-			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 		return err
