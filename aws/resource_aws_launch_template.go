@@ -319,7 +319,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
@@ -1095,15 +1095,16 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		}
 	}
 
+	ipv6AddressList := ni["ipv6_addresses"].(*schema.Set).List()
+	for _, address := range ipv6AddressList {
+		ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
+			Ipv6Address: aws.String(address.(string)),
+		})
+	}
+	networkInterface.Ipv6Addresses = ipv6Addresses
+
 	if v := ni["ipv6_address_count"].(int); v > 0 {
 		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
-	} else if v := ni["ipv6_addresses"].(*schema.Set); v.Len() > 0 {
-		for _, address := range v.List() {
-			ipv6Addresses = append(ipv6Addresses, &ec2.InstanceIpv6AddressRequest{
-				Ipv6Address: aws.String(address.(string)),
-			})
-		}
-		networkInterface.Ipv6Addresses = ipv6Addresses
 	}
 
 	if v := ni["ipv4_address_count"].(int); v > 0 {

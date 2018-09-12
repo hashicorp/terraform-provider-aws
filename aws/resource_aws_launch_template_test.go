@@ -244,7 +244,6 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "network_interfaces.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.0.associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.0.ipv4_address_count", "2"),
-					resource.TestCheckResourceAttr(resName, "network_interfaces.0.ipv6_address_count", "3"),
 				),
 			},
 		},
@@ -528,7 +527,6 @@ resource "aws_launch_template" "test" {
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
     ipv4_address_count = 2
-    ipv6_address_count = 3
   }
 }
 `
