@@ -34,7 +34,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(64),
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"enabled": {
 				Type:     schema.TypeBool,

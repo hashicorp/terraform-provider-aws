@@ -40,13 +40,13 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
 			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(255 - resource.UniqueIDSuffixLength),
+				ValidateFunc: validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
 			},
 
 			"launch_configuration": {

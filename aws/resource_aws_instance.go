@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -142,7 +143,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateMaxLength(16384),
+				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
 
 			"user_data_base64": {

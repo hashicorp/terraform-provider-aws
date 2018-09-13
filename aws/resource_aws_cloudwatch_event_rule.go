@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCloudWatchEventRule() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 			"schedule_expression": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(256),
+				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"event_pattern": {
 				Type:         schema.TypeString,
@@ -57,12 +58,12 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(512),
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(1600),
+				ValidateFunc: validation.StringLenBetween(0, 1600),
 			},
 			"is_enabled": {
 				Type:     schema.TypeBool,

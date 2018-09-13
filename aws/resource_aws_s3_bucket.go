@@ -224,7 +224,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateMaxLength(255),
+							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 						"prefix": {
 							Type:     schema.TypeString,
@@ -368,7 +368,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateMaxLength(255),
+										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
 									"destination": {
 										Type:     schema.TypeSet,
@@ -429,7 +429,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"prefix": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateMaxLength(1024),
+										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"status": {
 										Type:     schema.TypeString,

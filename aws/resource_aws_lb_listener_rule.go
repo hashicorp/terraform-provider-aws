@@ -163,7 +163,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"field": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateMaxLength(64),
+							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
 						"values": {
 							Type:     schema.TypeList,

@@ -29,14 +29,14 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			"app_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateMaxLength(100),
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 
 			"deployment_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(100),
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 
 			"deployment_style": {
@@ -242,7 +242,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "CodeDeployDefault.OneAtATime",
-				ValidateFunc: validateMaxLength(100),
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 
 			"ec2_tag_set": {
