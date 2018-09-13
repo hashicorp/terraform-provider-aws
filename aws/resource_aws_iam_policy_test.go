@@ -26,6 +26,7 @@ func TestAWSPolicy_namePrefix(t *testing.T) {
 					testAccCheckAWSPolicyExists("aws_iam_policy.policy", &out),
 					testAccCheckAWSPolicyGeneratedNamePrefix(
 						"aws_iam_policy.policy", "test-policy-"),
+					resource.TestCheckResourceAttr("aws_iam_policy.policy", "description", ""),
 				),
 			},
 		},

@@ -278,12 +278,7 @@ func iamPolicyListVersions(arn string, iamconn *iam.IAM) ([]*iam.PolicyVersion, 
 
 func readIamPolicy(d *schema.ResourceData, policy *iam.Policy) error {
 	d.SetId(*policy.Arn)
-	if policy.Description != nil {
-		// the description isn't present in the response to CreatePolicy.
-		if err := d.Set("description", policy.Description); err != nil {
-			return err
-		}
-	}
+	d.Set("description", policy.Description)
 	if err := d.Set("path", policy.Path); err != nil {
 		return err
 	}
