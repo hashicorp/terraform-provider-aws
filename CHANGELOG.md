@@ -1,4 +1,10 @@
 ## 1.37.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
+* resource/aws_s3_bucket: Prevent `NoSuchBucket` error on deletion [GH-5842]
+
 ## 1.36.0 (September 13, 2018)
 
 FEATURES:
