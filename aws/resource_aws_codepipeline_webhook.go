@@ -2,13 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/codepipeline"
 )
 
 func resourceAwsCodePipelineWebhook() *schema.Resource {
@@ -46,7 +44,7 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				Elem: &schema.Schema{
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"json_path": {
 							Type:     schema.TypeString,
@@ -93,33 +91,37 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 	target := d.Get("target").(map[string]interface{})
 	filters := d.Get("filter").(*schema.Set)
 
-	var rules []aws.WebhookFilterRule
+	var rules []*codepipeline.WebhookFilterRule
 
 	for _, f := range filters.List() {
-		r = f.(map[string]interface{})
-		rules = append(rules, &aws.WebhookFilterRule{
-			JsonPath:    aws.String(r["json_path"]),
-			MatchEquals: aws.String(r["match_equals"]),
-		})
+		r := f.(map[string]interface{})
+		filter := codepipeline.WebhookFilterRule{
+			JsonPath:    aws.String(r["json_path"].(string)),
+			MatchEquals: aws.String(r["match_equals"].(string)),
+		}
+
+		rules = append(rules, &filter)
 	}
 
-	request = &codepipeline.PutWebhookInput{
+	request := &codepipeline.PutWebhookInput{
 		Webhook: &codepipeline.WebhookDefinition{
-			Authentication: &aws.String(auth["type"]),
-			Filters:        &rules,
-			Name:           &aws.String(d.Get("name").(string)),
-			TargetAction:   &aws.String(target["action"]),
-			TargetPipeline: &aws.String(target["pipeline"]),
+			Authentication: aws.String(auth["type"].(string)),
+			Filters:        rules,
+			Name:           aws.String(d.Get("name").(string)),
+			TargetAction:   aws.String(target["action"].(string)),
+			TargetPipeline: aws.String(target["pipeline"].(string)),
 		},
 	}
 
-	var authConfig WebhookAuthConfiguration
+	var authConfig codepipeline.WebhookAuthConfiguration
 	switch auth["type"] {
 	case "IP":
-		authConfig.AllowedIPRange = auth["allowed_ip_range"]
+		ipRange := auth["allowed_ip_range"].(string)
+		authConfig.AllowedIPRange = &ipRange
 		break
 	case "GITHUB_HMAC":
-		authConfig.SecretToken = auth["allowed_ip_range"]
+		secretToken := auth["secret_token"].(string)
+		authConfig.SecretToken = &secretToken
 		break
 	case "UNAUTHENTICATED":
 		break
@@ -128,12 +130,13 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 	}
 
 	request.Webhook.AuthenticationConfiguration = &authConfig
-	webhook, err := codepipeline.PutWebhook(request)
+	webhook, err := conn.PutWebhook(request)
 	if err != nil {
 		return fmt.Errorf("Error creating webhook: %s", err)
 	}
 
-	d.SetId(webhook.Arn)
+	arn := *webhook.Webhook.Arn
+	d.SetId(arn)
 
 	return resourceAwsCodePipelineWebhookRead(d, meta)
 }
@@ -149,15 +152,18 @@ func getAllCodePipelineWebhooks(conn *codepipeline.CodePipeline) ([]*codepipelin
 		if nextToken != "" {
 			input.NextToken = aws.String(nextToken)
 		}
+
 		out, err := conn.ListWebhooks(input)
 		if err != nil {
-			return pools, err
+			return webhooks, err
 		}
-		pools = append(pools, out.Webhooks...)
+
+		webhooks = append(webhooks, out.Webhooks...)
 
 		if out.NextToken == nil {
 			break
 		}
+
 		nextToken = aws.StringValue(out.NextToken)
 	}
 
@@ -168,13 +174,13 @@ func setFilters(webhook codepipeline.WebhookDefinition, d *schema.ResourceData) 
 	filters := []interface{}{}
 	for _, filter := range webhook.Filters {
 		f := map[string]interface{}{
-			json_path:    filter.JsonPath,
-			match_equals: filter.MatchEquals,
+			"json_path":    filter.JsonPath,
+			"match_equals": filter.MatchEquals,
 		}
 		filters = append(filters, f)
 	}
 
-	if err := d.Set("auth", auth); err != nil {
+	if err := d.Set("filter", filters); err != nil {
 		return err
 	}
 
@@ -186,12 +192,14 @@ func setAuthentication(webhook codepipeline.WebhookDefinition, d *schema.Resourc
 		"type": webhook.Authentication,
 	}
 
-	if webhook.AuthenticationConfiguration.AllowedIPRange != "" {
-		auth["allowed_ip_range"] = webhook.AuthenticationConfiguration.AllowedIPRange
+	ipRange := *webhook.AuthenticationConfiguration.AllowedIPRange
+	if ipRange != "" {
+		auth["allowed_ip_range"] = ipRange
 	}
 
-	if webhook.AuthenticationConfiguration.SecretToken != "" {
-		auth["secret_token"] = webhook.AuthenticationConfiguration.SecretToken
+	secretToken := *webhook.AuthenticationConfiguration.SecretToken
+	if secretToken != "" {
+		auth["secret_token"] = secretToken
 	}
 
 	if err := d.Set("auth", auth); err != nil {
@@ -213,32 +221,33 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("No webhooks returned!")
 	}
 
-	found * codepipeline.ListWebhookItem
+	var found codepipeline.WebhookDefinition
 	for _, w := range webhooks {
-		if w.Arn == arn {
-			found = w
+		a := *w.Arn
+		if a == arn {
+			found = *w.Definition
 			break
 		}
 	}
 
-	if found.Arn == "" {
+	name := *found.Name
+	if name == "" {
 		return fmt.Errorf("Webhook not found: %s", arn)
 	}
 
-	d.SetId(found.Arn)
-	d.Set("name", found.Definition.Name)
+	d.Set("name", name)
 
-	if err = setAuthentication(webhook, d); err != nil {
+	if err = setAuthentication(found, d); err != nil {
 		return err
 	}
 
-	if err = setFilters(webhook, d); err != nil {
+	if err = setFilters(found, d); err != nil {
 		return err
 	}
 
 	target := map[string]interface{}{
-		action:   webhook.TargetAction,
-		pipeline: webhook.TargetPipeline,
+		"action":   found.TargetAction,
+		"pipeline": found.TargetPipeline,
 	}
 
 	if err := d.Set("target", target); err != nil {
@@ -252,9 +261,10 @@ func resourceAwsCodePipelineWebhookDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).codepipelineconn
 	name := d.Get("name").(string)
 
-	resp, err := conn.DeleteWebhook(&DeleteWebhookInput{
+	input := codepipeline.DeleteWebhookInput{
 		Name: &name,
-	})
+	}
+	_, err := conn.DeleteWebhook(&input)
 
 	if err != nil {
 		return fmt.Errorf("Could not delete webhook: %s", err)
