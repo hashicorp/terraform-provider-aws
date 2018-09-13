@@ -104,6 +104,10 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Optional: true,
 			},
 			"tags": tagsSchema(),
+			"xray_tracing_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -130,6 +134,9 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("xray_tracing_enabled"); ok {
+		input.TracingEnabled = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("documentation_version"); ok {
 		input.DocumentationVersion = aws.String(v.(string))
@@ -161,6 +168,7 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetPartial("deployment_id")
 	d.SetPartial("description")
 	d.SetPartial("variables")
+	d.SetPartial("xray_tracing_enabled")
 
 	if waitForCache && *out.CacheClusterStatus != "NOT_AVAILABLE" {
 		stateConf := &resource.StateChangeConf{
@@ -233,6 +241,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
+	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
 	if err := d.Set("tags", aws.StringValueMap(stage.Tags)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -312,6 +321,13 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 			Value: aws.String(d.Get("description").(string)),
 		})
 	}
+	if d.HasChange("xray_tracing_enabled") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/tracingEnabled"),
+			Value: aws.String(fmt.Sprintf("%t", d.Get("xray_tracing_enabled").(bool))),
+		})
+	}
 	if d.HasChange("documentation_version") {
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
@@ -361,6 +377,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	d.SetPartial("client_certificate_id")
 	d.SetPartial("deployment_id")
 	d.SetPartial("description")
+	d.SetPartial("xray_tracing_enabled")
 	d.SetPartial("variables")
 
 	if waitForCache && *out.CacheClusterStatus != "NOT_AVAILABLE" {
