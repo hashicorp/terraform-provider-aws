@@ -350,10 +350,6 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 	return
 }
 
-func validateMaxLength(length int) schema.SchemaValidateFunc {
-	return validation.StringLenBetween(0, length)
-}
-
 func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
 		value := v.(int)
