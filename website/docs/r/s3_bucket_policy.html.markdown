@@ -22,6 +22,7 @@ resource "aws_s3_bucket" "b" {
 resource "aws_s3_bucket_policy" "b" {
   bucket = "${aws_s3_bucket.b.id}"
   policy =<<POLICY
+# notice there aren't any spaces before the {
 {
   "Version": "2012-10-17",
   "Id": "MYBUCKETPOLICY",
