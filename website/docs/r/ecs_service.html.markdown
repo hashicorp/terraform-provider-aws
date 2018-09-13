@@ -108,7 +108,7 @@ Load balancers support the following:
 `ordered_placement_strategy` supports the following:
 
 * `type` - (Required) The type of placement strategy. Must be one of: `binpack`, `random`, or `spread`
-* `field` - (Optional) For the `spread` placement strategy, valid values are instanceId (or host,
+* `field` - (Optional) For the `spread` placement strategy, valid values are `instanceId` (or `host`,
  which has the same effect), or any platform or custom attribute that is applied to a container instance.
  For the `binpack` type, valid values are `memory` and `cpu`. For the `random` type, this attribute is not
  needed. For more information, see [Placement Strategy](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_PlacementStrategy.html).

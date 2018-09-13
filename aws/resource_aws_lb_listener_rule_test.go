@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -76,6 +75,8 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "action.0.target_group_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1366281676.field", "path-pattern"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1366281676.values.#", "1"),
@@ -107,10 +108,85 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "action.0.target_group_arn"),
+					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.1366281676.field", "path-pattern"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.1366281676.values.#", "1"),
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "condition.1366281676.values.0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBListenerRule_redirect(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener_rule.static",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_redirect(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "redirect"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.host", "#{host}"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.path", "/#{path}"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.port", "443"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.protocol", "HTTPS"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.query", "#{query}"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.status_code", "HTTP_301"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1366281676.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1366281676.values.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "condition.1366281676.values.0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-fixedresponse-%s", acctest.RandStringFromCharSet(9, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener_rule.static",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "fixed-response"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.content_type", "text/plain"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.message_body", "Fixed response content"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.status_code", "200"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1366281676.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1366281676.values.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "condition.1366281676.values.0"),
 				),
 			},
 		},
@@ -326,10 +402,10 @@ func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isRuleNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking LB Listener Rule destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking LB Listener Rule destroyed: %s", err)
 		}
 	}
 
@@ -667,6 +743,208 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
+}
+
+func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority = 100
+
+  action {
+    type = "redirect"
+    redirect {
+      port = "443"
+      protocol = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/static/*"]
+  }
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol = "HTTP"
+  port = "80"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      port = "443"
+      protocol = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id}"]
+
+  idle_timeout = 30
+  enable_deletion_protection = false
+
+  tags {
+    Name = "TestAccAWSALB_redirect"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-lb-listener-rule-redirect"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags {
+    Name = "tf-acc-lb-listener-rule-redirect-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name = "TestAccAWSALB_redirect"
+  }
+}`, lbName)
+}
+
+func testAccAWSLBListenerRuleConfig_fixedResponse(lbName string) string {
+	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority = 100
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Fixed response content"
+      status_code = "200"
+    }
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/static/*"]
+  }
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol = "HTTP"
+  port = "80"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Fixed response content"
+      status_code = "200"
+    }
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id}"]
+
+  idle_timeout = 30
+  enable_deletion_protection = false
+
+  tags {
+    Name = "TestAccAWSALB_fixedResponse"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-lb-listener-rule-fixedresponse"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags {
+    Name = "tf-acc-lb-listener-rule-fixedresponse-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name = "TestAccAWSALB_fixedresponse"
+  }
+}`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {

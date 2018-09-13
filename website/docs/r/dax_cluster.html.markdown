@@ -14,7 +14,7 @@ Provides a DAX Cluster resource.
 
 ```hcl
 resource "aws_dax_cluster" "bar" {
-  cluster_id         = "cluster-example"
+  cluster_name       = "cluster-example"
   iam_role_arn       = "${data.aws_iam_role.example.arn}"
   node_type          = "dax.r3.large"
   replication_factor = 1
@@ -59,10 +59,16 @@ maintenance on the cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi`
 * `security_group_ids` – (Optional) One or more VPC security groups associated
 with the cluster
 
+* `server_side_encryption` - (Optional) Encrypt at rest options
+
 * `subnet_group_name` – (Optional) Name of the subnet group to be used for the
 cluster
 
 * `tags` - (Optional) A mapping of tags to assign to the resource
+
+The `server_side_encryption` object supports the following:
+
+* `enabled` - (Optional) Whether to enable encryption at rest. Defaults to `false`.
 
 ## Attributes Reference
 

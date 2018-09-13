@@ -40,6 +40,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.location", ""),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.name", ""),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.namespace_type", ""),
@@ -578,6 +579,29 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_EncryptionDisabled(rName, bName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.537882814.encryption_disabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAWSCodeBuildProject_nameValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -658,6 +682,14 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSCodeBuildProjectConfig_Base_Bucket(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "%s"
+  force_destroy = true
+}`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName string) string {
@@ -1239,4 +1271,30 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, testAccAWSCodeBuildGitHubSourceLocationFromEnv())
+}
+
+func testAccAWSCodebuildProjectConfig_Artifacts_EncryptionDisabled(rName string, bName string, encryptionDisabled bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = "%s"
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    encryption_disabled = %t
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, encryptionDisabled)
 }

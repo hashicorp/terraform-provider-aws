@@ -21,7 +21,7 @@ func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIAMOpenIDConnectProviderConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider("aws_iam_openid_connect_provider.goog"),
@@ -32,7 +32,7 @@ func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_openid_connect_provider.goog", "thumbprint_list.#", "0"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIAMOpenIDConnectProviderConfig_modified(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider("aws_iam_openid_connect_provider.goog"),
@@ -58,11 +58,11 @@ func TestAccAWSIAMOpenIDConnectProvider_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIAMOpenIDConnectProviderConfig_modified(rString),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -79,7 +79,7 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIAMOpenIDConnectProviderConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider("aws_iam_openid_connect_provider.goog"),

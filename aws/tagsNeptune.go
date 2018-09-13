@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -112,4 +113,21 @@ func tagIgnoredNeptune(t *neptune.Tag) bool {
 		}
 	}
 	return false
+}
+
+func saveTagsNeptune(conn *neptune.Neptune, d *schema.ResourceData, arn string) error {
+	resp, err := conn.ListTagsForResource(&neptune.ListTagsForResourceInput{
+		ResourceName: aws.String(arn),
+	})
+
+	if err != nil {
+		return fmt.Errorf("[DEBUG] Error retreiving tags for ARN: %s", arn)
+	}
+
+	var dt []*neptune.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapNeptune(dt))
 }

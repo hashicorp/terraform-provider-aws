@@ -16,7 +16,7 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsEcsTaskDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ecs_task_definition.mongo", "family", rName),

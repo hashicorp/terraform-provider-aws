@@ -18,12 +18,12 @@ func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
 		Delete: resourceAwsWafSqlInjectionMatchSetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sql_injection_match_tuples": &schema.Schema{
+			"sql_injection_match_tuples": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
 								},
 							},
 						},
-						"text_transformation": &schema.Schema{
+						"text_transformation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},

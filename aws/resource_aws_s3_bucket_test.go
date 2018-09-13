@@ -522,7 +522,7 @@ func TestAccAWSS3Bucket_Versioning(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Cors(t *testing.T) {
+func TestAccAWSS3Bucket_Cors_Update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	updateBucketCors := func(n string) resource.TestCheckFunc {
@@ -545,30 +545,8 @@ func TestAccAWSS3Bucket_Cors(t *testing.T) {
 					},
 				},
 			})
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
-					return err
-				}
-			}
-			return nil
-		}
-	}
-
-	deleteBucketCors := func(n string) resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			rs, ok := s.RootModule().Resources[n]
-			if !ok {
-				return fmt.Errorf("Not found: %s", n)
-			}
-
-			conn := testAccProvider.Meta().(*AWSClient).s3conn
-			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
-				Bucket: aws.String(rs.Primary.ID),
-			})
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
-					return err
-				}
+			if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+				return err
 			}
 			return nil
 		}
@@ -619,6 +597,28 @@ func TestAccAWSS3Bucket_Cors(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	deleteBucketCors := func(n string) resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			rs, ok := s.RootModule().Resources[n]
+			if !ok {
+				return fmt.Errorf("Not found: %s", n)
+			}
+
+			conn := testAccProvider.Meta().(*AWSClient).s3conn
+			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
+				Bucket: aws.String(rs.Primary.ID),
+			})
+			if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+				return err
+			}
+			return nil
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -635,6 +635,10 @@ func TestAccAWSS3Bucket_Cors(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

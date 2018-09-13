@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -20,6 +21,7 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "ami", "ami-4fccb37f"),
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "instance_type", "m1.small"),
+					resource.TestMatchResourceAttr("data.aws_instance.web-instance", "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 				),
 			},
 		},

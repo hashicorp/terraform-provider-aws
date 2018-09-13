@@ -42,6 +42,7 @@ The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
 * `description` - (Optional) A longer, human-readable description for the AMI.
+* `ena_support` - (Optional) Specifies whether enhanced networking with ENA is enabled. Defaults to `false`.
 * `root_device_name` - (Optional) The name of the root device (for example, `/dev/sda1`, or `/dev/xvda`).
 * `virtualization_type` - (Optional) Keyword to choose what virtualization mode created instances
   will use. Can be either "paravirtual" (the default) or "hvm". The choice of virtualization type

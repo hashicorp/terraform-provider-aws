@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/satori/uuid"
 )
 
 func TestAccDataSourceAwsAmiIds_basic(t *testing.T) {
@@ -24,21 +24,21 @@ func TestAccDataSourceAwsAmiIds_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsAmiIds_sorted(t *testing.T) {
-	uuid := uuid.NewV4().String()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAmiIdsConfig_sorted1(uuid),
+				Config: testAccDataSourceAwsAmiIdsConfig_sorted1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_ami_from_instance.a", "id"),
 					resource.TestCheckResourceAttrSet("aws_ami_from_instance.b", "id"),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsAmiIdsConfig_sorted2(uuid),
+				Config: testAccDataSourceAwsAmiIdsConfig_sorted2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ami_ids.test"),
 					resource.TestCheckResourceAttr("data.aws_ami_ids.test", "ids.#", "2"),
@@ -81,7 +81,7 @@ data "aws_ami_ids" "ubuntu" {
 }
 `
 
-func testAccDataSourceAwsAmiIdsConfig_sorted1(uuid string) string {
+func testAccDataSourceAwsAmiIdsConfig_sorted1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_instance" "test" {
     ami           = "ami-efd0428f"
@@ -91,13 +91,13 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_ami_from_instance" "a" {
-    name                    = "tf-test-%s-a"
+    name                    = "%s-a"
     source_instance_id      = "${aws_instance.test.*.id[0]}"
     snapshot_without_reboot = true
 }
 
 resource "aws_ami_from_instance" "b" {
-    name                    = "tf-test-%s-b"
+    name                    = "%s-b"
     source_instance_id      = "${aws_instance.test.*.id[1]}"
     snapshot_without_reboot = true
 
@@ -106,16 +106,16 @@ resource "aws_ami_from_instance" "b" {
     // the images are being sorted correctly.
     depends_on = ["aws_ami_from_instance.a"]
 }
-`, uuid, uuid)
+`, rName, rName)
 }
 
-func testAccDataSourceAwsAmiIdsConfig_sorted2(uuid string) string {
-	return testAccDataSourceAwsAmiIdsConfig_sorted1(uuid) + fmt.Sprintf(`
+func testAccDataSourceAwsAmiIdsConfig_sorted2(rName string) string {
+	return testAccDataSourceAwsAmiIdsConfig_sorted1(rName) + fmt.Sprintf(`
 data "aws_ami_ids" "test" {
   owners     = ["self"]
-  name_regex = "^tf-test-%s-"
+  name_regex = "^%s-"
 }
-`, uuid)
+`, rName)
 }
 
 const testAccDataSourceAwsAmiIdsConfig_empty = `

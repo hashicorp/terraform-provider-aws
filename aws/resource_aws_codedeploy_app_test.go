@@ -18,14 +18,14 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCodeDeployApp,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_codedeploy_app.foo", "compute_platform", "Server"),
 					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCodeDeployAppModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
@@ -43,7 +43,7 @@ func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCodeDeployAppConfigComputePlatform(rName, "Server"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),
@@ -51,7 +51,7 @@ func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
 						"aws_codedeploy_app.foo", "compute_platform", "Server"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCodeDeployAppConfigComputePlatform(rName, "Lambda"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists("aws_codedeploy_app.foo"),

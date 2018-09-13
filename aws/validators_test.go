@@ -81,6 +81,54 @@ func TestValidateRFC3339TimeString(t *testing.T) {
 	}
 }
 
+func TestValidateTypeStringNullableBoolean(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "",
+		},
+		{
+			val: "0",
+		},
+		{
+			val: "1",
+		},
+		{
+			val:         "invalid",
+			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := validateTypeStringNullableBoolean(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
+
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",
@@ -262,6 +310,32 @@ func TestValidateLambdaPermissionAction(t *testing.T) {
 		_, errors := validateLambdaPermissionAction(v, "action")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda permission action", v)
+		}
+	}
+}
+
+func TestValidateLambdaPermissionEventSourceToken(t *testing.T) {
+	validTokens := []string{
+		"amzn1.ask.skill.80c92c86-e6dd-4c4b-8d0d-000000000000",
+		"test-event-source-token",
+		strings.Repeat(".", 256),
+	}
+	for _, v := range validTokens {
+		_, errors := validateLambdaPermissionEventSourceToken(v, "event_source_token")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Lambda permission event source token", v)
+		}
+	}
+
+	invalidTokens := []string{
+		"!",
+		"test event source token",
+		strings.Repeat(".", 257),
+	}
+	for _, v := range invalidTokens {
+		_, errors := validateLambdaPermissionEventSourceToken(v, "event_source_token")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Lambda permission event source token", v)
 		}
 	}
 }
@@ -1489,6 +1563,66 @@ func TestValidateElbNamePrefix(t *testing.T) {
 	}
 }
 
+func TestValidateNeptuneEventSubscriptionName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(256),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateNeptuneEventSubscriptionName(tc.Value, "aws_neptune_event_subscription")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Neptune Event Subscription Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateNeptuneEventSubscriptionNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(254),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateNeptuneEventSubscriptionNamePrefix(tc.Value, "aws_neptune_event_subscription")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Neptune Event Subscription Name Prefix to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
 func TestValidateDbSubnetGroupName(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -2206,23 +2340,23 @@ func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testin
 	}{
 		{
 			AmbiguousRoleResolution: nil,
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 1,
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                1,
 		},
 		{
 			AmbiguousRoleResolution: "foo",
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 0, // 0 as it should be defined, the value isn't validated here
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                0, // 0 as it should be defined, the value isn't validated here
 		},
 		{
 			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 0,
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                0,
 		},
 		{
 			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-			Type:     cognitoidentity.RoleMappingTypeToken,
-			ErrCount: 0,
+			Type:                    cognitoidentity.RoleMappingTypeToken,
+			ErrCount:                0,
 		},
 	}
 
@@ -2326,9 +2460,9 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 
 func TestValidateCognitoRoles(t *testing.T) {
 	validValues := []map[string]interface{}{
-		map[string]interface{}{"authenticated": "hoge"},
-		map[string]interface{}{"unauthenticated": "hoge"},
-		map[string]interface{}{"authenticated": "hoge", "unauthenticated": "hoge"},
+		{"authenticated": "hoge"},
+		{"unauthenticated": "hoge"},
+		{"authenticated": "hoge", "unauthenticated": "hoge"},
 	}
 
 	for _, s := range validValues {
@@ -2339,8 +2473,8 @@ func TestValidateCognitoRoles(t *testing.T) {
 	}
 
 	invalidValues := []map[string]interface{}{
-		map[string]interface{}{},
-		map[string]interface{}{"invalid": "hoge"},
+		{},
+		{"invalid": "hoge"},
 	}
 
 	for _, s := range invalidValues {
@@ -2551,7 +2685,51 @@ func TestValidateCognitoUserPoolId(t *testing.T) {
 	}
 }
 
-func TestValidateAmazonSideAsn(t *testing.T) {
+func TestValidateVpnGatewayAmazonSideAsn(t *testing.T) {
+	validAsns := []string{
+		"7224",
+		"9059",
+		"10124",
+		"17493",
+		"64512",
+		"64513",
+		"65533",
+		"65534",
+		"4200000000",
+		"4200000001",
+		"4294967293",
+		"4294967294",
+	}
+	for _, v := range validAsns {
+		_, errors := validateVpnGatewayAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"1",
+		"ABCDEFG",
+		"",
+		"7225",
+		"9058",
+		"10125",
+		"17492",
+		"64511",
+		"65535",
+		"4199999999",
+		"4294967295",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := validateVpnGatewayAmazonSideAsn(v, "amazon_side_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
+func TestValidateDxGatewayAmazonSideAsn(t *testing.T) {
 	validAsns := []string{
 		"64512",
 		"64513",
@@ -2563,7 +2741,7 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		"4294967294",
 	}
 	for _, v := range validAsns {
-		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		_, errors := validateDxGatewayAmazonSideAsn(v, "amazon_side_asn")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid ASN: %q", v, errors)
 		}
@@ -2573,9 +2751,18 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 		"1",
 		"ABCDEFG",
 		"",
+		"7224",
+		"9059",
+		"10124",
+		"17493",
+		"64511",
+		"65535",
+		"4199999999",
+		"4294967295",
+		"9999999999",
 	}
 	for _, v := range invalidAsns {
-		_, errors := validateAmazonSideAsn(v, "amazon_side_asn")
+		_, errors := validateDxGatewayAmazonSideAsn(v, "amazon_side_asn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ASN", v)
 		}
@@ -2727,6 +2914,62 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyName(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(128),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyNamePrefix(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
 		}
 	}
 }

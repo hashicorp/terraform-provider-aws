@@ -63,11 +63,11 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(vID)},
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.instance-id"),
 				Values: []*string{aws.String(iID)},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.device"),
 				Values: []*string{aws.String(name)},
 			},
@@ -138,11 +138,11 @@ func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID 
 		request := &ec2.DescribeVolumesInput{
 			VolumeIds: []*string{aws.String(volumeID)},
 			Filters: []*ec2.Filter{
-				&ec2.Filter{
+				{
 					Name:   aws.String("attachment.device"),
 					Values: []*string{aws.String(name)},
 				},
-				&ec2.Filter{
+				{
 					Name:   aws.String("attachment.instance-id"),
 					Values: []*string{aws.String(instanceID)},
 				},
@@ -176,11 +176,11 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(d.Get("volume_id").(string))},
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.device"),
 				Values: []*string{aws.String(d.Get("device_name").(string))},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.instance-id"),
 				Values: []*string{aws.String(d.Get("instance_id").(string))},
 			},

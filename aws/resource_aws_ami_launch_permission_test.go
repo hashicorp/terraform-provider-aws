@@ -25,7 +25,7 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []r.TestStep{
 			// Scaffold everything
-			r.TestStep{
+			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, true),
 				Check: r.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
@@ -33,14 +33,14 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 				),
 			},
 			// Drop just launch permission to test destruction
-			r.TestStep{
+			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, false),
 				Check: r.ComposeTestCheckFunc(
 					testAccAWSAMILaunchPermissionDestroyed(accountID, &imageID),
 				),
 			},
 			// Re-add everything so we can test when AMI disappears
-			r.TestStep{
+			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, true),
 				Check: r.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
@@ -49,7 +49,7 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 			},
 			// Here we delete the AMI to verify the follow-on refresh after this step
 			// should not error.
-			r.TestStep{
+			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, true),
 				Check: r.ComposeTestCheckFunc(
 					testAccAWSAMIDisappears(&imageID),

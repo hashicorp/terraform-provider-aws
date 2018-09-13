@@ -100,3 +100,11 @@ In addition to the arguments, the following attributes are exported:
   that can be used to create a Route53 alias record for the distribution.
 * `regional_domain_name` - The hostname for the custom domain's regional endpoint.
 * `regional_zone_id` - The hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
+
+## Import
+
+API Gateway domain names can be imported using their `name`, e.g.
+
+```
+$ terraform import aws_api_gateway_domain_name.example dev.example.com
+```

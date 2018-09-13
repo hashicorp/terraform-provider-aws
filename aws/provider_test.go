@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/organizations"
+
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -76,6 +80,44 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+// testAccAwsProviderAccountID returns the account ID of an AWS provider
+func testAccAwsProviderAccountID(provider *schema.Provider) string {
+	if provider == nil {
+		log.Print("[DEBUG] Unable to read account ID from test provider: empty provider")
+		return ""
+	}
+	if provider.Meta() == nil {
+		log.Print("[DEBUG] Unable to read account ID from test provider: unconfigured provider")
+		return ""
+	}
+	client, ok := provider.Meta().(*AWSClient)
+	if !ok {
+		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured AWS provider")
+		return ""
+	}
+	return client.accountid
+}
+
+// testAccCheckResourceAttrRegionalARN ensures the Terraform state exactly matches a formatted ARN with region
+func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
+// testAccGetAccountID returns the account ID of testAccProvider
+// Must be used returned within a resource.TestCheckFunc
+func testAccGetAccountID() string {
+	return testAccAwsProviderAccountID(testAccProvider)
+}
+
 func testAccGetRegion() string {
 	v := os.Getenv("AWS_DEFAULT_REGION")
 	if v == "" {
@@ -89,6 +131,14 @@ func testAccGetPartition() string {
 		return partition.ID()
 	}
 	return "aws"
+}
+
+func testAccGetServiceEndpoint(service string) string {
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(service, testAccGetRegion())
+	if err != nil {
+		return ""
+	}
+	return strings.TrimPrefix(endpoint.URL, "https://")
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {
@@ -115,6 +165,19 @@ func testAccMultipleRegionsPreCheck(t *testing.T) {
 			t.Skip("skipping tests; partition only includes a single region")
 		}
 	}
+}
+
+func testAccOrganizationsAccountPreCheck(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	input := &organizations.DescribeOrganizationInput{}
+	_, err := conn.DescribeOrganization(input)
+	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		return
+	}
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {

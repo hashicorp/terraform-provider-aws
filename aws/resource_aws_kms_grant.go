@@ -74,14 +74,14 @@ func resourceAwsKmsGrant() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							// ConflictsWith encryption_context_subset handled in Create, see kmsGrantConstraintsIsValid
 						},
 						"encryption_context_subset": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							// ConflictsWith encryption_context_equals handled in Create, see kmsGrantConstraintsIsValid
 						},
 					},
@@ -163,7 +163,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 					fmt.Errorf("[WARN] Error adding new KMS Grant for key: %s, retrying %s",
 						*input.KeyId, err))
 			}
-			log.Printf("[ERROR] An error occured creating new AWS KMS Grant: %s", err)
+			log.Printf("[ERROR] An error occurred creating new AWS KMS Grant: %s", err)
 			return resource.NonRetryableError(err)
 		}
 		return nil

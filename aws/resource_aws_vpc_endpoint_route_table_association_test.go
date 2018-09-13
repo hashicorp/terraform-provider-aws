@@ -19,7 +19,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointRouteTableAssociationExists(

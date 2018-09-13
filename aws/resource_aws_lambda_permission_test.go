@@ -49,6 +49,13 @@ func TestLambdaPermissionUnmarshalling(t *testing.T) {
 			v.Statement[0].Condition["StringEquals"]["AWS:SourceAccount"],
 			expectedSourceAccount)
 	}
+
+	expectedEventSourceToken := "test-event-source-token"
+	if v.Statement[0].Condition["StringEquals"]["lambda:EventSourceToken"] != expectedEventSourceToken {
+		t.Fatalf("Expected Event Source Token to match (%q != %q)",
+			v.Statement[0].Condition["StringEquals"]["lambda:EventSourceToken"],
+			expectedEventSourceToken)
+	}
 }
 
 func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_alias(t *testing.T) {
@@ -178,6 +185,7 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.allow_cloudwatch", "statement_id", "AllowExecutionFromCloudWatch"),
 					resource.TestCheckResourceAttr("aws_lambda_permission.allow_cloudwatch", "qualifier", ""),
 					resource.TestMatchResourceAttr("aws_lambda_permission.allow_cloudwatch", "function_name", funcArnRe),
+					resource.TestCheckResourceAttr("aws_lambda_permission.allow_cloudwatch", "event_source_token", "test-event-source-token"),
 				),
 			},
 		},
@@ -551,6 +559,7 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
     action = "lambda:InvokeFunction"
     function_name = "${aws_lambda_function.test_lambda.arn}"
     principal = "events.amazonaws.com"
+    event_source_token = "test-event-source-token"
 }
 
 resource "aws_lambda_function" "test_lambda" {
@@ -901,7 +910,7 @@ var testLambdaPolicy = []byte(`{
 	"Statement": [
 		{
 			"Condition": {
-				"StringEquals": {"AWS:SourceAccount": "319201112229"},
+				"StringEquals": {"AWS:SourceAccount": "319201112229", "lambda:EventSourceToken": "test-event-source-token"},
 				"ArnLike":{"AWS:SourceArn":"arn:aws:events:eu-west-1:319201112229:rule/RunDaily"}
 			},
 			"Action": "lambda:InvokeFunction",

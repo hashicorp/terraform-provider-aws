@@ -23,7 +23,7 @@ func TestAccAWSWafRegionalByteMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &v),

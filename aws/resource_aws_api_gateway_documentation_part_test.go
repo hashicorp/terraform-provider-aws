@@ -27,7 +27,7 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -37,7 +37,7 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -66,7 +66,7 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -78,7 +78,7 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -109,7 +109,7 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -123,7 +123,7 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -155,7 +155,7 @@ func TestAccAWSAPIGatewayDocumentationPart_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -165,7 +165,7 @@ func TestAccAWSAPIGatewayDocumentationPart_importBasic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

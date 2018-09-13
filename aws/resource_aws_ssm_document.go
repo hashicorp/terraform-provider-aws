@@ -58,6 +58,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 					ssm.DocumentTypeCommand,
 					ssm.DocumentTypePolicy,
 					ssm.DocumentTypeAutomation,
+					ssm.DocumentTypeSession,
 				}, false),
 			},
 			"schema_version": {
@@ -297,7 +298,7 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if _, ok := d.GetOk("permissions"); ok {
+	if d.HasChange("permissions") {
 		if err := setDocumentPermissions(d, meta); err != nil {
 			return err
 		}
@@ -376,24 +377,55 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
-	permission := d.Get("permissions").(map[string]interface{})
 
-	ids := aws.StringSlice([]string{permission["account_ids"].(string)})
+	// Since AccountIdsToRemove has higher priority than AccountIdsToAdd,
+	// we filter out accounts from both lists
+	if d.HasChange("permissions") {
+		o, n := d.GetChange("permissions")
+		oldPermissions := o.(map[string]interface{})
+		newPermissions := n.(map[string]interface{})
+		oldPermissionsAccountIds := make([]interface{}, 0)
+		if v, ok := oldPermissions["account_ids"]; ok && v.(string) != "" {
+			parts := strings.Split(v.(string), ",")
+			oldPermissionsAccountIds = make([]interface{}, len(parts))
+			for i, v := range parts {
+				oldPermissionsAccountIds[i] = v
+			}
+		}
+		newPermissionsAccountIds := make([]interface{}, 0)
+		if v, ok := newPermissions["account_ids"]; ok && v.(string) != "" {
+			parts := strings.Split(v.(string), ",")
+			newPermissionsAccountIds = make([]interface{}, len(parts))
+			for i, v := range parts {
+				newPermissionsAccountIds[i] = v
+			}
+		}
 
-	if strings.Contains(permission["account_ids"].(string), ",") {
-		ids = aws.StringSlice(strings.Split(permission["account_ids"].(string), ","))
-	}
+		accountIdsToRemove := make([]string, 0)
+		for _, oldPermissionsAccountId := range oldPermissionsAccountIds {
+			if _, contains := sliceContainsString(newPermissionsAccountIds, oldPermissionsAccountId.(string)); !contains {
+				accountIdsToRemove = append(accountIdsToRemove, oldPermissionsAccountId.(string))
+			}
+		}
+		accountIdsToAdd := make([]string, 0)
+		for _, newPermissionsAccountId := range newPermissionsAccountIds {
+			if _, contains := sliceContainsString(oldPermissionsAccountIds, newPermissionsAccountId.(string)); !contains {
+				accountIdsToAdd = append(accountIdsToAdd, newPermissionsAccountId.(string))
+			}
+		}
 
-	permInput := &ssm.ModifyDocumentPermissionInput{
-		Name:            aws.String(d.Get("name").(string)),
-		PermissionType:  aws.String(permission["type"].(string)),
-		AccountIdsToAdd: ids,
-	}
+		input := &ssm.ModifyDocumentPermissionInput{
+			Name:               aws.String(d.Get("name").(string)),
+			PermissionType:     aws.String("Share"),
+			AccountIdsToAdd:    aws.StringSlice(accountIdsToAdd),
+			AccountIdsToRemove: aws.StringSlice(accountIdsToRemove),
+		}
 
-	_, err := ssmconn.ModifyDocumentPermission(permInput)
-
-	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error setting permissions for SSM document: {{err}}", err)
+		log.Printf("[DEBUG] Modifying SSM document permissions: %s", input)
+		_, err := ssmconn.ModifyDocumentPermission(input)
+		if err != nil {
+			return fmt.Errorf("error modifying SSM document permissions: %s", err)
+		}
 	}
 
 	return nil
@@ -423,13 +455,11 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 		account_ids[i] = *resp.AccountIds[i]
 	}
 
-	var ids = ""
+	ids := ""
 	if len(account_ids) == 1 {
 		ids = account_ids[0]
 	} else if len(account_ids) > 1 {
 		ids = strings.Join(account_ids, ",")
-	} else {
-		ids = ""
 	}
 
 	if ids == "" {
@@ -448,10 +478,19 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
+	permission := d.Get("permissions").(map[string]interface{})
+	var accountsToRemove []*string
+	if permission["account_ids"] != nil {
+		accountsToRemove = aws.StringSlice([]string{permission["account_ids"].(string)})
+		if strings.Contains(permission["account_ids"].(string), ",") {
+			accountsToRemove = aws.StringSlice(strings.Split(permission["account_ids"].(string), ","))
+		}
+	}
+
 	permInput := &ssm.ModifyDocumentPermissionInput{
 		Name:               aws.String(d.Get("name").(string)),
 		PermissionType:     aws.String("Share"),
-		AccountIdsToRemove: aws.StringSlice(strings.Split("all", ",")),
+		AccountIdsToRemove: accountsToRemove,
 	}
 
 	_, err := ssmconn.ModifyDocumentPermission(permInput)

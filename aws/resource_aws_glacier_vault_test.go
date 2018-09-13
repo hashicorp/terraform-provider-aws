@@ -21,7 +21,7 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGlacierVault_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists("aws_glacier_vault.test"),
@@ -38,7 +38,7 @@ func TestAccAWSGlacierVault_full(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGlacierVault_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
@@ -55,13 +55,13 @@ func TestAccAWSGlacierVault_RemoveNotifications(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGlacierVault_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccGlacierVault_withoutNotification(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),

@@ -160,7 +160,7 @@ func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{})
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		// We don't return an error here because the Create call succeded
+		// We don't return an error here because the Create call succeeded
 		log.Printf("[ERR] Error waiting for KeyPair (%s) to become ready: %s", d.Id(), err)
 	}
 

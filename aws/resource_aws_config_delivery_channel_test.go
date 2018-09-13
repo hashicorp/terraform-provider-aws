@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -31,7 +32,19 @@ func testSweepConfigDeliveryChannels(region string) error {
 	conn := client.(*AWSClient).configconn
 
 	req := &configservice.DescribeDeliveryChannelsInput{}
-	resp, err := conn.DescribeDeliveryChannels(req)
+	var resp *configservice.DescribeDeliveryChannelsOutput
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.DescribeDeliveryChannels(req)
+		if err != nil {
+			// ThrottlingException: Rate exceeded
+			if isAWSErr(err, "ThrottlingException", "Rate exceeded") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error describing Delivery Channels: %s", err)
 	}
@@ -116,11 +129,11 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigDeliveryChannelConfig_basic(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

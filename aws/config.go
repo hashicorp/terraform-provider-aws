@@ -70,6 +70,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -89,6 +90,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/waf"
@@ -210,6 +212,7 @@ type AWSClient struct {
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
 	lightsailconn         *lightsail.Lightsail
+	macieconn             *macie.Macie
 	mqconn                *mq.MQ
 	opsworksconn          *opsworks.OpsWorks
 	organizationsconn     *organizations.Organizations
@@ -222,6 +225,7 @@ type AWSClient struct {
 	sdconn                *servicediscovery.ServiceDiscovery
 	sfnconn               *sfn.SFN
 	ssmconn               *ssm.SSM
+	storagegatewayconn    *storagegateway.StorageGateway
 	swfconn               *swf.SWF
 	wafconn               *waf.WAF
 	wafregionalconn       *wafregional.WAFRegional
@@ -244,11 +248,6 @@ func (c *AWSClient) S3() *s3.S3 {
 
 func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
 	return c.dynamodbconn
-}
-
-func (c *AWSClient) IsGovCloud() bool {
-	_, isGovCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsUsGovPartition()}, c.region)
-	return isGovCloud
 }
 
 func (c *AWSClient) IsChinaCloud() bool {
@@ -380,6 +379,12 @@ func (c *Config) Client() (interface{}, error) {
 			log.Printf("[WARN] Disabling retries after next request due to networking issue")
 			r.Retryable = aws.Bool(false)
 		}
+		// RequestError: send request failed
+		// caused by: Post https://FQDN/: dial tcp IPADDRESS:443: connect: connection refused
+		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "connection refused") {
+			log.Printf("[WARN] Disabling retries after next request due to networking issue")
+			r.Retryable = aws.Bool(false)
+		}
 	})
 
 	// This restriction should only be used for Route53 sessions.
@@ -418,32 +423,55 @@ func (c *Config) Client() (interface{}, error) {
 	log.Println("[INFO] Initializing DeviceFarm SDK connection")
 	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
 
-	// These two services need to be set up early so we can check on AccountID
+	// Beyond verifying credentials (if enabled), we use the next set of logic
+	// to determine two pieces of information required for manually assembling
+	// resource ARNs when they are not available in the service API:
+	//  * client.accountid
+	//  * client.partition
 	client.iamconn = iam.New(awsIamSess)
 	client.stsconn = sts.New(awsStsSess)
 
+	if c.AssumeRoleARN != "" {
+		client.accountid, client.partition, _ = parseAccountIDAndPartitionFromARN(c.AssumeRoleARN)
+	}
+
+	// Validate credentials early and fail before we do any graph walking.
 	if !c.SkipCredsValidation {
-		err = c.ValidateCredentials(client.stsconn)
+		var err error
+		client.accountid, client.partition, err = GetAccountIDAndPartitionFromSTSGetCallerIdentity(client.stsconn)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error validating provider credentials: %s", err)
 		}
 	}
 
-	// Infer AWS partition from configured region
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
-		client.partition = partition.ID()
+	if client.accountid == "" && !c.SkipRequestingAccountId {
+		var err error
+		client.accountid, client.partition, err = GetAccountIDAndPartition(client.iamconn, client.stsconn, cp.ProviderName)
+		if err != nil {
+			// DEPRECATED: Next major version of the provider should return the error instead of logging
+			//             if skip_request_account_id is not enabled.
+			log.Printf("[WARN] %s", fmt.Sprintf(
+				"AWS account ID not previously found and failed retrieving via all available methods. "+
+					"This will return an error in the next major version of the AWS provider. "+
+					"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for workaround and implications. "+
+					"Errors: %s", err))
+		}
 	}
 
-	if !c.SkipRequestingAccountId {
-		accountID, err := GetAccountID(client.iamconn, client.stsconn, cp.ProviderName)
-		if err == nil {
-			client.accountid = accountID
-		}
+	if client.accountid == "" {
+		log.Printf("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
 	}
 
 	authErr := c.ValidateAccountId(client.accountid)
 	if authErr != nil {
 		return nil, authErr
+	}
+
+	// Infer AWS partition from configured region if we still need it
+	if client.partition == "" {
+		if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
+			client.partition = partition.ID()
+		}
 	}
 
 	client.ec2conn = ec2.New(awsEc2Sess)
@@ -506,6 +534,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
 	client.lightsailconn = lightsail.New(sess)
+	client.macieconn = macie.New(sess)
 	client.mqconn = mq.New(sess)
 	client.neptuneconn = neptune.New(sess)
 	client.opsworksconn = opsworks.New(sess)
@@ -523,6 +552,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
 	client.ssmconn = ssm.New(awsSsmSess)
+	client.storagegatewayconn = storagegateway.New(sess)
 	client.swfconn = swf.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
@@ -586,6 +616,13 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
+		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	return &client, nil
 }
 
@@ -610,12 +647,6 @@ func (c *Config) ValidateRegion() error {
 	}
 
 	return fmt.Errorf("Not a valid region: %s", c.Region)
-}
-
-// Validate credentials early and fail before we do any graph walking.
-func (c *Config) ValidateCredentials(stsconn *sts.STS) error {
-	_, err := stsconn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	return err
 }
 
 // ValidateAccountId returns a context-specific error if the configured account

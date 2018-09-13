@@ -38,6 +38,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"encryption_disabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -103,7 +108,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"encryption_key": {
 				Type:     schema.TypeString,
@@ -360,17 +365,15 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	var resp *codebuild.CreateProjectOutput
+	// Handle IAM eventual consistency
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreateProject(params)
 		if err != nil {
-			// Work around eventual consistency of IAM
-			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
-				return resource.RetryableError(err)
-			}
-
-			if isAWSErr(err, "InvalidInputException", "Not authorized to perform DescribeSecurityGroups") {
+			// InvalidInputException: CodeBuild is not authorized to perform
+			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
+			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 
@@ -387,15 +390,23 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(*resp.Project.Arn)
 
-	return resourceAwsCodeBuildProjectUpdate(d, meta)
+	return resourceAwsCodeBuildProjectRead(d, meta)
 }
 
 func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	configs := d.Get("artifacts").(*schema.Set).List()
 	data := configs[0].(map[string]interface{})
 
+	artifactType := data["type"].(string)
+
 	projectArtifacts := codebuild.ProjectArtifacts{
-		Type: aws.String(data["type"].(string)),
+		Type: aws.String(artifactType),
+	}
+
+	// Only valid for S3 and CODEPIPELINE artifacts types
+	// InvalidInputException: Invalid artifacts: artifact type NO_ARTIFACTS should have null encryptionDisabled
+	if artifactType == codebuild.ArtifactsTypeS3 || artifactType == codebuild.ArtifactsTypeCodepipeline {
+		projectArtifacts.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
 	}
 
 	if data["location"].(string) != "" {
@@ -664,13 +675,15 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	// But its a slice of pointers so if not set for every update, they get removed.
 	params.Tags = tagsFromMapCodeBuild(d.Get("tags").(map[string]interface{}))
 
+	// Handle IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 
 		_, err = conn.UpdateProject(params)
 		if err != nil {
-			// Work around eventual consistency of IAM
-			if isAWSErr(err, "InvalidInputException", "CodeBuild is not authorized to perform") {
+			// InvalidInputException: CodeBuild is not authorized to perform
+			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
+			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 
@@ -714,6 +727,9 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 
 	values["type"] = *artifacts.Type
 
+	if artifacts.EncryptionDisabled != nil {
+		values["encryption_disabled"] = *artifacts.EncryptionDisabled
+	}
 	if artifacts.Location != nil {
 		values["location"] = *artifacts.Location
 	}
@@ -805,9 +821,7 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	artifactType := m["type"].(string)
-
-	buf.WriteString(fmt.Sprintf("%s-", artifactType))
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 
 	return hashcode.String(buf.String())
 }

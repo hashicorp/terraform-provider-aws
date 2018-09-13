@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSfnStateMachine() *schema.Resource {
@@ -27,7 +28,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			"definition": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateMaxLength(1024 * 1024), // 1048576
+				ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
 			},
 
 			"name": {

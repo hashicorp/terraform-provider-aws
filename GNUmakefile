@@ -19,23 +19,22 @@ test: fmtcheck
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
-vet:
-	@echo "go vet ."
-	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
-		echo ""; \
-		echo "Vet found suspicious constructs. Please check the reported constructs"; \
-		echo "and fix them if necessary before submitting the code for review."; \
-		exit 1; \
-	fi
-
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	@echo "==> Fixing source code with gofmt..."
+	gofmt -s -w ./$(PKG_NAME)
 
+# Currently required by tf-deploy compile
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-errcheck:
-	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
+lint:
+	@echo "==> Checking source code against linters..."
+	@gometalinter ./$(PKG_NAME)
+
+tools:
+	go get -u github.com/kardianos/govendor
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install
 
 vendor-status:
 	@govendor status
@@ -55,6 +54,10 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
+website-lint:
+	@echo "==> Checking website against linters..."
+	@misspell -error -source=text website/
+
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
@@ -62,5 +65,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build sweep test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
+.PHONY: build sweep test testacc fmt fmtcheck lint tools vendor-status test-compile website website-lint website-test
 

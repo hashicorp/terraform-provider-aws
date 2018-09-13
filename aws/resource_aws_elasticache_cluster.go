@@ -111,7 +111,7 @@ func resourceAwsElastiCacheCommonSchema() map[string]*schema.Schema {
 			Optional: true,
 			ForceNew: true,
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				// Supress default memcached/redis ports when not defined
+				// Suppress default memcached/redis ports when not defined
 				if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
 					return true
 				}
@@ -229,7 +229,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		Optional: true,
 		ForceNew: true,
 		ConflictsWith: []string{
-			"availability_zone",
 			"availability_zones",
 			"az_mode",
 			"engine_version",

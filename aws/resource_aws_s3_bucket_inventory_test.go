@@ -27,7 +27,7 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfig(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
@@ -50,7 +50,7 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -74,14 +74,14 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -103,7 +103,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
@@ -111,7 +111,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile("^arn:aws:kms:")),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

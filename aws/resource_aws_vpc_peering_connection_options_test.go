@@ -14,7 +14,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConnectionOptionsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(

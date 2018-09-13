@@ -20,13 +20,13 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSInspectorTemplateAssessment(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorTemplateExists("aws_inspector_assessment_template.foo"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckAWSInspectorTemplatetModified(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorTargetExists("aws_inspector_assessment_template.foo"),

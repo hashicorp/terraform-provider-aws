@@ -228,11 +228,11 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		"cloudwatch_logging_options":           flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   aws.StringValue(description.CompressionFormat),
 		"data_format_conversion_configuration": flattenFirehoseDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
-		"prefix":                   aws.StringValue(description.Prefix),
-		"processing_configuration": flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
-		"role_arn":                 aws.StringValue(description.RoleARN),
-		"s3_backup_configuration":  flattenFirehoseS3Configuration(description.S3BackupDescription),
-		"s3_backup_mode":           aws.StringValue(description.S3BackupMode),
+		"prefix":                               aws.StringValue(description.Prefix),
+		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"role_arn":                             aws.StringValue(description.RoleARN),
+		"s3_backup_configuration":              flattenFirehoseS3Configuration(description.S3BackupDescription),
+		"s3_backup_mode":                       aws.StringValue(description.S3BackupMode),
 	}
 
 	if description.BufferingHints != nil {
@@ -673,12 +673,14 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"kinesis_stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
 					},
@@ -2068,6 +2070,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
 				return resource.RetryableError(err)
 			}
+			// InvalidArgumentException: Verify that the IAM role has access to the ElasticSearch domain.
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
+				return resource.RetryableError(err)
+			}
 			// IAM roles can take ~10 seconds to propagate in AWS:
 			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
@@ -2191,6 +2197,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 			// Retry for IAM eventual consistency
 			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
+				return resource.RetryableError(err)
+			}
+			// InvalidArgumentException: Verify that the IAM role has access to the ElasticSearch domain.
+			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
 				return resource.RetryableError(err)
 			}
 			// IAM roles can take ~10 seconds to propagate in AWS:

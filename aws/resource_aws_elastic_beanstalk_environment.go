@@ -980,7 +980,7 @@ func getBeanstalkEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, envi
 		}
 		events = append(events, e)
 	}
-	sort.Sort(beanstalkEnvironmentErrors(events))
+	sort.Sort(events)
 
 	var result *multierror.Error
 	for _, event := range events {

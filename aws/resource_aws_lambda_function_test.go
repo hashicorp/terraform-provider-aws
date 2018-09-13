@@ -151,7 +151,7 @@ func TestAccAWSLambdaFunction_updateRuntime(t *testing.T) {
 				Config: testAccAWSLambdaConfigBasicUpdateRuntime(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs4.3-edge"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs6.10"),
 				),
 			},
 		},
@@ -534,6 +534,35 @@ func TestAccAWSLambdaFunction_VPC(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_VPCRemoval(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.lambda_function_test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithVPC(rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigBasic(rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -598,6 +627,31 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccAwsInvokeLambdaFunction(&conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_empty_vpc_config_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_empty_vpc_config_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_empty_vpc_config_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_empty_vpc_config_%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithEmptyVpcConfig(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.test", funcName, &conf),
+					resource.TestCheckResourceAttr("aws_lambda_function.test", "vpc_config.#", "0"),
 				),
 			},
 		},
@@ -1350,7 +1404,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3-edge"
+    runtime = "nodejs6.10"
 }
 `, funcName)
 }
@@ -1686,6 +1740,22 @@ resource "aws_security_group" "sg_for_lambda_2" {
 
 
 `, funcName, sgName2)
+}
+
+func testAccAWSLambdaConfigWithEmptyVpcConfig(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+    filename      = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role          = "${aws_iam_role.iam_for_lambda.arn}"
+    handler       = "exports.example"
+    runtime       = "nodejs4.3"
+
+    vpc_config {
+        subnet_ids         = []
+        security_group_ids = []
+    }
+}`, funcName)
 }
 
 func testAccAWSLambdaConfigS3(bucketName, roleName, funcName string) string {

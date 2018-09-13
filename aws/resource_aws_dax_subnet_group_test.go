@@ -47,11 +47,11 @@ func TestAccAwsDaxSubnetGroup_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDaxSubnetGroupConfig(acctest.RandString(5)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

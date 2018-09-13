@@ -57,7 +57,7 @@ in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
 and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
-  supports the below instance classes.
+  supports the below instance classes. Please see [AWS Documentation][7] for complete details.
   - db.t2.small
   - db.t2.medium
   - db.r3.large
@@ -97,6 +97,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster instance
 * `cluster_identifier` - The RDS Cluster Identifier
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier
@@ -120,6 +121,7 @@ In addition to all arguments above, the following attributes are exported:
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Managing.html
 [5]: /docs/configuration/resources.html#count
 [6]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
+[7]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
 
 ## Timeouts
 

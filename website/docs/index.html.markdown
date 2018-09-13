@@ -209,19 +209,46 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 * `skip_requesting_account_id` - (Optional) Skip requesting the account
   ID.  Useful for AWS API implementations that do not have the IAM, STS
-  API, or metadata API.  When set to `true`, prevents you from managing
-  any resource that requires Account ID to construct an ARN, e.g.
-  - `aws_db_instance`
-  - `aws_db_option_group`
-  - `aws_db_parameter_group`
-  - `aws_db_security_group`
-  - `aws_db_subnet_group`
-  - `aws_elasticache_cluster`
-  - `aws_glacier_vault`
-  - `aws_rds_cluster`
-  - `aws_rds_cluster_instance`
-  - `aws_rds_cluster_parameter_group`
-  - `aws_redshift_cluster`
+  API, or metadata API.  When set to `true` and not determined previously,
+  returns an empty account ID when manually constructing ARN attributes with
+  the following:
+  - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
+  - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
+  - [`aws_api_gateway_stage` resource](/docs/providers/aws/r/api_gateway_stage.html)
+  - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
+  - [`aws_cognito_identity_pool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
+  - [`aws_cognito_user_pool` resource](/docs/providers/aws/r/cognito_user_pool.html)
+  - [`aws_cognito_user_pools` data source](/docs/providers/aws/d/cognito_user_pools.html)
+  - [`aws_dms_replication_subnet_group` resource](/docs/providers/aws/r/dms_replication_subnet_group.html)
+  - [`aws_dx_connection` resource](/docs/providers/aws/r/dx_connection.html)
+  - [`aws_dx_hosted_private_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface_accepter.html)
+  - [`aws_dx_hosted_private_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface.html)
+  - [`aws_dx_hosted_public_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface_accepter.html)
+  - [`aws_dx_hosted_public_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface.html)
+  - [`aws_dx_lag` resource](/docs/providers/aws/r/dx_lag.html)
+  - [`aws_dx_private_virtual_interface` resource](/docs/providers/aws/r/dx_private_virtual_interface.html)
+  - [`aws_dx_public_virtual_interface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
+  - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
+  - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
+  - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
+  - [`aws_elasticache_cluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
+  - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
+  - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+  - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
+  - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
+  - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
+  - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
+  - [`aws_redshift_subnet_group` resource](/docs/providers/aws/r/redshift_subnet_group.html)
+  - [`aws_ses_domain_identity_verification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
+  - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
+  - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
+  - [`aws_ssm_parameter` resource](/docs/providers/aws/r/ssm_parameter.html)
+  - [`aws_subnet` data source](/docs/providers/aws/d/subnet.html)
+  - [`aws_subnet` resource](/docs/providers/aws/r/subnet.html)
+  - [`aws_vpc` data source](/docs/providers/aws/d/vpc.html)
+  - [`aws_vpc` resource](/docs/providers/aws/r/vpc.html)
+  - [`aws_waf_ipset` resource](/docs/providers/aws/r/waf_ipset.html)
+  - [`aws_wafregional_ipset` resource](/docs/providers/aws/r/wafregional_ipset.html)
 
 * `skip_metadata_api_check` - (Optional) Skip the AWS Metadata API
   check.  Useful for AWS API implementations that do not have a metadata
