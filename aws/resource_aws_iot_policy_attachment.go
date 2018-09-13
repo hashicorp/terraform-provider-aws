@@ -116,6 +116,7 @@ func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 
 	if err != nil {
 		log.Printf("[ERROR] Error detaching policy %s from target %s: %s", policyName, target, err)
+		return err
 	}
 
 	return nil
