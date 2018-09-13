@@ -19,6 +19,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_iam_policy: Ensure `description` is available as an attribute when empty [GH-5815]
+* resource/aws_iam_user: Remove extraneous `DeleteUserPermissionsBoundary` API call during deletion [GH-5857]
 * resource/aws_lambda_function: Retry on `InvalidParameterValueException` errors relating to KMS-backed environment variables [GH-5849]
 * resource/aws_launch_template: Ensure `ebs_optimized` argument accepts "unspecified" value [GH-5627]
 
