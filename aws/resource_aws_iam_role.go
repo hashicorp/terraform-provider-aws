@@ -87,7 +87,7 @@ func resourceAwsIamRole() *schema.Resource {
 			"permissions_boundary": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(2048),
+				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
 
 			"description": {

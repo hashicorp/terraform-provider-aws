@@ -31,7 +31,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateMaxLength(64),
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"rule_id": {
 				Type:     schema.TypeString,
@@ -44,7 +44,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(256),
+				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"input_parameters": {
 				Type:         schema.TypeString,
@@ -65,7 +65,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 						"compliance_resource_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateMaxLength(256),
+							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 						"compliance_resource_types": {
 							Type:     schema.TypeSet,
@@ -73,19 +73,19 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateMaxLength(256),
+								ValidateFunc: validation.StringLenBetween(0, 256),
 							},
 							Set: schema.HashString,
 						},
 						"tag_key": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateMaxLength(128),
+							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 						"tag_value": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateMaxLength(256),
+							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
 				},
@@ -131,7 +131,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 						"source_identifier": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateMaxLength(256),
+							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
 				},

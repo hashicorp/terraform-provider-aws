@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsIamUser() *schema.Resource {
 			"permissions_boundary": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(2048),
+				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
 			"force_destroy": {
 				Type:        schema.TypeBool,
