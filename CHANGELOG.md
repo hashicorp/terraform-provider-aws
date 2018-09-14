@@ -1,5 +1,9 @@
 ## 1.37.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket_inventory: Allow SSE-S3 encryption [GH-5870]
+
 BUG FIXES:
 
 * resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
