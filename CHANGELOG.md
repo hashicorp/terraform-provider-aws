@@ -1,5 +1,9 @@
 ## 1.37.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_dx_bgp_peer` [GH-5886]
+
 ENHANCEMENTS:
 
 * resource/aws_s3_bucket_inventory: Allow SSE-S3 encryption [GH-5870]
