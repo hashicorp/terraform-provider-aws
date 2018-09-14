@@ -6,6 +6,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_config_config_rule: Prevent panic when specifying empty `scope` [GH-5852]
 * resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
 * resource/aws_s3_bucket: Prevent `NoSuchBucket` error on deletion [GH-5842]
 
