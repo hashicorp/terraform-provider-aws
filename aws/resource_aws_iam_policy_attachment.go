@@ -65,7 +65,7 @@ func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 	groups := expandStringList(d.Get("groups").(*schema.Set).List())
 
 	if len(users) == 0 && len(roles) == 0 && len(groups) == 0 {
-		return fmt.Errorf("[WARN] No Users, Roles, or Groups specified for IAM Policy Attachment %s", name)
+		return fmt.Errorf("No Users, Roles, or Groups specified for IAM Policy Attachment %s", name)
 	} else {
 		var userErr, roleErr, groupErr error
 		if users != nil {

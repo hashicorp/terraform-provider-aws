@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -540,7 +539,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 			if awsErr.Code() == "OperationAborted" {
 				log.Printf("[WARN] Got an error while trying to create S3 bucket %s: %s", bucket, err)
 				return resource.RetryableError(
-					fmt.Errorf("[WARN] Error creating S3 bucket %s, retrying: %s",
+					fmt.Errorf("Error creating S3 bucket %s, retrying: %s",
 						bucket, err))
 			}
 		}
@@ -681,7 +680,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			} else {
 				policy, err := structure.NormalizeJsonString(*v)
 				if err != nil {
-					return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+					return fmt.Errorf("policy contains an invalid JSON: %s", err)
 				}
 				d.Set("policy", policy)
 			}

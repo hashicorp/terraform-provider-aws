@@ -628,7 +628,7 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 		log.Printf("[DEBUG] Modifying ElastiCache Cluster (%s), opts:\n%s", d.Id(), req)
 		_, err := conn.ModifyCacheCluster(req)
 		if err != nil {
-			return fmt.Errorf("[WARN] Error updating ElastiCache cluster (%s), error: %s", d.Id(), err)
+			return fmt.Errorf("Error updating ElastiCache cluster (%s), error: %s", d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Waiting for update: %s", d.Id())
@@ -727,7 +727,7 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 		}
 
 		if len(resp.CacheClusters) == 0 {
-			return nil, "", fmt.Errorf("[WARN] Error: no Cache Clusters found for id (%s)", clusterID)
+			return nil, "", fmt.Errorf("Error: no Cache Clusters found for id (%s)", clusterID)
 		}
 
 		var c *elasticache.CacheCluster
@@ -739,7 +739,7 @@ func cacheClusterStateRefreshFunc(conn *elasticache.ElastiCache, clusterID, give
 		}
 
 		if c == nil {
-			return nil, "", fmt.Errorf("[WARN] Error: no matching Elastic Cache cluster for id (%s)", clusterID)
+			return nil, "", fmt.Errorf("Error: no matching Elastic Cache cluster for id (%s)", clusterID)
 		}
 
 		log.Printf("[DEBUG] ElastiCache Cluster (%s) status: %v", clusterID, *c.CacheClusterStatus)
