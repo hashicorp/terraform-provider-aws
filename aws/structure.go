@@ -2259,7 +2259,11 @@ func flattenConfigRuleScope(scope *configservice.Scope) []interface{} {
 	return items
 }
 
-func expandConfigRuleScope(configured map[string]interface{}) *configservice.Scope {
+func expandConfigRuleScope(l []interface{}) *configservice.Scope {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	configured := l[0].(map[string]interface{})
 	scope := &configservice.Scope{}
 
 	if v, ok := configured["compliance_resource_id"].(string); ok && v != "" {
