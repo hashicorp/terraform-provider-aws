@@ -53,7 +53,8 @@ func testAccCheckAwsDxBgpPeerDestroy(s *terraform.State) error {
 		}
 		for _, peer := range resp.VirtualInterfaces[0].BgpPeers {
 			if *peer.AddressFamily == rs.Primary.Attributes["address_family"] &&
-				strconv.Itoa(int(*peer.Asn)) == rs.Primary.Attributes["bgp_asn"] {
+				strconv.Itoa(int(*peer.Asn)) == rs.Primary.Attributes["bgp_asn"] &&
+				*peer.BgpPeerState != directconnect.BGPPeerStateDeleted {
 				return fmt.Errorf("[DESTROY ERROR] Dx BGP peer (%s) not deleted", rs.Primary.ID)
 			}
 		}
