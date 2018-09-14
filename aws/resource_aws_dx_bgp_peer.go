@@ -13,10 +13,9 @@ import (
 
 func resourceAwsDxBgpPeer() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAwsDxBgpPeerCreate,
-		Read:          resourceAwsDxBgpPeerRead,
-		Delete:        resourceAwsDxBgpPeerDelete,
-		CustomizeDiff: resourceAwsDxBgpPeerCustomizeDiff,
+		Create: resourceAwsDxBgpPeerCreate,
+		Read:   resourceAwsDxBgpPeerRead,
+		Delete: resourceAwsDxBgpPeerDelete,
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
@@ -52,6 +51,10 @@ func resourceAwsDxBgpPeer() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"bgp_status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
@@ -90,32 +93,62 @@ func resourceAwsDxBgpPeerCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(fmt.Sprintf("%s-%s-%d", d.Get("virtual_interface_id"), d.Get("address_family"), d.Get("bgp_asn")))
 
-	// if err := dxPublicVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
-	// 	return err
-	// }
-
 	return resourceAwsDxBgpPeerRead(d, meta)
 }
 
 func resourceAwsDxBgpPeerRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).dxconn
+
+	vifId := d.Get("virtual_interface_id").(string)
+	vif, err := dxVirtualInterfaceRead(vifId, conn)
+	if err != nil {
+		return err
+	}
+	if vif == nil {
+		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing BGP peer from state", vifId)
+		d.SetId("")
+		return nil
+	}
+
+	var bgpPeer *directconnect.BGPPeer
+	for _, peer := range vif.BgpPeers {
+		if aws.StringValue(peer.AddressFamily) == d.Get("address_family").(string) &&
+			aws.Int64Value(peer.Asn) == int64(d.Get("bgp_asn").(int)) {
+			bgpPeer = peer
+			break
+		}
+	}
+	if bgpPeer == nil {
+		log.Printf("[WARN] Direct Connect BGP peer (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("address_family", bgpPeer.AddressFamily)
+	d.Set("bgp_asn", bgpPeer.Asn)
+	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
+	d.Set("amazon_address", bgpPeer.AmazonAddress)
+	d.Set("bgp_auth_key", bgpPeer.AuthKey)
+	d.Set("customer_address", bgpPeer.CustomerAddress)
+	d.Set("bgp_status", bgpPeer.BgpStatus)
+
 	return nil
 }
 
 func resourceAwsDxBgpPeerDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
+	conn := meta.(*AWSClient).dxconn
 
-func resourceAwsDxBgpPeerCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
-	if diff.Id() == "" {
-		// New resource.
-		if addressFamily := diff.Get("address_family").(string); addressFamily == directconnect.AddressFamilyIpv4 {
-			if _, ok := diff.GetOk("customer_address"); !ok {
-				return fmt.Errorf("'customer_address' must be set when 'address_family' is '%s'", addressFamily)
-			}
-			if _, ok := diff.GetOk("amazon_address"); !ok {
-				return fmt.Errorf("'amazon_address' must be set when 'address_family' is '%s'", addressFamily)
-			}
+	log.Printf("[DEBUG] Deleting Direct Connect BGP peer: %s", d.Id())
+	_, err := conn.DeleteBGPPeer(&directconnect.DeleteBGPPeerInput{
+		Asn:                aws.Int64(int64(d.Get("bgp_asn").(int))),
+		CustomerAddress:    aws.String(d.Get("customer_address").(string)),
+		VirtualInterfaceId: aws.String(d.Get("virtual_interface_id").(string)),
+	})
+	if err != nil {
+		if isAWSErr(err, "DirectConnectClientException", "XXX") {
+			return nil
 		}
+		return err
 	}
 
 	return nil

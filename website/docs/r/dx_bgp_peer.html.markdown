@@ -38,6 +38,7 @@ Required for IPv4 BGP peers on public virtual interfaces.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the BGP peer.
+* `bgp_status` - The Up/Down state of the BGP peer.
 
 ## Timeouts
 
