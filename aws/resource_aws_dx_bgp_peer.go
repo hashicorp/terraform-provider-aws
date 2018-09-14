@@ -159,7 +159,8 @@ func resourceAwsDxBgpPeerDelete(d *schema.ResourceData, meta interface{}) error 
 		VirtualInterfaceId: aws.String(vifId),
 	})
 	if err != nil {
-		if isAWSErr(err, "DirectConnectClientException", "XXX") {
+		// This is the error returned if the BGP peering has already gone.
+		if isAWSErr(err, "DirectConnectClientException", "The last BGP Peer on a Virtual Interface cannot be deleted") {
 			return nil
 		}
 		return err
