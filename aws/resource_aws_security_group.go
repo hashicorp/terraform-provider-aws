@@ -110,6 +110,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							},
 						},
 
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
