@@ -1581,16 +1581,6 @@ func validateAwsSSMMaintenanceWindowTaskName(v interface{}, k string) (ws []stri
 	return
 }
 
-func validateAwsSSMMaintenanceWindowTaskDescription(v interface{}, k string) (ws []string, errors []error) {
-	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_RegisterTaskWithMaintenanceWindow.html#systemsmanager-RegisterTaskWithMaintenanceWindow-request-Description
-	value := v.(string)
-	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 128 characters: %q", k, value))
-	}
-	return
-}
-
 func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`).MatchString(value) {

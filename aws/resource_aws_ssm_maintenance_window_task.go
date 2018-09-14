@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/validation"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -84,7 +85,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsSSMMaintenanceWindowTaskDescription,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 
 			"priority": {
@@ -256,14 +257,8 @@ func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interf
 			d.Set("service_role_arn", t.ServiceRoleArn)
 			d.Set("task_arn", t.TaskArn)
 			d.Set("priority", t.Priority)
-
-			if t.Name != nil {
-				d.Set("name", t.Name)
-			}
-
-			if t.Description != nil {
-				d.Set("description", t.Description)
-			}
+			d.Set("name", t.Name)
+			d.Set("description", t.Description)
 
 			if t.LoggingInfo != nil {
 				if err := d.Set("logging_info", flattenAwsSsmMaintenanceWindowLoggingInfo(t.LoggingInfo)); err != nil {
