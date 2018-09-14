@@ -70,21 +70,26 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 			return !lastPage
 		})
 
-		for _, v := range rawName {
-			input := &autoscaling.DescribeAutoScalingGroupsInput{
-				AutoScalingGroupNames: []*string{
-					aws.String(v),
-				},
+		maxAutoScalingGroupNames := 1600
+		for i := 0; i < len(rawName); i += maxAutoScalingGroupNames {
+			end := i + maxAutoScalingGroupNames
+
+			if end > len(rawName) {
+				end = len(rawName)
 			}
 
-			err = conn.DescribeAutoScalingGroupsPages(input, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+			nameInput := &autoscaling.DescribeAutoScalingGroupsInput{
+				AutoScalingGroupNames: aws.StringSlice(rawName[i:end]),
+				MaxRecords:            aws.Int64(100),
+			}
+
+			err = conn.DescribeAutoScalingGroupsPages(nameInput, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
 				for _, group := range resp.AutoScalingGroups {
 					rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
 				}
 				return !lastPage
 			})
 		}
-
 	} else {
 		err = conn.DescribeAutoScalingGroupsPages(&autoscaling.DescribeAutoScalingGroupsInput{}, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
 			for _, group := range resp.AutoScalingGroups {
