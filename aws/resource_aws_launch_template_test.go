@@ -250,6 +250,27 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.0.ipv6_addresses.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -527,6 +548,19 @@ resource "aws_launch_template" "test" {
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
     ipv4_address_count = 2
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses = `
+resource "aws_launch_template" "test" {
+  name = "network-interface-ipv6-addresses-launch-template"
+
+  network_interfaces {
+    ipv6_addresses = [
+      "0:0:0:0:0:ffff:a01:5",
+      "0:0:0:0:0:ffff:a01:6",
+    ]
   }
 }
 `
