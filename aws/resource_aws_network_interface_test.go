@@ -11,6 +11,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSENI_importBasic(t *testing.T) {
+	resourceName := "aws_network_interface.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSENIConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 

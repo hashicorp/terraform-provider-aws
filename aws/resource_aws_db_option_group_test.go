@@ -76,6 +76,28 @@ func testSweepDbOptionGroups(region string) error {
 	return nil
 }
 
+func TestAccAWSDBOptionGroup_importBasic(t *testing.T) {
+	resourceName := "aws_db_option_group.bar"
+	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBOptionGroupBasicConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))

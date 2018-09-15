@@ -11,6 +11,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCloudWatchLogGroup_importBasic(t *testing.T) {
+	resourceName := "aws_cloudwatch_log_group.foobar"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_in_days"}, //this has a default value
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()

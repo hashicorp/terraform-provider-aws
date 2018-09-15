@@ -12,6 +12,27 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
+func TestAccAWSPlacementGroup_importBasic(t *testing.T) {
+	resourceName := "aws_placement_group.pg"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPlacementGroupConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

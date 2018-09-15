@@ -12,6 +12,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSElasticacheSubnetGroup_importBasic(t *testing.T) {
+	resourceName := "aws_elasticache_subnet_group.bar"
+	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())

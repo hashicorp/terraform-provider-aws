@@ -70,6 +70,28 @@ func testSweepCloudWatchEventRules(region string) error {
 	return nil
 }
 
+func TestAccAWSCloudWatchEventRule_importBasic(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_rule.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig,
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_enabled"}, //this has a default value
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
