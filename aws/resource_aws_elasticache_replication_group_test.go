@@ -1151,7 +1151,7 @@ resource "aws_security_group" "bar" {
 resource "aws_elasticache_replication_group" "bar" {
     replication_group_id = "tf-%s"
     replication_group_description = "test description"
-    node_type = "cache.t2.micro"
+    node_type = "cache.m3.medium"
     number_cache_clusters = "2"
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
