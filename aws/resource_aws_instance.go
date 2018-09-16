@@ -1159,7 +1159,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 		if mErr != nil {
-			return fmt.Errorf("[WARN] Error updating Instance monitoring: %s", mErr)
+			return fmt.Errorf("Error updating Instance monitoring: %s", mErr)
 		}
 	}
 
@@ -1176,7 +1176,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error updating Instance credit specification: %s", err)
+				return fmt.Errorf("Error updating Instance credit specification: %s", err)
 			}
 		}
 	}
@@ -1398,7 +1398,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("[WARN] Error finding Root Device Name for AMI (%s)", ami)
+		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", ami)
 	}
 
 	return rootDeviceName, nil

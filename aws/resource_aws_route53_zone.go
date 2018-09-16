@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -166,7 +165,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 		}
 		sort.Strings(ns)
 		if err := d.Set("name_servers", ns); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting name servers for: %s, error: %#v", d.Id(), err)
+			return fmt.Errorf("Error setting name servers for: %s, error: %#v", d.Id(), err)
 		}
 	} else {
 		ns, err := getNameServers(d.Id(), d.Get("name").(string), r53)
@@ -174,7 +173,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 			return err
 		}
 		if err := d.Set("name_servers", ns); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting name servers for: %s, error: %#v", d.Id(), err)
+			return fmt.Errorf("Error setting name servers for: %s, error: %#v", d.Id(), err)
 		}
 
 		// In the import case we just associate it with the first VPC
@@ -198,7 +197,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 		if associatedVPC == nil {
-			return fmt.Errorf("[DEBUG] VPC: %v is not associated with Zone: %v", d.Get("vpc_id"), d.Id())
+			return fmt.Errorf("VPC: %v is not associated with Zone: %v", d.Get("vpc_id"), d.Id())
 		}
 	}
 
@@ -268,7 +267,7 @@ func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) erro
 
 	if d.Get("force_destroy").(bool) {
 		if err := deleteAllRecordsInHostedZoneId(d.Id(), d.Get("name").(string), r53); err != nil {
-			return errwrap.Wrapf("{{err}}", err)
+			return fmt.Errorf("%s", err)
 		}
 	}
 

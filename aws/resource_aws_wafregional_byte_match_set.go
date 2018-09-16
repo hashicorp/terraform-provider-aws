@@ -1,13 +1,13 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -120,7 +120,7 @@ func resourceAwsWafRegionalByteMatchSetCreate(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error creating ByteMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateByteMatchSetOutput)
 
@@ -200,7 +200,7 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 
 		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 		}
 	} else if d.HasChange("byte_match_tuples") {
 		o, n := d.GetChange("byte_match_tuples")
@@ -208,7 +208,7 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 
 		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 		}
 	}
 	return resourceAwsWafRegionalByteMatchSetRead(d, meta)
@@ -232,7 +232,7 @@ func resourceAwsWafRegionalByteMatchSetDelete(d *schema.ResourceData, meta inter
 
 		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
 		}
 	}
 
@@ -245,7 +245,7 @@ func resourceAwsWafRegionalByteMatchSetDelete(d *schema.ResourceData, meta inter
 		return conn.DeleteByteMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error deleting ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
 	}
 
 	return nil
@@ -263,7 +263,7 @@ func updateByteMatchSetResourceWR(d *schema.ResourceData, oldT, newT []interface
 		return conn.UpdateByteMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 	}
 
 	return nil
