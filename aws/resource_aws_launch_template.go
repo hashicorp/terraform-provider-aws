@@ -769,7 +769,7 @@ func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
-		var ipv4Addresses []string
+		var ipv4Addresses []map[string]interface{}
 
 		networkInterface := map[string]interface{}{
 			"associate_public_ip_address": aws.BoolValue(v.AssociatePublicIpAddress),
@@ -1101,10 +1101,6 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
 	}
 
-	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
-		networkInterface.PrivateIpAddress = aws.String(v)
-	}
-
 	if v, ok := ni["subnet_id"].(string); ok && v != "" {
 		networkInterface.SubnetId = aws.String(v)
 	}
@@ -1127,7 +1123,9 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
 	}
 
-	if v := ni["ipv4_address_count"].(int); v > 0 {
+	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
+		networkInterface.PrivateIpAddress = aws.String(v)
+	} else if v := ni["ipv4_address_count"].(int); v > 0 {
 		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
 	} else if v, ok := ni["ipv4_addresses"]; ok && len(v.([]interface{})) > 0 {
 		for _, address := range v.([]interface{}) {
