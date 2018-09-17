@@ -21,6 +21,7 @@ func init() {
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
+			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
 			"aws_vpn_gateway",
@@ -42,6 +43,7 @@ func testSweepVPCs(region string) error {
 				Name: aws.String("tag-value"),
 				Values: []*string{
 					aws.String("terraform-testacc-*"),
+					aws.String("tf-acc-test-*"),
 				},
 			},
 		},

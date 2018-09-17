@@ -36,8 +36,11 @@ func testSweepSecurityGroups(region string) error {
 	req := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("tag-value"),
-				Values: []*string{aws.String("tf-acc-revoke*")},
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("tf-acc-revoke*"),
+					aws.String("tf-acc-test-*"),
+				},
 			},
 		},
 	}
