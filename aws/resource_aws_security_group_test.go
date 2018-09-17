@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -1802,6 +1803,28 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 	})
 }
 
+// testAccAWSSecurityGroupRulesPerGroupLimitFromEnv returns security group rules per group limit
+// Currently this information is not available from any EC2 or Trusted Advisor API
+// Prefers the EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT environment variable or defaults to 50
+func testAccAWSSecurityGroupRulesPerGroupLimitFromEnv() int {
+	const defaultLimit = 50
+	const envVar = "EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT"
+
+	envLimitStr := os.Getenv(envVar)
+	if envLimitStr == "" {
+		return defaultLimit
+	}
+	envLimitInt, err := strconv.Atoi(envLimitStr)
+	if err != nil {
+		log.Printf("[WARN] Error converting %q environment variable value %q to integer: %s", envVar, envLimitStr, err)
+		return defaultLimit
+	}
+	if envLimitInt <= 50 {
+		return defaultLimit
+	}
+	return envLimitInt
+}
+
 func testAccCheckAWSSecurityGroupSGandCidrAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *group.GroupName != "terraform_acceptance_test_example" {
@@ -1980,6 +2003,8 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
+	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
+
 	var group ec2.SecurityGroup
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1988,30 +2013,30 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
-					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
 			// append a rule to step over the limit
 			{
-				Config:      testAccAWSSecurityGroupConfigRuleLimit(0, 51),
+				Config:      testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
-					// should have the 50 original rules still
-					err := testSecurityGroupRuleCount(*group.GroupId, 0, 50)
+					// should have the original rules still
+					err := testSecurityGroupRuleCount(*group.GroupId, 0, ruleLimit)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
-					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
 		},
@@ -2019,6 +2044,8 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
+	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
+
 	var group ec2.SecurityGroup
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2027,7 +2054,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 1),
@@ -2035,12 +2062,12 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 			},
 			// append a rule to step over the limit
 			{
-				Config:      testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, 51),
+				Config:      testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
-					// should have the 50 original cidr blocks still in 1 rule
+					// should have the original cidr blocks still in 1 rule
 					err := testSecurityGroupRuleCount(*group.GroupId, 0, 1)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
@@ -2066,12 +2093,12 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 						t.Fatalf("PreConfig check failed: security group %s not found", id)
 					}
 
-					if cidrCount := len(match.IpPermissionsEgress[0].IpRanges); cidrCount != 50 {
-						t.Fatalf("PreConfig check failed: rule does not have 50 previous IP ranges, has %d", cidrCount)
+					if cidrCount := len(match.IpPermissionsEgress[0].IpRanges); cidrCount != ruleLimit {
+						t.Fatalf("PreConfig check failed: rule does not have previous IP ranges, has %d", cidrCount)
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 1),
@@ -2082,6 +2109,8 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
+	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
+
 	var group ec2.SecurityGroup
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2090,30 +2119,30 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
-					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
 			// prepend a rule to step over the limit
 			{
-				Config:      testAccAWSSecurityGroupConfigRuleLimit(1, 51),
+				Config:      testAccAWSSecurityGroupConfigRuleLimit(1, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
-					// should have the 49 original rules still (50 - 1 because of the shift)
-					err := testSecurityGroupRuleCount(*group.GroupId, 0, 49)
+					// should have the original rules still (limit - 1 because of the shift)
+					err := testSecurityGroupRuleCount(*group.GroupId, 0, ruleLimit-1)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
-					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
 		},
@@ -2121,6 +2150,8 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
+	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
+
 	var group ec2.SecurityGroup
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2129,15 +2160,15 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
-					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
 			// add a rule to step over the limit with entirely new rules
 			{
-				Config:      testAccAWSSecurityGroupConfigRuleLimit(100, 51),
+				Config:      testAccAWSSecurityGroupConfigRuleLimit(100, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
@@ -2149,10 +2180,10 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccAWSSecurityGroupConfigRuleLimit(0, 50),
+				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
-					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 50),
+					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
 		},
