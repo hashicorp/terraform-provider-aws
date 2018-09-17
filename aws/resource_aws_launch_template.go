@@ -335,9 +335,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"ipv4_addresses": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"primary": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"private_ip_address": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
@@ -788,7 +799,11 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		}
 
 		for _, address := range v.PrivateIpAddresses {
-			ipv4Addresses = append(ipv4Addresses, aws.StringValue(address.PrivateIpAddress))
+			ipv4Address := map[string]interface{}{
+				"primary":            aws.BoolValue(address.Primary),
+				"private_ip_address": aws.StringValue(address.PrivateIpAddress),
+			}
+			ipv4Addresses = append(ipv4Addresses, ipv4Address)
 		}
 		if len(ipv4Addresses) > 0 {
 			networkInterface["ipv4_addresses"] = ipv4Addresses
@@ -1066,7 +1081,6 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTempla
 func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
-	var privateIpAddress string
 	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
 	if v, ok := ni["delete_on_termination"]; ok {
@@ -1088,7 +1102,6 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
-		privateIpAddress = v
 		networkInterface.PrivateIpAddress = aws.String(v)
 	}
 
@@ -1116,11 +1129,12 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v := ni["ipv4_address_count"].(int); v > 0 {
 		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
-	} else if v := ni["ipv4_addresses"].(*schema.Set); v.Len() > 0 {
-		for _, address := range v.List() {
+	} else if v, ok := ni["ipv4_addresses"]; ok && len(v.([]interface{})) > 0 {
+		for _, address := range v.([]interface{}) {
+			vData := address.(map[string]interface{})
 			privateIp := &ec2.PrivateIpAddressSpecification{
-				Primary:          aws.Bool(address.(string) == privateIpAddress),
-				PrivateIpAddress: aws.String(address.(string)),
+				Primary:          aws.Bool(vData["primary"].(bool)),
+				PrivateIpAddress: aws.String(vData["private_ip_address"].(string)),
 			}
 			ipv4Addresses = append(ipv4Addresses, privateIp)
 		}
