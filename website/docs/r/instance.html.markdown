@@ -192,6 +192,8 @@ Each `network_interface` block supports the following:
 
 ### Credit Specification
 
+~> **NOTE:** Removing this configuration on existing instances will only stop managing it. It will not change the configuration back to the default for the instance type.
+
 Credit specification can be applied/modified to the EC2 Instance at any time.
 
 The `credit_specification` block supports the following:
