@@ -178,13 +178,19 @@ func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interfac
 			RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		})
 		if err != nil {
-			return resource.RetryableError(err)
+			// If the stage is already deleted then there is no need to attempt deletion
+			apigatewayErr, _ := err.(awserr.Error)
+			if apigatewayErr.Code() == "NotFoundException" {
+				return nil
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("error getting referenced stage: %s", err))
 		}
 
 		// If the stage has been updated to point at a different deployment, then
 		// the stage should not be removed then this deployment is deleted.
 		var shouldDeleteStage = true
-		if *stage.DeploymentId != d.Id() {
+		if stage == nil || aws.StringValue(stage.DeploymentId) != d.Id() {
 			shouldDeleteStage = false
 		}
 

@@ -58,7 +58,7 @@ func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
-					testAccCheckAWSAPIGatewayDeploymentStageExists("test", &stage),
+					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", "test", &stage),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
-					testAccCheckAWSAPIGatewayDeploymentStageExists("test", &stage),
+					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", "test", &stage),
 				),
 			},
 		},
@@ -112,11 +112,16 @@ func testAccCheckAWSAPIGatewayDeploymentExists(n string, res *apigateway.Deploym
 	}
 }
 
-func testAccCheckAWSAPIGatewayDeploymentStageExists(stageName string, res *apigateway.Stage) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayDeploymentStageExists(deploymentName string, stageName string, res *apigateway.Stage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).apigateway
 
-		restApiId := aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID)
+		deploymentResource, ok := s.RootModule().Resources[deploymentName]
+		if !ok {
+			return fmt.Errorf("Deployment not found: %s", deploymentName)
+		}
+
+		restApiId := aws.String(deploymentResource.Primary.Attributes["rest_api_id"])
 
 		req := &apigateway.GetStageInput{
 			StageName: &stageName,
