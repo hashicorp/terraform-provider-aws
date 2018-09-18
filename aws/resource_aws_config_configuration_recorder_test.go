@@ -30,6 +30,10 @@ func testSweepConfigConfigurationRecorder(region string) error {
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecorders(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing Configuration Recorders: %s", err)
 	}
 

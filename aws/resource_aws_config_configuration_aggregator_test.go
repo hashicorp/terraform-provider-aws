@@ -30,6 +30,10 @@ func testSweepConfigConfigurationAggregators(region string) error {
 
 	resp, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving config configuration aggregators: %s", err)
 	}
 
