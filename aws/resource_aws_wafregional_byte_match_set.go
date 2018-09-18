@@ -151,7 +151,8 @@ func resourceAwsWafRegionalByteMatchSetRead(d *schema.ResourceData, meta interfa
 
 	if _, ok := d.GetOk("byte_match_tuple"); ok {
 		d.Set("byte_match_tuple", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples))
-	} else {
+	}
+	if _, ok := d.GetOk("byte_match_tuples"); ok {
 		d.Set("byte_match_tuples", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples))
 	}
 	d.Set("name", resp.ByteMatchSet.Name)
@@ -194,23 +195,30 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 	region := meta.(*AWSClient).region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
+	var oldValue, newValue, oldT, oldTs, newT, newTs []interface{}
+
 	if d.HasChange("byte_match_tuple") {
 		o, n := d.GetChange("byte_match_tuple")
-		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
-		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
-		}
-	} else if d.HasChange("byte_match_tuples") {
-		o, n := d.GetChange("byte_match_tuples")
-		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
-		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
-		}
+		oldT, newT = o.(*schema.Set).List(), n.(*schema.Set).List()
 	}
+	if d.HasChange("byte_match_tuples") {
+		o, n := d.GetChange("byte_match_tuples")
+		oldTs, newTs = o.(*schema.Set).List(), n.(*schema.Set).List()
+	}
+
+	oldValue = oldT
+	newValue = newT
+	if len(oldTs) != 0 {
+		oldValue = oldTs
+	}
+	if len(newTs) != 0 {
+		newValue = newTs
+	}
+
+	if err := updateByteMatchSetResourceWR(d, oldValue, newValue, conn, region); err != nil {
+		return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+	}
+
 	return resourceAwsWafRegionalByteMatchSetRead(d, meta)
 }
 
