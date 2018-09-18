@@ -610,6 +610,15 @@ const (
 	// operation, but the target is still referenced in a task.
 	ErrCodeTargetInUseException = "TargetInUseException"
 
+	// ErrCodeTargetNotConnected for service response error code
+	// "TargetNotConnected".
+	//
+	// The specified target instance for the session is not fully configured for
+	// use with Session Manager. For more information, see Getting Started with
+	// Session Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+	// in the AWS Systems Manager User Guide.
+	ErrCodeTargetNotConnected = "TargetNotConnected"
+
 	// ErrCodeTooManyTagsError for service response error code
 	// "TooManyTagsError".
 	//

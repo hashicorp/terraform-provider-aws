@@ -341,7 +341,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
@@ -758,7 +758,6 @@ func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
-		var ipv6Addresses []string
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
@@ -773,11 +772,19 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
-		for _, address := range v.Ipv6Addresses {
-			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
-		}
-		if len(ipv6Addresses) > 0 {
-			networkInterface["ipv6_addresses"] = ipv6Addresses
+		if len(v.Ipv6Addresses) > 0 {
+			raw, ok := networkInterface["ipv6_addresses"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+
+			list := raw.(*schema.Set)
+
+			for _, address := range v.Ipv6Addresses {
+				list.Add(aws.StringValue(address.Ipv6Address))
+			}
+
+			networkInterface["ipv6_addresses"] = list
 		}
 
 		for _, address := range v.PrivateIpAddresses {
@@ -1107,18 +1114,17 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
 	}
 
-	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
-	for _, address := range ipv4AddressList {
-		privateIp := &ec2.PrivateIpAddressSpecification{
-			Primary:          aws.Bool(address.(string) == privateIpAddress),
-			PrivateIpAddress: aws.String(address.(string)),
-		}
-		ipv4Addresses = append(ipv4Addresses, privateIp)
-	}
-	networkInterface.PrivateIpAddresses = ipv4Addresses
-
 	if v := ni["ipv4_address_count"].(int); v > 0 {
 		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	} else if v := ni["ipv4_addresses"].(*schema.Set); v.Len() > 0 {
+		for _, address := range v.List() {
+			privateIp := &ec2.PrivateIpAddressSpecification{
+				Primary:          aws.Bool(address.(string) == privateIpAddress),
+				PrivateIpAddress: aws.String(address.(string)),
+			}
+			ipv4Addresses = append(ipv4Addresses, privateIp)
+		}
+		networkInterface.PrivateIpAddresses = ipv4Addresses
 	}
 
 	return networkInterface

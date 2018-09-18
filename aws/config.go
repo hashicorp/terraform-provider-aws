@@ -96,7 +96,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
@@ -347,7 +346,7 @@ func (c *Config) Client() (interface{}, error) {
   Please see https://terraform.io/docs/providers/aws/index.html for more information on
   providing credentials for the AWS Provider`)
 		}
-		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
+		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
 	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)

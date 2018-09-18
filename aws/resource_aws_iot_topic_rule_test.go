@@ -105,6 +105,30 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 	})
 }
 
+func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTTopicRule_firehose_separator(rName, "\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+				),
+			},
+			{
+				Config: testAccAWSIoTTopicRule_firehose_separator(rName, ","),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 	rName := acctest.RandString(5)
 
@@ -390,6 +414,24 @@ resource "aws_iot_topic_rule" "rule" {
   }
 }
 `, rName)
+}
+
+func testAccAWSIoTTopicRule_firehose_separator(rName, separator string) string {
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  firehose {
+    delivery_stream_name = "mystream"
+    role_arn             = "${aws_iam_role.iot_role.arn}"
+    separator            = %q
+  }
+}
+`, rName, separator)
 }
 
 func testAccAWSIoTTopicRule_kinesis(rName string) string {

@@ -449,7 +449,7 @@ func testAccCheck_bootstrap_order(cluster *emr.Cluster, argsInts, argsStrings []
 
 		resp, err := emrconn.ListBootstrapActions(&req)
 		if err != nil {
-			return fmt.Errorf("[ERR] Error listing boostrap actions in test: %s", err)
+			return fmt.Errorf("Error listing boostrap actions in test: %s", err)
 		}
 
 		// make sure we actually checked something

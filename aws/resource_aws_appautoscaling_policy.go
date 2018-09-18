@@ -28,7 +28,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -217,7 +217,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 									"resource_label": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateMaxLength(1023),
+										ValidateFunc: validation.StringLenBetween(0, 1023),
 									},
 								},
 							},

@@ -131,11 +131,11 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := ssmconn.CreateAssociation(associationInput)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error creating SSM association: %s", err)
+		return fmt.Errorf("Error creating SSM association: %s", err)
 	}
 
 	if resp.AssociationDescription == nil {
-		return fmt.Errorf("[ERROR] AssociationDescription was nil")
+		return fmt.Errorf("AssociationDescription was nil")
 	}
 
 	d.SetId(*resp.AssociationDescription.AssociationId)
@@ -160,10 +160,10 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] Error reading SSM association: %s", err)
+		return fmt.Errorf("Error reading SSM association: %s", err)
 	}
 	if resp.AssociationDescription == nil {
-		return fmt.Errorf("[ERROR] AssociationDescription was nil")
+		return fmt.Errorf("AssociationDescription was nil")
 	}
 
 	association := resp.AssociationDescription
@@ -176,11 +176,11 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("document_version", association.DocumentVersion)
 
 	if err := d.Set("targets", flattenAwsSsmTargets(association.Targets)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting targets error: %#v", err)
+		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
 	if err := d.Set("output_location", flattenAwsSsmAssociationOutoutLocation(association.OutputLocation)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting output_location error: %#v", err)
+		return fmt.Errorf("Error setting output_location error: %#v", err)
 	}
 
 	return nil
@@ -222,7 +222,7 @@ func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 
 	_, err := ssmconn.UpdateAssociation(associationInput)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error updating SSM association: %s", err)
+		return fmt.Errorf("Error updating SSM association: %s", err)
 	}
 
 	return resourceAwsSsmAssociationRead(d, meta)
@@ -240,7 +240,7 @@ func resourceAwsSsmAssociationDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := ssmconn.DeleteAssociation(params)
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error deleting SSM association: %s", err)
+		return fmt.Errorf("Error deleting SSM association: %s", err)
 	}
 
 	return nil

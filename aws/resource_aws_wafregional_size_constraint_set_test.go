@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -211,7 +210,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(constraints *waf.Size
 			return conn.UpdateSizeConstraintSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating SizeConstraintSet: {{err}}", err)
+			return fmt.Errorf("Error updating SizeConstraintSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

@@ -1230,7 +1230,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		replicas = append(replicas, *v)
 	}
 	if err := d.Set("replicas", replicas); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting replicas attribute: %#v, error: %#v", replicas, err)
+		return fmt.Errorf("Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)

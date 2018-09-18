@@ -108,7 +108,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"encryption_key": {
 				Type:     schema.TypeString,
@@ -385,7 +385,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error creating CodeBuild project: %s", err)
+		return fmt.Errorf("Error creating CodeBuild project: %s", err)
 	}
 
 	d.SetId(*resp.Project.Arn)
@@ -563,7 +563,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error retreiving Projects: %q", err)
+		return fmt.Errorf("Error retreiving Projects: %q", err)
 	}
 
 	// if nothing was found, then return no state

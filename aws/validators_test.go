@@ -2917,3 +2917,59 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateCloudFrontPublicKeyName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyName(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(128),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyNamePrefix(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}

@@ -40,7 +40,7 @@ func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta inter
 
 	err := attachPolicyToRole(conn, role, arn)
 	if err != nil {
-		return fmt.Errorf("[WARN] Error attaching policy %s to IAM Role %s: %v", arn, role, err)
+		return fmt.Errorf("Error attaching policy %s to IAM Role %s: %v", arn, role, err)
 	}
 
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
@@ -98,7 +98,7 @@ func resourceAwsIamRolePolicyAttachmentDelete(d *schema.ResourceData, meta inter
 
 	err := detachPolicyFromRole(conn, role, arn)
 	if err != nil {
-		return fmt.Errorf("[WARN] Error removing policy %s from IAM Role %s: %v", arn, role, err)
+		return fmt.Errorf("Error removing policy %s from IAM Role %s: %v", arn, role, err)
 	}
 	return nil
 }

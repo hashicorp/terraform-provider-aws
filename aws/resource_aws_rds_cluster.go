@@ -830,7 +830,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	// Wait, catching any errors
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for RDS Cluster state to be \"available\": %s", err)
+		return fmt.Errorf("Error waiting for RDS Cluster state to be \"available\": %s", err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
@@ -1153,7 +1153,7 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error deleting RDS Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	return nil

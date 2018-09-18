@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
 
 			"name_prefix": {
@@ -51,7 +52,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateMaxLength(100),
+				ValidateFunc:  validation.StringLenBetween(0, 100),
 			},
 
 			"description": {
@@ -59,7 +60,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Managed by Terraform",
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
 			"vpc_id": {

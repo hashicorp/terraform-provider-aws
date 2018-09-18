@@ -197,6 +197,25 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_session(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentTypeSessionConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "document_type", "Session"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_DocumentFormat_YAML(t *testing.T) {
 	name := acctest.RandString(10)
 	content1 := `
@@ -637,6 +656,29 @@ DOC
 }
 
 `, rName, rName, rName)
+}
+
+func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  name = "test_document-%s"
+	document_type = "Session"
+  content = <<DOC
+{
+    "schemaVersion": "1.0",
+    "description": "Document to hold regional settings for Session Manager",
+    "sessionType": "Standard_Stream",
+    "inputs": {
+        "s3BucketName": "test",
+        "s3KeyPrefix": "test",
+        "s3EncryptionEnabled": true,
+        "cloudWatchLogGroupName": "/logs/sessions",
+        "cloudWatchEncryptionEnabled": false
+    }
+}
+DOC
+}
+`, rName)
 }
 
 func testAccAWSSSMDocumentConfig_DocumentFormat_YAML(rName, content string) string {

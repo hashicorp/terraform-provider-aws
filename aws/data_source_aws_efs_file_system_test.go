@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"regexp"
 )
 
 func TestAccDataSourceAwsEfsFileSystem(t *testing.T) {
