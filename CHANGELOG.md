@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_launch_template: Fix handling of `network_interface` `ipv6_addresses` [GH-5883]
 * resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
 * resource/aws_s3_bucket: Prevent `NoSuchBucket` error on deletion [GH-5842]
+* resource/aws_wafregional_byte_match_set: Properly read `byte_match_tuple` into Terraform state [GH-5902]
 
 ## 1.36.0 (September 13, 2018)
 
