@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -47,7 +46,7 @@ func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error attaching policy %s to IAM Role %s: %v", arn, role, err)
 	}
 
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
+	d.SetId(fmt.Sprintf("%s-%s", role, arn))
 	return resourceAwsIamRolePolicyAttachmentRead(d, meta)
 }
 
