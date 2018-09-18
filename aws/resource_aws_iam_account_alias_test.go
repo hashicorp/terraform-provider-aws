@@ -59,7 +59,7 @@ func testAccAWSIAMAccountAlias_basic_with_datasource(t *testing.T) {
 				// We expect a non-empty plan due to the way data sources and depends_on
 				// work, or don't work. See https://github.com/hashicorp/terraform/issues/11139#issuecomment-275121893
 				// We accept this limitation and feel this test is OK because of the
-				// explicity check above
+				// explicitly check above
 				ExpectNonEmptyPlan: true,
 			},
 		},

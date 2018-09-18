@@ -112,6 +112,19 @@ func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
+// testAccCheckResourceAttrGlobalARN ensures the Terraform state exactly matches a formatted ARN without region
+func testAccCheckResourceAttrGlobalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
 // testAccGetAccountID returns the account ID of testAccProvider
 // Must be used returned within a resource.TestCheckFunc
 func testAccGetAccountID() string {

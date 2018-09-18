@@ -19,6 +19,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Provider: Configuration](#provider-configuration)
 - [Data Source: aws_ami](#data-source-aws_ami)
 - [Data Source: aws_ami_ids](#data-source-aws_ami_ids)
 - [Data Source: aws_iam_role](#data-source-aws_iam_role)
@@ -70,6 +71,24 @@ provider "aws" {
   # ... other configuration ...
 
   version = "~> 2.0.0"
+}
+```
+
+## Provider: Configuration
+
+### skip_requesting_account_id Argument Now Required to Skip Account ID Lookup Errors
+
+If the provider is unable to determine the AWS account ID from a provider assume role configuration or the STS GetCallerIdentity call used to verify the credentials (if `skip_credentials_validation = false`), it will attempt to lookup the AWS account ID via EC2 metadata, IAM GetUser, IAM ListRoles, and STS GetCallerIdentity. Previously, the provider would silently allow the failure of all the above methods.
+
+The provider will now return an error to ensure operators understand the implications of the missing AWS account ID in the provider.
+
+If necessary, the AWS account ID lookup logic can be skipped via:
+
+```hcl
+provider "aws" {
+  # ... other configuration ...
+
+  skip_requesting_account_id = true
 }
 ```
 

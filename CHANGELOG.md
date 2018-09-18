@@ -1,12 +1,61 @@
-## 1.35.0 (Unreleased)
+## 1.37.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_dx_bgp_peer` [GH-5886]
 
 ENHANCEMENTS:
 
-* resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument [GH-5740]
+* resource/aws_s3_bucket_inventory: Allow SSE-S3 encryption [GH-5870]
 
 BUG FIXES:
 
-* resource/aws_ecr_repository: Use `RepositoryUri` instead of our building our own URI for the `repository_url` attribute (AWS China fix) [GH-5748]
+* resource/aws_config_config_rule: Prevent panic when specifying empty `scope` [GH-5852]
+* resource/aws_iam_policy: Ensure `description` is properly read into Terraform state during resource creation [GH-5884]
+* resource/aws_launch_template: Fix handling of `network_interface` `ipv6_addresses` [GH-5883]
+* resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
+* resource/aws_s3_bucket: Prevent `NoSuchBucket` error on deletion [GH-5842]
+
+## 1.36.0 (September 13, 2018)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudfront_public_key` ([#5737](https://github.com/terraform-providers/terraform-provider-aws/issues/5737))
+
+ENHANCEMENTS:
+
+* data-source/aws_db_instance: Add `enabled_cloudwatch_logs_exports` attribute ([#5801](https://github.com/terraform-providers/terraform-provider-aws/issues/5801))
+* resource/aws_api_gateway_stage: Add `xray_tracing_enabled` argument ([#5817](https://github.com/terraform-providers/terraform-provider-aws/issues/5817))
+* resource/aws_cloudfront_distribution: Add `lambda_function_association` `include_body` argument ([#5681](https://github.com/terraform-providers/terraform-provider-aws/issues/5681))
+* resource/aws_db_instance: Add `domain` and `domain_iam_role_name` arguments (support for domain joining RDS instances) ([#5378](https://github.com/terraform-providers/terraform-provider-aws/issues/5378))
+* resource/aws_ecs_task_definition: Suppress `container_definition` differences for equivalent port and host mappings ([#5833](https://github.com/terraform-providers/terraform-provider-aws/issues/5833))
+* resource/aws_ecs_task_definition: Add docker volume configuration ([#5727](https://github.com/terraform-providers/terraform-provider-aws/issues/5727))
+* resource/aws_iam_user: Allow empty string (`""`) value for `permissions_boundary` argument ([#5859](https://github.com/terraform-providers/terraform-provider-aws/issues/5859))
+* resource/aws_iot_topic_rule: Add `firehose` `seperator` argument ([#5734](https://github.com/terraform-providers/terraform-provider-aws/issues/5734))
+* resource/aws_launch_template: Allow `network_interface` `ipv4_address_count` configuration ([#5830](https://github.com/terraform-providers/terraform-provider-aws/issues/5830))
+* resource/aws_ssm_document: Add support for `Session` `document_type` ([#5850](https://github.com/terraform-providers/terraform-provider-aws/issues/5850))
+
+BUG FIXES:
+
+* resource/aws_iam_policy: Ensure `description` is available as an attribute when empty ([#5815](https://github.com/terraform-providers/terraform-provider-aws/issues/5815))
+* resource/aws_iam_user: Remove extraneous `DeleteUserPermissionsBoundary` API call during deletion ([#5857](https://github.com/terraform-providers/terraform-provider-aws/issues/5857))
+* resource/aws_lambda_function: Retry on `InvalidParameterValueException` errors relating to KMS-backed environment variables ([#5849](https://github.com/terraform-providers/terraform-provider-aws/issues/5849))
+* resource/aws_launch_template: Ensure `ebs_optimized` argument accepts "unspecified" value ([#5627](https://github.com/terraform-providers/terraform-provider-aws/issues/5627))
+
+## 1.35.0 (September 06, 2018)
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `platform_version` attribute ([#5797](https://github.com/terraform-providers/terraform-provider-aws/issues/5797))
+* resource/aws_eks_cluster: Add `platform_version` attribute ([#5797](https://github.com/terraform-providers/terraform-provider-aws/issues/5797))
+* resource/aws_lambda_function: Allow empty lists for `vpc_config` `security_group_ids` and `subnet_ids` arguments to unconfigure VPC ([#1341](https://github.com/terraform-providers/terraform-provider-aws/issues/1341))
+* resource/aws_iam_role: Allow empty string (`""`) value for `permissions_boundary` argument ([#5740](https://github.com/terraform-providers/terraform-provider-aws/issues/5740))
+
+BUG FIXES:
+
+* resource/aws_ecr_repository: Use `RepositoryUri` instead of our building our own URI for the `repository_url` attribute (AWS China fix) ([#5748](https://github.com/terraform-providers/terraform-provider-aws/issues/5748))
+* resource/aws_lambda_function: Properly handle `vpc_config` removal ([#5798](https://github.com/terraform-providers/terraform-provider-aws/issues/5798))
+* resource/aws_redshift_cluster: Properly force new resource when updating `availability_zone` argument ([#5758](https://github.com/terraform-providers/terraform-provider-aws/issues/5758))
 
 ## 1.34.0 (August 30, 2018)
 

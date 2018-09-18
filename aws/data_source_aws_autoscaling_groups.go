@@ -106,7 +106,7 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 	sort.Strings(rawName)
 	sort.Strings(rawArn)
 
-	if err := d.Set("names", rawName); err != nil {
+  if err := d.Set("names", rawName); err != nil {
 		return fmt.Errorf("[WARN] Error setting Autoscaling Group Names: %s", err)
 	}
 

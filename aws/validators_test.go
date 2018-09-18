@@ -1563,6 +1563,66 @@ func TestValidateElbNamePrefix(t *testing.T) {
 	}
 }
 
+func TestValidateNeptuneEventSubscriptionName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(256),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateNeptuneEventSubscriptionName(tc.Value, "aws_neptune_event_subscription")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Neptune Event Subscription Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateNeptuneEventSubscriptionNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing_123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(254),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateNeptuneEventSubscriptionNamePrefix(tc.Value, "aws_neptune_event_subscription")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the Neptune Event Subscription Name Prefix to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
 func TestValidateDbSubnetGroupName(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -2854,6 +2914,62 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyName(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(128),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyNamePrefix(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
 		}
 	}
 }

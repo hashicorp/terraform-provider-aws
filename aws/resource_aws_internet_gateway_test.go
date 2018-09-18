@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -32,6 +33,7 @@ func testSweepInternetGateways(region string) error {
 				Name: aws.String("tag-value"),
 				Values: []*string{
 					aws.String("terraform-testacc-*"),
+					aws.String("tf-acc-test-*"),
 				},
 			},
 		},
@@ -51,13 +53,40 @@ func testSweepInternetGateways(region string) error {
 	}
 
 	for _, internetGateway := range resp.InternetGateways {
-		_, err := conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
+		for _, attachment := range internetGateway.Attachments {
+			input := &ec2.DetachInternetGatewayInput{
+				InternetGatewayId: internetGateway.InternetGatewayId,
+				VpcId:             attachment.VpcId,
+			}
+
+			log.Printf("[DEBUG] Detaching Internet Gateway: %s", input)
+			_, err := conn.DetachInternetGateway(input)
+			if err != nil {
+				return fmt.Errorf("error detaching Internet Gateway (%s) from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"detaching"},
+				Target:  []string{"detached"},
+				Refresh: detachIGStateRefreshFunc(conn, aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId)),
+				Timeout: 10 * time.Minute,
+				Delay:   10 * time.Second,
+			}
+
+			log.Printf("[DEBUG] Waiting for Internet Gateway (%s) to detach from VPC (%s)", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId))
+			if _, err = stateConf.WaitForState(); err != nil {
+				return fmt.Errorf("error waiting for VPN Gateway (%s) to detach from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
+			}
+		}
+
+		input := &ec2.DeleteInternetGatewayInput{
 			InternetGatewayId: internetGateway.InternetGatewayId,
-		})
+		}
+
+		log.Printf("[DEBUG] Deleting Internet Gateway: %s", input)
+		_, err := conn.DeleteInternetGateway(input)
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Internet Gateway (%s): %s",
-				*internetGateway.InternetGatewayId, err)
+			return fmt.Errorf("error deleting Internet Gateway (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), err)
 		}
 	}
 

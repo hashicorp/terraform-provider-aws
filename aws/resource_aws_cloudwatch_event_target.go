@@ -256,37 +256,37 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 
 	if t.RunCommandParameters != nil {
 		if err := d.Set("run_command_targets", flattenAwsCloudWatchEventTargetRunParameters(t.RunCommandParameters)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting run_command_targets error: %#v", err)
+			return fmt.Errorf("Error setting run_command_targets error: %#v", err)
 		}
 	}
 
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting ecs_target error: %#v", err)
+			return fmt.Errorf("Error setting ecs_target error: %#v", err)
 		}
 	}
 
 	if t.BatchParameters != nil {
 		if err := d.Set("batch_target", flattenAwsCloudWatchEventTargetBatchParameters(t.BatchParameters)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting batch_target error: %#v", err)
+			return fmt.Errorf("Error setting batch_target error: %#v", err)
 		}
 	}
 
 	if t.KinesisParameters != nil {
 		if err := d.Set("kinesis_target", flattenAwsCloudWatchEventTargetKinesisParameters(t.KinesisParameters)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting kinesis_target error: %#v", err)
+			return fmt.Errorf("Error setting kinesis_target error: %#v", err)
 		}
 	}
 
 	if t.SqsParameters != nil {
 		if err := d.Set("sqs_target", flattenAwsCloudWatchEventTargetSqsParameters(t.SqsParameters)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting sqs_target error: %#v", err)
+			return fmt.Errorf("Error setting sqs_target error: %#v", err)
 		}
 	}
 
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenAwsCloudWatchInputTransformer(t.InputTransformer)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting input_transformer error: %#v", err)
+			return fmt.Errorf("Error setting input_transformer error: %#v", err)
 		}
 	}
 

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"regexp"
 )
 
 // add sweeper to delete known test subnets
@@ -30,6 +30,7 @@ func init() {
 			"aws_elasticache_replication_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",
+			"aws_instance",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",

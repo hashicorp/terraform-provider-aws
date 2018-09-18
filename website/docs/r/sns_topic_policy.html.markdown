@@ -63,6 +63,7 @@ data "aws_iam_policy_document" "sns-topic-policy" {
 
     sid = "__default_statement_ID"
   }
+}
 ```
 
 ## Argument Reference

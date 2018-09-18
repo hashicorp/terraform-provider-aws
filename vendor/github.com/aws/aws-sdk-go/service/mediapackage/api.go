@@ -852,7 +852,12 @@ const opRotateChannelCredentials = "RotateChannelCredentials"
 //    }
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentials
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCredentialsInput) (req *request.Request, output *RotateChannelCredentialsOutput) {
+	if c.Client.Config.Logger != nil {
+		c.Client.Config.Logger.Log("This operation, RotateChannelCredentials, has been deprecated")
+	}
 	op := &request.Operation{
 		Name:       opRotateChannelCredentials,
 		HTTPMethod: "PUT",
@@ -870,7 +875,8 @@ func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCrede
 
 // RotateChannelCredentials API operation for AWS Elemental MediaPackage.
 //
-// Changes the Channel ingest username and password.
+// Changes the Channel's first IngestEndpoint's username and password. WARNING
+// - This API is deprecated. Please use RotateIngestEndpointCredentials instead
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -893,6 +899,8 @@ func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCrede
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentials
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentials(input *RotateChannelCredentialsInput) (*RotateChannelCredentialsOutput, error) {
 	req, out := c.RotateChannelCredentialsRequest(input)
 	return out, req.Send()
@@ -907,8 +915,99 @@ func (c *MediaPackage) RotateChannelCredentials(input *RotateChannelCredentialsI
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentialsWithContext(ctx aws.Context, input *RotateChannelCredentialsInput, opts ...request.Option) (*RotateChannelCredentialsOutput, error) {
 	req, out := c.RotateChannelCredentialsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRotateIngestEndpointCredentials = "RotateIngestEndpointCredentials"
+
+// RotateIngestEndpointCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the RotateIngestEndpointCredentials operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RotateIngestEndpointCredentials for more information on using the RotateIngestEndpointCredentials
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RotateIngestEndpointCredentialsRequest method.
+//    req, resp := client.RotateIngestEndpointCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateIngestEndpointCredentials
+func (c *MediaPackage) RotateIngestEndpointCredentialsRequest(input *RotateIngestEndpointCredentialsInput) (req *request.Request, output *RotateIngestEndpointCredentialsOutput) {
+	op := &request.Operation{
+		Name:       opRotateIngestEndpointCredentials,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/channels/{id}/ingest_endpoints/{ingest_endpoint_id}/credentials",
+	}
+
+	if input == nil {
+		input = &RotateIngestEndpointCredentialsInput{}
+	}
+
+	output = &RotateIngestEndpointCredentialsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RotateIngestEndpointCredentials API operation for AWS Elemental MediaPackage.
+//
+// Rotate the IngestEndpoint's username and password, as specified by the IngestEndpoint's
+// id.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaPackage's
+// API operation RotateIngestEndpointCredentials for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateIngestEndpointCredentials
+func (c *MediaPackage) RotateIngestEndpointCredentials(input *RotateIngestEndpointCredentialsInput) (*RotateIngestEndpointCredentialsOutput, error) {
+	req, out := c.RotateIngestEndpointCredentialsRequest(input)
+	return out, req.Send()
+}
+
+// RotateIngestEndpointCredentialsWithContext is the same as RotateIngestEndpointCredentials with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RotateIngestEndpointCredentials for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaPackage) RotateIngestEndpointCredentialsWithContext(ctx aws.Context, input *RotateIngestEndpointCredentialsInput, opts ...request.Option) (*RotateIngestEndpointCredentialsOutput, error) {
+	req, out := c.RotateIngestEndpointCredentialsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2662,6 +2761,9 @@ func (s *HlsPackage) SetUseAudioRenditionGroup(v bool) *HlsPackage {
 type IngestEndpoint struct {
 	_ struct{} `type:"structure"`
 
+	// The system generated unique identifier for the IngestEndpoint
+	Id *string `locationName:"id" type:"string"`
+
 	// The system generated password for ingest authentication.
 	Password *string `locationName:"password" type:"string"`
 
@@ -2680,6 +2782,12 @@ func (s IngestEndpoint) String() string {
 // GoString returns the string representation
 func (s IngestEndpoint) GoString() string {
 	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *IngestEndpoint) SetId(v string) *IngestEndpoint {
+	s.Id = &v
+	return s
 }
 
 // SetPassword sets the Password field's value.
@@ -3099,8 +3207,9 @@ func (s *OriginEndpoint) SetWhitelist(v []*string) *OriginEndpoint {
 	return s
 }
 
+// Deprecated: RotateChannelCredentialsInput has been deprecated
 type RotateChannelCredentialsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `deprecated:"true" type:"structure"`
 
 	// Id is a required field
 	Id *string `location:"uri" locationName:"id" type:"string" required:"true"`
@@ -3135,8 +3244,9 @@ func (s *RotateChannelCredentialsInput) SetId(v string) *RotateChannelCredential
 	return s
 }
 
+// Deprecated: RotateChannelCredentialsOutput has been deprecated
 type RotateChannelCredentialsOutput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `deprecated:"true" type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -3178,6 +3288,101 @@ func (s *RotateChannelCredentialsOutput) SetHlsIngest(v *HlsIngest) *RotateChann
 
 // SetId sets the Id field's value.
 func (s *RotateChannelCredentialsOutput) SetId(v string) *RotateChannelCredentialsOutput {
+	s.Id = &v
+	return s
+}
+
+type RotateIngestEndpointCredentialsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Id is a required field
+	Id *string `location:"uri" locationName:"id" type:"string" required:"true"`
+
+	// IngestEndpointId is a required field
+	IngestEndpointId *string `location:"uri" locationName:"ingest_endpoint_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RotateIngestEndpointCredentialsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RotateIngestEndpointCredentialsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RotateIngestEndpointCredentialsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RotateIngestEndpointCredentialsInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.IngestEndpointId == nil {
+		invalidParams.Add(request.NewErrParamRequired("IngestEndpointId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *RotateIngestEndpointCredentialsInput) SetId(v string) *RotateIngestEndpointCredentialsInput {
+	s.Id = &v
+	return s
+}
+
+// SetIngestEndpointId sets the IngestEndpointId field's value.
+func (s *RotateIngestEndpointCredentialsInput) SetIngestEndpointId(v string) *RotateIngestEndpointCredentialsInput {
+	s.IngestEndpointId = &v
+	return s
+}
+
+type RotateIngestEndpointCredentialsOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	Description *string `locationName:"description" type:"string"`
+
+	// An HTTP Live Streaming (HLS) ingest resource configuration.
+	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
+
+	Id *string `locationName:"id" type:"string"`
+}
+
+// String returns the string representation
+func (s RotateIngestEndpointCredentialsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RotateIngestEndpointCredentialsOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetArn(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetDescription(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Description = &v
+	return s
+}
+
+// SetHlsIngest sets the HlsIngest field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetHlsIngest(v *HlsIngest) *RotateIngestEndpointCredentialsOutput {
+	s.HlsIngest = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetId(v string) *RotateIngestEndpointCredentialsOutput {
 	s.Id = &v
 	return s
 }

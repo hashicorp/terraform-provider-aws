@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -274,7 +273,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDisappears(v *waf.ByteMatchSet) resou
 			return conn.UpdateByteMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -285,7 +284,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDisappears(v *waf.ByteMatchSet) resou
 			return conn.DeleteByteMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
 		}
 
 		return nil

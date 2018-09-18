@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"time"
 )
 
 func TestAccAWSSfnActivity_basic(t *testing.T) {

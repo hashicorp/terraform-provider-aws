@@ -159,8 +159,14 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				// Use TypeString to allow an "unspecified" value,
+				// since TypeBool only has true/false with false default.
+				// The conversion from bare true/false values in
+				// configurations to TypeString value is currently safe.
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+				ValidateFunc:     validateTypeStringNullableBoolean,
 			},
 
 			"elastic_gpu_specifications": {
@@ -335,7 +341,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
@@ -538,7 +544,6 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
 	d.Set("disable_api_termination", ltData.DisableApiTermination)
-	d.Set("ebs_optimized", ltData.EbsOptimized)
 	d.Set("image_id", ltData.ImageId)
 	d.Set("instance_initiated_shutdown_behavior", ltData.InstanceInitiatedShutdownBehavior)
 	d.Set("instance_type", ltData.InstanceType)
@@ -548,6 +553,11 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
 	d.Set("user_data", ltData.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
+	d.Set("ebs_optimized", "")
+
+	if ltData.EbsOptimized != nil {
+		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
+	}
 
 	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
 		return err
@@ -748,7 +758,6 @@ func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
-		var ipv6Addresses []string
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
@@ -763,11 +772,19 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
-		for _, address := range v.Ipv6Addresses {
-			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
-		}
-		if len(ipv6Addresses) > 0 {
-			networkInterface["ipv6_addresses"] = ipv6Addresses
+		if len(v.Ipv6Addresses) > 0 {
+			raw, ok := networkInterface["ipv6_addresses"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+
+			list := raw.(*schema.Set)
+
+			for _, address := range v.Ipv6Addresses {
+				list.Add(aws.StringValue(address.Ipv6Address))
+			}
+
+			networkInterface["ipv6_addresses"] = list
 		}
 
 		for _, address := range v.PrivateIpAddresses {
@@ -856,8 +873,12 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("ebs_optimized"); ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting ebs_optimized %q from string to boolean: %s", v.(string), err)
+		}
+		opts.EbsOptimized = aws.Bool(vBool)
 	}
 
 	if v, ok := d.GetOk("security_group_names"); ok {
@@ -1093,18 +1114,17 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
 	}
 
-	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
-	for _, address := range ipv4AddressList {
-		privateIp := &ec2.PrivateIpAddressSpecification{
-			Primary:          aws.Bool(address.(string) == privateIpAddress),
-			PrivateIpAddress: aws.String(address.(string)),
-		}
-		ipv4Addresses = append(ipv4Addresses, privateIp)
-	}
-	networkInterface.PrivateIpAddresses = ipv4Addresses
-
 	if v := ni["ipv4_address_count"].(int); v > 0 {
 		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	} else if v := ni["ipv4_addresses"].(*schema.Set); v.Len() > 0 {
+		for _, address := range v.List() {
+			privateIp := &ec2.PrivateIpAddressSpecification{
+				Primary:          aws.Bool(address.(string) == privateIpAddress),
+				PrivateIpAddress: aws.String(address.(string)),
+			}
+			ipv4Addresses = append(ipv4Addresses, privateIp)
+		}
+		networkInterface.PrivateIpAddresses = ipv4Addresses
 	}
 
 	return networkInterface

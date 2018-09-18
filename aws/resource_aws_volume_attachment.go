@@ -106,7 +106,7 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.AttachVolume(opts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("[WARN] Error attaching volume (%s) to instance (%s), message: \"%s\", code: \"%s\"",
+				return fmt.Errorf("Error attaching volume (%s) to instance (%s), message: \"%s\", code: \"%s\"",
 					vID, iID, awsErr.Message(), awsErr.Code())
 			}
 			return err

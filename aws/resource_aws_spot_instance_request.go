@@ -267,7 +267,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 		d.Set("spot_instance_id", *request.InstanceId)
 		// Read the instance data, setting up connection information
 		if err := readInstance(d, meta); err != nil {
-			return fmt.Errorf("[ERR] Error reading Spot Instance Data: %s", err)
+			return fmt.Errorf("Error reading Spot Instance Data: %s", err)
 		}
 	}
 
@@ -396,7 +396,7 @@ func resourceAwsSpotInstanceRequestDelete(d *schema.ResourceData, meta interface
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
 		log.Printf("[INFO] Terminating instance: %s", instanceId)
-		if err := awsTerminateInstance(conn, instanceId, d); err != nil {
+		if err := awsTerminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("Error terminating spot instance: %s", err)
 		}
 	}

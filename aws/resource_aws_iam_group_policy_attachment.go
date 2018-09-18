@@ -40,7 +40,7 @@ func resourceAwsIamGroupPolicyAttachmentCreate(d *schema.ResourceData, meta inte
 
 	err := attachPolicyToGroup(conn, group, arn)
 	if err != nil {
-		return fmt.Errorf("[WARN] Error attaching policy %s to IAM group %s: %v", arn, group, err)
+		return fmt.Errorf("Error attaching policy %s to IAM group %s: %v", arn, group, err)
 	}
 
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
@@ -96,7 +96,7 @@ func resourceAwsIamGroupPolicyAttachmentDelete(d *schema.ResourceData, meta inte
 
 	err := detachPolicyFromGroup(conn, group, arn)
 	if err != nil {
-		return fmt.Errorf("[WARN] Error removing policy %s from IAM Group %s: %v", arn, group, err)
+		return fmt.Errorf("Error removing policy %s from IAM Group %s: %v", arn, group, err)
 	}
 	return nil
 }

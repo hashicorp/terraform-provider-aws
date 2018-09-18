@@ -4685,6 +4685,92 @@ func (c *SSM) DescribePatchGroupsWithContext(ctx aws.Context, input *DescribePat
 	return out, req.Send()
 }
 
+const opDescribeSessions = "DescribeSessions"
+
+// DescribeSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeSessions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeSessions for more information on using the DescribeSessions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeSessionsRequest method.
+//    req, resp := client.DescribeSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeSessions
+func (c *SSM) DescribeSessionsRequest(input *DescribeSessionsInput) (req *request.Request, output *DescribeSessionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeSessions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeSessionsInput{}
+	}
+
+	output = &DescribeSessionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeSessions API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves a list of all active sessions (both connected and disconnected)
+// or terminated sessions from the past 30 days.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribeSessions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidFilterKey "InvalidFilterKey"
+//   The specified key is not valid.
+//
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The specified token is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeSessions
+func (c *SSM) DescribeSessions(input *DescribeSessionsInput) (*DescribeSessionsOutput, error) {
+	req, out := c.DescribeSessionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeSessionsWithContext is the same as DescribeSessions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeSessions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeSessionsWithContext(ctx aws.Context, input *DescribeSessionsInput, opts ...request.Option) (*DescribeSessionsOutput, error) {
+	req, out := c.DescribeSessionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetAutomationExecution = "GetAutomationExecution"
 
 // GetAutomationExecutionRequest generates a "aws/request.Request" representing the
@@ -4867,6 +4953,86 @@ func (c *SSM) GetCommandInvocation(input *GetCommandInvocationInput) (*GetComman
 // for more information on using Contexts.
 func (c *SSM) GetCommandInvocationWithContext(ctx aws.Context, input *GetCommandInvocationInput, opts ...request.Option) (*GetCommandInvocationOutput, error) {
 	req, out := c.GetCommandInvocationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetConnectionStatus = "GetConnectionStatus"
+
+// GetConnectionStatusRequest generates a "aws/request.Request" representing the
+// client's request for the GetConnectionStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetConnectionStatus for more information on using the GetConnectionStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetConnectionStatusRequest method.
+//    req, resp := client.GetConnectionStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetConnectionStatus
+func (c *SSM) GetConnectionStatusRequest(input *GetConnectionStatusInput) (req *request.Request, output *GetConnectionStatusOutput) {
+	op := &request.Operation{
+		Name:       opGetConnectionStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetConnectionStatusInput{}
+	}
+
+	output = &GetConnectionStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetConnectionStatus API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves the Session Manager connection status for an instance to determine
+// whether it is connected and ready to receive Session Manager connections.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation GetConnectionStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetConnectionStatus
+func (c *SSM) GetConnectionStatus(input *GetConnectionStatusInput) (*GetConnectionStatusOutput, error) {
+	req, out := c.GetConnectionStatusRequest(input)
+	return out, req.Send()
+}
+
+// GetConnectionStatusWithContext is the same as GetConnectionStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetConnectionStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetConnectionStatusWithContext(ctx aws.Context, input *GetConnectionStatusInput, opts ...request.Option) (*GetConnectionStatusOutput, error) {
+	req, out := c.GetConnectionStatusRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8804,6 +8970,96 @@ func (c *SSM) RemoveTagsFromResourceWithContext(ctx aws.Context, input *RemoveTa
 	return out, req.Send()
 }
 
+const opResumeSession = "ResumeSession"
+
+// ResumeSessionRequest generates a "aws/request.Request" representing the
+// client's request for the ResumeSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResumeSession for more information on using the ResumeSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResumeSessionRequest method.
+//    req, resp := client.ResumeSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResumeSession
+func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Request, output *ResumeSessionOutput) {
+	op := &request.Operation{
+		Name:       opResumeSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ResumeSessionInput{}
+	}
+
+	output = &ResumeSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ResumeSession API operation for Amazon Simple Systems Manager (SSM).
+//
+// Reconnects a session to an instance after it has been disconnected. Connections
+// can be resumed for disconnected sessions, but not terminated sessions.
+//
+// This command is primarily for use by client machines to automatically reconnect
+// during intermittent network issues. It is not intended for any other use.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation ResumeSession for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDoesNotExistException "DoesNotExistException"
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResumeSession
+func (c *SSM) ResumeSession(input *ResumeSessionInput) (*ResumeSessionOutput, error) {
+	req, out := c.ResumeSessionRequest(input)
+	return out, req.Send()
+}
+
+// ResumeSessionWithContext is the same as ResumeSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResumeSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ResumeSessionWithContext(ctx aws.Context, input *ResumeSessionInput, opts ...request.Option) (*ResumeSessionOutput, error) {
+	req, out := c.ResumeSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opSendAutomationSignal = "SendAutomationSignal"
 
 // SendAutomationSignalRequest generates a "aws/request.Request" representing the
@@ -9209,6 +9465,102 @@ func (c *SSM) StartAutomationExecutionWithContext(ctx aws.Context, input *StartA
 	return out, req.Send()
 }
 
+const opStartSession = "StartSession"
+
+// StartSessionRequest generates a "aws/request.Request" representing the
+// client's request for the StartSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartSession for more information on using the StartSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartSessionRequest method.
+//    req, resp := client.StartSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartSession
+func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Request, output *StartSessionOutput) {
+	op := &request.Operation{
+		Name:       opStartSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartSessionInput{}
+	}
+
+	output = &StartSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartSession API operation for Amazon Simple Systems Manager (SSM).
+//
+// Initiates a connection to a target (for example, an instance) for a Session
+// Manager session. Returns a URL and token that can be used to open a WebSocket
+// connection for sending input and receiving outputs.
+//
+// AWS CLI usage: start-session is an interactive command that requires the
+// Session Manager plugin to be installed on the client machine making the call.
+// For information, see  Install the Session Manager Plugin for the AWS CLI
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation StartSession for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidDocument "InvalidDocument"
+//   The specified document does not exist.
+//
+//   * ErrCodeTargetNotConnected "TargetNotConnected"
+//   The specified target instance for the session is not fully configured for
+//   use with Session Manager. For more information, see Getting Started with
+//   Session Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+//   in the AWS Systems Manager User Guide.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartSession
+func (c *SSM) StartSession(input *StartSessionInput) (*StartSessionOutput, error) {
+	req, out := c.StartSessionRequest(input)
+	return out, req.Send()
+}
+
+// StartSessionWithContext is the same as StartSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) StartSessionWithContext(ctx aws.Context, input *StartSessionInput, opts ...request.Option) (*StartSessionOutput, error) {
+	req, out := c.StartSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopAutomationExecution = "StopAutomationExecution"
 
 // StopAutomationExecutionRequest generates a "aws/request.Request" representing the
@@ -9290,6 +9642,94 @@ func (c *SSM) StopAutomationExecution(input *StopAutomationExecutionInput) (*Sto
 // for more information on using Contexts.
 func (c *SSM) StopAutomationExecutionWithContext(ctx aws.Context, input *StopAutomationExecutionInput, opts ...request.Option) (*StopAutomationExecutionOutput, error) {
 	req, out := c.StopAutomationExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTerminateSession = "TerminateSession"
+
+// TerminateSessionRequest generates a "aws/request.Request" representing the
+// client's request for the TerminateSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TerminateSession for more information on using the TerminateSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TerminateSessionRequest method.
+//    req, resp := client.TerminateSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/TerminateSession
+func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *request.Request, output *TerminateSessionOutput) {
+	op := &request.Operation{
+		Name:       opTerminateSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TerminateSessionInput{}
+	}
+
+	output = &TerminateSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// TerminateSession API operation for Amazon Simple Systems Manager (SSM).
+//
+// Permanently ends a session and closes the data connection between the Session
+// Manager client and SSM Agent on the instance. A terminated session cannot
+// be resumed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation TerminateSession for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDoesNotExistException "DoesNotExistException"
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/TerminateSession
+func (c *SSM) TerminateSession(input *TerminateSessionInput) (*TerminateSessionOutput, error) {
+	req, out := c.TerminateSessionRequest(input)
+	return out, req.Send()
+}
+
+// TerminateSessionWithContext is the same as TerminateSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TerminateSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) TerminateSessionWithContext(ctx aws.Context, input *TerminateSessionInput, opts ...request.Option) (*TerminateSessionOutput, error) {
+	req, out := c.TerminateSessionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -12168,7 +12608,44 @@ type CommandFilter struct {
 	// Key is a required field
 	Key *string `locationName:"key" type:"string" required:"true" enum:"CommandFilterKey"`
 
-	// The filter value.
+	// The filter value. Valid values for each filter key are as follows:
+	//
+	//    * InvokedAfter: A timestamp to limit your results. For example, specify
+	//    2018-07-07T00:00:00Z to see results occurring July 7, 2018, and later.
+	//
+	//    * InvokedBefore: A timestamp to limit your results. For example, specify
+	//    2018-07-07T00:00:00Z to see results before July 7, 2018.
+	//
+	//    * Status: Specify a valid command status to see a list of all command
+	//    executions with that status. Status values you can specify include:
+	//
+	// Pending
+	//
+	// InProgress
+	//
+	// Success
+	//
+	// Cancelled
+	//
+	// Failed
+	//
+	// TimedOut
+	//
+	// Cancelling
+	//
+	//    * DocumentName: The name of the SSM document for which you want to see
+	//    command results.
+	//
+	// For example, specify AWS-RunPatchBaseline to see command executions that
+	//    used this SSM document to perform security patching operations on instances.
+	//
+	//
+	//    * ExecutionStage: An enum whose value can be either Executing or Complete.
+	//
+	// Specify Executing to see a list of command executions that are currently
+	//    still running.
+	//
+	// Specify Complete to see a list of command exeuctions that have already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -16200,7 +16677,14 @@ type DescribeInstanceInformationInput struct {
 	// One or more filters. Use a filter to return a more specific list of instances.
 	Filters []*InstanceInformationStringFilter `type:"list"`
 
-	// One or more filters. Use a filter to return a more specific list of instances.
+	// This is a legacy method. We recommend that you don't use this method. Instead,
+	// use the InstanceInformationFilter action. The InstanceInformationFilter action
+	// enables you to return instance information by using tags that are specified
+	// as a key-value mapping.
+	//
+	// If you do use this method, then you can't use the InstanceInformationFilter
+	// action. Using this method and the InstanceInformationFilter action causes
+	// an exception error.
 	InstanceInformationFilterList []*InstanceInformationFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -17901,6 +18385,123 @@ func (s *DescribePatchGroupsOutput) SetNextToken(v string) *DescribePatchGroupsO
 	return s
 }
 
+type DescribeSessionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// One or more filters to limit the type of sessions returned by the request.
+	Filters []*SessionFilter `min:"1" type:"list"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The session status to retrieve a list of sessions for. For example, "active".
+	//
+	// State is a required field
+	State *string `type:"string" required:"true" enum:"SessionState"`
+}
+
+// String returns the string representation
+func (s DescribeSessionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSessionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeSessionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeSessionsInput"}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.State == nil {
+		invalidParams.Add(request.NewErrParamRequired("State"))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeSessionsInput) SetFilters(v []*SessionFilter) *DescribeSessionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeSessionsInput) SetMaxResults(v int64) *DescribeSessionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSessionsInput) SetNextToken(v string) *DescribeSessionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeSessionsInput) SetState(v string) *DescribeSessionsInput {
+	s.State = &v
+	return s
+}
+
+type DescribeSessionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// A list of sessions meeting the request parameters.
+	Sessions []*Session `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeSessionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSessionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSessionsOutput) SetNextToken(v string) *DescribeSessionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSessions sets the Sessions field's value.
+func (s *DescribeSessionsOutput) SetSessions(v []*Session) *DescribeSessionsOutput {
+	s.Sessions = v
+	return s
+}
+
 // A default version of a document.
 type DocumentDefaultVersionDescription struct {
 	_ struct{} `type:"structure"`
@@ -18954,6 +19555,80 @@ func (s *GetCommandInvocationOutput) SetStatus(v string) *GetCommandInvocationOu
 // SetStatusDetails sets the StatusDetails field's value.
 func (s *GetCommandInvocationOutput) SetStatusDetails(v string) *GetCommandInvocationOutput {
 	s.StatusDetails = &v
+	return s
+}
+
+type GetConnectionStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the instance.
+	//
+	// Target is a required field
+	Target *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetConnectionStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConnectionStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetConnectionStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetConnectionStatusInput"}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.Target != nil && len(*s.Target) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Target", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTarget sets the Target field's value.
+func (s *GetConnectionStatusInput) SetTarget(v string) *GetConnectionStatusInput {
+	s.Target = &v
+	return s
+}
+
+type GetConnectionStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the connection to the instance. For example, 'Connected' or
+	// 'Not Connected'.
+	Status *string `type:"string" enum:"ConnectionStatus"`
+
+	// The ID of the instance to check connection status.
+	Target *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetConnectionStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConnectionStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *GetConnectionStatusOutput) SetStatus(v string) *GetConnectionStatusOutput {
+	s.Status = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *GetConnectionStatusOutput) SetTarget(v string) *GetConnectionStatusOutput {
+	s.Target = &v
 	return s
 }
 
@@ -21517,7 +22192,12 @@ func (s *InstanceInformation) SetResourceType(v string) *InstanceInformation {
 	return s
 }
 
-// Describes a filter for a specific list of instances.
+// Describes a filter for a specific list of instances. You can filter instances
+// information by using tags. You specify tags by using a key-value mapping.
+//
+// Use this action instead of the DescribeInstanceInformationRequest$InstanceInformationFilterList
+// method. The InstanceInformationFilterList method is a legacy method and does
+// not support tags.
 type InstanceInformationFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -28358,6 +29038,98 @@ func (s *ResultAttribute) SetTypeName(v string) *ResultAttribute {
 	return s
 }
 
+type ResumeSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the disconnected session to resume.
+	//
+	// SessionId is a required field
+	SessionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResumeSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResumeSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResumeSessionInput"}
+	if s.SessionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SessionId"))
+	}
+	if s.SessionId != nil && len(*s.SessionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SessionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *ResumeSessionInput) SetSessionId(v string) *ResumeSessionInput {
+	s.SessionId = &v
+	return s
+}
+
+type ResumeSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session.
+	SessionId *string `min:"1" type:"string"`
+
+	// A URL back to SSM Agent on the instance that the Session Manager client uses
+	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
+	//
+	// region represents the Region identifier for an AWS Region supported by AWS
+	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
+	// of supported region values, see the Region column in the AWS Systems Manager
+	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// in the AWS General Reference.
+	//
+	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
+	StreamUrl *string `type:"string"`
+
+	// An encrypted token value containing session and caller information. Used
+	// to authenticate the connection to the instance.
+	TokenValue *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResumeSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *ResumeSessionOutput) SetSessionId(v string) *ResumeSessionOutput {
+	s.SessionId = &v
+	return s
+}
+
+// SetStreamUrl sets the StreamUrl field's value.
+func (s *ResumeSessionOutput) SetStreamUrl(v string) *ResumeSessionOutput {
+	s.StreamUrl = &v
+	return s
+}
+
+// SetTokenValue sets the TokenValue field's value.
+func (s *ResumeSessionOutput) SetTokenValue(v string) *ResumeSessionOutput {
+	s.TokenValue = &v
+	return s
+}
+
 // An Amazon S3 bucket where you want to store the results of this request.
 type S3OutputLocation struct {
 	_ struct{} `type:"structure"`
@@ -28802,6 +29574,220 @@ func (s *SendCommandOutput) SetCommand(v *Command) *SendCommandOutput {
 	return s
 }
 
+// Information about a Session Manager connection to an instance.
+type Session struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved for future use.
+	Details *string `min:"1" type:"string"`
+
+	// The name of the Session Manager SSM document used to define the parameters
+	// and plugin settings for the session. For example, SSM-SessionManagerRunShell.
+	DocumentName *string `type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, when the session was terminated.
+	EndDate *time.Time `type:"timestamp"`
+
+	// Reserved for future use.
+	OutputUrl *SessionManagerOutputUrl `type:"structure"`
+
+	// The ID of the AWS user account that started the session.
+	Owner *string `min:"1" type:"string"`
+
+	// The ID of the session.
+	SessionId *string `min:"1" type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, when the session began.
+	StartDate *time.Time `type:"timestamp"`
+
+	// The status of the session. For example, "Connected" or "Terminated".
+	Status *string `type:"string" enum:"SessionStatus"`
+
+	// The instance that the Session Manager session connected to.
+	Target *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s Session) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Session) GoString() string {
+	return s.String()
+}
+
+// SetDetails sets the Details field's value.
+func (s *Session) SetDetails(v string) *Session {
+	s.Details = &v
+	return s
+}
+
+// SetDocumentName sets the DocumentName field's value.
+func (s *Session) SetDocumentName(v string) *Session {
+	s.DocumentName = &v
+	return s
+}
+
+// SetEndDate sets the EndDate field's value.
+func (s *Session) SetEndDate(v time.Time) *Session {
+	s.EndDate = &v
+	return s
+}
+
+// SetOutputUrl sets the OutputUrl field's value.
+func (s *Session) SetOutputUrl(v *SessionManagerOutputUrl) *Session {
+	s.OutputUrl = v
+	return s
+}
+
+// SetOwner sets the Owner field's value.
+func (s *Session) SetOwner(v string) *Session {
+	s.Owner = &v
+	return s
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *Session) SetSessionId(v string) *Session {
+	s.SessionId = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *Session) SetStartDate(v time.Time) *Session {
+	s.StartDate = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *Session) SetStatus(v string) *Session {
+	s.Status = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *Session) SetTarget(v string) *Session {
+	s.Target = &v
+	return s
+}
+
+// Describes a filter for Session Manager information.
+type SessionFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the filter.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" type:"string" required:"true" enum:"SessionFilterKey"`
+
+	// The filter value. Valid values for each filter key are as follows:
+	//
+	//    * InvokedAfter: Specify a timestamp to limit your results. For example,
+	//    specify 2018-08-29T00:00:00Z to see sessions that started August 29, 2018,
+	//    and later.
+	//
+	//    * InvokedBefore: Specify a timestamp to limit your results. For example,
+	//    specify 2018-08-29T00:00:00Z to see sessions that started before August
+	//    29, 2018.
+	//
+	//    * Target: Specify an instance to which session connections have been made.
+	//
+	//    * Owner: Specify an AWS user account to see a list of sessions started
+	//    by that user.
+	//
+	//    * Status: Specify a valid session status to see a list of all sessions
+	//    with that status. Status values you can specify include:
+	//
+	// Connected
+	//
+	// Connecting
+	//
+	// Disconnected
+	//
+	// Terminated
+	//
+	// Terminating
+	//
+	// Failed
+	//
+	// Value is a required field
+	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SessionFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SessionFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SessionFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SessionFilter"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *SessionFilter) SetKey(v string) *SessionFilter {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *SessionFilter) SetValue(v string) *SessionFilter {
+	s.Value = &v
+	return s
+}
+
+// Reserved for future use.
+type SessionManagerOutputUrl struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved for future use.
+	CloudWatchOutputUrl *string `min:"1" type:"string"`
+
+	// Reserved for future use.
+	S3OutputUrl *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s SessionManagerOutputUrl) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SessionManagerOutputUrl) GoString() string {
+	return s.String()
+}
+
+// SetCloudWatchOutputUrl sets the CloudWatchOutputUrl field's value.
+func (s *SessionManagerOutputUrl) SetCloudWatchOutputUrl(v string) *SessionManagerOutputUrl {
+	s.CloudWatchOutputUrl = &v
+	return s
+}
+
+// SetS3OutputUrl sets the S3OutputUrl field's value.
+func (s *SessionManagerOutputUrl) SetS3OutputUrl(v string) *SessionManagerOutputUrl {
+	s.S3OutputUrl = &v
+	return s
+}
+
 // The number of managed instances found for each patch severity level defined
 // in the request filter.
 type SeveritySummary struct {
@@ -29123,6 +30109,118 @@ func (s StartAutomationExecutionOutput) GoString() string {
 // SetAutomationExecutionId sets the AutomationExecutionId field's value.
 func (s *StartAutomationExecutionOutput) SetAutomationExecutionId(v string) *StartAutomationExecutionOutput {
 	s.AutomationExecutionId = &v
+	return s
+}
+
+type StartSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the SSM document to define the parameters and plugin settings
+	// for the session. For example, SSM-SessionManagerRunShell. If no document
+	// name is provided, a shell to the instance is launched by default.
+	DocumentName *string `type:"string"`
+
+	// Reserved for future use.
+	Parameters map[string][]*string `type:"map"`
+
+	// The instance to connect to for the session.
+	//
+	// Target is a required field
+	Target *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartSessionInput"}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.Target != nil && len(*s.Target) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Target", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentName sets the DocumentName field's value.
+func (s *StartSessionInput) SetDocumentName(v string) *StartSessionInput {
+	s.DocumentName = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *StartSessionInput) SetParameters(v map[string][]*string) *StartSessionInput {
+	s.Parameters = v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *StartSessionInput) SetTarget(v string) *StartSessionInput {
+	s.Target = &v
+	return s
+}
+
+type StartSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session.
+	SessionId *string `min:"1" type:"string"`
+
+	// A URL back to SSM Agent on the instance that the Session Manager client uses
+	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
+	//
+	// region represents the Region identifier for an AWS Region supported by AWS
+	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
+	// of supported region values, see the Region column in the AWS Systems Manager
+	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// in the AWS General Reference.
+	//
+	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
+	StreamUrl *string `type:"string"`
+
+	// An encrypted token value containing session and caller information. Used
+	// to authenticate the connection to the instance.
+	TokenValue *string `type:"string"`
+}
+
+// String returns the string representation
+func (s StartSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *StartSessionOutput) SetSessionId(v string) *StartSessionOutput {
+	s.SessionId = &v
+	return s
+}
+
+// SetStreamUrl sets the StreamUrl field's value.
+func (s *StartSessionOutput) SetStreamUrl(v string) *StartSessionOutput {
+	s.StreamUrl = &v
+	return s
+}
+
+// SetTokenValue sets the TokenValue field's value.
+func (s *StartSessionOutput) SetTokenValue(v string) *StartSessionOutput {
+	s.TokenValue = &v
 	return s
 }
 
@@ -29572,6 +30670,70 @@ func (s *Target) SetKey(v string) *Target {
 // SetValues sets the Values field's value.
 func (s *Target) SetValues(v []*string) *Target {
 	s.Values = v
+	return s
+}
+
+type TerminateSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session to terminate.
+	//
+	// SessionId is a required field
+	SessionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TerminateSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TerminateSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TerminateSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TerminateSessionInput"}
+	if s.SessionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SessionId"))
+	}
+	if s.SessionId != nil && len(*s.SessionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SessionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *TerminateSessionInput) SetSessionId(v string) *TerminateSessionInput {
+	s.SessionId = &v
+	return s
+}
+
+type TerminateSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session that has been terminated.
+	SessionId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TerminateSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TerminateSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *TerminateSessionOutput) SetSessionId(v string) *TerminateSessionOutput {
+	s.SessionId = &v
 	return s
 }
 
@@ -31415,6 +32577,14 @@ const (
 )
 
 const (
+	// ConnectionStatusConnected is a ConnectionStatus enum value
+	ConnectionStatusConnected = "Connected"
+
+	// ConnectionStatusNotConnected is a ConnectionStatus enum value
+	ConnectionStatusNotConnected = "NotConnected"
+)
+
+const (
 	// DescribeActivationsFilterKeysActivationIds is a DescribeActivationsFilterKeys enum value
 	DescribeActivationsFilterKeysActivationIds = "ActivationIds"
 
@@ -31491,6 +32661,9 @@ const (
 
 	// DocumentTypeAutomation is a DocumentType enum value
 	DocumentTypeAutomation = "Automation"
+
+	// DocumentTypeSession is a DocumentType enum value
+	DocumentTypeSession = "Session"
 )
 
 const (
@@ -31857,6 +33030,51 @@ const (
 
 	// ResourceTypeForTaggingPatchBaseline is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingPatchBaseline = "PatchBaseline"
+)
+
+const (
+	// SessionFilterKeyInvokedAfter is a SessionFilterKey enum value
+	SessionFilterKeyInvokedAfter = "InvokedAfter"
+
+	// SessionFilterKeyInvokedBefore is a SessionFilterKey enum value
+	SessionFilterKeyInvokedBefore = "InvokedBefore"
+
+	// SessionFilterKeyTarget is a SessionFilterKey enum value
+	SessionFilterKeyTarget = "Target"
+
+	// SessionFilterKeyOwner is a SessionFilterKey enum value
+	SessionFilterKeyOwner = "Owner"
+
+	// SessionFilterKeyStatus is a SessionFilterKey enum value
+	SessionFilterKeyStatus = "Status"
+)
+
+const (
+	// SessionStateActive is a SessionState enum value
+	SessionStateActive = "Active"
+
+	// SessionStateHistory is a SessionState enum value
+	SessionStateHistory = "History"
+)
+
+const (
+	// SessionStatusConnected is a SessionStatus enum value
+	SessionStatusConnected = "Connected"
+
+	// SessionStatusConnecting is a SessionStatus enum value
+	SessionStatusConnecting = "Connecting"
+
+	// SessionStatusDisconnected is a SessionStatus enum value
+	SessionStatusDisconnected = "Disconnected"
+
+	// SessionStatusTerminated is a SessionStatus enum value
+	SessionStatusTerminated = "Terminated"
+
+	// SessionStatusTerminating is a SessionStatus enum value
+	SessionStatusTerminating = "Terminating"
+
+	// SessionStatusFailed is a SessionStatus enum value
+	SessionStatusFailed = "Failed"
 )
 
 const (
