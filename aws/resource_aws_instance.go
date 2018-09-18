@@ -479,13 +479,20 @@ func resourceAwsInstance() *schema.Resource {
 						"cpu_credits": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "standard",
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if strings.HasPrefix(d.Get("instance_type").(string), "t3") &&
-									old == "unlimited" && new == "standard" {
-									return true
+								// Only work with existing instances
+								if d.Id() == "" {
+									return false
 								}
-								return false
+								// Only work with missing configurations
+								if new != "" {
+									return false
+								}
+								// Only work when already set in Terraform state
+								if old == "" {
+									return false
+								}
+								return true
 							},
 						},
 					},
