@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_s3_bucket_inventory: Allow SSE-S3 encryption [GH-5870]
+* resource/aws_security_group: Add `prefix_list_ids` argument for `ingress` rules [GH-5916]
 
 BUG FIXES:
 
