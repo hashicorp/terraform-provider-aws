@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ami_ids: Add `sort_ascending` argument [GH-5912]
 * resource/aws_s3_bucket_inventory: Allow SSE-S3 encryption [GH-5870]
 * resource/aws_security_group: Add `prefix_list_ids` argument for `ingress` rules [GH-5916]
 
