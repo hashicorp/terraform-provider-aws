@@ -12,6 +12,7 @@ BUG FIXES:
 
 * resource/aws_config_config_rule: Prevent panic when specifying empty `scope` [GH-5852]
 * resource/aws_iam_policy: Ensure `description` is properly read into Terraform state during resource creation [GH-5884]
+* resource/aws_instance: Properly handle `credit_specifications` with T3 instance types [GH-5805]
 * resource/aws_launch_template: Fix handling of `network_interface` `ipv6_addresses` [GH-5883]
 * resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
 * resource/aws_s3_bucket: Prevent `NoSuchBucket` error on deletion [GH-5842]
