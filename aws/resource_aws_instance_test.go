@@ -1662,6 +1662,99 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 	})
 }
 
+func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
+	var before ec2.Instance
+	var after ec2.Instance
+	resName := "aws_instance.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 	var instance ec2.Instance
 	rInt := acctest.RandInt()
@@ -3343,6 +3436,29 @@ resource "aws_instance" "foo" {
 `, rInt)
 }
 
+func testAccInstanceConfig_creditSpecification_unspecified_t3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-51537029" # us-west-2
+  instance_type = "t3.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+}
+`, rInt)
+}
+
 func testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
@@ -3369,6 +3485,32 @@ resource "aws_instance" "foo" {
 `, rInt)
 }
 
+func testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-51537029" # us-west-2
+  instance_type = "t3.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`, rInt)
+}
+
 func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
@@ -3387,6 +3529,32 @@ resource "aws_subnet" "my_subnet" {
 resource "aws_instance" "foo" {
   ami = "ami-22b9a343" # us-west-2
   instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+`, rInt)
+}
+
+func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-51537029" # us-west-2
+  instance_type = "t3.micro"
   subnet_id = "${aws_subnet.my_subnet.id}"
   credit_specification {
     cpu_credits = "unlimited"
