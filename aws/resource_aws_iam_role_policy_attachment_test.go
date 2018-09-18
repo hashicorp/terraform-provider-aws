@@ -32,6 +32,11 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_iam_role_policy_attachment.test-attach",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSIAMRolePolicyAttachmentImportStateIdFunc,
+			},
+			{
 				Config: testAccAWSRolePolicyAttachConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRolePolicyAttachmentExists("aws_iam_role_policy_attachment.test-attach", 2, &out),
@@ -91,6 +96,21 @@ func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.L
 		}
 		return nil
 	}
+}
+
+func testAccAWSIAMRolePolicyAttachmentImportStateIdFunc(s *terraform.State) (string, error) {
+	resources := s.RootModule().Resources
+
+	roleResource, ok := resources["aws_iam_role.role"]
+	if !ok {
+		return "", fmt.Errorf("role not found: aws_iam_role.role")
+	}
+	policyResource, ok := resources["aws_iam_policy.policy"]
+	if !ok {
+		return "", fmt.Errorf("policy not found: aws_iam_policy.policy")
+	}
+
+	return fmt.Sprintf("%s/%s", roleResource.Primary.Attributes["name"], policyResource.Primary.Attributes["arn"]), nil
 }
 
 func testAccAWSRolePolicyAttachConfig(rInt int) string {
