@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/errwrap"
 )
 
 func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
@@ -217,7 +216,7 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if err := updateByteMatchSetResourceWR(d, oldValue, newValue, conn, region); err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 	}
 
 	return resourceAwsWafRegionalByteMatchSetRead(d, meta)
