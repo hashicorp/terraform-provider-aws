@@ -2,8 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -13,6 +15,69 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
+		Name: "aws_directory_service_directory",
+		F:    testSweepDirectoryServiceDirectories,
+	})
+}
+
+func testSweepDirectoryServiceDirectories(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).dsconn
+
+	input := &directoryservice.DescribeDirectoriesInput{}
+	for {
+		resp, err := conn.DescribeDirectories(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Directory Service Directory sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Directory Service Directories: %s", err)
+		}
+
+		for _, directory := range resp.DirectoryDescriptions {
+			id := aws.StringValue(directory.DirectoryId)
+			name := aws.StringValue(directory.Name)
+
+			if name != "corp.notexample.com" && name != "terraformtesting.com" {
+				log.Printf("[INFO] Skipping Directory Service Directory: %s / %s", id, name)
+				continue
+			}
+
+			deleteDirectoryInput := directoryservice.DeleteDirectoryInput{
+				DirectoryId: directory.DirectoryId,
+			}
+
+			log.Printf("[INFO] Deleting Directory Service Directory: %s", deleteDirectoryInput)
+			_, err := conn.DeleteDirectory(&deleteDirectoryInput)
+			if err != nil {
+				return fmt.Errorf("error deleting Directory Service Directory (%s): %s", id, err)
+			}
+
+			log.Printf("[INFO] Waiting for Directory Service Directory (%q) to be deleted", id)
+			err = waitForDirectoryServiceDirectoryDeletion(conn, id, 60*time.Minute)
+			if err != nil {
+				return fmt.Errorf("error waiting for Directory Service (%s) to be deleted: %s", id, err)
+			}
+		}
+
+		if resp.NextToken == nil {
+			break
+		}
+
+		input.NextToken = resp.NextToken
+	}
+
+	return nil
+}
 
 func TestDiffTagsDirectoryService(t *testing.T) {
 	cases := []struct {
