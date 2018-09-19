@@ -554,6 +554,187 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 	}
 }
 
+func TestAccAWSSecurityGroup_importBasic(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect 2: group, 2 rules
+		if len(s) != 2 {
+			return fmt.Errorf("expected 2 states: %#v", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfig,
+			},
+
+			{
+				ResourceName:            "aws_security_group.web",
+				ImportState:             true,
+				ImportStateCheck:        checkFn,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_importIpv6(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect 3: group, 2 rules
+		if len(s) != 3 {
+			return fmt.Errorf("expected 3 states: %#v", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigIpv6,
+			},
+
+			{
+				ResourceName:     "aws_security_group.web",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfig_importSelf,
+			},
+
+			{
+				ResourceName:            "aws_security_group.allow_all",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_importSourceSecurityGroup(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfig_importSourceSecurityGroup,
+			},
+
+			{
+				ResourceName:            "aws_security_group.test_group_1",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_importIPRangeAndSecurityGroupWithSameRules(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect 4: group, 3 rules
+		if len(s) != 4 {
+			return fmt.Errorf("expected 4 states: %#v", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfig_importIPRangeAndSecurityGroupWithSameRules,
+			},
+
+			{
+				ResourceName:     "aws_security_group.test_group_1",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_importIPRangesWithSameRules(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect 4: group, 2 rules
+		if len(s) != 3 {
+			return fmt.Errorf("expected 3 states: %#v", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfig_importIPRangesWithSameRules,
+			},
+
+			{
+				ResourceName:     "aws_security_group.test_group_1",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_importPrefixList(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect 2: group, 1 rule
+		if len(s) != 2 {
+			return fmt.Errorf("expected 2 states: %#v", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigPrefixListEgress,
+			},
+
+			{
+				ResourceName:     "aws_security_group.egress",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
 func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 
@@ -1753,9 +1934,30 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 				Config: testAccAWSSecurityGroupConfigPrefixListEgress,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.egress", &group),
-					testAccCheckAWSSecurityGroupPrefixListAttributes(&group),
+					testAccCheckAWSSecurityGroupEgressPrefixListAttributes(&group),
 					resource.TestCheckResourceAttr(
 						"aws_security_group.egress", "egress.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
+	var group ec2.SecurityGroup
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigPrefixListIngress,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists("aws_security_group.ingress", &group),
+					testAccCheckAWSSecurityGroupIngressPrefixListAttributes(&group),
+					resource.TestCheckResourceAttr(
+						"aws_security_group.ingress", "ingress.#", "1"),
 				),
 			},
 		},
@@ -1839,7 +2041,7 @@ func testAccCheckAWSSecurityGroupSGandCidrAttributes(group *ec2.SecurityGroup) r
 	}
 }
 
-func testAccCheckAWSSecurityGroupPrefixListAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckAWSSecurityGroupEgressPrefixListAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *group.GroupName != "terraform_acceptance_test_prefix_list_egress" {
 			return fmt.Errorf("Bad name: %s", *group.GroupName)
@@ -1855,6 +2057,31 @@ func testAccCheckAWSSecurityGroupPrefixListAttributes(group *ec2.SecurityGroup) 
 		}
 
 		p := group.IpPermissionsEgress[0]
+
+		if len(p.PrefixListIds) != 1 {
+			return fmt.Errorf("Expected 1 prefix list, got %d", len(p.PrefixListIds))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSecurityGroupIngressPrefixListAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *group.GroupName != "terraform_acceptance_test_prefix_list_ingress" {
+			return fmt.Errorf("Bad name: %s", *group.GroupName)
+		}
+		if *group.Description != "Used in the terraform acceptance tests" {
+			return fmt.Errorf("Bad description: %s", *group.Description)
+		}
+		if len(group.IpPermissions) == 0 {
+			return fmt.Errorf("No IPPerms")
+		}
+		if len(group.IpPermissions) != 1 {
+			return fmt.Errorf("Expected 1 rule, got %d", len(group.IpPermissions))
+		}
+
+		p := group.IpPermissions[0]
 
 		if len(p.PrefixListIds) != 1 {
 			return fmt.Errorf("Expected 1 prefix list, got %d", len(p.PrefixListIds))
@@ -3399,6 +3626,54 @@ resource "aws_security_group" "egress" {
     vpc_id = "${aws_vpc.tf_sg_prefix_list_egress_test.id}"
 
     egress {
+      protocol = "-1"
+      from_port = 0
+      to_port = 0
+      prefix_list_ids = ["${aws_vpc_endpoint.test.prefix_list_id}"]
+    }
+}
+`
+
+const testAccAWSSecurityGroupConfigPrefixListIngress = `
+data "aws_region" "current" {}
+
+resource "aws_vpc" "tf_sg_prefix_list_ingress_test" {
+    cidr_block = "10.0.0.0/16"
+    tags {
+        Name = "terraform-testacc-security-group-prefix-list-ingress"
+    }
+}
+
+resource "aws_route_table" "default" {
+    vpc_id = "${aws_vpc.tf_sg_prefix_list_ingress_test.id}"
+}
+
+resource "aws_vpc_endpoint" "test" {
+    vpc_id = "${aws_vpc.tf_sg_prefix_list_ingress_test.id}"
+    service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+    route_table_ids = ["${aws_route_table.default.id}"]
+    policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid":"AllowAll",
+            "Effect":"Allow",
+            "Principal":"*",
+            "Action":"*",
+            "Resource":"*"
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_security_group" "ingress" {
+    name = "terraform_acceptance_test_prefix_list_ingress"
+    description = "Used in the terraform acceptance tests"
+    vpc_id = "${aws_vpc.tf_sg_prefix_list_ingress_test.id}"
+
+    ingress {
       protocol = "-1"
       from_port = 0
       to_port = 0

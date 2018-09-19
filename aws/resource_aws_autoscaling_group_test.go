@@ -91,6 +91,30 @@ func testSweepAutoscalingGroups(region string) error {
 	return nil
 }
 
+func TestAccAWSAutoScalingGroup_importBasic(t *testing.T) {
+	resourceName := "aws_autoscaling_group.bar"
+	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupImport(randName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete", "metrics_granularity", "wait_for_capacity_timeout"},
+			},
+		},
+	})
+}
+
 func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 	var group autoscaling.Group
 	var lc autoscaling.LaunchConfiguration

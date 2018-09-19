@@ -11,6 +11,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSSESReceiptRuleSet_importBasic(t *testing.T) {
+	resourceName := "aws_ses_receipt_rule_set.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleSetConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

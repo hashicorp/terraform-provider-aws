@@ -66,6 +66,27 @@ func testSweepNatGateways(region string) error {
 	return nil
 }
 
+func TestAccAWSNatGateway_importBasic(t *testing.T) {
+	resourceName := "aws_nat_gateway.gateway"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNatGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNatGatewayConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSNatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
 

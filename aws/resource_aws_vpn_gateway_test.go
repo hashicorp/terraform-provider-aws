@@ -93,6 +93,27 @@ func testSweepVPNGateways(region string) error {
 	return nil
 }
 
+func TestAccAWSVpnGateway_importBasic(t *testing.T) {
+	resourceName := "aws_vpn_gateway.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnGatewayConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpnGateway_basic(t *testing.T) {
 	var v, v2 ec2.VpnGateway
 

@@ -12,6 +12,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSElasticacheParameterGroup_importBasic(t *testing.T) {
+	resourceName := "aws_elasticache_parameter_group.bar"
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheParameterGroupConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())

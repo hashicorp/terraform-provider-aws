@@ -12,6 +12,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSRedshiftSubnetGroup_importBasic(t *testing.T) {
+	resourceName := "aws_redshift_subnet_group.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRedshiftSubnetGroupConfig(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()

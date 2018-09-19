@@ -6,15 +6,21 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ami_ids: Add `sort_ascending` argument [GH-5912]
+* resource/aws_iam_role_policy_attachment: Support resource import [GH-5910]
 * resource/aws_s3_bucket_inventory: Allow SSE-S3 encryption [GH-5870]
+* resource/aws_security_group: Add `prefix_list_ids` argument for `ingress` rules [GH-5916]
 
 BUG FIXES:
 
 * resource/aws_config_config_rule: Prevent panic when specifying empty `scope` [GH-5852]
 * resource/aws_iam_policy: Ensure `description` is properly read into Terraform state during resource creation [GH-5884]
+* resource/aws_instance: Properly handle `credit_specifications` with T3 instance types [GH-5805]
 * resource/aws_launch_template: Fix handling of `network_interface` `ipv6_addresses` [GH-5883]
+* resource/aws_redshift_cluster: Properly disable logging when using `logging` nested argument [GH-5895]
 * resource/aws_s3_bucket: Prevent panics with various API read failures [GH-5842]
 * resource/aws_s3_bucket: Prevent `NoSuchBucket` error on deletion [GH-5842]
+* resource/aws_wafregional_byte_match_set: Properly read `byte_match_tuple` into Terraform state [GH-5902]
 
 ## 1.36.0 (September 13, 2018)
 
