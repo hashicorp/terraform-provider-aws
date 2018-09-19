@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -312,7 +313,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
+func TestAccAWSIAMRole_forceDetachPolicies(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -339,7 +340,7 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
+func TestAccAWSIAMRole_maxSessionDuration(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -385,7 +386,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
+func TestAccAWSIAMRole_permissionsBoundary(t *testing.T) {
 	var role iam.GetRoleOutput
 
 	rName := acctest.RandString(10)
@@ -419,10 +420,12 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 			},
 			// Test import
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+				},
 			},
 			// Test removal
 			{
@@ -485,6 +488,429 @@ func TestAccAWSIAMRole_tags(t *testing.T) {
 					testAccCheckAWSRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-basic-%s", rString)
+	ilPolicyName1 := fmt.Sprintf("tf-acc-ipolicy-basic-1-%s", rString)
+	ilPolicyName2 := fmt.Sprintf("tf-acc-ipolicy-basic-2-%s", rString)
+	ilPolicyName3 := fmt.Sprintf("tf-acc-ipolicy-basic-3-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRolePolicyInlineConfig(roleName, ilPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName1}),
+					resource.TestCheckResourceAttr(resourceAddr, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceAddr, "name", roleName),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "0"),
+				),
+			},
+
+			{
+				Config: testAccAWSRolePolicyInlineConfigUpdate(roleName, ilPolicyName2, ilPolicyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName2, ilPolicyName3}),
+					resource.TestCheckResourceAttr(resourceAddr, "inline_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "0"),
+				),
+			},
+
+			{
+				Config: testAccAWSRolePolicyInlineConfigUpdateDown(roleName, ilPolicyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName3}),
+					resource.TestCheckResourceAttr(resourceAddr, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "0"),
+				),
+			},
+
+			{
+				ResourceName:      resourceAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_policyInlinePrefix(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-prefix-%s", rString)
+	ilPolicyPrefix := fmt.Sprintf("tf-acc-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRolePolicyInlinePrefix(roleName, ilPolicyPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInlinePrefix(&role, roleName, ilPolicyPrefix),
+					resource.TestCheckResourceAttr(resourceAddr, "inline_policy.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_policyInlineNoName(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-prefix-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRolePolicyInlineNoName(roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					resource.TestCheckResourceAttr(resourceAddr, "inline_policy.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-basic-%s", rString)
+	mgPolicyName1 := fmt.Sprintf("tf-acc-mpolicy-basic-1-%s", rString)
+	mgPolicyName2 := fmt.Sprintf("tf-acc-mpolicy-basic-2-%s", rString)
+	mgPolicyName3 := fmt.Sprintf("tf-acc-mpolicy-basic-3-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1}),
+					resource.TestCheckResourceAttr(resourceAddr, "name", roleName),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "1"),
+				),
+			},
+
+			{
+				Config: testAccAWSRolePolicyManagedConfigUpdate(roleName, mgPolicyName1, mgPolicyName2, mgPolicyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName2, mgPolicyName3}),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccAWSRolePolicyManagedConfigUpdateDown(roleName, mgPolicyName1, mgPolicyName2, mgPolicyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName3}),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "1"),
+				),
+			},
+
+			{
+				ResourceName:      resourceAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyManagedReattached: if a policy is detached
+// externally, it should be reattached.
+func TestAccAWSIAMRole_policyManagedReattached(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-reattach-%s", rString)
+	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-detach-1-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyDetachManagedPolicy(&role, mgPolicyName1),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: testAccAWSRolePolicyManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1}),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyExtraManagedAdded: remove externally added
+// managed policies.
+func TestAccAWSIAMRole_policyExtraManagedAdded(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-extra-%s", rString)
+	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-good-%s", rString)
+	mgPolicyName2 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-bad-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyExtraManagedConfig(roleName, mgPolicyName1, mgPolicyName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyAttachManagedPolicy(&role, mgPolicyName2),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1, mgPolicyName2}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: testAccAWSRolePolicyExtraManagedConfig(roleName, mgPolicyName1, mgPolicyName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1}),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyExtraInlineAdded: remove externally added inline
+// policies.
+func TestAccAWSIAMRole_policyExtraInlineAdded(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-extra-%s", rString)
+	ilPolicyName1 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-good-%s", rString)
+	ilPolicyName2 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-bad-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyInlineConfig(roleName, ilPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyAddInlinePolicy(&role, ilPolicyName2),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName1, ilPolicyName2}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: testAccAWSRolePolicyInlineConfig(roleName, ilPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName1}),
+					resource.TestCheckResourceAttr(resourceAddr, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceAddr, "managed_policy_arns.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyNoInlineListExtraInlineAdded: when there is no
+// inline_policy attribute, resource should not do anything if policies
+// are added externally
+func TestAccAWSIAMRole_policyNoInlineListExtraInlineAdded(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-no-ilist-%s", rString)
+	ilPolicyName1 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-good-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyNoInlineConfig(roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyAddInlinePolicy(&role, ilPolicyName1),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName1}),
+				),
+			},
+
+			{
+				Config: testAccAWSRolePolicyNoInlineConfig(roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName1}),
+					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, ilPolicyName1),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyNoManagedListExtraManagedAdded: if there is no
+// managed_policies attribute, resource should not do anything if one is attached.
+func TestAccAWSIAMRole_policyNoManagedListExtraManagedAdded(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-no-mlist-%s", rString)
+	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-good-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyNoManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyAttachManagedPolicy(&role, mgPolicyName1),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1}),
+				),
+			},
+
+			{
+				Config: testAccAWSRolePolicyNoManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1}),
+					testAccCheckAWSRolePolicyDetachManagedPolicy(&role, mgPolicyName1),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyEmptyInlineListExtraInlineAdded: when there is an
+// empty inline_policy attribute, resource should remove policies that
+// are added externally
+func TestAccAWSIAMRole_policyEmptyInlineListExtraInlineAdded(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-empty-%s", rString)
+	ilPolicyName1 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-bad-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyEmptyInlineConfig(roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyAddInlinePolicy(&role, ilPolicyName1),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{ilPolicyName1}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: testAccAWSRolePolicyEmptyInlineConfig(roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, roleName, []string{}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSIAMRole_policyEmptyManagedListExtraManagedAdded: if there is no
+// managed_policies attribute, resource should not do anything if one is attached.
+func TestAccAWSIAMRole_policyEmptyManagedListExtraManagedAdded(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rString := acctest.RandString(5)
+	roleName := fmt.Sprintf("tf-acc-role-policy-empty-%s", rString)
+	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-bad-%s", rString)
+	resourceAddr := "aws_iam_role.acc_role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccAWSRolePolicyEmptyManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyAttachManagedPolicy(&role, mgPolicyName1),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{mgPolicyName1}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: testAccAWSRolePolicyEmptyManagedConfig(roleName, mgPolicyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceAddr, &role),
+					testAccCheckAWSRolePolicyCheckManaged(&role, roleName, []string{}),
 				),
 			},
 		},
@@ -596,13 +1022,13 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 		input := &iam.PutRolePolicyInput{
 			RoleName: aws.String(rs.Primary.ID),
 			PolicyDocument: aws.String(`{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}`),
+			  "Version": "2012-10-17",
+			  "Statement": {
+			    "Effect": "Allow",
+			    "Action": "*",
+			    "Resource": "*"
+			  }
+			}`),
 			PolicyName: aws.String(resource.UniqueId()),
 		}
 
@@ -625,6 +1051,406 @@ func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, ex
 
 		return nil
 	}
+}
+
+func testAccCheckAWSRolePolicyCheckInline(role *iam.GetRoleOutput, roleName string, inlinePolicies []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !strings.Contains(*role.Role.RoleName, roleName) {
+			return fmt.Errorf("bad role: expected %s, got %s", roleName, *role.Role.RoleName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		//inline policies
+		var inlinePolicyList []string
+		var marker *string
+		for {
+			//inline is ListRolePolicies
+			resp, err := conn.ListRolePolicies(&iam.ListRolePoliciesInput{
+				RoleName: aws.String(roleName),
+				Marker:   marker,
+			})
+
+			if err != nil {
+				if awsErr, ok := err.(awserr.Error); ok {
+					// aws specific error
+					if awsErr.Code() == "NoSuchEntity" {
+						// policies not found
+						break
+					}
+				}
+				return err
+			}
+
+			for _, policyName := range resp.PolicyNames {
+				inlinePolicyList = append(inlinePolicyList, *policyName)
+			}
+
+			if !*resp.IsTruncated {
+				break
+			}
+			marker = resp.Marker
+		}
+
+		if !compareStringSlices(inlinePolicyList, inlinePolicies) {
+			return fmt.Errorf("inline policies did not match: %s (from AWS) to %s (expected)", strings.Join(inlinePolicyList, ","), strings.Join(inlinePolicies, ","))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRolePolicyCheckManaged(role *iam.GetRoleOutput, roleName string, managedPolicies []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !strings.Contains(*role.Role.RoleName, roleName) {
+			return fmt.Errorf("bad role: expected %s, got %s", roleName, *role.Role.RoleName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		// managed policies
+		var managedPolicyList []string
+		var marker *string
+		for {
+			resp, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
+				RoleName: aws.String(roleName),
+				Marker:   marker,
+			})
+
+			if err != nil {
+				if awsErr, ok := err.(awserr.Error); ok {
+					// aws specific error
+					if awsErr.Code() == "NoSuchEntity" {
+						// role not found
+						break
+					}
+				}
+				return err
+			}
+
+			for _, ap := range resp.AttachedPolicies {
+				managedPolicyList = append(managedPolicyList, *ap.PolicyName) //PolicyName also available
+			}
+
+			if !*resp.IsTruncated {
+				break
+			}
+			marker = resp.Marker
+		}
+
+		if !compareStringSlices(managedPolicyList, managedPolicies) {
+			return fmt.Errorf("managed policies did not match: %s (from AWS) to %s (expected)", strings.Join(managedPolicyList, ","), strings.Join(managedPolicies, ","))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, managedPolicy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		// find in managed policies
+		var policyARN string
+		var marker *string
+		for {
+			resp, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
+				RoleName: aws.String(*role.Role.RoleName),
+				Marker:   marker,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			for _, ap := range resp.AttachedPolicies {
+				if *ap.PolicyName == managedPolicy {
+					policyARN = *ap.PolicyArn
+					break
+				}
+			}
+
+			if !*resp.IsTruncated {
+				break
+			}
+			marker = resp.Marker
+		}
+
+		if policyARN == "" {
+			return fmt.Errorf("managed policy %s not found", managedPolicy)
+		}
+
+		_, err := conn.DetachRolePolicy(&iam.DetachRolePolicyInput{
+			PolicyArn: aws.String(policyARN),
+			RoleName:  aws.String(*role.Role.RoleName),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.GetRoleOutput, managedPolicy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		// find in managed policies
+		var policyARN string
+		var marker *string
+		for {
+			pathPrefix := "/tf-testing/"
+			policyUsageFilter := "PermissionsPolicy"
+			scope := "Local"
+			resp, err := conn.ListPolicies(&iam.ListPoliciesInput{
+				PathPrefix:        &pathPrefix,
+				PolicyUsageFilter: &policyUsageFilter,
+				Scope:             &scope,
+				Marker:            marker,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			for _, ap := range resp.Policies {
+				if *ap.PolicyName == managedPolicy {
+					policyARN = *ap.Arn
+					break
+				}
+			}
+
+			if !*resp.IsTruncated {
+				break
+			}
+			marker = resp.Marker
+		}
+
+		if policyARN == "" {
+			return fmt.Errorf("managed policy %s not found", managedPolicy)
+		}
+
+		_, err := conn.AttachRolePolicy(&iam.AttachRolePolicyInput{
+			PolicyArn: aws.String(policyARN),
+			RoleName:  aws.String(*role.Role.RoleName),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRolePolicyAddInlinePolicy(role *iam.GetRoleOutput, inlinePolicy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		_, err := conn.PutRolePolicy(&iam.PutRolePolicyInput{
+			PolicyDocument: aws.String(testAccAWSRolePolicyExtraInlineConfig()),
+			PolicyName:     aws.String(inlinePolicy),
+			RoleName:       aws.String(*role.Role.RoleName),
+		})
+
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSRolePolicyRemoveInlinePolicy(role *iam.GetRoleOutput, inlinePolicy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		_, err := conn.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
+			PolicyName: aws.String(inlinePolicy),
+			RoleName:   aws.String(*role.Role.RoleName),
+		})
+
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSRolePolicyCheckInlinePrefix(role *iam.GetRoleOutput, roleName string, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *role.Role.RoleName != roleName {
+			return fmt.Errorf("bad role: expected %s, got %s", roleName, *role.Role.RoleName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		//inline policies
+		var inlinePolicyList []string
+		var marker *string
+		for {
+			//inline is ListRolePolicies
+			resp, err := conn.ListRolePolicies(&iam.ListRolePoliciesInput{
+				RoleName: aws.String(roleName),
+				Marker:   marker,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			for _, policyName := range resp.PolicyNames {
+				inlinePolicyList = append(inlinePolicyList, *policyName)
+			}
+
+			if !*resp.IsTruncated {
+				break
+			}
+			marker = resp.Marker
+		}
+
+		match := false
+		r := regexp.MustCompile(fmt.Sprintf("^%s(.*)$", prefix))
+
+		for _, policyName := range inlinePolicyList {
+			if r.MatchString(policyName) {
+				match = true
+				break
+			}
+		}
+
+		if !match {
+			return fmt.Errorf(
+				"%s didn't match any inline policies",
+				prefix)
+		}
+
+		return nil
+	}
+}
+
+func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
+	resp, err := conn.ListInstanceProfilesForRole(&iam.ListInstanceProfilesForRoleInput{
+		RoleName: aws.String(rolename),
+	})
+	if err != nil {
+		return fmt.Errorf("Error listing Profiles for IAM Role (%s) when trying to delete: %s", rolename, err)
+	}
+
+	// Loop and remove this Role from any Profiles
+	for _, i := range resp.InstanceProfiles {
+		input := &iam.RemoveRoleFromInstanceProfileInput{
+			InstanceProfileName: i.InstanceProfileName,
+			RoleName:            aws.String(rolename),
+		}
+
+		_, err := conn.RemoveRoleFromInstanceProfile(input)
+
+		if err != nil {
+			return fmt.Errorf("Error deleting IAM Role %s: %s", rolename, err)
+		}
+	}
+
+	return nil
+}
+
+<<<<<<< HEAD
+		input := &iam.PutRolePolicyInput{
+			RoleName: aws.String(rs.Primary.ID),
+			PolicyDocument: aws.String(`{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}`),
+			PolicyName: aws.String(resource.UniqueId()),
+=======
+func deleteAwsIamRolePolicyAttachments(conn *iam.IAM, rolename string) error {
+	managedPolicies := make([]*string, 0)
+	input := &iam.ListAttachedRolePoliciesInput{
+		RoleName: aws.String(rolename),
+	}
+
+	err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
+		for _, v := range page.AttachedPolicies {
+			managedPolicies = append(managedPolicies, v.PolicyArn)
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("Error listing Policies for IAM Role (%s) when trying to delete: %s", rolename, err)
+	}
+	for _, parn := range managedPolicies {
+		input := &iam.DetachRolePolicyInput{
+			PolicyArn: parn,
+			RoleName:  aws.String(rolename),
+>>>>>>> 558baf839 (resource/aws_iam_role: Add new acceptance tests)
+		}
+
+		_, err = conn.DetachRolePolicy(input)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error deleting IAM Role %s: %s", rolename, err)
+		}
+	}
+
+	return nil
+}
+
+func deleteAwsIamRolePolicies(conn *iam.IAM, rolename string) error {
+	inlinePolicies := make([]*string, 0)
+	input := &iam.ListRolePoliciesInput{
+		RoleName: aws.String(rolename),
+	}
+
+	err := conn.ListRolePoliciesPages(input, func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
+		inlinePolicies = append(inlinePolicies, page.PolicyNames...)
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error listing inline Policies for IAM Role (%s) when trying to delete: %s", rolename, err)
+	}
+
+	for _, pname := range inlinePolicies {
+		input := &iam.DeleteRolePolicyInput{
+			PolicyName: pname,
+			RoleName:   aws.String(rolename),
+		}
+
+		_, err := conn.DeleteRolePolicy(input)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error deleting inline policy of IAM Role %s: %s", rolename, err)
+		}
+	}
+
+	return nil
+}
+
+func compareStringSlices(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	sort.Strings(a)
+	sort.Strings(b)
+	for i := range b {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
@@ -1056,4 +1882,383 @@ EOF
   }
 }
 `, rName)
+}
+
+func testAccAWSRoleAssumeRolePolicy() string {
+	return `
+data "aws_iam_policy_document" "assume-role" {
+	statement {
+		actions = ["sts:AssumeRole"]
+
+		principals {
+			type        = "Service"
+			identifiers = ["ec2.amazonaws.com"]
+		}
+	}
+}
+	`
+}
+
+func testAccAWSRolePolicyInlineConfig(roleName, ilPolicyName1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+	inline_policy {
+		name = "%s"
+		policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+	}
+}
+
+%s
+
+`, roleName, ilPolicyName1, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyInlinePrefix(roleName, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+	inline_policy {
+		name_prefix = "%s"
+		policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+	}
+}
+
+%s
+`, roleName, prefix, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyInlineNoName(roleName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+	inline_policy {
+		policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+	}
+}
+
+%s
+`, roleName, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyInlineConfigUpdate(roleName, ilPolicyName2, ilPolicyName3 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+
+	inline_policy {
+		name = "%s"
+		policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+	}
+
+	inline_policy {
+		name = "%s"
+		policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+	}
+
+}
+
+%s
+`, roleName, ilPolicyName2, ilPolicyName3, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyInlineConfigUpdateDown(roleName, ilPolicyName3 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+
+	inline_policy {
+		name = "%s"
+		policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": {
+		"Effect": "Allow",
+		"Action": "ec2:Describe*",
+		"Resource": "*",
+		"Condition": {
+			"DateGreaterThan": {"aws:CurrentTime": "2017-07-01T00:00:00Z"},
+			"DateLessThan": {"aws:CurrentTime": "2017-12-31T23:59:59Z"}
+		}
+	}
+}
+EOF
+	}
+}
+
+%s
+`, roleName, ilPolicyName3, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyManaged(resourceAddr, mgPolicyName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "%s" {
+	name   = "%s"
+	path   = "/tf-testing/"
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+}
+	`, resourceAddr, mgPolicyName)
+}
+
+func testAccAWSRolePolicyManagedConfigUpdateTemplate(roleName, managedARNs, mgPolicy1, mgPolicy2, mgPolicy3 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name                = "%s"
+	assume_role_policy  = "${data.aws_iam_policy_document.assume-role.json}"
+%s
+}
+
+%s
+
+%s
+
+%s
+
+%s
+`,
+		roleName,
+		managedARNs,
+		mgPolicy1,
+		mgPolicy2,
+		mgPolicy3,
+		testAccAWSRoleAssumeRolePolicy(),
+	)
+}
+
+func testAccAWSRolePolicyManagedConfig(roleName, mgPolicyName1 string) string {
+	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
+		roleName,
+		`
+	managed_policy_arns = ["${aws_iam_policy.managed-policy1.arn}"]
+		`,
+		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
+		"",
+		"",
+	)
+}
+
+func testAccAWSRolePolicyManagedConfigUpdate(roleName, mgPolicyName1, mgPolicyName2, mgPolicyName3 string) string {
+	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
+		roleName,
+		`
+	managed_policy_arns = [
+		"${aws_iam_policy.managed-policy2.arn}",
+		"${aws_iam_policy.managed-policy3.arn}",
+	]
+		`,
+		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
+		testAccAWSRolePolicyManaged("managed-policy2", mgPolicyName2),
+		testAccAWSRolePolicyManaged("managed-policy3", mgPolicyName3),
+	)
+}
+
+func testAccAWSRolePolicyManagedConfigUpdateDown(roleName, mgPolicyName1, mgPolicyName2, mgPolicyName3 string) string {
+	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
+		roleName,
+		`
+	managed_policy_arns = [
+		"${aws_iam_policy.managed-policy3.arn}",
+	]
+		`,
+		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
+		testAccAWSRolePolicyManaged("managed-policy2", mgPolicyName2),
+		testAccAWSRolePolicyManaged("managed-policy3", mgPolicyName3),
+	)
+}
+
+func testAccAWSRolePolicyExtraManagedConfig(roleName, mgPolicyName1, mgPolicyName2 string) string {
+	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
+		roleName,
+		`
+	managed_policy_arns = ["${aws_iam_policy.managed-policy1.arn}"]
+		`,
+		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
+		testAccAWSRolePolicyManaged("managed-policy2", mgPolicyName2),
+		"",
+	)
+
+}
+
+func testAccAWSRolePolicyExtraInlineConfig() string {
+	return fmt.Sprint(`{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}`)
+}
+
+func testAccAWSRolePolicyNoInlineConfig(roleName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+%s
+`, roleName, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyNoManagedConfig(roleName, mgPolicyName1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name               = "%s"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+}
+
+resource "aws_iam_policy" "managed-policy1" {
+	name = "%s"
+	path = "/tf-testing/"
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+}
+
+%s
+`, roleName, mgPolicyName1, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyEmptyInlineConfig(roleName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name                      = "%s"
+	assume_role_policy        = "${data.aws_iam_policy_document.assume-role.json}"
+	inline_policy {}
+}
+
+%s
+`, roleName, testAccAWSRoleAssumeRolePolicy())
+}
+
+func testAccAWSRolePolicyEmptyManagedConfig(roleName, mgPolicyName1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "acc_role" {
+	name                = "%s"
+	assume_role_policy  = "${data.aws_iam_policy_document.assume-role.json}"
+	managed_policy_arns = []
+}
+
+resource "aws_iam_policy" "managed-policy1" {
+	name = "%s"
+	path = "/tf-testing/"
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": [
+			"ec2:Describe*"
+		],
+		"Effect": "Allow",
+		"Resource": "*"
+		}
+	]
+}
+EOF
+}
+
+%s
+`, roleName, mgPolicyName1, testAccAWSRoleAssumeRolePolicy())
 }

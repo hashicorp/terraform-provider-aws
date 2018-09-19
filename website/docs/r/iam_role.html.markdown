@@ -58,11 +58,9 @@ The following arguments are supported:
 * `max_session_duration` - (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
 * `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the role.
 <<<<<<< HEAD
-* `tags` - Key-value map of tags for the IAM role
-=======
 <<<<<<< HEAD
+* `tags` - Key-value map of tags for the IAM role
 * `tags` - Key-value mapping of tags for the IAM role
-=======
 * `managed_policy_arns` - (Optional) An exclusive set of IAM managed policy ARNs to attach to the IAM role. If the attribute is not used, the resource will not attach or detach the role's managed policies on the next `apply`. If the set is empty, all managed policies that are attached out of band, will be detached on the next `apply`. 
 
 ~> **NOTE:** The `managed_policy_arns` attribute, which provides an _exclusive_ set of managed policies for an IAM role, will conflict with using the `iam_role_policy_attachment` resource, which provides non-exclusive, managed policy-role attachment. See [`iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html).
