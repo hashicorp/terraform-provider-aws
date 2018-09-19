@@ -61,7 +61,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
-				Deprecated:       "The `overwrite` attribute is no longer used",
+				Deprecated:       "The `overwrite` attribute is no longer used. Existing resources are now always overwritten.",
 			},
 			"allowed_pattern": {
 				Type:     schema.TypeString,
