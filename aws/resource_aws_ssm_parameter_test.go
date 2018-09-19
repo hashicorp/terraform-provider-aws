@@ -408,35 +408,3 @@ resource "aws_kms_alias" "test_alias" {
 }
 `, rName, value, keyAlias)
 }
-
-func TestAWSSSMParameterShouldUpdate(t *testing.T) {
-	data := resourceAwsSsmParameter().TestResourceData()
-	failure := false
-
-	if !shouldUpdateSsmParameter(data) {
-		t.Logf("Existing resources should be overwritten if the values don't match!")
-		failure = true
-	}
-
-	data.MarkNewResource()
-	if shouldUpdateSsmParameter(data) {
-		t.Logf("New resources must never be overwritten, this will overwrite parameters created outside of the system")
-		failure = true
-	}
-
-	data = resourceAwsSsmParameter().TestResourceData()
-	data.Set("overwrite", true)
-	if !shouldUpdateSsmParameter(data) {
-		t.Logf("Resources should always be overwritten if the user requests it")
-		failure = true
-	}
-
-	data.Set("overwrite", false)
-	if shouldUpdateSsmParameter(data) {
-		t.Logf("Resources should never be overwritten if the user requests it")
-		failure = true
-	}
-	if failure {
-		t.Fail()
-	}
-}
