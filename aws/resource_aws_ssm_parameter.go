@@ -58,8 +58,9 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Computed: true,
 			},
 			"overwrite": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:             schema.TypeBool,
+				Optional:         true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
 			},
 			"allowed_pattern": {
 				Type:     schema.TypeString,
