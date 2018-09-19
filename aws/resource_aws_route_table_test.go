@@ -53,6 +53,18 @@ func testSweepRouteTables(region string) error {
 	}
 
 	for _, routeTable := range resp.RouteTables {
+		for _, routeTableAssociation := range routeTable.Associations {
+			input := &ec2.DisassociateRouteTableInput{
+				AssociationId: routeTableAssociation.RouteTableAssociationId,
+			}
+
+			log.Printf("[DEBUG] Deleting Route Table Association: %s", input)
+			_, err := conn.DisassociateRouteTable(input)
+			if err != nil {
+				return fmt.Errorf("error deleting Route Table Association (%s): %s", aws.StringValue(routeTableAssociation.RouteTableAssociationId), err)
+			}
+		}
+
 		input := &ec2.DeleteRouteTableInput{
 			RouteTableId: routeTable.RouteTableId,
 		}
