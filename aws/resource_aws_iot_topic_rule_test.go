@@ -10,6 +10,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIoTTopicRule_importbasic(t *testing.T) {
+	resourceName := "aws_iot_topic_rule.rule"
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTTopicRule_basic(rName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 

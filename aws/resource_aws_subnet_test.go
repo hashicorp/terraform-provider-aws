@@ -86,6 +86,27 @@ func testSweepSubnets(region string) error {
 	return nil
 }
 
+func TestAccAWSSubnet_importBasic(t *testing.T) {
+	resourceName := "aws_subnet.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 

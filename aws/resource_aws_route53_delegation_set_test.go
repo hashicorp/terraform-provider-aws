@@ -14,6 +14,28 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 )
 
+func TestAccAWSRoute53DelegationSet_importBasic(t *testing.T) {
+	resourceName := "aws_route53_delegation_set.test"
+	refName := acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53DelegationSetConfig(refName),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"reference_name"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	refName := fmt.Sprintf("tf_acc_%s", rString)

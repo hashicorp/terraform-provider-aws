@@ -17,6 +17,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
+func TestAccAWSRDSCluster_importBasic(t *testing.T) {
+	resourceName := "aws_rds_cluster.default"
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig(ri),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"master_password", "skip_final_snapshot"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
 	rInt := acctest.RandInt()
