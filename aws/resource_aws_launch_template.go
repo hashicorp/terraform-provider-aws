@@ -319,7 +319,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
