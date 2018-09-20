@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSDmsReplicationInstanceBasic(t *testing.T) {
+func TestAccAWSDmsReplicationInstance_Basic(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.dms_replication_instance"
 	randId := acctest.RandString(8)
 
@@ -39,6 +39,39 @@ func TestAccAWSDmsReplicationInstanceBasic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "apply_immediately"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "mon:00:30-mon:02:30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
+	resourceName := "aws_dms_replication_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsReplicationInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDmsReplicationInstanceConfig_EngineVersion(rName, "2.4.2"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsReplicationInstanceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "2.4.2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccAWSDmsReplicationInstanceConfig_EngineVersion(rName, "2.4.3"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsReplicationInstanceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "2.4.3"),
 				),
 			},
 		},
@@ -198,4 +231,15 @@ resource "aws_dms_replication_instance" "dms_replication_instance" {
 	}
 }
 `, randId)
+}
+
+func testAccAWSDmsReplicationInstanceConfig_EngineVersion(rName, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_replication_instance" "test" {
+  apply_immediately          = true
+  engine_version             = %q
+  replication_instance_class = "dms.t2.micro"
+  replication_instance_id    = %q
+}
+`, engineVersion, rName)
 }
