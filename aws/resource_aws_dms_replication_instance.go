@@ -259,7 +259,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChange("engine_version") {
 		if v, ok := d.GetOk("engine_version"); ok {
-			request.ReplicationInstanceClass = aws.String(v.(string))
+			request.EngineVersion = aws.String(v.(string))
 			hasChanges = true
 		}
 	}
