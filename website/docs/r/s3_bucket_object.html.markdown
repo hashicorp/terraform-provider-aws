@@ -97,7 +97,7 @@ The following arguments are supported:
 * `storage_class` - (Optional) Specifies the desired [Storage Class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
 for the object. Can be either "`STANDARD`", "`REDUCED_REDUNDANCY`", "`ONEZONE_IA`", or "`STANDARD_IA`". Defaults to "`STANDARD`".
 * `etag` - (Optional) Used to trigger updates. The only meaningful value is `${md5(file("path/to/file"))}`.
-This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"`.
+This attribute is not compatible with KMS encryption like `kms_key_id`.  It is also not compatible with `server_side_encryption` of any kind due to a current Terraform limitation.  [See here](https://github.com/terraform-providers/terraform-provider-aws/issues/5033#issuecomment-423061373) for more information.
 * `server_side_encryption` - (Optional) Specifies server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
 * `kms_key_id` - (Optional) Specifies the AWS KMS Key ARN to use for object encryption.
 This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`,
