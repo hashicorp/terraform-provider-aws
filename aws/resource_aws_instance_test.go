@@ -115,7 +115,12 @@ func TestFetchRootDevice(t *testing.T) {
 		},
 	}
 
-	conn := ec2.New(session.New(nil))
+	sess, err := session.NewSession(nil)
+	if err != nil {
+		t.Errorf("Error new session: %s", err)
+	}
+
+	conn := ec2.New(sess)
 
 	for _, tc := range cases {
 		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
