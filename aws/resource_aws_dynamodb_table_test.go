@@ -331,6 +331,71 @@ func TestDiffDynamoDbGSI(t *testing.T) {
 	}
 }
 
+func TestAccAWSDynamoDbTable_importBasic(t *testing.T) {
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigInitialState(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_importTags(t *testing.T) {
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigTags(),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_importTimeToLive(t *testing.T) {
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -769,7 +834,7 @@ func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckF
 		resp, err := conn.DescribeTimeToLive(params)
 
 		if err != nil {
-			return fmt.Errorf("[ERROR] Problem describing time to live for table '%s': %s", rs.Primary.ID, err)
+			return fmt.Errorf("Problem describing time to live for table '%s': %s", rs.Primary.ID, err)
 		}
 
 		ttlDescription := resp.TimeToLiveDescription
@@ -813,7 +878,7 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "0"),
 					func(s *terraform.State) error {
 						if confEncDisabled.Table.CreationDateTime.Equal(*confEncEnabled.Table.CreationDateTime) {
-							return fmt.Errorf("[ERROR] DynamoDB table not recreated when changing SSE")
+							return fmt.Errorf("DynamoDB table not recreated when changing SSE")
 						}
 						return nil
 					},
@@ -826,7 +891,7 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "server_side_encryption.#", "0"),
 					func(s *terraform.State) error {
 						if !confBasic.Table.CreationDateTime.Equal(*confEncDisabled.Table.CreationDateTime) {
-							return fmt.Errorf("[ERROR] DynamoDB table was recreated unexpectedly")
+							return fmt.Errorf("DynamoDB table was recreated unexpectedly")
 						}
 						return nil
 					},
@@ -887,7 +952,7 @@ func testAccCheckInitialAWSDynamoDbTableExists(n string, table *dynamodb.Describ
 		resp, err := conn.DescribeTable(params)
 
 		if err != nil {
-			return fmt.Errorf("[ERROR] Problem describing table '%s': %s", rs.Primary.ID, err)
+			return fmt.Errorf("Problem describing table '%s': %s", rs.Primary.ID, err)
 		}
 
 		*table = *resp
@@ -917,7 +982,7 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 		resp, err := conn.DescribeTable(params)
 
 		if err != nil {
-			return fmt.Errorf("[ERROR] Problem describing table '%s': %s", rs.Primary.ID, err)
+			return fmt.Errorf("Problem describing table '%s': %s", rs.Primary.ID, err)
 		}
 
 		table := resp.Table

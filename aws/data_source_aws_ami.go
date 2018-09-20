@@ -277,7 +277,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 
 // Returns the most recent AMI out of a slice of images.
 func mostRecentAmi(images []*ec2.Image) *ec2.Image {
-	return sortImages(images)[0]
+	return sortImages(images, false)[0]
 }
 
 // populate the numerous fields that the image description returns.

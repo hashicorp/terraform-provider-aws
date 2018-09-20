@@ -34,6 +34,7 @@ func testSweepVPNGateways(region string) error {
 				Name: aws.String("tag-value"),
 				Values: []*string{
 					aws.String("terraform-testacc-*"),
+					aws.String("tf-acc-test-*"),
 				},
 			},
 		},
@@ -53,17 +54,64 @@ func testSweepVPNGateways(region string) error {
 	}
 
 	for _, vpng := range resp.VpnGateways {
-		_, err := conn.DeleteVpnGateway(&ec2.DeleteVpnGatewayInput{
+		for _, vpcAttachment := range vpng.VpcAttachments {
+			input := &ec2.DetachVpnGatewayInput{
+				VpcId:        vpcAttachment.VpcId,
+				VpnGatewayId: vpng.VpnGatewayId,
+			}
+
+			log.Printf("[DEBUG] Detaching VPN Gateway: %s", input)
+			_, err := conn.DetachVpnGateway(input)
+			if err != nil {
+				return fmt.Errorf("error detaching VPN Gateway (%s) from VPC (%s): %s", aws.StringValue(vpng.VpnGatewayId), aws.StringValue(vpcAttachment.VpcId), err)
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"attached", "detaching"},
+				Target:  []string{"detached"},
+				Refresh: vpnGatewayAttachmentStateRefresh(conn, aws.StringValue(vpcAttachment.VpcId), aws.StringValue(vpng.VpnGatewayId)),
+				Timeout: 10 * time.Minute,
+			}
+
+			log.Printf("[DEBUG] Waiting for VPN Gateway (%s) to detach from VPC (%s)", aws.StringValue(vpng.VpnGatewayId), aws.StringValue(vpcAttachment.VpcId))
+			if _, err = stateConf.WaitForState(); err != nil {
+				return fmt.Errorf("error waiting for VPN Gateway (%s) to detach from VPC (%s): %s", aws.StringValue(vpng.VpnGatewayId), aws.StringValue(vpcAttachment.VpcId), err)
+			}
+		}
+
+		input := &ec2.DeleteVpnGatewayInput{
 			VpnGatewayId: vpng.VpnGatewayId,
-		})
+		}
+
+		log.Printf("[DEBUG] Deleting VPN Gateway: %s", input)
+		_, err := conn.DeleteVpnGateway(input)
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting VPN Gateway (%s): %s",
-				*vpng.VpnGatewayId, err)
+			return fmt.Errorf("error deleting VPN Gateway (%s): %s", aws.StringValue(vpng.VpnGatewayId), err)
 		}
 	}
 
 	return nil
+}
+
+func TestAccAWSVpnGateway_importBasic(t *testing.T) {
+	resourceName := "aws_vpn_gateway.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnGatewayConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccAWSVpnGateway_basic(t *testing.T) {

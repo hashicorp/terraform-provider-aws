@@ -32,6 +32,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "execution_arn"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "xray_tracing_enabled", "true"),
 				),
 			},
 			{
@@ -47,6 +48,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "stage_name", "prod"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "cache_cluster_enabled", "false"),
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "xray_tracing_enabled", "false"),
 				),
 			},
 			{
@@ -59,6 +61,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "tags.%", "1"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "execution_arn"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_stage.test", "invoke_url"),
+					resource.TestCheckResourceAttr("aws_api_gateway_stage.test", "xray_tracing_enabled", "true"),
 				),
 			},
 		},
@@ -262,6 +265,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
+  xray_tracing_enabled = true
   variables {
     one = "1"
     two = "2"
@@ -281,6 +285,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = false
   description = "Hello world"
+  xray_tracing_enabled = false
   variables {
     one = "1"
     three = "3"

@@ -166,7 +166,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 		maxParams := 20
 
 		for len(toRemove) > 0 {
-			paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+			var paramsToModify []*elasticache.ParameterNameValue
 			if len(toRemove) <= maxParams {
 				paramsToModify, toRemove = toRemove[:], nil
 			} else {
@@ -194,7 +194,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 		}
 
 		for len(toAdd) > 0 {
-			paramsToModify := make([]*elasticache.ParameterNameValue, 0)
+			var paramsToModify []*elasticache.ParameterNameValue
 			if len(toAdd) <= maxParams {
 				paramsToModify, toAdd = toAdd[:], nil
 			} else {

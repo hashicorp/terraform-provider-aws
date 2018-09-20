@@ -34,6 +34,7 @@ func testSweepLBs(region string) error {
 		"tf-test-",
 		"tf-acc-test-",
 		"test-",
+		"testacc",
 	}
 
 	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {

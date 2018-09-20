@@ -290,7 +290,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 			ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 		})
 		if err != nil {
-			return fmt.Errorf("[ERROR] Problem getting table item '%s': %s", rs.Primary.ID, err)
+			return fmt.Errorf("Problem getting table item '%s': %s", rs.Primary.ID, err)
 		}
 
 		*item = *result

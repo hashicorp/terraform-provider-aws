@@ -54,7 +54,7 @@ func resourceAwsIamUser() *schema.Resource {
 			"permissions_boundary": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(20, 2048),
+				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
 			"force_destroy": {
 				Type:        schema.TypeBool,
@@ -273,16 +273,6 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error deleting Account Login Profile: %s", err)
 		}
-	}
-
-	deleteUserPermissionsBoundaryInput := &iam.DeleteUserPermissionsBoundaryInput{
-		UserName: aws.String(d.Id()),
-	}
-
-	log.Println("[DEBUG] Delete IAM User Permissions Boundary request:", deleteUserPermissionsBoundaryInput)
-	_, err = iamconn.DeleteUserPermissionsBoundary(deleteUserPermissionsBoundaryInput)
-	if err != nil && !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-		return fmt.Errorf("Error deleting IAM User %s Permissions Boundary: %s", d.Id(), err)
 	}
 
 	deleteUserInput := &iam.DeleteUserInput{

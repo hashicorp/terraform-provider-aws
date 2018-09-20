@@ -652,7 +652,7 @@ func resourceAwsNeptuneClusterDelete(d *schema.ResourceData, meta interface{}) e
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error deleting Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
 	return nil

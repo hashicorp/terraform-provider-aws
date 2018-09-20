@@ -65,6 +65,31 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
+func TestAccAWSRoute53Zone_importBasic(t *testing.T) {
+	resourceName := "aws_route53_zone.main"
+
+	rString := acctest.RandString(8)
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ZoneConfig(zoneName),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	var zone, zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
 	var td route53.ResourceTagSet

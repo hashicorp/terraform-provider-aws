@@ -415,6 +415,8 @@ const opAttachPrincipalPolicy = "AttachPrincipalPolicy"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
+//
+// Deprecated: AttachPrincipalPolicy has been deprecated
 func (c *IoT) AttachPrincipalPolicyRequest(input *AttachPrincipalPolicyInput) (req *request.Request, output *AttachPrincipalPolicyOutput) {
 	if c.Client.Config.Logger != nil {
 		c.Client.Config.Logger.Log("This operation, AttachPrincipalPolicy, has been deprecated")
@@ -472,6 +474,8 @@ func (c *IoT) AttachPrincipalPolicyRequest(input *AttachPrincipalPolicyInput) (r
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit has been exceeded.
 //
+//
+// Deprecated: AttachPrincipalPolicy has been deprecated
 func (c *IoT) AttachPrincipalPolicy(input *AttachPrincipalPolicyInput) (*AttachPrincipalPolicyOutput, error) {
 	req, out := c.AttachPrincipalPolicyRequest(input)
 	return out, req.Send()
@@ -486,6 +490,8 @@ func (c *IoT) AttachPrincipalPolicy(input *AttachPrincipalPolicyInput) (*AttachP
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: AttachPrincipalPolicyWithContext has been deprecated
 func (c *IoT) AttachPrincipalPolicyWithContext(ctx aws.Context, input *AttachPrincipalPolicyInput, opts ...request.Option) (*AttachPrincipalPolicyOutput, error) {
 	req, out := c.AttachPrincipalPolicyRequest(input)
 	req.SetContext(ctx)
@@ -1604,6 +1610,9 @@ func (c *IoT) CreateOTAUpdateRequest(input *CreateOTAUpdateInput) (req *request.
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   The request is not valid.
 //
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit has been exceeded.
+//
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified resource does not exist.
 //
@@ -2169,6 +2178,9 @@ func (c *IoT) CreateStreamRequest(input *CreateStreamInput) (req *request.Reques
 // Returned Error Codes:
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   The request is not valid.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit has been exceeded.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified resource does not exist.
@@ -3221,6 +3233,10 @@ func (c *IoT) DeleteOTAUpdateRequest(input *DeleteOTAUpdateInput) (req *request.
 //
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The service is temporarily unavailable.
+//
+//   * ErrCodeVersionConflictException "VersionConflictException"
+//   An exception thrown when the version of an entity specified with the expectedVersion
+//   parameter does not match the latest version in the system.
 //
 func (c *IoT) DeleteOTAUpdate(input *DeleteOTAUpdateInput) (*DeleteOTAUpdateOutput, error) {
 	req, out := c.DeleteOTAUpdateRequest(input)
@@ -6213,6 +6229,8 @@ const opDetachPrincipalPolicy = "DetachPrincipalPolicy"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
+//
+// Deprecated: DetachPrincipalPolicy has been deprecated
 func (c *IoT) DetachPrincipalPolicyRequest(input *DetachPrincipalPolicyInput) (req *request.Request, output *DetachPrincipalPolicyOutput) {
 	if c.Client.Config.Logger != nil {
 		c.Client.Config.Logger.Log("This operation, DetachPrincipalPolicy, has been deprecated")
@@ -6266,6 +6284,8 @@ func (c *IoT) DetachPrincipalPolicyRequest(input *DetachPrincipalPolicyInput) (r
 //   * ErrCodeInternalFailureException "InternalFailureException"
 //   An unexpected error has occurred.
 //
+//
+// Deprecated: DetachPrincipalPolicy has been deprecated
 func (c *IoT) DetachPrincipalPolicy(input *DetachPrincipalPolicyInput) (*DetachPrincipalPolicyOutput, error) {
 	req, out := c.DetachPrincipalPolicyRequest(input)
 	return out, req.Send()
@@ -6280,6 +6300,8 @@ func (c *IoT) DetachPrincipalPolicy(input *DetachPrincipalPolicyInput) (*DetachP
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: DetachPrincipalPolicyWithContext has been deprecated
 func (c *IoT) DetachPrincipalPolicyWithContext(ctx aws.Context, input *DetachPrincipalPolicyInput, opts ...request.Option) (*DetachPrincipalPolicyOutput, error) {
 	req, out := c.DetachPrincipalPolicyRequest(input)
 	req.SetContext(ctx)
@@ -8854,6 +8876,8 @@ const opListPolicyPrincipals = "ListPolicyPrincipals"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
+//
+// Deprecated: ListPolicyPrincipals has been deprecated
 func (c *IoT) ListPolicyPrincipalsRequest(input *ListPolicyPrincipalsInput) (req *request.Request, output *ListPolicyPrincipalsOutput) {
 	if c.Client.Config.Logger != nil {
 		c.Client.Config.Logger.Log("This operation, ListPolicyPrincipals, has been deprecated")
@@ -8905,6 +8929,8 @@ func (c *IoT) ListPolicyPrincipalsRequest(input *ListPolicyPrincipalsInput) (req
 //   * ErrCodeInternalFailureException "InternalFailureException"
 //   An unexpected error has occurred.
 //
+//
+// Deprecated: ListPolicyPrincipals has been deprecated
 func (c *IoT) ListPolicyPrincipals(input *ListPolicyPrincipalsInput) (*ListPolicyPrincipalsOutput, error) {
 	req, out := c.ListPolicyPrincipalsRequest(input)
 	return out, req.Send()
@@ -8919,6 +8945,8 @@ func (c *IoT) ListPolicyPrincipals(input *ListPolicyPrincipalsInput) (*ListPolic
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: ListPolicyPrincipalsWithContext has been deprecated
 func (c *IoT) ListPolicyPrincipalsWithContext(ctx aws.Context, input *ListPolicyPrincipalsInput, opts ...request.Option) (*ListPolicyPrincipalsOutput, error) {
 	req, out := c.ListPolicyPrincipalsRequest(input)
 	req.SetContext(ctx)
@@ -9041,6 +9069,8 @@ const opListPrincipalPolicies = "ListPrincipalPolicies"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
+//
+// Deprecated: ListPrincipalPolicies has been deprecated
 func (c *IoT) ListPrincipalPoliciesRequest(input *ListPrincipalPoliciesInput) (req *request.Request, output *ListPrincipalPoliciesOutput) {
 	if c.Client.Config.Logger != nil {
 		c.Client.Config.Logger.Log("This operation, ListPrincipalPolicies, has been deprecated")
@@ -9093,6 +9123,8 @@ func (c *IoT) ListPrincipalPoliciesRequest(input *ListPrincipalPoliciesInput) (r
 //   * ErrCodeInternalFailureException "InternalFailureException"
 //   An unexpected error has occurred.
 //
+//
+// Deprecated: ListPrincipalPolicies has been deprecated
 func (c *IoT) ListPrincipalPolicies(input *ListPrincipalPoliciesInput) (*ListPrincipalPoliciesOutput, error) {
 	req, out := c.ListPrincipalPoliciesRequest(input)
 	return out, req.Send()
@@ -9107,6 +9139,8 @@ func (c *IoT) ListPrincipalPolicies(input *ListPrincipalPoliciesInput) (*ListPri
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: ListPrincipalPoliciesWithContext has been deprecated
 func (c *IoT) ListPrincipalPoliciesWithContext(ctx aws.Context, input *ListPrincipalPoliciesInput, opts ...request.Option) (*ListPrincipalPoliciesOutput, error) {
 	req, out := c.ListPrincipalPoliciesRequest(input)
 	req.SetContext(ctx)
@@ -15165,6 +15199,43 @@ func (s *AuthorizerSummary) SetAuthorizerName(v string) *AuthorizerSummary {
 	return s
 }
 
+// Configuration for the rollout of OTA updates.
+type AwsJobExecutionsRolloutConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of OTA update job executions started per minute.
+	MaximumPerMinute *int64 `locationName:"maximumPerMinute" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsJobExecutionsRolloutConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobExecutionsRolloutConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobExecutionsRolloutConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobExecutionsRolloutConfig"}
+	if s.MaximumPerMinute != nil && *s.MaximumPerMinute < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumPerMinute", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumPerMinute sets the MaximumPerMinute field's value.
+func (s *AwsJobExecutionsRolloutConfig) SetMaximumPerMinute(v int64) *AwsJobExecutionsRolloutConfig {
+	s.MaximumPerMinute = &v
+	return s
+}
+
 // A Device Defender security profile behavior.
 type Behavior struct {
 	_ struct{} `type:"structure"`
@@ -16214,6 +16285,9 @@ type CodeSigning struct {
 
 	// A custom method for code signing a file.
 	CustomCodeSigning *CustomCodeSigning `locationName:"customCodeSigning" type:"structure"`
+
+	// Describes the code-signing job.
+	StartSigningJobParameter *StartSigningJobParameter `locationName:"startSigningJobParameter" type:"structure"`
 }
 
 // String returns the string representation
@@ -16229,9 +16303,9 @@ func (s CodeSigning) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CodeSigning) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CodeSigning"}
-	if s.CustomCodeSigning != nil {
-		if err := s.CustomCodeSigning.Validate(); err != nil {
-			invalidParams.AddNested("CustomCodeSigning", err.(request.ErrInvalidParams))
+	if s.StartSigningJobParameter != nil {
+		if err := s.StartSigningJobParameter.Validate(); err != nil {
+			invalidParams.AddNested("StartSigningJobParameter", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -16253,6 +16327,12 @@ func (s *CodeSigning) SetCustomCodeSigning(v *CustomCodeSigning) *CodeSigning {
 	return s
 }
 
+// SetStartSigningJobParameter sets the StartSigningJobParameter field's value.
+func (s *CodeSigning) SetStartSigningJobParameter(v *StartSigningJobParameter) *CodeSigning {
+	s.StartSigningJobParameter = v
+	return s
+}
+
 // Describes the certificate chain being used when code signing a file.
 type CodeSigningCertificateChain struct {
 	_ struct{} `type:"structure"`
@@ -16262,9 +16342,6 @@ type CodeSigningCertificateChain struct {
 
 	// A base64 encoded binary representation of the code signing certificate chain.
 	InlineDocument *string `locationName:"inlineDocument" type:"string"`
-
-	// A stream of the certificate chain files.
-	Stream *Stream `locationName:"stream" type:"structure"`
 }
 
 // String returns the string representation
@@ -16275,21 +16352,6 @@ func (s CodeSigningCertificateChain) String() string {
 // GoString returns the string representation
 func (s CodeSigningCertificateChain) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CodeSigningCertificateChain) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CodeSigningCertificateChain"}
-	if s.Stream != nil {
-		if err := s.Stream.Validate(); err != nil {
-			invalidParams.AddNested("Stream", err.(request.ErrInvalidParams))
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetCertificateName sets the CertificateName field's value.
@@ -16304,12 +16366,6 @@ func (s *CodeSigningCertificateChain) SetInlineDocument(v string) *CodeSigningCe
 	return s
 }
 
-// SetStream sets the Stream field's value.
-func (s *CodeSigningCertificateChain) SetStream(v *Stream) *CodeSigningCertificateChain {
-	s.Stream = v
-	return s
-}
-
 // Describes the signature for a file.
 type CodeSigningSignature struct {
 	_ struct{} `type:"structure"`
@@ -16318,9 +16374,6 @@ type CodeSigningSignature struct {
 	//
 	// InlineDocument is automatically base64 encoded/decoded by the SDK.
 	InlineDocument []byte `locationName:"inlineDocument" type:"blob"`
-
-	// A stream of the code signing signature.
-	Stream *Stream `locationName:"stream" type:"structure"`
 }
 
 // String returns the string representation
@@ -16333,30 +16386,9 @@ func (s CodeSigningSignature) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CodeSigningSignature) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CodeSigningSignature"}
-	if s.Stream != nil {
-		if err := s.Stream.Validate(); err != nil {
-			invalidParams.AddNested("Stream", err.(request.ErrInvalidParams))
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetInlineDocument sets the InlineDocument field's value.
 func (s *CodeSigningSignature) SetInlineDocument(v []byte) *CodeSigningSignature {
 	s.InlineDocument = v
-	return s
-}
-
-// SetStream sets the Stream field's value.
-func (s *CodeSigningSignature) SetStream(v *Stream) *CodeSigningSignature {
-	s.Stream = v
 	return s
 }
 
@@ -16861,6 +16893,9 @@ type CreateOTAUpdateInput struct {
 	// A list of additional OTA update parameters which are name-value pairs.
 	AdditionalParameters map[string]*string `locationName:"additionalParameters" type:"map"`
 
+	// Configuration for the rollout of OTA updates.
+	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
+
 	// The description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
 
@@ -16930,6 +16965,11 @@ func (s *CreateOTAUpdateInput) Validate() error {
 	if s.Targets != nil && len(s.Targets) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Targets", 1))
 	}
+	if s.AwsJobExecutionsRolloutConfig != nil {
+		if err := s.AwsJobExecutionsRolloutConfig.Validate(); err != nil {
+			invalidParams.AddNested("AwsJobExecutionsRolloutConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Files != nil {
 		for i, v := range s.Files {
 			if v == nil {
@@ -16950,6 +16990,12 @@ func (s *CreateOTAUpdateInput) Validate() error {
 // SetAdditionalParameters sets the AdditionalParameters field's value.
 func (s *CreateOTAUpdateInput) SetAdditionalParameters(v map[string]*string) *CreateOTAUpdateInput {
 	s.AdditionalParameters = v
+	return s
+}
+
+// SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *CreateOTAUpdateInput {
+	s.AwsJobExecutionsRolloutConfig = v
 	return s
 }
 
@@ -18178,26 +18224,6 @@ func (s CustomCodeSigning) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CustomCodeSigning) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CustomCodeSigning"}
-	if s.CertificateChain != nil {
-		if err := s.CertificateChain.Validate(); err != nil {
-			invalidParams.AddNested("CertificateChain", err.(request.ErrInvalidParams))
-		}
-	}
-	if s.Signature != nil {
-		if err := s.Signature.Validate(); err != nil {
-			invalidParams.AddNested("Signature", err.(request.ErrInvalidParams))
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetCertificateChain sets the CertificateChain field's value.
 func (s *CustomCodeSigning) SetCertificateChain(v *CodeSigningCertificateChain) *CustomCodeSigning {
 	s.CertificateChain = v
@@ -18622,6 +18648,14 @@ func (s DeleteJobOutput) GoString() string {
 type DeleteOTAUpdateInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specifies if the stream associated with an OTA update should be deleted when
+	// the OTA update is deleted.
+	DeleteStream *bool `location:"querystring" locationName:"deleteStream" type:"boolean"`
+
+	// Specifies if the AWS Job associated with the OTA update should be deleted
+	// with the OTA update is deleted.
+	ForceDeleteAWSJob *bool `location:"querystring" locationName:"forceDeleteAWSJob" type:"boolean"`
+
 	// The OTA update ID to delete.
 	//
 	// OtaUpdateId is a required field
@@ -18652,6 +18686,18 @@ func (s *DeleteOTAUpdateInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDeleteStream sets the DeleteStream field's value.
+func (s *DeleteOTAUpdateInput) SetDeleteStream(v bool) *DeleteOTAUpdateInput {
+	s.DeleteStream = &v
+	return s
+}
+
+// SetForceDeleteAWSJob sets the ForceDeleteAWSJob field's value.
+func (s *DeleteOTAUpdateInput) SetForceDeleteAWSJob(v bool) *DeleteOTAUpdateInput {
+	s.ForceDeleteAWSJob = &v
+	return s
 }
 
 // SetOtaUpdateId sets the OtaUpdateId field's value.
@@ -21113,6 +21159,45 @@ func (s *DescribeThingTypeOutput) SetThingTypeProperties(v *ThingTypeProperties)
 	return s
 }
 
+// Describes the location of the updated firmware.
+type Destination struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the location in S3 of the updated firmware.
+	S3Destination *S3Destination `locationName:"s3Destination" type:"structure"`
+}
+
+// String returns the string representation
+func (s Destination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Destination) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Destination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Destination"}
+	if s.S3Destination != nil {
+		if err := s.S3Destination.Validate(); err != nil {
+			invalidParams.AddNested("S3Destination", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3Destination sets the S3Destination field's value.
+func (s *Destination) SetS3Destination(v *S3Destination) *Destination {
+	s.S3Destination = v
+	return s
+}
+
 type DetachPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21911,6 +21996,59 @@ func (s ExplicitDeny) GoString() string {
 // SetPolicies sets the Policies field's value.
 func (s *ExplicitDeny) SetPolicies(v []*Policy) *ExplicitDeny {
 	s.Policies = v
+	return s
+}
+
+// The location of the OTA update.
+type FileLocation struct {
+	_ struct{} `type:"structure"`
+
+	// The location of the updated firmware in S3.
+	S3Location *S3Location `locationName:"s3Location" type:"structure"`
+
+	// The stream that contains the OTA update.
+	Stream *Stream `locationName:"stream" type:"structure"`
+}
+
+// String returns the string representation
+func (s FileLocation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileLocation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FileLocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FileLocation"}
+	if s.S3Location != nil {
+		if err := s.S3Location.Validate(); err != nil {
+			invalidParams.AddNested("S3Location", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Stream != nil {
+		if err := s.Stream.Validate(); err != nil {
+			invalidParams.AddNested("Stream", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3Location sets the S3Location field's value.
+func (s *FileLocation) SetS3Location(v *S3Location) *FileLocation {
+	s.S3Location = v
+	return s
+}
+
+// SetStream sets the Stream field's value.
+func (s *FileLocation) SetStream(v *Stream) *FileLocation {
+	s.Stream = v
 	return s
 }
 
@@ -27419,11 +27557,11 @@ type OTAUpdateFile struct {
 	// The code signing method of the file.
 	CodeSigning *CodeSigning `locationName:"codeSigning" type:"structure"`
 
+	// The location of the updated firmware.
+	FileLocation *FileLocation `locationName:"fileLocation" type:"structure"`
+
 	// The name of the file.
 	FileName *string `locationName:"fileName" type:"string"`
-
-	// The source of the file.
-	FileSource *Stream `locationName:"fileSource" type:"structure"`
 
 	// The file version.
 	FileVersion *string `locationName:"fileVersion" type:"string"`
@@ -27447,9 +27585,9 @@ func (s *OTAUpdateFile) Validate() error {
 			invalidParams.AddNested("CodeSigning", err.(request.ErrInvalidParams))
 		}
 	}
-	if s.FileSource != nil {
-		if err := s.FileSource.Validate(); err != nil {
-			invalidParams.AddNested("FileSource", err.(request.ErrInvalidParams))
+	if s.FileLocation != nil {
+		if err := s.FileLocation.Validate(); err != nil {
+			invalidParams.AddNested("FileLocation", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -27471,15 +27609,15 @@ func (s *OTAUpdateFile) SetCodeSigning(v *CodeSigning) *OTAUpdateFile {
 	return s
 }
 
-// SetFileName sets the FileName field's value.
-func (s *OTAUpdateFile) SetFileName(v string) *OTAUpdateFile {
-	s.FileName = &v
+// SetFileLocation sets the FileLocation field's value.
+func (s *OTAUpdateFile) SetFileLocation(v *FileLocation) *OTAUpdateFile {
+	s.FileLocation = v
 	return s
 }
 
-// SetFileSource sets the FileSource field's value.
-func (s *OTAUpdateFile) SetFileSource(v *Stream) *OTAUpdateFile {
-	s.FileSource = v
+// SetFileName sets the FileName field's value.
+func (s *OTAUpdateFile) SetFileName(v string) *OTAUpdateFile {
+	s.FileName = &v
 	return s
 }
 
@@ -27501,6 +27639,9 @@ type OTAUpdateInfo struct {
 
 	// The AWS IoT job ID associated with the OTA update.
 	AwsIotJobId *string `locationName:"awsIotJobId" type:"string"`
+
+	// Configuration for the rollout of OTA updates.
+	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
 	// The date when the OTA update was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
@@ -27563,6 +27704,12 @@ func (s *OTAUpdateInfo) SetAwsIotJobArn(v string) *OTAUpdateInfo {
 // SetAwsIotJobId sets the AwsIotJobId field's value.
 func (s *OTAUpdateInfo) SetAwsIotJobId(v string) *OTAUpdateInfo {
 	s.AwsIotJobId = &v
+	return s
+}
+
+// SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
+func (s *OTAUpdateInfo) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *OTAUpdateInfo {
+	s.AwsJobExecutionsRolloutConfig = v
 	return s
 }
 
@@ -28088,6 +28235,8 @@ type RegisterCertificateInput struct {
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string" required:"true"`
 
 	// A boolean value that specifies if the CA certificate is set to active.
+	//
+	// Deprecated: SetAsActive has been deprecated
 	SetAsActive *bool `location:"querystring" locationName:"setAsActive" deprecated:"true" type:"boolean"`
 
 	// The status of the register certificate request.
@@ -28871,21 +29020,63 @@ func (s *S3Action) SetRoleArn(v string) *S3Action {
 	return s
 }
 
-// The location in S3 the contains the files to stream.
+// Describes the location of updated firmware in S3.
+type S3Destination struct {
+	_ struct{} `type:"structure"`
+
+	// The S3 bucket that contains the updated firmware.
+	Bucket *string `locationName:"bucket" min:"1" type:"string"`
+
+	// The S3 prefix.
+	Prefix *string `locationName:"prefix" type:"string"`
+}
+
+// String returns the string representation
+func (s S3Destination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3Destination) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3Destination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3Destination"}
+	if s.Bucket != nil && len(*s.Bucket) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Bucket", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBucket sets the Bucket field's value.
+func (s *S3Destination) SetBucket(v string) *S3Destination {
+	s.Bucket = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *S3Destination) SetPrefix(v string) *S3Destination {
+	s.Prefix = &v
+	return s
+}
+
+// The S3 location.
 type S3Location struct {
 	_ struct{} `type:"structure"`
 
-	// The S3 bucket that contains the file to stream.
-	//
-	// Bucket is a required field
-	Bucket *string `locationName:"bucket" min:"1" type:"string" required:"true"`
+	// The S3 bucket.
+	Bucket *string `locationName:"bucket" min:"1" type:"string"`
 
-	// The name of the file within the S3 bucket to stream.
-	//
-	// Key is a required field
-	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+	// The S3 key.
+	Key *string `locationName:"key" min:"1" type:"string"`
 
-	// The file version.
+	// The S3 bucket version.
 	Version *string `locationName:"version" type:"string"`
 }
 
@@ -28902,14 +29093,8 @@ func (s S3Location) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *S3Location) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "S3Location"}
-	if s.Bucket == nil {
-		invalidParams.Add(request.NewErrParamRequired("Bucket"))
-	}
 	if s.Bucket != nil && len(*s.Bucket) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Bucket", 1))
-	}
-	if s.Key == nil {
-		invalidParams.Add(request.NewErrParamRequired("Key"))
 	}
 	if s.Key != nil && len(*s.Key) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
@@ -29610,6 +29795,48 @@ func (s SetV2LoggingOptionsOutput) GoString() string {
 	return s.String()
 }
 
+// Describes the code-signing profile.
+type SigningProfileParameter struct {
+	_ struct{} `type:"structure"`
+
+	// Certificate ARN.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
+	// The location of the code-signing certificate on your device.
+	CertificatePathOnDevice *string `locationName:"certificatePathOnDevice" type:"string"`
+
+	// The hardware platform of your device.
+	Platform *string `locationName:"platform" type:"string"`
+}
+
+// String returns the string representation
+func (s SigningProfileParameter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SigningProfileParameter) GoString() string {
+	return s.String()
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *SigningProfileParameter) SetCertificateArn(v string) *SigningProfileParameter {
+	s.CertificateArn = &v
+	return s
+}
+
+// SetCertificatePathOnDevice sets the CertificatePathOnDevice field's value.
+func (s *SigningProfileParameter) SetCertificatePathOnDevice(v string) *SigningProfileParameter {
+	s.CertificatePathOnDevice = &v
+	return s
+}
+
+// SetPlatform sets the Platform field's value.
+func (s *SigningProfileParameter) SetPlatform(v string) *SigningProfileParameter {
+	s.Platform = &v
+	return s
+}
+
 // Describes an action to publish to an Amazon SNS topic.
 type SnsAction struct {
 	_ struct{} `type:"structure"`
@@ -29800,6 +30027,63 @@ func (s StartOnDemandAuditTaskOutput) GoString() string {
 // SetTaskId sets the TaskId field's value.
 func (s *StartOnDemandAuditTaskOutput) SetTaskId(v string) *StartOnDemandAuditTaskOutput {
 	s.TaskId = &v
+	return s
+}
+
+// Information required to start a signing job.
+type StartSigningJobParameter struct {
+	_ struct{} `type:"structure"`
+
+	// The location to write the code-signed file.
+	Destination *Destination `locationName:"destination" type:"structure"`
+
+	// The code-signing profile name.
+	SigningProfileName *string `locationName:"signingProfileName" type:"string"`
+
+	// Describes the code-signing profile.
+	SigningProfileParameter *SigningProfileParameter `locationName:"signingProfileParameter" type:"structure"`
+}
+
+// String returns the string representation
+func (s StartSigningJobParameter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartSigningJobParameter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartSigningJobParameter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartSigningJobParameter"}
+	if s.Destination != nil {
+		if err := s.Destination.Validate(); err != nil {
+			invalidParams.AddNested("Destination", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *StartSigningJobParameter) SetDestination(v *Destination) *StartSigningJobParameter {
+	s.Destination = v
+	return s
+}
+
+// SetSigningProfileName sets the SigningProfileName field's value.
+func (s *StartSigningJobParameter) SetSigningProfileName(v string) *StartSigningJobParameter {
+	s.SigningProfileName = &v
+	return s
+}
+
+// SetSigningProfileParameter sets the SigningProfileParameter field's value.
+func (s *StartSigningJobParameter) SetSigningProfileParameter(v *SigningProfileParameter) *StartSigningJobParameter {
+	s.SigningProfileParameter = v
 	return s
 }
 
