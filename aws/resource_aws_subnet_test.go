@@ -25,6 +25,7 @@ func init() {
 			"aws_batch_compute_environment",
 			"aws_beanstalk_environment",
 			"aws_db_instance",
+			"aws_directory_service_directory",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",

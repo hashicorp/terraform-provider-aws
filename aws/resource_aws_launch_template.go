@@ -563,7 +563,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return err
 		}
@@ -903,7 +903,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
+	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 {
