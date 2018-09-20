@@ -259,7 +259,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChange("engine_version") {
 		if v, ok := d.GetOk("engine_version"); ok {
-			request.ReplicationInstanceClass = aws.String(v.(string))
+			request.EngineVersion = aws.String(v.(string))
 			hasChanges = true
 		}
 	}
@@ -308,7 +308,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 		}
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying"},
+			Pending:    []string{"modifying", "upgrading"},
 			Target:     []string{"available"},
 			Refresh:    resourceAwsDmsReplicationInstanceStateRefreshFunc(d, meta),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
