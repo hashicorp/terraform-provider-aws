@@ -2623,6 +2623,9 @@ type CreateElasticsearchDomainInput struct {
 	// a given type of Elasticsearch log.
 	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
 
+	// Specifies the NodeToNodeEncryptionOptions.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptions `type:"structure"`
+
 	// Option to set time, in UTC format, of the daily automated snapshot. Default
 	// value is 0 hours.
 	SnapshotOptions *SnapshotOptions `type:"structure"`
@@ -2720,6 +2723,12 @@ func (s *CreateElasticsearchDomainInput) SetEncryptionAtRestOptions(v *Encryptio
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *CreateElasticsearchDomainInput) SetLogPublishingOptions(v map[string]*LogPublishingOption) *CreateElasticsearchDomainInput {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptions) *CreateElasticsearchDomainInput {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -3572,6 +3581,9 @@ type ElasticsearchDomainConfig struct {
 	// Log publishing options for the given domain.
 	LogPublishingOptions *LogPublishingOptionsStatus `type:"structure"`
 
+	// Specifies the NodeToNodeEncryptionOptions for the Elasticsearch domain.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptionsStatus `type:"structure"`
+
 	// Specifies the SnapshotOptions for the Elasticsearch domain.
 	SnapshotOptions *SnapshotOptionsStatus `type:"structure"`
 
@@ -3635,6 +3647,12 @@ func (s *ElasticsearchDomainConfig) SetEncryptionAtRestOptions(v *EncryptionAtRe
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *ElasticsearchDomainConfig) SetLogPublishingOptions(v *LogPublishingOptionsStatus) *ElasticsearchDomainConfig {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *ElasticsearchDomainConfig) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptionsStatus) *ElasticsearchDomainConfig {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -3719,6 +3737,9 @@ type ElasticsearchDomainStatus struct {
 
 	// Log publishing options for the given domain.
 	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
+
+	// Specifies the status of the NodeToNodeEncryptionOptions.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptions `type:"structure"`
 
 	// The status of the Elasticsearch domain configuration. True if Amazon Elasticsearch
 	// Service is processing configuration changes. False if the configuration is
@@ -3834,6 +3855,12 @@ func (s *ElasticsearchDomainStatus) SetEndpoints(v map[string]*string) *Elastics
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *ElasticsearchDomainStatus) SetLogPublishingOptions(v map[string]*LogPublishingOption) *ElasticsearchDomainStatus {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *ElasticsearchDomainStatus) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptions) *ElasticsearchDomainStatus {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -4709,6 +4736,70 @@ func (s *LogPublishingOptionsStatus) SetOptions(v map[string]*LogPublishingOptio
 
 // SetStatus sets the Status field's value.
 func (s *LogPublishingOptionsStatus) SetStatus(v *OptionStatus) *LogPublishingOptionsStatus {
+	s.Status = v
+	return s
+}
+
+// Specifies the node-to-node encryption options.
+type NodeToNodeEncryptionOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specify true to enable node-to-node encryption.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s NodeToNodeEncryptionOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeToNodeEncryptionOptions) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *NodeToNodeEncryptionOptions) SetEnabled(v bool) *NodeToNodeEncryptionOptions {
+	s.Enabled = &v
+	return s
+}
+
+// Status of the node-to-node encryption options for the specified Elasticsearch
+// domain.
+type NodeToNodeEncryptionOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the node-to-node encryption options for the specified Elasticsearch
+	// domain.
+	//
+	// Options is a required field
+	Options *NodeToNodeEncryptionOptions `type:"structure" required:"true"`
+
+	// Specifies the status of the node-to-node encryption options for the specified
+	// Elasticsearch domain.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeToNodeEncryptionOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeToNodeEncryptionOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *NodeToNodeEncryptionOptionsStatus) SetOptions(v *NodeToNodeEncryptionOptions) *NodeToNodeEncryptionOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NodeToNodeEncryptionOptionsStatus) SetStatus(v *OptionStatus) *NodeToNodeEncryptionOptionsStatus {
 	s.Status = v
 	return s
 }
