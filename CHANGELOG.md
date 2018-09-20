@@ -7,6 +7,10 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Support `credit_specification` configuration of T3 instance types [GH-5922]
 * resource/aws_launch_template: Allow `network_interface` `ipv6_address_count` configuration [GH-5771]
 
+BUG FIXES:
+
+* resource/aws_dms_replication_instance: Properly handle `engine_version` updates [GH-5948]
+
 ## 1.37.0 (September 19, 2018)
 
 FEATURES:
