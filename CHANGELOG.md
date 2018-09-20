@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_autoscaling_groups: Add `arns` attribute [GH-5766]
 * resource/aws_launch_template: Support `credit_specification` configuration of T3 instance types [GH-5922]
 
 ## 1.37.0 (September 19, 2018)
