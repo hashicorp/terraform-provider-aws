@@ -163,7 +163,6 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "block_device_mappings.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "disable_api_termination"),
 					resource.TestCheckResourceAttr(resName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resName, "elastic_gpu_specifications.#", "1"),
@@ -250,8 +249,9 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_nonBurstable(t *testing.T) {
+func TestAccAWSLaunchTemplate_creditSpecification_nonBurstable(t *testing.T) {
 	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resName := "aws_launch_template.foo"
 
 	resource.Test(t, resource.TestCase{
@@ -260,9 +260,53 @@ func TestAccAWSLaunchTemplate_nonBurstable(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_nonBurstable,
+				Config: testAccAWSLaunchTemplateConfig_creditSpecification(rName, "m1.small", "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_creditSpecification_t2(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resName := "aws_launch_template.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_creditSpecification(rName, "t2.micro", "unlimited"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resName := "aws_launch_template.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_creditSpecification(rName, "t3.micro", "unlimited"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
 			},
 		},
@@ -491,10 +535,6 @@ resource "aws_launch_template" "foo" {
     device_name = "test"
   }
 
-  credit_specification {
-    cpu_credits = "standard"
-  }
-
   disable_api_termination = true
 
   ebs_optimized = false
@@ -560,15 +600,18 @@ resource "aws_launch_template" "foo" {
 `, rInt)
 }
 
-const testAccAWSLaunchTemplateConfig_nonBurstable = `
+func testAccAWSLaunchTemplateConfig_creditSpecification(rName, instanceType, cpuCredits string) string {
+	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
-  name = "non-burstable-launch-template"
-  instance_type = "m1.small"
+  instance_type = %q
+  name          = %q
+
   credit_specification {
-    cpu_credits = "standard"
+    cpu_credits = %q
   }
 }
-`
+`, instanceType, rName, cpuCredits)
+}
 
 const testAccAWSLaunchTemplateConfig_networkInterface = `
 resource "aws_vpc" "test" {
