@@ -76,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -239,6 +240,7 @@ type AWSClient struct {
 	budgetconn            *budgets.Budgets
 	neptuneconn           *neptune.Neptune
 	pricingconn           *pricing.Pricing
+	pinpointconn          *pinpoint.Pinpoint
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -563,6 +565,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.appsyncconn = appsync.New(sess)
 	client.neptuneconn = neptune.New(sess)
 	client.pricingconn = pricing.New(sess)
+	client.pinpointconn = pinpoint.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
