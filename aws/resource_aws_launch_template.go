@@ -727,17 +727,31 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 		mo := map[string]interface{}{
 			"market_type": aws.StringValue(m.MarketType),
 		}
-		spot := []interface{}{}
 		so := m.SpotOptions
 		if so != nil {
-			spot = append(spot, map[string]interface{}{
-				"block_duration_minutes":         aws.Int64Value(so.BlockDurationMinutes),
-				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
-				"max_price":                      aws.StringValue(so.MaxPrice),
-				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
-				"valid_until":                    aws.TimeValue(so.ValidUntil).Format(time.RFC3339),
-			})
-			mo["spot_options"] = spot
+			spotOptions := map[string]interface{}{}
+
+			if so.BlockDurationMinutes != nil {
+				spotOptions["block_duration_minutes"] = aws.Int64Value(so.BlockDurationMinutes)
+			}
+
+			if so.InstanceInterruptionBehavior != nil {
+				spotOptions["instance_interruption_behavior"] = aws.StringValue(so.InstanceInterruptionBehavior)
+			}
+
+			if so.MaxPrice != nil {
+				spotOptions["max_price"] = aws.StringValue(so.MaxPrice)
+			}
+
+			if so.SpotInstanceType != nil {
+				spotOptions["spot_instance_type"] = aws.StringValue(so.SpotInstanceType)
+			}
+
+			if so.ValidUntil != nil {
+				spotOptions["valid_until"] = aws.TimeValue(so.ValidUntil).Format(time.RFC3339)
+			}
+
+			mo["spot_options"] = []interface{}{spotOptions}
 		}
 		s = append(s, mo)
 	}

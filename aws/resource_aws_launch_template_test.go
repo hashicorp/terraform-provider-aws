@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -373,6 +374,43 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6AddressCount(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.0.ipv6_address_count", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_instanceMarketOptions(t *testing.T) {
+	var template ec2.LaunchTemplate
+	var group autoscaling.Group
+	templateName := "aws_launch_template.test"
+	groupName := "aws_autoscaling_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_instanceMarketOptions_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(templateName, &template),
+					testAccCheckAWSAutoScalingGroupExists(groupName, &group),
+					resource.TestCheckResourceAttr(templateName, "instance_market_options.#", "1"),
+					resource.TestCheckResourceAttr(templateName, "instance_market_options.0.spot_options.#", "1"),
+					resource.TestCheckResourceAttr(groupName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttr(groupName, "launch_template.0.version", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_instanceMarketOptions_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(templateName, &template),
+					testAccCheckAWSAutoScalingGroupExists(groupName, &group),
+					resource.TestCheckResourceAttr(templateName, "instance_market_options.#", "1"),
+					resource.TestCheckResourceAttr(templateName, "instance_market_options.0.spot_options.#", "1"),
+					resource.TestCheckResourceAttr(groupName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttr(groupName, "launch_template.0.version", "2"),
 				),
 			},
 		},
@@ -749,6 +787,91 @@ resource "aws_autoscaling_group" "bar" {
   launch_template = {
     id = "${aws_launch_template.foo.id}"
     version = "${aws_launch_template.foo.latest_version}"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_instanceMarketOptions_basic = `
+data "aws_ami" "test" {
+  most_recent = true
+
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name_prefix = "instance_market_options"
+  image_id = "${data.aws_ami.test.id}"
+
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      spot_instance_type = "one-time"
+    }
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  min_size = 0
+  max_size = 0
+
+  launch_template {
+    id = "${aws_launch_template.test.id}"
+    version = "${aws_launch_template.test.latest_version}"
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_instanceMarketOptions_update = `
+data "aws_ami" "test" {
+  most_recent = true
+
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name_prefix = "instance_market_options"
+  image_id = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      spot_instance_type = "one-time"
+    }
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity = 0
+  min_size = 0
+  max_size = 0
+
+  launch_template {
+    id = "${aws_launch_template.test.id}"
+    version = "${aws_launch_template.test.latest_version}"
   }
 }
 `
