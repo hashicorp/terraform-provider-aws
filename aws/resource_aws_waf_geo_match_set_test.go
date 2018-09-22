@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -22,7 +21,7 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafGeoMatchSetConfig(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafGeoMatchSetExists("aws_waf_geo_match_set.geo_match_set", &v),
@@ -195,7 +194,7 @@ func testAccCheckAWSWafGeoMatchSetDisappears(v *waf.GeoMatchSet) resource.TestCh
 			return conn.UpdateGeoMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating GeoMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating GeoMatchSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -206,7 +205,7 @@ func testAccCheckAWSWafGeoMatchSetDisappears(v *waf.GeoMatchSet) resource.TestCh
 			return conn.DeleteGeoMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting GeoMatchSet: {{err}}", err)
+			return fmt.Errorf("Error deleting GeoMatchSet: %s", err)
 		}
 		return nil
 	}

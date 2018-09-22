@@ -22,6 +22,74 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+func TestAccAWSS3Bucket_importBasic(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_importWithPolicy(t *testing.T) {
+	rInt := acctest.RandInt()
+	partition := testAccGetPartition()
+
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect 2: bucket + policy
+		if len(s) != 2 {
+			return fmt.Errorf("expected 2 states: %#v", s)
+		}
+		bucketState, policyState := s[0], s[1]
+
+		expectedBucketId := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+		if bucketState.ID != expectedBucketId {
+			return fmt.Errorf("expected bucket of ID %s, %s received",
+				expectedBucketId, bucketState.ID)
+		}
+
+		if policyState.ID != expectedBucketId {
+			return fmt.Errorf("expected policy of ID %s, %s received",
+				expectedBucketId, bucketState.ID)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithPolicy(rInt, partition),
+			},
+
+			{
+				ResourceName:     "aws_s3_bucket.bucket",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	arnRegexp := regexp.MustCompile(`^arn:aws[\w-]*:s3:::`)
@@ -522,7 +590,7 @@ func TestAccAWSS3Bucket_Versioning(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Cors(t *testing.T) {
+func TestAccAWSS3Bucket_Cors_Update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	updateBucketCors := func(n string) resource.TestCheckFunc {
@@ -545,30 +613,8 @@ func TestAccAWSS3Bucket_Cors(t *testing.T) {
 					},
 				},
 			})
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
-					return err
-				}
-			}
-			return nil
-		}
-	}
-
-	deleteBucketCors := func(n string) resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			rs, ok := s.RootModule().Resources[n]
-			if !ok {
-				return fmt.Errorf("Not found: %s", n)
-			}
-
-			conn := testAccProvider.Meta().(*AWSClient).s3conn
-			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
-				Bucket: aws.String(rs.Primary.ID),
-			})
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchCORSConfiguration" {
-					return err
-				}
+			if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+				return err
 			}
 			return nil
 		}
@@ -619,6 +665,28 @@ func TestAccAWSS3Bucket_Cors(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	deleteBucketCors := func(n string) resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			rs, ok := s.RootModule().Resources[n]
+			if !ok {
+				return fmt.Errorf("Not found: %s", n)
+			}
+
+			conn := testAccProvider.Meta().(*AWSClient).s3conn
+			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
+				Bucket: aws.String(rs.Primary.ID),
+			})
+			if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+				return err
+			}
+			return nil
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -635,6 +703,10 @@ func TestAccAWSS3Bucket_Cors(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -86,7 +86,7 @@ func TestAccDataSourceAwsRegion_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -118,7 +118,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpoint(endpoint1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -128,7 +128,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpoint(endpoint2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -138,7 +138,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_endpoint("does-not-exist"),
 				ExpectError: regexp.MustCompile(`region not found for endpoint: does-not-exist`),
 			},
@@ -164,7 +164,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(endpoint1, name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -174,7 +174,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(endpoint2, name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -184,7 +184,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(endpoint1, name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -194,11 +194,11 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_endpointAndName(endpoint1, name2),
 				ExpectError: regexp.MustCompile(`multiple regions matched`),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_endpointAndName(endpoint2, name1),
 				ExpectError: regexp.MustCompile(`multiple regions matched`),
 			},
@@ -224,7 +224,7 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_name(name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -234,7 +234,7 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_name(name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
@@ -244,7 +244,7 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_name("does-not-exist"),
 				ExpectError: regexp.MustCompile(`region not found for name: does-not-exist`),
 			},

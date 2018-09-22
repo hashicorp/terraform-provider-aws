@@ -48,6 +48,31 @@ func TestValidateIamUserName(t *testing.T) {
 	}
 }
 
+func TestAccAWSUser_importBasic(t *testing.T) {
+	resourceName := "aws_iam_user.user"
+
+	n := fmt.Sprintf("test-user-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(n, "/"),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSUser_basic(t *testing.T) {
 	var conf iam.GetUserOutput
 
@@ -61,14 +86,14 @@ func TestAccAWSUser_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSUserConfig(name1, path1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
 					testAccCheckAWSUserAttributes(&conf, name1, "/"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSUserConfig(name2, path2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
@@ -178,6 +203,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckAWSUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
 			},
 			// Test update
@@ -186,6 +212,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
+					testAccCheckAWSUserPermissionsBoundary(&user, permissionsBoundary2),
 				),
 			},
 			// Test import
@@ -201,6 +228,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					testAccCheckAWSUserPermissionsBoundary(&user, ""),
 				),
 			},
 			// Test addition
@@ -209,6 +237,16 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckAWSUserPermissionsBoundary(&user, permissionsBoundary1),
+				),
+			},
+			// Test empty value
+			{
+				Config: testAccAWSUserConfig_permissionsBoundary(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					testAccCheckAWSUserPermissionsBoundary(&user, ""),
 				),
 			},
 		},
@@ -291,6 +329,22 @@ func testAccCheckAWSUserDisappears(getUserOutput *iam.GetUserOutput) resource.Te
 		})
 		if err != nil {
 			return fmt.Errorf("error deleting user %q: %s", userName, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		actualPermissionsBoundaryArn := ""
+
+		if getUserOutput.User.PermissionsBoundary != nil {
+			actualPermissionsBoundaryArn = *getUserOutput.User.PermissionsBoundary.PermissionsBoundaryArn
+		}
+
+		if actualPermissionsBoundaryArn != expectedPermissionsBoundaryArn {
+			return fmt.Errorf("PermissionsBoundary: '%q', expected '%q'.", actualPermissionsBoundaryArn, expectedPermissionsBoundaryArn)
 		}
 
 		return nil

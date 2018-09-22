@@ -47,10 +47,10 @@ func TestAccAWSMediaStoreContainerPolicy_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccMediaStoreContainerPolicyConfig(acctest.RandString(5), acctest.RandString(5)),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

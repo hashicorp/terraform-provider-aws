@@ -34,11 +34,11 @@ func TestAccAWSSsmResourceDataSync_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

@@ -93,6 +93,33 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `name` - (Required) The name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 * `host_path` - (Optional) The path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `docker_volume_configuration` - (Optional) Used to configure a [docker volume](#docker-volume-configuration-arguments)
+
+#### Docker Volume Configuration Arguments
+
+For more information, see [Specifying a Docker volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-volumes.html#specify-volume-config)
+
+* `scope` - (Optional) The scope for the Docker volume, which determines its lifecycle, either `task` or `shared`.  Docker volumes that are scoped to a `task` are automatically provisioned when the task starts and destroyed when the task stops. Docker volumes that are `scoped` as shared persist after the task stops.
+* `autoprovision` - (Optional) If this value is `true`, the Docker volume is created if it does not already exist. *Note*: This field is only used if the scope is `shared`.
+* `driver` - (Optional) The Docker volume driver to use. The driver value must match the driver name provided by Docker because it is used for task placement.
+* `driver_opts` - (Optional) A map of Docker driver specific options.
+* `labels` - (Optional) A map of custom metadata to add to your Docker volume.
+
+##### Example Usage:
+```hcl
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = "${file("task-definitions/service.json")}"
+
+  volume {
+    name = "service-storage"
+    docker_volume_configuration {
+        scope         = "shared"
+        autoprovision = true
+    }
+  }
+}
+```
 
 #### Placement Constraints Arguments
 

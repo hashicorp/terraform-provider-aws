@@ -12,6 +12,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSElasticacheSubnetGroup_importBasic(t *testing.T) {
+	resourceName := "aws_elasticache_subnet_group.bar"
+	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
@@ -21,7 +45,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists("aws_elasticache_subnet_group.bar", &csg),
@@ -45,7 +69,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(rn, &csg),
@@ -53,7 +77,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(rn, &csg),

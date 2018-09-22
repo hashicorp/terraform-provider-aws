@@ -13,7 +13,7 @@ func TestAccDataSourceAwsEip_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsEipConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsEipCheck("data.aws_eip.by_id"),

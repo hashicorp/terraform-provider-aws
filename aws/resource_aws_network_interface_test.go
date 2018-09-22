@@ -11,6 +11,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSENI_importBasic(t *testing.T) {
+	resourceName := "aws_network_interface.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSENIConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 
@@ -20,7 +41,7 @@ func TestAccAWSENI_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -48,7 +69,7 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -57,7 +78,7 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigUpdatedDescription,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -78,7 +99,7 @@ func TestAccAWSENI_attached(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigWithAttachment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -102,7 +123,7 @@ func TestAccAWSENI_ignoreExternalAttachment(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigExternalAttachment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -123,7 +144,7 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigWithSourceDestCheck,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
@@ -144,7 +165,7 @@ func TestAccAWSENI_computedIPs(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSENIConfigWithNoPrivateIPs,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),

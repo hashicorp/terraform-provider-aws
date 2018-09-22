@@ -14,6 +14,28 @@ import (
 	"github.com/jen20/awspolicyequivalence"
 )
 
+func TestAccAWSSNSTopic_importBasic(t *testing.T) {
+	resourceName := "aws_sns_topic.test_topic"
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicConfig_withName(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSNSTopic_basic(t *testing.T) {
 	attributes := make(map[string]string)
 
@@ -23,7 +45,7 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicConfig_withGeneratedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
@@ -44,7 +66,7 @@ func TestAccAWSSNSTopic_name(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicConfig_withName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
@@ -65,7 +87,7 @@ func TestAccAWSSNSTopic_namePrefix(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicConfig_withNamePrefix(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
@@ -87,7 +109,7 @@ func TestAccAWSSNSTopic_policy(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicWithPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
@@ -108,7 +130,7 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicConfig_withIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
@@ -126,7 +148,7 @@ func TestAccAWSSNSTopic_withFakeIAMRole(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccAWSSNSTopicConfig_withFakeIAMRole(rName),
 				ExpectError: regexp.MustCompile(`PrincipalNotFound`),
 			},
@@ -145,7 +167,7 @@ func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicConfig_withDeliveryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
@@ -182,7 +204,7 @@ func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSTopicConfig_deliveryStatus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),

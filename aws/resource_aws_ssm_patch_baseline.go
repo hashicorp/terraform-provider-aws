@@ -147,7 +147,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	params := &ssm.CreatePatchBaselineInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name:                           aws.String(d.Get("name").(string)),
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
 	}
@@ -253,11 +253,11 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("rejected_patches", flattenStringList(resp.RejectedPatches))
 
 	if err := d.Set("global_filter", flattenAwsSsmPatchFilterGroup(resp.GlobalFilters)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting global filters error: %#v", err)
+		return fmt.Errorf("Error setting global filters error: %#v", err)
 	}
 
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting approval rules error: %#v", err)
+		return fmt.Errorf("Error setting approval rules error: %#v", err)
 	}
 
 	return nil

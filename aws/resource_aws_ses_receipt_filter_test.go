@@ -9,6 +9,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSSESReceiptFilter_importBasic(t *testing.T) {
+	resourceName := "aws_ses_receipt_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptFilterConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -17,7 +38,7 @@ func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptFilterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptFilterExists("aws_ses_receipt_filter.test"),

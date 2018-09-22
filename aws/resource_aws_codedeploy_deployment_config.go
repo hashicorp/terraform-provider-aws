@@ -95,7 +95,7 @@ func resourceAwsCodeDeployDeploymentConfigRead(d *schema.ResourceData, meta inte
 	}
 
 	if resp.DeploymentConfigInfo == nil {
-		return fmt.Errorf("[ERROR] Cannot find DeploymentConfig %q", d.Id())
+		return fmt.Errorf("Cannot find DeploymentConfig %q", d.Id())
 	}
 
 	if err := d.Set("minimum_healthy_hosts", flattenAwsCodeDeployConfigMinimumHealthHosts(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {

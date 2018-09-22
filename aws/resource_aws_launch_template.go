@@ -89,12 +89,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"encrypted": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -147,8 +159,14 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				// Use TypeString to allow an "unspecified" value,
+				// since TypeBool only has true/false with false default.
+				// The conversion from bare true/false values in
+				// configurations to TypeString value is currently safe.
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+				ValidateFunc:     validateTypeStringNullableBoolean,
 			},
 
 			"elastic_gpu_specifications": {
@@ -301,7 +319,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
@@ -323,7 +341,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
@@ -526,7 +544,6 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
 	d.Set("disable_api_termination", ltData.DisableApiTermination)
-	d.Set("ebs_optimized", ltData.EbsOptimized)
 	d.Set("image_id", ltData.ImageId)
 	d.Set("instance_initiated_shutdown_behavior", ltData.InstanceInitiatedShutdownBehavior)
 	d.Set("instance_type", ltData.InstanceType)
@@ -536,12 +553,17 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
 	d.Set("user_data", ltData.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
+	d.Set("ebs_optimized", "")
+
+	if ltData.EbsOptimized != nil {
+		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
+	}
 
 	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
 		return err
 	}
 
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return err
 		}
@@ -638,14 +660,18 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			"virtual_name": aws.StringValue(v.VirtualName),
 		}
 		if v.NoDevice != nil {
-			mapping["no_device"] = *v.NoDevice
+			mapping["no_device"] = aws.StringValue(v.NoDevice)
 		}
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": aws.BoolValue(v.Ebs.DeleteOnTermination),
-				"encrypted":             aws.BoolValue(v.Ebs.Encrypted),
-				"volume_size":           int(aws.Int64Value(v.Ebs.VolumeSize)),
-				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
+				"volume_size": int(aws.Int64Value(v.Ebs.VolumeSize)),
+				"volume_type": aws.StringValue(v.Ebs.VolumeType),
+			}
+			if v.Ebs.DeleteOnTermination != nil {
+				ebs["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination))
+			}
+			if v.Ebs.Encrypted != nil {
+				ebs["encrypted"] = strconv.FormatBool(aws.BoolValue(v.Ebs.Encrypted))
 			}
 			if v.Ebs.Iops != nil {
 				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
@@ -732,7 +758,6 @@ func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
-		var ipv6Addresses []string
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
@@ -747,11 +772,19 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
-		for _, address := range v.Ipv6Addresses {
-			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
-		}
-		if len(ipv6Addresses) > 0 {
-			networkInterface["ipv6_addresses"] = ipv6Addresses
+		if len(v.Ipv6Addresses) > 0 {
+			raw, ok := networkInterface["ipv6_addresses"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+
+			list := raw.(*schema.Set)
+
+			for _, address := range v.Ipv6Addresses {
+				list.Add(aws.StringValue(address.Ipv6Address))
+			}
+
+			networkInterface["ipv6_addresses"] = list
 		}
 
 		for _, address := range v.PrivateIpAddresses {
@@ -840,8 +873,12 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("ebs_optimized"); ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting ebs_optimized %q from string to boolean: %s", v.(string), err)
+		}
+		opts.EbsOptimized = aws.Bool(vBool)
 	}
 
 	if v, ok := d.GetOk("security_group_names"); ok {
@@ -857,12 +894,16 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
-			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{})))
+			blockDeviceMapping, err := readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
 		}
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
+	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 {
@@ -950,7 +991,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	return opts, nil
 }
 
-func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
+func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) (*ec2.LaunchTemplateBlockDeviceMappingRequest, error) {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
 	if v := bdm["device_name"].(string); v != "" {
@@ -967,24 +1008,36 @@ func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTem
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
 		ebs := v.([]interface{})
-		if len(ebs) > 0 {
-			ebsData := ebs[0]
-			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}))
+		if len(ebs) > 0 && ebs[0] != nil {
+			ebsData := ebs[0].(map[string]interface{})
+			launchTemplateEbsBlockDeviceRequest, err := readEbsBlockDeviceFromConfig(ebsData)
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMapping.Ebs = launchTemplateEbsBlockDeviceRequest
 		}
 	}
 
-	return blockDeviceMapping
+	return blockDeviceMapping, nil
 }
 
-func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplateEbsBlockDeviceRequest {
+func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTemplateEbsBlockDeviceRequest, error) {
 	ebsDevice := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v := ebs["delete_on_termination"]; v != nil {
-		ebsDevice.DeleteOnTermination = aws.Bool(v.(bool))
+	if v, ok := ebs["delete_on_termination"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.DeleteOnTermination = aws.Bool(vBool)
 	}
 
-	if v := ebs["encrypted"]; v != nil {
-		ebsDevice.Encrypted = aws.Bool(v.(bool))
+	if v, ok := ebs["encrypted"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting encrypted %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.Encrypted = aws.Bool(vBool)
 	}
 
 	if v := ebs["iops"].(int); v > 0 {
@@ -1007,7 +1060,7 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.VolumeType = aws.String(v)
 	}
 
-	return ebsDevice
+	return ebsDevice, nil
 }
 
 func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
@@ -1061,18 +1114,17 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
 	}
 
-	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
-	for _, address := range ipv4AddressList {
-		privateIp := &ec2.PrivateIpAddressSpecification{
-			Primary:          aws.Bool(address.(string) == privateIpAddress),
-			PrivateIpAddress: aws.String(address.(string)),
-		}
-		ipv4Addresses = append(ipv4Addresses, privateIp)
-	}
-	networkInterface.PrivateIpAddresses = ipv4Addresses
-
 	if v := ni["ipv4_address_count"].(int); v > 0 {
 		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	} else if v := ni["ipv4_addresses"].(*schema.Set); v.Len() > 0 {
+		for _, address := range v.List() {
+			privateIp := &ec2.PrivateIpAddressSpecification{
+				Primary:          aws.Bool(address.(string) == privateIpAddress),
+				PrivateIpAddress: aws.String(address.(string)),
+			}
+			ipv4Addresses = append(ipv4Addresses, privateIp)
+		}
+		networkInterface.PrivateIpAddresses = ipv4Addresses
 	}
 
 	return networkInterface

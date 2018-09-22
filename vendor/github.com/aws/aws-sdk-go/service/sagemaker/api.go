@@ -427,27 +427,32 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // CreateModel API operation for Amazon SageMaker Service.
 //
 // Creates a model in Amazon SageMaker. In the request, you name the model and
-// describe one or more containers. For each container, you specify the docker
-// image containing inference code, artifacts (from prior training), and custom
-// environment map that the inference code uses when you deploy the model into
-// production.
+// describe a primary container. For the primary container, you specify the
+// docker image containing inference code, artifacts (from prior training),
+// and custom environment map that the inference code uses when you deploy the
+// model for predictions.
 //
-// Use this API to create a model only if you want to use Amazon SageMaker hosting
-// services. To host your model, you create an endpoint configuration with the
-// CreateEndpointConfig API, and then create an endpoint with the CreateEndpoint
-// API.
+// Use this API to create a model if you want to use Amazon SageMaker hosting
+// services or run a batch transform job.
 //
-// Amazon SageMaker then deploys all of the containers that you defined for
-// the model in the hosting environment.
+// To host your model, you create an endpoint configuration with the CreateEndpointConfig
+// API, and then create an endpoint with the CreateEndpoint API. Amazon SageMaker
+// then deploys all of the containers that you defined for the model in the
+// hosting environment.
+//
+// To run a batch transform using your model, you start a job with the CreateTransformJob
+// API. Amazon SageMaker uses your model and your dataset to get inferences
+// which are then saved to a specified S3 location.
 //
 // In the CreateModel request, you must define a container with the PrimaryContainer
 // parameter.
 //
 // In the request, you also provide an IAM role that Amazon SageMaker can assume
 // to access model artifacts and docker image for deployment on ML compute hosting
-// instances. In addition, you also use the IAM role to manage permissions the
-// inference code needs. For example, if the inference code access any other
-// AWS resources, you grant necessary permissions via this role.
+// instances or for batch transform jobs. In addition, you also use the IAM
+// role to manage permissions the inference code needs. For example, if the
+// inference code access any other AWS resources, you grant necessary permissions
+// via this role.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -745,6 +750,15 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // home page from the notebook instance. The console uses this API to get the
 // URL and show the page.
 //
+// You can restrict access to this API and to the URL that it returns to a list
+// of IP addresses that you specify. To restrict access, attach an IAM policy
+// that denies access to this API unless the call comes from an IP address in
+// the specified list to every AWS Identity and Access Management user, group,
+// or role used to access the notebook instance. Use the NotIpAddress condition
+// operator and the aws:SourceIP condition context key to specify the list of
+// IP addresses that you want to have access to the notebook instance. For more
+// information, see nbi-ip-filter.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -947,7 +961,8 @@ func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (r
 //    within an AWS Region in an AWS account.
 //
 //    * ModelName - Identifies the model to use. ModelName must be the name
-//    of an existing Amazon SageMaker model within an AWS Region in an AWS account.
+//    of an existing Amazon SageMaker model in the same AWS Region and AWS account.
+//    For information on creating a model, see CreateModel.
 //
 //    * TransformInput - Describes the dataset to be transformed and the Amazon
 //    S3 location where it is stored.
@@ -4410,7 +4425,7 @@ type Channel struct {
 	// algorithm requires the RecordIO format, in which case, Amazon SageMaker wraps
 	// each individual S3 object in a RecordIO record. If the input data is already
 	// in RecordIO format, you don't need to set this attribute. For more information,
-	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/how_to/recordio.html?highlight=im2rec)
+	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/architecture/note_data_loading.html#data-format)
 	RecordWrapperType *string `type:"string" enum:"RecordWrapper"`
 }
 
@@ -4994,8 +5009,9 @@ type CreateModelInput struct {
 
 	// The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker can
 	// assume to access model artifacts and docker image for deployment on ML compute
-	// instances. Deploying on ML compute instances is part of model hosting. For
-	// more information, see Amazon SageMaker Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	// instances or for batch transform jobs. Deploying on ML compute instances
+	// is part of model hosting. For more information, see Amazon SageMaker Roles
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
 	//
 	// To be able to pass this role to Amazon SageMaker, the caller of this API
 	// must have the iam:PassRole permission.
@@ -5010,7 +5026,7 @@ type CreateModelInput struct {
 
 	// The location of the primary docker image containing inference code, associated
 	// artifacts, and custom environment map that the inference code uses when the
-	// model is deployed into production.
+	// model is deployed for predictions.
 	//
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
@@ -5022,6 +5038,7 @@ type CreateModelInput struct {
 
 	// A VpcConfig object that specifies the VPC that you want your model to connect
 	// to. Control access to and from your model container by configuring the VPC.
+	// VpcConfig is currently used in hosting services but not in batch transform.
 	// For more information, see host-vpc.
 	VpcConfig *VpcConfig `type:"structure"`
 }
@@ -7353,14 +7370,7 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * Starting - starting the training job.
 	//
-	//    * LaunchingMLInstances - launching ML instances for the training job.
-	//
-	//    * PreparingTrainingStack - preparing the ML instances for the training
-	//    job.
-	//
 	//    * Downloading - downloading the input data.
-	//
-	//    * DownloadingTrainingImage - downloading the training algorithm image.
 	//
 	//    * Training - model training is in progress.
 	//
@@ -7375,8 +7385,8 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * Completed - the training job has completed.
 	//
-	//    * Failed - the training job has failed. The failure reason is provided
-	//    in the StatusMessage.
+	//    * Failed - the training job has failed. The failure reason is stored in
+	//    the FailureReason field of DescribeTrainingJobResponse.
 	//
 	// The valid values for SecondaryStatus are subject to change. They primarily
 	// provide information on the progress of the training job.
@@ -12119,6 +12129,11 @@ type TransformResources struct {
 	//
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TransformInstanceType"`
+
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
+	// instance(s) that run the batch transform job.
+	VolumeKmsKeyId *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12159,6 +12174,12 @@ func (s *TransformResources) SetInstanceCount(v int64) *TransformResources {
 // SetInstanceType sets the InstanceType field's value.
 func (s *TransformResources) SetInstanceType(v string) *TransformResources {
 	s.InstanceType = &v
+	return s
+}
+
+// SetVolumeKmsKeyId sets the VolumeKmsKeyId field's value.
+func (s *TransformResources) SetVolumeKmsKeyId(v string) *TransformResources {
+	s.VolumeKmsKeyId = &v
 	return s
 }
 
@@ -12424,8 +12445,16 @@ func (s *UpdateEndpointWeightsAndCapacitiesOutput) SetEndpointArn(v string) *Upd
 type UpdateNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true to remove the notebook instance lifecycle configuration currently
+	// associated with the notebook instance.
+	DisassociateLifecycleConfig *bool `type:"boolean"`
+
 	// The Amazon ML compute instance type.
 	InstanceType *string `type:"string" enum:"InstanceType"`
+
+	// The name of a lifecycle configuration to associate with the notebook instance.
+	// For information about lifestyle configurations, see notebook-lifecycle-config.
+	LifecycleConfigName *string `type:"string"`
 
 	// The name of the notebook instance to update.
 	//
@@ -12467,9 +12496,21 @@ func (s *UpdateNotebookInstanceInput) Validate() error {
 	return nil
 }
 
+// SetDisassociateLifecycleConfig sets the DisassociateLifecycleConfig field's value.
+func (s *UpdateNotebookInstanceInput) SetDisassociateLifecycleConfig(v bool) *UpdateNotebookInstanceInput {
+	s.DisassociateLifecycleConfig = &v
+	return s
+}
+
 // SetInstanceType sets the InstanceType field's value.
 func (s *UpdateNotebookInstanceInput) SetInstanceType(v string) *UpdateNotebookInstanceInput {
 	s.InstanceType = &v
+	return s
+}
+
+// SetLifecycleConfigName sets the LifecycleConfigName field's value.
+func (s *UpdateNotebookInstanceInput) SetLifecycleConfigName(v string) *UpdateNotebookInstanceInput {
+	s.LifecycleConfigName = &v
 	return s
 }
 
@@ -12713,6 +12754,9 @@ const (
 
 	// EndpointStatusUpdating is a EndpointStatus enum value
 	EndpointStatusUpdating = "Updating"
+
+	// EndpointStatusSystemUpdating is a EndpointStatus enum value
+	EndpointStatusSystemUpdating = "SystemUpdating"
 
 	// EndpointStatusRollingBack is a EndpointStatus enum value
 	EndpointStatusRollingBack = "RollingBack"

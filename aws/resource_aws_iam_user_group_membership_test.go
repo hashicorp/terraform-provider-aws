@@ -28,7 +28,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 		CheckDestroy: testAccAWSUserGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			// simplest test
-			resource.TestStep{
+			{
 				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigInit,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
@@ -36,7 +36,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 				),
 			},
 			// test adding an additional group to an existing resource
-			resource.TestStep{
+			{
 				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddOne,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
@@ -44,7 +44,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 				),
 			},
 			// test adding multiple resources for the same user, and resources with the same groups for another user
-			resource.TestStep{
+			{
 				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
@@ -56,7 +56,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 				),
 			},
 			// test that nothing happens when we apply the same config again
-			resource.TestStep{
+			{
 				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigAddAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
@@ -68,7 +68,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 				),
 			},
 			// test removing a group
-			resource.TestStep{
+			{
 				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigRemoveGroup,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
@@ -80,7 +80,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 				),
 			},
 			// test removing a resource
-			resource.TestStep{
+			{
 				Config: usersAndGroupsConfig + testAccAWSUserGroupMembershipConfigDeleteResource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),

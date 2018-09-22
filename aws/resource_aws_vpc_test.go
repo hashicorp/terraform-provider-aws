@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,6 +21,7 @@ func init() {
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
+			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
 			"aws_vpn_gateway",
@@ -41,6 +43,7 @@ func testSweepVPCs(region string) error {
 				Name: aws.String("tag-value"),
 				Values: []*string{
 					aws.String("terraform-testacc-*"),
+					aws.String("tf-acc-test-*"),
 				},
 			},
 		},
@@ -60,18 +63,50 @@ func testSweepVPCs(region string) error {
 	}
 
 	for _, vpc := range resp.Vpcs {
-		// delete the vpc
-		_, err := conn.DeleteVpc(&ec2.DeleteVpcInput{
+		input := &ec2.DeleteVpcInput{
 			VpcId: vpc.VpcId,
+		}
+		log.Printf("[DEBUG] Deleting VPC: %s", input)
+
+		// Handle EC2 eventual consistency
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteVpc(input)
+			if isAWSErr(err, "DependencyViolation", "") {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
 		})
+
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting VPC (%s): %s",
-				*vpc.VpcId, err)
+			return fmt.Errorf("Error deleting VPC (%s): %s", aws.StringValue(vpc.VpcId), err)
 		}
 	}
 
 	return nil
+}
+
+func TestAccAWSVpc_importBasic(t *testing.T) {
+	resourceName := "aws_vpc.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccAWSVpc_basic(t *testing.T) {

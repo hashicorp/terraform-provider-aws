@@ -711,7 +711,7 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 		}
 
 		if len(resp.ReplicationGroups) == 0 {
-			return nil, "", fmt.Errorf("[WARN] Error: no Cache Replication Groups found for id (%s)", replicationGroupId)
+			return nil, "", fmt.Errorf("Error: no Cache Replication Groups found for id (%s)", replicationGroupId)
 		}
 
 		var rg *elasticache.ReplicationGroup
@@ -723,7 +723,7 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 		}
 
 		if rg == nil {
-			return nil, "", fmt.Errorf("[WARN] Error: no matching ElastiCache Replication Group for id (%s)", replicationGroupId)
+			return nil, "", fmt.Errorf("Error: no matching ElastiCache Replication Group for id (%s)", replicationGroupId)
 		}
 
 		log.Printf("[DEBUG] ElastiCache Replication Group (%s) status: %v", replicationGroupId, *rg.Status)

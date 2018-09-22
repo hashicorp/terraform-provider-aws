@@ -136,7 +136,7 @@ func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interf
 		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags: dmsTagsFromMap(d.Get("tags").(map[string]interface{})),
+		Tags:                          dmsTagsFromMap(d.Get("tags").(map[string]interface{})),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional
@@ -259,7 +259,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChange("engine_version") {
 		if v, ok := d.GetOk("engine_version"); ok {
-			request.ReplicationInstanceClass = aws.String(v.(string))
+			request.EngineVersion = aws.String(v.(string))
 			hasChanges = true
 		}
 	}
@@ -308,7 +308,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 		}
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying"},
+			Pending:    []string{"modifying", "upgrading"},
 			Target:     []string{"available"},
 			Refresh:    resourceAwsDmsReplicationInstanceStateRefreshFunc(d, meta),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),

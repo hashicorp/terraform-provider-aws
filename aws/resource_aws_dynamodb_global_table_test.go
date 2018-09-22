@@ -98,11 +98,11 @@ func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

@@ -1260,6 +1260,78 @@ func (c *DynamoDB) DescribeContinuousBackupsWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opDescribeEndpoints = "DescribeEndpoints"
+
+// DescribeEndpointsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeEndpoints operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeEndpoints for more information on using the DescribeEndpoints
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeEndpointsRequest method.
+//    req, resp := client.DescribeEndpointsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeEndpoints
+func (c *DynamoDB) DescribeEndpointsRequest(input *DescribeEndpointsInput) (req *request.Request, output *DescribeEndpointsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeEndpoints,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeEndpointsInput{}
+	}
+
+	output = &DescribeEndpointsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeEndpoints API operation for Amazon DynamoDB.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation DescribeEndpoints for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeEndpoints
+func (c *DynamoDB) DescribeEndpoints(input *DescribeEndpointsInput) (*DescribeEndpointsOutput, error) {
+	req, out := c.DescribeEndpointsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeEndpointsWithContext is the same as DescribeEndpoints with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeEndpoints for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) DescribeEndpointsWithContext(ctx aws.Context, input *DescribeEndpointsInput, opts ...request.Option) (*DescribeEndpointsOutput, error) {
+	req, out := c.DescribeEndpointsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeGlobalTable = "DescribeGlobalTable"
 
 // DescribeGlobalTableRequest generates a "aws/request.Request" representing the
@@ -4636,6 +4708,10 @@ type BackupDetails struct {
 	// BackupCreationDateTime is a required field
 	BackupCreationDateTime *time.Time `type:"timestamp" required:"true"`
 
+	// Time at which the automatic on-demand backup created by DynamoDB will expire.
+	// This SYSTEM on-demand backup expires automatically 35 days after its creation.
+	BackupExpiryDateTime *time.Time `type:"timestamp"`
+
 	// Name of the requested backup.
 	//
 	// BackupName is a required field
@@ -4648,6 +4724,15 @@ type BackupDetails struct {
 	//
 	// BackupStatus is a required field
 	BackupStatus *string `type:"string" required:"true" enum:"BackupStatus"`
+
+	// BackupType:
+	//
+	//    * USER - On-demand backup created by you.
+	//
+	//    * SYSTEM - On-demand backup automatically created by DynamoDB.
+	//
+	// BackupType is a required field
+	BackupType *string `type:"string" required:"true" enum:"BackupType"`
 }
 
 // String returns the string representation
@@ -4672,6 +4757,12 @@ func (s *BackupDetails) SetBackupCreationDateTime(v time.Time) *BackupDetails {
 	return s
 }
 
+// SetBackupExpiryDateTime sets the BackupExpiryDateTime field's value.
+func (s *BackupDetails) SetBackupExpiryDateTime(v time.Time) *BackupDetails {
+	s.BackupExpiryDateTime = &v
+	return s
+}
+
 // SetBackupName sets the BackupName field's value.
 func (s *BackupDetails) SetBackupName(v string) *BackupDetails {
 	s.BackupName = &v
@@ -4690,6 +4781,12 @@ func (s *BackupDetails) SetBackupStatus(v string) *BackupDetails {
 	return s
 }
 
+// SetBackupType sets the BackupType field's value.
+func (s *BackupDetails) SetBackupType(v string) *BackupDetails {
+	s.BackupType = &v
+	return s
+}
+
 // Contains details for the backup.
 type BackupSummary struct {
 	_ struct{} `type:"structure"`
@@ -4700,6 +4797,10 @@ type BackupSummary struct {
 	// Time at which the backup was created.
 	BackupCreationDateTime *time.Time `type:"timestamp"`
 
+	// Time at which the automatic on-demand backup created by DynamoDB will expire.
+	// This SYSTEM on-demand backup expires automatically 35 days after its creation.
+	BackupExpiryDateTime *time.Time `type:"timestamp"`
+
 	// Name of the specified backup.
 	BackupName *string `min:"3" type:"string"`
 
@@ -4708,6 +4809,13 @@ type BackupSummary struct {
 
 	// Backup can be in one of the following states: CREATING, ACTIVE, DELETED.
 	BackupStatus *string `type:"string" enum:"BackupStatus"`
+
+	// BackupType:
+	//
+	//    * USER - On-demand backup created by you.
+	//
+	//    * SYSTEM - On-demand backup automatically created by DynamoDB.
+	BackupType *string `type:"string" enum:"BackupType"`
 
 	// ARN associated with the table.
 	TableArn *string `type:"string"`
@@ -4741,6 +4849,12 @@ func (s *BackupSummary) SetBackupCreationDateTime(v time.Time) *BackupSummary {
 	return s
 }
 
+// SetBackupExpiryDateTime sets the BackupExpiryDateTime field's value.
+func (s *BackupSummary) SetBackupExpiryDateTime(v time.Time) *BackupSummary {
+	s.BackupExpiryDateTime = &v
+	return s
+}
+
 // SetBackupName sets the BackupName field's value.
 func (s *BackupSummary) SetBackupName(v string) *BackupSummary {
 	s.BackupName = &v
@@ -4756,6 +4870,12 @@ func (s *BackupSummary) SetBackupSizeBytes(v int64) *BackupSummary {
 // SetBackupStatus sets the BackupStatus field's value.
 func (s *BackupSummary) SetBackupStatus(v string) *BackupSummary {
 	s.BackupStatus = &v
+	return s
+}
+
+// SetBackupType sets the BackupType field's value.
+func (s *BackupSummary) SetBackupType(v string) *BackupSummary {
+	s.BackupType = &v
 	return s
 }
 
@@ -5388,7 +5508,7 @@ func (s *ConsumedCapacity) SetTableName(v string) *ConsumedCapacity {
 type ContinuousBackupsDescription struct {
 	_ struct{} `type:"structure"`
 
-	// ContinuousBackupsStatus can be one of the following states : ENABLED, DISABLED
+	// ContinuousBackupsStatus can be one of the following states: ENABLED, DISABLED
 	//
 	// ContinuousBackupsStatus is a required field
 	ContinuousBackupsStatus *string `type:"string" required:"true" enum:"ContinuousBackupsStatus"`
@@ -5958,11 +6078,6 @@ func (s *CreateTableInput) Validate() error {
 	if s.ProvisionedThroughput != nil {
 		if err := s.ProvisionedThroughput.Validate(); err != nil {
 			invalidParams.AddNested("ProvisionedThroughput", err.(request.ErrInvalidParams))
-		}
-	}
-	if s.SSESpecification != nil {
-		if err := s.SSESpecification.Validate(); err != nil {
-			invalidParams.AddNested("SSESpecification", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -6713,6 +6828,43 @@ func (s *DescribeContinuousBackupsOutput) SetContinuousBackupsDescription(v *Con
 	return s
 }
 
+type DescribeEndpointsInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeEndpointsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeEndpointsInput) GoString() string {
+	return s.String()
+}
+
+type DescribeEndpointsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Endpoints is a required field
+	Endpoints []*Endpoint `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeEndpointsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeEndpointsOutput) GoString() string {
+	return s.String()
+}
+
+// SetEndpoints sets the Endpoints field's value.
+func (s *DescribeEndpointsOutput) SetEndpoints(v []*Endpoint) *DescribeEndpointsOutput {
+	s.Endpoints = v
+	return s
+}
+
 type DescribeGlobalTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7049,6 +7201,38 @@ func (s DescribeTimeToLiveOutput) GoString() string {
 // SetTimeToLiveDescription sets the TimeToLiveDescription field's value.
 func (s *DescribeTimeToLiveOutput) SetTimeToLiveDescription(v *TimeToLiveDescription) *DescribeTimeToLiveOutput {
 	s.TimeToLiveDescription = v
+	return s
+}
+
+type Endpoint struct {
+	_ struct{} `type:"structure"`
+
+	// Address is a required field
+	Address *string `type:"string" required:"true"`
+
+	// CachePeriodInMinutes is a required field
+	CachePeriodInMinutes *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s Endpoint) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Endpoint) GoString() string {
+	return s.String()
+}
+
+// SetAddress sets the Address field's value.
+func (s *Endpoint) SetAddress(v string) *Endpoint {
+	s.Address = &v
+	return s
+}
+
+// SetCachePeriodInMinutes sets the CachePeriodInMinutes field's value.
+func (s *Endpoint) SetCachePeriodInMinutes(v int64) *Endpoint {
+	s.CachePeriodInMinutes = &v
 	return s
 }
 
@@ -8266,6 +8450,17 @@ func (s *KeysAndAttributes) SetProjectionExpression(v string) *KeysAndAttributes
 type ListBackupsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The backups from the table specified by BackupType are listed.
+	//
+	// Where BackupType can be:
+	//
+	//    * USER - On-demand backup created by you.
+	//
+	//    * SYSTEM - On-demand backup automatically created by DynamoDB.
+	//
+	//    * ALL - All types of on-demand backups (USER and SYSTEM).
+	BackupType *string `type:"string" enum:"BackupTypeFilter"`
+
 	// LastEvaluatedBackupArn is the ARN of the backup last evaluated when the current
 	// page of results was returned, inclusive of the current page of results. This
 	// value may be specified as the ExclusiveStartBackupArn of a new ListBackups
@@ -8313,6 +8508,12 @@ func (s *ListBackupsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetBackupType sets the BackupType field's value.
+func (s *ListBackupsInput) SetBackupType(v string) *ListBackupsInput {
+	s.BackupType = &v
+	return s
 }
 
 // SetExclusiveStartBackupArn sets the ExclusiveStartBackupArn field's value.
@@ -10787,6 +10988,8 @@ type SSEDescription struct {
 	//    * DISABLING - Server-side encryption is being disabled.
 	//
 	//    * DISABLED - Server-side encryption is disabled.
+	//
+	//    * UPDATING - Server-side encryption is being updated.
 	Status *string `type:"string" enum:"SSEStatus"`
 }
 
@@ -10824,9 +11027,21 @@ type SSESpecification struct {
 
 	// Indicates whether server-side encryption is enabled (true) or disabled (false)
 	// on the table.
+	Enabled *bool `type:"boolean"`
+
+	// The KMS Master Key (CMK) which should be used for the KMS encryption. To
+	// specify a CMK, use its key ID, Amazon Resource Name (ARN), alias name, or
+	// alias ARN. Note that you should only provide this parameter if the key is
+	// different from the default DynamoDB KMS Master Key alias/aws/dynamodb.
+	KMSMasterKeyId *string `type:"string"`
+
+	// Server-side encryption type:
 	//
-	// Enabled is a required field
-	Enabled *bool `type:"boolean" required:"true"`
+	//    * AES256 - Server-side encryption which uses the AES256 algorithm.
+	//
+	//    * KMS - Server-side encryption which uses AWS Key Management Service.
+	//    (default)
+	SSEType *string `type:"string" enum:"SSEType"`
 }
 
 // String returns the string representation
@@ -10839,22 +11054,21 @@ func (s SSESpecification) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *SSESpecification) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "SSESpecification"}
-	if s.Enabled == nil {
-		invalidParams.Add(request.NewErrParamRequired("Enabled"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetEnabled sets the Enabled field's value.
 func (s *SSESpecification) SetEnabled(v bool) *SSESpecification {
 	s.Enabled = &v
+	return s
+}
+
+// SetKMSMasterKeyId sets the KMSMasterKeyId field's value.
+func (s *SSESpecification) SetKMSMasterKeyId(v string) *SSESpecification {
+	s.KMSMasterKeyId = &v
+	return s
+}
+
+// SetSSEType sets the SSEType field's value.
+func (s *SSESpecification) SetSSEType(v string) *SSESpecification {
+	s.SSEType = &v
 	return s
 }
 
@@ -12992,6 +13206,9 @@ type UpdateTableInput struct {
 	// The new provisioned throughput settings for the specified table or index.
 	ProvisionedThroughput *ProvisionedThroughput `type:"structure"`
 
+	// The new server-side encryption settings for the specified table.
+	SSESpecification *SSESpecification `type:"structure"`
+
 	// Represents the DynamoDB Streams configuration for the table.
 	//
 	// You will receive a ResourceInUseException if you attempt to enable a stream
@@ -13071,6 +13288,12 @@ func (s *UpdateTableInput) SetGlobalSecondaryIndexUpdates(v []*GlobalSecondaryIn
 // SetProvisionedThroughput sets the ProvisionedThroughput field's value.
 func (s *UpdateTableInput) SetProvisionedThroughput(v *ProvisionedThroughput) *UpdateTableInput {
 	s.ProvisionedThroughput = v
+	return s
+}
+
+// SetSSESpecification sets the SSESpecification field's value.
+func (s *UpdateTableInput) SetSSESpecification(v *SSESpecification) *UpdateTableInput {
+	s.SSESpecification = v
 	return s
 }
 
@@ -13251,6 +13474,25 @@ const (
 
 	// BackupStatusAvailable is a BackupStatus enum value
 	BackupStatusAvailable = "AVAILABLE"
+)
+
+const (
+	// BackupTypeUser is a BackupType enum value
+	BackupTypeUser = "USER"
+
+	// BackupTypeSystem is a BackupType enum value
+	BackupTypeSystem = "SYSTEM"
+)
+
+const (
+	// BackupTypeFilterUser is a BackupTypeFilter enum value
+	BackupTypeFilterUser = "USER"
+
+	// BackupTypeFilterSystem is a BackupTypeFilter enum value
+	BackupTypeFilterSystem = "SYSTEM"
+
+	// BackupTypeFilterAll is a BackupTypeFilter enum value
+	BackupTypeFilterAll = "ALL"
 )
 
 const (
@@ -13442,6 +13684,9 @@ const (
 
 	// SSEStatusDisabled is a SSEStatus enum value
 	SSEStatusDisabled = "DISABLED"
+
+	// SSEStatusUpdating is a SSEStatus enum value
+	SSEStatusUpdating = "UPDATING"
 )
 
 const (

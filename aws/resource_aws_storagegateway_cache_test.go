@@ -68,7 +68,7 @@ func TestDecodeStorageGatewayCacheID(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayCache_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cache.test"
 
@@ -79,7 +79,34 @@ func TestAccAWSStorageGatewayCache_Basic(t *testing.T) {
 		// CheckDestroy: testAccCheckAWSStorageGatewayCacheDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayCacheConfig_Basic(rName),
+				Config: testAccAWSStorageGatewayCacheConfig_FileGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayCacheExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
+					resource.TestMatchResourceAttr(resourceName, "gateway_arn", regexp.MustCompile(`^arn:[^:]+:storagegateway:[^:]+:[^:]+:gateway/sgw-.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_cache.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		// Storage Gateway API does not support removing caches
+		// CheckDestroy: testAccCheckAWSStorageGatewayCacheDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayCacheConfig_TapeAndVolumeGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayCacheExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
@@ -133,7 +160,7 @@ func testAccCheckAWSStorageGatewayCacheExists(resourceName string) resource.Test
 	}
 }
 
-func testAccAWSStorageGatewayCacheConfig_Basic(rName string) string {
+func testAccAWSStorageGatewayCacheConfig_FileGateway(rName string) string {
 	return testAccAWSStorageGatewayGatewayConfig_GatewayType_FileS3(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = "${aws_instance.test.availability_zone}"
@@ -158,6 +185,46 @@ data "aws_storagegateway_local_disk" "test" {
 }
 
 resource "aws_storagegateway_cache" "test" {
+  disk_id     = "${data.aws_storagegateway_local_disk.test.id}"
+  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+}
+`, rName)
+}
+
+func testAccAWSStorageGatewayCacheConfig_TapeAndVolumeGateway(rName string) string {
+	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = "${aws_instance.test.availability_zone}"
+  size              = "10"
+  type              = "gp2"
+
+  tags {
+    Name = %q
+  }
+}
+
+resource "aws_volume_attachment" "test" {
+  device_name  = "/dev/xvdc"
+  force_detach = true
+  instance_id  = "${aws_instance.test.id}"
+  volume_id    = "${aws_ebs_volume.test.id}"
+}
+
+data "aws_storagegateway_local_disk" "test" {
+  disk_path   = "${aws_volume_attachment.test.device_name}"
+  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+}
+
+resource "aws_storagegateway_cache" "test" {
+  # ACCEPTANCE TESTING WORKAROUND:
+  # Data sources are not refreshed before plan after apply in TestStep
+  # Step 0 error: After applying this step, the plan was not empty:
+  #   disk_id:     "0b68f77a-709b-4c79-ad9d-d7728014b291" => "/dev/xvdc" (forces new resource)
+  # We expect this data source value to change due to how Storage Gateway works.
+  lifecycle {
+    ignore_changes = ["disk_id"]
+  }
+
   disk_id     = "${data.aws_storagegateway_local_disk.test.id}"
   gateway_arn = "${aws_storagegateway_gateway.test.arn}"
 }

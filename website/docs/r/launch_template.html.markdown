@@ -75,6 +75,8 @@ resource "aws_launch_template" "foo" {
       Name = "test"
     }
   }
+  
+  user_data = "${base64encode(...)}"
 }
 ```
 
@@ -209,12 +211,12 @@ Each `network_interfaces` block supports the following:
 * `delete_on_termination` - Whether the network interface should be destroyed on instance termination.
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
-* `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet.
+* `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.
 * `private_ip_address` - The primary private IPv4 address.
-* `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface.
-* `ipv4_addresses` - One or more private IPv4 addresses to associate.
+* `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_address_count`
+* `ipv4_addresses` - One or more private IPv4 addresses to associate. Conflicts with `ipv4_addresses`
 * `security_groups` - A list of security group IDs to associate.
 * `subnet_id` - The VPC Subnet ID to associate.
 

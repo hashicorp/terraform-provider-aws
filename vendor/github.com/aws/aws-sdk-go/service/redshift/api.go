@@ -6861,6 +6861,129 @@ func (c *Redshift) ResetClusterParameterGroupWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opResizeCluster = "ResizeCluster"
+
+// ResizeClusterRequest generates a "aws/request.Request" representing the
+// client's request for the ResizeCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResizeCluster for more information on using the ResizeCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResizeClusterRequest method.
+//    req, resp := client.ResizeClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ResizeCluster
+func (c *Redshift) ResizeClusterRequest(input *ResizeClusterInput) (req *request.Request, output *ResizeClusterOutput) {
+	op := &request.Operation{
+		Name:       opResizeCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ResizeClusterInput{}
+	}
+
+	output = &ResizeClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ResizeCluster API operation for Amazon Redshift.
+//
+// Changes the size of the cluster. You can change the cluster's type, or change
+// the number or type of nodes. The default behavior is to use the elastic resize
+// method. With an elastic resize your cluster is avaialble for read and write
+// operations more quickly than with the classic resize method.
+//
+// Elastic resize operations have the following restrictions:
+//
+//    * You can only resize clusters of the following types:
+//
+// dc2.large
+//
+// dc2.8xlarge
+//
+// ds2.xlarge
+//
+// ds2.8xlarge
+//
+//    * The type of nodes you add must match the node type for the cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation ResizeCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
+//
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeNumberOfNodesQuotaExceededFault "NumberOfNodesQuotaExceeded"
+//   The operation would exceed the number of nodes allotted to the account. For
+//   information about increasing your quota, go to Limits in Amazon Redshift
+//   (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+//   in the Amazon Redshift Cluster Management Guide.
+//
+//   * ErrCodeNumberOfNodesPerClusterLimitExceededFault "NumberOfNodesPerClusterLimitExceeded"
+//   The operation would exceed the number of nodes allowed for a cluster.
+//
+//   * ErrCodeInsufficientClusterCapacityFault "InsufficientClusterCapacity"
+//   The number of nodes specified exceeds the allotted capacity of the cluster.
+//
+//   * ErrCodeUnsupportedOptionFault "UnsupportedOptionFault"
+//   A request option was specified that is not supported.
+//
+//   * ErrCodeUnsupportedOperationFault "UnsupportedOperation"
+//   The requested operation isn't supported.
+//
+//   * ErrCodeUnauthorizedOperation "UnauthorizedOperation"
+//   Your account is not authorized to perform the requested operation.
+//
+//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   The encryption key has exceeded its grant limit in AWS KMS.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ResizeCluster
+func (c *Redshift) ResizeCluster(input *ResizeClusterInput) (*ResizeClusterOutput, error) {
+	req, out := c.ResizeClusterRequest(input)
+	return out, req.Send()
+}
+
+// ResizeClusterWithContext is the same as ResizeCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResizeCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) ResizeClusterWithContext(ctx aws.Context, input *ResizeClusterInput, opts ...request.Option) (*ResizeClusterOutput, error) {
+	req, out := c.ResizeClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRestoreFromClusterSnapshot = "RestoreFromClusterSnapshot"
 
 // RestoreFromClusterSnapshotRequest generates a "aws/request.Request" representing the
@@ -7832,6 +7955,10 @@ type Cluster struct {
 	// The status of the elastic IP (EIP) address.
 	ElasticIpStatus *ElasticIpStatus `type:"structure"`
 
+	// Indicates the number of nodes the cluster can be resized to with the elastic
+	// resize method.
+	ElasticResizeNumberOfNodeOptions *string `type:"string"`
+
 	// A Boolean value that, if true, indicates that data in the cluster is encrypted
 	// at rest.
 	Encrypted *bool `type:"boolean"`
@@ -8015,6 +8142,12 @@ func (s *Cluster) SetDBName(v string) *Cluster {
 // SetElasticIpStatus sets the ElasticIpStatus field's value.
 func (s *Cluster) SetElasticIpStatus(v *ElasticIpStatus) *Cluster {
 	s.ElasticIpStatus = v
+	return s
+}
+
+// SetElasticResizeNumberOfNodeOptions sets the ElasticResizeNumberOfNodeOptions field's value.
+func (s *Cluster) SetElasticResizeNumberOfNodeOptions(v string) *Cluster {
+	s.ElasticResizeNumberOfNodeOptions = &v
 	return s
 }
 
@@ -13107,12 +13240,19 @@ type DescribeResizeOutput struct {
 	// Valid Values: List of table names
 	ImportTablesNotStarted []*string `type:"list"`
 
+	// An optional string to provide additional details about the resize action.
+	Message *string `type:"string"`
+
 	// While the resize operation is in progress, this value shows the current amount
 	// of data, in megabytes, that has been processed so far. When the resize operation
 	// is complete, this value shows the total amount of data, in megabytes, on
 	// the cluster, which may be more or less than TotalResizeDataInMegaBytes (the
 	// estimated total amount of data before resize).
 	ProgressInMegaBytes *int64 `type:"long"`
+
+	// An enum with possible values of ClassicResize and ElasticResize. These values
+	// describe the type of resize operation being performed.
+	ResizeType *string `type:"string"`
 
 	// The status of the resize operation.
 	//
@@ -13123,6 +13263,12 @@ type DescribeResizeOutput struct {
 	//
 	// Valid Values: multi-node | single-node
 	TargetClusterType *string `type:"string"`
+
+	// The type of encryption for the cluster after the resize is complete.
+	//
+	// Possible values are KMS and None. In the China region possible values are:
+	// Legacy and None.
+	TargetEncryptionType *string `type:"string"`
 
 	// The node type that the cluster will have after the resize operation is complete.
 	TargetNodeType *string `type:"string"`
@@ -13182,9 +13328,21 @@ func (s *DescribeResizeOutput) SetImportTablesNotStarted(v []*string) *DescribeR
 	return s
 }
 
+// SetMessage sets the Message field's value.
+func (s *DescribeResizeOutput) SetMessage(v string) *DescribeResizeOutput {
+	s.Message = &v
+	return s
+}
+
 // SetProgressInMegaBytes sets the ProgressInMegaBytes field's value.
 func (s *DescribeResizeOutput) SetProgressInMegaBytes(v int64) *DescribeResizeOutput {
 	s.ProgressInMegaBytes = &v
+	return s
+}
+
+// SetResizeType sets the ResizeType field's value.
+func (s *DescribeResizeOutput) SetResizeType(v string) *DescribeResizeOutput {
+	s.ResizeType = &v
 	return s
 }
 
@@ -13197,6 +13355,12 @@ func (s *DescribeResizeOutput) SetStatus(v string) *DescribeResizeOutput {
 // SetTargetClusterType sets the TargetClusterType field's value.
 func (s *DescribeResizeOutput) SetTargetClusterType(v string) *DescribeResizeOutput {
 	s.TargetClusterType = &v
+	return s
+}
+
+// SetTargetEncryptionType sets the TargetEncryptionType field's value.
+func (s *DescribeResizeOutput) SetTargetEncryptionType(v string) *DescribeResizeOutput {
+	s.TargetEncryptionType = &v
 	return s
 }
 
@@ -15152,6 +15316,13 @@ type ModifyClusterInput struct {
 	// in the Amazon Redshift Cluster Management Guide.
 	ElasticIp *string `type:"string"`
 
+	// Indicates whether the cluster is encrypted. If the cluster is encrypted and
+	// you provide a value for the KmsKeyId parameter, we will encrypt the cluster
+	// with the provided KmsKeyId. If you don't provide a KmsKeyId, we will encrypt
+	// with the default key. In the China region we will use legacy encryption if
+	// you specify that the cluster is encrypted.
+	Encrypted *bool `type:"boolean"`
+
 	// An option that specifies whether to create the cluster with enhanced VPC
 	// routing enabled. To create a cluster that uses enhanced VPC routing, the
 	// cluster must be in a VPC. For more information, see Enhanced VPC Routing
@@ -15170,6 +15341,10 @@ type ModifyClusterInput struct {
 	// Specifies the name of the HSM configuration that contains the information
 	// the Amazon Redshift cluster can use to retrieve and store keys in an HSM.
 	HsmConfigurationIdentifier *string `type:"string"`
+
+	// The AWS Key Management Service (KMS) key ID of the encryption key that you
+	// want to use to encrypt data in the cluster.
+	KmsKeyId *string `type:"string"`
 
 	// The name for the maintenance track that you want to assign for the cluster.
 	// This name change is asynchronous. The new track name stays in the PendingModifiedValues
@@ -15347,6 +15522,12 @@ func (s *ModifyClusterInput) SetElasticIp(v string) *ModifyClusterInput {
 	return s
 }
 
+// SetEncrypted sets the Encrypted field's value.
+func (s *ModifyClusterInput) SetEncrypted(v bool) *ModifyClusterInput {
+	s.Encrypted = &v
+	return s
+}
+
 // SetEnhancedVpcRouting sets the EnhancedVpcRouting field's value.
 func (s *ModifyClusterInput) SetEnhancedVpcRouting(v bool) *ModifyClusterInput {
 	s.EnhancedVpcRouting = &v
@@ -15362,6 +15543,12 @@ func (s *ModifyClusterInput) SetHsmClientCertificateIdentifier(v string) *Modify
 // SetHsmConfigurationIdentifier sets the HsmConfigurationIdentifier field's value.
 func (s *ModifyClusterInput) SetHsmConfigurationIdentifier(v string) *ModifyClusterInput {
 	s.HsmConfigurationIdentifier = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ModifyClusterInput) SetKmsKeyId(v string) *ModifyClusterInput {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -15975,6 +16162,10 @@ type PendingModifiedValues struct {
 	// The pending or in-progress change of the service version.
 	ClusterVersion *string `type:"string"`
 
+	// The encryption type for a cluster. Possible values are: KMS and None. For
+	// the China region the possible values are None, and Legacy.
+	EncryptionType *string `type:"string"`
+
 	// An option that specifies whether to create the cluster with enhanced VPC
 	// routing enabled. To create a cluster that uses enhanced VPC routing, the
 	// cluster must be in a VPC. For more information, see Enhanced VPC Routing
@@ -16035,6 +16226,12 @@ func (s *PendingModifiedValues) SetClusterType(v string) *PendingModifiedValues 
 // SetClusterVersion sets the ClusterVersion field's value.
 func (s *PendingModifiedValues) SetClusterVersion(v string) *PendingModifiedValues {
 	s.ClusterVersion = &v
+	return s
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *PendingModifiedValues) SetEncryptionType(v string) *PendingModifiedValues {
+	s.EncryptionType = &v
 	return s
 }
 
@@ -16550,6 +16747,110 @@ func (s *ResetClusterParameterGroupInput) SetParameters(v []*Parameter) *ResetCl
 // SetResetAllParameters sets the ResetAllParameters field's value.
 func (s *ResetClusterParameterGroupInput) SetResetAllParameters(v bool) *ResetClusterParameterGroupInput {
 	s.ResetAllParameters = &v
+	return s
+}
+
+type ResizeClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// A boolean value indicating whether the resize operation is using the classic
+	// resize process. If you don't provide this parameter or set the value to false
+	// the resize type is elastic.
+	Classic *bool `type:"boolean"`
+
+	// The unique identifier for the cluster to resize.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+
+	// The new cluster type for the specified cluster.
+	ClusterType *string `type:"string"`
+
+	// The new node type for the nodes you are adding.
+	NodeType *string `type:"string"`
+
+	// The new number of nodes for the cluster.
+	//
+	// NumberOfNodes is a required field
+	NumberOfNodes *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s ResizeClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResizeClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResizeClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResizeClusterInput"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+	if s.NumberOfNodes == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNodes"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClassic sets the Classic field's value.
+func (s *ResizeClusterInput) SetClassic(v bool) *ResizeClusterInput {
+	s.Classic = &v
+	return s
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *ResizeClusterInput) SetClusterIdentifier(v string) *ResizeClusterInput {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+// SetClusterType sets the ClusterType field's value.
+func (s *ResizeClusterInput) SetClusterType(v string) *ResizeClusterInput {
+	s.ClusterType = &v
+	return s
+}
+
+// SetNodeType sets the NodeType field's value.
+func (s *ResizeClusterInput) SetNodeType(v string) *ResizeClusterInput {
+	s.NodeType = &v
+	return s
+}
+
+// SetNumberOfNodes sets the NumberOfNodes field's value.
+func (s *ResizeClusterInput) SetNumberOfNodes(v int64) *ResizeClusterInput {
+	s.NumberOfNodes = &v
+	return s
+}
+
+type ResizeClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes a cluster.
+	Cluster *Cluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s ResizeClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResizeClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *ResizeClusterOutput) SetCluster(v *Cluster) *ResizeClusterOutput {
+	s.Cluster = v
 	return s
 }
 

@@ -96,7 +96,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
@@ -347,7 +346,7 @@ func (c *Config) Client() (interface{}, error) {
   Please see https://terraform.io/docs/providers/aws/index.html for more information on
   providing credentials for the AWS Provider`)
 		}
-		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
+		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
 	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)
@@ -376,6 +375,12 @@ func (c *Config) Client() (interface{}, error) {
 		// RequestError: send request failed
 		// caused by: Post https://FQDN/: dial tcp: lookup FQDN: no such host
 		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
+			log.Printf("[WARN] Disabling retries after next request due to networking issue")
+			r.Retryable = aws.Bool(false)
+		}
+		// RequestError: send request failed
+		// caused by: Post https://FQDN/: dial tcp IPADDRESS:443: connect: connection refused
+		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "connection refused") {
 			log.Printf("[WARN] Disabling retries after next request due to networking issue")
 			r.Retryable = aws.Bool(false)
 		}
@@ -442,8 +447,18 @@ func (c *Config) Client() (interface{}, error) {
 		var err error
 		client.accountid, client.partition, err = GetAccountIDAndPartition(client.iamconn, client.stsconn, cp.ProviderName)
 		if err != nil {
-			return nil, fmt.Errorf("Failed getting account information via all available methods. Errors: %s", err)
+			// DEPRECATED: Next major version of the provider should return the error instead of logging
+			//             if skip_request_account_id is not enabled.
+			log.Printf("[WARN] %s", fmt.Sprintf(
+				"AWS account ID not previously found and failed retrieving via all available methods. "+
+					"This will return an error in the next major version of the AWS provider. "+
+					"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for workaround and implications. "+
+					"Errors: %s", err))
 		}
+	}
+
+	if client.accountid == "" {
+		log.Printf("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
 	}
 
 	authErr := c.ValidateAccountId(client.accountid)
@@ -597,6 +612,13 @@ func (c *Config) Client() (interface{}, error) {
 			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
 				r.Retryable = aws.Bool(true)
 			}
+		}
+	})
+
+	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
+		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
+			r.Retryable = aws.Bool(true)
 		}
 	})
 

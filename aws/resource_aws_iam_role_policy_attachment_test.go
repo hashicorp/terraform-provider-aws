@@ -32,6 +32,27 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_iam_role_policy_attachment.test-attach",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSIAMRolePolicyAttachmentImportStateIdFunc("aws_iam_role_policy_attachment.test-attach"),
+				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// Failed state verification, resource with ID ROLE-POLICYARN not found
+				// ImportStateVerify: true,
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+
+					rs := s[0]
+
+					if !strings.HasPrefix(rs.Attributes["policy_arn"], "arn:") {
+						return fmt.Errorf("expected policy_arn attribute to be set and begin with arn:, received: %s", rs.Attributes["policy_arn"])
+					}
+
+					return nil
+				},
+			},
+			{
 				Config: testAccAWSRolePolicyAttachConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRolePolicyAttachmentExists("aws_iam_role_policy_attachment.test-attach", 2, &out),
@@ -90,6 +111,17 @@ func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.L
 			return fmt.Errorf("Error: Number of attached policies was incorrect: expected %d matched policies, matched %d of %d", len(policies), matched, len(out.AttachedPolicies))
 		}
 		return nil
+	}
+}
+
+func testAccAWSIAMRolePolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"]), nil
 	}
 }
 

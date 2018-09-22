@@ -14,6 +14,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
+func TestAccAWSDBSubnetGroup_importBasic(t *testing.T) {
+	resourceName := "aws_db_subnet_group.foo"
+
+	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBSubnetGroupConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 
@@ -28,7 +52,7 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(
@@ -54,7 +78,7 @@ func TestAccAWSDBSubnetGroup_namePrefix(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBSubnetGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(
@@ -75,7 +99,7 @@ func TestAccAWSDBSubnetGroup_generatedName(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBSubnetGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(
@@ -100,7 +124,7 @@ func TestAccAWSDBSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(
@@ -125,7 +149,7 @@ func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(
@@ -135,7 +159,7 @@ func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccDBSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(

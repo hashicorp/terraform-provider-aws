@@ -34,7 +34,7 @@ func testAccAWSSNSSMSPreferences_empty(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("aws_sns_sms_preferences.test_pref", "monthly_spend_limit"),
@@ -55,7 +55,7 @@ func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_defSMSType,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("aws_sns_sms_preferences.test_pref", "monthly_spend_limit"),
@@ -76,7 +76,7 @@ func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_almostAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_sns_sms_preferences.test_pref", "monthly_spend_limit", "1"),
@@ -95,7 +95,7 @@ func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_deliveryRole,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_sns_sms_preferences.test_pref", "delivery_status_iam_role_arn", arnRole),

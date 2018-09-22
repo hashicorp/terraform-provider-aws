@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -23,7 +22,7 @@ func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafSizeConstraintSetExists("aws_waf_size_constraint_set.size_constraint_set", &v),
@@ -210,7 +209,7 @@ func testAccCheckAWSWafSizeConstraintSetDisappears(v *waf.SizeConstraintSet) res
 			return conn.UpdateSizeConstraintSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating SizeConstraintSet: {{err}}", err)
+			return fmt.Errorf("Error updating SizeConstraintSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

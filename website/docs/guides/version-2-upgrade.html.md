@@ -19,6 +19,9 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Provider: Configuration](#provider-configuration)
+- [Data Source: aws_ami](#data-source-aws_ami)
+- [Data Source: aws_ami_ids](#data-source-aws_ami_ids)
 - [Data Source: aws_iam_role](#data-source-aws_iam_role)
 - [Data Source: aws_kms_secret](#data-source-aws_kms_secret)
 - [Data Source: aws_region](#data-source-aws_region)
@@ -38,6 +41,7 @@ Upgrade topics:
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
+- [Resource: aws_route_table](#resource-aws_route_table)
 - [Resource: aws_wafregional_byte_match_set](#resource-aws_wafregional_byte_match_set)
 
 <!-- /TOC -->
@@ -69,6 +73,36 @@ provider "aws" {
   version = "~> 2.0.0"
 }
 ```
+
+## Provider: Configuration
+
+### skip_requesting_account_id Argument Now Required to Skip Account ID Lookup Errors
+
+If the provider is unable to determine the AWS account ID from a provider assume role configuration or the STS GetCallerIdentity call used to verify the credentials (if `skip_credentials_validation = false`), it will attempt to lookup the AWS account ID via EC2 metadata, IAM GetUser, IAM ListRoles, and STS GetCallerIdentity. Previously, the provider would silently allow the failure of all the above methods.
+
+The provider will now return an error to ensure operators understand the implications of the missing AWS account ID in the provider.
+
+If necessary, the AWS account ID lookup logic can be skipped via:
+
+```hcl
+provider "aws" {
+  # ... other configuration ...
+
+  skip_requesting_account_id = true
+}
+```
+
+## Data Source: aws_ami
+
+### owners Argument Now Required
+
+The `owners` argument is now required. Specifying `owner-id` or `owner-alias` under `filter` does not satisfy this requirement.
+
+## Data Source: aws_ami_ids
+
+### owners Argument Now Required
+
+The `owners` argument is now required. Specifying `owner-id` or `owner-alias` under `filter` does not satisfy this requirement.
 
 ## Data Source: aws_iam_role
 
@@ -576,6 +610,14 @@ resource "aws_redshift_cluster" "example" {
   }
 }
 ```
+
+## Resource: aws_route_table
+
+### Import Change
+
+Previously, importing this resource resulted in an `aws_route` resource for each route, in
+addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
+resource, with in-line routes, to the state.
 
 ## Resource: aws_wafregional_byte_match_set
 

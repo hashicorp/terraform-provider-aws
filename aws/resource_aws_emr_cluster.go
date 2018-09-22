@@ -384,7 +384,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"autoscaling_role": &schema.Schema{
+			"autoscaling_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -615,7 +615,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
+		return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
 	}
 
 	return resourceAwsEMRClusterRead(d, meta)
@@ -767,7 +767,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		coreInstanceCount := d.Get("core_instance_count").(int)
 		coreGroup := findGroup(groups, "CORE")
 		if coreGroup == nil {
-			return fmt.Errorf("[ERR] Error finding core group")
+			return fmt.Errorf("Error finding core group")
 		}
 
 		params := &emr.ModifyInstanceGroupsInput{
@@ -805,7 +805,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("[WARN] Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\" after modification: %s", err)
+			return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\" after modification: %s", err)
 		}
 	}
 
@@ -891,7 +891,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[DEBUG] All (%d) EMR Cluster (%s) Instances terminated", instanceCount, d.Id())
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("[DEBUG] EMR Cluster (%s) has (%d) Instances remaining, retrying", d.Id(), len(resp.Instances)))
+		return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining, retrying", d.Id(), len(resp.Instances)))
 	})
 
 	if err != nil {

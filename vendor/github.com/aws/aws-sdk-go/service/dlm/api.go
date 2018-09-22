@@ -461,7 +461,7 @@ type CreateLifecyclePolicyInput struct {
 	// ExecutionRoleArn is a required field
 	ExecutionRoleArn *string `type:"string" required:"true"`
 
-	// The configuration of the lifecycle policy.
+	// The configuration details of the lifecycle policy.
 	//
 	// Target tags cannot be re-used across lifecycle policies.
 	//
@@ -689,16 +689,17 @@ type GetLifecyclePoliciesInput struct {
 	// The activation state.
 	State *string `location:"querystring" locationName:"state" type:"string" enum:"GettablePolicyStateValues"`
 
-	// The tags to add to the resources.
+	// The tags to add to objects created by the policy.
 	//
-	// Tags are strings in the format key:value.
+	// Tags are strings in the format key=value.
 	//
-	// These tags are added in addition to the AWS-added lifecycle tags.
+	// These user-defined tags are added in addition to the AWS-added lifecycle
+	// tags.
 	TagsToAdd []*string `location:"querystring" locationName:"tagsToAdd" type:"list"`
 
-	// The target tags.
+	// The target tag for a policy.
 	//
-	// Tags are strings in the format key:value.
+	// Tags are strings in the format key=value.
 	TargetTags []*string `location:"querystring" locationName:"targetTags" min:"1" type:"list"`
 }
 
@@ -970,10 +971,10 @@ type PolicyDetails struct {
 	// The resource type.
 	ResourceTypes []*string `min:"1" type:"list"`
 
-	// The schedule.
+	// The schedule of policy-defined actions.
 	Schedules []*Schedule `min:"1" type:"list"`
 
-	// The target tags.
+	// The single tag that identifies targeted resources for this policy.
 	TargetTags []*Tag `min:"1" type:"list"`
 }
 
@@ -1099,8 +1100,8 @@ type Schedule struct {
 	// The retain rule.
 	RetainRule *RetainRule `type:"structure"`
 
-	// The tags to add to policy-created resources. These tags are added in addition
-	// to the default lifecycle tags.
+	// The tags to apply to policy-created resources. These user-defined tags are
+	// in addition to the AWS-added lifecycle tags.
 	TagsToAdd []*Tag `type:"list"`
 }
 

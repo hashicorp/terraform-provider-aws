@@ -85,7 +85,7 @@ func expandListeners(configured []interface{}) ([]*elb.Listener, error) {
 		if valid {
 			listeners = append(listeners, l)
 		} else {
-			return nil, fmt.Errorf("[ERR] ELB Listener: ssl_certificate_id may be set only when protocol is 'https' or 'ssl'")
+			return nil, fmt.Errorf("ELB Listener: ssl_certificate_id may be set only when protocol is 'https' or 'ssl'")
 		}
 	}
 
@@ -110,6 +110,32 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 		if hostPath != "" {
 			l.Host = &ecs.HostVolumeProperties{
 				SourcePath: aws.String(hostPath),
+			}
+		}
+
+		configList, ok := data["docker_volume_configuration"].([]interface{})
+		if ok && len(configList) > 0 {
+			config := configList[0].(map[string]interface{})
+			l.DockerVolumeConfiguration = &ecs.DockerVolumeConfiguration{}
+
+			if v, ok := config["scope"].(string); ok && v != "" {
+				l.DockerVolumeConfiguration.Scope = aws.String(v)
+			}
+
+			if v, ok := config["autoprovision"]; ok {
+				l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+			}
+
+			if v, ok := config["driver"].(string); ok && v != "" {
+				l.DockerVolumeConfiguration.Driver = aws.String(v)
+			}
+
+			if v, ok := config["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
+				l.DockerVolumeConfiguration.DriverOpts = stringMapToPointers(v)
+			}
+
+			if v, ok := config["labels"].(map[string]interface{}); ok && len(v) > 0 {
+				l.DockerVolumeConfiguration.Labels = stringMapToPointers(v)
 			}
 		}
 
@@ -621,13 +647,45 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			"name": *volume.Name,
 		}
 
-		if volume.Host.SourcePath != nil {
+		if volume.Host != nil && volume.Host.SourcePath != nil {
 			l["host_path"] = *volume.Host.SourcePath
+		}
+
+		if volume.DockerVolumeConfiguration != nil {
+			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
 		result = append(result, l)
 	}
 	return result
+}
+
+func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+
+	if config.Scope != nil {
+		m["scope"] = aws.StringValue(config.Scope)
+	}
+
+	if config.Autoprovision != nil {
+		m["autoprovision"] = aws.BoolValue(config.Autoprovision)
+	}
+
+	if config.Driver != nil {
+		m["driver"] = aws.StringValue(config.Driver)
+	}
+
+	if config.DriverOpts != nil {
+		m["driver_opts"] = pointersMapToStringList(config.DriverOpts)
+	}
+
+	if config.Labels != nil {
+		m["labels"] = pointersMapToStringList(config.Labels)
+	}
+
+	items = append(items, m)
+	return items
 }
 
 // Flattens an array of ECS LoadBalancers into a []map[string]interface{}
@@ -1127,6 +1185,18 @@ func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]inter
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
 		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
 		m["role_arn"] = aws.StringValue(c.RoleArn)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenESSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
+	if snapshotOptions == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"automated_snapshot_start_hour": int(aws.Int64Value(snapshotOptions.AutomatedSnapshotStartHour)),
 	}
 
 	return []map[string]interface{}{m}
@@ -1799,7 +1869,7 @@ func flattenBeanstalkTrigger(list []*elasticbeanstalk.Trigger) []string {
 }
 
 // There are several parts of the AWS API that will sort lists of strings,
-// causing diffs inbetween resources that use lists. This avoids a bit of
+// causing diffs between resources that use lists. This avoids a bit of
 // code duplication for pre-sorts that can be used for things like hash
 // functions, etc.
 func sortInterfaceSlice(in []interface{}) []interface{} {
@@ -2189,7 +2259,11 @@ func flattenConfigRuleScope(scope *configservice.Scope) []interface{} {
 	return items
 }
 
-func expandConfigRuleScope(configured map[string]interface{}) *configservice.Scope {
+func expandConfigRuleScope(l []interface{}) *configservice.Scope {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	configured := l[0].(map[string]interface{})
 	scope := &configservice.Scope{}
 
 	if v, ok := configured["compliance_resource_id"].(string); ok && v != "" {
@@ -2740,8 +2814,9 @@ func flattenIoTRuleFirehoseActions(actions []*iot.Action) []map[string]interface
 		result := make(map[string]interface{})
 		v := a.Firehose
 		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["delivery_stream_name"] = *v.DeliveryStreamName
+			result["role_arn"] = aws.StringValue(v.RoleArn)
+			result["delivery_stream_name"] = aws.StringValue(v.DeliveryStreamName)
+			result["separator"] = aws.StringValue(v.Separator)
 
 			results = append(results, result)
 		}
@@ -4193,7 +4268,7 @@ func expandDynamoDbAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition
 	return attributes
 }
 
-// TODO: Get rid of keySchemaM - the user should just explicitely define
+// TODO: Get rid of keySchemaM - the user should just explicitly define
 // this in the config, we shouldn't magically be setting it like this.
 // Removal will however require config change, hence BC. :/
 func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interface{}) []*dynamodb.LocalSecondaryIndex {
@@ -4503,4 +4578,91 @@ func flattenMacieClassificationType(classificationType *macie.ClassificationType
 		"one_time":   aws.StringValue(classificationType.OneTime),
 	}
 	return []map[string]interface{}{m}
+}
+
+func expandDaxParameterGroupParameterNameValue(config []interface{}) []*dax.ParameterNameValue {
+	if len(config) == 0 {
+		return nil
+	}
+	results := make([]*dax.ParameterNameValue, 0, len(config))
+	for _, raw := range config {
+		m := raw.(map[string]interface{})
+		pnv := &dax.ParameterNameValue{
+			ParameterName:  aws.String(m["name"].(string)),
+			ParameterValue: aws.String(m["value"].(string)),
+		}
+		results = append(results, pnv)
+	}
+	return results
+}
+
+func flattenDaxParameterGroupParameters(params []*dax.Parameter) []map[string]interface{} {
+	if len(params) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, p := range params {
+		m := map[string]interface{}{
+			"name":  aws.StringValue(p.ParameterName),
+			"value": aws.StringValue(p.ParameterValue),
+		}
+		results = append(results, m)
+	}
+	return results
+}
+
+func expandDaxEncryptAtRestOptions(m map[string]interface{}) *dax.SSESpecification {
+	options := dax.SSESpecification{}
+
+	if v, ok := m["enabled"]; ok {
+		options.Enabled = aws.Bool(v.(bool))
+	}
+
+	return &options
+}
+
+func flattenDaxEncryptAtRestOptions(options *dax.SSEDescription) []map[string]interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
+	}
+
+	if options == nil {
+		return []map[string]interface{}{m}
+	}
+
+	m["enabled"] = (aws.StringValue(options.Status) == dax.SSEStatusEnabled)
+
+	return []map[string]interface{}{m}
+}
+
+func expandRdsScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	scalingConfiguration := &rds.ScalingConfiguration{
+		AutoPause:             aws.Bool(m["auto_pause"].(bool)),
+		MaxCapacity:           aws.Int64(int64(m["max_capacity"].(int))),
+		MinCapacity:           aws.Int64(int64(m["min_capacity"].(int))),
+		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
+	}
+
+	return scalingConfiguration
+}
+
+func flattenRdsScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
+	if scalingConfigurationInfo == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"auto_pause":               aws.BoolValue(scalingConfigurationInfo.AutoPause),
+		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
+		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
+		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
+	}
+
+	return []interface{}{m}
 }

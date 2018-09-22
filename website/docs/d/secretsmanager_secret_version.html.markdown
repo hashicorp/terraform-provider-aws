@@ -39,6 +39,7 @@ data "aws_secretsmanager_secret_version" "by-version-stage" {
 
 ## Attributes Reference
 
+* `arn` - The ARN of the secret.
 * `id` - The unique identifier of this version of the secret.
 * `secret_string` - The decrypted part of the protected secret information that was originally provided as a string.
 * `version_id` - The unique identifier of this version of the secret.

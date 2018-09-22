@@ -610,7 +610,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
-		Type: aws.String(d.Get("fleet_type").(string)),
+		Type:                             aws.String(d.Get("fleet_type").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -696,7 +696,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 				// IAM is eventually consistent :/
 				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
 					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error creating Spot fleet request, retrying: %s", err))
+						fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 				}
 			}
 			return resource.NonRetryableError(err)

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -22,7 +21,7 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalXssMatchSetConfig(xssMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &v),
@@ -220,7 +219,7 @@ func testAccCheckAWSWafRegionalXssMatchSetDisappears(v *waf.XssMatchSet) resourc
 			return conn.UpdateXssMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating regional WAF XSS Match Set: {{err}}", err)
+			return fmt.Errorf("Error updating regional WAF XSS Match Set: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -231,7 +230,7 @@ func testAccCheckAWSWafRegionalXssMatchSetDisappears(v *waf.XssMatchSet) resourc
 			return conn.DeleteXssMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting regional WAF XSS Match Set: {{err}}", err)
+			return fmt.Errorf("Error deleting regional WAF XSS Match Set: %s", err)
 		}
 		return nil
 	}

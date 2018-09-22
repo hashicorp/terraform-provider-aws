@@ -21,7 +21,7 @@ func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceAllowedPrincipalExists("aws_vpc_endpoint_service_allowed_principal.foo"),

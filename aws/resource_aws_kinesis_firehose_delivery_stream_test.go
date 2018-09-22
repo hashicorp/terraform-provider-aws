@@ -15,6 +15,48 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
+	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
+	rInt := acctest.RandInt()
+
+	funcName := fmt.Sprintf("aws_kinesis_firehose_ds_import_%d", rInt)
+	policyName := fmt.Sprintf("tf_acc_policy_%d", rInt)
+	roleName := fmt.Sprintf("tf_acc_role_%d", rInt)
+
+	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
+			rInt, rInt, rInt, rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Ensure we properly error on malformed import IDs
+			{
+				ResourceName:  resName,
+				ImportState:   true,
+				ImportStateId: "just-a-name",
+				ExpectError:   regexp.MustCompile(`Expected ID in format`),
+			},
+			{
+				ResourceName:  resName,
+				ImportState:   true,
+				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash",
+				ExpectError:   regexp.MustCompile(`Expected ID in format`),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -485,10 +527,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -544,10 +586,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -604,10 +646,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -662,10 +704,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
