@@ -24,6 +24,29 @@ func TestAccAwsServerlessRepositoryApplication_Basic(t *testing.T) {
 				Config: testAccAwsServerlessRepositoryApplicationConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttrSet("aws_serverlessrepository_application.postgres-rotator", "semantic_version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsServerlessRepositoryApplication_Versioned(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := fmt.Sprintf("tf-acc-test-versioned-%s", acctest.RandString(10))
+	const version = "1.0.15"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServerlessRepositoryApplicationConfig_versioned(stackName, version),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "semantic_version", version),
 				),
 			},
 		},
@@ -40,6 +63,19 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
     endpoint     = "secretsmanager.us-east-2.amazonaws.com"
   }
 }`, stackName)
+}
+
+func testAccAWSServerlessRepositoryApplicationConfig_versioned(stackName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_serverlessrepository_application" "postgres-rotator" {
+  name             = "%[1]s"
+  application_id   = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  semantic_version = "%[2]s"
+  parameters = {
+    functionName = "func-%[1]s"
+    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+  }
+}`, stackName, version)
 }
 
 func testAccCheckerverlessRepositoryApplicationExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {

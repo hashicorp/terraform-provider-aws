@@ -48,15 +48,12 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			//			"semantic_version": {
-			//				Type:     schema.TypeString,
-			//				Optional: true,
-			//				Computed: true,
-			//			},
-			//			"outputs": {
-			//				Type:     schema.TypeMap,
-			//				Computed: true,
-			//			},
+			"semantic_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -68,6 +65,10 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 	changeSetRequest := serverlessapplicationrepository.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(d.Get("name").(string)),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
+	}
+	if v, ok := d.GetOk("semantic_version"); ok {
+		version := v.(string)
+		changeSetRequest.SemanticVersion = aws.String(version)
 	}
 	if v, ok := d.GetOk("parameters"); ok {
 		changeSetRequest.ParameterOverrides = expandServerlessRepositoryApplicationParameters(v.(map[string]interface{}))
@@ -214,12 +215,26 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
+	cfConn := meta.(*AWSClient).cfconn
+
+	getApplicationInput := &serverlessapplicationrepository.GetApplicationInput{
+		ApplicationId: aws.String(d.Get("application_id").(string)),
+	}
+
+	_, ok := d.GetOk("semantic_version")
+	if !ok {
+		getApplicationOutput, err := serverlessConn.GetApplication(getApplicationInput)
+		if err != nil {
+			return err
+		}
+		d.Set("semantic_version", getApplicationOutput.Version.SemanticVersion)
+	}
 
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(d.Id()),
 	}
-	resp, err := conn.DescribeStacks(input)
+	resp, err := cfConn.DescribeStacks(input)
 	if err != nil {
 		awsErr, ok := err.(awserr.Error)
 		// ValidationError: Stack with id % does not exist
@@ -250,7 +265,8 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 	stack := stacks[0]
 	log.Printf("[DEBUG] Received CloudFormation stack: %s", stack)
 
-	// Serverless Application Repo prefixes the stack with "serverlessrepo-", so remove it
+	// Serverless Application Repo prefixes the stack with "serverlessrepo-",
+	// so remove it from the saved string
 	stackName := strings.TrimPrefix(*stack.StackName, "serverlessrepo-")
 	d.Set("name", &stackName)
 
@@ -260,18 +276,9 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 		return err
 	}
 
-	//	err = d.Set("tags", flattenCloudFormationTags(stack.Tags))
-	//	if err != nil {
-	//		return err
-	//	}
-
-	//	err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
-	//	if err != nil {
-	//		return err
-	//	}
-
 	return nil
 }
+
 func resourceAwsServerlessRepositoryApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
