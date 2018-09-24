@@ -10,6 +10,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_dms_replication_instance: Properly handle `engine_version` updates [GH-5948]
+* resource/aws_launch_template: Prevent `Auto Scaling only supports the 'one-time' Spot instance type with no duration.` error when using `instance_market_options` and AutoScaling Groups [GH-5957]
 
 ## 1.37.0 (September 19, 2018)
 
