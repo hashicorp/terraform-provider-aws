@@ -233,12 +233,12 @@ The following arguments are supported:
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is GitHub.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN of the CodeBuild project.
+* `id` - The name (if imported via `name`) or ARN (if created via Terraform or imported via ARN) of the CodeBuild project.
+* `arn` - The ARN of the CodeBuild project.
 * `badge_url` - The URL of the build badge when `badge_enabled` is enabled.
 
 ## Import
