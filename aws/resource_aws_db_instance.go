@@ -773,7 +773,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("backup_retention_period"); ok {
+		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
 		}
