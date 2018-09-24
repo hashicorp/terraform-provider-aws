@@ -144,6 +144,27 @@ func TestAccAWSELB_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSELB_disappears(t *testing.T) {
+	var loadBalancer elb.LoadBalancerDescription
+	resourceName := "aws_elb.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSELBConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &loadBalancer),
+					testAccCheckAWSELBDisappears(&loadBalancer),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 
@@ -1064,6 +1085,19 @@ func testAccCheckAWSELBDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSELBDisappears(loadBalancer *elb.LoadBalancerDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).elbconn
+
+		input := elb.DeleteLoadBalancerInput{
+			LoadBalancerName: loadBalancer.LoadBalancerName,
+		}
+		_, err := conn.DeleteLoadBalancer(&input)
+
+		return err
+	}
 }
 
 func testAccCheckAWSELBAttributes(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
