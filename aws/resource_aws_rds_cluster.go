@@ -126,6 +126,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ForceNew: true,
 				Default:  "provisioned",
 				ValidateFunc: validation.StringInSlice([]string{
+					"parallelquery",
 					"provisioned",
 					"serverless",
 				}, false),
