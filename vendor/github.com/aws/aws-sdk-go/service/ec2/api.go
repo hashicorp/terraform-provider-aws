@@ -71051,6 +71051,9 @@ const (
 	// InstanceTypeF12xlarge is a InstanceType enum value
 	InstanceTypeF12xlarge = "f1.2xlarge"
 
+	// InstanceTypeF14xlarge is a InstanceType enum value
+	InstanceTypeF14xlarge = "f1.4xlarge"
+
 	// InstanceTypeF116xlarge is a InstanceType enum value
 	InstanceTypeF116xlarge = "f1.16xlarge"
 
