@@ -284,7 +284,7 @@ const (
 	// ErrCodeInvalidDBInstanceStateFault for service response error code
 	// "InvalidDBInstanceState".
 	//
-	// The specified DB instance isn't in the available state.
+	// The DB instance isn't in a valid state.
 	ErrCodeInvalidDBInstanceStateFault = "InvalidDBInstanceState"
 
 	// ErrCodeInvalidDBParameterGroupStateFault for service response error code

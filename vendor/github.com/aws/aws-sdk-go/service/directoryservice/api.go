@@ -785,6 +785,101 @@ func (c *DirectoryService) CreateDirectoryWithContext(ctx aws.Context, input *Cr
 	return out, req.Send()
 }
 
+const opCreateLogSubscription = "CreateLogSubscription"
+
+// CreateLogSubscriptionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateLogSubscription operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateLogSubscription for more information on using the CreateLogSubscription
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateLogSubscriptionRequest method.
+//    req, resp := client.CreateLogSubscriptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateLogSubscription
+func (c *DirectoryService) CreateLogSubscriptionRequest(input *CreateLogSubscriptionInput) (req *request.Request, output *CreateLogSubscriptionOutput) {
+	op := &request.Operation{
+		Name:       opCreateLogSubscription,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateLogSubscriptionInput{}
+	}
+
+	output = &CreateLogSubscriptionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateLogSubscription API operation for AWS Directory Service.
+//
+// Creates a subscription to forward real time Directory Service domain controller
+// security logs to the specified CloudWatch log group in your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation CreateLogSubscription for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+//   The specified entity already exists.
+//
+//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   The specified entity could not be found.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   The account does not have sufficient permission to perform the operation.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateLogSubscription
+func (c *DirectoryService) CreateLogSubscription(input *CreateLogSubscriptionInput) (*CreateLogSubscriptionOutput, error) {
+	req, out := c.CreateLogSubscriptionRequest(input)
+	return out, req.Send()
+}
+
+// CreateLogSubscriptionWithContext is the same as CreateLogSubscription with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateLogSubscription for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) CreateLogSubscriptionWithContext(ctx aws.Context, input *CreateLogSubscriptionInput, opts ...request.Option) (*CreateLogSubscriptionOutput, error) {
+	req, out := c.CreateLogSubscriptionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateMicrosoftAD = "CreateMicrosoftAD"
 
 // CreateMicrosoftADRequest generates a "aws/request.Request" representing the
@@ -1258,6 +1353,94 @@ func (c *DirectoryService) DeleteDirectory(input *DeleteDirectoryInput) (*Delete
 // for more information on using Contexts.
 func (c *DirectoryService) DeleteDirectoryWithContext(ctx aws.Context, input *DeleteDirectoryInput, opts ...request.Option) (*DeleteDirectoryOutput, error) {
 	req, out := c.DeleteDirectoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteLogSubscription = "DeleteLogSubscription"
+
+// DeleteLogSubscriptionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteLogSubscription operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteLogSubscription for more information on using the DeleteLogSubscription
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteLogSubscriptionRequest method.
+//    req, resp := client.DeleteLogSubscriptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteLogSubscription
+func (c *DirectoryService) DeleteLogSubscriptionRequest(input *DeleteLogSubscriptionInput) (req *request.Request, output *DeleteLogSubscriptionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteLogSubscription,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteLogSubscriptionInput{}
+	}
+
+	output = &DeleteLogSubscriptionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteLogSubscription API operation for AWS Directory Service.
+//
+// Deletes the specified log subscription.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation DeleteLogSubscription for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   The specified entity could not be found.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteLogSubscription
+func (c *DirectoryService) DeleteLogSubscription(input *DeleteLogSubscriptionInput) (*DeleteLogSubscriptionOutput, error) {
+	req, out := c.DeleteLogSubscriptionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteLogSubscriptionWithContext is the same as DeleteLogSubscription with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteLogSubscription for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) DeleteLogSubscriptionWithContext(ctx aws.Context, input *DeleteLogSubscriptionInput, opts ...request.Option) (*DeleteLogSubscriptionOutput, error) {
+	req, out := c.DeleteLogSubscriptionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2783,6 +2966,94 @@ func (c *DirectoryService) ListIpRoutes(input *ListIpRoutesInput) (*ListIpRoutes
 // for more information on using Contexts.
 func (c *DirectoryService) ListIpRoutesWithContext(ctx aws.Context, input *ListIpRoutesInput, opts ...request.Option) (*ListIpRoutesOutput, error) {
 	req, out := c.ListIpRoutesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListLogSubscriptions = "ListLogSubscriptions"
+
+// ListLogSubscriptionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListLogSubscriptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListLogSubscriptions for more information on using the ListLogSubscriptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListLogSubscriptionsRequest method.
+//    req, resp := client.ListLogSubscriptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListLogSubscriptions
+func (c *DirectoryService) ListLogSubscriptionsRequest(input *ListLogSubscriptionsInput) (req *request.Request, output *ListLogSubscriptionsOutput) {
+	op := &request.Operation{
+		Name:       opListLogSubscriptions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListLogSubscriptionsInput{}
+	}
+
+	output = &ListLogSubscriptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListLogSubscriptions API operation for AWS Directory Service.
+//
+// Lists the active log subscriptions for the AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation ListLogSubscriptions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   The specified entity could not be found.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The NextToken value is not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListLogSubscriptions
+func (c *DirectoryService) ListLogSubscriptions(input *ListLogSubscriptionsInput) (*ListLogSubscriptionsOutput, error) {
+	req, out := c.ListLogSubscriptionsRequest(input)
+	return out, req.Send()
+}
+
+// ListLogSubscriptionsWithContext is the same as ListLogSubscriptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListLogSubscriptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) ListLogSubscriptionsWithContext(ctx aws.Context, input *ListLogSubscriptionsInput, opts ...request.Option) (*ListLogSubscriptionsOutput, error) {
+	req, out := c.ListLogSubscriptionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4876,6 +5147,77 @@ func (s *CreateDirectoryOutput) SetDirectoryId(v string) *CreateDirectoryOutput 
 	return s
 }
 
+type CreateLogSubscriptionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Identifier (ID) of the directory to which you want to subscribe and receive
+	// real-time logs to your specified CloudWatch log group.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The name of the CloudWatch log group where the real-time domain controller
+	// logs are forwarded.
+	//
+	// LogGroupName is a required field
+	LogGroupName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateLogSubscriptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLogSubscriptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateLogSubscriptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateLogSubscriptionInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.LogGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogGroupName"))
+	}
+	if s.LogGroupName != nil && len(*s.LogGroupName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LogGroupName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *CreateLogSubscriptionInput) SetDirectoryId(v string) *CreateLogSubscriptionInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetLogGroupName sets the LogGroupName field's value.
+func (s *CreateLogSubscriptionInput) SetLogGroupName(v string) *CreateLogSubscriptionInput {
+	s.LogGroupName = &v
+	return s
+}
+
+type CreateLogSubscriptionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateLogSubscriptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLogSubscriptionOutput) GoString() string {
+	return s.String()
+}
+
 // Creates a Microsoft AD in the AWS cloud.
 type CreateMicrosoftADInput struct {
 	_ struct{} `type:"structure"`
@@ -5343,6 +5685,58 @@ func (s DeleteDirectoryOutput) GoString() string {
 func (s *DeleteDirectoryOutput) SetDirectoryId(v string) *DeleteDirectoryOutput {
 	s.DirectoryId = &v
 	return s
+}
+
+type DeleteLogSubscriptionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Identifier (ID) of the directory whose log subscription you want to delete.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteLogSubscriptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLogSubscriptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteLogSubscriptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteLogSubscriptionInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *DeleteLogSubscriptionInput) SetDirectoryId(v string) *DeleteLogSubscriptionInput {
+	s.DirectoryId = &v
+	return s
+}
+
+type DeleteLogSubscriptionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteLogSubscriptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLogSubscriptionOutput) GoString() string {
+	return s.String()
 }
 
 // Contains the inputs for the DeleteSnapshot operation.
@@ -7413,6 +7807,82 @@ func (s *ListIpRoutesOutput) SetNextToken(v string) *ListIpRoutesOutput {
 	return s
 }
 
+type ListLogSubscriptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// If a DirectoryID is provided, lists only the log subscription associated
+	// with that directory. If no DirectoryId is provided, lists all log subscriptions
+	// associated with your AWS account. If there are no log subscriptions for the
+	// AWS account or the directory, an empty list will be returned.
+	DirectoryId *string `type:"string"`
+
+	// The maximum number of items returned.
+	Limit *int64 `type:"integer"`
+
+	// The token for the next set of items to return.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListLogSubscriptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLogSubscriptionsInput) GoString() string {
+	return s.String()
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *ListLogSubscriptionsInput) SetDirectoryId(v string) *ListLogSubscriptionsInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListLogSubscriptionsInput) SetLimit(v int64) *ListLogSubscriptionsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListLogSubscriptionsInput) SetNextToken(v string) *ListLogSubscriptionsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListLogSubscriptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of active LogSubscription objects for calling the AWS account.
+	LogSubscriptions []*LogSubscription `type:"list"`
+
+	// The token for the next set of items to return.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListLogSubscriptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLogSubscriptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetLogSubscriptions sets the LogSubscriptions field's value.
+func (s *ListLogSubscriptionsOutput) SetLogSubscriptions(v []*LogSubscription) *ListLogSubscriptionsOutput {
+	s.LogSubscriptions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListLogSubscriptionsOutput) SetNextToken(v string) *ListLogSubscriptionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListSchemaExtensionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7590,6 +8060,50 @@ func (s *ListTagsForResourceOutput) SetNextToken(v string) *ListTagsForResourceO
 // SetTags sets the Tags field's value.
 func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
 	s.Tags = v
+	return s
+}
+
+// Represents a log subscription, which tracks real-time data from a chosen
+// log group to a specified destination.
+type LogSubscription struct {
+	_ struct{} `type:"structure"`
+
+	// Identifier (ID) of the directory that you want to associate with the log
+	// subscription.
+	DirectoryId *string `type:"string"`
+
+	// The name of the log group.
+	LogGroupName *string `min:"1" type:"string"`
+
+	// The date and time that the log subscription was created.
+	SubscriptionCreatedDateTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s LogSubscription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogSubscription) GoString() string {
+	return s.String()
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *LogSubscription) SetDirectoryId(v string) *LogSubscription {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetLogGroupName sets the LogGroupName field's value.
+func (s *LogSubscription) SetLogGroupName(v string) *LogSubscription {
+	s.LogGroupName = &v
+	return s
+}
+
+// SetSubscriptionCreatedDateTime sets the SubscriptionCreatedDateTime field's value.
+func (s *LogSubscription) SetSubscriptionCreatedDateTime(v time.Time) *LogSubscription {
+	s.SubscriptionCreatedDateTime = &v
 	return s
 }
 
