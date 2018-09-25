@@ -165,7 +165,7 @@ resource "aws_rds_cluster" "example" {
     auto_pause               = true
     max_capacity             = 256
     min_capacity             = 2
-    seconds_until_auto_pause = 60
+    seconds_until_auto_pause = 300
   }
 }
 ```
