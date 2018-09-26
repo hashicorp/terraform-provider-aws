@@ -79,6 +79,28 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
+	var launchTemplate ec2.LaunchTemplate
+	resourceName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &launchTemplate),
+					testAccCheckAWSLaunchTemplateDisappears(&launchTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -473,6 +495,20 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSLaunchTemplateDisappears(launchTemplate *ec2.LaunchTemplate) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteLaunchTemplateInput{
+			LaunchTemplateId: launchTemplate.LaunchTemplateId,
+		}
+
+		_, err := conn.DeleteLaunchTemplate(input)
+
+		return err
+	}
 }
 
 func testAccAWSLaunchTemplateConfig_basic(rInt int) string {
