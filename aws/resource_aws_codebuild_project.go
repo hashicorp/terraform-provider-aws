@@ -28,6 +28,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"artifacts": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -770,6 +774,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	d.Set("arn", project.Arn)
 	d.Set("description", project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)

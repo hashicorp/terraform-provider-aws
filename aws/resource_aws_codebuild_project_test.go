@@ -60,6 +60,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.location", ""),
