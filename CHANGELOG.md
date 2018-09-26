@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_autoscaling_groups: Add `arns` attribute [GH-5766]
 * resource/aws_codebuild_project: Add `secondary_artifacts` and `secondary_sources` arguments [GH-5939]
+* resource/aws_codebuild_project: Add `arn` attribute [GH-5973]
 * resource/aws_launch_template: Support `credit_specification` configuration of T3 instance types [GH-5922]
 * resource/aws_launch_template: Allow `network_interface` `ipv6_address_count` configuration [GH-5771]
 * resource/aws_rds_cluster: Support `parallelquery` `engine_mode` argument [GH=5980]
