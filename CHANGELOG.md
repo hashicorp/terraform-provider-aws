@@ -1,5 +1,9 @@
 ## 1.38.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_db_event_categories` [GH-5514]
+
 ENHANCEMENTS:
 
 * data-source/aws_autoscaling_groups: Add `arns` attribute [GH-5766]
