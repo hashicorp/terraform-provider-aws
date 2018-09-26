@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ami: Prevent panics with AMIs in failed image state [GH-5968]
+* resource/aws_db_instance: Properly set `backup_retention_period = 0` with `snapshot_identifier` [GH-5970]
 * resource/aws_dms_replication_instance: Properly handle `engine_version` updates [GH-5948]
 * resource/aws_launch_template: Prevent `Auto Scaling only supports the 'one-time' Spot instance type with no duration.` error when using `instance_market_options` and AutoScaling Groups [GH-5957]
 * resource/aws_launch_template: Properly recreate existing resource when deleted [GH-5967]
