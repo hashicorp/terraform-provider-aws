@@ -44,7 +44,7 @@ func validateTypeStringNullableBoolean(v interface{}, k string) (ws []string, es
 		return
 	}
 
-	for _, str := range []string{"", "0", "1"} {
+	for _, str := range []string{"", "0", "1", "false", "true"} {
 		if value == str {
 			return
 		}
