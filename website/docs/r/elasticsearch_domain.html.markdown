@@ -70,6 +70,7 @@ The following arguments are supported:
    domain on every apply.
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
+* `node_to_node_encryption` - (Optional) Node-to-node encryption options. See below.
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
@@ -99,6 +100,10 @@ The following arguments are supported:
 * `dedicated_master_type` - (Optional) Instance type of the dedicated master nodes in the cluster.
 * `dedicated_master_count` - (Optional) Number of dedicated master nodes in the cluster
 * `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled.
+
+**node_to_node_encryption** supports the following attributes:
+
+* `enabled` - (Required) Whether to enable node-to-node encryption. If the `node_to_node_encryption` block is not provided then this defaults to `false`.
 
 **vpc_options** supports the following attributes:
 
