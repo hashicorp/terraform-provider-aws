@@ -96,6 +96,12 @@ func TestValidateTypeStringNullableBoolean(t *testing.T) {
 			val: "1",
 		},
 		{
+			val: "true",
+		},
+		{
+			val: "false",
+		},
+		{
 			val:         "invalid",
 			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
 		},

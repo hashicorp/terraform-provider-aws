@@ -149,6 +149,60 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 	})
 }
 
+func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_EbsOptimized(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_EbsOptimized(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_EbsOptimized(rName, "\"true\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_EbsOptimized(rName, "\"false\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_EbsOptimized(rName, "\"\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
@@ -596,6 +650,15 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, deleteOnTermination, rName)
+}
+
+func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  ebs_optimized = %s # allows "", false, true, "false", "true" values
+  name          = %q
+}
+`, ebsOptimized, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_data(rInt int) string {
