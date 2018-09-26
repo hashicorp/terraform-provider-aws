@@ -340,13 +340,13 @@ func TestAccAWSElasticacheReplicationGroup_redisClusterInVpc2(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.bar", "automatic_failover_enabled", "true"),
+						"aws_elasticache_replication_group.bar", "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "snapshot_window", "02:00-03:00"),
 					resource.TestCheckResourceAttr(
 						"aws_elasticache_replication_group.bar", "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
-						"aws_elasticache_replication_group.bar", "configuration_endpoint_address"),
+						"aws_elasticache_replication_group.bar", "primary_endpoint_address"),
 				),
 			},
 		},
@@ -1180,7 +1180,7 @@ resource "aws_security_group" "bar" {
 resource "aws_elasticache_replication_group" "bar" {
     replication_group_id = "tf-%s"
     replication_group_description = "test description"
-    node_type = "cache.t2.micro"
+    node_type = "cache.m3.medium"
     number_cache_clusters = "2"
     port = 6379
     subnet_group_name = "${aws_elasticache_subnet_group.bar.name}"
