@@ -180,6 +180,40 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
@@ -720,4 +754,23 @@ resource "aws_db_parameter_group" "bar" {
   }
 }
 `, n, n, n, n)
+}
+
+func testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName string, publiclyAccessible bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately       = true
+  cluster_identifier      = "${aws_rds_cluster.test.id}"
+  identifier              = %q
+  instance_class          = "db.t2.small"
+  publicly_accessible     = %t
+}
+`, rName, rName, publiclyAccessible)
 }

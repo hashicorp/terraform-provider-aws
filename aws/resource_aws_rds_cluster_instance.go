@@ -467,6 +467,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
+	if d.HasChange("publicly_accessible") {
+		d.SetPartial("publicly_accessible")
+		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		requestUpdate = true
+	}
+
 	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
