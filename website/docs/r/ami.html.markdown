@@ -109,3 +109,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the created AMI.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
+
+## Import
+
+`aws_ami` can be imported using the ID of the AMI, e.g.
+
+```
+$ terraform import aws_ami.example ami-12345678
+```
