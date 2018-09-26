@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_dms_replication_instance: Properly handle `engine_version` updates [GH-5948]
 * resource/aws_launch_template: Prevent `Auto Scaling only supports the 'one-time' Spot instance type with no duration.` error when using `instance_market_options` and AutoScaling Groups [GH-5957]
 * resource/aws_launch_template: Properly recreate existing resource when deleted [GH-5967]
+* resource/aws_load_balancer_policy: Properly handle resource when ELB is deleted [GH-5972]
 * resource/aws_security_group: Properly handle lingering ENIs from Lambda and similar services [GH-4884]
 * resource/aws_subnet: Properly handle lingering ENIs from Lambda and similar services [GH-4884]
 
