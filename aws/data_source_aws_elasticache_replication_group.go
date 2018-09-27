@@ -41,6 +41,12 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"read_endpoint_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"number_cache_clusters": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -110,6 +116,15 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 		}
 		d.Set("port", rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
+
+		var rEndpoints []*string
+		for _, member := range rg.NodeGroups[0].NodeGroupMembers {
+			rEndpoints = append(rEndpoints, member.ReadEndpoint.Address)
+		}
+		if err := d.Set("read_endpoint_addresses", flattenStringList(rEndpoints)); err != nil {
+			return fmt.Errorf("error setting read_endpoint_addresses: %s", err)
+		}
+
 	}
 	d.Set("number_cache_clusters", len(rg.MemberClusters))
 	if err := d.Set("member_clusters", flattenStringList(rg.MemberClusters)); err != nil {
