@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument [GH-5997]
 
+BUG FIXES:
+
+* resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
+
 ## 1.38.0 (September 26, 2018)
 
 FEATURES:
