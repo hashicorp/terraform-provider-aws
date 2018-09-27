@@ -1,4 +1,9 @@
 ## 1.39.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument [GH-5997]
+
 ## 1.38.0 (September 26, 2018)
 
 FEATURES:
