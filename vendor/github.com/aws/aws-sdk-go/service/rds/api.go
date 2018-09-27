@@ -9821,6 +9821,9 @@ func (c *RDS) StartDBClusterRequest(input *StartDBClusterInput) (req *request.Re
 // Starts an Amazon Aurora DB cluster that was stopped using the AWS console,
 // the stop-db-cluster AWS CLI command, or the StopDBCluster action.
 //
+// For more information, see  Stopping and Starting an Aurora Cluster (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-cluster-stop-start.html)
+// in the Amazon Aurora User Guide.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10033,6 +10036,9 @@ func (c *RDS) StopDBClusterRequest(input *StopDBClusterInput) (req *request.Requ
 // the DB cluster's metadata, including its endpoints and DB parameter groups.
 // Aurora also retains the transaction logs so you can do a point-in-time restore
 // if necessary.
+//
+// For more information, see  Stopping and Starting an Aurora Cluster (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-cluster-stop-start.html)
+// in the Amazon Aurora User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11949,6 +11955,11 @@ type CreateDBClusterInput struct {
 	// you are creating.
 	DatabaseName *string `type:"string"`
 
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
+
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
@@ -12201,6 +12212,12 @@ func (s *CreateDBClusterInput) SetDBSubnetGroupName(v string) *CreateDBClusterIn
 // SetDatabaseName sets the DatabaseName field's value.
 func (s *CreateDBClusterInput) SetDatabaseName(v string) *CreateDBClusterInput {
 	s.DatabaseName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBClusterInput) SetDeletionProtection(v bool) *CreateDBClusterInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -12826,6 +12843,11 @@ type CreateDBInstanceInput struct {
 	// If there is no DB subnet group, then it is a non-VPC DB instance.
 	DBSubnetGroupName *string `type:"string"`
 
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// Specify the Active Directory Domain to create the instance in.
 	Domain *string `type:"string"`
 
@@ -13392,6 +13414,12 @@ func (s *CreateDBInstanceInput) SetDBSubnetGroupName(v string) *CreateDBInstance
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBInstanceInput) SetDeletionProtection(v bool) *CreateDBInstanceInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetDomain sets the Domain field's value.
 func (s *CreateDBInstanceInput) SetDomain(v string) *CreateDBInstanceInput {
 	s.Domain = &v
@@ -13666,6 +13694,11 @@ type CreateDBInstanceReadReplicaInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
@@ -13929,6 +13962,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetDBInstanceIdentifier(v string) *Cr
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetDBSubnetGroupName(v string) *CreateDBInstanceReadReplicaInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetDeletionProtection(v bool) *CreateDBInstanceReadReplicaInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -14870,6 +14909,10 @@ type DBCluster struct {
 	// cluster is accessed.
 	DbClusterResourceId *string `type:"string"`
 
+	// Indicates if the DB cluster has deletion protection enabled. The database
+	// can't be deleted when this value is set to true.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The earliest time to which a DB cluster can be backtracked.
 	EarliestBacktrackTime *time.Time `type:"timestamp"`
 
@@ -15086,6 +15129,12 @@ func (s *DBCluster) SetDatabaseName(v string) *DBCluster {
 // SetDbClusterResourceId sets the DbClusterResourceId field's value.
 func (s *DBCluster) SetDbClusterResourceId(v string) *DBCluster {
 	s.DbClusterResourceId = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *DBCluster) SetDeletionProtection(v bool) *DBCluster {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -15980,6 +16029,11 @@ type DBInstance struct {
 	// instance is accessed.
 	DbiResourceId *string `type:"string"`
 
+	// Indicates if the DB instance has deletion protection enabled. The database
+	// can't be deleted when this value is set to true. For more information, see
+	//  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// The Active Directory Domain membership records associated with the DB instance.
 	DomainMemberships []*DomainMembership `locationNameList:"DomainMembership" type:"list"`
 
@@ -16250,6 +16304,12 @@ func (s *DBInstance) SetDbInstancePort(v int64) *DBInstance {
 // SetDbiResourceId sets the DbiResourceId field's value.
 func (s *DBInstance) SetDbiResourceId(v string) *DBInstance {
 	s.DbiResourceId = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *DBInstance) SetDeletionProtection(v bool) *DBInstance {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -22870,6 +22930,10 @@ type ModifyDBClusterInput struct {
 	// The name of the DB cluster parameter group to use for the DB cluster.
 	DBClusterParameterGroupName *string `type:"string"`
 
+	// Indicates if the DB cluster has deletion protection enabled. The database
+	// can't be deleted when this value is set to true.
+	DeletionProtection *bool `type:"boolean"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -23021,6 +23085,12 @@ func (s *ModifyDBClusterInput) SetDBClusterIdentifier(v string) *ModifyDBCluster
 // SetDBClusterParameterGroupName sets the DBClusterParameterGroupName field's value.
 func (s *ModifyDBClusterInput) SetDBClusterParameterGroupName(v string) *ModifyDBClusterInput {
 	s.DBClusterParameterGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *ModifyDBClusterInput) SetDeletionProtection(v bool) *ModifyDBClusterInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -23473,6 +23543,11 @@ type ModifyDBInstanceInput struct {
 	// Example: mySubnetGroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Indicates if the DB instance has deletion protection enabled. The database
+	// can't be deleted when this value is set to true. For more information, see
+	//  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// The Active Directory Domain to move the instance to. Specify none to remove
 	// the instance from its current domain. The domain must be created prior to
 	// this operation. Currently only a Microsoft SQL Server instance can be created
@@ -23879,6 +23954,12 @@ func (s *ModifyDBInstanceInput) SetDBSecurityGroups(v []*string) *ModifyDBInstan
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *ModifyDBInstanceInput) SetDBSubnetGroupName(v string) *ModifyDBInstanceInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *ModifyDBInstanceInput) SetDeletionProtection(v bool) *ModifyDBInstanceInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -27177,6 +27258,11 @@ type RestoreDBClusterFromS3Input struct {
 	// The database name for the restored DB cluster.
 	DatabaseName *string `type:"string"`
 
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The list of logs that the restored DB cluster is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
@@ -27428,6 +27514,12 @@ func (s *RestoreDBClusterFromS3Input) SetDatabaseName(v string) *RestoreDBCluste
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterFromS3Input) SetDeletionProtection(v bool) *RestoreDBClusterFromS3Input {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterFromS3Input) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterFromS3Input {
 	s.EnableCloudwatchLogsExports = v
@@ -27612,6 +27704,11 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// The database name for the restored DB cluster.
 	DatabaseName *string `type:"string"`
 
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The list of logs that the restored DB cluster is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
@@ -27752,6 +27849,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetDatabaseName(v string) *RestoreDB
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetDeletionProtection(v bool) *RestoreDBClusterFromSnapshotInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterFromSnapshotInput {
 	s.EnableCloudwatchLogsExports = v
@@ -27883,6 +27986,11 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
 
 	// The list of logs that the restored DB cluster is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
@@ -28031,6 +28139,12 @@ func (s *RestoreDBClusterToPointInTimeInput) SetDBClusterIdentifier(v string) *R
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *RestoreDBClusterToPointInTimeInput) SetDBSubnetGroupName(v string) *RestoreDBClusterToPointInTimeInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterToPointInTimeInput) SetDeletionProtection(v bool) *RestoreDBClusterToPointInTimeInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -28195,6 +28309,11 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
 
 	// Specify the Active Directory Domain to restore the instance in.
 	Domain *string `type:"string"`
@@ -28402,6 +28521,12 @@ func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBSnapshotIdentifier(v string)
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBSubnetGroupName(v string) *RestoreDBInstanceFromDBSnapshotInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBInstanceFromDBSnapshotInput) SetDeletionProtection(v bool) *RestoreDBInstanceFromDBSnapshotInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -28618,6 +28743,11 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// A DB subnet group to associate with this DB instance.
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
 
 	// The list of logs that the restored DB instance is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
@@ -28941,6 +29071,12 @@ func (s *RestoreDBInstanceFromS3Input) SetDBSubnetGroupName(v string) *RestoreDB
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBInstanceFromS3Input) SetDeletionProtection(v bool) *RestoreDBInstanceFromS3Input {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBInstanceFromS3Input) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceFromS3Input {
 	s.EnableCloudwatchLogsExports = v
@@ -29194,6 +29330,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// Specify the Active Directory Domain to restore the instance in.
 	Domain *string `type:"string"`
 
@@ -29425,6 +29566,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetDBName(v string) *RestoreDBInst
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetDBSubnetGroupName(v string) *RestoreDBInstanceToPointInTimeInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetDeletionProtection(v bool) *RestoreDBInstanceToPointInTimeInput {
+	s.DeletionProtection = &v
 	return s
 }
 
