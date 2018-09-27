@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_event_target: Support additional ECS target arguments [GH-5982]
 * resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument [GH-5997]
 
 BUG FIXES:
