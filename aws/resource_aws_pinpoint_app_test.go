@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAWSPinpointApp_basic(t *testing.T) {
-	attributes := make(map[string]string)
+	var application pinpoint.ApplicationResponse
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -23,7 +23,7 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 			{
 				Config: testAccAWSPinpointAppConfig_withGeneratedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists("aws_pinpoint_app.test_app", attributes),
+					testAccCheckAWSPinpointAppExists("aws_pinpoint_app.test_app", &application),
 				),
 			},
 		},
@@ -31,10 +31,11 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 }
 
 func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
-	attributes := make(map[string]string)
+	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 	appName := "terraform-test-pinpointapp-campaignhooklambda"
 	lambdaName := "test-pinpoint-lambda"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
@@ -44,7 +45,7 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 			{
 				Config: testAccAWSPinpointAppConfig_CampaignHookLambda(appName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, attributes),
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.0.mode", "DELIVERY"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "0"),
@@ -56,8 +57,9 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 }
 
 func TestAccAWSPinpointApp_Limits(t *testing.T) {
-	attributes := make(map[string]string)
+	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
@@ -67,7 +69,7 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 			{
 				Config: testAccAWSPinpointAppConfig_Limits,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, attributes),
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "limits.0.total", "500"),
@@ -79,8 +81,9 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 }
 
 func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
-	attributes := make(map[string]string)
+	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
@@ -90,7 +93,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 			{
 				Config: testAccAWSPinpointAppConfig_QuietTime,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, attributes),
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
@@ -101,7 +104,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSPinpointAppExists(n string, attributes map[string]string) resource.TestCheckFunc {
+func testAccCheckAWSPinpointAppExists(n string, application *pinpoint.ApplicationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -118,11 +121,13 @@ func testAccCheckAWSPinpointAppExists(n string, attributes map[string]string) re
 		params := &pinpoint.GetAppInput{
 			ApplicationId: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.GetApp(params)
+		output, err := conn.GetApp(params)
 
 		if err != nil {
 			return err
 		}
+
+		*application = *output.ApplicationResponse
 
 		return nil
 	}
@@ -239,7 +244,7 @@ func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
 		_, err := conn.GetApp(params)
 		if err != nil {
 			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
-				return nil
+				continue
 			}
 			return err
 		}
