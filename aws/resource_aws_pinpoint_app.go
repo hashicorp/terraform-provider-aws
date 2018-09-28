@@ -212,9 +212,15 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", app.ApplicationResponse.Name)
 	d.Set("application_id", app.ApplicationResponse.Id)
 
-	d.Set("campaign_hook", flattenPinpointCampaignHook(settings.ApplicationSettingsResource.CampaignHook))
-	d.Set("limits", flattenPinpointCampaignLimits(settings.ApplicationSettingsResource.Limits))
-	d.Set("quiet_time", flattenPinpointQuietTime(settings.ApplicationSettingsResource.QuietTime))
+	if err := d.Set("campaign_hook", flattenPinpointCampaignHook(settings.ApplicationSettingsResource.CampaignHook)); err != nil {
+		return fmt.Errorf("error setting campaign_hook: %s", err)
+	}
+	if err := d.Set("limits", flattenPinpointCampaignLimits(settings.ApplicationSettingsResource.Limits)); err != nil {
+		return fmt.Errorf("error setting limits: %s", err)
+	}
+	if err := d.Set("quiet_time", flattenPinpointQuietTime(settings.ApplicationSettingsResource.QuietTime)); err != nil {
+		return fmt.Errorf("error setting quiet_time: %s", err)
+	}
 
 	return nil
 }
