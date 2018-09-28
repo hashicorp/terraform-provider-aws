@@ -232,6 +232,11 @@ func resourceAwsPinpointAppDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
