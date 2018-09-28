@@ -1,7 +1,9 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -12,6 +14,47 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
+	var testCases = []struct {
+		old        string
+		new        string
+		equivalent bool
+	}{
+		{
+			old:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries":5,"numMaxDelayRetries":null,"numNoDelayRetries":null,"numMinDelayRetries":null,"backoffFunction":null},"sicklyRetryPolicy":null,"throttlePolicy":null,"guaranteed":false}`,
+			new:        `{"healthyRetryPolicy":{"maxDelayTarget":20,"minDelayTarget":5,"numRetries":5}}`,
+			equivalent: true,
+		},
+		{
+			old:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries":5,"numMaxDelayRetries":null,"numNoDelayRetries":null,"numMinDelayRetries":null,"backoffFunction":null},"sicklyRetryPolicy":null,"throttlePolicy":null,"guaranteed":false}`,
+			new:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries":5}}`,
+			equivalent: true,
+		},
+		{
+			old:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries":5,"numMaxDelayRetries":null,"numNoDelayRetries":null,"numMinDelayRetries":null,"backoffFunction":null},"sicklyRetryPolicy":null,"throttlePolicy":null,"guaranteed":false}`,
+			new:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries":6}}`,
+			equivalent: false,
+		},
+		{
+			old:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries":5,"numMaxDelayRetries":null,"numNoDelayRetries":null,"numMinDelayRetries":null,"backoffFunction":null},"sicklyRetryPolicy":null,"throttlePolicy":null,"guaranteed":false}`,
+			new:        `{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20}}`,
+			equivalent: false,
+		},
+		{
+			old:        `{"healthyRetryPolicy":null,"sicklyRetryPolicy":null,"throttlePolicy":null,"guaranteed":true}`,
+			new:        `{"guaranteed":true}`,
+			equivalent: true,
+		},
+	}
+
+	for i, tc := range testCases {
+		actual := suppressEquivalentSnsTopicSubscriptionDeliveryPolicy("", tc.old, tc.new, nil)
+		if actual != tc.equivalent {
+			t.Fatalf("Test Case %d: Got: %t Expected: %t", i, actual, tc.equivalent)
+		}
+	}
+}
 
 func TestAccAWSSNSTopicSubscription_importBasic(t *testing.T) {
 	resourceName := "aws_sns_topic.test_topic"
@@ -48,8 +91,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
 				),
 			},
 		},
@@ -57,6 +99,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 }
 
 func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
+	attributes := make(map[string]string)
 	ri := acctest.RandInt()
 	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
 	filterPolicy2 := `{"key3": ["val3"], "key4": ["val4"]}`
@@ -68,20 +111,25 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy1)),
-				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy1),
+				),
 			},
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy2)),
-				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy2),
+				),
 			},
 		},
 	})
 }
 
 func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
+	attributes := make(map[string]string)
 	ri := acctest.RandInt()
-	deliveryPolicy1 := `{"healthyRetryPolicy": {"minDelayTarget": 5, "maxDelayTarget": 20, "numRetries": 5}}`
-	deliveryPolicy2 := `{"healthyRetryPolicy": {"minDelayTarget": 3, "maxDelayTarget": 78, "numRetries": 11}}`
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -89,12 +137,30 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(ri, strconv.Quote(deliveryPolicy1)),
-				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "delivery_policy", deliveryPolicy1),
+				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(ri, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &snsTopicSubscriptionDeliveryPolicy{
+						HealthyRetryPolicy: &snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
+							MaxDelayTarget: 20,
+							MinDelayTarget: 5,
+							NumRetries:     5,
+						},
+					}),
+				),
 			},
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(ri, strconv.Quote(deliveryPolicy2)),
-				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "delivery_policy", deliveryPolicy2),
+				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(ri, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":3,"maxDelayTarget":78,"numRetries": 11}}`)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &snsTopicSubscriptionDeliveryPolicy{
+						HealthyRetryPolicy: &snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
+							MaxDelayTarget: 78,
+							MinDelayTarget: 3,
+							NumRetries:     11,
+						},
+					}),
+				),
 			},
 		},
 	})
@@ -113,8 +179,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
 				),
 			},
 		},
@@ -134,8 +199,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(ri, "john", "doe"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
 				),
 			},
 		},
@@ -171,7 +235,7 @@ func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSNSTopicSubscriptionExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,13 +251,38 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string) resource.TestCheckFunc 
 		params := &sns.GetSubscriptionAttributesInput{
 			SubscriptionArn: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.GetSubscriptionAttributes(params)
+		output, err := conn.GetSubscriptionAttributes(params)
+
+		for k, v := range output.Attributes {
+			attributes[k] = aws.StringValue(v)
+		}
 
 		if err != nil {
 			return err
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[string]string, expectedDeliveryPolicy *snsTopicSubscriptionDeliveryPolicy) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		apiDeliveryPolicyJSONString, ok := attributes["DeliveryPolicy"]
+
+		if !ok {
+			return fmt.Errorf("DeliveryPolicy attribute not found in attributes: %s", attributes)
+		}
+
+		var apiDeliveryPolicy snsTopicSubscriptionDeliveryPolicy
+		if err := json.Unmarshal([]byte(apiDeliveryPolicyJSONString), &apiDeliveryPolicy); err != nil {
+			return fmt.Errorf("unable to unmarshal SNS Topic Subscription delivery policy JSON (%s): %s", apiDeliveryPolicyJSONString, err)
+		}
+
+		if reflect.DeepEqual(apiDeliveryPolicy, *expectedDeliveryPolicy) {
+			return nil
+		}
+
+		return fmt.Errorf("SNS Topic Subscription delivery policy did not match:\n\nReceived\n\n%s\n\nExpected\n\n%s\n\n", apiDeliveryPolicy, *expectedDeliveryPolicy)
 	}
 }
 
@@ -252,125 +341,20 @@ resource "aws_sns_topic_subscription" "test_subscription" {
 func testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(i int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-  name = "tf-acc-test-sns-%d"
+  name = "terraform-test-topic-%d"
 }
 
-resource "aws_api_gateway_rest_api" "test" {
-  name        = "tf-acc-test-sns-%d"
-  description = "Terraform Acceptance test for SNS subscription"
-}
-
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "200"
-
-  response_parameters {
-    "method.response.header.Access-Control-Allow-Origin" = true
-  }
-}
-
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id             = "${aws_api_gateway_rest_api.test.id}"
-  resource_id             = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method             = "${aws_api_gateway_method.test.http_method}"
-  integration_http_method = "POST"
-  type                    = "AWS"
-  uri                     = "${aws_lambda_function.lambda.invoke_arn}"
-}
-
-resource "aws_api_gateway_integration_response" "test" {
-  depends_on  = ["aws_api_gateway_integration.test"]
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.test.status_code}"
-
-  response_parameters {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
-  }
-}
-
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "tf-acc-test-sns-%d"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "policy" {
-  name = "tf-acc-test-sns-%d"
-  role = "${aws_iam_role.iam_for_lambda.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lambda_permission" "apigw_lambda" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.lambda.arn}"
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
-}
-
-resource "aws_lambda_function" "lambda" {
-  filename         = "test-fixtures/lambda_confirm_sns.zip"
-  function_name    = "tf-acc-test-sns-%d"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
-  handler          = "main.confirm_subscription"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_confirm_sns.zip"))}"
-  runtime          = "python3.6"
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  depends_on  = ["aws_api_gateway_integration_response.test"]
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name  = "acctest"
+resource "aws_sqs_queue" "test_queue" {
+  name = "terraform-subscription-test-queue-%d"
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  depends_on             = ["aws_lambda_permission.apigw_lambda"]
-  topic_arn              = "${aws_sns_topic.test_topic.arn}"
-  protocol               = "https"
-  endpoint               = "${aws_api_gateway_deployment.test.invoke_url}"
-  endpoint_auto_confirms = true
-  delivery_policy        = %s
+  delivery_policy = %s
+  endpoint        = "${aws_sqs_queue.test_queue.arn}"
+  protocol        = "sqs"
+  topic_arn       = "${aws_sns_topic.test_topic.arn}"
 }
-`, i, i, i, i, i, policy)
+`, i, i, policy)
 }
 
 func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(i int) string {

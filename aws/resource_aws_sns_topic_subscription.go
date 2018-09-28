@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
 
@@ -79,11 +82,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validateJsonString,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+				DiffSuppressFunc: suppressEquivalentSnsTopicSubscriptionDeliveryPolicy,
 			},
 			"raw_message_delivery": {
 				Type:     schema.TypeBool,
@@ -351,4 +350,95 @@ func snsSubscriptionAttributeUpdate(snsconn *sns.SNS, subscriptionArn, attribute
 		return fmt.Errorf("Unable to set %s attribute on subscription: %s", attributeName, err)
 	}
 	return nil
+}
+
+type snsTopicSubscriptionDeliveryPolicy struct {
+	Guaranteed         bool                                                  `json:"guaranteed,omitempty"`
+	HealthyRetryPolicy *snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy `json:"healthyRetryPolicy,omitempty"`
+	SicklyRetryPolicy  *snsTopicSubscriptionDeliveryPolicySicklyRetryPolicy  `json:"sicklyRetryPolicy,omitempty"`
+	ThrottlePolicy     *snsTopicSubscriptionDeliveryPolicyThrottlePolicy     `json:"throttlePolicy,omitempty"`
+}
+
+func (s snsTopicSubscriptionDeliveryPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+func (s snsTopicSubscriptionDeliveryPolicy) GoString() string {
+	return s.String()
+}
+
+type snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy struct {
+	BackoffFunction    string `json:"backoffFunction,omitempty"`
+	MaxDelayTarget     int    `json:"maxDelayTarget,omitempty"`
+	MinDelayTarget     int    `json:"minDelayTarget,omitempty"`
+	NumMaxDelayRetries int    `json:"numMaxDelayRetries,omitempty"`
+	NumMinDelayRetries int    `json:"numMinDelayRetries,omitempty"`
+	NumNoDelayRetries  int    `json:"numNoDelayRetries,omitempty"`
+	NumRetries         int    `json:"numRetries,omitempty"`
+}
+
+func (s snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+func (s snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy) GoString() string {
+	return s.String()
+}
+
+type snsTopicSubscriptionDeliveryPolicySicklyRetryPolicy struct {
+	BackoffFunction    string `json:"backoffFunction,omitempty"`
+	MaxDelayTarget     int    `json:"maxDelayTarget,omitempty"`
+	MinDelayTarget     int    `json:"minDelayTarget,omitempty"`
+	NumMaxDelayRetries int    `json:"numMaxDelayRetries,omitempty"`
+	NumMinDelayRetries int    `json:"numMinDelayRetries,omitempty"`
+	NumNoDelayRetries  int    `json:"numNoDelayRetries,omitempty"`
+	NumRetries         int    `json:"numRetries,omitempty"`
+}
+
+func (s snsTopicSubscriptionDeliveryPolicySicklyRetryPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+func (s snsTopicSubscriptionDeliveryPolicySicklyRetryPolicy) GoString() string {
+	return s.String()
+}
+
+type snsTopicSubscriptionDeliveryPolicyThrottlePolicy struct {
+	MaxReceivesPerSecond int `json:"maxReceivesPerSecond,omitempty"`
+}
+
+func (s snsTopicSubscriptionDeliveryPolicyThrottlePolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+func (s snsTopicSubscriptionDeliveryPolicyThrottlePolicy) GoString() string {
+	return s.String()
+}
+
+func suppressEquivalentSnsTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
+	var deliveryPolicy snsTopicSubscriptionDeliveryPolicy
+
+	if err := json.Unmarshal([]byte(old), &deliveryPolicy); err != nil {
+		log.Printf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)
+		return false
+	}
+
+	normalizedDeliveryPolicy, err := json.Marshal(deliveryPolicy)
+
+	if err != nil {
+		log.Printf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return false
+	}
+
+	ob := bytes.NewBufferString("")
+	if err := json.Compact(ob, []byte(normalizedDeliveryPolicy)); err != nil {
+		return false
+	}
+
+	nb := bytes.NewBufferString("")
+	if err := json.Compact(nb, []byte(new)); err != nil {
+		return false
+	}
+
+	return jsonBytesEqual(ob.Bytes(), nb.Bytes())
 }
