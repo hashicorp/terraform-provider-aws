@@ -136,7 +136,7 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 
 	output, err := pinpointconn.CreateApp(req)
 	if err != nil {
-		return fmt.Errorf("[ERROR] creating Pinpoint app: %s", err)
+		return fmt.Errorf("error creating Pinpoint app: %s", err)
 	}
 
 	d.SetId(*output.ApplicationResponse.Id)
