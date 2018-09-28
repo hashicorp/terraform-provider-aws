@@ -1,5 +1,9 @@
 ## 1.39.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_pinpoint_app` [GH-5956]
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_target: Support additional ECS target arguments [GH-5982]
