@@ -369,10 +369,10 @@ func flattenPinpointQuietTime(qt *pinpoint.QuietTime) []interface{} {
 	m := map[string]interface{}{}
 
 	if qt.End != nil {
-		m["end"] = qt.End
+		m["end"] = *qt.End
 	}
 	if qt.Start != nil {
-		m["start"] = qt.Start
+		m["start"] = *qt.Start
 	}
 
 	if len(m) <= 0 {

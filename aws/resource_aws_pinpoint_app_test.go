@@ -2,8 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -45,7 +46,7 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointAppExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.4129384237.mode", "DELIVERY"),
+					resource.TestCheckResourceAttr(resourceName, "campaign_hook.0.mode", "DELIVERY"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "0"),
 				),
@@ -69,7 +70,7 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 					testAccCheckAWSPinpointAppExists(resourceName, attributes),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "limits.1765820463.total", "500"),
+					resource.TestCheckResourceAttr(resourceName, "limits.0.total", "500"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "0"),
 				),
 			},
@@ -93,7 +94,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.537668748.start", "00:00"),
+					resource.TestCheckResourceAttr(resourceName, "quiet_time.0.start", "00:00"),
 				),
 			},
 		},
