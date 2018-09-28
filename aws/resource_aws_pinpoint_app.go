@@ -252,16 +252,16 @@ func expandPinpointCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 
 	ch := &pinpoint.CampaignHook{}
 
-	if m["lambda_function_name"] != nil {
-		ch.LambdaFunctionName = aws.String(m["lambda_function_name"].(string))
+	if v, ok := m["lambda_function_name"]; ok {
+		ch.LambdaFunctionName = aws.String(v.(string))
 	}
 
-	if m["mode"] != nil {
-		ch.Mode = aws.String(m["mode"].(string))
+	if v, ok := m["mode"]; ok {
+		ch.Mode = aws.String(v.(string))
 	}
 
-	if m["web_url"] != nil {
-		ch.WebUrl = aws.String(m["web_url"].(string))
+	if v, ok := m["web_url"]; ok {
+		ch.WebUrl = aws.String(v.(string))
 	}
 
 	return ch
@@ -302,19 +302,20 @@ func expandPinpointCampaignLimits(configs []interface{}) *pinpoint.CampaignLimit
 
 	cl := pinpoint.CampaignLimits{}
 
-	if m["daily"] != nil {
-		cl.Daily = aws.Int64(int64(m["daily"].(int)))
+	if v, ok := m["daily"]; ok {
+		cl.Daily = aws.Int64(int64(v.(int)))
 	}
 
-	if m["maximum_duration"] != nil {
-		cl.MaximumDuration = aws.Int64(int64(m["maximum_duration"].(int)))
+	if v, ok := m["maximum_duration"]; ok {
+		cl.MaximumDuration = aws.Int64(int64(v.(int)))
 	}
 
-	if m["messages_per_second"] != nil {
-		cl.MessagesPerSecond = aws.Int64(int64(m["messages_per_second"].(int)))
+	if v, ok := m["messages_per_second"]; ok {
+		cl.MessagesPerSecond = aws.Int64(int64(v.(int)))
 	}
-	if m["total"] != nil {
-		cl.Total = aws.Int64(int64(m["total"].(int)))
+
+	if v, ok := m["total"]; ok {
+		cl.Total = aws.Int64(int64(v.(int)))
 	}
 
 	return &cl
@@ -357,12 +358,12 @@ func expandPinpointQuietTime(configs []interface{}) *pinpoint.QuietTime {
 
 	qt := pinpoint.QuietTime{}
 
-	if m["end"] != nil {
-		qt.End = aws.String(m["end"].(string))
+	if v, ok := m["end"]; ok {
+		qt.End = aws.String(v.(string))
 	}
 
-	if m["start"] != nil {
-		qt.Start = aws.String(m["start"].(string))
+	if v, ok := m["start"]; ok {
+		qt.Start = aws.String(v.(string))
 	}
 
 	return &qt
