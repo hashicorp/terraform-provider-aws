@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_codedeploy_deployment_group: Include autoscaling groups when updating blue green config [GH-5827]
 * resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
 
 ## 1.38.0 (September 26, 2018)
