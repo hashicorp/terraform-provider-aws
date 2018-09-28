@@ -118,6 +118,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinitionWithDockerVolumesMinimalConfig(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
+					testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
 					resource.TestCheckResourceAttr(
 						"aws_ecs_task_definition.sleep", "volume.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -457,6 +458,22 @@ func testAccCheckAWSEcsTaskDefinitionExists(name string, def *ecs.TaskDefinition
 
 		*def = *out.TaskDefinition
 
+		return nil
+	}
+}
+
+func testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *ecs.TaskDefinition) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len(def.Volumes) != 1 {
+			return fmt.Errorf("Expected (1) volumes, got (%d)", len(def.Volumes))
+		}
+		config := def.Volumes[0].DockerVolumeConfiguration
+		if config == nil {
+			return fmt.Errorf("Expected docker_volume_configuration, got nil")
+		}
+		if config.Autoprovision != nil {
+			return fmt.Errorf("Expected autoprovision to be nil, got %t", *config.Autoprovision)
+		}
 		return nil
 	}
 }
@@ -901,7 +918,7 @@ TASK_DEFINITION
   volume {
     name = "database_scratch"
     docker_volume_configuration {
-        autoprovision = true
+			scope = "task"
     }
   }
 }
