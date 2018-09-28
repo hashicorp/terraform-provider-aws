@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Project can be imported using the `application-id`, e.g.
+Pinpoint App can be imported using the `application-id`, e.g.
 
 ```
 $ terraform import aws_pinpoint_app.name application-id
