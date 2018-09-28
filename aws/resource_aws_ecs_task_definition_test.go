@@ -918,7 +918,7 @@ TASK_DEFINITION
   volume {
     name = "database_scratch"
     docker_volume_configuration {
-			scope = "task"
+      scope = "task"
     }
   }
 }
