@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/pinpoint"
@@ -12,25 +13,39 @@ import (
 )
 
 func TestAccAWSPinpointApp_basic(t *testing.T) {
+	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
+
 	var application pinpoint.ApplicationResponse
+	resourceName := "aws_pinpoint_app.test_app"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_pinpoint_app.test_app",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointAppConfig_withGeneratedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists("aws_pinpoint_app.test_app", &application),
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
+	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
+
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 	appName := "terraform-test-pinpointapp-campaignhooklambda"
@@ -52,11 +67,20 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSPinpointApp_Limits(t *testing.T) {
+	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
+
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
@@ -76,11 +100,20 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
+	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
+
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
@@ -99,6 +132,11 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.0.start", "00:00"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
