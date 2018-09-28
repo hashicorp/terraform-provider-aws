@@ -44,11 +44,9 @@ func resourceAwsPinpointApp() *schema.Resource {
 			//	Default:  false,
 			//},
 			"campaign_hook": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Set:      campaignHookHash,
 				MaxItems: 1,
-				MinItems: 0,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
@@ -71,9 +69,8 @@ func resourceAwsPinpointApp() *schema.Resource {
 				},
 			},
 			"limits": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Set:      campaignLimitsHash,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -97,9 +94,8 @@ func resourceAwsPinpointApp() *schema.Resource {
 				},
 			},
 			"quiet_time": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Set:      quietTimeHash,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -158,15 +154,15 @@ func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) erro
 	//}
 
 	if d.HasChange("campaign_hook") {
-		appSettings.CampaignHook = expandCampaignHook(d)
+		appSettings.CampaignHook = expandPinpointCampaignHook(d.Get("campaign_hook").([]interface{}))
 	}
 
 	if d.HasChange("limits") {
-		appSettings.Limits = expandCampaignLimits(d.Get("limits").(*schema.Set))
+		appSettings.Limits = expandPinpointCampaignLimits(d.Get("limits").([]interface{}))
 	}
 
 	if d.HasChange("quiet_time") {
-		appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").(*schema.Set))
+		appSettings.QuietTime = expandPinpointQuietTime(d.Get("quiet_time").([]interface{}))
 	}
 
 	req := pinpoint.UpdateApplicationSettingsInput{
@@ -216,9 +212,9 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", app.ApplicationResponse.Name)
 	d.Set("application_id", app.ApplicationResponse.Id)
 
-	d.Set("campaign_hook", flattenCampaignHook(settings.ApplicationSettingsResource.CampaignHook))
-	d.Set("limits", flattenCampaignLimits(settings.ApplicationSettingsResource.Limits))
-	d.Set("quiet_time", flattenQuietTime(settings.ApplicationSettingsResource.QuietTime))
+	d.Set("campaign_hook", flattenPinpointCampaignHook(settings.ApplicationSettingsResource.CampaignHook))
+	d.Set("limits", flattenPinpointCampaignLimits(settings.ApplicationSettingsResource.Limits))
+	d.Set("quiet_time", flattenPinpointQuietTime(settings.ApplicationSettingsResource.QuietTime))
 
 	return nil
 }
@@ -236,8 +232,7 @@ func resourceAwsPinpointAppDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandCampaignHook(d *schema.ResourceData) *pinpoint.CampaignHook {
-	configs := d.Get("campaign_hook").(*schema.Set).List()
+func expandPinpointCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 	if configs == nil || len(configs) == 0 {
 		return nil
 	}
@@ -261,7 +256,7 @@ func expandCampaignHook(d *schema.ResourceData) *pinpoint.CampaignHook {
 	return ch
 }
 
-func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
+func flattenPinpointCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
@@ -287,11 +282,12 @@ func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 	return l
 }
 
-func expandCampaignLimits(s *schema.Set) *pinpoint.CampaignLimits {
-	if s == nil || s.Len() == 0 {
+func expandPinpointCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
+	if configs == nil || len(configs) == 0 {
 		return nil
 	}
-	m := s.List()[0].(map[string]interface{})
+
+	m := configs[0].(map[string]interface{})
 
 	cl := pinpoint.CampaignLimits{}
 
@@ -313,7 +309,7 @@ func expandCampaignLimits(s *schema.Set) *pinpoint.CampaignLimits {
 	return &cl
 }
 
-func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
+func flattenPinpointCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
@@ -341,12 +337,12 @@ func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 	return l
 }
 
-func expandQuietTime(s *schema.Set) *pinpoint.QuietTime {
-	if s == nil || s.Len() == 0 {
+func expandPinpointQuietTime(configs []interface{}) *pinpoint.QuietTime {
+	if configs == nil || len(configs) == 0 {
 		return nil
 	}
 
-	m := s.List()[0].(map[string]interface{})
+	m := configs[0].(map[string]interface{})
 
 	qt := pinpoint.QuietTime{}
 
@@ -361,7 +357,7 @@ func expandQuietTime(s *schema.Set) *pinpoint.QuietTime {
 	return &qt
 }
 
-func flattenQuietTime(qt *pinpoint.QuietTime) []interface{} {
+func flattenPinpointQuietTime(qt *pinpoint.QuietTime) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
@@ -380,55 +376,4 @@ func flattenQuietTime(qt *pinpoint.QuietTime) []interface{} {
 	l = append(l, m)
 
 	return l
-}
-
-// Assemble the hash for the aws_pinpoint_app campaignHook
-// TypeSet attribute.
-func campaignHookHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["lambda_function_name"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["mode"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["web_url"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return hashcode.String(buf.String())
-}
-
-// Assemble the hash for the aws_pinpoint_app campaignLimits
-// TypeSet attribute.
-func campaignLimitsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["daily"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["maximum_duration"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["messages_per_second"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["total"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	return hashcode.String(buf.String())
-}
-
-// Assemble the hash for the aws_pinpoint_app quietTime
-// TypeSet attribute.
-func quietTimeHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["end"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["start"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return hashcode.String(buf.String())
 }
