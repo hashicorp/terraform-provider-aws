@@ -47,6 +47,12 @@ func resourceAwsPinpointApp() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"lambda_function_name": {
@@ -72,6 +78,12 @@ func resourceAwsPinpointApp() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily": {
@@ -97,6 +109,12 @@ func resourceAwsPinpointApp() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end": {
@@ -272,21 +290,9 @@ func flattenPinpointCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 
 	m := map[string]interface{}{}
 
-	if ch.LambdaFunctionName != nil {
-		m["lambda_function_name"] = *ch.LambdaFunctionName
-	}
-
-	if ch.Mode != nil && *ch.Mode != "" {
-		m["mode"] = *ch.Mode
-	}
-
-	if ch.WebUrl != nil {
-		m["web_url"] = *ch.WebUrl
-	}
-
-	if len(m) <= 0 {
-		return nil
-	}
+	m["lambda_function_name"] = aws.StringValue(ch.LambdaFunctionName)
+	m["mode"] = aws.StringValue(ch.Mode)
+	m["web_url"] = aws.StringValue(ch.WebUrl)
 
 	l = append(l, m)
 
@@ -326,23 +332,10 @@ func flattenPinpointCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 
 	m := map[string]interface{}{}
 
-	if cl.Daily != nil {
-		m["daily"] = *cl.Daily
-	}
-	if cl.MaximumDuration != nil {
-		m["maximum_duration"] = *cl.MaximumDuration
-	}
-	if cl.MessagesPerSecond != nil {
-		m["messages_per_second"] = *cl.MessagesPerSecond
-	}
-
-	if cl.Total != nil {
-		m["total"] = *cl.Total
-	}
-
-	if len(m) <= 0 {
-		return nil
-	}
+	m["daily"] = aws.Int64Value(cl.Daily)
+	m["maximum_duration"] = aws.Int64Value(cl.MaximumDuration)
+	m["messages_per_second"] = aws.Int64Value(cl.MessagesPerSecond)
+	m["total"] = aws.Int64Value(cl.Total)
 
 	l = append(l, m)
 
@@ -374,16 +367,8 @@ func flattenPinpointQuietTime(qt *pinpoint.QuietTime) []interface{} {
 
 	m := map[string]interface{}{}
 
-	if qt.End != nil {
-		m["end"] = *qt.End
-	}
-	if qt.Start != nil {
-		m["start"] = *qt.Start
-	}
-
-	if len(m) <= 0 {
-		return nil
-	}
+	m["end"] = aws.StringValue(qt.End)
+	m["start"] = aws.StringValue(qt.Start)
 
 	l = append(l, m)
 

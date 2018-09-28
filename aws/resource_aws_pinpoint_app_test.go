@@ -63,8 +63,6 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 					testAccCheckAWSPinpointAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.0.mode", "DELIVERY"),
-					resource.TestCheckResourceAttr(resourceName, "limits.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "0"),
 				),
 			},
 			{
@@ -94,10 +92,8 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 				Config: testAccAWSPinpointAppConfig_Limits,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointAppExists(resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "limits.0.total", "500"),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "0"),
 				),
 			},
 			{
@@ -127,8 +123,6 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 				Config: testAccAWSPinpointAppConfig_QuietTime,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointAppExists(resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "limits.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.0.start", "00:00"),
 				),
