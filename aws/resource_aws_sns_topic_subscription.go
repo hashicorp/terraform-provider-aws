@@ -431,7 +431,7 @@ func suppressEquivalentSnsTopicSubscriptionDeliveryPolicy(k, old, new string, d 
 	}
 
 	ob := bytes.NewBufferString("")
-	if err := json.Compact(ob, []byte(normalizedDeliveryPolicy)); err != nil {
+	if err := json.Compact(ob, normalizedDeliveryPolicy); err != nil {
 		return false
 	}
 
