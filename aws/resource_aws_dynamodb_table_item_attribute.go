@@ -28,12 +28,12 @@ func resourceAwsDynamoDbTableItemAttribute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"hash_key": {
+			"hash_key_value": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"range_key": {
+			"range_key_value": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -56,11 +56,10 @@ func resourceAwsDynamoDbTableItemAttributeDelete(d *schema.ResourceData, meta in
 }
 
 func resourceAwsDynamoDbTableItemAttributeUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := resourceAwsDynamoDbTableItemAttributeModify(updateExpressionSet, d, meta); err == nil {
-		return resourceAwsDynamoDbTableItemAttributeRead(d, meta)
-	} else {
+	if err := resourceAwsDynamoDbTableItemAttributeModify(updateExpressionSet, d, meta); err != nil {
 		return err
 	}
+	return resourceAwsDynamoDbTableItemAttributeRead(d, meta)
 }
 
 func resourceAwsDynamoDbTableItemAttributeModify(action string, d *schema.ResourceData, meta interface{}) error {
@@ -69,8 +68,8 @@ func resourceAwsDynamoDbTableItemAttributeModify(action string, d *schema.Resour
 
 	tableName := d.Get("table_name").(string)
 
-	hashKey := d.Get("hash_key").(string)
-	rangeKey := d.Get("range_key").(string)
+	hashKeyValue := d.Get("hash_key_value").(string)
+	rangeKeyValue := d.Get("range_key_value").(string)
 	attributeKey := d.Get("attribute_key").(string)
 	attributeValue := d.Get("attribute_value").(string)
 
@@ -80,30 +79,33 @@ func resourceAwsDynamoDbTableItemAttributeModify(action string, d *schema.Resour
 	}
 
 	updateItemInput := &dynamodb.UpdateItemInput{
-		Key:       resourceAwsDynamoDbTableItemAttributeGetQueryKey(hashKeyName, hashKey, rangeKeyName, rangeKey),
+		Key:       resourceAwsDynamoDbTableItemAttributeGetQueryKey(hashKeyName, hashKeyValue, rangeKeyName, rangeKeyValue),
 		TableName: aws.String(tableName),
 	}
 
 	if d.IsNewResource() {
-		updateItemInput.ConditionExpression = aws.String(fmt.Sprintf("attribute_not_exists(%s)", attributeKey))
+		updateItemInput.ConditionExpression = aws.String("attribute_not_exists(#key)")
 	}
 
+	updateItemInput.ExpressionAttributeNames = map[string]*string{
+		"#key": aws.String(attributeKey),
+	}
 	if action == updateExpressionSet {
-		updateItemInput.UpdateExpression = aws.String(fmt.Sprintf("%s %s = :v", updateExpressionSet, attributeKey))
+		updateItemInput.UpdateExpression = aws.String(fmt.Sprintf("%s #key = :v", updateExpressionSet))
 		updateItemInput.ExpressionAttributeValues = map[string]*dynamodb.AttributeValue{
 			":v": {
 				S: aws.String(attributeValue),
 			},
 		}
 	} else if action == updateExpressionRemove {
-		updateItemInput.UpdateExpression = aws.String(fmt.Sprintf("%s %s", updateExpressionRemove, attributeKey))
+		updateItemInput.UpdateExpression = aws.String(fmt.Sprintf("%s #key", updateExpressionRemove))
 	}
 
 	if _, err := conn.UpdateItem(updateItemInput); err != nil {
 		return err
 	}
 
-	id := fmt.Sprintf("%s:%s:%s:%s", tableName, hashKey, rangeKey, attributeKey)
+	id := fmt.Sprintf("%s:%s:%s:%s", tableName, hashKeyValue, rangeKeyValue, attributeKey)
 	d.SetId(id)
 
 	return nil
@@ -115,7 +117,7 @@ func resourceAwsDynamoDbTableItemAttributeRead(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Loading data for DynamoDB table item attribute '%s'", d.Id())
 
 	idParts := strings.Split(d.Id(), ":")
-	tableName, hashKey, rangeKey, attributeKey := idParts[0], idParts[1], idParts[2], idParts[3]
+	tableName, hashKeyValue, rangeKeyValue, attributeKey := idParts[0], idParts[1], idParts[2], idParts[3]
 
 	hashKeyName, rangeKeyName, err := resourceAwsDynamoDbTableItemAttributeGetKeysInfo(conn, tableName)
 	if err != nil {
@@ -123,10 +125,13 @@ func resourceAwsDynamoDbTableItemAttributeRead(d *schema.ResourceData, meta inte
 	}
 
 	result, err := conn.GetItem(&dynamodb.GetItemInput{
-		ConsistentRead:       aws.Bool(true),
-		Key:                  resourceAwsDynamoDbTableItemAttributeGetQueryKey(hashKeyName, hashKey, rangeKeyName, rangeKey),
+		ConsistentRead: aws.Bool(true),
+		ExpressionAttributeNames: map[string]*string{
+			"#key": aws.String(attributeKey),
+		},
+		Key:                  resourceAwsDynamoDbTableItemAttributeGetQueryKey(hashKeyName, hashKeyValue, rangeKeyName, rangeKeyValue),
 		TableName:            aws.String(tableName),
-		ProjectionExpression: aws.String(attributeKey),
+		ProjectionExpression: aws.String("#key"),
 	})
 	if err != nil {
 		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
@@ -144,8 +149,8 @@ func resourceAwsDynamoDbTableItemAttributeRead(d *schema.ResourceData, meta inte
 		return nil
 	}
 	d.Set("table_name", tableName)
-	d.Set("hash_key", hashKey)
-	d.Set("range_key", rangeKey)
+	d.Set("hash_key_value", hashKeyValue)
+	d.Set("range_key_value", rangeKeyValue)
 	d.Set("attribute_key", attributeKey)
 	d.Set("attribute_value", result.Item[attributeKey].S)
 
@@ -165,7 +170,7 @@ func resourceAwsDynamoDbTableItemAttributeGetKeysInfo(conn *dynamodb.DynamoDB, t
 			}
 		}
 	} else {
-		return "", "", fmt.Errorf("Error descring table %s: %v", tableName, err)
+		return "", "", fmt.Errorf("Error describing table %s: %v", tableName, err)
 	}
 
 	return hashKeyName, rangeKeyName, nil
@@ -173,7 +178,7 @@ func resourceAwsDynamoDbTableItemAttributeGetKeysInfo(conn *dynamodb.DynamoDB, t
 
 func resourceAwsDynamoDbTableItemAttributeGetQueryKey(hashKeyName string, hashKeyValue string, rangeKeyName string, rangeKeyValue string) map[string]*dynamodb.AttributeValue {
 	queryKey := map[string]*dynamodb.AttributeValue{
-		hashKeyName: &dynamodb.AttributeValue{S: aws.String(hashKeyValue)},
+		hashKeyName: {S: aws.String(hashKeyValue)},
 	}
 	if rangeKeyValue != "" {
 		queryKey[rangeKeyName] = &dynamodb.AttributeValue{S: aws.String(rangeKeyValue)}
