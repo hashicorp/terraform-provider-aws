@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -24,6 +25,41 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 		Read:   resourceAwsCodeDeployDeploymentGroupRead,
 		Update: resourceAwsCodeDeployDeploymentGroupUpdate,
 		Delete: resourceAwsCodeDeployDeploymentGroupDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), ":")
+
+				if len(idParts) != 2 {
+					return []*schema.ResourceData{}, fmt.Errorf("expected ID in format ApplicationName:DeploymentGroupName, received: %s", d.Id())
+				}
+
+				applicationName := idParts[0]
+				deploymentGroupName := idParts[1]
+				conn := meta.(*AWSClient).codedeployconn
+
+				input := &codedeploy.GetDeploymentGroupInput{
+					ApplicationName:     aws.String(applicationName),
+					DeploymentGroupName: aws.String(deploymentGroupName),
+				}
+
+				log.Printf("[DEBUG] Reading CodeDeploy Application: %s", input)
+				output, err := conn.GetDeploymentGroup(input)
+
+				if err != nil {
+					return []*schema.ResourceData{}, err
+				}
+
+				if output == nil || output.DeploymentGroupInfo == nil {
+					return []*schema.ResourceData{}, fmt.Errorf("error reading CodeDeploy Application (%s): empty response", d.Id())
+				}
+
+				d.SetId(aws.StringValue(output.DeploymentGroupInfo.DeploymentGroupId))
+				d.Set("app_name", applicationName)
+				d.Set("deployment_group_name", deploymentGroupName)
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"app_name": {
@@ -471,10 +507,17 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	}
 
 	d.Set("app_name", resp.DeploymentGroupInfo.ApplicationName)
-	d.Set("autoscaling_groups", resp.DeploymentGroupInfo.AutoScalingGroups)
 	d.Set("deployment_config_name", resp.DeploymentGroupInfo.DeploymentConfigName)
 	d.Set("deployment_group_name", resp.DeploymentGroupInfo.DeploymentGroupName)
 	d.Set("service_role_arn", resp.DeploymentGroupInfo.ServiceRoleArn)
+
+	autoScalingGroups := make([]string, len(resp.DeploymentGroupInfo.AutoScalingGroups))
+	for i, autoScalingGroup := range resp.DeploymentGroupInfo.AutoScalingGroups {
+		autoScalingGroups[i] = aws.StringValue(autoScalingGroup.Name)
+	}
+	if err := d.Set("autoscaling_groups", autoScalingGroups); err != nil {
+		return fmt.Errorf("error setting autoscaling_groups: %s", err)
+	}
 
 	if err := d.Set("deployment_style", flattenDeploymentStyle(resp.DeploymentGroupInfo.DeploymentStyle)); err != nil {
 		return err
