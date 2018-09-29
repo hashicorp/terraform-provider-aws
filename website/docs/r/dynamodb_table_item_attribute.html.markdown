@@ -66,4 +66,14 @@ All of the arguments above are exported as attributes.
 
 ## Import
 
-DynamoDB table items cannot be imported.
+DynamoDB table item attributes can be imported using the table name, hash key value, range key value and attribute key, e.g.
+
+Without a range key:
+```
+$ terraform import aws_dynamodb_table_item_attribute.example table_name:hash_key_value::attribute_key
+```
+
+With a range key:
+```
+$ terraform import aws_dynamodb_table_item_attribute.example table_name:hash_key_value:range_key_value:attribute_key
+```

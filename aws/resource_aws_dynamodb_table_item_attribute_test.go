@@ -34,6 +34,11 @@ func TestAccAWSDynamoDbTableItemAttribute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute_value", attributeValue),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -98,6 +103,11 @@ func TestAccAWSDynamoDbTableItemAttribute_withRangeKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute_key", attributeKey),
 					resource.TestCheckResourceAttr(resourceName, "attribute_value", attributeValue),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

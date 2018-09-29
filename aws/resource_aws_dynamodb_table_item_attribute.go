@@ -21,6 +21,9 @@ func resourceAwsDynamoDbTableItemAttribute() *schema.Resource {
 		Read:   resourceAwsDynamoDbTableItemAttributeRead,
 		Update: resourceAwsDynamoDbTableItemAttributeUpdate,
 		Delete: resourceAwsDynamoDbTableItemAttributeDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"table_name": {
