@@ -148,13 +148,6 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// Test non-existent resource import
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
 		},
 	})
 }
