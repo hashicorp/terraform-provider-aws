@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -60,18 +61,17 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := ssmconn.GetParameter(paramInput)
 
 	if err != nil {
+		v, ok := d.GetOkExists("default")
+		if err.(awserr.Error).Code() == ssm.ErrCodeParameterNotFound && ok {
+			d.SetId(name)
+			d.Set("arn", "")
+			d.Set("name", name)
+			d.Set("type", "String")
+			d.Set("value", v)
+			return nil
+		}
 		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
-	}
-	v, ok := d.GetOkExists("default")
-	if len(resp.InvalidParameters) > 0 && ok {
-		d.SetId(name)
-		d.Set("arn", "")
-		d.Set("name", name)
-		d.Set("type", "String")
-		d.Set("value", v)
-		return nil
-	} else if len(resp.InvalidParameters) > 0 {
-		return fmt.Errorf("[ERROR] SSM Parameter %s is invalid", name)
+
 	}
 
 	param := resp.Parameter
