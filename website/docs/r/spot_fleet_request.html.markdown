@@ -110,7 +110,7 @@ across different markets and instance types.
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
   `lowestPrice`.
-* `instance_pools_to_use` - (Optional; Default: 1)
+* `instance_pools_to_use_count` - (Optional; Default: 1)
   The number of Spot pools across which to allocate your target Spot capacity. 
   Valid only when `allocation_strategy` is set to `lowestPrice`. Spot Fleet selects 
   the cheapest Spot pools and evenly allocates your target Spot capacity across 

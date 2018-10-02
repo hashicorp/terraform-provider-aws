@@ -285,7 +285,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  "lowestPrice",
 				ForceNew: true,
 			},
-			"instance_pools_to_use": {
+			"instance_pools_to_use_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1,
@@ -629,10 +629,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
 	}
 
-	if v, ok := d.GetOk("instance_pools_to_use"); ok {
-		if *(spotFleetConfig.AllocationStrategy) != "lowestPrice" {
-			return fmt.Errorf("Specifying instance_pools_to_use requires allocation_strategy=lowestPrice")
-		}
+	if v, ok := d.GetOk("instance_pools_to_use_count"); ok && v.(int) != 1 {
 		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
@@ -893,7 +890,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if config.InstancePoolsToUseCount != nil {
-		d.Set("instance_pools_to_use", aws.Int64Value(config.InstancePoolsToUseCount))
+		d.Set("instance_pools_to_use_count", aws.Int64Value(config.InstancePoolsToUseCount))
 	}
 
 	if config.ClientToken != nil {
