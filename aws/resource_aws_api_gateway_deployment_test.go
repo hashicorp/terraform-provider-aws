@@ -58,7 +58,7 @@ func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
-					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", "test", &stage),
+					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", &stage),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
-					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", "test", &stage),
+					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", &stage),
 				),
 			},
 		},
@@ -112,20 +112,18 @@ func testAccCheckAWSAPIGatewayDeploymentExists(n string, res *apigateway.Deploym
 	}
 }
 
-func testAccCheckAWSAPIGatewayDeploymentStageExists(deploymentName string, stageName string, res *apigateway.Stage) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName string, res *apigateway.Stage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).apigateway
 
-		deploymentResource, ok := s.RootModule().Resources[deploymentName]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Deployment not found: %s", deploymentName)
+			return fmt.Errorf("Deployment not found: %s", resourceName)
 		}
 
-		restApiId := aws.String(deploymentResource.Primary.Attributes["rest_api_id"])
-
 		req := &apigateway.GetStageInput{
-			StageName: &stageName,
-			RestApiId: restApiId,
+			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
+			RestApiId: aws.String(rs.Primary.Attributes["rest_api_id"]),
 		}
 		stage, err := conn.GetStage(req)
 		if err != nil {
