@@ -14,6 +14,8 @@ BUG FIXES:
 
 * resource/aws_codedeploy_deployment_group: Include autoscaling groups when updating blue green config [GH-5827]
 * resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
+* resource/aws_security_group: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
+* resource/aws_subnet: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
 
 ## 1.38.0 (September 26, 2018)
 
