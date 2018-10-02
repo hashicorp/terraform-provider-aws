@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_target: Support additional ECS target arguments [GH-5982]
 * resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument [GH-5997]
 * resource/aws_sns_topic_subscription: Add `delivery_policy` argument [GH-3289]
+* resource/aws_spot_fleet_request: Add `instance_pools_to_use_count` argument [GH-5955]
 
 BUG FIXES:
 
