@@ -1413,6 +1413,11 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName
 		},
 	}
 	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
+
+	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -1425,6 +1430,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName
 				AttachmentId: eni.Attachment.AttachmentId,
 			}
 			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+
+			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+				return nil
+			}
 
 			if detachNetworkInterfaceErr != nil {
 				return detachNetworkInterfaceErr
@@ -1448,6 +1457,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName
 		}
 		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
 
+		if isAWSErr(deleteNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+			return nil
+		}
+
 		if deleteNetworkInterfaceErr != nil {
 			return deleteNetworkInterfaceErr
 		}
@@ -1464,8 +1477,11 @@ func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 		}
 		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			return 42, "false", nil
+		}
+
 		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
 			return nil, "", err
 		}
 
