@@ -39,7 +39,7 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 			},
 			"statement": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sid": {
@@ -111,52 +111,55 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 		doc.Id = policyID.(string)
 	}
 
-	var cfgStmts = d.Get("statement").([]interface{})
-	stmts := make([]*IAMPolicyStatement, len(cfgStmts))
-	for i, stmtI := range cfgStmts {
-		cfgStmt := stmtI.(map[string]interface{})
-		stmt := &IAMPolicyStatement{
-			Effect: cfgStmt["effect"].(string),
+	if cfgStmts, hasCfgStmts := d.GetOk("statement"); hasCfgStmts {
+		var cfgStmtIntf = cfgStmts.([]interface{})
+		stmts := make([]*IAMPolicyStatement, len(cfgStmtIntf))
+		for i, stmtI := range cfgStmtIntf {
+			cfgStmt := stmtI.(map[string]interface{})
+			stmt := &IAMPolicyStatement{
+				Effect: cfgStmt["effect"].(string),
+			}
+
+			if sid, ok := cfgStmt["sid"]; ok {
+				stmt.Sid = sid.(string)
+			}
+
+			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
+				stmt.Actions = iamPolicyDecodeConfigStringList(actions)
+			}
+			if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {
+				stmt.NotActions = iamPolicyDecodeConfigStringList(actions)
+			}
+
+			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
+				stmt.Resources = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
+					iamPolicyDecodeConfigStringList(resources),
+				)
+			}
+			if resources := cfgStmt["not_resources"].(*schema.Set).List(); len(resources) > 0 {
+				stmt.NotResources = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
+					iamPolicyDecodeConfigStringList(resources),
+				)
+			}
+
+			if principals := cfgStmt["principals"].(*schema.Set).List(); len(principals) > 0 {
+				stmt.Principals = dataSourceAwsIamPolicyDocumentMakePrincipals(principals)
+			}
+
+			if principals := cfgStmt["not_principals"].(*schema.Set).List(); len(principals) > 0 {
+				stmt.NotPrincipals = dataSourceAwsIamPolicyDocumentMakePrincipals(principals)
+			}
+
+			if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
+				stmt.Conditions = dataSourceAwsIamPolicyDocumentMakeConditions(conditions)
+			}
+
+			stmts[i] = stmt
 		}
 
-		if sid, ok := cfgStmt["sid"]; ok {
-			stmt.Sid = sid.(string)
-		}
+		doc.Statements = stmts
 
-		if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
-			stmt.Actions = iamPolicyDecodeConfigStringList(actions)
-		}
-		if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {
-			stmt.NotActions = iamPolicyDecodeConfigStringList(actions)
-		}
-
-		if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
-			stmt.Resources = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
-				iamPolicyDecodeConfigStringList(resources),
-			)
-		}
-		if resources := cfgStmt["not_resources"].(*schema.Set).List(); len(resources) > 0 {
-			stmt.NotResources = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
-				iamPolicyDecodeConfigStringList(resources),
-			)
-		}
-
-		if principals := cfgStmt["principals"].(*schema.Set).List(); len(principals) > 0 {
-			stmt.Principals = dataSourceAwsIamPolicyDocumentMakePrincipals(principals)
-		}
-
-		if principals := cfgStmt["not_principals"].(*schema.Set).List(); len(principals) > 0 {
-			stmt.NotPrincipals = dataSourceAwsIamPolicyDocumentMakePrincipals(principals)
-		}
-
-		if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
-			stmt.Conditions = dataSourceAwsIamPolicyDocumentMakeConditions(conditions)
-		}
-
-		stmts[i] = stmt
 	}
-
-	doc.Statements = stmts
 
 	// merge our current document into mergedDoc
 	mergedDoc.Merge(doc)
