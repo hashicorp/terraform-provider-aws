@@ -24,7 +24,7 @@ resource "aws_elasticsearch_domain" "es" {
   domain_name           = "${var.domain}"
   elasticsearch_version = "1.5"
   cluster_config {
-    instance_type = "r3.large.elasticsearch"
+    instance_type = "r4.large.elasticsearch"
   }
 
   advanced_options {

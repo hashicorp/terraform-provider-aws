@@ -84,8 +84,8 @@ EOF
 }
   ebs_root_volume_size     = 100
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "m5.xlarge"
+  core_instance_type   = "m5.xlarge"
   core_instance_count  = 1
 
   tags {
@@ -355,8 +355,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "m5.xlarge"
+  core_instance_type   = "m5.xlarge"
   core_instance_count  = 1
 
   tags {
