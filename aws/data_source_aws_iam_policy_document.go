@@ -96,8 +96,8 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	mergedDoc := &IAMPolicyDoc{}
 
 	// populate mergedDoc directly with any source_json
-	if sourceJson, hasSourceJson := d.GetOk("source_json"); hasSourceJson {
-		if err := json.Unmarshal([]byte(sourceJson.(string)), mergedDoc); err != nil {
+	if sourceJSON, hasSourceJSON := d.GetOk("source_json"); hasSourceJSON {
+		if err := json.Unmarshal([]byte(sourceJSON.(string)), mergedDoc); err != nil {
 			return err
 		}
 	}
@@ -107,8 +107,8 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 
 	doc.Version = "2012-10-17"
 
-	if policyId, hasPolicyId := d.GetOk("policy_id"); hasPolicyId {
-		doc.Id = policyId.(string)
+	if policyID, hasPolicyID := d.GetOk("policy_id"); hasPolicyID {
+		doc.Id = policyID.(string)
 	}
 
 	var cfgStmts = d.Get("statement").([]interface{})
@@ -162,9 +162,9 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	mergedDoc.Merge(doc)
 
 	// merge in override_json
-	if overrideJson, hasOverrideJson := d.GetOk("override_json"); hasOverrideJson {
+	if overrideJSON, hasOverrideJSON := d.GetOk("override_json"); hasOverrideJSON {
 		overrideDoc := &IAMPolicyDoc{}
-		if err := json.Unmarshal([]byte(overrideJson.(string)), overrideDoc); err != nil {
+		if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
 			return err
 		}
 
