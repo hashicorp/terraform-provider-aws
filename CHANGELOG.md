@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_deployment: Do not delete stage if it is in use by another deployment [GH-3896]
 * resource/aws_codedeploy_deployment_group: Include autoscaling groups when updating blue green config [GH-5827]
 * resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
 * resource/aws_s3_bucket_object: Mark `version_id` as recomputed on `etag` updates [GH-3861]
