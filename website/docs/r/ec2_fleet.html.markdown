@@ -14,7 +14,7 @@ Provides a resource to manage EC2 Fleets.
 
 ```hcl
 resource "aws_ec2_fleet" "example" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.example.id}"
       version            = "${aws_launch_template.example.latest_version}"
@@ -32,7 +32,7 @@ resource "aws_ec2_fleet" "example" {
 
 The following arguments are supported:
 
-* `launch_template_configs` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
+* `launch_template_config` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
 * `target_capacity_specification` - (Required) Nested argument containing target capacity configurations. Defined below.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`.
 * `on_demand_options` - (Optional) Nested argument containing On-Demand configurations. Defined below.
@@ -43,9 +43,10 @@ The following arguments are supported:
 * `terminate_instances_with_expiration` - (Optional) Whether running instances should be terminated when the EC2 Fleet expires. Defaults to `false`.
 * `type` - (Optional) The type of request. Indicates whether the EC2 Fleet only requests the target capacity, or also attempts to maintain it. Valid values: `maintain`, `request`. Defaults to `maintain`.
 
-### launch_template_configs
+### launch_template_config
 
 * `launch_template_specification` - (Required) Nested argument containing EC2 Launch Template to use. Defined below.
+* `override` - (Optional) Nested argument(s) containing parameters to override the same parameters in the Launch Template. Defined below.
 
 #### launch_template_specification
 
@@ -55,7 +56,29 @@ The following arguments are supported:
 * `launch_template_id` - (Optional) ID of the launch template.
 * `launch_template_name` - (Optional) Name of the launch template.
 
-#### overrides
+#### override
+
+Example:
+
+```hcl
+resource "aws_ec2_fleet" "example" {
+  # ... other configuration ...
+
+  launch_template_config {
+    # ... other configuration ...
+
+    override {
+      instance_type     = "m4.xlarge"
+      weighted_capacity = 1
+    }
+
+    override {
+      instance_type     = "m4.2xlarge"
+      weighted_capacity = 2
+    }
+  }
+}
+```
 
 * `availability_zone` - (Optional) Availability Zone in which to launch the instances.
 * `instance_type` - (Optional) Instance type.

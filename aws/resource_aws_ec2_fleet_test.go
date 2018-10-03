@@ -28,11 +28,11 @@ func TestAccAWSEc2Fleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "termination"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "launch_template_configs.0.launch_template_specification.0.version"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
@@ -116,7 +116,7 @@ func TestAccAWSEc2Fleet_ExcessCapacityTerminationPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateId(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateId(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
@@ -129,13 +129,13 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Launch
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateId(rName, launchTemplateResourceName1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateId(rName, launchTemplateResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName1, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.version", launchTemplateResourceName1, "latest_version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName1, "latest_version"),
 				),
 			},
 			{
@@ -145,21 +145,21 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Launch
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateId(rName, launchTemplateResourceName2),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateId(rName, launchTemplateResourceName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName2, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.version", launchTemplateResourceName2, "latest_version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName2, "latest_version"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateName(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
@@ -172,13 +172,13 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Launch
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName1, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.version", launchTemplateResourceName1, "latest_version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName1, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName1, "latest_version"),
 				),
 			},
 			{
@@ -188,21 +188,21 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Launch
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName2),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName2, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.version", launchTemplateResourceName2, "latest_version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName2, "latest_version"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Version(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_Version(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	var launchTemplate ec2.LaunchTemplate
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -215,16 +215,16 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Versio
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_Version(rName, "t3.micro"),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, "t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(launchTemplateResourceName, &launchTemplate),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.micro"),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", "1"),
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.version", launchTemplateResourceName, "latest_version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName, "latest_version"),
 				),
 			},
 			{
@@ -234,24 +234,24 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_LaunchTemplateSpecification_Versio
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_Version(rName, "t3.small"),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(launchTemplateResourceName, &launchTemplate),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.small"),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", "2"),
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.launch_template_specification.0.version", launchTemplateResourceName, "latest_version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName, "latest_version"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_AvailabilityZone(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_AvailabilityZone(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_ec2_fleet.test"
@@ -263,12 +263,12 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_AvailabilityZone(t *test
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_AvailabilityZone(rName, 0),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.overrides.0.availability_zone", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.availability_zone", availabilityZonesDataSourceName, "names.0"),
 				),
 			},
 			{
@@ -278,20 +278,20 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_AvailabilityZone(t *test
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_AvailabilityZone(rName, 1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.overrides.0.availability_zone", availabilityZonesDataSourceName, "names.1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.availability_zone", availabilityZonesDataSourceName, "names.1"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_InstanceType(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_InstanceType(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -302,12 +302,12 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_InstanceType(t *testing.
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_InstanceType(rName, "t3.small"),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.instance_type", "t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_type", "t3.small"),
 				),
 			},
 			{
@@ -317,21 +317,21 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_InstanceType(t *testing.
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_InstanceType(rName, "t3.medium"),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, "t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.instance_type", "t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_type", "t3.medium"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_MaxPrice(t *testing.T) {
-	t.Skip("EC2 API is not correctly returning MaxPrice overrides")
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_MaxPrice(t *testing.T) {
+	t.Skip("EC2 API is not correctly returning MaxPrice override")
 
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -343,12 +343,12 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_MaxPrice(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_MaxPrice(rName, "1.01"),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, "1.01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.max_price", "1.01"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.max_price", "1.01"),
 				),
 			},
 			{
@@ -358,20 +358,20 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_MaxPrice(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_MaxPrice(rName, "1.02"),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, "1.02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.max_price", "1.02"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.max_price", "1.02"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_Priority(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -382,12 +382,12 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_Priority(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_Priority(rName, 1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "1"),
 				),
 			},
 			{
@@ -397,20 +397,20 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_Priority(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_Priority(rName, 2),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_Priority_Multiple(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority_Multiple(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -421,13 +421,13 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_Priority_Multiple(t *tes
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_Priority_Multiple(rName, 1, 2),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.priority", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.1.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", "2"),
 				),
 			},
 			{
@@ -437,21 +437,21 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_Priority_Multiple(t *tes
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_Priority_Multiple(rName, 2, 1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.1.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", "1"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_SubnetId(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_SubnetId(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	subnetResourceName1 := "aws_subnet.test.0"
 	subnetResourceName2 := "aws_subnet.test.1"
@@ -464,12 +464,12 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_SubnetId(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_SubnetId(rName, 0),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_SubnetId(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.overrides.0.subnet_id", subnetResourceName1, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName1, "id"),
 				),
 			},
 			{
@@ -479,20 +479,20 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_SubnetId(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_SubnetId(rName, 1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_SubnetId(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_configs.0.overrides.0.subnet_id", subnetResourceName2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName2, "id"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_WeightedCapacity(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -503,12 +503,12 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_WeightedCapacity(t *test
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_WeightedCapacity(rName, 1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),
 				),
 			},
 			{
@@ -518,20 +518,20 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_WeightedCapacity(t *test
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_WeightedCapacity(rName, 2),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_WeightedCapacity_Multiple(t *testing.T) {
+func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -542,13 +542,13 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_WeightedCapacity_Multipl
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_WeightedCapacity_Multiple(rName, 1, 1),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName, 1, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.weighted_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.1.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", "1"),
 				),
 			},
 			{
@@ -558,14 +558,14 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfigs_Overrides_WeightedCapacity_Multipl
 				ImportStateVerifyIgnore: []string{"terminate_instances"},
 			},
 			{
-				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_WeightedCapacity_Multiple(rName, 1, 2),
+				Config: testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
 					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.0.weighted_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.0.overrides.1.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", "2"),
 				),
 			},
 		},
@@ -1147,7 +1147,7 @@ func testAccAWSEc2FleetConfig_ExcessCapacityTerminationPolicy(rName, excessCapac
 resource "aws_ec2_fleet" "test" {
   excess_capacity_termination_policy = %q
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1162,7 +1162,7 @@ resource "aws_ec2_fleet" "test" {
 `, excessCapacityTerminationPolicy)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateId(rName, launchTemplateResourceName string) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateId(rName, launchTemplateResourceName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
@@ -1187,7 +1187,7 @@ resource "aws_launch_template" "test2" {
 }
 
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${%s.id}"
       version            = "${%s.latest_version}"
@@ -1202,7 +1202,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, rName, launchTemplateResourceName, launchTemplateResourceName)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName string) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
@@ -1227,7 +1227,7 @@ resource "aws_launch_template" "test2" {
 }
 
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_name = "${%s.name}"
       version              = "${%s.latest_version}"
@@ -1242,7 +1242,7 @@ resource "aws_ec2_fleet" "test" {
 `, rName, rName, launchTemplateResourceName, launchTemplateResourceName)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_LaunchTemplateSpecification_Version(rName, instanceType string) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_Version(rName, instanceType string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
@@ -1261,7 +1261,7 @@ resource "aws_launch_template" "test" {
 }
 
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1276,18 +1276,18 @@ resource "aws_ec2_fleet" "test" {
 `, instanceType, rName)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_AvailabilityZone(rName string, availabilityZoneIndex int) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName string, availabilityZoneIndex int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       availability_zone = "${data.aws_availability_zones.available.names[%d]}"
     }
   }
@@ -1300,16 +1300,16 @@ resource "aws_ec2_fleet" "test" {
 `, availabilityZoneIndex)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_InstanceType(rName, instanceType string) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, instanceType string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       instance_type = %q
     }
   }
@@ -1322,16 +1322,16 @@ resource "aws_ec2_fleet" "test" {
 `, instanceType)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_MaxPrice(rName, maxPrice string) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, maxPrice string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       max_price = %q
     }
   }
@@ -1344,16 +1344,16 @@ resource "aws_ec2_fleet" "test" {
 `, maxPrice)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_Priority(rName string, priority int) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority(rName string, priority int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       priority = %d
     }
   }
@@ -1366,21 +1366,21 @@ resource "aws_ec2_fleet" "test" {
 `, priority)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_Priority_Multiple(rName string, priority1, priority2 int) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName string, priority1, priority2 int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       instance_type = "${aws_launch_template.test.instance_type}"
       priority      = %d
     }
 
-    overrides {
+    override {
       instance_type = "t3.small"
       priority      = %d
     }
@@ -1394,10 +1394,10 @@ resource "aws_ec2_fleet" "test" {
 `, priority1, priority2)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_SubnetId(rName string, subnetIndex int) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_SubnetId(rName string, subnetIndex int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 variable "TestAccNameTag" {
-  default = "tf-acc-test-ec2-fleet-launchtemplateconfig-overrides-subnetid"
+  default = "tf-acc-test-ec2-fleet-launchtemplateconfig-override-subnetid"
 }
 
 resource "aws_vpc" "test" {
@@ -1420,13 +1420,13 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       subnet_id = "${aws_subnet.test.*.id[%d]}"
     }
   }
@@ -1439,16 +1439,16 @@ resource "aws_ec2_fleet" "test" {
 `, subnetIndex)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_WeightedCapacity(rName string, weightedCapacity int) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName string, weightedCapacity int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       weighted_capacity = %d
     }
   }
@@ -1461,21 +1461,21 @@ resource "aws_ec2_fleet" "test" {
 `, weightedCapacity)
 }
 
-func testAccAWSEc2FleetConfig_LaunchTemplateConfigs_Overrides_WeightedCapacity_Multiple(rName string, weightedCapacity1, weightedCapacity2 int) string {
+func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName string, weightedCapacity1, weightedCapacity2 int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
     }
 
-    overrides {
+    override {
       instance_type     = "${aws_launch_template.test.instance_type}"
       weighted_capacity = %d
     }
 
-    overrides {
+    override {
       instance_type     = "t3.small"
       weighted_capacity = %d
     }
@@ -1492,7 +1492,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccAWSEc2FleetConfig_OnDemandOptions_AllocationStrategy(rName, allocationStrategy string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1516,7 +1516,7 @@ func testAccAWSEc2FleetConfig_ReplaceUnhealthyInstances(rName string, replaceUnh
 resource "aws_ec2_fleet" "test" {
   replace_unhealthy_instances = %t
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1534,7 +1534,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccAWSEc2FleetConfig_SpotOptions_AllocationStrategy(rName, allocationStrategy string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1556,7 +1556,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccAWSEc2FleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, instanceInterruptionBehavior string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1578,7 +1578,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccAWSEc2FleetConfig_SpotOptions_InstancePoolsToUseCount(rName string, instancePoolsToUseCount int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1600,7 +1600,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccAWSEc2FleetConfig_Tags(rName, key1, value1 string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1622,7 +1622,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccAWSEc2FleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, defaultTargetCapacityType string) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1642,7 +1642,7 @@ func testAccAWSEc2FleetConfig_TargetCapacitySpecification_TotalTargetCapacity(rN
 resource "aws_ec2_fleet" "test" {
   terminate_instances = true
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1662,7 +1662,7 @@ func testAccAWSEc2FleetConfig_TerminateInstancesWithExpiration(rName string, ter
 resource "aws_ec2_fleet" "test" {
   terminate_instances_with_expiration = %t
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"
@@ -1682,7 +1682,7 @@ func testAccAWSEc2FleetConfig_Type(rName, fleetType string) string {
 resource "aws_ec2_fleet" "test" {
   type = %q
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       launch_template_id = "${aws_launch_template.test.id}"
       version            = "${aws_launch_template.test.latest_version}"

@@ -38,7 +38,7 @@ func resourceAwsEc2Fleet() *schema.Resource {
 					ec2.FleetExcessCapacityTerminationPolicyTermination,
 				}, false),
 			},
-			"launch_template_configs": {
+			"launch_template_config": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -72,7 +72,7 @@ func resourceAwsEc2Fleet() *schema.Resource {
 								},
 							},
 						},
-						"overrides": {
+						"override": {
 							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
@@ -312,7 +312,7 @@ func resourceAwsEc2FleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.CreateFleetInput{
 		ExcessCapacityTerminationPolicy:  aws.String(d.Get("excess_capacity_termination_policy").(string)),
-		LaunchTemplateConfigs:            expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_configs").([]interface{})),
+		LaunchTemplateConfigs:            expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		OnDemandOptions:                  expandEc2OnDemandOptionsRequest(d.Get("on_demand_options").([]interface{})),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		SpotOptions:                      expandEc2SpotOptionsRequest(d.Get("spot_options").([]interface{})),
@@ -420,8 +420,8 @@ func resourceAwsEc2FleetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 
-	if err := d.Set("launch_template_configs", flattenEc2FleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
-		return fmt.Errorf("error setting launch_template_configs: %s", err)
+	if err := d.Set("launch_template_config", flattenEc2FleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
+		return fmt.Errorf("error setting launch_template_config: %s", err)
 	}
 
 	if err := d.Set("on_demand_options", flattenEc2OnDemandOptions(fleet.OnDemandOptions)); err != nil {
@@ -559,6 +559,7 @@ func ec2FleetRefreshFunc(conn *ec2.EC2, fleetID string) resource.StateRefreshFun
 			}
 			if aws.StringValue(fleetData.FleetId) == fleetID {
 				fleet = fleetData
+				break
 			}
 		}
 
@@ -588,7 +589,7 @@ func expandEc2FleetLaunchTemplateConfigRequest(m map[string]interface{}) *ec2.Fl
 		LaunchTemplateSpecification: expandEc2LaunchTemplateSpecificationRequest(m["launch_template_specification"].([]interface{})),
 	}
 
-	if v, ok := m["overrides"]; ok {
+	if v, ok := m["override"]; ok {
 		fleetLaunchTemplateConfigRequest.Overrides = expandEc2FleetLaunchTemplateOverridesRequests(v.([]interface{}))
 	}
 
@@ -747,7 +748,7 @@ func flattenEc2FleetLaunchTemplateConfigs(fleetLaunchTemplateConfigs []*ec2.Flee
 		}
 		m := map[string]interface{}{
 			"launch_template_specification": flattenEc2FleetLaunchTemplateSpecification(fleetLaunchTemplateConfig.LaunchTemplateSpecification),
-			"overrides":                     flattenEc2FleetLaunchTemplateOverrides(fleetLaunchTemplateConfig.Overrides),
+			"override":                      flattenEc2FleetLaunchTemplateOverrides(fleetLaunchTemplateConfig.Overrides),
 		}
 		l[i] = m
 	}
