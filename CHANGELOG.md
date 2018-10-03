@@ -1,37 +1,37 @@
-## 1.39.0 (Unreleased)
+## 1.39.0 (October 03, 2018)
 
 FEATURES:
 
-* **New Resource:** `aws_ec2_fleet` [GH-5960]
-* **New Resource:** `aws_pinpoint_app` [GH-5956]
+* **New Resource:** `aws_ec2_fleet` ([#5960](https://github.com/terraform-providers/terraform-provider-aws/issues/5960))
+* **New Resource:** `aws_pinpoint_app` ([#5956](https://github.com/terraform-providers/terraform-provider-aws/issues/5956))
 
 ENHANCEMENTS:
 
-* resource/aws_cloudwatch_event_target: Support additional ECS target arguments [GH-5982]
-* resource/aws_codedeploy_app: Support resource import [GH-6025]
-* resource/aws_codedeploy_deployment_config: Support resource import [GH-6025]
-* resource/aws_codedeploy_deployment_group: Support resource import [GH-6025]
-* resource/aws_db_instance: Add `deletion_protection` argument [GH-6011]
-* resource/aws_dx_connection: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `bandwidth` values [GH-6057]
-* resource/aws_dx_lag: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `connections_bandwidth` values [GH-6057]
-* resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument [GH-5997]
-* resource/aws_rds_cluster: Add `deletion_protection` argument [GH-6010]
-* resource/aws_sns_topic_subscription: Add `delivery_policy` argument [GH-3289]
-* resource/aws_spot_fleet_request: Add `instance_pools_to_use_count` argument [GH-5955]
+* resource/aws_cloudwatch_event_target: Support additional ECS target arguments ([#5982](https://github.com/terraform-providers/terraform-provider-aws/issues/5982))
+* resource/aws_codedeploy_app: Support resource import ([#6025](https://github.com/terraform-providers/terraform-provider-aws/issues/6025))
+* resource/aws_codedeploy_deployment_config: Support resource import ([#6025](https://github.com/terraform-providers/terraform-provider-aws/issues/6025))
+* resource/aws_codedeploy_deployment_group: Support resource import ([#6025](https://github.com/terraform-providers/terraform-provider-aws/issues/6025))
+* resource/aws_db_instance: Add `deletion_protection` argument ([#6011](https://github.com/terraform-providers/terraform-provider-aws/issues/6011))
+* resource/aws_dx_connection: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `bandwidth` values ([#6057](https://github.com/terraform-providers/terraform-provider-aws/issues/6057))
+* resource/aws_dx_lag: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `connections_bandwidth` values ([#6057](https://github.com/terraform-providers/terraform-provider-aws/issues/6057))
+* resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument ([#5997](https://github.com/terraform-providers/terraform-provider-aws/issues/5997))
+* resource/aws_rds_cluster: Add `deletion_protection` argument ([#6010](https://github.com/terraform-providers/terraform-provider-aws/issues/6010))
+* resource/aws_sns_topic_subscription: Add `delivery_policy` argument ([#3289](https://github.com/terraform-providers/terraform-provider-aws/issues/3289))
+* resource/aws_spot_fleet_request: Add `instance_pools_to_use_count` argument ([#5955](https://github.com/terraform-providers/terraform-provider-aws/issues/5955))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_deployment: Do not delete stage if it is in use by another deployment [GH-3896]
-* resource/aws_codedeploy_deployment_group: Include autoscaling groups when updating blue green config [GH-5827]
-* resource/aws_codedeploy_deployment_group: Properly read `autoscaling_groups` into Terraform state [GH-6025]
-* resource/aws_ecs_task_definition: Properly handle task scoped docker volume configurations [GH-5907]
-* resource/aws_network_interface_sg_attachment: Properly handle `InvalidNetworkInterfaceID.NotFound` errors [GH-6048]
-* resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
-* resource/aws_s3_bucket_object: Mark `version_id` as recomputed on `etag` updates [GH-3861]
-* resource/aws_security_group: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
-* resource/aws_sns_topic_subscription: Properly read all attributes into Terraform state on reads [GH-6023]
-* resource/aws_sns_topic_subscription: Properly handle `filter_policy` removal [GH-6023]
-* resource/aws_subnet: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
+* resource/aws_api_gateway_deployment: Do not delete stage if it is in use by another deployment ([#3896](https://github.com/terraform-providers/terraform-provider-aws/issues/3896))
+* resource/aws_codedeploy_deployment_group: Include autoscaling groups when updating blue green config ([#5827](https://github.com/terraform-providers/terraform-provider-aws/issues/5827))
+* resource/aws_codedeploy_deployment_group: Properly read `autoscaling_groups` into Terraform state ([#6025](https://github.com/terraform-providers/terraform-provider-aws/issues/6025))
+* resource/aws_ecs_task_definition: Properly handle task scoped docker volume configurations ([#5907](https://github.com/terraform-providers/terraform-provider-aws/issues/5907))
+* resource/aws_network_interface_sg_attachment: Properly handle `InvalidNetworkInterfaceID.NotFound` errors ([#6048](https://github.com/terraform-providers/terraform-provider-aws/issues/6048))
+* resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot ([#6012](https://github.com/terraform-providers/terraform-provider-aws/issues/6012))
+* resource/aws_s3_bucket_object: Mark `version_id` as recomputed on `etag` updates ([#3861](https://github.com/terraform-providers/terraform-provider-aws/issues/3861))
+* resource/aws_security_group: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces ([#6037](https://github.com/terraform-providers/terraform-provider-aws/issues/6037))
+* resource/aws_sns_topic_subscription: Properly read all attributes into Terraform state on reads ([#6023](https://github.com/terraform-providers/terraform-provider-aws/issues/6023))
+* resource/aws_sns_topic_subscription: Properly handle `filter_policy` removal ([#6023](https://github.com/terraform-providers/terraform-provider-aws/issues/6023))
+* resource/aws_subnet: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces ([#6037](https://github.com/terraform-providers/terraform-provider-aws/issues/6037))
 
 ## 1.38.0 (September 26, 2018)
 
