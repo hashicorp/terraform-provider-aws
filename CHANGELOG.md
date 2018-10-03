@@ -7,6 +7,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_target: Support additional ECS target arguments [GH-5982]
+* resource/aws_codedeploy_app: Support resource import [GH-6025]
+* resource/aws_codedeploy_deployment_config: Support resource import [GH-6025]
+* resource/aws_codedeploy_deployment_group: Support resource import [GH-6025]
 * resource/aws_db_instance: Add `deletion_protection` argument [GH-6011]
 * resource/aws_dx_connection: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `bandwidth` values [GH-6057]
 * resource/aws_dx_lag: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `connections_bandwidth` values [GH-6057]
@@ -19,6 +22,7 @@ BUG FIXES:
 
 * resource/aws_api_gateway_deployment: Do not delete stage if it is in use by another deployment [GH-3896]
 * resource/aws_codedeploy_deployment_group: Include autoscaling groups when updating blue green config [GH-5827]
+* resource/aws_codedeploy_deployment_group: Properly read `autoscaling_groups` into Terraform state [GH-6025]
 * resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
 * resource/aws_s3_bucket_object: Mark `version_id` as recomputed on `etag` updates [GH-3861]
 * resource/aws_security_group: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
