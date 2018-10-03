@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-func TestAccAWSPlacementGroup_importBasic(t *testing.T) {
-	resourceName := "aws_placement_group.pg"
+func TestAccAWSPlacementGroup_basic(t *testing.T) {
+	resourceName := "aws_placement_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,29 +22,17 @@ func TestAccAWSPlacementGroup_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPlacementGroupConfig,
+				Config: testAccAWSPlacementGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSPlacementGroup_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSPlacementGroupConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists("aws_placement_group.pg"),
-				),
 			},
 		},
 	})
@@ -60,11 +49,12 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 		_, err := conn.DescribePlacementGroups(&ec2.DescribePlacementGroupsInput{
 			GroupNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
+
+		if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+			continue
+		}
+
 		if err != nil {
-			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "InvalidPlacementGroup.Unknown" {
-				continue
-			}
 			return err
 		}
 
@@ -119,9 +109,11 @@ func testAccCheckAWSDestroyPlacementGroup(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccAWSPlacementGroupConfig = `
-resource "aws_placement_group" "pg" {
-	name = "tf-test-pg"
-	strategy = "cluster"
+func testAccAWSPlacementGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %q
+  strategy = "cluster"
 }
-`
+`, rName)
+}
