@@ -26,6 +26,8 @@ BUG FIXES:
 * resource/aws_rds_cluster: Properly handle `kms_key_id` when restoring from snapshot [GH-6012]
 * resource/aws_s3_bucket_object: Mark `version_id` as recomputed on `etag` updates [GH-3861]
 * resource/aws_security_group: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
+* resource/aws_sns_topic_subscription: Properly read all attributes into Terraform state on reads [GH-6023]
+* resource/aws_sns_topic_subscription: Properly handle `filter_policy` removal [GH-6023]
 * resource/aws_subnet: Prevent `InvalidNetworkInterfaceID.NotFound` errors when deleting lingering network interfaces [GH-6037]
 
 ## 1.38.0 (September 26, 2018)
