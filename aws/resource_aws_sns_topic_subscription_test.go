@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -56,31 +57,9 @@ func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
 	}
 }
 
-func TestAccAWSSNSTopicSubscription_importBasic(t *testing.T) {
-	resourceName := "aws_sns_topic.test_topic"
-	ri := acctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	attributes := make(map[string]string)
-
+	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -91,8 +70,24 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("terraform-test-topic-%d:.+", ri))),
+					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_sqs_queue.test_queue", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "sqs"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test_topic", "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
 			},
 		},
 	})
@@ -100,6 +95,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 
 func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
 	filterPolicy2 := `{"key3": ["val3"], "key4": ["val4"]}`
@@ -112,15 +108,33 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
-					resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy1),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy", filterPolicy1),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			// Test attribute update
+			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
-					resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy2),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy", filterPolicy2),
+				),
+			},
+			// Test attribute removal
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 				),
 			},
 		},
@@ -129,6 +143,7 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 
 func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -139,7 +154,7 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(ri, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
 					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &snsTopicSubscriptionDeliveryPolicy{
 						HealthyRetryPolicy: &snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 20,
@@ -150,9 +165,19 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			// Test attribute update
+			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(ri, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":3,"maxDelayTarget":78,"numRetries": 11}}`)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
 					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &snsTopicSubscriptionDeliveryPolicy{
 						HealthyRetryPolicy: &snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 78,
@@ -162,13 +187,67 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 					}),
 				),
 			},
+			// Test attribute removal
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
+	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic_subscription.test_subscription"
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			// Test attribute update
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+				),
+			},
+			// Test attribute removal
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	attributes := make(map[string]string)
-
+	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -179,8 +258,17 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
 			},
 		},
 	})
@@ -188,7 +276,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 
 func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
 	attributes := make(map[string]string)
-
+	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -199,8 +287,17 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 			{
 				Config: testAccAWSSNSTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(ri, "john", "doe"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription", attributes),
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
 			},
 		},
 	})
@@ -355,6 +452,25 @@ resource "aws_sns_topic_subscription" "test_subscription" {
   topic_arn       = "${aws_sns_topic.test_topic.arn}"
 }
 `, i, i, policy)
+}
+
+func testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(i int, rawMessageDelivery bool) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  name = "terraform-test-topic-%d"
+}
+
+resource "aws_sqs_queue" "test_queue" {
+  name = "terraform-subscription-test-queue-%d"
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+  endpoint             = "${aws_sqs_queue.test_queue.arn}"
+  protocol             = "sqs"
+  raw_message_delivery = %t
+  topic_arn            = "${aws_sns_topic.test_topic.arn}"
+}
+`, i, i, rawMessageDelivery)
 }
 
 func testAccAWSSNSTopicSubscriptionConfig_autoConfirmingEndpoint(i int) string {
