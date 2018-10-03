@@ -122,8 +122,11 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				l.DockerVolumeConfiguration.Scope = aws.String(v)
 			}
 
-			if v, ok := config["autoprovision"]; ok {
-				l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+			if v, ok := config["autoprovision"]; ok && v != "" {
+				scope := l.DockerVolumeConfiguration.Scope
+				if scope == nil || *scope != ecs.ScopeTask || v.(bool) {
+					l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+				}
 			}
 
 			if v, ok := config["driver"].(string); ok && v != "" {
