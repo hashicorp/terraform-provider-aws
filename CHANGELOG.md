@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_ec2_fleet` [GH-5960]
 * **New Resource:** `aws_pinpoint_app` [GH-5956]
 
 ENHANCEMENTS:
