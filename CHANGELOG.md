@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_dx_connection: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `bandwidth` values [GH-6057]
 * resource/aws_dx_lag: Support 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps as valid `connections_bandwidth` values [GH-6057]
 * resource/aws_elasticsearch_domain: Add `node_to_node_encryption` argument [GH-5997]
+* resource/aws_rds_cluster: Add `deletion_protection` argument [GH-6010]
 * resource/aws_sns_topic_subscription: Add `delivery_policy` argument [GH-3289]
 * resource/aws_spot_fleet_request: Add `instance_pools_to_use_count` argument [GH-5955]
 
