@@ -43,7 +43,7 @@ func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecretVersion_BasicBinary(t *testing.T) {
+func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
 	var version secretsmanager.GetSecretValueOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
@@ -57,7 +57,7 @@ func TestAccAwsSecretsManagerSecretVersion_BasicBinary(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretVersionConfig_SecretBinary(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretVersionExists(resourceName, &version),
-					resource.TestCheckResourceAttr(resourceName, "secret_binary", "test-binary"),
+					resource.TestCheckResourceAttr(resourceName, "secret_binary", base64Encode([]byte("test-binary"))),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.3070137", "AWSCURRENT"),
@@ -229,7 +229,7 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = "${aws_secretsmanager_secret.test.id}"
-  secret_binary = "test-binary"
+  secret_binary = "${base64encode("test-binary")}"
 }
 `, rName)
 }

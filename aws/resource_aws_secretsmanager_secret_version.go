@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"encoding/base64"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -71,7 +73,18 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("secret_binary"); ok {
-		input.SecretBinary = []byte(v.(string))
+		vs := []byte(v.(string))
+
+		if !isBase64Encoded(vs) {
+			fmt.Errorf("expected base64 in secret_binary")
+		}
+
+		var err error
+		input.SecretBinary, err = base64.StdEncoding.DecodeString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("error decoding secret binary value: %s", err)
+		}
 	}
 
 	if v, ok := d.GetOk("version_stages"); ok {
@@ -120,7 +133,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
-	d.Set("secret_binary", fmt.Sprintf("%s", output.SecretBinary))
+	d.Set("secret_binary", base64Encode(output.SecretBinary))
 	d.Set("version_id", output.VersionId)
 	d.Set("arn", output.ARN)
 
