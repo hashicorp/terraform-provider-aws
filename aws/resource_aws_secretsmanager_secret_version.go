@@ -31,10 +31,18 @@ func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
 				ForceNew: true,
 			},
 			"secret_string": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_binary"},
+			},
+			"secret_binary": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_string"},
 			},
 			"version_id": {
 				Type:     schema.TypeString,
@@ -55,8 +63,15 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.PutSecretValueInput{
-		SecretId:     aws.String(secretID),
-		SecretString: aws.String(d.Get("secret_string").(string)),
+		SecretId: aws.String(secretID),
+	}
+
+	if v, ok := d.GetOk("secret_string"); ok {
+		input.SecretString = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("secret_binary"); ok {
+		input.SecretBinary = []byte(v.(string))
 	}
 
 	if v, ok := d.GetOk("version_stages"); ok {
@@ -105,6 +120,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
+	d.Set("secret_binary", fmt.Sprintf("%s", output.SecretBinary))
 	d.Set("version_id", output.VersionId)
 	d.Set("arn", output.ARN)
 
