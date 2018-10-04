@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,8 +42,6 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 
 	applicationId := d.Get("application_id").(string)
 
-	d.SetId(applicationId)
-
 	params := &pinpoint.WriteEventStream{}
 
 	if d.HasChange("destination_stream_arn") {
@@ -60,8 +59,10 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 
 	_, err := conn.PutEventStream(&req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error putting Pinpoint Event Stream for application %s: %s", applicationId, err)
 	}
+
+	d.SetId(applicationId)
 
 	return resourceAwsPinpointEventStreamRead(d, meta)
 }
@@ -81,7 +82,7 @@ func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("error getting Pinpoint Event Stream for application %s: %s", d.Id(), err)
 	}
 
 	d.Set("application_id", output.EventStream.ApplicationId)
@@ -104,7 +105,7 @@ func resourceAwsPinpointEventStreamDelete(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Pinpoint Event Stream for application %s: %s", d.Id(), err)
 	}
 	return nil
 }
