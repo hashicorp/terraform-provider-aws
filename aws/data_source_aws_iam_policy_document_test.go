@@ -90,6 +90,40 @@ func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSourceIAMPolicyDocument_noStatementMerge(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentNoStatementMergeConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStateValue("data.aws_iam_policy_document.yak_politik", "json",
+						testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMPolicyDocument_noStatementOverride(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentNoStatementOverrideConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStateValue("data.aws_iam_policy_document.yak_politik", "json",
+						testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStateValue(id, name, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
@@ -516,6 +550,82 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
       "Sid": "SidToOverwrite",
       "Effect": "Allow",
       "Action": "s3:*",
+      "Resource": "*"
+    }
+  ]
+}`
+
+var testAccAWSIAMPolicyDocumentNoStatementMergeConfig = `
+data "aws_iam_policy_document" "source" {
+  statement {
+    sid = ""
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid = "OverridePlaceholder"
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "yak_politik" {
+  source_json = "${data.aws_iam_policy_document.source.json}"
+  override_json = "${data.aws_iam_policy_document.override.json}"
+}
+`
+
+var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:DescribeAccountAttributes",
+      "Resource": "*"
+    },
+    {
+      "Sid": "OverridePlaceholder",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "*"
+    }
+  ]
+}`
+
+var testAccAWSIAMPolicyDocumentNoStatementOverrideConfig = `
+data "aws_iam_policy_document" "source" {
+  statement {
+    sid = "OverridePlaceholder"
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid = "OverridePlaceholder"
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "yak_politik" {
+  source_json = "${data.aws_iam_policy_document.source.json}"
+  override_json = "${data.aws_iam_policy_document.override.json}"
+}
+`
+
+var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OverridePlaceholder",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
       "Resource": "*"
     }
   ]
