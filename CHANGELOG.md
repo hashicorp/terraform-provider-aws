@@ -1,4 +1,7 @@
 ## 1.40.0 (Unreleased)
+
+* New Resource: `aws_pinpoint_event_stream` [GH-6069]
+
 ## 1.39.0 (October 03, 2018)
 
 FEATURES:
