@@ -14,6 +14,28 @@ import (
 	"github.com/jen20/awspolicyequivalence"
 )
 
+func TestAccAWSSNSTopic_importBasic(t *testing.T) {
+	resourceName := "aws_sns_topic.test_topic"
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicConfig_withName(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSNSTopic_basic(t *testing.T) {
 	attributes := make(map[string]string)
 

@@ -277,7 +277,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 
 // Returns the most recent AMI out of a slice of images.
 func mostRecentAmi(images []*ec2.Image) *ec2.Image {
-	return sortImages(images)[0]
+	return sortImages(images, false)[0]
 }
 
 // populate the numerous fields that the image description returns.
@@ -341,31 +341,23 @@ func amiBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			"device_name": *v.DeviceName,
+			"device_name":  aws.StringValue(v.DeviceName),
+			"virtual_name": aws.StringValue(v.VirtualName),
 		}
+
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": fmt.Sprintf("%t", *v.Ebs.DeleteOnTermination),
-				"encrypted":             fmt.Sprintf("%t", *v.Ebs.Encrypted),
-				"volume_size":           fmt.Sprintf("%d", *v.Ebs.VolumeSize),
-				"volume_type":           *v.Ebs.VolumeType,
-			}
-			// Iops is not always set
-			if v.Ebs.Iops != nil {
-				ebs["iops"] = fmt.Sprintf("%d", *v.Ebs.Iops)
-			} else {
-				ebs["iops"] = "0"
-			}
-			// snapshot id may not be set
-			if v.Ebs.SnapshotId != nil {
-				ebs["snapshot_id"] = *v.Ebs.SnapshotId
+				"delete_on_termination": fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
+				"encrypted":             fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				"iops":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				"volume_size":           fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
+				"snapshot_id":           aws.StringValue(v.Ebs.SnapshotId),
+				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
 			}
 
 			mapping["ebs"] = ebs
 		}
-		if v.VirtualName != nil {
-			mapping["virtual_name"] = *v.VirtualName
-		}
+
 		log.Printf("[DEBUG] aws_ami - adding block device mapping: %v", mapping)
 		s.Add(mapping)
 	}
@@ -379,8 +371,8 @@ func amiProductCodes(m []*ec2.ProductCode) *schema.Set {
 	}
 	for _, v := range m {
 		code := map[string]interface{}{
-			"product_code_id":   *v.ProductCodeId,
-			"product_code_type": *v.ProductCodeType,
+			"product_code_id":   aws.StringValue(v.ProductCodeId),
+			"product_code_type": aws.StringValue(v.ProductCodeType),
 		}
 		s.Add(code)
 	}
@@ -407,8 +399,8 @@ func amiRootSnapshotId(image *ec2.Image) string {
 func amiStateReason(m *ec2.StateReason) map[string]interface{} {
 	s := make(map[string]interface{})
 	if m != nil {
-		s["code"] = *m.Code
-		s["message"] = *m.Message
+		s["code"] = aws.StringValue(m.Code)
+		s["message"] = aws.StringValue(m.Message)
 	} else {
 		s["code"] = "UNSET"
 		s["message"] = "UNSET"

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -114,6 +113,21 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Computed:         true,
 							ForceNew:         true,
 							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
+						},
+					},
+				},
+			},
+			"node_to_node_encryption": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -374,6 +388,13 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("node_to_node_encryption"); ok {
+		options := v.([]interface{})
+
+		s := options[0].(map[string]interface{})
+		input.NodeToNodeEncryptionOptions = expandESNodeToNodeEncryptionOptions(s)
+	}
+
 	if v, ok := d.GetOk("snapshot_options"); ok {
 		options := v.([]interface{})
 
@@ -526,7 +547,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
 		if err != nil {
-			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
+			return fmt.Errorf("access policies contain an invalid JSON: %s", err)
 		}
 		d.Set("access_policies", policies)
 	}
@@ -552,6 +573,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	err = d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions))
+	if err != nil {
+		return err
+	}
+	err = d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions))
 	if err != nil {
 		return err
 	}
@@ -801,4 +826,26 @@ func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool 
 		return !clusterConfig["dedicated_master_enabled"].(bool)
 	}
 	return false
+}
+
+func expandESNodeToNodeEncryptionOptions(s map[string]interface{}) *elasticsearch.NodeToNodeEncryptionOptions {
+	options := elasticsearch.NodeToNodeEncryptionOptions{}
+
+	if v, ok := s["enabled"]; ok {
+		options.Enabled = aws.Bool(v.(bool))
+	}
+	return &options
+}
+
+func flattenESNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOptions) []map[string]interface{} {
+	if o == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+	if o.Enabled != nil {
+		m["enabled"] = aws.BoolValue(o.Enabled)
+	}
+
+	return []map[string]interface{}{m}
 }

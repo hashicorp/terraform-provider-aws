@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -79,7 +78,7 @@ func resourceAwsWafByteMatchSetCreate(d *schema.ResourceData, meta interface{}) 
 		return conn.CreateByteMatchSet(params)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error creating ByteMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateByteMatchSetOutput)
 
@@ -122,7 +121,7 @@ func resourceAwsWafByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) 
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 		err := updateByteMatchSetResource(d.Id(), oldT, newT, conn)
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 		}
 	}
 
@@ -151,7 +150,7 @@ func resourceAwsWafByteMatchSetDelete(d *schema.ResourceData, meta interface{}) 
 		return conn.DeleteByteMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error deleting ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
 	}
 
 	return nil
@@ -169,7 +168,7 @@ func updateByteMatchSetResource(id string, oldT, newT []interface{}, conn *waf.W
 		return conn.UpdateByteMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+		return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 	}
 
 	return nil

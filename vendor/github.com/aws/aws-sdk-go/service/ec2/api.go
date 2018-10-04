@@ -2499,6 +2499,11 @@ func (c *EC2) CopyImageRequest(input *CopyImageInput) (req *request.Request, out
 // region. You specify the destination region by using its endpoint when making
 // the request.
 //
+// Copies of encrypted backing snapshots for the AMI are encrypted. Copies of
+// unencrypted backing snapshots remain unencrypted, unless you set Encrypted
+// during the copy operation. You cannot create an unencrypted copy of an encrypted
+// backing snapshot.
+//
 // For more information about the prerequisites and limits when copying an AMI,
 // see Copying an AMI (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/CopyingAMIs.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -2850,8 +2855,8 @@ func (c *EC2) CreateDefaultVpcRequest(input *CreateDefaultVpcInput) (req *reques
 // in the Amazon Virtual Private Cloud User Guide. You cannot specify the components
 // of the default VPC yourself.
 //
-// iIf you deleted your previous default VPC, you can create a default VPC.
-// You cannot have more than one default VPC per Region.
+// If you deleted your previous default VPC, you can create a default VPC. You
+// cannot have more than one default VPC per Region.
 //
 // If your account supports EC2-Classic, you cannot use this action to create
 // a default VPC in a Region that supports EC2-Classic. If you want a default
@@ -9836,7 +9841,7 @@ func (c *EC2) DescribeHostReservationOfferingsRequest(input *DescribeHostReserva
 // offerings that may not match the instance family and region of your Dedicated
 // Hosts. When purchasing an offering, ensure that the instance family and Region
 // of the offering matches that of the Dedicated Hosts with which it is to be
-// associated . For more information about supported instance types, see Dedicated
+// associated. For more information about supported instance types, see Dedicated
 // Hosts Overview (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
@@ -10702,14 +10707,19 @@ func (c *EC2) DescribeInstanceCreditSpecificationsRequest(input *DescribeInstanc
 
 // DescribeInstanceCreditSpecifications API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the credit option for CPU usage of one or more of your T2 instances.
-// The credit options are standard and unlimited.
+// Describes the credit option for CPU usage of one or more of your T2 or T3
+// instances. The credit options are standard and unlimited.
 //
-// If you do not specify an instance ID, Amazon EC2 returns only the T2 instances
-// with the unlimited credit option. If you specify one or more instance IDs,
-// Amazon EC2 returns the credit option (standard or unlimited) of those instances.
-// If you specify an instance ID that is not valid, such as an instance that
-// is not a T2 instance, an error is returned.
+// If you do not specify an instance ID, Amazon EC2 returns T2 and T3 instances
+// with the unlimited credit option, as well as instances that were previously
+// configured as T2 or T3 with the unlimited credit option. For example, if
+// you resize a T2 instance, while it is configured as unlimited, to an M4 instance,
+// Amazon EC2 returns the M4 instance.
+//
+// If you specify one or more instance IDs, Amazon EC2 returns the credit option
+// (standard or unlimited) of those instances. If you specify an instance ID
+// that is not valid, such as an instance that is not a T2 or T3 instance, an
+// error is returned.
 //
 // Recently terminated instances might appear in the returned results. This
 // interval is usually less than one hour.
@@ -10719,7 +10729,7 @@ func (c *EC2) DescribeInstanceCreditSpecificationsRequest(input *DescribeInstanc
 // all, the call fails. If you specify only instance IDs in an unaffected zone,
 // the call works normally.
 //
-// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
+// For more information, see Burstable Performance Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11809,6 +11819,12 @@ func (c *EC2) DescribeNetworkInterfacesRequest(input *DescribeNetworkInterfacesI
 		Name:       opDescribeNetworkInterfaces,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11850,6 +11866,56 @@ func (c *EC2) DescribeNetworkInterfacesWithContext(ctx aws.Context, input *Descr
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeNetworkInterfacesPages iterates over the pages of a DescribeNetworkInterfaces operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeNetworkInterfaces method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeNetworkInterfaces operation.
+//    pageNum := 0
+//    err := client.DescribeNetworkInterfacesPages(params,
+//        func(page *DescribeNetworkInterfacesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeNetworkInterfacesPages(input *DescribeNetworkInterfacesInput, fn func(*DescribeNetworkInterfacesOutput, bool) bool) error {
+	return c.DescribeNetworkInterfacesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeNetworkInterfacesPagesWithContext same as DescribeNetworkInterfacesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeNetworkInterfacesPagesWithContext(ctx aws.Context, input *DescribeNetworkInterfacesInput, fn func(*DescribeNetworkInterfacesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeNetworkInterfacesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeNetworkInterfacesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeNetworkInterfacesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribePlacementGroups = "DescribePlacementGroups"
@@ -18004,7 +18070,7 @@ func (c *EC2) ModifyHostsRequest(input *ModifyHostsInput) (req *request.Request,
 // is enabled, any instances that you launch with a tenancy of host but without
 // a specific host ID are placed onto any available Dedicated Host in your account
 // that has auto-placement enabled. When auto-placement is disabled, you need
-// to provide a host ID ito have the instance launch onto a specific host. If
+// to provide a host ID to have the instance launch onto a specific host. If
 // no host ID is provided, the instance is launched onto a suitable host with
 // auto-placement enabled.
 //
@@ -18448,10 +18514,10 @@ func (c *EC2) ModifyInstanceCreditSpecificationRequest(input *ModifyInstanceCred
 
 // ModifyInstanceCreditSpecification API operation for Amazon Elastic Compute Cloud.
 //
-// Modifies the credit option for CPU usage on a running or stopped T2 instance.
-// The credit options are standard and unlimited.
+// Modifies the credit option for CPU usage on a running or stopped T2 or T3
+// instance. The credit options are standard and unlimited.
 //
-// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
+// For more information, see Burstable Performance Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -20709,7 +20775,7 @@ func (c *EC2) ReleaseHostsRequest(input *ReleaseHostsInput) (req *request.Reques
 // When you no longer want to use an On-Demand Dedicated Host it can be released.
 // On-Demand billing is stopped and the host goes into released state. The host
 // ID of Dedicated Hosts that have been released can no longer be specified
-// in another request, for example, ModifyHosts. You must stop or terminate
+// in another request, for example, to modify the host. You must stop or terminate
 // all instances on a host before it can be released.
 //
 // When Dedicated Hosts are released, it may take some time for them to stop
@@ -23133,7 +23199,6 @@ func (s *AcceptVpcEndpointConnectionsOutput) SetUnsuccessful(v []*UnsuccessfulIt
 	return s
 }
 
-// Contains the parameters for AcceptVpcPeeringConnection.
 type AcceptVpcPeeringConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23170,7 +23235,6 @@ func (s *AcceptVpcPeeringConnectionInput) SetVpcPeeringConnectionId(v string) *A
 	return s
 }
 
-// Contains the output of AcceptVpcPeeringConnection.
 type AcceptVpcPeeringConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -23493,7 +23557,6 @@ func (s *AllocateAddressOutput) SetPublicIp(v string) *AllocateAddressOutput {
 	return s
 }
 
-// Contains the parameters for AllocateHosts.
 type AllocateHostsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23525,6 +23588,9 @@ type AllocateHostsInput struct {
 	//
 	// Quantity is a required field
 	Quantity *int64 `locationName:"quantity" type:"integer" required:"true"`
+
+	// The tags to apply to the Dedicated Host during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -23583,6 +23649,12 @@ func (s *AllocateHostsInput) SetInstanceType(v string) *AllocateHostsInput {
 // SetQuantity sets the Quantity field's value.
 func (s *AllocateHostsInput) SetQuantity(v int64) *AllocateHostsInput {
 	s.Quantity = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *AllocateHostsInput) SetTagSpecifications(v []*TagSpecification) *AllocateHostsInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -23939,7 +24011,6 @@ func (s *AssociateAddressOutput) SetAssociationId(v string) *AssociateAddressOut
 	return s
 }
 
-// Contains the parameters for AssociateDhcpOptions.
 type AssociateDhcpOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24094,7 +24165,6 @@ func (s *AssociateIamInstanceProfileOutput) SetIamInstanceProfileAssociation(v *
 	return s
 }
 
-// Contains the parameters for AssociateRouteTable.
 type AssociateRouteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24159,7 +24229,6 @@ func (s *AssociateRouteTableInput) SetSubnetId(v string) *AssociateRouteTableInp
 	return s
 }
 
-// Contains the output of AssociateRouteTable.
 type AssociateRouteTableOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -24367,7 +24436,6 @@ func (s *AssociateVpcCidrBlockOutput) SetVpcId(v string) *AssociateVpcCidrBlockO
 	return s
 }
 
-// Contains the parameters for AttachClassicLinkVpc.
 type AttachClassicLinkVpcInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24447,7 +24515,6 @@ func (s *AttachClassicLinkVpcInput) SetVpcId(v string) *AttachClassicLinkVpcInpu
 	return s
 }
 
-// Contains the output of AttachClassicLinkVpc.
 type AttachClassicLinkVpcOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -24471,7 +24538,6 @@ func (s *AttachClassicLinkVpcOutput) SetReturn(v bool) *AttachClassicLinkVpcOutp
 	return s
 }
 
-// Contains the parameters for AttachInternetGateway.
 type AttachInternetGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -24870,7 +24936,6 @@ func (s *AttributeValue) SetValue(v string) *AttributeValue {
 	return s
 }
 
-// Contains the parameters for AuthorizeSecurityGroupEgress.
 type AuthorizeSecurityGroupEgressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25002,7 +25067,6 @@ func (s AuthorizeSecurityGroupEgressOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for AuthorizeSecurityGroupIngress.
 type AuthorizeSecurityGroupIngressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26888,10 +26952,12 @@ type CopyImageInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// Specifies whether the destination snapshots of the copied image should be
-	// encrypted. The default CMK for EBS is used unless a non-default AWS Key Management
-	// Service (AWS KMS) CMK is specified with KmsKeyId. For more information, see
-	// Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// encrypted. You can encrypt a copy of an unencrypted snapshot, but you cannot
+	// create an unencrypted copy of an encrypted snapshot. The default CMK for
+	// EBS is used unless you specify a non-default AWS Key Management Service (AWS
+	// KMS) CMK using KmsKeyId. For more information, see Amazon EBS Encryption
+	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) in
+	// the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// An identifier for the AWS Key Management Service (AWS KMS) customer master
@@ -27065,12 +27131,11 @@ type CopySnapshotInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// Specifies whether the destination snapshot should be encrypted. You can encrypt
-	// a copy of an unencrypted snapshot using this flag, but you cannot use it
-	// to create an unencrypted copy from an encrypted snapshot. Your default CMK
-	// for EBS is used unless a non-default AWS Key Management Service (AWS KMS)
-	// CMK is specified with KmsKeyId. For more information, see Amazon EBS Encryption
-	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) in
-	// the Amazon Elastic Compute Cloud User Guide.
+	// a copy of an unencrypted snapshot, but you cannot use it to create an unencrypted
+	// copy of an encrypted snapshot. Your default CMK for EBS is used unless you
+	// specify a non-default AWS Key Management Service (AWS KMS) CMK using KmsKeyId.
+	// For more information, see Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// An identifier for the AWS Key Management Service (AWS KMS) customer master
@@ -27472,7 +27537,6 @@ func (s *CreateDefaultSubnetOutput) SetSubnet(v *Subnet) *CreateDefaultSubnetOut
 	return s
 }
 
-// Contains the parameters for CreateDefaultVpc.
 type CreateDefaultVpcInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27499,7 +27563,6 @@ func (s *CreateDefaultVpcInput) SetDryRun(v bool) *CreateDefaultVpcInput {
 	return s
 }
 
-// Contains the output of CreateDefaultVpc.
 type CreateDefaultVpcOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27523,7 +27586,6 @@ func (s *CreateDefaultVpcOutput) SetVpc(v *Vpc) *CreateDefaultVpcOutput {
 	return s
 }
 
-// Contains the parameters for CreateDhcpOptions.
 type CreateDhcpOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27574,7 +27636,6 @@ func (s *CreateDhcpOptionsInput) SetDryRun(v bool) *CreateDhcpOptionsInput {
 	return s
 }
 
-// Contains the output of CreateDhcpOptions.
 type CreateDhcpOptionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27901,7 +27962,6 @@ func (s *CreateFleetOutput) SetFleetId(v string) *CreateFleetOutput {
 	return s
 }
 
-// Contains the parameters for CreateFlowLogs.
 type CreateFlowLogsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27930,7 +27990,8 @@ type CreateFlowLogsInput struct {
 	// can also specify a subfolder in the bucket. To specify a subfolder in the
 	// bucket, use the following ARN format: bucket_ARN/subfolder_name/. For example,
 	// to specify a subfolder named my-logs in a bucket named my-bucket, use the
-	// following ARN: arn:aws:s3:::my-bucket/my-logs/.
+	// following ARN: arn:aws:s3:::my-bucket/my-logs/. You cannot use AWSLogs as
+	// a subfolder name. This is a reserved term.
 	LogDestination *string `type:"string"`
 
 	// Specifies the type of destination to which the flow log data is to be published.
@@ -28045,7 +28106,6 @@ func (s *CreateFlowLogsInput) SetTrafficType(v string) *CreateFlowLogsInput {
 	return s
 }
 
-// Contains the output of CreateFlowLogs.
 type CreateFlowLogsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -28212,7 +28272,9 @@ func (s *CreateFpgaImageOutput) SetFpgaImageId(v string) *CreateFpgaImageOutput 
 type CreateImageInput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about one or more block device mappings.
+	// Information about one or more block device mappings. This parameter cannot
+	// be used to modify the encryption status of existing volumes or snapshots.
+	// To create an AMI with encrypted snapshots, use the CopyImage action.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"blockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
 	// A description for the new image.
@@ -28422,7 +28484,6 @@ func (s *CreateInstanceExportTaskOutput) SetExportTask(v *ExportTask) *CreateIns
 	return s
 }
 
-// Contains the parameters for CreateInternetGateway.
 type CreateInternetGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28449,7 +28510,6 @@ func (s *CreateInternetGatewayInput) SetDryRun(v bool) *CreateInternetGatewayInp
 	return s
 }
 
-// Contains the output of CreateInternetGateway.
 type CreateInternetGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -28473,7 +28533,6 @@ func (s *CreateInternetGatewayOutput) SetInternetGateway(v *InternetGateway) *Cr
 	return s
 }
 
-// Contains the parameters for CreateKeyPair.
 type CreateKeyPairInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28813,7 +28872,6 @@ func (s *CreateLaunchTemplateVersionOutput) SetLaunchTemplateVersion(v *LaunchTe
 	return s
 }
 
-// Contains the parameters for CreateNatGateway.
 type CreateNatGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28880,7 +28938,6 @@ func (s *CreateNatGatewayInput) SetSubnetId(v string) *CreateNatGatewayInput {
 	return s
 }
 
-// Contains the output of CreateNatGateway.
 type CreateNatGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -28914,7 +28971,6 @@ func (s *CreateNatGatewayOutput) SetNatGateway(v *NatGateway) *CreateNatGatewayO
 	return s
 }
 
-// Contains the parameters for CreateNetworkAclEntry.
 type CreateNetworkAclEntryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29083,7 +29139,6 @@ func (s CreateNetworkAclEntryOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for CreateNetworkAcl.
 type CreateNetworkAclInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29134,7 +29189,6 @@ func (s *CreateNetworkAclInput) SetVpcId(v string) *CreateNetworkAclInput {
 	return s
 }
 
-// Contains the output of CreateNetworkAcl.
 type CreateNetworkAclOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -29613,7 +29667,6 @@ func (s *CreateReservedInstancesListingOutput) SetReservedInstancesListings(v []
 	return s
 }
 
-// Contains the parameters for CreateRoute.
 type CreateRouteInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29740,7 +29793,6 @@ func (s *CreateRouteInput) SetVpcPeeringConnectionId(v string) *CreateRouteInput
 	return s
 }
 
-// Contains the output of CreateRoute.
 type CreateRouteOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -29764,7 +29816,6 @@ func (s *CreateRouteOutput) SetReturn(v bool) *CreateRouteOutput {
 	return s
 }
 
-// Contains the parameters for CreateRouteTable.
 type CreateRouteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29815,7 +29866,6 @@ func (s *CreateRouteTableInput) SetVpcId(v string) *CreateRouteTableInput {
 	return s
 }
 
-// Contains the output of CreateRouteTable.
 type CreateRouteTableOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -29839,7 +29889,6 @@ func (s *CreateRouteTableOutput) SetRouteTable(v *RouteTable) *CreateRouteTableO
 	return s
 }
 
-// Contains the parameters for CreateSecurityGroup.
 type CreateSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29925,7 +29974,6 @@ func (s *CreateSecurityGroupInput) SetVpcId(v string) *CreateSecurityGroupInput 
 	return s
 }
 
-// Contains the output of CreateSecurityGroup.
 type CreateSecurityGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -30102,7 +30150,6 @@ func (s *CreateSpotDatafeedSubscriptionOutput) SetSpotDatafeedSubscription(v *Sp
 	return s
 }
 
-// Contains the parameters for CreateSubnet.
 type CreateSubnetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -30189,7 +30236,6 @@ func (s *CreateSubnetInput) SetVpcId(v string) *CreateSubnetInput {
 	return s
 }
 
-// Contains the output of CreateSubnet.
 type CreateSubnetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -30213,7 +30259,6 @@ func (s *CreateSubnetOutput) SetSubnet(v *Subnet) *CreateSubnetOutput {
 	return s
 }
 
-// Contains the parameters for CreateTags.
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -30687,7 +30732,7 @@ type CreateVpcEndpointInput struct {
 	// true: enableDnsHostnames and enableDnsSupport. Use ModifyVpcAttribute to
 	// set the VPC attributes.
 	//
-	// Default: true
+	// Default: false
 	PrivateDnsEnabled *bool `type:"boolean"`
 
 	// (Gateway endpoint) One or more route table IDs.
@@ -30942,7 +30987,6 @@ func (s *CreateVpcEndpointServiceConfigurationOutput) SetServiceConfiguration(v 
 	return s
 }
 
-// Contains the parameters for CreateVpc.
 type CreateVpcInput struct {
 	_ struct{} `type:"structure"`
 
@@ -31022,7 +31066,6 @@ func (s *CreateVpcInput) SetInstanceTenancy(v string) *CreateVpcInput {
 	return s
 }
 
-// Contains the output of CreateVpc.
 type CreateVpcOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -31046,7 +31089,6 @@ func (s *CreateVpcOutput) SetVpc(v *Vpc) *CreateVpcOutput {
 	return s
 }
 
-// Contains the parameters for CreateVpcPeeringConnection.
 type CreateVpcPeeringConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -31115,7 +31157,6 @@ func (s *CreateVpcPeeringConnectionInput) SetVpcId(v string) *CreateVpcPeeringCo
 	return s
 }
 
-// Contains the output of CreateVpcPeeringConnection.
 type CreateVpcPeeringConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -31415,12 +31456,12 @@ func (s *CreateVpnGatewayOutput) SetVpnGateway(v *VpnGateway) *CreateVpnGatewayO
 	return s
 }
 
-// Describes the credit option for CPU usage of a T2 instance.
+// Describes the credit option for CPU usage of a T2 or T3 instance.
 type CreditSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The credit option for CPU usage of a T2 instance. Valid values are standard
-	// and unlimited.
+	// The credit option for CPU usage of a T2 or T3 instance. Valid values are
+	// standard and unlimited.
 	CpuCredits *string `locationName:"cpuCredits" type:"string"`
 }
 
@@ -31440,12 +31481,12 @@ func (s *CreditSpecification) SetCpuCredits(v string) *CreditSpecification {
 	return s
 }
 
-// The credit option for CPU usage of a T2 instance.
+// The credit option for CPU usage of a T2 or T3 instance.
 type CreditSpecificationRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The credit option for CPU usage of a T2 instance. Valid values are standard
-	// and unlimited.
+	// The credit option for CPU usage of a T2 or T3 instance. Valid values are
+	// standard and unlimited.
 	//
 	// CpuCredits is a required field
 	CpuCredits *string `type:"string" required:"true"`
@@ -31616,7 +31657,6 @@ func (s DeleteCustomerGatewayOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteDhcpOptions.
 type DeleteDhcpOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -31959,7 +31999,6 @@ func (s *DeleteFleetsOutput) SetUnsuccessfulFleetDeletions(v []*DeleteFleetError
 	return s
 }
 
-// Contains the parameters for DeleteFlowLogs.
 type DeleteFlowLogsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -32010,7 +32049,6 @@ func (s *DeleteFlowLogsInput) SetFlowLogIds(v []*string) *DeleteFlowLogsInput {
 	return s
 }
 
-// Contains the output of DeleteFlowLogs.
 type DeleteFlowLogsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -32107,7 +32145,6 @@ func (s *DeleteFpgaImageOutput) SetReturn(v bool) *DeleteFpgaImageOutput {
 	return s
 }
 
-// Contains the parameters for DeleteInternetGateway.
 type DeleteInternetGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -32172,7 +32209,6 @@ func (s DeleteInternetGatewayOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteKeyPair.
 type DeleteKeyPairInput struct {
 	_ struct{} `type:"structure"`
 
@@ -32517,7 +32553,6 @@ func (s *DeleteLaunchTemplateVersionsResponseSuccessItem) SetVersionNumber(v int
 	return s
 }
 
-// Contains the parameters for DeleteNatGateway.
 type DeleteNatGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -32556,7 +32591,6 @@ func (s *DeleteNatGatewayInput) SetNatGatewayId(v string) *DeleteNatGatewayInput
 	return s
 }
 
-// Contains the output of DeleteNatGateway.
 type DeleteNatGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -32580,7 +32614,6 @@ func (s *DeleteNatGatewayOutput) SetNatGatewayId(v string) *DeleteNatGatewayOutp
 	return s
 }
 
-// Contains the parameters for DeleteNetworkAclEntry.
 type DeleteNetworkAclEntryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -32673,7 +32706,6 @@ func (s DeleteNetworkAclEntryOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteNetworkAcl.
 type DeleteNetworkAclInput struct {
 	_ struct{} `type:"structure"`
 
@@ -32953,7 +32985,6 @@ func (s DeletePlacementGroupOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteRoute.
 type DeleteRouteInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33038,7 +33069,6 @@ func (s DeleteRouteOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteRouteTable.
 type DeleteRouteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33103,7 +33133,6 @@ func (s DeleteRouteTableOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteSecurityGroup.
 type DeleteSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33269,7 +33298,6 @@ func (s DeleteSpotDatafeedSubscriptionOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteSubnet.
 type DeleteSubnetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33334,7 +33362,6 @@ func (s DeleteSubnetOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteTags.
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33701,7 +33728,6 @@ func (s *DeleteVpcEndpointsOutput) SetUnsuccessful(v []*UnsuccessfulItem) *Delet
 	return s
 }
 
-// Contains the parameters for DeleteVpc.
 type DeleteVpcInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33766,7 +33792,6 @@ func (s DeleteVpcOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DeleteVpcPeeringConnection.
 type DeleteVpcPeeringConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -33817,7 +33842,6 @@ func (s *DeleteVpcPeeringConnectionInput) SetVpcPeeringConnectionId(v string) *D
 	return s
 }
 
-// Contains the output of DeleteVpcPeeringConnection.
 type DeleteVpcPeeringConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -34507,7 +34531,6 @@ func (s *DescribeBundleTasksOutput) SetBundleTasks(v []*BundleTask) *DescribeBun
 	return s
 }
 
-// Contains the parameters for DescribeClassicLinkInstances.
 type DescribeClassicLinkInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -34596,7 +34619,6 @@ func (s *DescribeClassicLinkInstancesInput) SetNextToken(v string) *DescribeClas
 	return s
 }
 
-// Contains the output of DescribeClassicLinkInstances.
 type DescribeClassicLinkInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -34785,7 +34807,6 @@ func (s *DescribeCustomerGatewaysOutput) SetCustomerGateways(v []*CustomerGatewa
 	return s
 }
 
-// Contains the parameters for DescribeDhcpOptions.
 type DescribeDhcpOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -34848,7 +34869,6 @@ func (s *DescribeDhcpOptionsInput) SetFilters(v []*Filter) *DescribeDhcpOptionsI
 	return s
 }
 
-// Contains the output of DescribeDhcpOptions.
 type DescribeDhcpOptionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -35515,7 +35535,6 @@ func (s *DescribeFleetsOutput) SetNextToken(v string) *DescribeFleetsOutput {
 	return s
 }
 
-// Contains the parameters for DescribeFlowLogs.
 type DescribeFlowLogsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -35596,7 +35615,6 @@ func (s *DescribeFlowLogsInput) SetNextToken(v string) *DescribeFlowLogsInput {
 	return s
 }
 
-// Contains the output of DescribeFlowLogs.
 type DescribeFlowLogsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -36002,7 +36020,7 @@ type DescribeHostReservationsInput struct {
 
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
-	// nextToken value. This value can be between 5 and 500.If maxResults is given
+	// nextToken value. This value can be between 5 and 500. If maxResults is given
 	// a larger value than 500, you receive an error.
 	MaxResults *int64 `type:"integer"`
 
@@ -36077,7 +36095,6 @@ func (s *DescribeHostReservationsOutput) SetNextToken(v string) *DescribeHostRes
 	return s
 }
 
-// Contains the parameters for DescribeHosts.
 type DescribeHostsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -36152,7 +36169,6 @@ func (s *DescribeHostsInput) SetNextToken(v string) *DescribeHostsInput {
 	return s
 }
 
-// Contains the output of DescribeHosts.
 type DescribeHostsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -37759,7 +37775,6 @@ func (s *DescribeInstancesOutput) SetReservations(v []*Reservation) *DescribeIns
 	return s
 }
 
-// Contains the parameters for DescribeInternetGateways.
 type DescribeInternetGatewaysInput struct {
 	_ struct{} `type:"structure"`
 
@@ -37823,7 +37838,6 @@ func (s *DescribeInternetGatewaysInput) SetInternetGatewayIds(v []*string) *Desc
 	return s
 }
 
-// Contains the output of DescribeInternetGateways.
 type DescribeInternetGatewaysOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -37847,7 +37861,6 @@ func (s *DescribeInternetGatewaysOutput) SetInternetGateways(v []*InternetGatewa
 	return s
 }
 
-// Contains the parameters for DescribeKeyPairs.
 type DescribeKeyPairsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -37898,7 +37911,6 @@ func (s *DescribeKeyPairsInput) SetKeyNames(v []*string) *DescribeKeyPairsInput 
 	return s
 }
 
-// Contains the output of DescribeKeyPairs.
 type DescribeKeyPairsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -38313,7 +38325,6 @@ func (s *DescribeMovingAddressesOutput) SetNextToken(v string) *DescribeMovingAd
 	return s
 }
 
-// Contains the parameters for DescribeNatGateways.
 type DescribeNatGatewaysInput struct {
 	_ struct{} `type:"structure"`
 
@@ -38388,7 +38399,6 @@ func (s *DescribeNatGatewaysInput) SetNextToken(v string) *DescribeNatGatewaysIn
 	return s
 }
 
-// Contains the output of DescribeNatGateways.
 type DescribeNatGatewaysOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -38422,7 +38432,6 @@ func (s *DescribeNatGatewaysOutput) SetNextToken(v string) *DescribeNatGatewaysO
 	return s
 }
 
-// Contains the parameters for DescribeNetworkAcls.
 type DescribeNetworkAclsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -38446,8 +38455,6 @@ type DescribeNetworkAclsInput struct {
 	//
 	//    * entry.cidr - The IPv4 CIDR range specified in the entry.
 	//
-	//    * entry.egress - Indicates whether the entry applies to egress traffic.
-	//
 	//    * entry.icmp.code - The ICMP code specified in the entry, if any.
 	//
 	//    * entry.icmp.type - The ICMP type specified in the entry, if any.
@@ -38466,7 +38473,7 @@ type DescribeNetworkAclsInput struct {
 	//    * entry.rule-action - Allows or denies the matching traffic (allow | deny).
 	//
 	//    * entry.rule-number - The number of an entry (in other words, rule) in
-	//    the ACL's set of entries.
+	//    the set of ACL entries.
 	//
 	//    * network-acl-id - The ID of the network ACL.
 	//
@@ -38517,7 +38524,6 @@ func (s *DescribeNetworkAclsInput) SetNetworkAclIds(v []*string) *DescribeNetwor
 	return s
 }
 
-// Contains the output of DescribeNetworkAcls.
 type DescribeNetworkAclsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -38877,10 +38883,18 @@ type DescribeNetworkInterfacesInput struct {
 	//    * vpc-id - The ID of the VPC for the network interface.
 	Filters []*Filter `locationName:"filter" locationNameList:"Filter" type:"list"`
 
+	// The maximum number of items to return for this request. The request returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `type:"integer"`
+
 	// One or more network interface IDs.
 	//
 	// Default: Describes all your network interfaces.
 	NetworkInterfaceIds []*string `locationName:"NetworkInterfaceId" locationNameList:"item" type:"list"`
+
+	// The token to retrieve the next page of results.
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -38905,9 +38919,21 @@ func (s *DescribeNetworkInterfacesInput) SetFilters(v []*Filter) *DescribeNetwor
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeNetworkInterfacesInput) SetMaxResults(v int64) *DescribeNetworkInterfacesInput {
+	s.MaxResults = &v
+	return s
+}
+
 // SetNetworkInterfaceIds sets the NetworkInterfaceIds field's value.
 func (s *DescribeNetworkInterfacesInput) SetNetworkInterfaceIds(v []*string) *DescribeNetworkInterfacesInput {
 	s.NetworkInterfaceIds = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeNetworkInterfacesInput) SetNextToken(v string) *DescribeNetworkInterfacesInput {
+	s.NextToken = &v
 	return s
 }
 
@@ -38917,6 +38943,10 @@ type DescribeNetworkInterfacesOutput struct {
 
 	// Information about one or more network interfaces.
 	NetworkInterfaces []*NetworkInterface `locationName:"networkInterfaceSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -38932,6 +38962,12 @@ func (s DescribeNetworkInterfacesOutput) GoString() string {
 // SetNetworkInterfaces sets the NetworkInterfaces field's value.
 func (s *DescribeNetworkInterfacesOutput) SetNetworkInterfaces(v []*NetworkInterface) *DescribeNetworkInterfacesOutput {
 	s.NetworkInterfaces = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeNetworkInterfacesOutput) SetNextToken(v string) *DescribeNetworkInterfacesOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -39013,7 +39049,6 @@ func (s *DescribePlacementGroupsOutput) SetPlacementGroups(v []*PlacementGroup) 
 	return s
 }
 
-// Contains the parameters for DescribePrefixLists.
 type DescribePrefixListsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -39086,7 +39121,6 @@ func (s *DescribePrefixListsInput) SetPrefixListIds(v []*string) *DescribePrefix
 	return s
 }
 
-// Contains the output of DescribePrefixLists.
 type DescribePrefixListsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -39850,7 +39884,6 @@ func (s *DescribeReservedInstancesOutput) SetReservedInstances(v []*ReservedInst
 	return s
 }
 
-// Contains the parameters for DescribeRouteTables.
 type DescribeRouteTablesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -39922,6 +39955,14 @@ type DescribeRouteTablesInput struct {
 	//    * vpc-id - The ID of the VPC for the route table.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
+	// The maximum number of results to return in a single call. To retrieve the
+	// remaining results, make another call with the returned NextToken value. This
+	// value can be between 5 and 100.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to retrieve the next page of results.
+	NextToken *string `type:"string"`
+
 	// One or more route table IDs.
 	//
 	// Default: Describes all your route tables.
@@ -39950,6 +39991,18 @@ func (s *DescribeRouteTablesInput) SetFilters(v []*Filter) *DescribeRouteTablesI
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeRouteTablesInput) SetMaxResults(v int64) *DescribeRouteTablesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeRouteTablesInput) SetNextToken(v string) *DescribeRouteTablesInput {
+	s.NextToken = &v
+	return s
+}
+
 // SetRouteTableIds sets the RouteTableIds field's value.
 func (s *DescribeRouteTablesInput) SetRouteTableIds(v []*string) *DescribeRouteTablesInput {
 	s.RouteTableIds = v
@@ -39959,6 +40012,10 @@ func (s *DescribeRouteTablesInput) SetRouteTableIds(v []*string) *DescribeRouteT
 // Contains the output of DescribeRouteTables.
 type DescribeRouteTablesOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// Information about one or more route tables.
 	RouteTables []*RouteTable `locationName:"routeTableSet" locationNameList:"item" type:"list"`
@@ -39972,6 +40029,12 @@ func (s DescribeRouteTablesOutput) String() string {
 // GoString returns the string representation
 func (s DescribeRouteTablesOutput) GoString() string {
 	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeRouteTablesOutput) SetNextToken(v string) *DescribeRouteTablesOutput {
+	s.NextToken = &v
+	return s
 }
 
 // SetRouteTables sets the RouteTables field's value.
@@ -40262,7 +40325,7 @@ func (s *DescribeScheduledInstancesOutput) SetScheduledInstanceSet(v []*Schedule
 type DescribeSecurityGroupReferencesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Checks whether you have the required permissions for the operation, without
+	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
 	// it is UnauthorizedOperation.
@@ -40332,7 +40395,6 @@ func (s *DescribeSecurityGroupReferencesOutput) SetSecurityGroupReferenceSet(v [
 	return s
 }
 
-// Contains the parameters for DescribeSecurityGroups.
 type DescribeSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -40491,7 +40553,6 @@ func (s *DescribeSecurityGroupsInput) SetNextToken(v string) *DescribeSecurityGr
 	return s
 }
 
-// Contains the output of DescribeSecurityGroups.
 type DescribeSecurityGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -41553,7 +41614,7 @@ func (s *DescribeSpotPriceHistoryOutput) SetSpotPriceHistory(v []*SpotPrice) *De
 type DescribeStaleSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Checks whether you have the required permissions for the operation, without
+	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
 	// it is UnauthorizedOperation.
@@ -41660,7 +41721,6 @@ func (s *DescribeStaleSecurityGroupsOutput) SetStaleSecurityGroupSet(v []*StaleS
 	return s
 }
 
-// Contains the parameters for DescribeSubnets.
 type DescribeSubnetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -41745,7 +41805,6 @@ func (s *DescribeSubnetsInput) SetSubnetIds(v []*string) *DescribeSubnetsInput {
 	return s
 }
 
-// Contains the output of DescribeSubnets.
 type DescribeSubnetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -41769,7 +41828,6 @@ func (s *DescribeSubnetsOutput) SetSubnets(v []*Subnet) *DescribeSubnetsOutput {
 	return s
 }
 
-// Contains the parameters for DescribeTags.
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -41783,13 +41841,17 @@ type DescribeTagsInput struct {
 	//
 	//    * key - The tag key.
 	//
-	//    * resource-id - The resource ID.
+	//    * resource-id - The ID of the resource.
 	//
-	//    * resource-type - The resource type (customer-gateway | dhcp-options |
-	//    elastic-ip | fleet | fpga-image | image | instance | internet-gateway
-	//    | launch-template | natgateway | network-acl | network-interface | reserved-instances
-	//    | route-table | security-group | snapshot | spot-instances-request | subnet
-	//    | volume | vpc | vpc-peering-connection | vpn-connection | vpn-gateway).
+	//    * resource-type - The resource type (customer-gateway | dedicated-host
+	//    | dhcp-options | elastic-ip | fleet | fpga-image | image | instance |
+	//    internet-gateway | launch-template | natgateway | network-acl | network-interface
+	//    | reserved-instances | route-table | security-group | snapshot | spot-instances-request
+	//    | subnet | volume | vpc | vpc-peering-connection | vpn-connection | vpn-gateway).
+	//
+	//    * tag:<key> - The key/value combination of the tag. For example, specify
+	//    "tag:Owner" for the filter name and "TeamA" for the filter value to find
+	//    resources with the tag "Owner=TeamA".
 	//
 	//    * value - The tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
@@ -41837,7 +41899,6 @@ func (s *DescribeTagsInput) SetNextToken(v string) *DescribeTagsInput {
 	return s
 }
 
-// Contains the output of DescribeTags.
 type DescribeTagsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -41845,7 +41906,7 @@ type DescribeTagsOutput struct {
 	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
-	// A list of tags.
+	// The tags.
 	Tags []*TagDescription `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
@@ -42366,7 +42427,6 @@ func (s *DescribeVolumesOutput) SetVolumes(v []*Volume) *DescribeVolumesOutput {
 	return s
 }
 
-// Contains the parameters for DescribeVpcAttribute.
 type DescribeVpcAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42431,7 +42491,6 @@ func (s *DescribeVpcAttributeInput) SetVpcId(v string) *DescribeVpcAttributeInpu
 	return s
 }
 
-// Contains the output of DescribeVpcAttribute.
 type DescribeVpcAttributeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -42477,7 +42536,6 @@ func (s *DescribeVpcAttributeOutput) SetVpcId(v string) *DescribeVpcAttributeOut
 	return s
 }
 
-// Contains the parameters for DescribeVpcClassicLinkDnsSupport.
 type DescribeVpcClassicLinkDnsSupportInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42538,7 +42596,6 @@ func (s *DescribeVpcClassicLinkDnsSupportInput) SetVpcIds(v []*string) *Describe
 	return s
 }
 
-// Contains the output of DescribeVpcClassicLinkDnsSupport.
 type DescribeVpcClassicLinkDnsSupportOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -42571,7 +42628,6 @@ func (s *DescribeVpcClassicLinkDnsSupportOutput) SetVpcs(v []*ClassicLinkDnsSupp
 	return s
 }
 
-// Contains the parameters for DescribeVpcClassicLink.
 type DescribeVpcClassicLinkInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42629,7 +42685,6 @@ func (s *DescribeVpcClassicLinkInput) SetVpcIds(v []*string) *DescribeVpcClassic
 	return s
 }
 
-// Contains the output of DescribeVpcClassicLink.
 type DescribeVpcClassicLinkOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -43310,7 +43365,6 @@ func (s *DescribeVpcEndpointsOutput) SetVpcEndpoints(v []*VpcEndpoint) *Describe
 	return s
 }
 
-// Contains the parameters for DescribeVpcPeeringConnections.
 type DescribeVpcPeeringConnectionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -43392,7 +43446,6 @@ func (s *DescribeVpcPeeringConnectionsInput) SetVpcPeeringConnectionIds(v []*str
 	return s
 }
 
-// Contains the output of DescribeVpcPeeringConnections.
 type DescribeVpcPeeringConnectionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -43416,7 +43469,6 @@ func (s *DescribeVpcPeeringConnectionsOutput) SetVpcPeeringConnections(v []*VpcP
 	return s
 }
 
-// Contains the parameters for DescribeVpcs.
 type DescribeVpcsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -43504,7 +43556,6 @@ func (s *DescribeVpcsInput) SetVpcIds(v []*string) *DescribeVpcsInput {
 	return s
 }
 
-// Contains the output of DescribeVpcs.
 type DescribeVpcsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -43736,7 +43787,6 @@ func (s *DescribeVpnGatewaysOutput) SetVpnGateways(v []*VpnGateway) *DescribeVpn
 	return s
 }
 
-// Contains the parameters for DetachClassicLinkVpc.
 type DetachClassicLinkVpcInput struct {
 	_ struct{} `type:"structure"`
 
@@ -43801,7 +43851,6 @@ func (s *DetachClassicLinkVpcInput) SetVpcId(v string) *DetachClassicLinkVpcInpu
 	return s
 }
 
-// Contains the output of DetachClassicLinkVpc.
 type DetachClassicLinkVpcOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -43825,7 +43874,6 @@ func (s *DetachClassicLinkVpcOutput) SetReturn(v bool) *DetachClassicLinkVpcOutp
 	return s
 }
 
-// Contains the parameters for DetachInternetGateway.
 type DetachInternetGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -44283,7 +44331,6 @@ func (s DisableVgwRoutePropagationOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DisableVpcClassicLinkDnsSupport.
 type DisableVpcClassicLinkDnsSupportInput struct {
 	_ struct{} `type:"structure"`
 
@@ -44307,7 +44354,6 @@ func (s *DisableVpcClassicLinkDnsSupportInput) SetVpcId(v string) *DisableVpcCla
 	return s
 }
 
-// Contains the output of DisableVpcClassicLinkDnsSupport.
 type DisableVpcClassicLinkDnsSupportOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -44331,7 +44377,6 @@ func (s *DisableVpcClassicLinkDnsSupportOutput) SetReturn(v bool) *DisableVpcCla
 	return s
 }
 
-// Contains the parameters for DisableVpcClassicLink.
 type DisableVpcClassicLinkInput struct {
 	_ struct{} `type:"structure"`
 
@@ -44382,7 +44427,6 @@ func (s *DisableVpcClassicLinkInput) SetVpcId(v string) *DisableVpcClassicLinkIn
 	return s
 }
 
-// Contains the output of DisableVpcClassicLink.
 type DisableVpcClassicLinkOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -44526,7 +44570,6 @@ func (s *DisassociateIamInstanceProfileOutput) SetIamInstanceProfileAssociation(
 	return s
 }
 
-// Contains the parameters for DisassociateRouteTable.
 type DisassociateRouteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -45009,9 +45052,14 @@ type EbsBlockDevice struct {
 	DeleteOnTermination *bool `locationName:"deleteOnTermination" type:"boolean"`
 
 	// Indicates whether the EBS volume is encrypted. Encrypted volumes can only
-	// be attached to instances that support Amazon EBS encryption. If you are creating
-	// a volume from a snapshot, you can't specify an encryption value. This is
-	// because only blank volumes can be encrypted on creation.
+	// be attached to instances that support Amazon EBS encryption.
+	//
+	// If you are creating a volume from a snapshot, you cannot specify an encryption
+	// value. This is because only blank volumes can be encrypted on creation. If
+	// you are creating a snapshot from an existing EBS volume, you cannot specify
+	// an encryption value that differs from that of the EBS volume. We recommend
+	// that you omit the encryption value from the block device mappings when creating
+	// an image from an instance.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) that the volume supports.
@@ -45568,7 +45616,6 @@ func (s EnableVolumeIOOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for EnableVpcClassicLinkDnsSupport.
 type EnableVpcClassicLinkDnsSupportInput struct {
 	_ struct{} `type:"structure"`
 
@@ -45592,7 +45639,6 @@ func (s *EnableVpcClassicLinkDnsSupportInput) SetVpcId(v string) *EnableVpcClass
 	return s
 }
 
-// Contains the output of EnableVpcClassicLinkDnsSupport.
 type EnableVpcClassicLinkDnsSupportOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -45616,7 +45662,6 @@ func (s *EnableVpcClassicLinkDnsSupportOutput) SetReturn(v bool) *EnableVpcClass
 	return s
 }
 
-// Contains the parameters for EnableVpcClassicLink.
 type EnableVpcClassicLinkInput struct {
 	_ struct{} `type:"structure"`
 
@@ -45667,7 +45712,6 @@ func (s *EnableVpcClassicLinkInput) SetVpcId(v string) *EnableVpcClassicLinkInpu
 	return s
 }
 
-// Contains the output of EnableVpcClassicLink.
 type EnableVpcClassicLinkOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -46473,8 +46517,7 @@ type FleetLaunchTemplateSpecification struct {
 	// or a template ID.
 	LaunchTemplateName *string `locationName:"launchTemplateName" min:"3" type:"string"`
 
-	// The version number. By default, the default version of the launch template
-	// is used.
+	// The version number of the launch template. You must specify a version number.
 	Version *string `locationName:"version" type:"string"`
 }
 
@@ -49372,7 +49415,6 @@ func (s *ImportInstanceVolumeDetailItem) SetVolume(v *DiskImageVolumeDescription
 	return s
 }
 
-// Contains the parameters for ImportKeyPair.
 type ImportKeyPairInput struct {
 	_ struct{} `type:"structure"`
 
@@ -49440,7 +49482,6 @@ func (s *ImportKeyPairInput) SetPublicKeyMaterial(v []byte) *ImportKeyPairInput 
 	return s
 }
 
-// Contains the output of ImportKeyPair.
 type ImportKeyPairOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -50369,7 +50410,7 @@ func (s *InstanceCount) SetState(v string) *InstanceCount {
 	return s
 }
 
-// Describes the credit option for CPU usage of a T2 instance.
+// Describes the credit option for CPU usage of a T2 or T3 instance.
 type InstanceCreditSpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -50403,7 +50444,7 @@ func (s *InstanceCreditSpecification) SetInstanceId(v string) *InstanceCreditSpe
 	return s
 }
 
-// Describes the credit option for CPU usage of a T2 instance.
+// Describes the credit option for CPU usage of a T2 or T3 instance.
 type InstanceCreditSpecificationRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -51432,11 +51473,9 @@ type IpPermission struct {
 	// [EC2-VPC only] One or more IPv6 ranges.
 	Ipv6Ranges []*Ipv6Range `locationName:"ipv6Ranges" locationNameList:"item" type:"list"`
 
-	// (EC2-VPC only; valid for AuthorizeSecurityGroupEgress, RevokeSecurityGroupEgress
-	// and DescribeSecurityGroups only) One or more prefix list IDs for an AWS service.
-	// In an AuthorizeSecurityGroupEgress request, this is the AWS service that
-	// you want to access through a VPC endpoint from instances associated with
-	// the security group.
+	// [EC2-VPC only] One or more prefix list IDs for an AWS service. With AuthorizeSecurityGroupEgress,
+	// this is the AWS service that you want to access through a VPC endpoint from
+	// instances associated with the security group.
 	PrefixListIds []*PrefixListId `locationName:"prefixListIds" locationNameList:"item" type:"list"`
 
 	// The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
@@ -53719,7 +53758,6 @@ func (s *ModifyFpgaImageAttributeOutput) SetFpgaImageAttribute(v *FpgaImageAttri
 	return s
 }
 
-// Contains the parameters for ModifyHosts.
 type ModifyHostsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -53772,7 +53810,6 @@ func (s *ModifyHostsInput) SetHostIds(v []*string) *ModifyHostsInput {
 	return s
 }
 
-// Contains the output of ModifyHosts.
 type ModifyHostsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -54442,7 +54479,6 @@ func (s *ModifyInstanceCreditSpecificationOutput) SetUnsuccessfulInstanceCreditS
 	return s
 }
 
-// Contains the parameters for ModifyInstancePlacement.
 type ModifyInstancePlacementInput struct {
 	_ struct{} `type:"structure"`
 
@@ -54521,7 +54557,6 @@ func (s *ModifyInstancePlacementInput) SetTenancy(v string) *ModifyInstancePlace
 	return s
 }
 
-// Contains the output of ModifyInstancePlacement.
 type ModifyInstancePlacementOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -55036,7 +55071,6 @@ func (s *ModifySpotFleetRequestOutput) SetReturn(v bool) *ModifySpotFleetRequest
 	return s
 }
 
-// Contains the parameters for ModifySubnetAttribute.
 type ModifySubnetAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -55302,7 +55336,6 @@ func (s *ModifyVolumeOutput) SetVolumeModification(v *VolumeModification) *Modif
 	return s
 }
 
-// Contains the parameters for ModifyVpcAttribute.
 type ModifyVpcAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -55839,7 +55872,7 @@ type ModifyVpcPeeringConnectionOptionsInput struct {
 	// The VPC peering connection options for the accepter VPC.
 	AccepterPeeringConnectionOptions *PeeringConnectionOptionsRequest `type:"structure"`
 
-	// Checks whether you have the required permissions for the operation, without
+	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
 	// it is UnauthorizedOperation.
@@ -55933,11 +55966,10 @@ func (s *ModifyVpcPeeringConnectionOptionsOutput) SetRequesterPeeringConnectionO
 	return s
 }
 
-// Contains the parameters for ModifyVpcTenancy.
 type ModifyVpcTenancyInput struct {
 	_ struct{} `type:"structure"`
 
-	// Checks whether you have the required permissions for the operation, without
+	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
 	// it is UnauthorizedOperation.
@@ -55998,7 +56030,6 @@ func (s *ModifyVpcTenancyInput) SetVpcId(v string) *ModifyVpcTenancyInput {
 	return s
 }
 
-// Contains the output of ModifyVpcTenancy.
 type ModifyVpcTenancyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -57342,11 +57373,11 @@ type PeeringConnectionOptions struct {
 	AllowDnsResolutionFromRemoteVpc *bool `locationName:"allowDnsResolutionFromRemoteVpc" type:"boolean"`
 
 	// If true, enables outbound communication from an EC2-Classic instance that's
-	// linked to a local VPC via ClassicLink to instances in a peer VPC.
+	// linked to a local VPC using ClassicLink to instances in a peer VPC.
 	AllowEgressFromLocalClassicLinkToRemoteVpc *bool `locationName:"allowEgressFromLocalClassicLinkToRemoteVpc" type:"boolean"`
 
 	// If true, enables outbound communication from instances in a local VPC to
-	// an EC2-Classic instance that's linked to a peer VPC via ClassicLink.
+	// an EC2-Classic instance that's linked to a peer VPC using ClassicLink.
 	AllowEgressFromLocalVpcToRemoteClassicLink *bool `locationName:"allowEgressFromLocalVpcToRemoteClassicLink" type:"boolean"`
 }
 
@@ -57387,11 +57418,11 @@ type PeeringConnectionOptionsRequest struct {
 	AllowDnsResolutionFromRemoteVpc *bool `type:"boolean"`
 
 	// If true, enables outbound communication from an EC2-Classic instance that's
-	// linked to a local VPC via ClassicLink to instances in a peer VPC.
+	// linked to a local VPC using ClassicLink to instances in a peer VPC.
 	AllowEgressFromLocalClassicLinkToRemoteVpc *bool `type:"boolean"`
 
 	// If true, enables outbound communication from instances in a local VPC to
-	// an EC2-Classic instance that's linked to a peer VPC via ClassicLink.
+	// an EC2-Classic instance that's linked to a peer VPC using ClassicLink.
 	AllowEgressFromLocalVpcToRemoteClassicLink *bool `type:"boolean"`
 }
 
@@ -57613,7 +57644,7 @@ func (s *PrefixList) SetPrefixListName(v string) *PrefixList {
 	return s
 }
 
-// [EC2-VPC only] The ID of the prefix.
+// Describes a prefix list ID.
 type PrefixListId struct {
 	_ struct{} `type:"structure"`
 
@@ -58888,7 +58919,6 @@ func (s *RejectVpcEndpointConnectionsOutput) SetUnsuccessful(v []*UnsuccessfulIt
 	return s
 }
 
-// Contains the parameters for RejectVpcPeeringConnection.
 type RejectVpcPeeringConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -58939,7 +58969,6 @@ func (s *RejectVpcPeeringConnectionInput) SetVpcPeeringConnectionId(v string) *R
 	return s
 }
 
-// Contains the output of RejectVpcPeeringConnection.
 type RejectVpcPeeringConnectionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -59022,7 +59051,6 @@ func (s ReleaseAddressOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for ReleaseHosts.
 type ReleaseHostsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -59061,7 +59089,6 @@ func (s *ReleaseHostsInput) SetHostIds(v []*string) *ReleaseHostsInput {
 	return s
 }
 
-// Contains the output of ReleaseHosts.
 type ReleaseHostsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -59170,7 +59197,6 @@ func (s *ReplaceIamInstanceProfileAssociationOutput) SetIamInstanceProfileAssoci
 	return s
 }
 
-// Contains the parameters for ReplaceNetworkAclAssociation.
 type ReplaceNetworkAclAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -59236,7 +59262,6 @@ func (s *ReplaceNetworkAclAssociationInput) SetNetworkAclId(v string) *ReplaceNe
 	return s
 }
 
-// Contains the output of ReplaceNetworkAclAssociation.
 type ReplaceNetworkAclAssociationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -59260,7 +59285,6 @@ func (s *ReplaceNetworkAclAssociationOutput) SetNewAssociationId(v string) *Repl
 	return s
 }
 
-// Contains the parameters for ReplaceNetworkAclEntry.
 type ReplaceNetworkAclEntryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -59427,7 +59451,6 @@ func (s ReplaceNetworkAclEntryOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for ReplaceRoute.
 type ReplaceRouteInput struct {
 	_ struct{} `type:"structure"`
 
@@ -59566,7 +59589,6 @@ func (s ReplaceRouteOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for ReplaceRouteTableAssociation.
 type ReplaceRouteTableAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -59631,7 +59653,6 @@ func (s *ReplaceRouteTableAssociationInput) SetRouteTableId(v string) *ReplaceRo
 	return s
 }
 
-// Contains the output of ReplaceRouteTableAssociation.
 type ReplaceRouteTableAssociationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -59814,7 +59835,8 @@ type RequestLaunchTemplateData struct {
 	// in the Amazon Elastic Compute Cloud User Guide.
 	CpuOptions *LaunchTemplateCpuOptionsRequest `type:"structure"`
 
-	// The credit option for CPU usage of the instance. Valid for T2 instances only.
+	// The credit option for CPU usage of the instance. Valid for T2 or T3 instances
+	// only.
 	CreditSpecification *CreditSpecificationRequest `type:"structure"`
 
 	// If set to true, you can't terminate the instance using the Amazon EC2 console,
@@ -62103,7 +62125,6 @@ func (s *RestoreAddressToClassicOutput) SetStatus(v string) *RestoreAddressToCla
 	return s
 }
 
-// Contains the parameters for RevokeSecurityGroupEgress.
 type RevokeSecurityGroupEgressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -62235,7 +62256,6 @@ func (s RevokeSecurityGroupEgressOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for RevokeSecurityGroupIngress.
 type RevokeSecurityGroupIngressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -62653,10 +62673,10 @@ type RunInstancesInput struct {
 
 	// The credit option for CPU usage of the instance. Valid values are standard
 	// and unlimited. To change this attribute after launch, use ModifyInstanceCreditSpecification.
-	// For more information, see T2 Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/t2-instances.html)
+	// For more information, see Burstable Performance Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
-	// Default: standard
+	// Default: standard (T2 instances) or unlimited (T3 instances)
 	CreditSpecification *CreditSpecificationRequest `type:"structure"`
 
 	// If you set this parameter to true, you can't terminate the instance using
@@ -67005,7 +67025,7 @@ func (s *SubnetIpv6CidrBlockAssociation) SetIpv6CidrBlockState(v *SubnetCidrBloc
 	return s
 }
 
-// Describes the T2 instance whose credit option for CPU usage was successfully
+// Describes the T2 or T3 instance whose credit option for CPU usage was successfully
 // modified.
 type SuccessfulInstanceCreditSpecificationItem struct {
 	_ struct{} `type:"structure"`
@@ -67037,7 +67057,7 @@ type Tag struct {
 	// The key of the tag.
 	//
 	// Constraints: Tag keys are case-sensitive and accept a maximum of 127 Unicode
-	// characters. May not begin with aws:
+	// characters. May not begin with aws:.
 	Key *string `locationName:"key" type:"string"`
 
 	// The value of the tag.
@@ -67125,8 +67145,8 @@ type TagSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are fleet, instance, snapshot, and volume. To tag a resource
-	// after it has been created, see CreateTags.
+	// on creation are fleet, dedicated-host, instance, snapshot, and volume. To
+	// tag a resource after it has been created, see CreateTags.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -67796,12 +67816,13 @@ func (s *UnmonitorInstancesOutput) SetInstanceMonitorings(v []*InstanceMonitorin
 	return s
 }
 
-// Describes the T2 instance whose credit option for CPU usage was not modified.
+// Describes the T2 or T3 instance whose credit option for CPU usage was not
+// modified.
 type UnsuccessfulInstanceCreditSpecificationItem struct {
 	_ struct{} `type:"structure"`
 
-	// The applicable error for the T2 instance whose credit option for CPU usage
-	// was not modified.
+	// The applicable error for the T2 or T3 instance whose credit option for CPU
+	// usage was not modified.
 	Error *UnsuccessfulInstanceCreditSpecificationItemError `locationName:"error" type:"structure"`
 
 	// The ID of the instance.
@@ -67830,8 +67851,8 @@ func (s *UnsuccessfulInstanceCreditSpecificationItem) SetInstanceId(v string) *U
 	return s
 }
 
-// Information about the error for the T2 instance whose credit option for CPU
-// usage was not modified.
+// Information about the error for the T2 or T3 instance whose credit option
+// for CPU usage was not modified.
 type UnsuccessfulInstanceCreditSpecificationItemError struct {
 	_ struct{} `type:"structure"`
 
@@ -67937,7 +67958,6 @@ func (s *UnsuccessfulItemError) SetMessage(v string) *UnsuccessfulItemError {
 	return s
 }
 
-// Contains the parameters for UpdateSecurityGroupRuleDescriptionsEgress.
 type UpdateSecurityGroupRuleDescriptionsEgressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -68009,7 +68029,6 @@ func (s *UpdateSecurityGroupRuleDescriptionsEgressInput) SetIpPermissions(v []*I
 	return s
 }
 
-// Contains the output of UpdateSecurityGroupRuleDescriptionsEgress.
 type UpdateSecurityGroupRuleDescriptionsEgressOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -68033,7 +68052,6 @@ func (s *UpdateSecurityGroupRuleDescriptionsEgressOutput) SetReturn(v bool) *Upd
 	return s
 }
 
-// Contains the parameters for UpdateSecurityGroupRuleDescriptionsIngress.
 type UpdateSecurityGroupRuleDescriptionsIngressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -68105,7 +68123,6 @@ func (s *UpdateSecurityGroupRuleDescriptionsIngressInput) SetIpPermissions(v []*
 	return s
 }
 
-// Contains the output of UpdateSecurityGroupRuleDescriptionsIngress.
 type UpdateSecurityGroupRuleDescriptionsIngressOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -71073,6 +71090,9 @@ const (
 	// InstanceTypeF12xlarge is a InstanceType enum value
 	InstanceTypeF12xlarge = "f1.2xlarge"
 
+	// InstanceTypeF14xlarge is a InstanceType enum value
+	InstanceTypeF14xlarge = "f1.4xlarge"
+
 	// InstanceTypeF116xlarge is a InstanceType enum value
 	InstanceTypeF116xlarge = "f1.16xlarge"
 
@@ -71516,6 +71536,9 @@ const (
 const (
 	// ResourceTypeCustomerGateway is a ResourceType enum value
 	ResourceTypeCustomerGateway = "customer-gateway"
+
+	// ResourceTypeDedicatedHost is a ResourceType enum value
+	ResourceTypeDedicatedHost = "dedicated-host"
 
 	// ResourceTypeDhcpOptions is a ResourceType enum value
 	ResourceTypeDhcpOptions = "dhcp-options"

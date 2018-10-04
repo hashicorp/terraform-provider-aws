@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -142,7 +143,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateMaxLength(16384),
+				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
 
 			"user_data_base64": {
@@ -478,7 +479,21 @@ func resourceAwsInstance() *schema.Resource {
 						"cpu_credits": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "standard",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Only work with existing instances
+								if d.Id() == "" {
+									return false
+								}
+								// Only work with missing configurations
+								if new != "" {
+									return false
+								}
+								// Only work when already set in Terraform state
+								if old == "" {
+									return false
+								}
+								return true
+							},
 						},
 					},
 				},
@@ -1158,7 +1173,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 		if mErr != nil {
-			return fmt.Errorf("[WARN] Error updating Instance monitoring: %s", mErr)
+			return fmt.Errorf("Error updating Instance monitoring: %s", mErr)
 		}
 	}
 
@@ -1175,7 +1190,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error updating Instance credit specification: %s", err)
+				return fmt.Errorf("Error updating Instance credit specification: %s", err)
 			}
 		}
 	}
@@ -1397,7 +1412,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("[WARN] Error finding Root Device Name for AMI (%s)", ami)
+		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", ami)
 	}
 
 	return rootDeviceName, nil
@@ -1747,15 +1762,22 @@ func buildAwsInstanceOpts(
 		InstanceType:          aws.String(instanceType),
 	}
 
+	// Set default cpu_credits as Unlimited for T3 instance type
+	if strings.HasPrefix(instanceType, "t3") {
+		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+			CpuCredits: aws.String("unlimited"),
+		}
+	}
+
 	if v, ok := d.GetOk("credit_specification"); ok {
-		// Only T2 instances support T2 Unlimited
-		if strings.HasPrefix(instanceType, "t2") {
+		// Only T2 and T3 are burstable performance instance types and supports Unlimited
+		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
 			cs := v.([]interface{})[0].(map[string]interface{})
 			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
 				CpuCredits: aws.String(cs["cpu_credits"].(string)),
 			}
 		} else {
-			log.Print("[WARN] credit_specification is defined but instance type is not T2. Ignoring...")
+			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")
 		}
 	}
 

@@ -2,9 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"testing"
 )
 
 func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {

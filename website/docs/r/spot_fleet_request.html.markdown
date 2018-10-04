@@ -106,10 +106,15 @@ across different markets and instance types.
   timeout of 10m is reached.
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
-important to your application workload, such as vCPUs, memory, or I/O.
+  important to your application workload, such as vCPUs, memory, or I/O.
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
-lowestPrice.
+  `lowestPrice`.
+* `instance_pools_to_use_count` - (Optional; Default: 1)
+  The number of Spot pools across which to allocate your target Spot capacity. 
+  Valid only when `allocation_strategy` is set to `lowestPrice`. Spot Fleet selects 
+  the cheapest Spot pools and evenly allocates your target Spot capacity across 
+  the number of Spot pools that you specify.
 * `excess_capacity_termination_policy` - Indicates whether running Spot
   instances should be terminated if the target capacity of the Spot fleet
   request is decreased below the current size of the Spot fleet.

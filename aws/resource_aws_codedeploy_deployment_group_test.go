@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -93,6 +94,12 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo", "trigger_configuration.#", "0"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -177,6 +184,12 @@ func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo", "trigger_configuration.#", "0"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -211,6 +224,12 @@ func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "on_premises_instance_tag_filter.2916377465.value", "filtervalue"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -274,6 +293,12 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_basic(t *testing.T
 					}),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -327,6 +352,12 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						regexp.MustCompile("^arn:aws:sns:[^:]+:[0-9]{12}:baz-topic-"+rName+"$")),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -362,6 +393,12 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *tes
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "auto_rollback_configuration.0.events.135881253", "DEPLOYMENT_FAILURE"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -407,6 +444,12 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *tes
 						"aws_codedeploy_deployment_group.foo_group", "auto_rollback_configuration.0.events.135881253", "DEPLOYMENT_FAILURE"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -442,6 +485,12 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *tes
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "auto_rollback_configuration.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -485,6 +534,12 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *te
 						"aws_codedeploy_deployment_group.foo_group", "auto_rollback_configuration.0.events.135881253", "DEPLOYMENT_FAILURE"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -522,6 +577,12 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T)
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -571,6 +632,12 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T)
 						"aws_codedeploy_deployment_group.foo_group", "alarm_configuration.0.ignore_poll_alarm_failure", "true"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -608,6 +675,12 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T)
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "alarm_configuration.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -655,6 +728,12 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T
 						"aws_codedeploy_deployment_group.foo_group", "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -681,6 +760,12 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_default(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -727,6 +812,12 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -764,6 +855,12 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "IN_PLACE"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -805,6 +902,12 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -838,6 +941,12 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -877,6 +986,12 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.4206303396.name", "bar-elb"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -913,6 +1028,12 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -947,6 +1068,12 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.target_group_info.4178177480.name", "foo-tg"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -986,6 +1113,12 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.target_group_info.2940009368.name", "bar-tg"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1020,6 +1153,12 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1048,7 +1187,6 @@ func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_contro
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "0"),
 				),
 			},
-
 			{
 				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1067,6 +1205,85 @@ func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_contro
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
 				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_control_update(t *testing.T) {
+	var group codedeploy.DeploymentGroupInfo
+
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "IN_PLACE"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
+				),
+			},
+			{
+				Config: test_config_in_place_deployment_with_traffic_control_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "BLUE_GREEN"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "CONTINUE_DEPLOYMENT"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.0.action", "DISCOVER_EXISTING"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.action", "KEEP_ALIVE"),
+				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1115,6 +1332,78 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.action", "TERMINATE"),
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.termination_wait_time_in_minutes", "120"),
+				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update_with_asg(t *testing.T) {
+	var group codedeploy.DeploymentGroupInfo
+
+	rName := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: test_config_blue_green_deployment_config_create_with_asg(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "STOP_DEPLOYMENT"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.0.wait_time_in_minutes", "60"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.0.action", "COPY_AUTO_SCALING_GROUP"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.action", "TERMINATE"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.termination_wait_time_in_minutes", "120"),
+				),
+			},
+			{
+				Config: test_config_blue_green_deployment_config_update_with_asg(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "STOP_DEPLOYMENT"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.0.wait_time_in_minutes", "60"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.0.action", "COPY_AUTO_SCALING_GROUP"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.action", "KEEP_ALIVE"),
 				),
 			},
 		},
@@ -1232,6 +1521,12 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1287,6 +1582,52 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.termination_wait_time_in_minutes", "0"),
 				),
+			},
+			{
+				Config: test_config_blue_green_deployment_complete_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "BLUE_GREEN"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.0.elb_info.2441772102.name", "foo-elb"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.deployment_ready_option.0.action_on_timeout", "CONTINUE_DEPLOYMENT"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.green_fleet_provisioning_option.0.action", "DISCOVER_EXISTING"),
+
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.action", "KEEP_ALIVE"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.0.terminate_blue_instances_on_deployment_success.0.termination_wait_time_in_minutes", "0"),
+				),
+			},
+			{
+				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1871,6 +2212,63 @@ func testAccCheckAWSCodeDeployDeploymentGroupExists(name string, group *codedepl
 		*group = *resp.DeploymentGroupInfo
 
 		return nil
+	}
+}
+
+func TestAWSCodeDeployDeploymentGroup_handleCodeDeployApiError(t *testing.T) {
+	notAnAwsError := errors.New("Not an awserr")
+	invalidRoleException := awserr.New("InvalidRoleException", "Invalid role exception", nil)
+	invalidTriggerConfigExceptionNoMatch := awserr.New("InvalidTriggerConfigException", "Some other error message", nil)
+	invalidTriggerConfigExceptionMatch := awserr.New("InvalidTriggerConfigException", "Topic ARN foo is not valid", nil)
+	fakeAwsError := awserr.New("FakeAwsException", "Not a real AWS error", nil)
+
+	testCases := []struct {
+		Input    error
+		Expected *resource.RetryError
+	}{
+		{
+			Input:    nil,
+			Expected: nil,
+		},
+		{
+			Input:    notAnAwsError,
+			Expected: resource.NonRetryableError(notAnAwsError),
+		},
+		{
+			Input:    invalidRoleException,
+			Expected: resource.RetryableError(invalidRoleException),
+		},
+		{
+			Input:    invalidTriggerConfigExceptionNoMatch,
+			Expected: resource.NonRetryableError(invalidTriggerConfigExceptionNoMatch),
+		},
+		{
+			Input:    invalidTriggerConfigExceptionMatch,
+			Expected: resource.RetryableError(invalidTriggerConfigExceptionMatch),
+		},
+		{
+			Input:    fakeAwsError,
+			Expected: resource.NonRetryableError(fakeAwsError),
+		},
+	}
+
+	for _, tc := range testCases {
+		actual := handleCodeDeployApiError(tc.Input, "test")
+		if !reflect.DeepEqual(actual, tc.Expected) {
+			t.Fatalf(`handleCodeDeployApiError output is not correct. Expected: %v, Actual: %v.`,
+				tc.Expected, actual)
+		}
+	}
+}
+
+func testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["app_name"], rs.Primary.Attributes["deployment_group_name"]), nil
 	}
 }
 
@@ -2571,6 +2969,43 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
 }`, baseCodeDeployConfig(rName), rName)
 }
 
+func test_config_in_place_deployment_with_traffic_control_update(rName string) string {
+	return fmt.Sprintf(`
+
+  %s
+
+resource "aws_codedeploy_deployment_group" "foo_group" {
+  app_name = "${aws_codedeploy_app.foo_app.name}"
+  deployment_group_name = "foo-group-%s"
+  service_role_arn = "${aws_iam_role.foo_role.arn}"
+
+  deployment_style {
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type = "BLUE_GREEN"
+  }
+
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout = "CONTINUE_DEPLOYMENT"
+    }
+
+    green_fleet_provisioning_option {
+      action = "DISCOVER_EXISTING"
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action = "KEEP_ALIVE"
+    }
+  }
+}`, baseCodeDeployConfig(rName), rName)
+}
+
 func test_config_blue_green_deployment_config_default(rName string) string {
 	return fmt.Sprintf(`
 
@@ -2633,6 +3068,60 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     terminate_blue_instances_on_deployment_success {
       action = "TERMINATE"
       termination_wait_time_in_minutes = 120
+    }
+  }
+}`, baseCodeDeployConfig(rName), rName, rName)
+}
+
+func test_config_blue_green_deployment_config_update_with_asg(rName string) string {
+	return fmt.Sprintf(`
+
+  %s
+
+resource "aws_launch_configuration" "foo_lc" {
+  image_id = "ami-21f78e11"
+  instance_type = "t1.micro"
+  "name_prefix" = "foo-lc-"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "foo_asg" {
+  name = "foo-asg-%s"
+  max_size = 2
+  min_size = 0
+  desired_capacity = 1
+
+  availability_zones = ["us-west-2a"]
+
+  launch_configuration = "${aws_launch_configuration.foo_lc.name}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_codedeploy_deployment_group" "foo_group" {
+  app_name = "${aws_codedeploy_app.foo_app.name}"
+  deployment_group_name = "foo-group-%s"
+  service_role_arn = "${aws_iam_role.foo_role.arn}"
+
+  autoscaling_groups = ["${aws_autoscaling_group.foo_asg.name}"]
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout = "STOP_DEPLOYMENT"
+      wait_time_in_minutes = 60
+    }
+
+    green_fleet_provisioning_option {
+      action = "COPY_AUTO_SCALING_GROUP"
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action = "KEEP_ALIVE"
     }
   }
 }`, baseCodeDeployConfig(rName), rName, rName)
@@ -2717,6 +3206,43 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     deployment_ready_option {
       action_on_timeout = "STOP_DEPLOYMENT"
       wait_time_in_minutes = 60
+    }
+
+    green_fleet_provisioning_option {
+      action = "DISCOVER_EXISTING"
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action = "KEEP_ALIVE"
+    }
+  }
+}`, baseCodeDeployConfig(rName), rName)
+}
+
+func test_config_blue_green_deployment_complete_updated(rName string) string {
+	return fmt.Sprintf(`
+
+  %s
+
+resource "aws_codedeploy_deployment_group" "foo_group" {
+  app_name = "${aws_codedeploy_app.foo_app.name}"
+  deployment_group_name = "foo-group-%s"
+  service_role_arn = "${aws_iam_role.foo_role.arn}"
+
+  deployment_style {
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type = "BLUE_GREEN"
+  }
+
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout = "CONTINUE_DEPLOYMENT"
     }
 
     green_fleet_provisioning_option {

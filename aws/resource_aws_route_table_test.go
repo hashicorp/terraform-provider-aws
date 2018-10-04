@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,72 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_route_table", &resource.Sweeper{
+		Name: "aws_route_table",
+		F:    testSweepRouteTables,
+	})
+}
+
+func testSweepRouteTables(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	req := &ec2.DescribeRouteTablesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("tag-value"),
+				Values: []*string{
+					aws.String("terraform-testacc-*"),
+					aws.String("tf-acc-test-*"),
+				},
+			},
+		},
+	}
+	resp, err := conn.DescribeRouteTables(req)
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Route Table sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error describing Route Tables: %s", err)
+	}
+
+	if len(resp.RouteTables) == 0 {
+		log.Print("[DEBUG] No Route Tables to sweep")
+		return nil
+	}
+
+	for _, routeTable := range resp.RouteTables {
+		for _, routeTableAssociation := range routeTable.Associations {
+			input := &ec2.DisassociateRouteTableInput{
+				AssociationId: routeTableAssociation.RouteTableAssociationId,
+			}
+
+			log.Printf("[DEBUG] Deleting Route Table Association: %s", input)
+			_, err := conn.DisassociateRouteTable(input)
+			if err != nil {
+				return fmt.Errorf("error deleting Route Table Association (%s): %s", aws.StringValue(routeTableAssociation.RouteTableAssociationId), err)
+			}
+		}
+
+		input := &ec2.DeleteRouteTableInput{
+			RouteTableId: routeTable.RouteTableId,
+		}
+
+		log.Printf("[DEBUG] Deleting Route Table: %s", input)
+		_, err := conn.DeleteRouteTable(input)
+		if err != nil {
+			return fmt.Errorf("error deleting Route Table (%s): %s", aws.StringValue(routeTable.RouteTableId), err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSRouteTable_basic(t *testing.T) {
 	var v ec2.RouteTable

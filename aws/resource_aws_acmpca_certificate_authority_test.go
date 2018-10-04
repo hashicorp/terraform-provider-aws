@@ -29,6 +29,10 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 
 	certificateAuthorities, err := listAcmpcaCertificateAuthorities(conn)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ACMPCA Certificate Authorities sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving ACMPCA Certificate Authorities: %s", err)
 	}
 	if len(certificateAuthorities) == 0 {

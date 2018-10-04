@@ -68,6 +68,31 @@ func testSweepIamServerCertificates(region string) error {
 	return nil
 }
 
+func TestAccAWSIAMServerCertificate_importBasic(t *testing.T) {
+	resourceName := "aws_iam_server_certificate.test_cert"
+	rInt := acctest.RandInt()
+	resourceId := fmt.Sprintf("terraform-test-cert-%d", rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMServerCertConfig(rInt),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     resourceId,
+				ImportStateVerifyIgnore: []string{
+					"private_key"},
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate
 	rInt := acctest.RandInt()

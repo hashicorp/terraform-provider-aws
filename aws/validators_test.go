@@ -96,6 +96,12 @@ func TestValidateTypeStringNullableBoolean(t *testing.T) {
 			val: "1",
 		},
 		{
+			val: "true",
+		},
+		{
+			val: "false",
+		},
+		{
 			val:         "invalid",
 			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
 		},
@@ -2914,6 +2920,97 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the Neptune Parameter Group Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyName(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(128),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateCloudFrontPublicKeyNamePrefix(tc.Value, "aws_cloudfront_public_key")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the CloudFront PublicKey Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateDxConnectionBandWidth(t *testing.T) {
+	validBandwidths := []string{
+		"1Gbps",
+		"10Gbps",
+		"50Mbps",
+		"100Mbps",
+		"200Mbps",
+		"300Mbps",
+		"400Mbps",
+		"500Mbps",
+	}
+	for _, v := range validBandwidths {
+		_, errors := validateDxConnectionBandWidth()(v, "bandwidth")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid bandwidth: %q", v, errors)
+		}
+	}
+
+	invalidBandwidths := []string{
+		"1Tbps",
+		"100Gbps",
+		"10GBpS",
+		"42Mbps",
+		"0",
+		"???",
+		"a lot",
+	}
+	for _, v := range invalidBandwidths {
+		_, errors := validateDxConnectionBandWidth()(v, "bandwidth")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid bandwidth", v)
 		}
 	}
 }
