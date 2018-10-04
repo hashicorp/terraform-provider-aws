@@ -76,7 +76,7 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 		vs := []byte(v.(string))
 
 		if !isBase64Encoded(vs) {
-			fmt.Errorf("expected base64 in secret_binary")
+			return fmt.Errorf("expected base64 in secret_binary")
 		}
 
 		var err error
