@@ -1,7 +1,13 @@
 ## 1.40.0 (Unreleased)
 
+FEATURES:
+
 * **New Data Source:** `aws_launch_template` [GH-6064]
 * **New Resource:** `aws_pinpoint_event_stream` [GH-6069]
+
+ENHANCEMENTS:
+
+* data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
 
 ## 1.39.0 (October 03, 2018)
 
