@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsLaunchTemplate() *schema.Resource {
@@ -18,13 +17,12 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 		Read: dataSourceAwsLaunchTemplateRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -40,56 +38,52 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 			},
 			"block_device_mappings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"no_device": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"virtual_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"ebs": {
 							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										Type:             schema.TypeString,
-										Optional:         true,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"encrypted": {
-										Type:             schema.TypeString,
-										Optional:         true,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
 										Computed: true,
-										Optional: true,
 									},
 									"kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"volume_size": {
 										Type:     schema.TypeInt,
-										Optional: true,
 										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 								},
@@ -100,27 +94,27 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 			},
 			"credit_specification": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cpu_credits": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"ebs_optimized": {
-				Type:             schema.TypeString,
-				Optional:         true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"elastic_gpu_specifications": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -132,66 +126,62 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 			},
 			"iam_instance_profile": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"image_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"instance_market_options": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"market_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"spot_options": {
 							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"block_duration_minutes": {
 										Type:     schema.TypeInt,
-										Optional: true,
+										Computed: true,
 									},
 									"instance_interruption_behavior": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"max_price": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"spot_instance_type": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"valid_until": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
@@ -201,147 +191,141 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"kernel_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"key_name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"monitoring": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"network_interfaces": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"associate_public_ip_address": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Computed: true,
 						},
 						"delete_on_termination": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Computed: true,
 						},
 						"description": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"device_index": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
 						"security_groups": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"private_ip_address": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"ipv4_addresses": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"placement": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"affinity": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"availability_zone": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"group_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"host_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"spread_domain": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"tenancy": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"ram_disk_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"security_group_names": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"vpc_security_group_ids": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tag_specifications": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_type": {
 							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"instance",
-								"volume",
-							}, false),
+							Computed: true,
 						},
 						"tags": tagsSchemaComputed(),
 					},
@@ -349,7 +333,7 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 			},
 			"user_data": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
 		},
