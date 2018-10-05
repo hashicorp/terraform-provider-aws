@@ -1626,6 +1626,17 @@ type Build struct {
 	// The name of the AWS CodeBuild project.
 	ProjectName *string `locationName:"projectName" min:"1" type:"string"`
 
+	// An identifier for the version of this build's source code.
+	//
+	//    *  For AWS CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the commit
+	//    ID.
+	//
+	//    *  For AWS CodePipeline, the source revision provided by AWS CodePipeline.
+	//
+	//
+	//    *  For Amazon Simple Storage Service (Amazon S3), this does not apply.
+	ResolvedSourceVersion *string `locationName:"resolvedSourceVersion" min:"1" type:"string"`
+
 	// An array of ProjectArtifacts objects.
 	SecondaryArtifacts []*BuildArtifacts `locationName:"secondaryArtifacts" type:"list"`
 
@@ -1773,6 +1784,12 @@ func (s *Build) SetPhases(v []*BuildPhase) *Build {
 // SetProjectName sets the ProjectName field's value.
 func (s *Build) SetProjectName(v string) *Build {
 	s.ProjectName = &v
+	return s
+}
+
+// SetResolvedSourceVersion sets the ResolvedSourceVersion field's value.
+func (s *Build) SetResolvedSourceVersion(v string) *Build {
+	s.ResolvedSourceVersion = &v
 	return s
 }
 
@@ -4242,7 +4259,7 @@ type S3LogsConfig struct {
 
 	// The ARN of an S3 bucket and the path prefix for S3 logs. If your Amazon S3
 	// bucket name is my-bucket, and your path prefix is build-log, then acceptable
-	// formats are my-bucket/build-log or aws:s3:::my-bucket/build-log.
+	// formats are my-bucket/build-log or arn:aws:s3:::my-bucket/build-log.
 	Location *string `locationName:"location" type:"string"`
 
 	// The current status of the S3 build logs. Valid values are:

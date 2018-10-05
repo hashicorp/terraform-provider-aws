@@ -1306,6 +1306,9 @@ func (c *MQ) UpdateBrokerRequest(input *UpdateBrokerRequest) (req *request.Reque
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //   Returns information about an error.
 //
+//   * ErrCodeConflictException "ConflictException"
+//   Returns information about an error.
+//
 //   * ErrCodeForbiddenException "ForbiddenException"
 //   Returns information about an error.
 //
@@ -1523,7 +1526,7 @@ type BrokerInstance struct {
 	// The broker's wire-level protocol endpoints.
 	Endpoints []*string `locationName:"endpoints" type:"list"`
 
-	// The IP address of the ENI attached to the broker.
+	// The IP address of the Elastic Network Interface (ENI) attached to the broker.
 	IpAddress *string `locationName:"ipAddress" type:"string"`
 }
 
@@ -2380,6 +2383,8 @@ type DescribeBrokerResponse struct {
 	// apply pending updates or patches to the broker.
 	MaintenanceWindowStartTime *WeeklyStartTime `locationName:"maintenanceWindowStartTime" type:"structure"`
 
+	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
+
 	PubliclyAccessible *bool `locationName:"publiclyAccessible" type:"boolean"`
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
@@ -2480,6 +2485,12 @@ func (s *DescribeBrokerResponse) SetLogs(v *LogsSummary) *DescribeBrokerResponse
 // SetMaintenanceWindowStartTime sets the MaintenanceWindowStartTime field's value.
 func (s *DescribeBrokerResponse) SetMaintenanceWindowStartTime(v *WeeklyStartTime) *DescribeBrokerResponse {
 	s.MaintenanceWindowStartTime = v
+	return s
+}
+
+// SetPendingEngineVersion sets the PendingEngineVersion field's value.
+func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrokerResponse {
+	s.PendingEngineVersion = &v
 	return s
 }
 
@@ -3220,13 +3231,13 @@ type LogsSummary struct {
 	// ActiveMQ Web Console is logged.
 	Audit *bool `locationName:"audit" type:"boolean"`
 
-	// Location of CloudWatch Log group where audit logs will be sent.
+	// The location of the CloudWatch Logs log group where audit logs are sent.
 	AuditLogGroup *string `locationName:"auditLogGroup" type:"string"`
 
 	// Enables general logging.
 	General *bool `locationName:"general" type:"boolean"`
 
-	// Location of CloudWatch Log group where general logs will be sent.
+	// The location of the CloudWatch Logs log group where general logs are sent.
 	GeneralLogGroup *string `locationName:"generalLogGroup" type:"string"`
 
 	// The list of information about logs pending to be deployed for the specified
@@ -3404,11 +3415,15 @@ func (s *SanitizationWarning) SetReason(v string) *SanitizationWarning {
 type UpdateBrokerRequest struct {
 	_ struct{} `type:"structure"`
 
+	AutoMinorVersionUpgrade *bool `locationName:"autoMinorVersionUpgrade" type:"boolean"`
+
 	// BrokerId is a required field
 	BrokerId *string `location:"uri" locationName:"broker-id" type:"string" required:"true"`
 
 	// A list of information about the configuration.
 	Configuration *ConfigurationId `locationName:"configuration" type:"structure"`
+
+	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
@@ -3437,6 +3452,12 @@ func (s *UpdateBrokerRequest) Validate() error {
 	return nil
 }
 
+// SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
+func (s *UpdateBrokerRequest) SetAutoMinorVersionUpgrade(v bool) *UpdateBrokerRequest {
+	s.AutoMinorVersionUpgrade = &v
+	return s
+}
+
 // SetBrokerId sets the BrokerId field's value.
 func (s *UpdateBrokerRequest) SetBrokerId(v string) *UpdateBrokerRequest {
 	s.BrokerId = &v
@@ -3449,6 +3470,12 @@ func (s *UpdateBrokerRequest) SetConfiguration(v *ConfigurationId) *UpdateBroker
 	return s
 }
 
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *UpdateBrokerRequest) SetEngineVersion(v string) *UpdateBrokerRequest {
+	s.EngineVersion = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	s.Logs = v
@@ -3458,10 +3485,14 @@ func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 type UpdateBrokerResponse struct {
 	_ struct{} `type:"structure"`
 
+	AutoMinorVersionUpgrade *bool `locationName:"autoMinorVersionUpgrade" type:"boolean"`
+
 	BrokerId *string `locationName:"brokerId" type:"string"`
 
 	// A list of information about the configuration.
 	Configuration *ConfigurationId `locationName:"configuration" type:"structure"`
+
+	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
@@ -3477,6 +3508,12 @@ func (s UpdateBrokerResponse) GoString() string {
 	return s.String()
 }
 
+// SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
+func (s *UpdateBrokerResponse) SetAutoMinorVersionUpgrade(v bool) *UpdateBrokerResponse {
+	s.AutoMinorVersionUpgrade = &v
+	return s
+}
+
 // SetBrokerId sets the BrokerId field's value.
 func (s *UpdateBrokerResponse) SetBrokerId(v string) *UpdateBrokerResponse {
 	s.BrokerId = &v
@@ -3486,6 +3523,12 @@ func (s *UpdateBrokerResponse) SetBrokerId(v string) *UpdateBrokerResponse {
 // SetConfiguration sets the Configuration field's value.
 func (s *UpdateBrokerResponse) SetConfiguration(v *ConfigurationId) *UpdateBrokerResponse {
 	s.Configuration = v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse {
+	s.EngineVersion = &v
 	return s
 }
 

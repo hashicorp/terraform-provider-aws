@@ -5011,7 +5011,9 @@ func (c *StorageGateway) RefreshCacheRequest(input *RefreshCacheInput) (req *req
 // Refreshes the cache for the specified file share. This operation finds objects
 // in the Amazon S3 bucket that were added, removed or replaced since the gateway
 // last listed the bucket's contents and cached the results. This operation
-// is only supported in the file gateway type.
+// is only supported in the file gateway type. You can subscribe to be notified
+// through an Amazon CloudWatch event when your RefreshCache operation completes.
+// For more information, see Getting Notified About File Operations (https://docs.aws.amazon.com/storagegateway/latest/userguide/monitoring-file-gateway.html#get-notification).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6685,7 +6687,7 @@ type ActivateGatewayInput struct {
 
 	// A value that defines the type of gateway to activate. The type specified
 	// is critical to all later functions of the gateway and cannot be changed after
-	// activation. The default value is STORED.
+	// activation. The default value is CACHED.
 	//
 	// Valid Values: "STORED", "CACHED", "VTL", "FILE_S3"
 	GatewayType *string `min:"2" type:"string"`
@@ -12752,6 +12754,21 @@ type RefreshCacheInput struct {
 	//
 	// FileShareARN is a required field
 	FileShareARN *string `min:"50" type:"string" required:"true"`
+
+	// A comma-separated list of the paths of folders to refresh in the cache. The
+	// default is ["/"]. The default refreshes objects and folders at the root of
+	// the Amazon S3 bucket. If Recursive is set to "true", the entire S3 bucket
+	// that the file share has access to is refreshed.
+	FolderList []*string `min:"1" type:"list"`
+
+	// A value that specifies whether to recursively refresh folders in the cache.
+	// The refresh includes folders that were in the cache the last time the gateway
+	// listed the folder's contents. If this value set to "true", each folder that
+	// is listed in FolderList is recursively updated. Otherwise, subfolders listed
+	// in FolderList are not refreshed. Only objects that are in folders listed
+	// directly under FolderList are found and used for the update. The default
+	// is "true".
+	Recursive *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -12773,6 +12790,9 @@ func (s *RefreshCacheInput) Validate() error {
 	if s.FileShareARN != nil && len(*s.FileShareARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("FileShareARN", 50))
 	}
+	if s.FolderList != nil && len(s.FolderList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FolderList", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12786,11 +12806,28 @@ func (s *RefreshCacheInput) SetFileShareARN(v string) *RefreshCacheInput {
 	return s
 }
 
+// SetFolderList sets the FolderList field's value.
+func (s *RefreshCacheInput) SetFolderList(v []*string) *RefreshCacheInput {
+	s.FolderList = v
+	return s
+}
+
+// SetRecursive sets the Recursive field's value.
+func (s *RefreshCacheInput) SetRecursive(v bool) *RefreshCacheInput {
+	s.Recursive = &v
+	return s
+}
+
+// RefreshCacheOutput
 type RefreshCacheOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the file share.
 	FileShareARN *string `min:"50" type:"string"`
+
+	// The randomly generated ID of the notification that was sent. This ID is in
+	// UUID format.
+	NotificationId *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -12806,6 +12843,12 @@ func (s RefreshCacheOutput) GoString() string {
 // SetFileShareARN sets the FileShareARN field's value.
 func (s *RefreshCacheOutput) SetFileShareARN(v string) *RefreshCacheOutput {
 	s.FileShareARN = &v
+	return s
+}
+
+// SetNotificationId sets the NotificationId field's value.
+func (s *RefreshCacheOutput) SetNotificationId(v string) *RefreshCacheOutput {
+	s.NotificationId = &v
 	return s
 }
 

@@ -14290,6 +14290,21 @@ type CreatePatchBaselineInput struct {
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
+	// The action for Patch Manager to take on patches included in the RejectedPackages
+	// list.
+	//
+	//    * ALLOW_AS_DEPENDENCY: A package in the Rejected patches list is installed
+	//    only if it is a dependency of another package. It is considered compliant
+	//    with the patch baseline, and its status is reported as InstalledOther.
+	//    This is the default action if no option is specified.
+	//
+	//    * BLOCK: Packages in the RejectedPatches list, and packages that include
+	//    them as dependencies, are not installed under any circumstances. If a
+	//    package was installed before it was added to the Rejected patches list,
+	//    it is considered non-compliant with the patch baseline, and its status
+	//    is reported as InstalledRejected.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
 	Sources []*PatchSource `type:"list"`
@@ -14404,6 +14419,12 @@ func (s *CreatePatchBaselineInput) SetOperatingSystem(v string) *CreatePatchBase
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *CreatePatchBaselineInput) SetRejectedPatches(v []*string) *CreatePatchBaselineInput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *CreatePatchBaselineInput) SetRejectedPatchesAction(v string) *CreatePatchBaselineInput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -18230,6 +18251,14 @@ type DescribePatchGroupStateOutput struct {
 	// The number of instances with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
+	// The number of instances with patches installed that are specified in a RejectedPatches
+	// list. Patches with a status of InstalledRejected were typically installed
+	// before they were added to a RejectedPatches list.
+	//
+	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
+	// the value of InstancesWithInstalledRejectedPatches will always be 0 (zero).
+	InstancesWithInstalledRejectedPatches *int64 `type:"integer"`
+
 	// The number of instances with missing patches from the patch baseline.
 	InstancesWithMissingPatches *int64 `type:"integer"`
 
@@ -18268,6 +18297,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledOtherPatches(v 
 // SetInstancesWithInstalledPatches sets the InstancesWithInstalledPatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithInstalledPatches = &v
+	return s
+}
+
+// SetInstancesWithInstalledRejectedPatches sets the InstancesWithInstalledRejectedPatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledRejectedPatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithInstalledRejectedPatches = &v
 	return s
 }
 
@@ -18400,7 +18435,7 @@ type DescribeSessionsInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// The session status to retrieve a list of sessions for. For example, "active".
+	// The session status to retrieve a list of sessions for. For example, "Active".
 	//
 	// State is a required field
 	State *string `type:"string" required:"true" enum:"SessionState"`
@@ -21631,6 +21666,11 @@ type GetPatchBaselineOutput struct {
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
 
+	// The action specified to take on patches included in the RejectedPatches list.
+	// A patch can be allowed only if it is a dependency of another package, or
+	// blocked entirely along with packages that include it as a dependency.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
 	Sources []*PatchSource `type:"list"`
@@ -21721,6 +21761,12 @@ func (s *GetPatchBaselineOutput) SetPatchGroups(v []*string) *GetPatchBaselineOu
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *GetPatchBaselineOutput) SetRejectedPatches(v []*string) *GetPatchBaselineOutput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *GetPatchBaselineOutput) SetRejectedPatchesAction(v string) *GetPatchBaselineOutput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -22331,12 +22377,30 @@ type InstancePatchState struct {
 	// during the last patching operation, but failed to install.
 	FailedCount *int64 `type:"integer"`
 
+	// An https URL or an Amazon S3 path-style URL to a list of patches to be installed.
+	// This patch installation list, which you maintain in an Amazon S3 bucket in
+	// YAML format and specify in the SSM document AWS-RunPatchBaseline, overrides
+	// the patches specified by the default patch baseline.
+	//
+	// For more information about the InstallOverrideList parameter, see About the
+	// SSM Document AWS-RunPatchBaseline (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-about-aws-runpatchbaseline.html)
+	// in the AWS Systems Manager User Guide.
+	InstallOverrideList *string `min:"1" type:"string"`
+
 	// The number of patches from the patch baseline that are installed on the instance.
 	InstalledCount *int64 `type:"integer"`
 
 	// The number of patches not specified in the patch baseline that are installed
 	// on the instance.
 	InstalledOtherCount *int64 `type:"integer"`
+
+	// The number of instances with patches installed that are specified in a RejectedPatches
+	// list. Patches with a status of InstalledRejected were typically installed
+	// before they were added to a RejectedPatches list.
+	//
+	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
+	// the value of InstalledRejectedCount will always be 0 (zero).
+	InstalledRejectedCount *int64 `type:"integer"`
 
 	// The ID of the managed instance the high-level patch compliance information
 	// was collected for.
@@ -22404,6 +22468,12 @@ func (s *InstancePatchState) SetFailedCount(v int64) *InstancePatchState {
 	return s
 }
 
+// SetInstallOverrideList sets the InstallOverrideList field's value.
+func (s *InstancePatchState) SetInstallOverrideList(v string) *InstancePatchState {
+	s.InstallOverrideList = &v
+	return s
+}
+
 // SetInstalledCount sets the InstalledCount field's value.
 func (s *InstancePatchState) SetInstalledCount(v int64) *InstancePatchState {
 	s.InstalledCount = &v
@@ -22413,6 +22483,12 @@ func (s *InstancePatchState) SetInstalledCount(v int64) *InstancePatchState {
 // SetInstalledOtherCount sets the InstalledOtherCount field's value.
 func (s *InstancePatchState) SetInstalledOtherCount(v int64) *InstancePatchState {
 	s.InstalledOtherCount = &v
+	return s
+}
+
+// SetInstalledRejectedCount sets the InstalledRejectedCount field's value.
+func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchState {
+	s.InstalledRejectedCount = &v
 	return s
 }
 
@@ -32066,6 +32142,21 @@ type UpdatePatchBaselineInput struct {
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
+	// The action for Patch Manager to take on patches included in the RejectedPackages
+	// list.
+	//
+	//    * ALLOW_AS_DEPENDENCY: A package in the Rejected patches list is installed
+	//    only if it is a dependency of another package. It is considered compliant
+	//    with the patch baseline, and its status is reported as InstalledOther.
+	//    This is the default action if no option is specified.
+	//
+	//    * BLOCK: Packages in the RejectedPatches list, and packages that include
+	//    them as dependencies, are not installed under any circumstances. If a
+	//    package was installed before it was added to the Rejected patches list,
+	//    it is considered non-compliant with the patch baseline, and its status
+	//    is reported as InstalledRejected.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// If True, then all fields that are required by the CreatePatchBaseline action
 	// are also required for this API request. Optional fields that are not specified
 	// are set to null.
@@ -32182,6 +32273,12 @@ func (s *UpdatePatchBaselineInput) SetRejectedPatches(v []*string) *UpdatePatchB
 	return s
 }
 
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *UpdatePatchBaselineInput) SetRejectedPatchesAction(v string) *UpdatePatchBaselineInput {
+	s.RejectedPatchesAction = &v
+	return s
+}
+
 // SetReplace sets the Replace field's value.
 func (s *UpdatePatchBaselineInput) SetReplace(v bool) *UpdatePatchBaselineInput {
 	s.Replace = &v
@@ -32235,6 +32332,11 @@ type UpdatePatchBaselineOutput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// The action specified to take on patches included in the RejectedPatches list.
+	// A patch can be allowed only if it is a dependency of another package, or
+	// blocked entirely along with packages that include it as a dependency.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
@@ -32320,6 +32422,12 @@ func (s *UpdatePatchBaselineOutput) SetOperatingSystem(v string) *UpdatePatchBas
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *UpdatePatchBaselineOutput) SetRejectedPatches(v []*string) *UpdatePatchBaselineOutput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *UpdatePatchBaselineOutput) SetRejectedPatchesAction(v string) *UpdatePatchBaselineOutput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -32899,11 +33007,22 @@ const (
 )
 
 const (
+	// PatchActionAllowAsDependency is a PatchAction enum value
+	PatchActionAllowAsDependency = "ALLOW_AS_DEPENDENCY"
+
+	// PatchActionBlock is a PatchAction enum value
+	PatchActionBlock = "BLOCK"
+)
+
+const (
 	// PatchComplianceDataStateInstalled is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalled = "INSTALLED"
 
 	// PatchComplianceDataStateInstalledOther is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledOther = "INSTALLED_OTHER"
+
+	// PatchComplianceDataStateInstalledRejected is a PatchComplianceDataState enum value
+	PatchComplianceDataStateInstalledRejected = "INSTALLED_REJECTED"
 
 	// PatchComplianceDataStateMissing is a PatchComplianceDataState enum value
 	PatchComplianceDataStateMissing = "MISSING"
