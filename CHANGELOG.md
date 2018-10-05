@@ -9,6 +9,10 @@ ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
 
+BUG FIXES:
+
+* resource/aws_appsync_datasource: Properly pass all attributes during update [GH-5814]
+
 ## 1.39.0 (October 03, 2018)
 
 FEATURES:
