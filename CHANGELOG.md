@@ -14,6 +14,7 @@ BUG FIXES:
 
 * resource/aws_appautoscaling_policy: Properly handle negative values in step scaling metric intervals [GH-3480]
 * resource/aws_appsync_datasource: Properly pass all attributes during update [GH-5814]
+* resource/aws_ecs_service: Properly remove non-existent services from Terraform state [GH-6039]
 
 ## 1.39.0 (October 03, 2018)
 
