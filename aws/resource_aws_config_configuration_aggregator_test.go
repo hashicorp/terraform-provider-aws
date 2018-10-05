@@ -30,6 +30,10 @@ func testSweepConfigConfigurationAggregators(region string) error {
 
 	resp, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving config configuration aggregators: %s", err)
 	}
 
@@ -96,7 +100,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	expectedName := fmt.Sprintf("tf-%s", rString)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
@@ -124,7 +128,7 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	rString := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{

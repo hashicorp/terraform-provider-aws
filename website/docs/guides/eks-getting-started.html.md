@@ -41,7 +41,7 @@ associated with these services, even if you choose a different architecture.
         - [EKS Master Cluster IAM Role](#eks-master-cluster-iam-role)
         - [EKS Master Cluster Security Group](#eks-master-cluster-security-group)
         - [EKS Master Cluster](#eks-master-cluster)
-        - [Obtaining kubectl Configuration From Terraform](#obtaining-kubectl-configuration-from-terraform)
+    - [Configuring kubectl for EKS](#configuring-kubectl-for-eks)
     - [Kubernetes Worker Nodes](#kubernetes-worker-nodes)
         - [Worker Node IAM Role and Instance Profile](#worker-node-iam-role-and-instance-profile)
         - [Worker Node Security Group](#worker-node-security-group)
@@ -84,7 +84,7 @@ and configuration of these applications, see their official documentation.
 
 Relevant Links:
 
-* [Kubernetes Client Downloads](https://kubernetes.io/docs/imported/release/notes/#client-binaries)
+* [Kubernetes Client Install Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [AWS IAM Authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator)
 
 ## Create Sample Architecture in AWS
@@ -285,14 +285,21 @@ resource "aws_eks_cluster" "demo" {
 }
 ```
 
-#### Obtaining kubectl Configuration From Terraform
+### Configuring kubectl for EKS
+
+-> This section only provides some example methods for configuring `kubectl` to communicate with EKS servers. Managing Kubernetes clients and configurations is outside the scope of this guide.
 
 If you are planning on using `kubectl` to manage the Kubernetes cluster, now
-might be a great time to configure your client. The below Terraform output
-generates a sample `kubectl` configuration to connect to your cluster.
-
-You can verify cluster access via `kubectl version` displaying server version
+might be a great time to configure your client. After configuration, you can
+verify cluster access via `kubectl version` displaying server version
 information in addition to local client version information.
+
+The AWS CLI [`eks update-kubeconfig`](https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html)
+command provides a simple method to create or update configuration files.
+
+If you would rather update your configuration manually, the below Terraform output
+generates a sample `kubectl` configuration to connect to your cluster. This can
+be placed into a Kubernetes configuration file, e.g. `~/.kube/config`
 
 ```hcl
 locals {
@@ -466,11 +473,11 @@ First, let us create a data source to fetch the latest Amazon Machine Image
 data "aws_ami" "eks-worker" {
   filter {
     name   = "name"
-    values = ["eks-worker-*"]
+    values = ["amazon-eks-node-v*"]
   }
 
   most_recent = true
-  owners      = ["602401143452"] # Amazon Account ID
+  owners      = ["602401143452"] # Amazon EKS AMI Account ID
 }
 ```
 
@@ -486,29 +493,12 @@ data "aws_region" "current" {}
 # properly configure Kubernetes applications on the EC2 instance.
 # We utilize a Terraform local here to simplify Base64 encoding this
 # information into the AutoScaling Launch Configuration.
-# More information: https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-06-05/amazon-eks-nodegroup.yaml
+# More information: https://docs.aws.amazon.com/eks/latest/userguide/launch-workers.html
 locals {
   demo-node-userdata = <<USERDATA
-#!/bin/bash -xe
-
-CA_CERTIFICATE_DIRECTORY=/etc/kubernetes/pki
-CA_CERTIFICATE_FILE_PATH=$CA_CERTIFICATE_DIRECTORY/ca.crt
-mkdir -p $CA_CERTIFICATE_DIRECTORY
-echo "${aws_eks_cluster.demo.certificate_authority.0.data}" | base64 -d >  $CA_CERTIFICATE_FILE_PATH
-INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-sed -i s,MASTER_ENDPOINT,${aws_eks_cluster.demo.endpoint},g /var/lib/kubelet/kubeconfig
-sed -i s,CLUSTER_NAME,${var.cluster-name},g /var/lib/kubelet/kubeconfig
-sed -i s,REGION,${data.aws_region.current.name},g /etc/systemd/system/kubelet.service
-sed -i s,MAX_PODS,20,g /etc/systemd/system/kubelet.service
-sed -i s,MASTER_ENDPOINT,${aws_eks_cluster.demo.endpoint},g /etc/systemd/system/kubelet.service
-sed -i s,INTERNAL_IP,$INTERNAL_IP,g /etc/systemd/system/kubelet.service
-DNS_CLUSTER_IP=10.100.0.10
-if [[ $INTERNAL_IP == 10.* ]] ; then DNS_CLUSTER_IP=172.20.0.10; fi
-sed -i s,DNS_CLUSTER_IP,$DNS_CLUSTER_IP,g /etc/systemd/system/kubelet.service
-sed -i s,CERTIFICATE_AUTHORITY_FILE,$CA_CERTIFICATE_FILE_PATH,g /var/lib/kubelet/kubeconfig
-sed -i s,CLIENT_CA_FILE,$CA_CERTIFICATE_FILE_PATH,g  /etc/systemd/system/kubelet.service
-systemctl daemon-reload
-systemctl restart kubelet
+#!/bin/bash
+set -o xtrace
+/etc/eks/bootstrap.sh --apiserver-endpoint '${aws_eks_cluster.demo.endpoint}' --b64-cluster-ca '${aws_eks_cluster.demo.certificate_authority.0.data}' '${var.cluster-name}'
 USERDATA
 }
 
@@ -562,14 +552,11 @@ configuration to enable the worker nodes to join the cluster.
 
 #### Required Kubernetes Configuration to Join Worker Nodes
 
+-> While managing Kubernetes cluster and client configurations are beyond the scope of this guide, we provide an example of how to apply the required Kubernetes [`ConfigMap`](http://kubernetes.io/docs/user-guide/configmap/) via `kubectl` below for completeness. See also the [Configuring kubectl for EKS](#configuring-kubectl-for-eks) section.
+
 The EKS service does not provide a cluster-level API parameter or resource to
 automatically configure the underlying Kubernetes cluster to allow worker nodes
 to join the cluster via AWS IAM role authentication.
-
-While managing the underlying Kubernetes cluster configuration is beyond the
-scope of this guide, we provide an example of how to apply the required
-Kubernetes [`ConfigMap`](http://kubernetes.io/docs/user-guide/configmap/)
-via `kubectl` below for completeness.
 
 To output an example IAM Role authentication `ConfigMap` from your
 Terraform configuration:

@@ -87,7 +87,7 @@ func resourceAwsIamRole() *schema.Resource {
 			"permissions_boundary": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(20, 2048),
+				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
 
 			"description": {
@@ -187,12 +187,18 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := iamconn.GetRole(request)
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") { // XXX test me
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			log.Printf("[WARN] IAM Role %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error reading IAM Role %s: %s", d.Id(), err)
+	}
+
+	if getResp == nil || getResp.Role == nil {
+		log.Printf("[WARN] IAM Role %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	role := getResp.Role
@@ -375,16 +381,6 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		}
-	}
-
-	deleteRolePermissionsBoundaryInput := &iam.DeleteRolePermissionsBoundaryInput{
-		RoleName: aws.String(d.Id()),
-	}
-
-	log.Println("[DEBUG] Delete IAM Role Permissions Boundary request:", deleteRolePermissionsBoundaryInput)
-	_, err = iamconn.DeleteRolePermissionsBoundary(deleteRolePermissionsBoundaryInput)
-	if err != nil && !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-		return fmt.Errorf("Error deleting IAM Role %s Permissions Boundary: %s", d.Id(), err)
 	}
 
 	deleteRoleInput := &iam.DeleteRoleInput{

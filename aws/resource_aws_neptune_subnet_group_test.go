@@ -24,7 +24,7 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -52,7 +52,7 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -79,7 +79,7 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -104,7 +104,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -114,7 +114,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(

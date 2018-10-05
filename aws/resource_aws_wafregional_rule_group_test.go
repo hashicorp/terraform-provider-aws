@@ -77,7 +77,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),
@@ -240,6 +240,9 @@ func testAccCheckAWSWafRegionalRuleGroupDisappears(group *waf.RuleGroup) resourc
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
+		if err != nil {
+			return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
+		}
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

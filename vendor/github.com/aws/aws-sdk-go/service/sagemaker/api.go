@@ -427,27 +427,32 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // CreateModel API operation for Amazon SageMaker Service.
 //
 // Creates a model in Amazon SageMaker. In the request, you name the model and
-// describe one or more containers. For each container, you specify the docker
-// image containing inference code, artifacts (from prior training), and custom
-// environment map that the inference code uses when you deploy the model into
-// production.
+// describe a primary container. For the primary container, you specify the
+// docker image containing inference code, artifacts (from prior training),
+// and custom environment map that the inference code uses when you deploy the
+// model for predictions.
 //
-// Use this API to create a model only if you want to use Amazon SageMaker hosting
-// services. To host your model, you create an endpoint configuration with the
-// CreateEndpointConfig API, and then create an endpoint with the CreateEndpoint
-// API.
+// Use this API to create a model if you want to use Amazon SageMaker hosting
+// services or run a batch transform job.
 //
-// Amazon SageMaker then deploys all of the containers that you defined for
-// the model in the hosting environment.
+// To host your model, you create an endpoint configuration with the CreateEndpointConfig
+// API, and then create an endpoint with the CreateEndpoint API. Amazon SageMaker
+// then deploys all of the containers that you defined for the model in the
+// hosting environment.
+//
+// To run a batch transform using your model, you start a job with the CreateTransformJob
+// API. Amazon SageMaker uses your model and your dataset to get inferences
+// which are then saved to a specified S3 location.
 //
 // In the CreateModel request, you must define a container with the PrimaryContainer
 // parameter.
 //
 // In the request, you also provide an IAM role that Amazon SageMaker can assume
 // to access model artifacts and docker image for deployment on ML compute hosting
-// instances. In addition, you also use the IAM role to manage permissions the
-// inference code needs. For example, if the inference code access any other
-// AWS resources, you grant necessary permissions via this role.
+// instances or for batch transform jobs. In addition, you also use the IAM
+// role to manage permissions the inference code needs. For example, if the
+// inference code access any other AWS resources, you grant necessary permissions
+// via this role.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -745,6 +750,15 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // home page from the notebook instance. The console uses this API to get the
 // URL and show the page.
 //
+// You can restrict access to this API and to the URL that it returns to a list
+// of IP addresses that you specify. To restrict access, attach an IAM policy
+// that denies access to this API unless the call comes from an IP address in
+// the specified list to every AWS Identity and Access Management user, group,
+// or role used to access the notebook instance. Use the NotIpAddress condition
+// operator and the aws:SourceIP condition context key to specify the list of
+// IP addresses that you want to have access to the notebook instance. For more
+// information, see nbi-ip-filter.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -935,8 +949,8 @@ func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (r
 
 // CreateTransformJob API operation for Amazon SageMaker Service.
 //
-// Starts a transform job. After the results are obtained, Amazon SageMaker
-// saves them to an Amazon S3 location that you specify.
+// Starts a transform job. A transform job uses a trained model to get inferences
+// on a dataset and saves these results to an Amazon S3 location that you specify.
 //
 // To perform batch transformations, you create a transform job and use the
 // data that you have readily available.
@@ -946,7 +960,9 @@ func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (r
 //    * TransformJobName - Identifies the transform job. The name must be unique
 //    within an AWS Region in an AWS account.
 //
-//    * ModelName - Identifies the model to use.
+//    * ModelName - Identifies the model to use. ModelName must be the name
+//    of an existing Amazon SageMaker model in the same AWS Region and AWS account.
+//    For information on creating a model, see CreateModel.
 //
 //    * TransformInput - Describes the dataset to be transformed and the Amazon
 //    S3 location where it is stored.
@@ -1045,6 +1061,10 @@ func (c *SageMaker) DeleteEndpointRequest(input *DeleteEndpointInput) (req *requ
 //
 // Deletes an endpoint. Amazon SageMaker frees up all of the resources that
 // were deployed when the endpoint was created.
+//
+// Amazon SageMaker retires any custom KMS key grants associated with the endpoint,
+// meaning you don't need to use the RevokeGrant (http://docs.aws.amazon.com/kms/latest/APIReference/API_RevokeGrant.html)
+// API call.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4405,7 +4425,7 @@ type Channel struct {
 	// algorithm requires the RecordIO format, in which case, Amazon SageMaker wraps
 	// each individual S3 object in a RecordIO record. If the input data is already
 	// in RecordIO format, you don't need to set this attribute. For more information,
-	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/how_to/recordio.html?highlight=im2rec)
+	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/architecture/note_data_loading.html#data-format)
 	RecordWrapperType *string `type:"string" enum:"RecordWrapper"`
 }
 
@@ -4989,8 +5009,9 @@ type CreateModelInput struct {
 
 	// The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker can
 	// assume to access model artifacts and docker image for deployment on ML compute
-	// instances. Deploying on ML compute instances is part of model hosting. For
-	// more information, see Amazon SageMaker Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	// instances or for batch transform jobs. Deploying on ML compute instances
+	// is part of model hosting. For more information, see Amazon SageMaker Roles
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
 	//
 	// To be able to pass this role to Amazon SageMaker, the caller of this API
 	// must have the iam:PassRole permission.
@@ -5005,7 +5026,7 @@ type CreateModelInput struct {
 
 	// The location of the primary docker image containing inference code, associated
 	// artifacts, and custom environment map that the inference code uses when the
-	// model is deployed into production.
+	// model is deployed for predictions.
 	//
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
@@ -5017,6 +5038,7 @@ type CreateModelInput struct {
 
 	// A VpcConfig object that specifies the VPC that you want your model to connect
 	// to. Control access to and from your model container by configuring the VPC.
+	// VpcConfig is currently used in hosting services but not in batch transform.
 	// For more information, see host-vpc.
 	VpcConfig *VpcConfig `type:"structure"`
 }
@@ -5762,33 +5784,41 @@ func (s *CreateTrainingJobOutput) SetTrainingJobArn(v string) *CreateTrainingJob
 type CreateTransformJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// Determins the number of records included in a single batch. SingleRecord
-	// means only one record is used per batch. MultiRecord means a batch is set
-	// to contain as many records that could possibly fit within the MaxPayloadInMB
+	// Determines the number of records included in a single mini-batch. SingleRecord
+	// means only one record is used per mini-batch. MultiRecord means a mini-batch
+	// is set to contain as many records that can fit within the MaxPayloadInMB
 	// limit.
+	//
+	// Batch transform will automatically split your input data into whatever payload
+	// size is specified if you set SplitType to Line and BatchStrategy to MultiRecord.
+	// There's no need to split the dataset into smaller files or to use larger
+	// payload sizes unless the records in your dataset are very large.
 	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
 
 	// The environment variables to set in the Docker container. We support up to
 	// 16 key and values entries in the map.
 	Environment map[string]*string `type:"map"`
 
-	// The maximum number of parallel requests on each instance node that can be
-	// launched in a transform job. The default value is 1. To allow Amazon SageMaker
-	// to determine the appropriate number for MaxConcurrentTransforms, set the
-	// value to 0.
+	// The maximum number of parallel requests that can be sent to each instance
+	// in a transform job. This is good for algorithms that implement multiple workers
+	// on larger instances . The default value is 1. To allow Amazon SageMaker to
+	// determine the appropriate number for MaxConcurrentTransforms, set the value
+	// to 0.
 	MaxConcurrentTransforms *int64 `type:"integer"`
 
 	// The maximum payload size allowed, in MB. A payload is the data portion of
 	// a record (without metadata). The value in MaxPayloadInMB must be greater
-	// than the size of a single record.You can approximate the size of a record
-	// by dividing the size of your dataset by the number of records. The value
-	// you enter should be proportional to the number of records you want per batch.
-	// It is recommended to enter a slightly higher value to ensure the records
-	// will fit within the maximum payload size. The default value is 6 MB. For
-	// an unlimited payload size, set the value to 0.
+	// or equal to the size of a single record. You can approximate the size of
+	// a record by dividing the size of your dataset by the number of records. Then
+	// multiply this value by the number of records you want in a mini-batch. It
+	// is recommended to enter a value slightly larger than this to ensure the records
+	// fit within the maximum payload size. The default value is 6 MB. For an unlimited
+	// payload size, set the value to 0.
 	MaxPayloadInMB *int64 `type:"integer"`
 
-	// The name of the model that you want to use for the transform job.
+	// The name of the model that you want to use for the transform job. ModelName
+	// must be the name of an existing Amazon SageMaker model within an AWS Region
+	// in an AWS account.
 	//
 	// ModelName is a required field
 	ModelName *string `type:"string" required:"true"`
@@ -7338,8 +7368,35 @@ type DescribeTrainingJobOutput struct {
 	// Provides granular information about the system state. For more information,
 	// see TrainingJobStatus.
 	//
+	//    * Starting - starting the training job.
+	//
+	//    * Downloading - downloading the input data.
+	//
+	//    * Training - model training is in progress.
+	//
+	//    * Uploading - uploading the trained model.
+	//
+	//    * Stopping - stopping the training job.
+	//
+	//    * Stopped - the training job has stopped.
+	//
+	//    * MaxRuntimeExceeded - the training job exceeded the specified max run
+	//    time and has been stopped.
+	//
+	//    * Completed - the training job has completed.
+	//
+	//    * Failed - the training job has failed. The failure reason is stored in
+	//    the FailureReason field of DescribeTrainingJobResponse.
+	//
+	// The valid values for SecondaryStatus are subject to change. They primarily
+	// provide information on the progress of the training job.
+	//
 	// SecondaryStatus is a required field
 	SecondaryStatus *string `type:"string" required:"true" enum:"SecondaryStatus"`
+
+	// To give an overview of the training job lifecycle, SecondaryStatusTransitions
+	// is a log of time-ordered secondary statuses that a training job has transitioned.
+	SecondaryStatusTransitions []*SecondaryStatusTransition `type:"list"`
 
 	// The condition under which to stop the training job.
 	//
@@ -7477,6 +7534,12 @@ func (s *DescribeTrainingJobOutput) SetSecondaryStatus(v string) *DescribeTraini
 	return s
 }
 
+// SetSecondaryStatusTransitions sets the SecondaryStatusTransitions field's value.
+func (s *DescribeTrainingJobOutput) SetSecondaryStatusTransitions(v []*SecondaryStatusTransition) *DescribeTrainingJobOutput {
+	s.SecondaryStatusTransitions = v
+	return s
+}
+
 // SetStoppingCondition sets the StoppingCondition field's value.
 func (s *DescribeTrainingJobOutput) SetStoppingCondition(v *StoppingCondition) *DescribeTrainingJobOutput {
 	s.StoppingCondition = v
@@ -7569,9 +7632,9 @@ func (s *DescribeTransformJobInput) SetTransformJobName(v string) *DescribeTrans
 type DescribeTransformJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// SingleRecord means only one record was used per a batch. <code>MultiRecord</code>
-	// means batches contained as many records that could possibly fit within the
-	// MaxPayloadInMB limit.
+	// SingleRecord means only one record was used per a batch. MultiRecord means
+	// batches contained as many records that could possibly fit within the MaxPayloadInMB
+	// limit.
 	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
 
 	// A timestamp that shows when the transform Job was created.
@@ -11152,6 +11215,69 @@ func (s *S3DataSource) SetS3Uri(v string) *S3DataSource {
 	return s
 }
 
+// Specifies a secondary status the job has transitioned into. It includes a
+// start timestamp and later an end timestamp. The end timestamp is added either
+// after the job transitions to a different secondary status or after the job
+// has ended.
+type SecondaryStatusTransition struct {
+	_ struct{} `type:"structure"`
+
+	// A timestamp that shows when the secondary status has ended and the job has
+	// transitioned into another secondary status. The EndTime timestamp is also
+	// set after the training job has ended.
+	EndTime *time.Time `type:"timestamp"`
+
+	// A timestamp that shows when the training job has entered this secondary status.
+	//
+	// StartTime is a required field
+	StartTime *time.Time `type:"timestamp" required:"true"`
+
+	// Provides granular information about the system state. For more information,
+	// see SecondaryStatus under the DescribeTrainingJob response elements.
+	//
+	// Status is a required field
+	Status *string `type:"string" required:"true" enum:"SecondaryStatus"`
+
+	// Shows a brief description and other information about the secondary status.
+	// For example, the LaunchingMLInstances secondary status could show a status
+	// message of "Insufficent capacity error while launching instances".
+	StatusMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SecondaryStatusTransition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SecondaryStatusTransition) GoString() string {
+	return s.String()
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *SecondaryStatusTransition) SetEndTime(v time.Time) *SecondaryStatusTransition {
+	s.EndTime = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *SecondaryStatusTransition) SetStartTime(v time.Time) *SecondaryStatusTransition {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *SecondaryStatusTransition) SetStatus(v string) *SecondaryStatusTransition {
+	s.Status = &v
+	return s
+}
+
+// SetStatusMessage sets the StatusMessage field's value.
+func (s *SecondaryStatusTransition) SetStatusMessage(v string) *SecondaryStatusTransition {
+	s.StatusMessage = &v
+	return s
+}
+
 type StartNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11740,7 +11866,7 @@ type TransformInput struct {
 	DataSource *TransformDataSource `type:"structure" required:"true"`
 
 	// The method to use to split the transform job's data into smaller batches.
-	// The default value is None. If you don't want to split the data, specify (None).
+	// The default value is None. If you don't want to split the data, specify None.
 	// If you want to split records on a newline character boundary, specify Line.
 	// To split records according to the RecordIO format, specify RecordIO.
 	//
@@ -11903,7 +12029,7 @@ type TransformOutput struct {
 	Accept *string `type:"string"`
 
 	// Defines how to assemble the results of the transform job as a single S3 object.
-	// You should select a format that is most convienant to you. To concatenate
+	// You should select a format that is most convenient to you. To concatenate
 	// the results in binary format, specify None. To add a newline character at
 	// the end of every transformed record, specify Line. To assemble the output
 	// in RecordIO format, specify RecordIO. The default value is None.
@@ -11930,7 +12056,7 @@ type TransformOutput struct {
 	//
 	// For every S3 object used as input for the transform job, the transformed
 	// data is stored in a corresponding subfolder in the location under the output
-	// prefix.For example, the input data s3://bucket-name/input-name-prefix/dataset01/data.csv
+	// prefix. For example, the input data s3://bucket-name/input-name-prefix/dataset01/data.csv
 	// will have the transformed data stored at s3://bucket-name/key-name-prefix/dataset01/,
 	// based on the original name, as a series of .part files (.part0001, part0002,
 	// etc).
@@ -12003,6 +12129,11 @@ type TransformResources struct {
 	//
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TransformInstanceType"`
+
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
+	// instance(s) that run the batch transform job.
+	VolumeKmsKeyId *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12043,6 +12174,12 @@ func (s *TransformResources) SetInstanceCount(v int64) *TransformResources {
 // SetInstanceType sets the InstanceType field's value.
 func (s *TransformResources) SetInstanceType(v string) *TransformResources {
 	s.InstanceType = &v
+	return s
+}
+
+// SetVolumeKmsKeyId sets the VolumeKmsKeyId field's value.
+func (s *TransformResources) SetVolumeKmsKeyId(v string) *TransformResources {
+	s.VolumeKmsKeyId = &v
 	return s
 }
 
@@ -12308,8 +12445,16 @@ func (s *UpdateEndpointWeightsAndCapacitiesOutput) SetEndpointArn(v string) *Upd
 type UpdateNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true to remove the notebook instance lifecycle configuration currently
+	// associated with the notebook instance.
+	DisassociateLifecycleConfig *bool `type:"boolean"`
+
 	// The Amazon ML compute instance type.
 	InstanceType *string `type:"string" enum:"InstanceType"`
+
+	// The name of a lifecycle configuration to associate with the notebook instance.
+	// For information about lifestyle configurations, see notebook-lifecycle-config.
+	LifecycleConfigName *string `type:"string"`
 
 	// The name of the notebook instance to update.
 	//
@@ -12351,9 +12496,21 @@ func (s *UpdateNotebookInstanceInput) Validate() error {
 	return nil
 }
 
+// SetDisassociateLifecycleConfig sets the DisassociateLifecycleConfig field's value.
+func (s *UpdateNotebookInstanceInput) SetDisassociateLifecycleConfig(v bool) *UpdateNotebookInstanceInput {
+	s.DisassociateLifecycleConfig = &v
+	return s
+}
+
 // SetInstanceType sets the InstanceType field's value.
 func (s *UpdateNotebookInstanceInput) SetInstanceType(v string) *UpdateNotebookInstanceInput {
 	s.InstanceType = &v
+	return s
+}
+
+// SetLifecycleConfigName sets the LifecycleConfigName field's value.
+func (s *UpdateNotebookInstanceInput) SetLifecycleConfigName(v string) *UpdateNotebookInstanceInput {
+	s.LifecycleConfigName = &v
 	return s
 }
 
@@ -12597,6 +12754,9 @@ const (
 
 	// EndpointStatusUpdating is a EndpointStatus enum value
 	EndpointStatusUpdating = "Updating"
+
+	// EndpointStatusSystemUpdating is a EndpointStatus enum value
+	EndpointStatusSystemUpdating = "SystemUpdating"
 
 	// EndpointStatusRollingBack is a EndpointStatus enum value
 	EndpointStatusRollingBack = "RollingBack"
@@ -12915,8 +13075,17 @@ const (
 	// SecondaryStatusStarting is a SecondaryStatus enum value
 	SecondaryStatusStarting = "Starting"
 
+	// SecondaryStatusLaunchingMlinstances is a SecondaryStatus enum value
+	SecondaryStatusLaunchingMlinstances = "LaunchingMLInstances"
+
+	// SecondaryStatusPreparingTrainingStack is a SecondaryStatus enum value
+	SecondaryStatusPreparingTrainingStack = "PreparingTrainingStack"
+
 	// SecondaryStatusDownloading is a SecondaryStatus enum value
 	SecondaryStatusDownloading = "Downloading"
+
+	// SecondaryStatusDownloadingTrainingImage is a SecondaryStatus enum value
+	SecondaryStatusDownloadingTrainingImage = "DownloadingTrainingImage"
 
 	// SecondaryStatusTraining is a SecondaryStatus enum value
 	SecondaryStatusTraining = "Training"

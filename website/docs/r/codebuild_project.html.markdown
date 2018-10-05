@@ -157,10 +157,13 @@ The following arguments are supported:
 * `service_role` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
+* `secondary_artifacts` - (Optional) A set of secondary artifacts to be used inside the build. Secondary artifacts blocks are documented below.
+* `secondary_sources` - (Optional) A set of secondary sources to be used inside the build. Secondary sources blocks are documented below. 
 
 `artifacts` supports the following:
 
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
+* `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
 * `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.
@@ -207,11 +210,35 @@ The following arguments are supported:
 * `subnets` - (Required) The subnet IDs within which to run builds.
 * `vpc_id` - (Required) The ID of the VPC within which to run builds.
 
+
+`secondary_artifacts` supports the following:
+
+* `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
+* `artifact_identifier` - (Required) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec. 
+* `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
+* `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
+* `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
+* `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.
+* `packaging` - (Optional) The type of build output artifact to create. If `type` is set to `S3`, valid values for this parameter are: `NONE` or `ZIP`
+* `path` - (Optional) If `type` is set to `S3`, this is the path to the output artifact
+
+`secondary_sources` supports the following:
+
+* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
+* `source_identifier` - (Required) The source identifier. Source data will be put inside a folder named as this parameter inside AWS CodeBuild source directory
+* `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
+* `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
+* `git_clone_depth` - (Optional) Truncate git history to this many commits.
+* `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
+* `location` - (Optional) The location of the source code from git or s3.
+* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is GitHub.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN of the CodeBuild project.
+* `id` - The name (if imported via `name`) or ARN (if created via Terraform or imported via ARN) of the CodeBuild project.
+* `arn` - The ARN of the CodeBuild project.
 * `badge_url` - The URL of the build badge when `badge_enabled` is enabled.
 
 ## Import

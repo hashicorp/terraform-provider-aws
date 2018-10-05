@@ -24,17 +24,17 @@ func resourceAwsRouteTableAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"association_id": &schema.Schema{
+			"association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_id": &schema.Schema{
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"route_table_id": &schema.Schema{
+			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

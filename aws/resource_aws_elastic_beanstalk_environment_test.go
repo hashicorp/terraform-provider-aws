@@ -113,6 +113,43 @@ func testSweepBeanstalkEnvironments(region string) error {
 	return nil
 }
 
+func TestAWSElasticBeanstalkEnvironment_importBasic(t *testing.T) {
+	resourceName := "aws_elastic_beanstalk_application.tftest"
+
+	applicationName := fmt.Sprintf("tf-test-name-%d", acctest.RandInt())
+	environmentName := fmt.Sprintf("tf-test-env-name-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkEnvImportConfig(applicationName, environmentName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccBeanstalkEnvImportConfig(appName, envName string) string {
+	return fmt.Sprintf(`resource "aws_elastic_beanstalk_application" "tftest" {
+	  name = "%s"
+	  description = "tf-test-desc"
+	}
+
+	resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+	  name = "%s"
+	  application = "${aws_elastic_beanstalk_application.tftest.name}"
+	  solution_stack_name = "64bit Amazon Linux running Python"
+	}`, appName, envName)
+}
+
 func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
@@ -459,13 +496,13 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkEnvApplicationVersionConfig(bucketName, appName, appVersionName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed("aws_elastic_beanstalk_environment.default", &app),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkEnvApplicationVersionConfig(bucketName, appName, uAppVersionName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed("aws_elastic_beanstalk_environment.default", &app),
@@ -492,7 +529,7 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkEnvSettingJsonValue(appName, queueName, keyPairName, instanceProfileName, roleName, policyName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.default", &app),

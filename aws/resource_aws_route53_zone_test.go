@@ -65,6 +65,31 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
+func TestAccAWSRoute53Zone_importBasic(t *testing.T) {
+	resourceName := "aws_route53_zone.main"
+
+	rString := acctest.RandString(8)
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ZoneConfig(zoneName),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	var zone, zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
 	var td route53.ResourceTagSet
@@ -78,7 +103,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
@@ -86,7 +111,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 					testAccCheckTagsR53(&td.Tags, "foo", "bar"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneCountConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main.0", &zone0),
@@ -122,7 +147,7 @@ func TestAccAWSRoute53Zone_forceDestroy(t *testing.T) {
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneConfig_forceDestroy(zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExistsWithProvider("aws_route53_zone.destroyable", &zone,
@@ -159,7 +184,7 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
@@ -170,7 +195,7 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneConfigUpdateComment(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
@@ -195,7 +220,7 @@ func TestAccAWSRoute53Zone_private_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53PrivateZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone),
@@ -222,7 +247,7 @@ func TestAccAWSRoute53Zone_private_region(t *testing.T) {
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53PrivateZoneRegionConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExistsWithProvider("aws_route53_zone.main", &zone,
@@ -269,7 +294,7 @@ func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *sch
 					Name: aws.String(fmt.Sprintf("%d-tf-acc-random.%s", acctest.RandInt(), *zone.HostedZone.Name)),
 					Type: aws.String("CNAME"),
 					ResourceRecords: []*route53.ResourceRecord{
-						&route53.ResourceRecord{Value: aws.String(fmt.Sprintf("random.%s", *zone.HostedZone.Name))},
+						{Value: aws.String(fmt.Sprintf("random.%s", *zone.HostedZone.Name))},
 					},
 					TTL: aws.Int64(int64(30)),
 				},

@@ -21,7 +21,7 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
@@ -39,7 +39,7 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleS3ActionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
@@ -57,7 +57,7 @@ func TestAccAWSSESReceiptRule_order(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleOrderConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleOrder("aws_ses_receipt_rule.second"),
@@ -75,7 +75,7 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESReceiptRuleActionsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleActions("aws_ses_receipt_rule.actions"),

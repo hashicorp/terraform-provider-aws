@@ -12,6 +12,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSGlueCatalogTable_importBasic(t *testing.T) {
+	resourceName := "aws_glue_catalog_table.test"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogTable_full(rInt, "A test table from terraform"),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := "aws_glue_catalog_table.test"

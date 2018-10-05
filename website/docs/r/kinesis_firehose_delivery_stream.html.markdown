@@ -92,7 +92,7 @@ resource "aws_lambda_function" "lambda_processor" {
   function_name = "firehose_lambda_processor"
   role = "${aws_iam_role.lambda_iam.arn}"
   handler = "exports.handler"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
 }
 ```
 
@@ -249,7 +249,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   }
 }
 ```
-~> **NOTE:** Kinesis Firehose is currently only supported in us-east-1, us-west-2 and eu-west-1.
 
 ## Argument Reference
 

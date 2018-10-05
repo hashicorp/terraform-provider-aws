@@ -10,17 +10,6 @@
                     <a href="/docs/providers/aws/index.html">AWS Provider</a>
                 </li>
 
-                <li<%= sidebar_current("docs-aws-community-events") %>>
-                <a href="#">Upcoming Community Events</a>
-                    <ul class="nav nav-visible">
-
-                        <li<%= sidebar_current("docs-aws-community-events-gardening-summer-2018") %>>
-                            <a href="/docs/providers/aws/events/gardening-summer-2018.html">Community Gardening - Summer 2018</a>
-                        </li>
-
-                    </ul>
-                </li>
-
                 <li<%= sidebar_current("docs-aws-guide") %>>
                 <a href="#">Guides</a>
                     <ul class="nav nav-visible">
@@ -64,6 +53,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ami-ids") %>>
                             <a href="/docs/providers/aws/d/ami_ids.html">aws_ami_ids</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws_api_gateway_resource") %>>
+                            <a href="/docs/providers/aws/d/api_gateway_resource.html">aws_api_gateway_resource</a>
                         </li>
                         <li<%= sidebar_current("docs-aws_api_gateway_rest_api") %>>
                             <a href="/docs/providers/aws/d/api_gateway_rest_api.html">aws_api_gateway_rest_api</a>
@@ -112,6 +104,12 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-cognito-user-pools") %>>
                             <a href="/docs/providers/aws/d/cognito_user_pools.html">aws_cognito_user_pools</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-db-cluster-snapshot") %>>
+                          <a href="/docs/providers/aws/d/db_cluster_snapshot.html">aws_db_cluster_snapshot</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-db-event-categories") %>>
+                          <a href="/docs/providers/aws/d/db_event_categories.html">aws_db_event_categories</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-instance") %>>
                             <a href="/docs/providers/aws/d/db_instance.html">aws_db_instance</a>
@@ -266,6 +264,12 @@
                         <li<%= sidebar_current("docs-aws-datasource-launch-configuration") %>>
                             <a href="/docs/providers/aws/d/launch_configuration.html">aws_launch_configuration</a>
                         </li>
+
+
+                        <li<%= sidebar_current("docs-aws-datasource-launch-template") %>>
+                            <a href="/docs/providers/aws/d/launch_template.html">aws_launch_template</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-datasource-lb-x") %>>
                             <a href="/docs/providers/aws/d/lb.html">aws_lb</a>
                         </li>
@@ -337,6 +341,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ssm-parameter") %>>
                          <a href="/docs/providers/aws/d/ssm_parameter.html">aws_ssm_parameter</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-storagegateway-local-disk") %>>
+                         <a href="/docs/providers/aws/d/storagegateway_local_disk.html">aws_storagegateway_local_disk</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-subnet-x") %>>
                             <a href="/docs/providers/aws/d/subnet.html">aws_subnet</a>
@@ -556,6 +563,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-resource-cloudfront-origin-access-identity") %>>
                             <a href="/docs/providers/aws/r/cloudfront_origin_access_identity.html">aws_cloudfront_origin_access_identity</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudfront-public-key") %>>
+                            <a href="/docs/providers/aws/r/cloudfront_public_key.html">aws_cloudfront_public_key</a>
                         </li>
                     </ul>
                 </li>
@@ -798,6 +808,9 @@
                 <li<%= sidebar_current("docs-aws-resource-dx") %>>
                     <a href="#">Direct Connect Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-dx-bgp-peer") %>>
+                            <a href="/docs/providers/aws/r/dx_bgp_peer.html">aws_dx_bgp_peer</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-dx-connection") %>>
                             <a href="/docs/providers/aws/r/dx_connection.html">aws_dx_connection</a>
                         </li>
@@ -956,6 +969,10 @@
 
                         <li<%= sidebar_current("docs-aws-resource-ebs-volume") %>>
                             <a href="/docs/providers/aws/r/ebs_volume.html">aws_ebs_volume</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-ec2-fleet") %>>
+                            <a href="/docs/providers/aws/r/ec2_fleet.html">aws_ec2_fleet</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-eip") %>>
@@ -1523,6 +1540,10 @@
                     <a href="#">Macie Resources</a>
                     <ul class="nav nav-visible">
 
+                        <li<%= sidebar_current("docs-aws-macie-member-account-association") %>>
+                            <a href="/docs/providers/aws/r/macie_member_account_association.html">aws_macie_member_account_association</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-macie-s3-bucket-association") %>>
                             <a href="/docs/providers/aws/r/macie_s3_bucket_association.html">aws_macie_s3_bucket_association</a>
                         </li>
@@ -1647,9 +1668,26 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-pinpoint") %>>
+                    <a href="#">Pinpoint Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-app") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_app.html">aws_pinpoint_app</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-event-stream") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_event_stream.html">aws_pinpoint_event_stream</a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li<%= sidebar_current("docs-aws-resource-(db|rds)") %>>
                     <a href="#">RDS Resources</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-db-cluster-snapshot") %>>
+                          <a href="/docs/providers/aws/r/db_cluster_snapshot.html">aws_db_cluster_snapshot</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-db-event-subscription") %>>
                             <a href="/docs/providers/aws/r/db_event_subscription.html">aws_db_event_subscription</a>
@@ -1712,6 +1750,18 @@
 
                          <li<%= sidebar_current("docs-aws-resource-neptune-cluster-x") %>>
                             <a href="/docs/providers/aws/r/neptune_cluster.html">aws_neptune_cluster</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-neptune-cluster-instance") %>>
+                            <a href="/docs/providers/aws/r/neptune_cluster_instance.html">aws_neptune_cluster_instance</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-neptune-cluster-snapshot") %>>
+                            <a href="/docs/providers/aws/r/neptune_cluster_snapshot.html">aws_neptune_cluster_snapshot</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-neptune-event-subscription") %>>
+                            <a href="/docs/providers/aws/r/neptune_event_subscription.html">aws_neptune_event_subscription</a>
                         </li>
 
                     </ul>
@@ -2137,8 +2187,32 @@
                     <a href="#">Storage Gateway Resources</a>
                     <ul class="nav nav-visible">
 
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-cache-x") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_cache.html">aws_storagegateway_cache</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-cached-iscsi-volume") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_cached_iscsi_volume.html">aws_storagegateway_cached_iscsi_volume</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-resource-storagegateway-gateway") %>>
                             <a href="/docs/providers/aws/r/storagegateway_gateway.html">aws_storagegateway_gateway</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-nfs-file-share") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_nfs_file_share.html">aws_storagegateway_nfs_file_share</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-smb-file-share") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_smb_file_share.html">aws_storagegateway_smb_file_share</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-upload-buffer") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_upload_buffer.html">aws_storagegateway_upload_buffer</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-storagegateway-working-storage") %>>
+                            <a href="/docs/providers/aws/r/storagegateway_working_storage.html">aws_storagegateway_working_storage</a>
                         </li>
 
                     </ul>

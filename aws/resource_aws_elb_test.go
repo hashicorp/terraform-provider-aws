@@ -81,6 +81,27 @@ func testSweepELBs(region string) error {
 	return nil
 }
 
+func TestAccAWSELB_importBasic(t *testing.T) {
+	resourceName := "aws_elb.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSELBConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSELB_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 
@@ -118,6 +139,27 @@ func TestAccAWSELB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "cross_zone_load_balancing", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSELB_disappears(t *testing.T) {
+	var loadBalancer elb.LoadBalancerDescription
+	resourceName := "aws_elb.bar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSELBConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &loadBalancer),
+					testAccCheckAWSELBDisappears(&loadBalancer),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -246,7 +288,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSELB_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists("aws_elb.test", &conf),
@@ -586,7 +628,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
-							&elb.Listener{
+							{
 								InstancePort:     aws.Int64(int64(22)),
 								InstanceProtocol: aws.String("tcp"),
 								LoadBalancerPort: aws.Int64(int64(22)),
@@ -1045,6 +1087,19 @@ func testAccCheckAWSELBDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSELBDisappears(loadBalancer *elb.LoadBalancerDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).elbconn
+
+		input := elb.DeleteLoadBalancerInput{
+			LoadBalancerName: loadBalancer.LoadBalancerName,
+		}
+		_, err := conn.DeleteLoadBalancer(&input)
+
+		return err
+	}
+}
+
 func testAccCheckAWSELBAttributes(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		zones := []string{"us-west-2a", "us-west-2b", "us-west-2c"}
@@ -1392,20 +1447,6 @@ resource "aws_instance" "foo" {
 	# us-west-2
 	ami = "ami-043a5034"
 	instance_type = "t1.micro"
-}
-`
-
-const testAccAWSELBConfigListenerSSLCertificateId = `
-resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a"]
-
-  listener {
-    instance_port = 8000
-    instance_protocol = "http"
-    ssl_certificate_id = "%s"
-    lb_port = 443
-    lb_protocol = "https"
-  }
 }
 `
 
