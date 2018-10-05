@@ -148,13 +148,30 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// Test non-existent resource import
+		},
+	})
+}
+
+func TestAccAWSEcsService_disappears(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
-				ImportState:       true,
-				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`No ECS service found`),
+				Config: testAccAWSEcsService(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					testAccCheckAWSEcsServiceDisappears(&service),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -800,6 +817,22 @@ func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource
 		*service = *output.Services[0]
 
 		return nil
+	}
+}
+
+func testAccCheckAWSEcsServiceDisappears(service *ecs.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+
+		input := &ecs.DeleteServiceInput{
+			Cluster: aws.String(*service.ClusterArn),
+			Service: aws.String(*service.ServiceName),
+			Force:   aws.Bool(true),
+		}
+
+		_, err := conn.DeleteService(input)
+
+		return err
 	}
 }
 
