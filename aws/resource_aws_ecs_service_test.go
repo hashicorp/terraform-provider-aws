@@ -148,6 +148,14 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Test non-existent resource import
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
+				ImportState:       true,
+				ImportStateVerify: false,
+				ExpectError:       regexp.MustCompile(`Please verify the ID is correct`),
+			},
 		},
 	})
 }
@@ -825,12 +833,37 @@ func testAccCheckAWSEcsServiceDisappears(service *ecs.Service) resource.TestChec
 		conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
 		input := &ecs.DeleteServiceInput{
-			Cluster: aws.String(*service.ClusterArn),
-			Service: aws.String(*service.ServiceName),
+			Cluster: service.ClusterArn,
+			Service: service.ServiceName,
 			Force:   aws.Bool(true),
 		}
 
 		_, err := conn.DeleteService(input)
+
+		if err != nil {
+			return err
+		}
+
+		// Wait until it's deleted
+		wait := resource.StateChangeConf{
+			Pending:    []string{"ACTIVE", "DRAINING"},
+			Target:     []string{"INACTIVE"},
+			Timeout:    10 * time.Minute,
+			MinTimeout: 1 * time.Second,
+			Refresh: func() (interface{}, string, error) {
+				resp, err := conn.DescribeServices(&ecs.DescribeServicesInput{
+					Cluster:  service.ClusterArn,
+					Services: []*string{service.ServiceName},
+				})
+				if err != nil {
+					return resp, "FAILED", err
+				}
+
+				return resp, aws.StringValue(resp.Services[0].Status), nil
+			},
+		}
+
+		_, err = wait.WaitForState()
 
 		return err
 	}
