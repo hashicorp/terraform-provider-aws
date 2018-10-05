@@ -37,9 +37,7 @@ EOF
 The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string.
-  The heredoc syntax or `file` function is helpful here. Use the [IoT Developer Guide]
-  (http://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) for more information on IoT Policies
+* `policy` - (Required) The policy document. This is a JSON formatted string. Use the [IoT Developer Guide](http://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) for more information on IoT Policies. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
 
 ## Attributes Reference
 
