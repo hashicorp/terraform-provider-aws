@@ -92,3 +92,11 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF WebACL.
+
+## Import
+
+WAF Web ACL can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
+```

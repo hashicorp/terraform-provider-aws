@@ -5604,6 +5604,99 @@ func (c *DeviceFarm) ScheduleRunWithContext(ctx aws.Context, input *ScheduleRunI
 	return out, req.Send()
 }
 
+const opStopJob = "StopJob"
+
+// StopJobRequest generates a "aws/request.Request" representing the
+// client's request for the StopJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopJob for more information on using the StopJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopJobRequest method.
+//    req, resp := client.StopJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopJob
+func (c *DeviceFarm) StopJobRequest(input *StopJobInput) (req *request.Request, output *StopJobOutput) {
+	op := &request.Operation{
+		Name:       opStopJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopJobInput{}
+	}
+
+	output = &StopJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StopJob API operation for AWS Device Farm.
+//
+// Initiates a stop request for the current job. AWS Device Farm will immediately
+// stop the job on the device where tests have not started executing, and you
+// will not be billed for this device. On the device where tests have started
+// executing, Setup Suite and Teardown Suite tests will run to completion before
+// stopping execution on the device. You will be billed for Setup, Teardown,
+// and any tests that were in progress or already completed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation StopJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopJob
+func (c *DeviceFarm) StopJob(input *StopJobInput) (*StopJobOutput, error) {
+	req, out := c.StopJobRequest(input)
+	return out, req.Send()
+}
+
+// StopJobWithContext is the same as StopJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) StopJobWithContext(ctx aws.Context, input *StopJobInput, opts ...request.Option) (*StopJobOutput, error) {
+	req, out := c.StopJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopRemoteAccessSession = "StopRemoteAccessSession"
 
 // StopRemoteAccessSessionRequest generates a "aws/request.Request" representing the
@@ -6222,6 +6315,94 @@ func (c *DeviceFarm) UpdateProject(input *UpdateProjectInput) (*UpdateProjectOut
 // for more information on using Contexts.
 func (c *DeviceFarm) UpdateProjectWithContext(ctx aws.Context, input *UpdateProjectInput, opts ...request.Option) (*UpdateProjectOutput, error) {
 	req, out := c.UpdateProjectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateUpload = "UpdateUpload"
+
+// UpdateUploadRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateUpload operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateUpload for more information on using the UpdateUpload
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateUploadRequest method.
+//    req, resp := client.UpdateUploadRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateUpload
+func (c *DeviceFarm) UpdateUploadRequest(input *UpdateUploadInput) (req *request.Request, output *UpdateUploadOutput) {
+	op := &request.Operation{
+		Name:       opUpdateUpload,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateUploadInput{}
+	}
+
+	output = &UpdateUploadOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateUpload API operation for AWS Device Farm.
+//
+// Update an uploaded test specification (test spec).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation UpdateUpload for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateUpload
+func (c *DeviceFarm) UpdateUpload(input *UpdateUploadInput) (*UpdateUploadOutput, error) {
+	req, out := c.UpdateUploadRequest(input)
+	return out, req.Send()
+}
+
+// UpdateUploadWithContext is the same as UpdateUpload with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateUpload for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) UpdateUploadWithContext(ctx aws.Context, input *UpdateUploadInput, opts ...request.Option) (*UpdateUploadOutput, error) {
+	req, out := c.UpdateUploadRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7367,7 +7548,7 @@ type CreateUploadInput struct {
 	//
 	//    * IOS_APP: An iOS upload.
 	//
-	//    * WEB_APP: A web appliction upload.
+	//    * WEB_APP: A web application upload.
 	//
 	//    * EXTERNAL_DATA: An external data upload.
 	//
@@ -8549,6 +8730,10 @@ type ExecutionConfiguration struct {
 	// modify my app? (https://aws.amazon.com/device-farm/faq/) in the AWS Device
 	// Farm FAQs.
 	SkipAppResign *bool `locationName:"skipAppResign" type:"boolean"`
+
+	// Set to true to enable video capture; otherwise, set to false. The default
+	// is true.
+	VideoCapture *bool `locationName:"videoCapture" type:"boolean"`
 }
 
 // String returns the string representation
@@ -8582,6 +8767,12 @@ func (s *ExecutionConfiguration) SetJobTimeoutMinutes(v int64) *ExecutionConfigu
 // SetSkipAppResign sets the SkipAppResign field's value.
 func (s *ExecutionConfiguration) SetSkipAppResign(v bool) *ExecutionConfiguration {
 	s.SkipAppResign = &v
+	return s
+}
+
+// SetVideoCapture sets the VideoCapture field's value.
+func (s *ExecutionConfiguration) SetVideoCapture(v bool) *ExecutionConfiguration {
+	s.VideoCapture = &v
 	return s
 }
 
@@ -9938,7 +10129,7 @@ type Job struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the job was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The device (phone or tablet).
 	Device *Device `locationName:"device" type:"structure"`
@@ -9975,7 +10166,7 @@ type Job struct {
 	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
 
 	// The job's start time.
-	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
+	Started *time.Time `locationName:"started" type:"timestamp"`
 
 	// The job's status.
 	//
@@ -10001,7 +10192,7 @@ type Job struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The job's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
 
 	// The job's type.
 	//
@@ -10037,6 +10228,13 @@ type Job struct {
 	//
 	//    * XCTEST_UI: The XCode UI test type.
 	Type *string `locationName:"type" type:"string" enum:"TestType"`
+
+	// This value is set to true if video capture is enabled; otherwise, it is set
+	// to false.
+	VideoCapture *bool `locationName:"videoCapture" type:"boolean"`
+
+	// The endpoint for streaming device video.
+	VideoEndpoint *string `locationName:"videoEndpoint" type:"string"`
 }
 
 // String returns the string representation
@@ -10124,6 +10322,18 @@ func (s *Job) SetStopped(v time.Time) *Job {
 // SetType sets the Type field's value.
 func (s *Job) SetType(v string) *Job {
 	s.Type = &v
+	return s
+}
+
+// SetVideoCapture sets the VideoCapture field's value.
+func (s *Job) SetVideoCapture(v bool) *Job {
+	s.VideoCapture = &v
+	return s
+}
+
+// SetVideoEndpoint sets the VideoEndpoint field's value.
+func (s *Job) SetVideoEndpoint(v string) *Job {
+	s.VideoEndpoint = &v
 	return s
 }
 
@@ -11653,6 +11863,62 @@ type ListUploadsInput struct {
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
 	NextToken *string `locationName:"nextToken" min:"4" type:"string"`
+
+	// The type of upload.
+	//
+	// Must be one of the following values:
+	//
+	//    * ANDROID_APP: An Android upload.
+	//
+	//    * IOS_APP: An iOS upload.
+	//
+	//    * WEB_APP: A web appliction upload.
+	//
+	//    * EXTERNAL_DATA: An external data upload.
+	//
+	//    * APPIUM_JAVA_JUNIT_TEST_PACKAGE: An Appium Java JUnit test package upload.
+	//
+	//    * APPIUM_JAVA_TESTNG_TEST_PACKAGE: An Appium Java TestNG test package
+	//    upload.
+	//
+	//    * APPIUM_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
+	//
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE: An Appium Java JUnit test package
+	//    upload.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE: An Appium Java TestNG test package
+	//    upload.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
+	//
+	//    * CALABASH_TEST_PACKAGE: A Calabash test package upload.
+	//
+	//    * INSTRUMENTATION_TEST_PACKAGE: An instrumentation upload.
+	//
+	//    * UIAUTOMATION_TEST_PACKAGE: A uiautomation test package upload.
+	//
+	//    * UIAUTOMATOR_TEST_PACKAGE: A uiautomator test package upload.
+	//
+	//    * XCTEST_TEST_PACKAGE: An XCode test package upload.
+	//
+	//    * XCTEST_UI_TEST_PACKAGE: An XCode UI test package upload.
+	//
+	//    * APPIUM_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//
+	//    * APPIUM_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//
+	//    * APPIUM_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//
+	//    * INSTRUMENTATION_TEST_SPEC: An instrumentation test spec upload.
+	//
+	//    * XCTEST_UI_TEST_SPEC: An XCode UI test spec upload.
+	Type *string `locationName:"type" type:"string" enum:"UploadType"`
 }
 
 // String returns the string representation
@@ -11693,6 +11959,12 @@ func (s *ListUploadsInput) SetArn(v string) *ListUploadsInput {
 // SetNextToken sets the NextToken field's value.
 func (s *ListUploadsInput) SetNextToken(v string) *ListUploadsInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ListUploadsInput) SetType(v string) *ListUploadsInput {
+	s.Type = &v
 	return s
 }
 
@@ -12126,7 +12398,7 @@ type OfferingStatus struct {
 	_ struct{} `type:"structure"`
 
 	// The date on which the offering is effective.
-	EffectiveOn *time.Time `locationName:"effectiveOn" type:"timestamp" timestampFormat:"unix"`
+	EffectiveOn *time.Time `locationName:"effectiveOn" type:"timestamp"`
 
 	// Represents the metadata of an offering status.
 	Offering *Offering `locationName:"offering" type:"structure"`
@@ -12180,7 +12452,7 @@ type OfferingTransaction struct {
 	Cost *MonetaryAmount `locationName:"cost" type:"structure"`
 
 	// The date on which an offering transaction was created.
-	CreatedOn *time.Time `locationName:"createdOn" type:"timestamp" timestampFormat:"unix"`
+	CreatedOn *time.Time `locationName:"createdOn" type:"timestamp"`
 
 	// The ID that corresponds to a device offering promotion.
 	OfferingPromotionId *string `locationName:"offeringPromotionId" min:"4" type:"string"`
@@ -12368,7 +12640,7 @@ type Project struct {
 	Arn *string `locationName:"arn" min:"32" type:"string"`
 
 	// When the project was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The default number of minutes (at the project level) a test run will execute
 	// before it times out. Default value is 60 minutes.
@@ -12596,7 +12868,7 @@ type RemoteAccessSession struct {
 	ClientId *string `locationName:"clientId" type:"string"`
 
 	// The date and time the remote access session was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The device (phone or tablet) used in the remote access session.
 	Device *Device `locationName:"device" type:"structure"`
@@ -12678,7 +12950,7 @@ type RemoteAccessSession struct {
 	SkipAppResign *bool `locationName:"skipAppResign" type:"boolean"`
 
 	// The date and time the remote access session was started.
-	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
+	Started *time.Time `locationName:"started" type:"timestamp"`
 
 	// The status of the remote access session. Can be any of the following:
 	//
@@ -12702,7 +12974,7 @@ type RemoteAccessSession struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The date and time the remote access session was stopped.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -13039,7 +13311,7 @@ type Run struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the run was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// Output CustomerArtifactPaths object for the test run.
 	CustomerArtifactPaths *CustomerArtifactPaths `locationName:"customerArtifactPaths" type:"structure"`
@@ -13126,7 +13398,7 @@ type Run struct {
 	SkipAppResign *bool `locationName:"skipAppResign" type:"boolean"`
 
 	// The run's start time.
-	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
+	Started *time.Time `locationName:"started" type:"timestamp"`
 
 	// The run's status.
 	//
@@ -13152,7 +13424,10 @@ type Run struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The run's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
+
+	// The ARN of the YAML-formatted test specification for the run.
+	TestSpecArn *string `locationName:"testSpecArn" min:"32" type:"string"`
 
 	// The total number of jobs for the run.
 	TotalJobs *int64 `locationName:"totalJobs" type:"integer"`
@@ -13359,6 +13634,12 @@ func (s *Run) SetStatus(v string) *Run {
 // SetStopped sets the Stopped field's value.
 func (s *Run) SetStopped(v time.Time) *Run {
 	s.Stopped = &v
+	return s
+}
+
+// SetTestSpecArn sets the TestSpecArn field's value.
+func (s *Run) SetTestSpecArn(v string) *Run {
+	s.TestSpecArn = &v
 	return s
 }
 
@@ -13817,6 +14098,9 @@ type ScheduleRunTest struct {
 	// The ARN of the uploaded test that will be run.
 	TestPackageArn *string `locationName:"testPackageArn" min:"32" type:"string"`
 
+	// The ARN of the YAML-formatted test specification.
+	TestSpecArn *string `locationName:"testSpecArn" min:"32" type:"string"`
+
 	// The test's type.
 	//
 	// Must be one of the following values:
@@ -13871,6 +14155,9 @@ func (s *ScheduleRunTest) Validate() error {
 	if s.TestPackageArn != nil && len(*s.TestPackageArn) < 32 {
 		invalidParams.Add(request.NewErrParamMinLen("TestPackageArn", 32))
 	}
+	if s.TestSpecArn != nil && len(*s.TestSpecArn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("TestSpecArn", 32))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
@@ -13899,9 +14186,80 @@ func (s *ScheduleRunTest) SetTestPackageArn(v string) *ScheduleRunTest {
 	return s
 }
 
+// SetTestSpecArn sets the TestSpecArn field's value.
+func (s *ScheduleRunTest) SetTestSpecArn(v string) *ScheduleRunTest {
+	s.TestSpecArn = &v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ScheduleRunTest) SetType(v string) *ScheduleRunTest {
 	s.Type = &v
+	return s
+}
+
+type StopJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the Amazon Resource Name (ARN) of the Device Farm job you wish
+	// to stop.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopJobInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *StopJobInput) SetArn(v string) *StopJobInput {
+	s.Arn = &v
+	return s
+}
+
+type StopJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job that was stopped.
+	Job *Job `locationName:"job" type:"structure"`
+}
+
+// String returns the string representation
+func (s StopJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetJob sets the Job field's value.
+func (s *StopJobOutput) SetJob(v *Job) *StopJobOutput {
+	s.Job = v
 	return s
 }
 
@@ -14051,7 +14409,7 @@ type Suite struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the suite was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// Represents the total (metered or unmetered) minutes used by the test suite.
 	DeviceMinutes *DeviceMinutes `locationName:"deviceMinutes" type:"structure"`
@@ -14082,7 +14440,7 @@ type Suite struct {
 	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
 
 	// The suite's start time.
-	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
+	Started *time.Time `locationName:"started" type:"timestamp"`
 
 	// The suite's status.
 	//
@@ -14108,7 +14466,7 @@ type Suite struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The suite's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
 
 	// The suite's type.
 	//
@@ -14233,7 +14591,7 @@ type Test struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the test was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// Represents the total (metered or unmetered) minutes used by the test.
 	DeviceMinutes *DeviceMinutes `locationName:"deviceMinutes" type:"structure"`
@@ -14264,7 +14622,7 @@ type Test struct {
 	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
 
 	// The test's start time.
-	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
+	Started *time.Time `locationName:"started" type:"timestamp"`
 
 	// The test's status.
 	//
@@ -14290,7 +14648,7 @@ type Test struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The test's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
 
 	// The test's type.
 	//
@@ -15020,6 +15378,99 @@ func (s *UpdateProjectOutput) SetProject(v *Project) *UpdateProjectOutput {
 	return s
 }
 
+type UpdateUploadInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the uploaded test spec.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+
+	// The upload's content type (for example, "application/x-yaml").
+	ContentType *string `locationName:"contentType" type:"string"`
+
+	// Set to true if the YAML file has changed and needs to be updated; otherwise,
+	// set to false.
+	EditContent *bool `locationName:"editContent" type:"boolean"`
+
+	// The upload's test spec file name. The name should not contain the '/' character.
+	// The test spec file name must end with the .yaml or .yml file extension.
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateUploadInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateUploadInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateUploadInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateUploadInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateUploadInput) SetArn(v string) *UpdateUploadInput {
+	s.Arn = &v
+	return s
+}
+
+// SetContentType sets the ContentType field's value.
+func (s *UpdateUploadInput) SetContentType(v string) *UpdateUploadInput {
+	s.ContentType = &v
+	return s
+}
+
+// SetEditContent sets the EditContent field's value.
+func (s *UpdateUploadInput) SetEditContent(v bool) *UpdateUploadInput {
+	s.EditContent = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateUploadInput) SetName(v string) *UpdateUploadInput {
+	s.Name = &v
+	return s
+}
+
+type UpdateUploadOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A test spec uploaded to Device Farm.
+	Upload *Upload `locationName:"upload" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateUploadOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateUploadOutput) GoString() string {
+	return s.String()
+}
+
+// SetUpload sets the Upload field's value.
+func (s *UpdateUploadOutput) SetUpload(v *Upload) *UpdateUploadOutput {
+	s.Upload = v
+	return s
+}
+
 type UpdateVPCEConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15131,11 +15582,18 @@ type Upload struct {
 	// The upload's ARN.
 	Arn *string `locationName:"arn" min:"32" type:"string"`
 
+	// The upload's category. Allowed values include:
+	//
+	//    * CURATED: An upload managed by AWS Device Farm.
+	//
+	//    * PRIVATE: An upload managed by the AWS Device Farm customer.
+	Category *string `locationName:"category" type:"string" enum:"UploadCategory"`
+
 	// The upload's content type (for example, "application/octet-stream").
 	ContentType *string `locationName:"contentType" type:"string"`
 
 	// When the upload was created.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// A message about the upload's result.
 	Message *string `locationName:"message" type:"string"`
@@ -15219,6 +15677,12 @@ func (s Upload) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *Upload) SetArn(v string) *Upload {
 	s.Arn = &v
+	return s
+}
+
+// SetCategory sets the Category field's value.
+func (s *Upload) SetCategory(v string) *Upload {
+	s.Category = &v
 	return s
 }
 
@@ -15425,6 +15889,9 @@ const (
 
 	// ArtifactTypeCustomerArtifactLog is a ArtifactType enum value
 	ArtifactTypeCustomerArtifactLog = "CUSTOMER_ARTIFACT_LOG"
+
+	// ArtifactTypeTestspecOutput is a ArtifactType enum value
+	ArtifactTypeTestspecOutput = "TESTSPEC_OUTPUT"
 )
 
 const (
@@ -15737,6 +16204,14 @@ const (
 )
 
 const (
+	// UploadCategoryCurated is a UploadCategory enum value
+	UploadCategoryCurated = "CURATED"
+
+	// UploadCategoryPrivate is a UploadCategory enum value
+	UploadCategoryPrivate = "PRIVATE"
+)
+
+const (
 	// UploadStatusInitialized is a UploadStatus enum value
 	UploadStatusInitialized = "INITIALIZED"
 
@@ -15798,4 +16273,28 @@ const (
 
 	// UploadTypeXctestUiTestPackage is a UploadType enum value
 	UploadTypeXctestUiTestPackage = "XCTEST_UI_TEST_PACKAGE"
+
+	// UploadTypeAppiumJavaJunitTestSpec is a UploadType enum value
+	UploadTypeAppiumJavaJunitTestSpec = "APPIUM_JAVA_JUNIT_TEST_SPEC"
+
+	// UploadTypeAppiumJavaTestngTestSpec is a UploadType enum value
+	UploadTypeAppiumJavaTestngTestSpec = "APPIUM_JAVA_TESTNG_TEST_SPEC"
+
+	// UploadTypeAppiumPythonTestSpec is a UploadType enum value
+	UploadTypeAppiumPythonTestSpec = "APPIUM_PYTHON_TEST_SPEC"
+
+	// UploadTypeAppiumWebJavaJunitTestSpec is a UploadType enum value
+	UploadTypeAppiumWebJavaJunitTestSpec = "APPIUM_WEB_JAVA_JUNIT_TEST_SPEC"
+
+	// UploadTypeAppiumWebJavaTestngTestSpec is a UploadType enum value
+	UploadTypeAppiumWebJavaTestngTestSpec = "APPIUM_WEB_JAVA_TESTNG_TEST_SPEC"
+
+	// UploadTypeAppiumWebPythonTestSpec is a UploadType enum value
+	UploadTypeAppiumWebPythonTestSpec = "APPIUM_WEB_PYTHON_TEST_SPEC"
+
+	// UploadTypeInstrumentationTestSpec is a UploadType enum value
+	UploadTypeInstrumentationTestSpec = "INSTRUMENTATION_TEST_SPEC"
+
+	// UploadTypeXctestUiTestSpec is a UploadType enum value
+	UploadTypeXctestUiTestSpec = "XCTEST_UI_TEST_SPEC"
 )

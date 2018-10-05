@@ -15,7 +15,6 @@ Provides a Load Balancer Listener Rule resource.
 ## Example Usage
 
 ```hcl
-# Create a new load balancer
 resource "aws_lb" "front_end" {
   # ...
 }
@@ -39,6 +38,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
+# Forward action
+
 resource "aws_lb_listener_rule" "host_based_routing" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 99
@@ -51,6 +52,46 @@ resource "aws_lb_listener_rule" "host_based_routing" {
   condition {
     field  = "host-header"
     values = ["my-service.*.terraform.io"]
+  }
+}
+
+# Redirect action
+
+resource "aws_lb_listener_rule" "redirect_http_to_https" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "redirect"
+    redirect {
+      port = "443"
+      protocol = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    field  = "host-header"
+    values = ["my-service.*.terraform.io"]
+  }
+}
+
+# Fixed-response action
+
+resource "aws_lb_listener_rule" "health_check" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "HEALTHY"
+      status_code = "200"
+    }
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/health"]
   }
 }
 
@@ -67,8 +108,27 @@ The following arguments are supported:
 
 Action Blocks (for `action`) support the following:
 
-* `target_group_arn` - (Required) The ARN of the Target Group to which to route traffic.
-* `type` - (Required) The type of routing action. The only valid value is `forward`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect` and `fixed-response`.
+* `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic. Required if `type` is `forward`.
+* `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
+* `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+
+Redirect Blocks (for `redirect`) support the following:
+
+~> **NOTE::** You can reuse URI components using the following reserved keywords: `#{protocol}`, `#{host}`, `#{port}`, `#{path}` (the leading "/" is removed) and `#{query}`.
+
+* `host` - (Optional) The hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
+* `path` - (Optional) The absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
+* `port` - (Optional) The port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
+* `protocol` - (Optional) The protocol. Valid values are `HTTP`, `HTTPS`, or `#{protocol}`. Defaults to `#{protocol}`.
+* `query` - (Optional) The query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?". Defaults to `#{query}`.
+* `status_code` - (Required) The HTTP redirect code. The redirect is either permanent (`HTTP_301`) or temporary (`HTTP_302`).
+
+Fixed-response Blocks (for `fixed_response`) support the following:
+
+* `content_type` - (Required) The content type. Valid values are `text/plain`, `text/css`, `text/html`, `application/javascript` and `application/json`.
+* `message_body` - (Optional) The message body.
+* `status_code` - (Optional) The HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
 Condition Blocks (for `condition`) support the following:
 

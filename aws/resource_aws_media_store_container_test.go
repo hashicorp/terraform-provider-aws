@@ -35,10 +35,10 @@ func TestAccAWSMediaStoreContainer_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

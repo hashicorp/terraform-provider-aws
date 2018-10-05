@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -23,7 +22,7 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafSqlInjectionMatchSetConfig(sqlInjectionMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafSqlInjectionMatchSetExists("aws_waf_sql_injection_match_set.sql_injection_match_set", &v),
@@ -196,7 +195,7 @@ func testAccCheckAWSWafSqlInjectionMatchSetDisappears(v *waf.SqlInjectionMatchSe
 			return conn.UpdateSqlInjectionMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating SqlInjectionMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating SqlInjectionMatchSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -207,7 +206,7 @@ func testAccCheckAWSWafSqlInjectionMatchSetDisappears(v *waf.SqlInjectionMatchSe
 			return conn.DeleteSqlInjectionMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting SqlInjectionMatchSet: {{err}}", err)
+			return fmt.Errorf("Error deleting SqlInjectionMatchSet: %s", err)
 		}
 		return nil
 	}

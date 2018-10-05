@@ -16,7 +16,7 @@ func TestAwsElasticacheReplicationGroupMigrateState(t *testing.T) {
 		"v0Tov1": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"cluster_mode.#":                                  "1",
+				"cluster_mode.#": "1",
 				"cluster_mode.4170186206.num_node_groups":         "2",
 				"cluster_mode.4170186206.replicas_per_node_group": "1",
 			},
@@ -65,7 +65,7 @@ func TestAwsElasticacheReplicationGroupMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	is, err = resourceAwsElasticacheReplicationGroupMigrateState(0, is, meta)
+	_, err = resourceAwsElasticacheReplicationGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

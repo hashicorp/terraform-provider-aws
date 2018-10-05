@@ -57,7 +57,8 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-* `id` - A pipe delimited combination of secret ID and version ID
+* `arn` - The ARN of the secret.
+* `id` - A pipe delimited combination of secret ID and version ID.
 * `version_id` - The unique identifier of the version of the secret.
 
 ## Import

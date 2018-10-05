@@ -22,7 +22,7 @@ func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &v),

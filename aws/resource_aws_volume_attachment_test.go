@@ -72,8 +72,11 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(*i.InstanceId)},
+			InstanceIds: []*string{i.InstanceId},
 		})
+		if err != nil {
+			t.Fatalf("error stopping instance (%s): %s", aws.StringValue(i.InstanceId), err)
+		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "stopping"},

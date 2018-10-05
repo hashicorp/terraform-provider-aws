@@ -77,6 +77,29 @@ func testSweepCloudFrontDistributions(region string) error {
 	return nil
 }
 
+func TestAccAWSCloudFrontDistribution_importBasic(t *testing.T) {
+	ri := acctest.RandInt()
+	testConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionS3Config, ri, originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
+
+	resourceName := "aws_cloudfront_distribution.s3_distribution"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testConfig,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // TestAccAWSCloudFrontDistribution_S3Origin runs an
 // aws_cloudfront_distribution acceptance test with a single S3 origin.
 //
@@ -218,6 +241,11 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.default_ttl", "51"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.1.path_pattern", "images2/*.jpg"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

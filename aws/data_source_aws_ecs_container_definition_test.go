@@ -18,7 +18,7 @@ func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsEcsContainerDefinitionDataSourceConfig(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "image", "mongo:latest"),

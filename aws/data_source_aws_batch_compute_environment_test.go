@@ -18,7 +18,7 @@ func TestAccDataSourceAwsBatchComputeEnvironment(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsBatchComputeEnvironmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsBatchComputeEnvironmentCheck(datasourceName, resourceName),

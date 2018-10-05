@@ -20,7 +20,7 @@ func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists("aws_route53_zone_association.foobar", &zone),
@@ -42,7 +42,7 @@ func TestAccAWSRoute53ZoneAssociation_region(t *testing.T) {
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneAssociationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneAssociationRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExistsWithProvider("aws_route53_zone_association.foobar", &zone,

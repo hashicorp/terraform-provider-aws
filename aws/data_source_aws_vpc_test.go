@@ -30,6 +30,8 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 						"data.aws_vpc.by_id", "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc.by_id", "enable_dns_hostnames", "false"),
+					resource.TestCheckResourceAttrSet(
+						"data.aws_vpc.by_id", "arn"),
 				),
 			},
 		},

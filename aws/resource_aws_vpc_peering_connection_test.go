@@ -14,6 +14,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSVPCPeeringConnection_importBasic(t *testing.T) {
+	resourceName := "aws_vpc_peering_connection.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcPeeringConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"auto_accept"},
+			},
+		},
+	})
+}
+
 func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
@@ -25,7 +48,7 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -60,7 +83,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -85,7 +108,7 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -126,7 +149,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConfigOptions,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -166,7 +189,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConfigOptions,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -199,7 +222,7 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccVpcPeeringConfigFailedState,
 				ExpectError: regexp.MustCompile(`.*Error waiting.*\(pcx-\w+\).*incorrect.*VPC-ID.*`),
 			},
@@ -323,7 +346,7 @@ func TestAccAWSVPCPeeringConnection_peerRegionAndAutoAccept(t *testing.T) {
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccVpcPeeringConfigRegionAutoAccept,
 				ExpectError: regexp.MustCompile(`.*peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection.*`),
 			},
@@ -344,7 +367,7 @@ func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcPeeringConfigRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(

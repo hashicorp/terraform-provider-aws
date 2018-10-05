@@ -71,7 +71,7 @@ The following arguments are supported:
  Valid values for this parameter are `memcached` or `redis`
 
 * `engine_version` – (Optional) Version number of the cache engine to be used.
-See [Selecting a Cache Engine and Version](https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/SelectEngine.html)
+See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
 in the AWS Documentation center for supported versions
 
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance

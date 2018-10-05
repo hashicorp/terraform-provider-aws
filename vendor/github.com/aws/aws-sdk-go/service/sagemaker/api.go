@@ -427,27 +427,32 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // CreateModel API operation for Amazon SageMaker Service.
 //
 // Creates a model in Amazon SageMaker. In the request, you name the model and
-// describe one or more containers. For each container, you specify the docker
-// image containing inference code, artifacts (from prior training), and custom
-// environment map that the inference code uses when you deploy the model into
-// production.
+// describe a primary container. For the primary container, you specify the
+// docker image containing inference code, artifacts (from prior training),
+// and custom environment map that the inference code uses when you deploy the
+// model for predictions.
 //
-// Use this API to create a model only if you want to use Amazon SageMaker hosting
-// services. To host your model, you create an endpoint configuration with the
-// CreateEndpointConfig API, and then create an endpoint with the CreateEndpoint
-// API.
+// Use this API to create a model if you want to use Amazon SageMaker hosting
+// services or run a batch transform job.
 //
-// Amazon SageMaker then deploys all of the containers that you defined for
-// the model in the hosting environment.
+// To host your model, you create an endpoint configuration with the CreateEndpointConfig
+// API, and then create an endpoint with the CreateEndpoint API. Amazon SageMaker
+// then deploys all of the containers that you defined for the model in the
+// hosting environment.
+//
+// To run a batch transform using your model, you start a job with the CreateTransformJob
+// API. Amazon SageMaker uses your model and your dataset to get inferences
+// which are then saved to a specified S3 location.
 //
 // In the CreateModel request, you must define a container with the PrimaryContainer
 // parameter.
 //
 // In the request, you also provide an IAM role that Amazon SageMaker can assume
 // to access model artifacts and docker image for deployment on ML compute hosting
-// instances. In addition, you also use the IAM role to manage permissions the
-// inference code needs. For example, if the inference code access any other
-// AWS resources, you grant necessary permissions via this role.
+// instances or for batch transform jobs. In addition, you also use the IAM
+// role to manage permissions the inference code needs. For example, if the
+// inference code access any other AWS resources, you grant necessary permissions
+// via this role.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -745,6 +750,15 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // home page from the notebook instance. The console uses this API to get the
 // URL and show the page.
 //
+// You can restrict access to this API and to the URL that it returns to a list
+// of IP addresses that you specify. To restrict access, attach an IAM policy
+// that denies access to this API unless the call comes from an IP address in
+// the specified list to every AWS Identity and Access Management user, group,
+// or role used to access the notebook instance. Use the NotIpAddress condition
+// operator and the aws:SourceIP condition context key to specify the list of
+// IP addresses that you want to have access to the notebook instance. For more
+// information, see nbi-ip-filter.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -891,6 +905,114 @@ func (c *SageMaker) CreateTrainingJobWithContext(ctx aws.Context, input *CreateT
 	return out, req.Send()
 }
 
+const opCreateTransformJob = "CreateTransformJob"
+
+// CreateTransformJobRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTransformJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTransformJob for more information on using the CreateTransformJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTransformJobRequest method.
+//    req, resp := client.CreateTransformJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateTransformJob
+func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (req *request.Request, output *CreateTransformJobOutput) {
+	op := &request.Operation{
+		Name:       opCreateTransformJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTransformJobInput{}
+	}
+
+	output = &CreateTransformJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTransformJob API operation for Amazon SageMaker Service.
+//
+// Starts a transform job. A transform job uses a trained model to get inferences
+// on a dataset and saves these results to an Amazon S3 location that you specify.
+//
+// To perform batch transformations, you create a transform job and use the
+// data that you have readily available.
+//
+// In the request body, you provide the following:
+//
+//    * TransformJobName - Identifies the transform job. The name must be unique
+//    within an AWS Region in an AWS account.
+//
+//    * ModelName - Identifies the model to use. ModelName must be the name
+//    of an existing Amazon SageMaker model in the same AWS Region and AWS account.
+//    For information on creating a model, see CreateModel.
+//
+//    * TransformInput - Describes the dataset to be transformed and the Amazon
+//    S3 location where it is stored.
+//
+//    * TransformOutput - Identifies the Amazon S3 location where you want Amazon
+//    SageMaker to save the results from the transform job.
+//
+//    * TransformResources - Identifies the ML compute instances for the transform
+//    job.
+//
+// For more information about how batch transformation works Amazon SageMaker,
+// see How It Works (http://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation CreateTransformJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceInUse "ResourceInUse"
+//   Resource being accessed is in use.
+//
+//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   You have exceeded an Amazon SageMaker resource limit. For example, you might
+//   have too many training jobs created.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateTransformJob
+func (c *SageMaker) CreateTransformJob(input *CreateTransformJobInput) (*CreateTransformJobOutput, error) {
+	req, out := c.CreateTransformJobRequest(input)
+	return out, req.Send()
+}
+
+// CreateTransformJobWithContext is the same as CreateTransformJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTransformJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) CreateTransformJobWithContext(ctx aws.Context, input *CreateTransformJobInput, opts ...request.Option) (*CreateTransformJobOutput, error) {
+	req, out := c.CreateTransformJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteEndpoint = "DeleteEndpoint"
 
 // DeleteEndpointRequest generates a "aws/request.Request" representing the
@@ -939,6 +1061,10 @@ func (c *SageMaker) DeleteEndpointRequest(input *DeleteEndpointInput) (req *requ
 //
 // Deletes an endpoint. Amazon SageMaker frees up all of the resources that
 // were deployed when the endpoint was created.
+//
+// Amazon SageMaker retires any custom KMS key grants associated with the endpoint,
+// meaning you don't need to use the RevokeGrant (http://docs.aws.amazon.com/kms/latest/APIReference/API_RevokeGrant.html)
+// API call.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1884,6 +2010,85 @@ func (c *SageMaker) DescribeTrainingJob(input *DescribeTrainingJobInput) (*Descr
 // for more information on using Contexts.
 func (c *SageMaker) DescribeTrainingJobWithContext(ctx aws.Context, input *DescribeTrainingJobInput, opts ...request.Option) (*DescribeTrainingJobOutput, error) {
 	req, out := c.DescribeTrainingJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeTransformJob = "DescribeTransformJob"
+
+// DescribeTransformJobRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTransformJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTransformJob for more information on using the DescribeTransformJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeTransformJobRequest method.
+//    req, resp := client.DescribeTransformJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeTransformJob
+func (c *SageMaker) DescribeTransformJobRequest(input *DescribeTransformJobInput) (req *request.Request, output *DescribeTransformJobOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTransformJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeTransformJobInput{}
+	}
+
+	output = &DescribeTransformJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTransformJob API operation for Amazon SageMaker Service.
+//
+// Returns information about a transform job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DescribeTransformJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   Resource being access is not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeTransformJob
+func (c *SageMaker) DescribeTransformJob(input *DescribeTransformJobInput) (*DescribeTransformJobOutput, error) {
+	req, out := c.DescribeTransformJobRequest(input)
+	return out, req.Send()
+}
+
+// DescribeTransformJobWithContext is the same as DescribeTransformJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTransformJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DescribeTransformJobWithContext(ctx aws.Context, input *DescribeTransformJobInput, opts ...request.Option) (*DescribeTransformJobOutput, error) {
+	req, out := c.DescribeTransformJobRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3069,6 +3274,136 @@ func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobPagesWithContext(c
 	return p.Err()
 }
 
+const opListTransformJobs = "ListTransformJobs"
+
+// ListTransformJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListTransformJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTransformJobs for more information on using the ListTransformJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTransformJobsRequest method.
+//    req, resp := client.ListTransformJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTransformJobs
+func (c *SageMaker) ListTransformJobsRequest(input *ListTransformJobsInput) (req *request.Request, output *ListTransformJobsOutput) {
+	op := &request.Operation{
+		Name:       opListTransformJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListTransformJobsInput{}
+	}
+
+	output = &ListTransformJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTransformJobs API operation for Amazon SageMaker Service.
+//
+// Lists transform jobs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation ListTransformJobs for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTransformJobs
+func (c *SageMaker) ListTransformJobs(input *ListTransformJobsInput) (*ListTransformJobsOutput, error) {
+	req, out := c.ListTransformJobsRequest(input)
+	return out, req.Send()
+}
+
+// ListTransformJobsWithContext is the same as ListTransformJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTransformJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListTransformJobsWithContext(ctx aws.Context, input *ListTransformJobsInput, opts ...request.Option) (*ListTransformJobsOutput, error) {
+	req, out := c.ListTransformJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListTransformJobsPages iterates over the pages of a ListTransformJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTransformJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTransformJobs operation.
+//    pageNum := 0
+//    err := client.ListTransformJobsPages(params,
+//        func(page *ListTransformJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SageMaker) ListTransformJobsPages(input *ListTransformJobsInput, fn func(*ListTransformJobsOutput, bool) bool) error {
+	return c.ListTransformJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTransformJobsPagesWithContext same as ListTransformJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListTransformJobsPagesWithContext(ctx aws.Context, input *ListTransformJobsInput, fn func(*ListTransformJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTransformJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTransformJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTransformJobsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opStartNotebookInstance = "StartNotebookInstance"
 
 // StartNotebookInstanceRequest generates a "aws/request.Request" representing the
@@ -3205,7 +3540,7 @@ func (c *SageMaker) StopHyperParameterTuningJobRequest(input *StopHyperParameter
 // the tuning job launched.
 //
 // All model artifacts output from the training jobs are stored in Amazon Simple
-// Storage Service (Amazon S3). All data that the training jobs write toAmazon
+// Storage Service (Amazon S3). All data that the training jobs write to Amazon
 // CloudWatch Logs are still available in CloudWatch. After the tuning job moves
 // to the Stopped state, it releases all reserved resources for the tuning job.
 //
@@ -3413,6 +3748,92 @@ func (c *SageMaker) StopTrainingJob(input *StopTrainingJobInput) (*StopTrainingJ
 // for more information on using Contexts.
 func (c *SageMaker) StopTrainingJobWithContext(ctx aws.Context, input *StopTrainingJobInput, opts ...request.Option) (*StopTrainingJobOutput, error) {
 	req, out := c.StopTrainingJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopTransformJob = "StopTransformJob"
+
+// StopTransformJobRequest generates a "aws/request.Request" representing the
+// client's request for the StopTransformJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopTransformJob for more information on using the StopTransformJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopTransformJobRequest method.
+//    req, resp := client.StopTransformJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopTransformJob
+func (c *SageMaker) StopTransformJobRequest(input *StopTransformJobInput) (req *request.Request, output *StopTransformJobOutput) {
+	op := &request.Operation{
+		Name:       opStopTransformJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopTransformJobInput{}
+	}
+
+	output = &StopTransformJobOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopTransformJob API operation for Amazon SageMaker Service.
+//
+// Stops a transform job.
+//
+// When Amazon SageMaker receives a StopTransformJob request, the status of
+// the job changes to Stopping. After Amazon SageMaker stops the job, the status
+// is set to Stopped. When you stop a transform job before it is completed,
+// Amazon SageMaker doesn't store the job's output in Amazon S3.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation StopTransformJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   Resource being access is not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopTransformJob
+func (c *SageMaker) StopTransformJob(input *StopTransformJobInput) (*StopTransformJobOutput, error) {
+	req, out := c.StopTransformJobRequest(input)
+	return out, req.Send()
+}
+
+// StopTransformJobWithContext is the same as StopTransformJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopTransformJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) StopTransformJobWithContext(ctx aws.Context, input *StopTransformJobInput, opts ...request.Option) (*StopTransformJobOutput, error) {
+	req, out := c.StopTransformJobRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4004,7 +4425,7 @@ type Channel struct {
 	// algorithm requires the RecordIO format, in which case, Amazon SageMaker wraps
 	// each individual S3 object in a RecordIO record. If the input data is already
 	// in RecordIO format, you don't need to set this attribute. For more information,
-	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/how_to/recordio.html?highlight=im2rec)
+	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/architecture/note_data_loading.html#data-format)
 	RecordWrapperType *string `type:"string" enum:"RecordWrapper"`
 }
 
@@ -4588,8 +5009,9 @@ type CreateModelInput struct {
 
 	// The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker can
 	// assume to access model artifacts and docker image for deployment on ML compute
-	// instances. Deploying on ML compute instances is part of model hosting. For
-	// more information, see Amazon SageMaker Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	// instances or for batch transform jobs. Deploying on ML compute instances
+	// is part of model hosting. For more information, see Amazon SageMaker Roles
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
 	//
 	// To be able to pass this role to Amazon SageMaker, the caller of this API
 	// must have the iam:PassRole permission.
@@ -4604,7 +5026,7 @@ type CreateModelInput struct {
 
 	// The location of the primary docker image containing inference code, associated
 	// artifacts, and custom environment map that the inference code uses when the
-	// model is deployed into production.
+	// model is deployed for predictions.
 	//
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
@@ -4616,6 +5038,7 @@ type CreateModelInput struct {
 
 	// A VpcConfig object that specifies the VPC that you want your model to connect
 	// to. Control access to and from your model container by configuring the VPC.
+	// VpcConfig is currently used in hosting services but not in batch transform.
 	// For more information, see host-vpc.
 	VpcConfig *VpcConfig `type:"structure"`
 }
@@ -5167,7 +5590,7 @@ type CreateTrainingJobInput struct {
 	Tags []*Tag `type:"list"`
 
 	// The name of the training job. The name must be unique within an AWS Region
-	// in an AWS account. It appears in the Amazon SageMaker console.
+	// in an AWS account.
 	//
 	// TrainingJobName is a required field
 	TrainingJobName *string `min:"1" type:"string" required:"true"`
@@ -5355,6 +5778,224 @@ func (s CreateTrainingJobOutput) GoString() string {
 // SetTrainingJobArn sets the TrainingJobArn field's value.
 func (s *CreateTrainingJobOutput) SetTrainingJobArn(v string) *CreateTrainingJobOutput {
 	s.TrainingJobArn = &v
+	return s
+}
+
+type CreateTransformJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// Determines the number of records included in a single mini-batch. SingleRecord
+	// means only one record is used per mini-batch. MultiRecord means a mini-batch
+	// is set to contain as many records that can fit within the MaxPayloadInMB
+	// limit.
+	//
+	// Batch transform will automatically split your input data into whatever payload
+	// size is specified if you set SplitType to Line and BatchStrategy to MultiRecord.
+	// There's no need to split the dataset into smaller files or to use larger
+	// payload sizes unless the records in your dataset are very large.
+	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
+
+	// The environment variables to set in the Docker container. We support up to
+	// 16 key and values entries in the map.
+	Environment map[string]*string `type:"map"`
+
+	// The maximum number of parallel requests that can be sent to each instance
+	// in a transform job. This is good for algorithms that implement multiple workers
+	// on larger instances . The default value is 1. To allow Amazon SageMaker to
+	// determine the appropriate number for MaxConcurrentTransforms, set the value
+	// to 0.
+	MaxConcurrentTransforms *int64 `type:"integer"`
+
+	// The maximum payload size allowed, in MB. A payload is the data portion of
+	// a record (without metadata). The value in MaxPayloadInMB must be greater
+	// or equal to the size of a single record. You can approximate the size of
+	// a record by dividing the size of your dataset by the number of records. Then
+	// multiply this value by the number of records you want in a mini-batch. It
+	// is recommended to enter a value slightly larger than this to ensure the records
+	// fit within the maximum payload size. The default value is 6 MB. For an unlimited
+	// payload size, set the value to 0.
+	MaxPayloadInMB *int64 `type:"integer"`
+
+	// The name of the model that you want to use for the transform job. ModelName
+	// must be the name of an existing Amazon SageMaker model within an AWS Region
+	// in an AWS account.
+	//
+	// ModelName is a required field
+	ModelName *string `type:"string" required:"true"`
+
+	// An array of key-value pairs. Adding tags is optional. For more information,
+	// see Using Cost Allocation Tags (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
+	// in the AWS Billing and Cost Management User Guide.
+	Tags []*Tag `type:"list"`
+
+	// Describes the input source and the way the transform job consumes it.
+	//
+	// TransformInput is a required field
+	TransformInput *TransformInput `type:"structure" required:"true"`
+
+	// The name of the transform job. The name must be unique within an AWS Region
+	// in an AWS account.
+	//
+	// TransformJobName is a required field
+	TransformJobName *string `min:"1" type:"string" required:"true"`
+
+	// Describes the results of the transform job.
+	//
+	// TransformOutput is a required field
+	TransformOutput *TransformOutput `type:"structure" required:"true"`
+
+	// Describes the resources, including ML instance types and ML instance count,
+	// to use for the transform job.
+	//
+	// TransformResources is a required field
+	TransformResources *TransformResources `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateTransformJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTransformJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTransformJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTransformJobInput"}
+	if s.ModelName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ModelName"))
+	}
+	if s.TransformInput == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransformInput"))
+	}
+	if s.TransformJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransformJobName"))
+	}
+	if s.TransformJobName != nil && len(*s.TransformJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TransformJobName", 1))
+	}
+	if s.TransformOutput == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransformOutput"))
+	}
+	if s.TransformResources == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransformResources"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.TransformInput != nil {
+		if err := s.TransformInput.Validate(); err != nil {
+			invalidParams.AddNested("TransformInput", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.TransformOutput != nil {
+		if err := s.TransformOutput.Validate(); err != nil {
+			invalidParams.AddNested("TransformOutput", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.TransformResources != nil {
+		if err := s.TransformResources.Validate(); err != nil {
+			invalidParams.AddNested("TransformResources", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBatchStrategy sets the BatchStrategy field's value.
+func (s *CreateTransformJobInput) SetBatchStrategy(v string) *CreateTransformJobInput {
+	s.BatchStrategy = &v
+	return s
+}
+
+// SetEnvironment sets the Environment field's value.
+func (s *CreateTransformJobInput) SetEnvironment(v map[string]*string) *CreateTransformJobInput {
+	s.Environment = v
+	return s
+}
+
+// SetMaxConcurrentTransforms sets the MaxConcurrentTransforms field's value.
+func (s *CreateTransformJobInput) SetMaxConcurrentTransforms(v int64) *CreateTransformJobInput {
+	s.MaxConcurrentTransforms = &v
+	return s
+}
+
+// SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
+func (s *CreateTransformJobInput) SetMaxPayloadInMB(v int64) *CreateTransformJobInput {
+	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelName sets the ModelName field's value.
+func (s *CreateTransformJobInput) SetModelName(v string) *CreateTransformJobInput {
+	s.ModelName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateTransformJobInput) SetTags(v []*Tag) *CreateTransformJobInput {
+	s.Tags = v
+	return s
+}
+
+// SetTransformInput sets the TransformInput field's value.
+func (s *CreateTransformJobInput) SetTransformInput(v *TransformInput) *CreateTransformJobInput {
+	s.TransformInput = v
+	return s
+}
+
+// SetTransformJobName sets the TransformJobName field's value.
+func (s *CreateTransformJobInput) SetTransformJobName(v string) *CreateTransformJobInput {
+	s.TransformJobName = &v
+	return s
+}
+
+// SetTransformOutput sets the TransformOutput field's value.
+func (s *CreateTransformJobInput) SetTransformOutput(v *TransformOutput) *CreateTransformJobInput {
+	s.TransformOutput = v
+	return s
+}
+
+// SetTransformResources sets the TransformResources field's value.
+func (s *CreateTransformJobInput) SetTransformResources(v *TransformResources) *CreateTransformJobInput {
+	s.TransformResources = v
+	return s
+}
+
+type CreateTransformJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the transform job.
+	//
+	// TransformJobArn is a required field
+	TransformJobArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateTransformJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTransformJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetTransformJobArn sets the TransformJobArn field's value.
+func (s *CreateTransformJobOutput) SetTransformJobArn(v string) *CreateTransformJobOutput {
+	s.TransformJobArn = &v
 	return s
 }
 
@@ -5744,7 +6385,7 @@ type DeployedImage struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time when the image path for the model resolved to the ResolvedImage
-	ResolutionTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ResolutionTime *time.Time `type:"timestamp"`
 
 	// The specific digest path of the image hosted in this ProductionVariant.
 	ResolvedImage *string `type:"string"`
@@ -5825,7 +6466,7 @@ type DescribeEndpointConfigOutput struct {
 	// A timestamp that shows when the endpoint configuration was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint configuration.
 	//
@@ -5932,7 +6573,7 @@ type DescribeEndpointOutput struct {
 	// A timestamp that shows when the endpoint was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint.
 	//
@@ -5960,7 +6601,7 @@ type DescribeEndpointOutput struct {
 	// A timestamp that shows when the endpoint was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 
 	// An array of ProductionVariantSummary objects, one for each model hosted behind
 	// this endpoint.
@@ -6076,13 +6717,13 @@ type DescribeHyperParameterTuningJobOutput struct {
 	// The date and time that the tuning job started.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// If the tuning job failed, the reason it failed.
 	FailureReason *string `type:"string"`
 
 	// The date and time that the tuning job ended.
-	HyperParameterTuningEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	HyperParameterTuningEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the tuning job.
 	//
@@ -6107,7 +6748,7 @@ type DescribeHyperParameterTuningJobOutput struct {
 	HyperParameterTuningJobStatus *string `type:"string" required:"true" enum:"HyperParameterTuningJobStatus"`
 
 	// The date and time that the status of the tuning job was modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The ObjectiveStatusCounters object that specifies the number of training
 	// jobs, categorized by the status of their final objective metric, that this
@@ -6255,7 +6896,7 @@ type DescribeModelOutput struct {
 	// A timestamp that shows when the model was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that you specified for the
 	// model.
@@ -6410,10 +7051,10 @@ type DescribeNotebookInstanceLifecycleConfigOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that tells when the lifecycle configuration was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// A timestamp that tells when the lifecycle configuration was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the lifecycle configuration.
 	NotebookInstanceLifecycleConfigArn *string `type:"string"`
@@ -6480,7 +7121,7 @@ type DescribeNotebookInstanceOutput struct {
 
 	// A timestamp. Use this parameter to return the time when the notebook instance
 	// was created
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// Describes whether Amazon SageMaker provides internet access to the notebook
 	// instance. If this value is set to Disabled, he notebook instance does not
@@ -6502,7 +7143,7 @@ type DescribeNotebookInstanceOutput struct {
 
 	// A timestamp. Use this parameter to retrieve the time when the notebook instance
 	// was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// Network interface IDs that Amazon SageMaker created at the time of creating
 	// the instance.
@@ -6688,7 +7329,7 @@ type DescribeTrainingJobOutput struct {
 	// A timestamp that indicates when the training job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// If the training job failed, the reason it failed.
 	FailureReason *string `type:"string"`
@@ -6702,7 +7343,7 @@ type DescribeTrainingJobOutput struct {
 	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
 
 	// A timestamp that indicates when the status of the training job was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// Information about the Amazon S3 location that is configured for storing model
 	// artifacts.
@@ -6727,8 +7368,35 @@ type DescribeTrainingJobOutput struct {
 	// Provides granular information about the system state. For more information,
 	// see TrainingJobStatus.
 	//
+	//    * Starting - starting the training job.
+	//
+	//    * Downloading - downloading the input data.
+	//
+	//    * Training - model training is in progress.
+	//
+	//    * Uploading - uploading the trained model.
+	//
+	//    * Stopping - stopping the training job.
+	//
+	//    * Stopped - the training job has stopped.
+	//
+	//    * MaxRuntimeExceeded - the training job exceeded the specified max run
+	//    time and has been stopped.
+	//
+	//    * Completed - the training job has completed.
+	//
+	//    * Failed - the training job has failed. The failure reason is stored in
+	//    the FailureReason field of DescribeTrainingJobResponse.
+	//
+	// The valid values for SecondaryStatus are subject to change. They primarily
+	// provide information on the progress of the training job.
+	//
 	// SecondaryStatus is a required field
 	SecondaryStatus *string `type:"string" required:"true" enum:"SecondaryStatus"`
+
+	// To give an overview of the training job lifecycle, SecondaryStatusTransitions
+	// is a log of time-ordered secondary statuses that a training job has transitioned.
+	SecondaryStatusTransitions []*SecondaryStatusTransition `type:"list"`
 
 	// The condition under which to stop the training job.
 	//
@@ -6740,7 +7408,7 @@ type DescribeTrainingJobOutput struct {
 	// this time. For successful jobs and stopped jobs, this is the time after model
 	// artifacts are uploaded. For failed jobs, this is the time when Amazon SageMaker
 	// detects a job failure.
-	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the training job.
 	//
@@ -6779,7 +7447,7 @@ type DescribeTrainingJobOutput struct {
 	// The start time in CloudWatch Logs might be later than this time. The difference
 	// is due to the time it takes to download the training data and to the size
 	// of the training container.
-	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingStartTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the associated hyperparameter tuning job
 	// if the training job was launched by a hyperparameter tuning job.
@@ -6866,6 +7534,12 @@ func (s *DescribeTrainingJobOutput) SetSecondaryStatus(v string) *DescribeTraini
 	return s
 }
 
+// SetSecondaryStatusTransitions sets the SecondaryStatusTransitions field's value.
+func (s *DescribeTrainingJobOutput) SetSecondaryStatusTransitions(v []*SecondaryStatusTransition) *DescribeTrainingJobOutput {
+	s.SecondaryStatusTransitions = v
+	return s
+}
+
 // SetStoppingCondition sets the StoppingCondition field's value.
 func (s *DescribeTrainingJobOutput) SetStoppingCondition(v *StoppingCondition) *DescribeTrainingJobOutput {
 	s.StoppingCondition = v
@@ -6911,6 +7585,218 @@ func (s *DescribeTrainingJobOutput) SetTuningJobArn(v string) *DescribeTrainingJ
 // SetVpcConfig sets the VpcConfig field's value.
 func (s *DescribeTrainingJobOutput) SetVpcConfig(v *VpcConfig) *DescribeTrainingJobOutput {
 	s.VpcConfig = v
+	return s
+}
+
+type DescribeTransformJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the transform job that you want to view details of.
+	//
+	// TransformJobName is a required field
+	TransformJobName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeTransformJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTransformJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeTransformJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeTransformJobInput"}
+	if s.TransformJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransformJobName"))
+	}
+	if s.TransformJobName != nil && len(*s.TransformJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TransformJobName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTransformJobName sets the TransformJobName field's value.
+func (s *DescribeTransformJobInput) SetTransformJobName(v string) *DescribeTransformJobInput {
+	s.TransformJobName = &v
+	return s
+}
+
+type DescribeTransformJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// SingleRecord means only one record was used per a batch. MultiRecord means
+	// batches contained as many records that could possibly fit within the MaxPayloadInMB
+	// limit.
+	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
+
+	// A timestamp that shows when the transform Job was created.
+	//
+	// CreationTime is a required field
+	CreationTime *time.Time `type:"timestamp" required:"true"`
+
+	Environment map[string]*string `type:"map"`
+
+	// If the transform job failed, the reason that it failed.
+	FailureReason *string `type:"string"`
+
+	// The maximum number of parallel requests on each instance node that can be
+	// launched in a transform job. The default value is 1.
+	MaxConcurrentTransforms *int64 `type:"integer"`
+
+	// The maximum payload size , in MB used in the transform job.
+	MaxPayloadInMB *int64 `type:"integer"`
+
+	// The name of the model used in the transform job.
+	//
+	// ModelName is a required field
+	ModelName *string `type:"string" required:"true"`
+
+	// Indicates when the transform job is Completed, Stopped, or Failed. You are
+	// billed for the time interval between this time and the value of TransformStartTime.
+	TransformEndTime *time.Time `type:"timestamp"`
+
+	// Describes the dataset to be transformed and the Amazon S3 location where
+	// it is stored.
+	//
+	// TransformInput is a required field
+	TransformInput *TransformInput `type:"structure" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the transform job.
+	//
+	// TransformJobArn is a required field
+	TransformJobArn *string `type:"string" required:"true"`
+
+	// The name of the transform job.
+	//
+	// TransformJobName is a required field
+	TransformJobName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the transform job. If the transform job failed, the reason
+	// is returned in the FailureReason field.
+	//
+	// TransformJobStatus is a required field
+	TransformJobStatus *string `type:"string" required:"true" enum:"TransformJobStatus"`
+
+	// Identifies the Amazon S3 location where you want Amazon SageMaker to save
+	// the results from the transform job.
+	TransformOutput *TransformOutput `type:"structure"`
+
+	// Describes the resources, including ML instance types and ML instance count,
+	// to use for the transform job.
+	//
+	// TransformResources is a required field
+	TransformResources *TransformResources `type:"structure" required:"true"`
+
+	// Indicates when the transform job starts on ML instances. You are billed for
+	// the time interval between this time and the value of TransformEndTime.
+	TransformStartTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s DescribeTransformJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTransformJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchStrategy sets the BatchStrategy field's value.
+func (s *DescribeTransformJobOutput) SetBatchStrategy(v string) *DescribeTransformJobOutput {
+	s.BatchStrategy = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeTransformJobOutput) SetCreationTime(v time.Time) *DescribeTransformJobOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetEnvironment sets the Environment field's value.
+func (s *DescribeTransformJobOutput) SetEnvironment(v map[string]*string) *DescribeTransformJobOutput {
+	s.Environment = v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *DescribeTransformJobOutput) SetFailureReason(v string) *DescribeTransformJobOutput {
+	s.FailureReason = &v
+	return s
+}
+
+// SetMaxConcurrentTransforms sets the MaxConcurrentTransforms field's value.
+func (s *DescribeTransformJobOutput) SetMaxConcurrentTransforms(v int64) *DescribeTransformJobOutput {
+	s.MaxConcurrentTransforms = &v
+	return s
+}
+
+// SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
+func (s *DescribeTransformJobOutput) SetMaxPayloadInMB(v int64) *DescribeTransformJobOutput {
+	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelName sets the ModelName field's value.
+func (s *DescribeTransformJobOutput) SetModelName(v string) *DescribeTransformJobOutput {
+	s.ModelName = &v
+	return s
+}
+
+// SetTransformEndTime sets the TransformEndTime field's value.
+func (s *DescribeTransformJobOutput) SetTransformEndTime(v time.Time) *DescribeTransformJobOutput {
+	s.TransformEndTime = &v
+	return s
+}
+
+// SetTransformInput sets the TransformInput field's value.
+func (s *DescribeTransformJobOutput) SetTransformInput(v *TransformInput) *DescribeTransformJobOutput {
+	s.TransformInput = v
+	return s
+}
+
+// SetTransformJobArn sets the TransformJobArn field's value.
+func (s *DescribeTransformJobOutput) SetTransformJobArn(v string) *DescribeTransformJobOutput {
+	s.TransformJobArn = &v
+	return s
+}
+
+// SetTransformJobName sets the TransformJobName field's value.
+func (s *DescribeTransformJobOutput) SetTransformJobName(v string) *DescribeTransformJobOutput {
+	s.TransformJobName = &v
+	return s
+}
+
+// SetTransformJobStatus sets the TransformJobStatus field's value.
+func (s *DescribeTransformJobOutput) SetTransformJobStatus(v string) *DescribeTransformJobOutput {
+	s.TransformJobStatus = &v
+	return s
+}
+
+// SetTransformOutput sets the TransformOutput field's value.
+func (s *DescribeTransformJobOutput) SetTransformOutput(v *TransformOutput) *DescribeTransformJobOutput {
+	s.TransformOutput = v
+	return s
+}
+
+// SetTransformResources sets the TransformResources field's value.
+func (s *DescribeTransformJobOutput) SetTransformResources(v *TransformResources) *DescribeTransformJobOutput {
+	s.TransformResources = v
+	return s
+}
+
+// SetTransformStartTime sets the TransformStartTime field's value.
+func (s *DescribeTransformJobOutput) SetTransformStartTime(v time.Time) *DescribeTransformJobOutput {
+	s.TransformStartTime = &v
 	return s
 }
 
@@ -6981,7 +7867,7 @@ type EndpointConfigSummary struct {
 	// A timestamp that shows when the endpoint configuration was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint configuration.
 	//
@@ -7029,7 +7915,7 @@ type EndpointSummary struct {
 	// A timestamp that shows when the endpoint was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the endpoint.
 	//
@@ -7049,7 +7935,7 @@ type EndpointSummary struct {
 	// A timestamp that shows when the endpoint was last modified.
 	//
 	// LastModifiedTime is a required field
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -7427,7 +8313,7 @@ type HyperParameterTrainingJobSummary struct {
 	// The date and time that the training job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The reason that the training job failed.
 	FailureReason *string `type:"string"`
@@ -7452,7 +8338,7 @@ type HyperParameterTrainingJobSummary struct {
 	ObjectiveStatus *string `type:"string" enum:"ObjectiveStatus"`
 
 	// The date and time that the training job ended.
-	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the training job.
 	//
@@ -7470,7 +8356,7 @@ type HyperParameterTrainingJobSummary struct {
 	TrainingJobStatus *string `type:"string" required:"true" enum:"TrainingJobStatus"`
 
 	// The date and time that the training job started.
-	TrainingStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingStartTime *time.Time `type:"timestamp"`
 
 	// A list of the hyperparameters for which you specified ranges to search.
 	//
@@ -7714,10 +8600,10 @@ type HyperParameterTuningJobSummary struct {
 	// The date and time that the tuning job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The date and time that the tuning job ended.
-	HyperParameterTuningEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	HyperParameterTuningEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the tuning job.
 	//
@@ -7735,7 +8621,7 @@ type HyperParameterTuningJobSummary struct {
 	HyperParameterTuningJobStatus *string `type:"string" required:"true" enum:"HyperParameterTuningJobStatus"`
 
 	// The date and time that the tuning job was modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The ObjectiveStatusCounters object that specifies the numbers of training
 	// jobs, categorized by objective metric status, that this tuning job launched.
@@ -7904,11 +8790,11 @@ type ListEndpointConfigsInput struct {
 
 	// A filter that returns only endpoint configurations created after the specified
 	// time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoint configurations created before the specified
 	// time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of training jobs to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -8034,19 +8920,19 @@ type ListEndpointsInput struct {
 
 	// A filter that returns only endpoints that were created after the specified
 	// time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were created before the specified
 	// time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were modified after the specified
 	// timestamp.
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were modified before the specified
 	// timestamp.
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of endpoints to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -8193,19 +9079,19 @@ type ListHyperParameterTuningJobsInput struct {
 
 	// A filter that returns only tuning jobs that were created after the specified
 	// time.
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only tuning jobs that were created before the specified
 	// time.
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only tuning jobs that were modified after the specified
 	// time.
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only tuning jobs that were modified before the specified
 	// time.
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of tuning jobs to return. The default value is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -8353,10 +9239,10 @@ type ListModelsInput struct {
 	_ struct{} `type:"structure"`
 
 	// A filter that returns only models created after the specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only models created before the specified time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of models to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -8482,19 +9368,19 @@ type ListNotebookInstanceLifecycleConfigsInput struct {
 
 	// A filter that returns only lifecycle configurations that were created after
 	// the specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only lifecycle configurations that were created before
 	// the specified time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only lifecycle configurations that were modified after
 	// the specified time (timestamp).
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only lifecycle configurations that were modified before
 	// the specified time (timestamp).
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of lifecycle configurations to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -8631,19 +9517,19 @@ type ListNotebookInstancesInput struct {
 
 	// A filter that returns only notebook instances that were created after the
 	// specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only notebook instances that were created before the
 	// specified time (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only notebook instances that were modified after the
 	// specified time (timestamp).
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only notebook instances that were modified before the
 	// specified time (timestamp).
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of notebook instances to return.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9028,20 +9914,21 @@ func (s *ListTrainingJobsForHyperParameterTuningJobOutput) SetTrainingJobSummari
 type ListTrainingJobsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A filter that only training jobs created after the specified time (timestamp).
-	CreationTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// A filter that returns only training jobs created after the specified time
+	// (timestamp).
+	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only training jobs created before the specified time
 	// (timestamp).
-	CreationTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimeBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only training jobs modified after the specified time
 	// (timestamp).
-	LastModifiedTimeAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only training jobs modified before the specified time
 	// (timestamp).
-	LastModifiedTimeBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
 
 	// The maximum number of training jobs to return in the response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -9183,6 +10070,162 @@ func (s *ListTrainingJobsOutput) SetTrainingJobSummaries(v []*TrainingJobSummary
 	return s
 }
 
+type ListTransformJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A filter that returns only transform jobs created after the specified time.
+	CreationTimeAfter *time.Time `type:"timestamp"`
+
+	// A filter that returns only transform jobs created before the specified time.
+	CreationTimeBefore *time.Time `type:"timestamp"`
+
+	// A filter that returns only transform jobs modified after the specified time.
+	LastModifiedTimeAfter *time.Time `type:"timestamp"`
+
+	// A filter that returns only transform jobs modified before the specified time.
+	LastModifiedTimeBefore *time.Time `type:"timestamp"`
+
+	// The maximum number of transform jobs to return in the response. The default
+	// value is 10.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A string in the transform job name. This filter returns only transform jobs
+	// whose name contains the specified string.
+	NameContains *string `type:"string"`
+
+	// If the result of the previous ListTransformJobs request was truncated, the
+	// response includes a NextToken. To retrieve the next set of transform jobs,
+	// use the token in the next request.
+	NextToken *string `type:"string"`
+
+	// The field to sort results by. The default is CreationTime.
+	SortBy *string `type:"string" enum:"SortBy"`
+
+	// The sort order for results. The default is Descending.
+	SortOrder *string `type:"string" enum:"SortOrder"`
+
+	// A filter that retrieves only transform jobs with a specific status.
+	StatusEquals *string `type:"string" enum:"TransformJobStatus"`
+}
+
+// String returns the string representation
+func (s ListTransformJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTransformJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTransformJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTransformJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCreationTimeAfter sets the CreationTimeAfter field's value.
+func (s *ListTransformJobsInput) SetCreationTimeAfter(v time.Time) *ListTransformJobsInput {
+	s.CreationTimeAfter = &v
+	return s
+}
+
+// SetCreationTimeBefore sets the CreationTimeBefore field's value.
+func (s *ListTransformJobsInput) SetCreationTimeBefore(v time.Time) *ListTransformJobsInput {
+	s.CreationTimeBefore = &v
+	return s
+}
+
+// SetLastModifiedTimeAfter sets the LastModifiedTimeAfter field's value.
+func (s *ListTransformJobsInput) SetLastModifiedTimeAfter(v time.Time) *ListTransformJobsInput {
+	s.LastModifiedTimeAfter = &v
+	return s
+}
+
+// SetLastModifiedTimeBefore sets the LastModifiedTimeBefore field's value.
+func (s *ListTransformJobsInput) SetLastModifiedTimeBefore(v time.Time) *ListTransformJobsInput {
+	s.LastModifiedTimeBefore = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListTransformJobsInput) SetMaxResults(v int64) *ListTransformJobsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNameContains sets the NameContains field's value.
+func (s *ListTransformJobsInput) SetNameContains(v string) *ListTransformJobsInput {
+	s.NameContains = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTransformJobsInput) SetNextToken(v string) *ListTransformJobsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListTransformJobsInput) SetSortBy(v string) *ListTransformJobsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListTransformJobsInput) SetSortOrder(v string) *ListTransformJobsInput {
+	s.SortOrder = &v
+	return s
+}
+
+// SetStatusEquals sets the StatusEquals field's value.
+func (s *ListTransformJobsInput) SetStatusEquals(v string) *ListTransformJobsInput {
+	s.StatusEquals = &v
+	return s
+}
+
+type ListTransformJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// If the response is truncated, Amazon SageMaker returns this token. To retrieve
+	// the next set of transform jobs, use it in the next request.
+	NextToken *string `type:"string"`
+
+	// An array of TransformJobSummary objects.
+	//
+	// TransformJobSummaries is a required field
+	TransformJobSummaries []*TransformJobSummary `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTransformJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTransformJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTransformJobsOutput) SetNextToken(v string) *ListTransformJobsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTransformJobSummaries sets the TransformJobSummaries field's value.
+func (s *ListTransformJobsOutput) SetTransformJobSummaries(v []*TransformJobSummary) *ListTransformJobsOutput {
+	s.TransformJobSummaries = v
+	return s
+}
+
 // Specifies a metric that the training algorithm writes to stderr or stdout.
 // Amazon SageMakerHyperparamter tuning captures all defined metrics. You specify
 // one metric that a hyperparameter tuning job uses as its objective metric
@@ -9282,7 +10325,7 @@ type ModelSummary struct {
 	// A timestamp that indicates when the model was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the model.
 	//
@@ -9328,10 +10371,10 @@ type NotebookInstanceLifecycleConfigSummary struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that tells when the lifecycle configuration was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// A timestamp that tells when the lifecycle configuration was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the lifecycle configuration.
 	//
@@ -9435,13 +10478,13 @@ type NotebookInstanceSummary struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp that shows when the notebook instance was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The type of ML compute instance that the notebook instance is running on.
 	InstanceType *string `type:"string" enum:"InstanceType"`
 
 	// A timestamp that shows when the notebook instance was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the notebook instance.
 	//
@@ -10172,6 +11215,69 @@ func (s *S3DataSource) SetS3Uri(v string) *S3DataSource {
 	return s
 }
 
+// Specifies a secondary status the job has transitioned into. It includes a
+// start timestamp and later an end timestamp. The end timestamp is added either
+// after the job transitions to a different secondary status or after the job
+// has ended.
+type SecondaryStatusTransition struct {
+	_ struct{} `type:"structure"`
+
+	// A timestamp that shows when the secondary status has ended and the job has
+	// transitioned into another secondary status. The EndTime timestamp is also
+	// set after the training job has ended.
+	EndTime *time.Time `type:"timestamp"`
+
+	// A timestamp that shows when the training job has entered this secondary status.
+	//
+	// StartTime is a required field
+	StartTime *time.Time `type:"timestamp" required:"true"`
+
+	// Provides granular information about the system state. For more information,
+	// see SecondaryStatus under the DescribeTrainingJob response elements.
+	//
+	// Status is a required field
+	Status *string `type:"string" required:"true" enum:"SecondaryStatus"`
+
+	// Shows a brief description and other information about the secondary status.
+	// For example, the LaunchingMLInstances secondary status could show a status
+	// message of "Insufficent capacity error while launching instances".
+	StatusMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SecondaryStatusTransition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SecondaryStatusTransition) GoString() string {
+	return s.String()
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *SecondaryStatusTransition) SetEndTime(v time.Time) *SecondaryStatusTransition {
+	s.EndTime = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *SecondaryStatusTransition) SetStartTime(v time.Time) *SecondaryStatusTransition {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *SecondaryStatusTransition) SetStatus(v string) *SecondaryStatusTransition {
+	s.Status = &v
+	return s
+}
+
+// SetStatusMessage sets the StatusMessage field's value.
+func (s *SecondaryStatusTransition) SetStatusMessage(v string) *SecondaryStatusTransition {
+	s.StatusMessage = &v
+	return s
+}
+
 type StartNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10386,6 +11492,61 @@ func (s StopTrainingJobOutput) GoString() string {
 	return s.String()
 }
 
+type StopTransformJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the transform job to stop.
+	//
+	// TransformJobName is a required field
+	TransformJobName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopTransformJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopTransformJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopTransformJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopTransformJobInput"}
+	if s.TransformJobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransformJobName"))
+	}
+	if s.TransformJobName != nil && len(*s.TransformJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TransformJobName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTransformJobName sets the TransformJobName field's value.
+func (s *StopTransformJobInput) SetTransformJobName(v string) *StopTransformJobInput {
+	s.TransformJobName = &v
+	return s
+}
+
+type StopTransformJobOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopTransformJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopTransformJobOutput) GoString() string {
+	return s.String()
+}
+
 // Specifies how long model training can run. When model training reaches the
 // limit, Amazon SageMaker ends the training job. Use this API to cap model
 // training cost.
@@ -10567,15 +11728,15 @@ type TrainingJobSummary struct {
 	// A timestamp that shows when the training job was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationTime *time.Time `type:"timestamp" required:"true"`
 
 	// Timestamp when the training job was last modified.
-	LastModifiedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// A timestamp that shows when the training job ended. This field is set only
 	// if the training job has one of the terminal statuses (Completed, Failed,
 	// or Stopped).
-	TrainingEndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	TrainingEndTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the training job.
 	//
@@ -10636,6 +11797,481 @@ func (s *TrainingJobSummary) SetTrainingJobName(v string) *TrainingJobSummary {
 // SetTrainingJobStatus sets the TrainingJobStatus field's value.
 func (s *TrainingJobSummary) SetTrainingJobStatus(v string) *TrainingJobSummary {
 	s.TrainingJobStatus = &v
+	return s
+}
+
+// Describes the location of the channel data.
+type TransformDataSource struct {
+	_ struct{} `type:"structure"`
+
+	// The S3 location of the data source that is associated with a channel.
+	//
+	// S3DataSource is a required field
+	S3DataSource *TransformS3DataSource `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s TransformDataSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformDataSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TransformDataSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TransformDataSource"}
+	if s.S3DataSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3DataSource"))
+	}
+	if s.S3DataSource != nil {
+		if err := s.S3DataSource.Validate(); err != nil {
+			invalidParams.AddNested("S3DataSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3DataSource sets the S3DataSource field's value.
+func (s *TransformDataSource) SetS3DataSource(v *TransformS3DataSource) *TransformDataSource {
+	s.S3DataSource = v
+	return s
+}
+
+// Describes the input source of a transform job and the way the transform job
+// consumes it.
+type TransformInput struct {
+	_ struct{} `type:"structure"`
+
+	// Compressing data helps save on storage space. If your transform data is compressed,
+	// specify the compression type.and Amazon SageMaker will automatically decompress
+	// the data for the transform job accordingly. The default value is None.
+	CompressionType *string `type:"string" enum:"CompressionType"`
+
+	// The multipurpose internet mail extension (MIME) type of the data. Amazon
+	// SageMaker uses the MIME type with each http call to transfer data to the
+	// transform job.
+	ContentType *string `type:"string"`
+
+	// Describes the location of the channel data, meaning the S3 location of the
+	// input data that the model can consume.
+	//
+	// DataSource is a required field
+	DataSource *TransformDataSource `type:"structure" required:"true"`
+
+	// The method to use to split the transform job's data into smaller batches.
+	// The default value is None. If you don't want to split the data, specify None.
+	// If you want to split records on a newline character boundary, specify Line.
+	// To split records according to the RecordIO format, specify RecordIO.
+	//
+	// Amazon SageMaker will send maximum number of records per batch in each request
+	// up to the MaxPayloadInMB limit. For more information, see RecordIO data format
+	// (http://mxnet.io/architecture/note_data_loading.html#data-format).
+	//
+	// For information about the RecordIO format, see Data Format (http://mxnet.io/architecture/note_data_loading.html#data-format).
+	SplitType *string `type:"string" enum:"SplitType"`
+}
+
+// String returns the string representation
+func (s TransformInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TransformInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TransformInput"}
+	if s.DataSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("DataSource"))
+	}
+	if s.DataSource != nil {
+		if err := s.DataSource.Validate(); err != nil {
+			invalidParams.AddNested("DataSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCompressionType sets the CompressionType field's value.
+func (s *TransformInput) SetCompressionType(v string) *TransformInput {
+	s.CompressionType = &v
+	return s
+}
+
+// SetContentType sets the ContentType field's value.
+func (s *TransformInput) SetContentType(v string) *TransformInput {
+	s.ContentType = &v
+	return s
+}
+
+// SetDataSource sets the DataSource field's value.
+func (s *TransformInput) SetDataSource(v *TransformDataSource) *TransformInput {
+	s.DataSource = v
+	return s
+}
+
+// SetSplitType sets the SplitType field's value.
+func (s *TransformInput) SetSplitType(v string) *TransformInput {
+	s.SplitType = &v
+	return s
+}
+
+// Provides a summary information for a transform job. Multiple TransformJobSummary
+// objects are returned as a list after calling ListTransformJobs.
+type TransformJobSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A timestamp that shows when the transform Job was created.
+	//
+	// CreationTime is a required field
+	CreationTime *time.Time `type:"timestamp" required:"true"`
+
+	// If the transform job failed, the reason it failed.
+	FailureReason *string `type:"string"`
+
+	// Indicates when the transform job was last modified.
+	LastModifiedTime *time.Time `type:"timestamp"`
+
+	// Indicates when the transform job ends on compute instances. For successful
+	// jobs and stopped jobs, this is the exact time recorded after the results
+	// are uploaded. For failed jobs, this is when Amazon SageMaker detected that
+	// the job failed.
+	TransformEndTime *time.Time `type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the transform job.
+	//
+	// TransformJobArn is a required field
+	TransformJobArn *string `type:"string" required:"true"`
+
+	// The name of the transform job.
+	//
+	// TransformJobName is a required field
+	TransformJobName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the transform job.
+	//
+	// TransformJobStatus is a required field
+	TransformJobStatus *string `type:"string" required:"true" enum:"TransformJobStatus"`
+}
+
+// String returns the string representation
+func (s TransformJobSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformJobSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *TransformJobSummary) SetCreationTime(v time.Time) *TransformJobSummary {
+	s.CreationTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *TransformJobSummary) SetFailureReason(v string) *TransformJobSummary {
+	s.FailureReason = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *TransformJobSummary) SetLastModifiedTime(v time.Time) *TransformJobSummary {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetTransformEndTime sets the TransformEndTime field's value.
+func (s *TransformJobSummary) SetTransformEndTime(v time.Time) *TransformJobSummary {
+	s.TransformEndTime = &v
+	return s
+}
+
+// SetTransformJobArn sets the TransformJobArn field's value.
+func (s *TransformJobSummary) SetTransformJobArn(v string) *TransformJobSummary {
+	s.TransformJobArn = &v
+	return s
+}
+
+// SetTransformJobName sets the TransformJobName field's value.
+func (s *TransformJobSummary) SetTransformJobName(v string) *TransformJobSummary {
+	s.TransformJobName = &v
+	return s
+}
+
+// SetTransformJobStatus sets the TransformJobStatus field's value.
+func (s *TransformJobSummary) SetTransformJobStatus(v string) *TransformJobSummary {
+	s.TransformJobStatus = &v
+	return s
+}
+
+// Describes the results of a transform job output.
+type TransformOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The MIME type used to specify the output data. Amazon SageMaker uses the
+	// MIME type with each http call to transfer data from the transform job.
+	Accept *string `type:"string"`
+
+	// Defines how to assemble the results of the transform job as a single S3 object.
+	// You should select a format that is most convenient to you. To concatenate
+	// the results in binary format, specify None. To add a newline character at
+	// the end of every transformed record, specify Line. To assemble the output
+	// in RecordIO format, specify RecordIO. The default value is None.
+	//
+	// For information about the RecordIO format, see Data Format (http://mxnet.io/architecture/note_data_loading.html#data-format).
+	AssembleWith *string `type:"string" enum:"AssemblyType"`
+
+	// The AWS Key Management Service (AWS KMS) key for Amazon S3 server-side encryption
+	// that Amazon SageMaker uses to encrypt the transformed data.
+	//
+	// If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS
+	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
+	// Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	//
+	// The KMS key policy must grant permission to the IAM role that you specify
+	// in your CreateTramsformJob request. For more information, see Using Key Policies
+	// in AWS KMS (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
+	// in the AWS Key Management Service Developer Guide.
+	KmsKeyId *string `type:"string"`
+
+	// The Amazon S3 path where you want Amazon SageMaker to store the results of
+	// the transform job. For example, s3://bucket-name/key-name-prefix.
+	//
+	// For every S3 object used as input for the transform job, the transformed
+	// data is stored in a corresponding subfolder in the location under the output
+	// prefix. For example, the input data s3://bucket-name/input-name-prefix/dataset01/data.csv
+	// will have the transformed data stored at s3://bucket-name/key-name-prefix/dataset01/,
+	// based on the original name, as a series of .part files (.part0001, part0002,
+	// etc).
+	//
+	// S3OutputPath is a required field
+	S3OutputPath *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TransformOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformOutput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TransformOutput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TransformOutput"}
+	if s.S3OutputPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3OutputPath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccept sets the Accept field's value.
+func (s *TransformOutput) SetAccept(v string) *TransformOutput {
+	s.Accept = &v
+	return s
+}
+
+// SetAssembleWith sets the AssembleWith field's value.
+func (s *TransformOutput) SetAssembleWith(v string) *TransformOutput {
+	s.AssembleWith = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *TransformOutput) SetKmsKeyId(v string) *TransformOutput {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetS3OutputPath sets the S3OutputPath field's value.
+func (s *TransformOutput) SetS3OutputPath(v string) *TransformOutput {
+	s.S3OutputPath = &v
+	return s
+}
+
+// Describes the resources, including ML instance types and ML instance count,
+// to use for transform job.
+type TransformResources struct {
+	_ struct{} `type:"structure"`
+
+	// The number of ML compute instances to use in the transform job. For distributed
+	// transform, provide a value greater than 1. The default value is 1.
+	//
+	// InstanceCount is a required field
+	InstanceCount *int64 `min:"1" type:"integer" required:"true"`
+
+	// The ML compute instance type for the transform job. For using built-in algorithms
+	// to transform moderately sized datasets, ml.m4.xlarge or ml.m5.large should
+	// suffice. There is no default value for InstanceType.
+	//
+	// InstanceType is a required field
+	InstanceType *string `type:"string" required:"true" enum:"TransformInstanceType"`
+
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
+	// instance(s) that run the batch transform job.
+	VolumeKmsKeyId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TransformResources) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformResources) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TransformResources) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TransformResources"}
+	if s.InstanceCount == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceCount"))
+	}
+	if s.InstanceCount != nil && *s.InstanceCount < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("InstanceCount", 1))
+	}
+	if s.InstanceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInstanceCount sets the InstanceCount field's value.
+func (s *TransformResources) SetInstanceCount(v int64) *TransformResources {
+	s.InstanceCount = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *TransformResources) SetInstanceType(v string) *TransformResources {
+	s.InstanceType = &v
+	return s
+}
+
+// SetVolumeKmsKeyId sets the VolumeKmsKeyId field's value.
+func (s *TransformResources) SetVolumeKmsKeyId(v string) *TransformResources {
+	s.VolumeKmsKeyId = &v
+	return s
+}
+
+// Describes the S3 data source.
+type TransformS3DataSource struct {
+	_ struct{} `type:"structure"`
+
+	// If you choose S3Prefix, S3Uri identifies a key name prefix. Amazon SageMaker
+	// uses all objects with the specified key name prefix for batch transform.
+	//
+	// If you choose ManifestFile, S3Uri identifies an object that is a manifest
+	// file containing a list of object keys that you want Amazon SageMaker to use
+	// for batch transform.
+	//
+	// S3DataType is a required field
+	S3DataType *string `type:"string" required:"true" enum:"S3DataType"`
+
+	// Depending on the value specified for the S3DataType, identifies either a
+	// key name prefix or a manifest. For example:
+	//
+	//    *  A key name prefix might look like this: s3://bucketname/exampleprefix.
+	//
+	//
+	//    *  A manifest might look like this: s3://bucketname/example.manifest
+	//
+	//  The manifest is an S3 object which is a JSON file with the following format:
+	//
+	//
+	// [
+	//
+	//  {"prefix": "s3://customer_bucket/some/prefix/"},
+	//
+	//  "relative/path/to/custdata-1",
+	//
+	//  "relative/path/custdata-2",
+	//
+	//  ...
+	//
+	//  ]
+	//
+	//  The preceding JSON matches the following S3Uris:
+	//
+	// s3://customer_bucket/some/prefix/relative/path/to/custdata-1
+	//
+	// s3://customer_bucket/some/prefix/relative/path/custdata-1
+	//
+	// ...
+	//
+	//  The complete set of S3Uris in this manifest constitutes the input data for
+	//    the channel for this datasource. The object that each S3Uris points to
+	//    must be readable by the IAM role that Amazon SageMaker uses to perform
+	//    tasks on your behalf.
+	//
+	// S3Uri is a required field
+	S3Uri *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TransformS3DataSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformS3DataSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TransformS3DataSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TransformS3DataSource"}
+	if s.S3DataType == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3DataType"))
+	}
+	if s.S3Uri == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3Uri"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3DataType sets the S3DataType field's value.
+func (s *TransformS3DataSource) SetS3DataType(v string) *TransformS3DataSource {
+	s.S3DataType = &v
+	return s
+}
+
+// SetS3Uri sets the S3Uri field's value.
+func (s *TransformS3DataSource) SetS3Uri(v string) *TransformS3DataSource {
+	s.S3Uri = &v
 	return s
 }
 
@@ -10809,8 +12445,16 @@ func (s *UpdateEndpointWeightsAndCapacitiesOutput) SetEndpointArn(v string) *Upd
 type UpdateNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true to remove the notebook instance lifecycle configuration currently
+	// associated with the notebook instance.
+	DisassociateLifecycleConfig *bool `type:"boolean"`
+
 	// The Amazon ML compute instance type.
 	InstanceType *string `type:"string" enum:"InstanceType"`
+
+	// The name of a lifecycle configuration to associate with the notebook instance.
+	// For information about lifestyle configurations, see notebook-lifecycle-config.
+	LifecycleConfigName *string `type:"string"`
 
 	// The name of the notebook instance to update.
 	//
@@ -10852,9 +12496,21 @@ func (s *UpdateNotebookInstanceInput) Validate() error {
 	return nil
 }
 
+// SetDisassociateLifecycleConfig sets the DisassociateLifecycleConfig field's value.
+func (s *UpdateNotebookInstanceInput) SetDisassociateLifecycleConfig(v bool) *UpdateNotebookInstanceInput {
+	s.DisassociateLifecycleConfig = &v
+	return s
+}
+
 // SetInstanceType sets the InstanceType field's value.
 func (s *UpdateNotebookInstanceInput) SetInstanceType(v string) *UpdateNotebookInstanceInput {
 	s.InstanceType = &v
+	return s
+}
+
+// SetLifecycleConfigName sets the LifecycleConfigName field's value.
+func (s *UpdateNotebookInstanceInput) SetLifecycleConfigName(v string) *UpdateNotebookInstanceInput {
+	s.LifecycleConfigName = &v
 	return s
 }
 
@@ -11039,6 +12695,22 @@ func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
 }
 
 const (
+	// AssemblyTypeNone is a AssemblyType enum value
+	AssemblyTypeNone = "None"
+
+	// AssemblyTypeLine is a AssemblyType enum value
+	AssemblyTypeLine = "Line"
+)
+
+const (
+	// BatchStrategyMultiRecord is a BatchStrategy enum value
+	BatchStrategyMultiRecord = "MultiRecord"
+
+	// BatchStrategySingleRecord is a BatchStrategy enum value
+	BatchStrategySingleRecord = "SingleRecord"
+)
+
+const (
 	// CompressionTypeNone is a CompressionType enum value
 	CompressionTypeNone = "None"
 
@@ -11082,6 +12754,9 @@ const (
 
 	// EndpointStatusUpdating is a EndpointStatus enum value
 	EndpointStatusUpdating = "Updating"
+
+	// EndpointStatusSystemUpdating is a EndpointStatus enum value
+	EndpointStatusSystemUpdating = "SystemUpdating"
 
 	// EndpointStatusRollingBack is a EndpointStatus enum value
 	EndpointStatusRollingBack = "RollingBack"
@@ -11400,8 +13075,17 @@ const (
 	// SecondaryStatusStarting is a SecondaryStatus enum value
 	SecondaryStatusStarting = "Starting"
 
+	// SecondaryStatusLaunchingMlinstances is a SecondaryStatus enum value
+	SecondaryStatusLaunchingMlinstances = "LaunchingMLInstances"
+
+	// SecondaryStatusPreparingTrainingStack is a SecondaryStatus enum value
+	SecondaryStatusPreparingTrainingStack = "PreparingTrainingStack"
+
 	// SecondaryStatusDownloading is a SecondaryStatus enum value
 	SecondaryStatusDownloading = "Downloading"
+
+	// SecondaryStatusDownloadingTrainingImage is a SecondaryStatus enum value
+	SecondaryStatusDownloadingTrainingImage = "DownloadingTrainingImage"
 
 	// SecondaryStatusTraining is a SecondaryStatus enum value
 	SecondaryStatusTraining = "Training"
@@ -11442,6 +13126,17 @@ const (
 
 	// SortOrderDescending is a SortOrder enum value
 	SortOrderDescending = "Descending"
+)
+
+const (
+	// SplitTypeNone is a SplitType enum value
+	SplitTypeNone = "None"
+
+	// SplitTypeLine is a SplitType enum value
+	SplitTypeLine = "Line"
+
+	// SplitTypeRecordIo is a SplitType enum value
+	SplitTypeRecordIo = "RecordIO"
 )
 
 const (
@@ -11561,4 +13256,101 @@ const (
 
 	// TrainingJobStatusStopped is a TrainingJobStatus enum value
 	TrainingJobStatusStopped = "Stopped"
+)
+
+const (
+	// TransformInstanceTypeMlM4Xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM4Xlarge = "ml.m4.xlarge"
+
+	// TransformInstanceTypeMlM42xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM42xlarge = "ml.m4.2xlarge"
+
+	// TransformInstanceTypeMlM44xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM44xlarge = "ml.m4.4xlarge"
+
+	// TransformInstanceTypeMlM410xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM410xlarge = "ml.m4.10xlarge"
+
+	// TransformInstanceTypeMlM416xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
+	// TransformInstanceTypeMlC4Xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC4Xlarge = "ml.c4.xlarge"
+
+	// TransformInstanceTypeMlC42xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC42xlarge = "ml.c4.2xlarge"
+
+	// TransformInstanceTypeMlC44xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC44xlarge = "ml.c4.4xlarge"
+
+	// TransformInstanceTypeMlC48xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC48xlarge = "ml.c4.8xlarge"
+
+	// TransformInstanceTypeMlP2Xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlP2Xlarge = "ml.p2.xlarge"
+
+	// TransformInstanceTypeMlP28xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlP28xlarge = "ml.p2.8xlarge"
+
+	// TransformInstanceTypeMlP216xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlP216xlarge = "ml.p2.16xlarge"
+
+	// TransformInstanceTypeMlP32xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlP32xlarge = "ml.p3.2xlarge"
+
+	// TransformInstanceTypeMlP38xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlP38xlarge = "ml.p3.8xlarge"
+
+	// TransformInstanceTypeMlP316xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlP316xlarge = "ml.p3.16xlarge"
+
+	// TransformInstanceTypeMlC5Xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC5Xlarge = "ml.c5.xlarge"
+
+	// TransformInstanceTypeMlC52xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC52xlarge = "ml.c5.2xlarge"
+
+	// TransformInstanceTypeMlC54xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC54xlarge = "ml.c5.4xlarge"
+
+	// TransformInstanceTypeMlC59xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC59xlarge = "ml.c5.9xlarge"
+
+	// TransformInstanceTypeMlC518xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+
+	// TransformInstanceTypeMlM5Large is a TransformInstanceType enum value
+	TransformInstanceTypeMlM5Large = "ml.m5.large"
+
+	// TransformInstanceTypeMlM5Xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM5Xlarge = "ml.m5.xlarge"
+
+	// TransformInstanceTypeMlM52xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM52xlarge = "ml.m5.2xlarge"
+
+	// TransformInstanceTypeMlM54xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM54xlarge = "ml.m5.4xlarge"
+
+	// TransformInstanceTypeMlM512xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM512xlarge = "ml.m5.12xlarge"
+
+	// TransformInstanceTypeMlM524xlarge is a TransformInstanceType enum value
+	TransformInstanceTypeMlM524xlarge = "ml.m5.24xlarge"
+)
+
+const (
+	// TransformJobStatusInProgress is a TransformJobStatus enum value
+	TransformJobStatusInProgress = "InProgress"
+
+	// TransformJobStatusCompleted is a TransformJobStatus enum value
+	TransformJobStatusCompleted = "Completed"
+
+	// TransformJobStatusFailed is a TransformJobStatus enum value
+	TransformJobStatusFailed = "Failed"
+
+	// TransformJobStatusStopping is a TransformJobStatus enum value
+	TransformJobStatusStopping = "Stopping"
+
+	// TransformJobStatusStopped is a TransformJobStatus enum value
+	TransformJobStatusStopped = "Stopped"
 )

@@ -79,6 +79,35 @@ func testSweepBeanstalkApplications(region string) error {
 	return nil
 }
 
+func TestAWSElasticBeanstalkApplication_importBasic(t *testing.T) {
+	resourceName := "aws_elastic_beanstalk_application.tftest"
+	config := fmt.Sprintf("tf-test-name-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkAppImportConfig(config),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccBeanstalkAppImportConfig(name string) string {
+	return fmt.Sprintf(`resource "aws_elastic_beanstalk_application" "tftest" {
+	  name = "%s"
+	  description = "tf-test-desc"
+	}`, name)
+}
+
 func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -88,7 +117,7 @@ func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -107,7 +136,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -117,7 +146,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfigWithMaxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -130,7 +159,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3", "true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfigWithMaxCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
@@ -143,7 +172,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.delete_source_from_s3", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBeanstalkAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),

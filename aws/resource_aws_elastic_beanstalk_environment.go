@@ -803,7 +803,7 @@ func environmentStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, enviro
 		})
 		if err != nil {
 			log.Printf("[Err] Error waiting for Elastic Beanstalk Environment state: %s", err)
-			return -1, "failed", fmt.Errorf("[Err] Error waiting for Elastic Beanstalk Environment state: %s", err)
+			return -1, "failed", fmt.Errorf("Error waiting for Elastic Beanstalk Environment state: %s", err)
 		}
 
 		if resp == nil || len(resp.Environments) == 0 {
@@ -820,7 +820,7 @@ func environmentStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, enviro
 		}
 
 		if env == nil {
-			return -1, "failed", fmt.Errorf("[Err] Error finding Elastic Beanstalk Environment, environment not found")
+			return -1, "failed", fmt.Errorf("Error finding Elastic Beanstalk Environment, environment not found")
 		}
 
 		envErrors, err := getBeanstalkEnvironmentErrors(conn, environmentId, t)
@@ -968,7 +968,7 @@ func getBeanstalkEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, envi
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("[Err] Unable to get Elastic Beanstalk Evironment events: %s", err)
+		return nil, fmt.Errorf("Unable to get Elastic Beanstalk Evironment events: %s", err)
 	}
 
 	var events beanstalkEnvironmentErrors
@@ -980,7 +980,7 @@ func getBeanstalkEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, envi
 		}
 		events = append(events, e)
 	}
-	sort.Sort(beanstalkEnvironmentErrors(events))
+	sort.Sort(events)
 
 	var result *multierror.Error
 	for _, event := range events {
