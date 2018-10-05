@@ -1557,25 +1557,13 @@ func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, 
 
 data "aws_availability_zones" "available" {}
 
-variable "cluster_identifier" {
-  default = "tf-acc-test-%d"
-}
-
-variable "engine" {
-  default = "%s"
-}
-
-variable "engine_version" {
-  default = "%s"
-}
-
 resource "aws_rds_cluster" "test" {
   availability_zones              = ["${data.aws_availability_zones.available.names}"]
-  cluster_identifier              = "${var.cluster_identifier}"
+  cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
-  engine                          = "${var.engine}"
-  engine_version                  = "${var.engine_version}"
+  engine                          = %q
+  engine_version                  = %q
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
   skip_final_snapshot             = true
@@ -1583,12 +1571,11 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "${var.cluster_identifier}"
+  identifier         = "tf-acc-test-%d"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
-  engine             = "${var.engine}"
-  engine_version     = "${var.engine_version}"
+  engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r4.large"
-}`, rInt, engine, engineVersion)
+}`, rInt, engine, engineVersion, rInt)
 }
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {

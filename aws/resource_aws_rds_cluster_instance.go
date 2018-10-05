@@ -101,7 +101,7 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
+				ForceNew: true,
 				Computed: true,
 			},
 

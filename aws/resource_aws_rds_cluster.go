@@ -140,7 +140,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 				Computed: true,
 			},
 
@@ -231,7 +230,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"source_engine_version": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: false,
+							ForceNew: true,
 						},
 					},
 				},
