@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
+* resource/aws_rds_cluster: Support `engine_version` updates [GH-5010]
 
 BUG FIXES:
 
