@@ -140,7 +140,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -996,6 +995,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("engine_version") {
+		req.EngineVersion = aws.String(d.Get("engine_version").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			req.VpcSecurityGroupIds = expandStringList(attr.List())
@@ -1055,6 +1059,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
+
+				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
+					return resource.NonRetryableError(err)
+				}
+
 				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 					return resource.RetryableError(err)
 				}
@@ -1264,4 +1273,5 @@ var resourceAwsRdsClusterUpdatePendingStates = []string{
 	"backing-up",
 	"modifying",
 	"resetting-master-credentials",
+	"upgrading",
 }
