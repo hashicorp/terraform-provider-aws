@@ -71161,6 +71161,15 @@ const (
 
 	// InstanceTypeZ1d12xlarge is a InstanceType enum value
 	InstanceTypeZ1d12xlarge = "z1d.12xlarge"
+
+	// InstanceTypeU6tb1Metal is a InstanceType enum value
+	InstanceTypeU6tb1Metal = "u-6tb1.metal"
+
+	// InstanceTypeU9tb1Metal is a InstanceType enum value
+	InstanceTypeU9tb1Metal = "u-9tb1.metal"
+
+	// InstanceTypeU12tb1Metal is a InstanceType enum value
+	InstanceTypeU12tb1Metal = "u-12tb1.metal"
 )
 
 const (
