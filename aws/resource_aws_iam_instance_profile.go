@@ -160,7 +160,23 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		RoleName:            aws.String(roleName),
 	}
 
-	_, err := iamconn.AddRoleToInstanceProfile(request)
+	var createResp *iam.AddRoleToInstanceProfileOutput
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		var err error
+		createResp, err = iamconn.AddRoleToInstanceProfile(request)
+
+		// Todo: handle retryable and non-retryable errors
+		// if isAWSErr(err, "MalformedPolicyDocument", "Invalid principal in policy") {
+		//	return resource.RetryableError(err)
+		// }
+		//return resource.NonRetryableError(err)
+
+		return resource.RetryableError(err)
+	})
+	if err != nil {
+		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
+	}
+
 	return err
 }
 
