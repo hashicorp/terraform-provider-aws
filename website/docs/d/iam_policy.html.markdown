@@ -18,10 +18,18 @@ data "aws_iam_policy" "example" {
   arn = "arn:aws:iam::123456789012:policy/UsersManageOwnCredentials"
 }
 ```
+Using IAM policy `name` as input,
+
+```hcl
+data "aws_iam_policy" "example" {
+  name = "test_policy"
+}
+```
 
 ## Argument Reference
 
-* `arn` - (Required) ARN of the IAM policy.
+* `arn` - (Optional) The ARN of the IAM policy.
+* `name` - (Optional) The name of the IAM policy. You must use either ARN or name to fetch information about IAM policy.
 
 ## Attributes Reference
 
