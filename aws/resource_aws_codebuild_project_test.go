@@ -286,6 +286,27 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 	})
 }
 
+func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.3925601246.certificate", "arn:aws:s3:::secret_bucket/cert.pem"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1015,6 +1036,35 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, environmentVariableType)
+}
+
+func testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+		certificate  = "arn:aws:s3:::secret_bucket/cert.pem"
+  }
+
+  source {
+    location = "https://example.com/organization/repository.git"
+    type     = "GITHUB_ENTERPRISE"
+		auth {
+      resource = "FAKESOURCE"
+      type     = "OAUTH"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Auth(rName, authResource, authType string) string {

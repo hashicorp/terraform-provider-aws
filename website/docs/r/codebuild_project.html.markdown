@@ -158,7 +158,7 @@ The following arguments are supported:
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
 * `secondary_artifacts` - (Optional) A set of secondary artifacts to be used inside the build. Secondary artifacts blocks are documented below.
-* `secondary_sources` - (Optional) A set of secondary sources to be used inside the build. Secondary sources blocks are documented below. 
+* `secondary_sources` - (Optional) A set of secondary sources to be used inside the build. Secondary sources blocks are documented below.
 
 `artifacts` supports the following:
 
@@ -182,6 +182,7 @@ The following arguments are supported:
 * `type` - (Required) The type of build environment to use for related builds. Available values are: `LINUX_CONTAINER` or `WINDOWS_CONTAINER`.
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
+* `certificate` - (Optional) The ARN of the S3 bucket, path prefix and object key that contains the PEM-encoded certificate.
 
 `environment_variable` supports the following:
 
@@ -214,7 +215,7 @@ The following arguments are supported:
 `secondary_artifacts` supports the following:
 
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
-* `artifact_identifier` - (Required) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec. 
+* `artifact_identifier` - (Required) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
 * `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
