@@ -674,6 +674,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_job_queue":                              resourceAwsBatchJobQueue(),
 			"aws_pinpoint_app":                                 resourceAwsPinpointApp(),
 			"aws_pinpoint_event_stream":                        resourceAwsPinpointEventStream(),
+			"aws_pinpoint_sms_channel":                         resourceAwsPinpointSMSChannel(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
