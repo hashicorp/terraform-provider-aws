@@ -230,6 +230,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_function":                  dataSourceAwsLambdaFunction(),
 			"aws_lambda_invocation":                dataSourceAwsLambdaInvocation(),
 			"aws_launch_configuration":             dataSourceAwsLaunchConfiguration(),
+			"aws_launch_template":                  dataSourceAwsLaunchTemplate(),
 			"aws_mq_broker":                        dataSourceAwsMqBroker(),
 			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
 			"aws_network_acls":                     dataSourceAwsNetworkAcls(),
@@ -397,6 +398,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dynamodb_table":                               resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                          resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                        resourceAwsDynamoDbGlobalTable(),
+			"aws_ec2_fleet":                                    resourceAwsEc2Fleet(),
 			"aws_ebs_snapshot":                                 resourceAwsEbsSnapshot(),
 			"aws_ebs_volume":                                   resourceAwsEbsVolume(),
 			"aws_ecr_lifecycle_policy":                         resourceAwsEcrLifecyclePolicy(),
@@ -671,6 +673,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_job_definition":                         resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                              resourceAwsBatchJobQueue(),
 			"aws_pinpoint_app":                                 resourceAwsPinpointApp(),
+			"aws_pinpoint_event_stream":                        resourceAwsPinpointEventStream(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point

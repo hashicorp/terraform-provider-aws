@@ -16,6 +16,9 @@ func resourceAwsCodeDeployDeploymentConfig() *schema.Resource {
 		Create: resourceAwsCodeDeployDeploymentConfigCreate,
 		Read:   resourceAwsCodeDeployDeploymentConfigRead,
 		Delete: resourceAwsCodeDeployDeploymentConfigDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"deployment_config_name": {

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
@@ -23,15 +22,6 @@ import (
 const awsSNSPendingConfirmationMessage = "pending confirmation"
 const awsSNSPendingConfirmationMessageWithoutSpaces = "pendingconfirmation"
 const awsSNSPasswordObfuscationPattern = "****"
-
-var SNSSubscriptionAttributeMap = map[string]string{
-	"topic_arn":            "TopicArn",
-	"endpoint":             "Endpoint",
-	"protocol":             "Protocol",
-	"raw_message_delivery": "RawMessageDelivery",
-	"filter_policy":        "FilterPolicy",
-	"delivery_policy":      "DeliveryPolicy",
-}
 
 func resourceAwsSnsTopicSubscription() *schema.Resource {
 	return &schema.Resource{
@@ -134,31 +124,26 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 	snsconn := meta.(*AWSClient).snsconn
 
 	if d.HasChange("raw_message_delivery") {
-		_, n := d.GetChange("raw_message_delivery")
-
-		attrValue := "false"
-
-		if n.(bool) {
-			attrValue = "true"
-		}
-
-		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "raw_message_delivery", attrValue); err != nil {
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "RawMessageDelivery", fmt.Sprintf("%t", d.Get("raw_message_delivery").(bool))); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("filter_policy") {
-		_, n := d.GetChange("filter_policy")
+		filterPolicy := d.Get("filter_policy").(string)
 
-		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "filter_policy", n.(string)); err != nil {
+		// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
+		if filterPolicy == "" {
+			filterPolicy = "{}"
+		}
+
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "FilterPolicy", filterPolicy); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("delivery_policy") {
-		_, n := d.GetChange("delivery_policy")
-
-		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "delivery_policy", n.(string)); err != nil {
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "DeliveryPolicy", d.Get("delivery_policy").(string)); err != nil {
 			return err
 		}
 	}
@@ -174,33 +159,33 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 	attributeOutput, err := snsconn.GetSubscriptionAttributes(&sns.GetSubscriptionAttributesInput{
 		SubscriptionArn: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] SNS Topic Subscription (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFound" {
-			log.Printf("[WARN] SNS Topic Subscription (%s) not found, error code (404)", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return err
+		return fmt.Errorf("error reading SNS Topic Subscription (%s) attributes: %s", d.Id(), err)
 	}
 
-	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
-		attrHash := attributeOutput.Attributes
-		resource := *resourceAwsSnsTopicSubscription()
-
-		for iKey, oKey := range SNSSubscriptionAttributeMap {
-			log.Printf("[DEBUG] Reading %s => %s", iKey, oKey)
-
-			if attrHash[oKey] != nil {
-				if resource.Schema[iKey] != nil {
-					var value string
-					value = *attrHash[oKey]
-					log.Printf("[DEBUG] Reading %s => %s -> %s", iKey, oKey, value)
-					d.Set(iKey, value)
-				}
-			}
-		}
+	if attributeOutput == nil || len(attributeOutput.Attributes) == 0 {
+		return fmt.Errorf("error reading SNS Topic Subscription (%s) attributes: no attributes found", d.Id())
 	}
+
+	d.Set("arn", attributeOutput.Attributes["SubscriptionArn"])
+	d.Set("delivery_policy", attributeOutput.Attributes["DeliveryPolicy"])
+	d.Set("endpoint", attributeOutput.Attributes["Endpoint"])
+	d.Set("filter_policy", attributeOutput.Attributes["FilterPolicy"])
+	d.Set("protocol", attributeOutput.Attributes["Protocol"])
+
+	d.Set("raw_message_delivery", false)
+	if v, ok := attributeOutput.Attributes["RawMessageDelivery"]; ok && aws.StringValue(v) == "true" {
+		d.Set("raw_message_delivery", true)
+	}
+
+	d.Set("topic_arn", attributeOutput.Attributes["TopicArn"])
 
 	return nil
 }
@@ -338,16 +323,15 @@ func obfuscateEndpoint(endpoint string) string {
 }
 
 func snsSubscriptionAttributeUpdate(snsconn *sns.SNS, subscriptionArn, attributeName, attributeValue string) error {
-	awsAttributeName := SNSSubscriptionAttributeMap[attributeName]
 	req := &sns.SetSubscriptionAttributesInput{
 		SubscriptionArn: aws.String(subscriptionArn),
-		AttributeName:   aws.String(awsAttributeName),
+		AttributeName:   aws.String(attributeName),
 		AttributeValue:  aws.String(attributeValue),
 	}
 	_, err := snsconn.SetSubscriptionAttributes(req)
 
 	if err != nil {
-		return fmt.Errorf("Unable to set %s attribute on subscription: %s", attributeName, err)
+		return fmt.Errorf("error setting subscription (%s) attribute (%s): %s", subscriptionArn, attributeName, err)
 	}
 	return nil
 }

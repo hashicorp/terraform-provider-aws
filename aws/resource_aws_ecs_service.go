@@ -487,7 +487,9 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 			if d.IsNewResource() {
 				return resource.RetryableError(fmt.Errorf("ECS service not created yet: %q", d.Id()))
 			}
-			return resource.NonRetryableError(fmt.Errorf("No ECS service found: %q", d.Id()))
+			log.Printf("[WARN] ECS Service %s not found, removing from state.", d.Id())
+			d.SetId("")
+			return nil
 		}
 
 		service := out.Services[0]

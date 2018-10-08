@@ -46,13 +46,14 @@ func TestAccAwsAppsyncDatasource_es(t *testing.T) {
 }
 
 func TestAccAwsAppsyncDatasource_lambda(t *testing.T) {
+	Desc := "appsync datasource"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncDatasourceConfig_lambda(acctest.RandString(5)),
+				Config: testAccAppsyncDatasourceConfig_lambda(acctest.RandString(5), Desc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
 					resource.TestCheckResourceAttrSet("aws_appsync_datasource.test", "arn"),
@@ -75,14 +76,41 @@ func TestAccAwsAppsyncDatasource_update(t *testing.T) {
 					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
 					resource.TestCheckResourceAttrSet("aws_appsync_datasource.test", "arn"),
 					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "type", "AMAZON_DYNAMODB"),
+					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "description", "appsync datasource"),
 				),
 			},
 			{
-				Config: testAccAppsyncDatasourceConfig_update_lambda(rName),
+				Config: testAccAppsyncDatasourceConfig_lambda(rName, "appsync datasource"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
 					resource.TestCheckResourceAttrSet("aws_appsync_datasource.test", "arn"),
 					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "description", "appsync datasource"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsAppsyncDatasource_updateDescription(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfig_lambda(rName, "appsync datasource"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
+					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "description", "appsync datasource"),
+				),
+			},
+			{
+				Config: testAccAppsyncDatasourceConfig_lambda(rName, "appsync datasource v1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncDatasourceExists("aws_appsync_datasource.test"),
+					resource.TestCheckResourceAttr("aws_appsync_datasource.test", "description", "appsync datasource v1"),
 				),
 			},
 		},
@@ -188,6 +216,7 @@ resource "aws_appsync_datasource" "test" {
   api_id = "${aws_appsync_graphql_api.test.id}"
   name = "tf_appsync_%s"
   type = "AMAZON_DYNAMODB"
+  description = "appsync datasource"
   dynamodb_config {
     region = "${data.aws_region.current.name}"
     table_name = "${aws_dynamodb_table.test.name}"
@@ -268,94 +297,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, rName, rName, rName)
 }
 
-func testAccAppsyncDatasourceConfig_lambda(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appsync_graphql_api" "test" {
-  authentication_type = "API_KEY"
-  name = "tf_appsync_%s"
-}
-
-resource "aws_iam_role" "test_lambda" {
-  name = "tf-lambdarole-%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lambda_function" "test" {
-  function_name = "tf-lambda-%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.test_lambda.arn}"
-  handler = "exports.test"
-  runtime = "nodejs6.10"
-}
-
-resource "aws_iam_role" "test" {
-  name = "tf-role-%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "appsync.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = "tf-rolepolicy-%s"
-  role = "${aws_iam_role.test.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "lambda:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_lambda_function.test.arn}"
-      ]
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
-  name = "tf_appsync_%s"
-  type = "AWS_LAMBDA"
-  lambda_config {
-    function_arn = "${aws_lambda_function.test.arn}"
-  }
-  service_role_arn = "${aws_iam_role.test.arn}"
-}
-`, rName, rName, rName, rName, rName, rName)
-}
-
-func testAccAppsyncDatasourceConfig_update_lambda(rName string) string {
+func testAccAppsyncDatasourceConfig_lambda(rName, Desc string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -434,10 +376,11 @@ resource "aws_appsync_datasource" "test" {
   api_id = "${aws_appsync_graphql_api.test.id}"
   name = "tf_appsync_%s"
   type = "AWS_LAMBDA"
+  description = "%s"
   lambda_config {
     function_arn = "${aws_lambda_function.test.arn}"
   }
   service_role_arn = "${aws_iam_role.test_applambda.arn}"
 }
-`, rName, rName, rName, rName, rName, rName)
+`, rName, rName, rName, rName, rName, rName, Desc)
 }

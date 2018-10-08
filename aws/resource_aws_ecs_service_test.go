@@ -154,7 +154,32 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`No ECS service found`),
+				ExpectError:       regexp.MustCompile(`Please verify the ID is correct`),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_disappears(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsService(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					testAccCheckAWSEcsServiceDisappears(&service),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -800,6 +825,47 @@ func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource
 		*service = *output.Services[0]
 
 		return nil
+	}
+}
+
+func testAccCheckAWSEcsServiceDisappears(service *ecs.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+
+		input := &ecs.DeleteServiceInput{
+			Cluster: service.ClusterArn,
+			Service: service.ServiceName,
+			Force:   aws.Bool(true),
+		}
+
+		_, err := conn.DeleteService(input)
+
+		if err != nil {
+			return err
+		}
+
+		// Wait until it's deleted
+		wait := resource.StateChangeConf{
+			Pending:    []string{"ACTIVE", "DRAINING"},
+			Target:     []string{"INACTIVE"},
+			Timeout:    10 * time.Minute,
+			MinTimeout: 1 * time.Second,
+			Refresh: func() (interface{}, string, error) {
+				resp, err := conn.DescribeServices(&ecs.DescribeServicesInput{
+					Cluster:  service.ClusterArn,
+					Services: []*string{service.ServiceName},
+				})
+				if err != nil {
+					return resp, "FAILED", err
+				}
+
+				return resp, aws.StringValue(resp.Services[0].Status), nil
+			},
+		}
+
+		_, err = wait.WaitForState()
+
+		return err
 	}
 }
 

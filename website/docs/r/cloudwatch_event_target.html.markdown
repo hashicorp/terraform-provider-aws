@@ -19,12 +19,12 @@ resource "aws_cloudwatch_event_target" "yada" {
   arn       = "${aws_kinesis_stream.test_stream.arn}"
 
   run_command_targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["FooBar"]
   }
 
   run_command_targets {
-    key = "InstanceIds"
+    key    = "InstanceIds"
     values = ["i-162058cd308bffec2"]
   }
 }

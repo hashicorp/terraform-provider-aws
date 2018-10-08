@@ -435,6 +435,46 @@ func TestAccAWSRDSCluster_iamAuth(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_DeletionProtection(t *testing.T) {
+	var dbCluster1 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_DeletionProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSRDSClusterConfig_DeletionProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_EngineMode(t *testing.T) {
 	var dbCluster1, dbCluster2 rds.DBCluster
 
@@ -534,7 +574,41 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.6"),
+				Config: testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.3"),
+				),
+			},
+			{
+				Config:      testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.6"),
+				ExpectError: regexp.MustCompile(`Cannot modify engine version without a primary instance in DB cluster`),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
+	var dbCluster rds.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_rds_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.3"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
@@ -643,6 +717,55 @@ func TestAccAWSRDSCluster_SnapshotIdentifier(t *testing.T) {
 					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
 					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_SnapshotIdentifier_DeletionProtection(t *testing.T) {
+	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbClusterSnapshot rds.DBClusterSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_rds_cluster.source"
+	snapshotResourceName := "aws_db_cluster_snapshot.test"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_DeletionProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
+					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
+			},
+			// Ensure we disable deletion protection before attempting to delete :)
+			{
+				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_DeletionProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
+					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 		},
@@ -1424,8 +1547,35 @@ resource "aws_rds_cluster" "test" {
   engine_version                  = "%s"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
-  skip_final_snapshot             = true
+	skip_final_snapshot             = true
+	apply_immediately               = true
 }`, rInt, engine, engineVersion)
+}
+
+func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, engineVersion string) string {
+	return fmt.Sprintf(`
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_rds_cluster" "test" {
+  availability_zones              = ["${data.aws_availability_zones.available.names}"]
+  cluster_identifier              = "tf-acc-test-%d"
+  database_name                   = "mydb"
+  db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
+  engine                          = %q
+  engine_version                  = %q
+  master_password                 = "mustbeeightcharaters"
+  master_username                 = "foo"
+  skip_final_snapshot             = true
+  apply_immediately               = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = "tf-acc-test-%d"
+  cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
+  engine             = "${aws_rds_cluster.test.engine}"
+  instance_class     = "db.r4.large"
+}`, rInt, engine, engineVersion, rInt)
 }
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {
@@ -1786,6 +1936,18 @@ resource "aws_rds_cluster" "test_replica" {
 `, n)
 }
 
+func testAccAWSRDSClusterConfig_DeletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %q
+  deletion_protection  = %t
+  master_password      = "barbarbarbar"
+  master_username      = "foo"
+  skip_final_snapshot  = true
+}
+`, rName, deletionProtection)
+}
+
 func testAccAWSRDSClusterConfig_EngineMode(rName, engineMode string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -1837,6 +1999,29 @@ resource "aws_rds_cluster" "test" {
   snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSRDSClusterConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_snapshot_identifier = %q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  deletion_protection = %t
+  skip_final_snapshot = true
+  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+}
+`, rName, rName, rName, deletionProtection)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineMode(rName, engineMode string) string {
