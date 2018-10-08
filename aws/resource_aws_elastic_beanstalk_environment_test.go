@@ -555,9 +555,7 @@ func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
 				Config: testAccBeanstalkEnvConfig_platform_arn(appName, envName, platformArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
-					resource.TestMatchResourceAttr(
-						"aws_elastic_beanstalk_environment.tfenvtest", "platform_arn",
-						regexp.MustCompile(fmt.Sprintf("^%s$", platformArn))),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_environment.tfenvtest", "platform_arn", platformArn),
 				),
 			},
 		},
@@ -849,8 +847,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
   name = "%s"
   application = "${aws_elastic_beanstalk_application.tftest.name}"
-    platform_arn = "%s"
-    depends_on = ["aws_elastic_beanstalk_application.tftest"]
+  platform_arn = "%s"
 }
 `, appName, envName, platformArn)
 }
