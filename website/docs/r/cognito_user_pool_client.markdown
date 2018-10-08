@@ -67,3 +67,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the user pool client.
 * `client_secret` - The client secret of the user pool client.
+
+## Import
+
+Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.
+
+```
+$ terraform import aws_cognito_user_pool_client.client <user_pool_id>/<user_pool_client_id>
+```

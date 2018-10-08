@@ -1601,6 +1601,8 @@ const opInvokeAsync = "InvokeAsync"
 //    }
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeAsync
+//
+// Deprecated: InvokeAsync has been deprecated
 func (c *Lambda) InvokeAsyncRequest(input *InvokeAsyncInput) (req *request.Request, output *InvokeAsyncOutput) {
 	if c.Client.Config.Logger != nil {
 		c.Client.Config.Logger.Log("This operation, InvokeAsync, has been deprecated")
@@ -1652,6 +1654,8 @@ func (c *Lambda) InvokeAsyncRequest(input *InvokeAsyncInput) (req *request.Reque
 //   The runtime or runtime version specified is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeAsync
+//
+// Deprecated: InvokeAsync has been deprecated
 func (c *Lambda) InvokeAsync(input *InvokeAsyncInput) (*InvokeAsyncOutput, error) {
 	req, out := c.InvokeAsyncRequest(input)
 	return out, req.Send()
@@ -1666,6 +1670,8 @@ func (c *Lambda) InvokeAsync(input *InvokeAsyncInput) (*InvokeAsyncOutput, error
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: InvokeAsyncWithContext has been deprecated
 func (c *Lambda) InvokeAsyncWithContext(ctx aws.Context, input *InvokeAsyncInput, opts ...request.Option) (*InvokeAsyncOutput, error) {
 	req, out := c.InvokeAsyncRequest(input)
 	req.SetContext(ctx)
@@ -3744,7 +3750,7 @@ type CreateEventSourceMappingInput struct {
 	// returned is for the next (later) record. If the timestamp is older than the
 	// current trim horizon, the iterator returned is for the oldest untrimmed data
 	// record (TRIM_HORIZON). Valid only for Kinesis streams (http://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-streams.html).
-	StartingPositionTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartingPositionTimestamp *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -4448,7 +4454,7 @@ type EventSourceMappingConfiguration struct {
 	FunctionArn *string `type:"string"`
 
 	// The UTC time string indicating the last time the event mapping was updated.
-	LastModified *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModified *time.Time `type:"timestamp"`
 
 	// The result of the last AWS Lambda invocation of your Lambda function.
 	LastProcessingResult *string `type:"string"`
@@ -5267,6 +5273,7 @@ func (s *GetPolicyOutput) SetRevisionId(v string) *GetPolicyOutput {
 	return s
 }
 
+// Deprecated: InvokeAsyncInput has been deprecated
 type InvokeAsyncInput struct {
 	_ struct{} `deprecated:"true" type:"structure" payload:"InvokeArgs"`
 
@@ -5325,6 +5332,8 @@ func (s *InvokeAsyncInput) SetInvokeArgs(v io.ReadSeeker) *InvokeAsyncInput {
 }
 
 // Upon success, it returns empty response. Otherwise, throws an exception.
+//
+// Deprecated: InvokeAsyncOutput has been deprecated
 type InvokeAsyncOutput struct {
 	_ struct{} `deprecated:"true" type:"structure"`
 
@@ -7169,6 +7178,9 @@ const (
 
 	// RuntimeDotnetcore20 is a Runtime enum value
 	RuntimeDotnetcore20 = "dotnetcore2.0"
+
+	// RuntimeDotnetcore21 is a Runtime enum value
+	RuntimeDotnetcore21 = "dotnetcore2.1"
 
 	// RuntimeNodejs43Edge is a Runtime enum value
 	RuntimeNodejs43Edge = "nodejs4.3-edge"

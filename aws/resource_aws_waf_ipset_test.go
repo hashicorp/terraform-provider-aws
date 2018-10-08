@@ -2,8 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -24,7 +26,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafIPSetConfig(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafIPSetExists("aws_waf_ipset.ipset", &v),
@@ -169,11 +171,51 @@ func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
+	var ipset waf.IPSet
+	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	resourceName := "aws_waf_ipset.ipset"
+
+	incrementIP := func(ip net.IP) {
+		for j := len(ip) - 1; j >= 0; j-- {
+			ip[j]++
+			if ip[j] > 0 {
+				break
+			}
+		}
+	}
+
+	// Generate 2048 IPs
+	ip, ipnet, err := net.ParseCIDR("10.0.0.0/21")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ipSetDescriptors := make([]string, 0, 2048)
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incrementIP(ip) {
+		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptors {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafIPSetConfig_IpSetDescriptors(ipsetName, strings.Join(ipSetDescriptors, "\n")),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafIPSetExists(resourceName, &ipset),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "2048"),
+				),
+			},
+		},
+	})
+}
+
 func TestDiffWafIpSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
-		ExpectedUpdates []*waf.IPSetUpdate
+		ExpectedUpdates [][]*waf.IPSetUpdate
 	}{
 		{
 			// Change
@@ -183,19 +225,21 @@ func TestDiffWafIpSetDescriptors(t *testing.T) {
 			New: []interface{}{
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
-			ExpectedUpdates: []*waf.IPSetUpdate{
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionDelete),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.7.0/24"),
+			ExpectedUpdates: [][]*waf.IPSetUpdate{
+				{
+					{
+						Action: aws.String(waf.ChangeActionDelete),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.7.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.8.0/24"),
+					{
+						Action: aws.String(waf.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.8.0/24"),
+						},
 					},
 				},
 			},
@@ -208,26 +252,28 @@ func TestDiffWafIpSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "10.0.2.0/24"},
 				map[string]interface{}{"type": "IPV4", "value": "10.0.3.0/24"},
 			},
-			ExpectedUpdates: []*waf.IPSetUpdate{
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("10.0.1.0/24"),
+			ExpectedUpdates: [][]*waf.IPSetUpdate{
+				{
+					{
+						Action: aws.String(waf.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("10.0.1.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("10.0.2.0/24"),
+					{
+						Action: aws.String(waf.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("10.0.2.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("10.0.3.0/24"),
+					{
+						Action: aws.String(waf.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("10.0.3.0/24"),
+						},
 					},
 				},
 			},
@@ -239,19 +285,21 @@ func TestDiffWafIpSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
 			New: []interface{}{},
-			ExpectedUpdates: []*waf.IPSetUpdate{
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionDelete),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.7.0/24"),
+			ExpectedUpdates: [][]*waf.IPSetUpdate{
+				{
+					{
+						Action: aws.String(waf.ChangeActionDelete),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.7.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(waf.ChangeActionDelete),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.8.0/24"),
+					{
+						Action: aws.String(waf.ChangeActionDelete),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.8.0/24"),
+						},
 					},
 				},
 			},
@@ -399,6 +447,13 @@ func testAccAWSWafIPSetConfigChangeIPSetDescriptors(name string) string {
     value = "192.0.8.0/24"
   }
 }`, name)
+}
+
+func testAccAWSWafIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) string {
+	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+  name = "%s"
+%s
+}`, name, ipSetDescriptors)
 }
 
 func testAccAWSWafIPSetConfig_noDescriptors(name string) string {

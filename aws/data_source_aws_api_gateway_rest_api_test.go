@@ -15,7 +15,7 @@ func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsApiGatewayRestApiConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsApiGatewayRestApiCheck("data.aws_api_gateway_rest_api.by_name"),

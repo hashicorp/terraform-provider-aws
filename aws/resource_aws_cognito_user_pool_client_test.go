@@ -124,7 +124,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName),
+				Config: testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", clientName),
@@ -138,6 +138,55 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "write_attributes.#", "1"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "write_attributes.881205744", "email"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "refresh_token_validity", "300"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows.#", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows.2645166319", "code"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows.3465961881", "implicit"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows_user_pool_client", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_scopes.#", "5"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_scopes.2517049750", "openid"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_scopes.881205744", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_scopes.2603607895", "phone"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_scopes.380129571", "aws.cognito.signin.user.admin"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_scopes.4080487570", "profile"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "callback_urls.#", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "callback_urls.0", "https://www.example.com/callback"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "callback_urls.1", "https://www.example.com/redirect"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "default_redirect_uri", "https://www.example.com/redirect"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "logout_urls.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "logout_urls.0", "https://www.example.com/login"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName, 300),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName, 299),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", clientName),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.#", "3"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.1728632605", "CUSTOM_AUTH_FLOW_ONLY"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.1860959087", "USER_PASSWORD_AUTH"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "explicit_auth_flows.245201344", "ADMIN_NO_SRP_AUTH"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "generate_secret", "true"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "read_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "read_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "write_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "write_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "refresh_token_validity", "299"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows.#", "2"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows.2645166319", "code"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "allowed_oauth_flows.3465961881", "implicit"),
@@ -242,7 +291,7 @@ resource "aws_cognito_user_pool_client" "client" {
 `, rName, rName, refreshTokenValidity)
 }
 
-func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string) string {
+func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string, refreshTokenValidity int) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "%s"
@@ -259,7 +308,7 @@ resource "aws_cognito_user_pool_client" "client" {
   read_attributes = ["email"]
   write_attributes = ["email"]
 
-  refresh_token_validity = 300
+  refresh_token_validity = %d
 
   allowed_oauth_flows = ["code", "implicit"]
   allowed_oauth_flows_user_pool_client = "true"
@@ -269,5 +318,5 @@ resource "aws_cognito_user_pool_client" "client" {
   default_redirect_uri = "https://www.example.com/redirect"
   logout_urls = ["https://www.example.com/login"]
 }
-`, userPoolName, clientName)
+`, userPoolName, clientName, refreshTokenValidity)
 }

@@ -86,11 +86,11 @@ func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceDiscoveryServiceConfig_private(acctest.RandString(5), 5),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

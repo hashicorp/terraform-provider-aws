@@ -94,6 +94,12 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "certificate_upload_date"),
 				),
 			},
+			{
+				ResourceName:            "aws_api_gateway_domain_name.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"certificate_body", "certificate_chain", "certificate_private_key"},
+			},
 		},
 	})
 }

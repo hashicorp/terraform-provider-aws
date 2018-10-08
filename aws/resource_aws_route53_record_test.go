@@ -40,6 +40,7 @@ func TestExpandRecordName(t *testing.T) {
 		Input, Output string
 	}{
 		{"www", "www.nonexample.com"},
+		{"www.", "www.nonexample.com"},
 		{"dev.www", "dev.www.nonexample.com"},
 		{"*", "*.nonexample.com"},
 		{"nonexample.com", "nonexample.com"},
@@ -104,6 +105,48 @@ func TestParseRecordId(t *testing.T) {
 	}
 }
 
+func TestAccAWSRoute53Record_importBasic(t *testing.T) {
+	resourceName := "aws_route53_record.default"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig,
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_importUnderscored(t *testing.T) {
+	resourceName := "aws_route53_record.underscore"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigUnderscoreInName,
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -111,7 +154,7 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -128,7 +171,7 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfig_fqdn,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -141,7 +184,7 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 			// create_before_destroy, the record would actually be destroyed, and a
 			// non-empty plan would appear, and the record will fail to exist in
 			// testAccCheckRoute53RecordExists
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfig_fqdn_no_op,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -159,7 +202,7 @@ func TestAccAWSRoute53Record_txtSupport(t *testing.T) {
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfigTXT,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -176,7 +219,7 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfigSPF,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -195,7 +238,7 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfigCAA,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -214,7 +257,7 @@ func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfigSuffix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -231,7 +274,7 @@ func TestAccAWSRoute53Record_wildcard(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53WildCardRecordConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.wildcard"),
@@ -239,7 +282,7 @@ func TestAccAWSRoute53Record_wildcard(t *testing.T) {
 			},
 
 			// Cause a change, which will trigger a refresh
-			resource.TestStep{
+			{
 				Config: testAccRoute53WildCardRecordConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.wildcard"),
@@ -256,7 +299,7 @@ func TestAccAWSRoute53Record_failover(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53FailoverCNAMERecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.www-primary"),
@@ -274,7 +317,7 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53WeightedCNAMERecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.www-dev"),
@@ -295,7 +338,7 @@ func TestAccAWSRoute53Record_alias(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.alias"),
@@ -314,7 +357,7 @@ func TestAccAWSRoute53Record_aliasUppercase(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.alias"),
@@ -330,7 +373,7 @@ func TestAccAWSRoute53Record_s3_alias(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53S3AliasRecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.alias"),
@@ -347,7 +390,7 @@ func TestAccAWSRoute53Record_weighted_alias(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53WeightedElbAliasRecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.elb_weighted_alias_live"),
@@ -355,7 +398,7 @@ func TestAccAWSRoute53Record_weighted_alias(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccRoute53WeightedR53AliasRecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.green_origin"),
@@ -374,7 +417,7 @@ func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53GeolocationCNAMERecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default"),
@@ -393,7 +436,7 @@ func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53LatencyCNAMERecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.us-east-1"),
@@ -412,7 +455,7 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordTypeChangePre,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.sample"),
@@ -420,7 +463,7 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 			},
 
 			// Cause a change, which will trigger a refresh
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordTypeChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.sample"),
@@ -437,7 +480,7 @@ func TestAccAWSRoute53Record_SetIdentiferChange(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordSetIdentifierChangePre,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.basic_to_weighted"),
@@ -445,7 +488,7 @@ func TestAccAWSRoute53Record_SetIdentiferChange(t *testing.T) {
 			},
 
 			// Cause a change, which will trigger a refresh
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordSetIdentifierChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.basic_to_weighted"),
@@ -462,7 +505,7 @@ func TestAccAWSRoute53Record_AliasChange(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordAliasChangePre,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.elb_alias_change"),
@@ -470,7 +513,7 @@ func TestAccAWSRoute53Record_AliasChange(t *testing.T) {
 			},
 
 			// Cause a change, which will trigger a refresh
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordAliasChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.elb_alias_change"),
@@ -487,7 +530,7 @@ func TestAccAWSRoute53Record_empty(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfigEmptyName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.empty"),
@@ -505,7 +548,7 @@ func TestAccAWSRoute53Record_longTXTrecord(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53RecordConfigLongTxtRecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.long_txt"),
@@ -521,7 +564,7 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53MultiValueAnswerARecord,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.www-server1"),
@@ -676,34 +719,6 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigCNAMERecord = `
-resource "aws_route53_zone" "main" {
-	name = "notexample.com"
-}
-
-resource "aws_route53_record" "default" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
-	name = "host123.domain"
-	type = "CNAME"
-	ttl = "30"
-	records = ["1.2.3.4"]
-}
-`
-
-const testAccRoute53RecordConfigCNAMERecordUpdateToCNAME = `
-resource "aws_route53_zone" "main" {
-	name = "notexample.com"
-}
-
-resource "aws_route53_record" "default" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
-	name = "host123.domain"
-	type = "A"
-	ttl = "30"
-	records = ["1.2.3.4"]
-}
-`
-
 const testAccRoute53RecordConfig_fqdn = `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
@@ -737,12 +752,6 @@ resource "aws_route53_record" "default" {
   lifecycle {
     create_before_destroy = true
   }
-}
-`
-
-const testAccRoute53RecordNoConfig = `
-resource "aws_route53_zone" "main" {
-	name = "notexample.com"
 }
 `
 
@@ -1083,32 +1092,6 @@ resource "aws_elb" "main" {
     instance_protocol = "http"
     lb_port = 80
     lb_protocol = "http"
-  }
-}
-`
-
-const testAccRoute53AliasRecord = `
-resource "aws_route53_zone" "main" {
-  name = "notexample.com"
-}
-
-resource "aws_route53_record" "origin" {
-  zone_id = "${aws_route53_zone.main.zone_id}"
-  name = "origin"
-  type = "A"
-  ttl = 5
-  records = ["127.0.0.1"]
-}
-
-resource "aws_route53_record" "alias" {
-  zone_id = "${aws_route53_zone.main.zone_id}"
-  name = "www"
-  type = "A"
-
-  alias {
-    zone_id = "${aws_route53_zone.main.zone_id}"
-    name = "${aws_route53_record.origin.name}.${aws_route53_zone.main.name}"
-    evaluate_target_health = true
   }
 }
 `

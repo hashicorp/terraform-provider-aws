@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +22,22 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 		Read:   resourceAwsApiGatewayIntegrationRead,
 		Update: resourceAwsApiGatewayIntegrationUpdate,
 		Delete: resourceAwsApiGatewayIntegrationDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
+				}
+				restApiID := idParts[0]
+				resourceID := idParts[1]
+				httpMethod := idParts[2]
+				d.Set("http_method", httpMethod)
+				d.Set("resource_id", resourceID)
+				d.Set("rest_api_id", restApiID)
+				d.SetId(fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
@@ -138,6 +155,13 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+
+			"timeout_milliseconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(50, 29000),
+				Default:      29000,
+			},
 		},
 	}
 }
@@ -213,22 +237,28 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		cacheNamespace = aws.String(v.(string))
 	}
 
+	var timeoutInMillis *int64
+	if v, ok := d.GetOk("timeout_milliseconds"); ok {
+		timeoutInMillis = aws.Int64(int64(v.(int)))
+	}
+
 	_, err := conn.PutIntegration(&apigateway.PutIntegrationInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
-		ResourceId: aws.String(d.Get("resource_id").(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		Type:       aws.String(d.Get("type").(string)),
+		HttpMethod:            aws.String(d.Get("http_method").(string)),
+		ResourceId:            aws.String(d.Get("resource_id").(string)),
+		RestApiId:             aws.String(d.Get("rest_api_id").(string)),
+		Type:                  aws.String(d.Get("type").(string)),
 		IntegrationHttpMethod: integrationHttpMethod,
-		Uri:                 uri,
-		RequestParameters:   aws.StringMap(parameters),
-		RequestTemplates:    aws.StringMap(templates),
-		Credentials:         credentials,
-		CacheNamespace:      cacheNamespace,
-		CacheKeyParameters:  cacheKeyParameters,
-		PassthroughBehavior: passthroughBehavior,
-		ContentHandling:     contentHandling,
-		ConnectionType:      connectionType,
-		ConnectionId:        connectionId,
+		Uri:                   uri,
+		RequestParameters:     aws.StringMap(parameters),
+		RequestTemplates:      aws.StringMap(templates),
+		Credentials:           credentials,
+		CacheNamespace:        cacheNamespace,
+		CacheKeyParameters:    cacheKeyParameters,
+		PassthroughBehavior:   passthroughBehavior,
+		ContentHandling:       contentHandling,
+		ConnectionType:        connectionType,
+		ConnectionId:          connectionId,
+		TimeoutInMillis:       timeoutInMillis,
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration: %s", err)
@@ -257,42 +287,43 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 		return err
 	}
 	log.Printf("[DEBUG] Received API Gateway Integration: %s", integration)
-	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
 
-	// AWS converts "" to null on their side, convert it back
-	if v, ok := integration.RequestTemplates["application/json"]; ok && v == nil {
-		integration.RequestTemplates["application/json"] = aws.String("")
+	if err := d.Set("cache_key_parameters", flattenStringList(integration.CacheKeyParameters)); err != nil {
+		return fmt.Errorf("error setting cache_key_parameters: %s", err)
 	}
-
-	d.Set("request_templates", aws.StringValueMap(integration.RequestTemplates))
-	d.Set("type", integration.Type)
-	d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters))
-	d.Set("request_parameters_in_json", aws.StringValueMap(integration.RequestParameters))
-	d.Set("passthrough_behavior", integration.PassthroughBehavior)
+	d.Set("cache_namespace", integration.CacheNamespace)
+	d.Set("connection_id", integration.ConnectionId)
+	d.Set("connection_type", apigateway.ConnectionTypeInternet)
 	if integration.ConnectionType != nil {
 		d.Set("connection_type", integration.ConnectionType)
-	} else {
-		d.Set("connection_type", apigateway.ConnectionTypeInternet)
 	}
-	d.Set("connection_id", integration.ConnectionId)
+	d.Set("content_handling", integration.ContentHandling)
+	d.Set("credentials", integration.Credentials)
+	d.Set("integration_http_method", integration.HttpMethod)
+	d.Set("passthrough_behavior", integration.PassthroughBehavior)
 
-	if integration.Uri != nil {
-		d.Set("uri", integration.Uri)
-	}
-
-	if integration.Credentials != nil {
-		d.Set("credentials", integration.Credentials)
-	}
-
-	if integration.ContentHandling != nil {
-		d.Set("content_handling", integration.ContentHandling)
+	// KNOWN ISSUE: This next d.Set() is broken as it should be a JSON string of the map,
+	//              however leaving as-is since this attribute has been deprecated
+	//              for a very long time and will be removed soon in the next major release.
+	//              Not worth the effort of fixing, acceptance testing, and potential JSON equivalence bugs.
+	if _, ok := d.GetOk("request_parameters_in_json"); ok {
+		d.Set("request_parameters_in_json", aws.StringValueMap(integration.RequestParameters))
 	}
 
-	d.Set("cache_key_parameters", flattenStringList(integration.CacheKeyParameters))
+	d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters))
 
-	if integration.CacheNamespace != nil {
-		d.Set("cache_namespace", integration.CacheNamespace)
+	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes
+	requestTemplateMap := make(map[string]string)
+	for key, valuePointer := range integration.RequestTemplates {
+		requestTemplateMap[key] = aws.StringValue(valuePointer)
 	}
+	if err := d.Set("request_templates", requestTemplateMap); err != nil {
+		return fmt.Errorf("error setting request_templates: %s", err)
+	}
+
+	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
+	d.Set("type", integration.Type)
+	d.Set("uri", integration.Uri)
 
 	return nil
 }
@@ -446,6 +477,14 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 			Op:    aws.String("replace"),
 			Path:  aws.String("/connectionId"),
 			Value: aws.String(d.Get("connection_id").(string)),
+		})
+	}
+
+	if d.HasChange("timeout_milliseconds") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/timeoutInMillis"),
+			Value: aws.String(strconv.Itoa(d.Get("timeout_milliseconds").(int))),
 		})
 	}
 

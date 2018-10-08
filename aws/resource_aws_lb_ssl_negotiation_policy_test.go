@@ -19,7 +19,7 @@ func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslNegotiationPolicyConfig(
 					fmt.Sprintf("tf-acctest-%s", acctest.RandString(10)), fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))),
 				Check: resource.ComposeTestCheckFunc(
@@ -54,7 +54,7 @@ func TestAccAWSLBSSLNegotiationPolicy_missingLB(t *testing.T) {
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslNegotiationPolicyConfig(fmt.Sprintf("tf-acctest-%s", acctest.RandString(10)), lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(
@@ -65,7 +65,7 @@ func TestAccAWSLBSSLNegotiationPolicy_missingLB(t *testing.T) {
 						"aws_lb_ssl_negotiation_policy.foo", "attribute.#", "7"),
 				),
 			},
-			resource.TestStep{
+			{
 				PreConfig: removeLB,
 				Config:    testAccSslNegotiationPolicyConfig(fmt.Sprintf("tf-acctest-%s", acctest.RandString(10)), lbName),
 			},

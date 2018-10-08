@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -107,6 +108,11 @@ func resourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -176,6 +182,16 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
+
+	// ARN
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	// Tags
 	d.Set("tags", tagsToMap(vpc.Tags))
@@ -395,7 +411,7 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if toAssign {
 			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-				VpcId: &vpcid,
+				VpcId:                       &vpcid,
 				AmazonProvidedIpv6CidrBlock: aws.Bool(toAssign),
 			}
 			log.Printf("[INFO] Enabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",

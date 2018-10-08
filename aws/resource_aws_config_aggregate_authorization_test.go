@@ -29,6 +29,10 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 
 	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving config aggregate authorizations: %s", err)
 	}
 

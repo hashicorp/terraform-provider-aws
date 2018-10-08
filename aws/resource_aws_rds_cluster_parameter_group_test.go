@@ -15,6 +15,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDBClusterParameterGroup_importBasic(t *testing.T) {
+	resourceName := "aws_rds_cluster_parameter_group.bar"
+
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBClusterParameterGroupConfig(parameterGroupName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 
@@ -30,6 +53,7 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists("aws_rds_cluster_parameter_group.bar", &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestMatchResourceAttr("aws_rds_cluster_parameter_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-pg:.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster_parameter_group.bar", "name", parameterGroupName),
 					resource.TestCheckResourceAttr(

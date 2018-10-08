@@ -11,6 +11,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIotThingType_importBasic(t *testing.T) {
+	resourceName := "aws_iot_thing_type.foo"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIotThingTypeConfig_basic(rInt),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIotThingType_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 

@@ -75,6 +75,7 @@ the selected VPC.
 
 The following attribute is additionally exported:
 
+* `arn` - Amazon Resource Name (ARN) of VPC
 * `instance_tenancy` - The allowed tenancy of instances launched into the
   selected VPC. May be any of `"default"`, `"dedicated"`, or `"host"`.
 * `ipv6_association_id` - The association ID for the IPv6 CIDR block.

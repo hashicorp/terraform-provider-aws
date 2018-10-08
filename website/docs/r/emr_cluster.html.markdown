@@ -99,7 +99,34 @@ EOF
     args = ["instance.isMaster=true", "echo running on master node"]
   }
 
-  configurations = "test-fixtures/emr_configurations.json"
+  configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    {
+      "Classification": "spark-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF  
 
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
@@ -168,6 +195,30 @@ flow. Defined below
 * `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on
 	the cluster nodes. Defined below
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
+* `configurations_json` - (Optional) A JSON string for supplying list of configurations for the EMR cluster.
+
+~> **NOTE on configurations_json:** If the `Configurations` value is empty then you should skip
+the `Configurations` field instead of providing empty list as value `"Configurations": []`.
+
+```hcl
+configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
+```
+
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`
 * `autoscaling_role` - (Optional) An IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
 * `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform.
@@ -231,7 +282,7 @@ Attributes for each task instance group in the cluster
 Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
 
 * `size` - (Required) The volume size, in gibibytes (GiB).
-* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, and `standard`.
+* `type` - (Required) The volume type. Valid options are `gp2`, `io1`, `standard` and `st1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 * `iops` - (Optional) The number of I/O operations per second (IOPS) that the volume supports
 * `volumes_per_instance` - (Optional) The number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1)
 
@@ -321,7 +372,34 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     args = ["instance.isMaster=true", "echo running on master node"]
   }
 
-  configurations = "test-fixtures/emr_configurations.json"
+  configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    {
+      "Classification": "spark-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
 
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }

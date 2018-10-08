@@ -15,6 +15,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEFSMountTarget_importBasic(t *testing.T) {
+	resourceName := "aws_efs_mount_target.alpha"
+
+	ct := fmt.Sprintf("createtoken-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsMountTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSMountTargetConfig(ct),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 	var mount efs.MountTargetDescription
 	ct := fmt.Sprintf("createtoken-%d", acctest.RandInt())
@@ -24,7 +46,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -38,7 +60,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfigModified(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -75,7 +97,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(

@@ -154,7 +154,32 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`No ECS service found`),
+				ExpectError:       regexp.MustCompile(`Please verify the ID is correct`),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_disappears(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsService(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					testAccCheckAWSEcsServiceDisappears(&service),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -263,7 +288,6 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-hcgps-%s", rString)
 	roleName := fmt.Sprintf("tf-acc-role-svc-w-hcgps-%s", rString)
 	policyName := fmt.Sprintf("tf-acc-policy-svc-w-hcgps-%s", rString)
-	tgName := fmt.Sprintf("tf-acc-tg-svc-w-hcgps-%s", rString)
 	lbName := fmt.Sprintf("tf-acc-lb-svc-w-hcgps-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-hcgps-%s", rString)
 
@@ -276,17 +300,17 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, tgName, lbName, svcName, -1),
+					roleName, policyName, lbName, svcName, -1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, tgName, lbName, svcName, 7201),
+					roleName, policyName, lbName, svcName, 7201),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, tgName, lbName, svcName, 300),
+					roleName, policyName, lbName, svcName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "300"),
@@ -294,7 +318,7 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, tgName, lbName, svcName, 600),
+					roleName, policyName, lbName, svcName, 600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
@@ -422,7 +446,6 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-alb-%s", rString)
 	roleName := fmt.Sprintf("tf-acc-role-svc-w-alb-%s", rString)
 	policyName := fmt.Sprintf("tf-acc-policy-svc-w-alb-%s", rString)
-	tgName := fmt.Sprintf("tf-acc-tg-svc-w-alb-%s", rString)
 	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
 
@@ -432,7 +455,7 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, tgName, lbName, svcName),
+				Config: testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, lbName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_alb", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.with_alb", "load_balancer.#", "1"),
@@ -805,6 +828,47 @@ func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource
 	}
 }
 
+func testAccCheckAWSEcsServiceDisappears(service *ecs.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+
+		input := &ecs.DeleteServiceInput{
+			Cluster: service.ClusterArn,
+			Service: service.ServiceName,
+			Force:   aws.Bool(true),
+		}
+
+		_, err := conn.DeleteService(input)
+
+		if err != nil {
+			return err
+		}
+
+		// Wait until it's deleted
+		wait := resource.StateChangeConf{
+			Pending:    []string{"ACTIVE", "DRAINING"},
+			Target:     []string{"INACTIVE"},
+			Timeout:    10 * time.Minute,
+			MinTimeout: 1 * time.Second,
+			Refresh: func() (interface{}, string, error) {
+				resp, err := conn.DescribeServices(&ecs.DescribeServicesInput{
+					Cluster:  service.ClusterArn,
+					Services: []*string{service.ServiceName},
+				})
+				if err != nil {
+					return resp, "FAILED", err
+				}
+
+				return resp, aws.StringValue(resp.Services[0].Status), nil
+			},
+		}
+
+		_, err = wait.WaitForState()
+
+		return err
+	}
+}
+
 func testAccAWSEcsService(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
@@ -1127,7 +1191,7 @@ resource "aws_ecs_service" "main" {
 }
 
 func testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName, roleName, policyName,
-	tgName, lbName, svcName string, healthCheckGracePeriodSeconds int) string {
+	lbName, svcName string, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1217,7 +1281,7 @@ EOF
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
+  name = "${aws_lb.main.name}"
   port = 80
   protocol = "HTTP"
   vpc_id = "${aws_vpc.main.id}"
@@ -1256,11 +1320,10 @@ resource "aws_ecs_service" "with_alb" {
 
   depends_on = [
     "aws_iam_role_policy.ecs_service",
-    "aws_lb_listener.front_end"
   ]
 }
 `, vpcNameTag, clusterName, tdName, roleName, policyName,
-		tgName, lbName, svcName, healthCheckGracePeriodSeconds)
+		lbName, svcName, healthCheckGracePeriodSeconds)
 }
 
 func testAccAWSEcsService_withIamRole(clusterName, tdName, roleName, policyName, svcName string) string {
@@ -1613,7 +1676,7 @@ resource "aws_ecs_service" "jenkins" {
 `, clusterName, tdName, svcName)
 }
 
-func testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, tgName, lbName, svcName string) string {
+func testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, lbName, svcName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -1703,7 +1766,7 @@ EOF
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
+  name = "${aws_lb.main.name}"
   port = 80
   protocol = "HTTP"
   vpc_id = "${aws_vpc.main.id}"
@@ -1741,10 +1804,9 @@ resource "aws_ecs_service" "with_alb" {
 
   depends_on = [
     "aws_iam_role_policy.ecs_service",
-    "aws_lb_listener.front_end"
   ]
 }
-`, clusterName, tdName, roleName, policyName, tgName, lbName, svcName)
+`, clusterName, tdName, roleName, policyName, lbName, svcName)
 }
 
 func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {

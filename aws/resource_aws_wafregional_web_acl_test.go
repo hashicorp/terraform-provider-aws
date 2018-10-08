@@ -23,7 +23,7 @@ func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalWebAclExists("aws_wafregional_web_acl.waf_acl", &v),
@@ -52,7 +52,7 @@ func TestAccAWSWafRegionalWebAcl_createRateBased(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalWebAclConfigRateBased(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalWebAclExists("aws_wafregional_web_acl.waf_acl", &v),
@@ -81,7 +81,7 @@ func TestAccAWSWafRegionalWebAcl_createGroup(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalWebAclConfigGroup(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalWebAclExists("aws_wafregional_web_acl.waf_acl", &v),

@@ -106,6 +106,11 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 
 			{
 				Config: testAccAWSAPIGatewayRestAPIUpdateConfig,
@@ -153,6 +158,11 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "REGIONAL"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
@@ -248,6 +258,11 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "PRIVATE"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -265,6 +280,11 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource,
@@ -295,6 +315,11 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", expectedPolicyText),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy,
@@ -333,7 +358,12 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
 			},
-
+			{
+				ResourceName:            "aws_api_gateway_rest_api.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI,
 				Check: resource.ComposeTestCheckFunc(

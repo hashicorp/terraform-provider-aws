@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -86,6 +87,28 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 					testAccCheckBatchJobQueueExists("aws_batch_job_queue.test_queue", &jq),
 					testAccCheckBatchJobQueueAttributes(&jq),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
+	var jobQueue1 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test_queue"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccBatchJobQueueBasic, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckBatchJobQueueDisappears(&jobQueue1),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -188,6 +211,20 @@ func testAccCheckBatchJobQueueDestroy(s *terraform.State) error {
 		return nil
 	}
 	return nil
+}
+
+func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		name := aws.StringValue(jobQueue.JobQueueName)
+
+		err := disableBatchJobQueue(name, 10*time.Minute, conn)
+		if err != nil {
+			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
+		}
+
+		return deleteBatchJobQueue(name, 10*time.Minute, conn)
+	}
 }
 
 const testAccBatchJobQueueBaseConfig = `

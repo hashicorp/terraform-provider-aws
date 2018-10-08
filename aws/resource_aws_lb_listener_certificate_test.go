@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -111,7 +110,7 @@ func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeListenerCertificates(input)
 		if err != nil {
-			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == "ListenerNotFound" {
+			if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -119,11 +118,11 @@ func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
 
 		for _, cert := range resp.Certificates {
 			// We only care about additional certificates.
-			if *cert.IsDefault {
+			if aws.BoolValue(cert.IsDefault) {
 				continue
 			}
 
-			if *cert.CertificateArn == rs.Primary.Attributes["certificate_arn"] {
+			if aws.StringValue(cert.CertificateArn) == rs.Primary.Attributes["certificate_arn"] {
 				return errors.New("LB listener certificate not destroyed")
 			}
 		}
