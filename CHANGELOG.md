@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_launch_template` [GH-6064]
+* **New Resource:** `aws_pinpoint_adm_channel` [GH-6038]
 * **New Resource:** `aws_pinpoint_event_stream` [GH-6069]
 * **New Resource:** `aws_pinpoint_gcm_channel` [GH-6089]
 * **New Resource:** `aws_pinpoint_sms_channel` [GH-6088]
