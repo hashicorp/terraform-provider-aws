@@ -16,92 +16,14 @@ Note that the grant must exist in the destination region, and not in the region 
 
 ```hcl
 resource "aws_redshift_snapshot_copy_grant" "test" {
-    snapshot_copy_grant_name = "my-grant"
-}
-
-resource "aws_redshift_parameter_group" "test" {
-  name = "main"
-  family = "redshift-1.0"
-
-  parameter {
-    name = "require_ssl"
-    value = true
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  tags {
-    Name = "test"
-  }
-}
-
-variable "test_subnet_count" {
-  default = 2
-}
-
-resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  count = "${var.test_subnet_count}"
-  cidr_block = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-
-  tags {
-    Name = "${data.aws_availability_zones.available.names[count.index]}-private-test"
-  }
-}
-
-resource "aws_redshift_subnet_group" "test" {
-  name = "test"
-  subnet_ids = ["${aws_subnet.test.*.id}"]
-
-  tags = {
-    Name = "test-subnet-group"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name = "test"
-
-  description = "Managed by Terraform"
-  vpc_id = "${aws_vpc.test.id}"
-
-  # only postgres in
-  ingress {
-    from_port = 5432
-    to_port = 5432
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # allow all outbound traffic
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  snapshot_copy_grant_name = "my-grant"
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier = "test"
-  database_name = "test"
-  node_type = "dc1.large"
-  cluster_type = "single-node"
-  master_username = "test"
-  master_password = "Test12345Test"
-  vpc_security_group_ids = ["${aws_security_group.test.id}"]
-  cluster_subnet_group_name = "${aws_redshift_subnet_group.test.id}"
-  cluster_parameter_group_name = "${aws_redshift_parameter_group.test.name}"
-  automated_snapshot_retention_period = 3 # days
-  port = 5432
-  allow_version_upgrade = true
-  publicly_accessible = false
-  encrypted = true
+  # ... other configuration ...
   snapshot_copy {
     destination_region = "us-east-2"
-	grant_name = "${aws_redshift_snapshot_copy_grant.test.snapshot_copy_grant_name}"
+	grant_name         = "${aws_redshift_snapshot_copy_grant.test.snapshot_copy_grant_name}"
   }
 }
 ```
