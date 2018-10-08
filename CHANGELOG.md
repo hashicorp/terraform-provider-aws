@@ -11,7 +11,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
+* data-source/aws_secretsmanager_secret_version: Add `secret_binary` attribute [GH-6070]
 * resource/aws_rds_cluster: Support `engine_version` updates [GH-5010]
+* resource/aws_secretsmanager_secret_version: Add `secret_binary` argument [GH-6070]
 
 BUG FIXES:
 
