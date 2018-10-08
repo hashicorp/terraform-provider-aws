@@ -91,6 +91,7 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 	if jq == nil {
+		log.Printf("[WARN] Batch Job Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
