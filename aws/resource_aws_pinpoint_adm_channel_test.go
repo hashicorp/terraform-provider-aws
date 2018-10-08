@@ -27,11 +27,11 @@ type testAccAwsPinpointADMChannelConfiguration struct {
 func testAccAwsPinpointADMChannelConfigurationFromEnv(t *testing.T) *testAccAwsPinpointADMChannelConfiguration {
 
 	if os.Getenv("ADM_CLIENT_ID") == "" {
-		t.Fatalf("ADM_CLIENT_ID ENV is missing")
+		t.Skipf("ADM_CLIENT_ID ENV is missing")
 	}
 
 	if os.Getenv("ADM_CLIENT_SECRET") == "" {
-		t.Fatalf("ADM_CLIENT_SECRET ENV is missing")
+		t.Skipf("ADM_CLIENT_SECRET ENV is missing")
 	}
 
 	conf := testAccAwsPinpointADMChannelConfiguration{
@@ -63,6 +63,12 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointADMChannelExists(resourceName, &channel),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"client_id", "client_secret"},
 			},
 		},
 	})

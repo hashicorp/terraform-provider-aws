@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,7 +38,7 @@ func resourceAwsPinpointADMChannel() *schema.Resource {
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 		},
 	}
@@ -47,8 +48,6 @@ func resourceAwsPinpointADMChannelUpsert(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).pinpointconn
 
 	applicationId := d.Get("application_id").(string)
-
-	d.SetId(applicationId)
 
 	params := &pinpoint.ADMChannelRequest{}
 
@@ -74,6 +73,8 @@ func resourceAwsPinpointADMChannelUpsert(d *schema.ResourceData, meta interface{
 		return err
 	}
 
+	d.SetId(applicationId)
+
 	return resourceAwsPinpointADMChannelRead(d, meta)
 }
 
@@ -92,11 +93,12 @@ func resourceAwsPinpointADMChannelRead(d *schema.ResourceData, meta interface{})
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("error getting Pinpoint ADM Channel for application %s: %s", d.Id(), err)
 	}
 
 	d.Set("application_id", channel.ADMChannelResponse.ApplicationId)
 	d.Set("enabled", channel.ADMChannelResponse.Enabled)
+	// client_id and client_secret are never returned
 
 	return nil
 }
@@ -114,7 +116,7 @@ func resourceAwsPinpointADMChannelDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Pinpoint ADM Channel for application %s: %s", d.Id(), err)
 	}
 	return nil
 }
