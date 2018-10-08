@@ -3962,6 +3962,9 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 		if len(instance.Endpoints) > 0 {
 			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
 		}
+		if instance.IpAddress != nil {
+			m["ip_address"] = *instance.IpAddress
+		}
 		l[i] = m
 	}
 
