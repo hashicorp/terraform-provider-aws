@@ -33,14 +33,7 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 				if err := populateSecurityGroupRuleFromImport(d, importParts); err != nil {
 					return nil, err
 				}
-				err = resourceAwsSecurityGroupRuleRead(d, meta)
-				if err != nil {
-					return nil, err
-				}
-
-				results := make([]*schema.ResourceData, 1)
-				results[0] = d
-				return results, nil
+				return []*schema.ResourceData{d}, nil
 			},
 		},
 
