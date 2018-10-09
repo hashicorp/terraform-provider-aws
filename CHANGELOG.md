@@ -14,6 +14,8 @@ ENHANCEMENTS:
 * data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
 * data-source/aws_secretsmanager_secret: Add `policy` attribute [GH-6091]
 * data-source/aws_secretsmanager_secret_version: Add `secret_binary` attribute [GH-6070]
+* resource/aws_lb_listener: Support Cognito and OIDC authentication [GH-6094]
+* resource/aws_lb_listener_rule: Support Cognito and OIDC authentication [GH-6094]
 * resource/aws_rds_cluster: Support `engine_version` updates [GH-5010]
 * resource/aws_secretsmanager_secret_version: Add `secret_binary` argument [GH-6070]
 * resource/aws_security_group_rule: Support resource import [GH-6027]
