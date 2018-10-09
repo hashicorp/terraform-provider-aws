@@ -214,7 +214,7 @@ Authenticate Cognito Blocks (for `authenticate_cognito`) supports the following:
 * `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
 * `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
 * `user_pool_arn` - (Required) The ARN of the Cognito user pool.
-* `user_pool_client` - (Required) The ID of the Cognito user pool client.
+* `user_pool_client_id` - (Required) The ID of the Cognito user pool client.
 * `user_pool_domain` - (Required) The domain prefix or fully-qualified domain name of the Cognito user pool.
 
 Authenticate OIDC Blocks (for `authenticate_oidc`) supports the following:
