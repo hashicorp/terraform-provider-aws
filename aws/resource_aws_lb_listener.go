@@ -26,6 +26,10 @@ func resourceAwsLbListener() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -504,15 +508,30 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	resp, err := elbconn.DescribeListeners(&elbv2.DescribeListenersInput{
+	var resp *elbv2.DescribeListenersOutput
+	var request = &elbv2.DescribeListenersInput{
 		ListenerArns: []*string{aws.String(d.Id())},
-	})
-	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
-			log.Printf("[WARN] DescribeListeners - removing %s from state", d.Id())
-			d.SetId("")
-			return nil
+	}
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = elbconn.DescribeListeners(request)
+		if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+			return resource.RetryableError(err)
 		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		log.Printf("[WARN] ELBv2 Listener (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("Error retrieving Listener: %s", err)
 	}
 
