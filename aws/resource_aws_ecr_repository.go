@@ -22,6 +22,10 @@ func resourceAwsEcrRepository() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -72,14 +76,30 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).ecrconn
 
 	log.Printf("[DEBUG] Reading repository %s", d.Id())
-	out, err := conn.DescribeRepositories(&ecr.DescribeRepositoriesInput{
+	var out *ecr.DescribeRepositoriesOutput
+	input := &ecr.DescribeRepositoriesInput{
 		RepositoryNames: []*string{aws.String(d.Id())},
-	})
-	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok && ecrerr.Code() == "RepositoryNotFoundException" {
-			d.SetId("")
-			return nil
+	}
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		out, err = conn.DescribeRepositories(input)
+		if d.IsNewResource() && isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			return resource.RetryableError(err)
 		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		log.Printf("[WARN] ECR Repository (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
 		return err
 	}
 
@@ -109,7 +129,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Waiting for ECR Repository %q to be deleted", d.Id())
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DescribeRepositories(&ecr.DescribeRepositoriesInput{
 			RepositoryNames: []*string{aws.String(d.Id())},
 		})
