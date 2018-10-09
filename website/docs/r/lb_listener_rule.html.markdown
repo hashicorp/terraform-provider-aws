@@ -95,6 +95,64 @@ resource "aws_lb_listener_rule" "health_check" {
   }
 }
 
+# Authenticate-cognito Action
+
+resource "aws_cognito_user_pool" "pool" {
+  # ...
+}
+
+resource "aws_cognito_user_pool_client" "client" {
+  # ...
+}
+
+resource "aws_cognito_user_pool_domain" "domain" {
+  # ...
+}
+
+resource "aws_lb_listener_rule" "admin" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    order = 1
+    type  = "authenticate-cognito"
+    authenticate_cognito {
+      user_pool_arn       = "${aws_cognito_user_pool.pool.arn}"
+      user_pool_client_id = "${aws_cognito_user_pool_client.client.id}"
+      user_pool_domain    = "${aws_cognito_user_pool_domain.domain.domain}"
+    }
+  }
+
+  action {
+    order            = 2
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
+  }
+}
+
+# Authenticate-oidc Action
+
+resource "aws_lb_listener" "admin" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    order = 1
+    type  = "authenticate-oidc"
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "client_id"
+      client_secret          = "client_secret"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+    }
+  }
+
+  action {
+    order            = 2
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
+  }
+}
 ```
 
 ## Argument Reference
@@ -108,7 +166,7 @@ The following arguments are supported:
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect` and `fixed-response`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
 * `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic. Required if `type` is `forward`.
 * `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
@@ -140,7 +198,7 @@ Authenticate Cognito Blocks (for `authenticate_cognito`) supports the following:
 * `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
 * `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
 * `user_pool_arn` - (Required) The ARN of the Cognito user pool.
-* `user_pool_client` - (Required) The ID of the Cognito user pool client.
+* `user_pool_client_id` - (Required) The ID of the Cognito user pool client.
 * `user_pool_domain` - (Required) The domain prefix or fully-qualified domain name of the Cognito user pool.
 
 Authenticate OIDC Blocks (for `authenticate_oidc`) supports the following:
