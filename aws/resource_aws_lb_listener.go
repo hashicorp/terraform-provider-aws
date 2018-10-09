@@ -513,25 +513,25 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		ListenerArns: []*string{aws.String(d.Id())},
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = elbconn.DescribeListeners(request)
+		if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
-				return resource.RetryableError(err)
-			} else {
-				return resource.NonRetryableError(err)
-			}
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 
+	if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		log.Printf("[WARN] ELBv2 Listener (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
-			log.Printf("[WARN] DescribeListeners - removing %s from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error retrieving Listener: %s", err)
 	}
 
