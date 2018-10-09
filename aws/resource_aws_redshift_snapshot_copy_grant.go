@@ -64,8 +64,7 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 	out, err = conn.CreateSnapshotCopyGrant(&input)
 
 	if err != nil {
-		log.Printf("[ERROR] An error occured creating new AWS Redshift SnapshotCopyGrant: %s", err)
-		return err
+		return fmt.Errorf("error creating Redshift Snapshot Copy Grant (%s): %s", grantName, err)
 	}
 
 	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrant.SnapshotCopyGrantName)
