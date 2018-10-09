@@ -141,7 +141,7 @@ The following arguments are supported:
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response` and `authenticate-cognito`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
 * `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic. Required if `type` is `forward`.
 * `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
