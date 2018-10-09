@@ -81,7 +81,8 @@ func testSweepDbInstances(region string) error {
 	return nil
 }
 
-func TestAccAWSDBInstance_importBasic(t *testing.T) {
+func TestAccAWSDBInstance_basic(t *testing.T) {
+	var dbInstance1 rds.DBInstance
 	resourceName := "aws_db_instance.bar"
 
 	resource.Test(t, resource.TestCase{
@@ -91,8 +92,40 @@ func TestAccAWSDBInstance_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					testAccCheckAWSDBInstanceAttributes(&dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "mysql"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_class", "db.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "name", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-5-6"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "status", "available"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "username", "foo"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -102,47 +135,6 @@ func TestAccAWSDBInstance_importBasic(t *testing.T) {
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
-			},
-		},
-	})
-}
-
-func TestAccAWSDBInstance_basic(t *testing.T) {
-	var v rds.DBInstance
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					testAccCheckAWSDBInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "allocated_storage", "10"),
-					resource.TestMatchResourceAttr("aws_db_instance.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:db:.+`)),
-					resource.TestCheckResourceAttr("aws_db_instance.bar", "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "engine", "mysql"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "license_model", "general-public-license"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "instance_class", "db.t2.micro"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "name", "baz"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "username", "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "parameter_group_name", "default.mysql5.6"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "hosted_zone_id"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "ca_cert_identifier"),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.bar", "resource_id"),
-				),
 			},
 		},
 	})
