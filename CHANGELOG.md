@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
 * data-source/aws_secretsmanager_secret: Add `policy` attribute [GH-6091]
 * data-source/aws_secretsmanager_secret_version: Add `secret_binary` attribute [GH-6070]
+* resource/aws_codebuild_project: Add `environment` `certificate` argument [GH-6087]
 * resource/aws_ecr_repository: Add configurable `delete` timeout [GH-3910]
 * resource/aws_elastic_beanstalk_environment: Add `platform_arn` argument (support custom platforms) [GH-6093]
 * resource/aws_lb_listener: Support Cognito and OIDC authentication [GH-6094]
