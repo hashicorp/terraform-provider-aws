@@ -289,6 +289,8 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	oName := "certificate.pem"
 	resourceName := "aws_codebuild_project.test"
 
 	resource.Test(t, resource.TestCase{
@@ -297,10 +299,10 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName),
+				Config: testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName, bName, oName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "environment.3925601246.certificate", "arn:aws:s3:::secret_bucket/cert.pem"),
+					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.certificate", fmt.Sprintf("%s/%s", bName, oName)),
 				),
 			},
 		},
@@ -1038,10 +1040,16 @@ resource "aws_codebuild_project" "test" {
 `, rName, environmentVariableType)
 }
 
-func testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+func testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName string, bName string, oName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_s3_bucket_object" "test" {
+  bucket  = "${aws_s3_bucket.test.bucket}"
+  key     = "%s"
+  content = "foo"
+}
+
 resource "aws_codebuild_project" "test" {
-  name         = %q
+  name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
 
   artifacts {
@@ -1052,19 +1060,15 @@ resource "aws_codebuild_project" "test" {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
-		certificate  = "arn:aws:s3:::secret_bucket/cert.pem"
+    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
   }
 
   source {
-    location = "https://example.com/organization/repository.git"
-    type     = "GITHUB_ENTERPRISE"
-		auth {
-      resource = "FAKESOURCE"
-      type     = "OAUTH"
-    }
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
   }
 }
-`, rName)
+`, oName, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Auth(rName, authResource, authType string) string {

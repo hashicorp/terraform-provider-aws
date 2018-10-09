@@ -992,7 +992,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["type"] = *environment.Type
 	envConfig["compute_type"] = *environment.ComputeType
 	envConfig["image"] = *environment.Image
-	envConfig["certificate"] = *environment.Certificate
+	envConfig["certificate"] = aws.StringValue(environment.Certificate)
 	envConfig["privileged_mode"] = *environment.PrivilegedMode
 
 	if environment.EnvironmentVariables != nil {
@@ -1074,13 +1074,11 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	environmentType := m["type"].(string)
 	computeType := m["compute_type"].(string)
 	image := m["image"].(string)
-	certificate := m["certificate"].(string)
 	privilegedMode := m["privileged_mode"].(bool)
 	environmentVariables := m["environment_variable"].([]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", environmentType))
 	buf.WriteString(fmt.Sprintf("%s-", computeType))
 	buf.WriteString(fmt.Sprintf("%s-", image))
-	buf.WriteString(fmt.Sprintf("%s-", certificate))
 	buf.WriteString(fmt.Sprintf("%t-", privilegedMode))
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them
