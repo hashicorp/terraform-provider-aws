@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +13,28 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func TestAccAWSCognitoIdentityPool_importBasic(t *testing.T) {
+	resourceName := "aws_cognito_identity_pool.main"
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoIdentityPoolConfig_basic(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -27,6 +50,8 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
+					resource.TestMatchResourceAttr("aws_cognito_identity_pool.main", "arn",
+						regexp.MustCompile("^arn:aws:cognito-identity:[^:]+:[0-9]{12}:identitypool/[^:]+:([0-9a-f]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}$")),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "allow_unauthenticated_identities", "false"),
 				),
 			},

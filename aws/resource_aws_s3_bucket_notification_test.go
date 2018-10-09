@@ -16,6 +16,69 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func TestAccAWSS3BucketNotification_importBasic(t *testing.T) {
+	rString := acctest.RandString(8)
+
+	topicName := fmt.Sprintf("tf-acc-topic-s3-b-n-import-%s", rString)
+	bucketName := fmt.Sprintf("tf-acc-bucket-n-import-%s", rString)
+	queueName := fmt.Sprintf("tf-acc-queue-s3-b-n-import-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-s3-b-n-import-%s", rString)
+	lambdaFuncName := fmt.Sprintf("tf-acc-lambda-func-s3-b-n-import-%s", rString)
+
+	resourceName := "aws_s3_bucket_notification.notification"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithLambdaNotification(roleName, lambdaFuncName, bucketName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 
@@ -30,7 +93,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketTopicNotification(
@@ -40,11 +103,11 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Prefix"),
 									Value: aws.String("tf-acc-test/"),
 								},
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Suffix"),
 									Value: aws.String(".txt"),
 								},
@@ -58,7 +121,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Suffix"),
 									Value: aws.String(".log"),
 								},
@@ -67,7 +130,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketQueueNotification(
@@ -77,11 +140,11 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Prefix"),
 									Value: aws.String("tf-acc-test/"),
 								},
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Suffix"),
 									Value: aws.String(".mp4"),
 								},
@@ -90,7 +153,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketConfigWithLambdaNotification(roleName, lambdaFuncName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketLambdaFunctionConfiguration(
@@ -100,11 +163,11 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Prefix"),
 									Value: aws.String("tf-acc-test/"),
 								},
-								&s3.FilterRule{
+								{
 									Name:  aws.String("Suffix"),
 									Value: aws.String(".png"),
 								},
@@ -128,7 +191,7 @@ func TestAccAWSS3BucketNotification_withoutFilter(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketTopicNotification(
@@ -354,6 +417,8 @@ func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events [
 
 func testAccAWSS3BucketConfigWithTopicNotification(topicName, bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_sns_topic" "topic" {
     name = "%s"
 	policy = <<POLICY
@@ -364,7 +429,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:%s",
+		"Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}
@@ -405,6 +470,8 @@ resource "aws_s3_bucket_notification" "notification" {
 
 func testAccAWSS3BucketConfigWithQueueNotification(queueName, bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_sqs_queue" "queue" {
     name = "%s"
 	policy = <<POLICY
@@ -414,7 +481,7 @@ resource "aws_sqs_queue" "queue" {
 		"Effect":"Allow",
 		"Principal":"*",
 		"Action":"sqs:SendMessage",
-		"Resource":"arn:aws:sqs:*:*:%s",
+		"Resource":"arn:${data.aws_partition.current.partition}:sqs:*:*:%s",
 		"Condition":{
 			"ArnEquals":{
 				"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"
@@ -506,6 +573,7 @@ resource "aws_s3_bucket_notification" "notification" {
 
 func testAccAWSS3BucketConfigWithTopicNotificationWithoutFilter(topicName, bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
 resource "aws_sns_topic" "topic" {
     name = "%s"
 	policy = <<POLICY
@@ -516,7 +584,7 @@ resource "aws_sns_topic" "topic" {
 		"Effect": "Allow",
 		"Principal": {"AWS":"*"},
 		"Action": "SNS:Publish",
-		"Resource": "arn:aws:sns:*:*:%s",
+		"Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%s",
 		"Condition":{
 			"ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
 		}

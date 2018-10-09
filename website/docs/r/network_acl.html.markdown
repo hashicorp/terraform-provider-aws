@@ -11,6 +11,12 @@ description: |-
 Provides an network ACL resource. You might set up network ACLs with rules similar
 to your security groups in order to add an additional layer of security to your VPC.
 
+~> **NOTE on Network ACLs and Network ACL Rules:** Terraform currently
+provides both a standalone [Network ACL Rule](network_acl_rule.html) resource and a Network ACL resource with rules
+defined in-line. At this time you cannot use a Network ACL with in-line rules
+in conjunction with any Network ACL Rule resources. Doing so will cause
+a conflict of rule settings and will overwrite rules.
+
 ## Example Usage
 
 ```hcl
@@ -67,11 +73,11 @@ valid network mask.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the network ACL
 

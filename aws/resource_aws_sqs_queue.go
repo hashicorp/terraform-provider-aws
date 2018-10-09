@@ -53,11 +53,13 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateSQSQueueName,
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"delay_seconds": {
 				Type:     schema.TypeInt,
@@ -133,15 +135,20 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
 	var name string
+
+	fq := d.Get("fifo_queue").(bool)
+
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
 		name = resource.PrefixedUniqueId(v.(string))
+		if fq {
+			name += ".fifo"
+		}
 	} else {
 		name = resource.UniqueId()
 	}
 
-	fq := d.Get("fifo_queue").(bool)
 	cbd := d.Get("content_based_deduplication").(bool)
 
 	if fq {
@@ -149,7 +156,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error validating the FIFO queue name: %v", errors)
 		}
 	} else {
-		if errors := validateSQSQueueName(name, "name"); len(errors) > 0 {
+		if errors := validateSQSNonFifoQueueName(name, "name"); len(errors) > 0 {
 			return fmt.Errorf("Error validating SQS queue name: %v", errors)
 		}
 	}
@@ -243,7 +250,7 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			Attributes: attributes,
 		}
 		if _, err := sqsconn.SetQueueAttributes(req); err != nil {
-			return fmt.Errorf("[ERR] Error updating SQS attributes: %s", err)
+			return fmt.Errorf("Error updating SQS attributes: %s", err)
 		}
 	}
 
@@ -311,13 +318,21 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("fifo_queue", d.Get("fifo_queue").(bool))
 	d.Set("content_based_deduplication", d.Get("content_based_deduplication").(bool))
 
+	tags := make(map[string]string)
 	listTagsOutput, err := sqsconn.ListQueueTags(&sqs.ListQueueTagsInput{
 		QueueUrl: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		// Non-standard partitions (e.g. US Gov) and some local development
+		// solutions do not yet support this API call. Depending on the
+		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
+		if !isAWSErr(err, "InvalidAction", "") && !isAWSErr(err, sqs.ErrCodeUnsupportedOperation, "") {
+			return err
+		}
+	} else {
+		tags = tagsToMapGeneric(listTagsOutput.Tags)
 	}
-	d.Set("tags", tagsToMapGeneric(listTagsOutput.Tags))
+	d.Set("tags", tags)
 
 	return nil
 }
@@ -358,7 +373,7 @@ func setTagsSQS(conn *sqs.SQS, d *schema.ResourceData) error {
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
 			keys := make([]*string, 0, len(remove))
-			for k, _ := range remove {
+			for k := range remove {
 				keys = append(keys, aws.String(k))
 			}
 

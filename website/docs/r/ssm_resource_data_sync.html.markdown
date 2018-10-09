@@ -6,7 +6,7 @@ description: |-
   Provides a SSM resource data sync.
 ---
 
-# aws_athena_database
+# aws_ssm_resource_data_sync
 
 Provides a SSM resource data sync.
 
@@ -47,10 +47,9 @@ resource "aws_s3_bucket_policy" "hoge" {
                 }
             }
         }
-      ]
-  }
-  EOF
+    ]
 }
+EOF
 
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
@@ -77,3 +76,11 @@ The following arguments are supported:
 * `kms_key_arn` - (Optional) ARN of an encryption key for a destination in Amazon S3.
 * `prefix` - (Optional) Prefix for the bucket.
 * `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.
+
+## Import
+
+SSM resource data sync can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_ssm_resource_data_sync.example example-name
+```

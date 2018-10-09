@@ -15,6 +15,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSVpnConnection_importBasic(t *testing.T) {
+	resourceName := "aws_vpn_connection.foo"
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpnConnection_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
@@ -122,7 +143,7 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 			},
 			{
 				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn, "1234567!", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`can only contain alphanumeric and underscore characters`),
+				ExpectError: regexp.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
 
 			//Try actual building

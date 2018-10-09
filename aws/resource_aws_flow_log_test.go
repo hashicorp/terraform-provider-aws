@@ -11,6 +11,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSFlowLog_importBasic(t *testing.T) {
+	resourceName := "aws_flow_log.test_flow_log"
+
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_basic(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSFlowLog_basic(t *testing.T) {
 	var flowLog ec2.FlowLog
 
@@ -22,7 +45,7 @@ func TestAccAWSFlowLog_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccFlowLogConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists("aws_flow_log.test_flow_log", &flowLog),
@@ -44,7 +67,7 @@ func TestAccAWSFlowLog_subnet(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccFlowLogConfig_subnet(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists("aws_flow_log.test_flow_log_subnet", &flowLog),
@@ -111,19 +134,19 @@ func testAccCheckFlowLogDestroy(s *terraform.State) error {
 func testAccFlowLogConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "default" {
-        cidr_block = "10.0.0.0/16"
-        tags {
-                Name = "tf-flow-log-test"
-        }
+    cidr_block = "10.0.0.0/16"
+    tags {
+        Name = "terraform-testacc-flow-log-basic"
+    }
 }
 
 resource "aws_subnet" "test_subnet" {
-        vpc_id = "${aws_vpc.default.id}"
-        cidr_block = "10.0.1.0/24"
+    vpc_id = "${aws_vpc.default.id}"
+    cidr_block = "10.0.1.0/24"
 
-        tags {
-                Name = "tf-flow-test"
-        }
+    tags {
+        Name = "tf-acc-flow-log-basic"
+    }
 }
 
 resource "aws_iam_role" "test_role" {
@@ -152,17 +175,17 @@ resource "aws_cloudwatch_log_group" "foobar" {
     name = "tf-test-fl-%d"
 }
 resource "aws_flow_log" "test_flow_log" {
-        log_group_name = "${aws_cloudwatch_log_group.foobar.name}"
-        iam_role_arn = "${aws_iam_role.test_role.arn}"
-        vpc_id = "${aws_vpc.default.id}"
-        traffic_type = "ALL"
+    log_group_name = "${aws_cloudwatch_log_group.foobar.name}"
+    iam_role_arn = "${aws_iam_role.test_role.arn}"
+    vpc_id = "${aws_vpc.default.id}"
+    traffic_type = "ALL"
 }
 
 resource "aws_flow_log" "test_flow_log_subnet" {
-        log_group_name = "${aws_cloudwatch_log_group.foobar.name}"
-        iam_role_arn = "${aws_iam_role.test_role.arn}"
-        subnet_id = "${aws_subnet.test_subnet.id}"
-        traffic_type = "ALL"
+    log_group_name = "${aws_cloudwatch_log_group.foobar.name}"
+    iam_role_arn = "${aws_iam_role.test_role.arn}"
+    subnet_id = "${aws_subnet.test_subnet.id}"
+    traffic_type = "ALL"
 }
 `, rInt, rInt)
 }
@@ -170,19 +193,19 @@ resource "aws_flow_log" "test_flow_log_subnet" {
 func testAccFlowLogConfig_subnet(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "default" {
-        cidr_block = "10.0.0.0/16"
-        tags {
-                Name = "tf-flow-log-test"
-        }
+    cidr_block = "10.0.0.0/16"
+    tags {
+        Name = "terraform-testacc-flow-log-subnet"
+    }
 }
 
 resource "aws_subnet" "test_subnet" {
-        vpc_id = "${aws_vpc.default.id}"
-        cidr_block = "10.0.1.0/24"
+    vpc_id = "${aws_vpc.default.id}"
+    cidr_block = "10.0.1.0/24"
 
-        tags {
-                Name = "tf-flow-test"
-        }
+    tags {
+        Name = "tf-acc-flow-log-subnet"
+    }
 }
 
 resource "aws_iam_role" "test_role" {
@@ -211,10 +234,10 @@ resource "aws_cloudwatch_log_group" "foobar" {
 }
 
 resource "aws_flow_log" "test_flow_log_subnet" {
-        log_group_name = "${aws_cloudwatch_log_group.foobar.name}"
-        iam_role_arn = "${aws_iam_role.test_role.arn}"
-        subnet_id = "${aws_subnet.test_subnet.id}"
-        traffic_type = "ALL"
+    log_group_name = "${aws_cloudwatch_log_group.foobar.name}"
+    iam_role_arn = "${aws_iam_role.test_role.arn}"
+    subnet_id = "${aws_subnet.test_subnet.id}"
+    traffic_type = "ALL"
 }
 `, rInt, rInt)
 }

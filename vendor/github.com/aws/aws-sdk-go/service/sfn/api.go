@@ -14,7 +14,7 @@ const opCreateActivity = "CreateActivity"
 
 // CreateActivityRequest generates a "aws/request.Request" representing the
 // client's request for the CreateActivity operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -102,7 +102,7 @@ const opCreateStateMachine = "CreateStateMachine"
 
 // CreateStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStateMachine operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -201,7 +201,7 @@ const opDeleteActivity = "DeleteActivity"
 
 // DeleteActivityRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteActivity operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -280,7 +280,7 @@ const opDeleteStateMachine = "DeleteStateMachine"
 
 // DeleteStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteStateMachine operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -364,7 +364,7 @@ const opDescribeActivity = "DescribeActivity"
 
 // DescribeActivityRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeActivity operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -446,7 +446,7 @@ const opDescribeExecution = "DescribeExecution"
 
 // DescribeExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -528,7 +528,7 @@ const opDescribeStateMachine = "DescribeStateMachine"
 
 // DescribeStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStateMachine operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -610,7 +610,7 @@ const opDescribeStateMachineForExecution = "DescribeStateMachineForExecution"
 
 // DescribeStateMachineForExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStateMachineForExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -692,7 +692,7 @@ const opGetActivityTask = "GetActivityTask"
 
 // GetActivityTaskRequest generates a "aws/request.Request" representing the
 // client's request for the GetActivityTask operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -787,7 +787,7 @@ const opGetExecutionHistory = "GetExecutionHistory"
 
 // GetExecutionHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetExecutionHistory operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -934,7 +934,7 @@ const opListActivities = "ListActivities"
 
 // ListActivitiesRequest generates a "aws/request.Request" representing the
 // client's request for the ListActivities operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1073,7 +1073,7 @@ const opListExecutions = "ListExecutions"
 
 // ListExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListExecutions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1218,7 +1218,7 @@ const opListStateMachines = "ListStateMachines"
 
 // ListStateMachinesRequest generates a "aws/request.Request" representing the
 // client's request for the ListStateMachines operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1357,7 +1357,7 @@ const opSendTaskFailure = "SendTaskFailure"
 
 // SendTaskFailureRequest generates a "aws/request.Request" representing the
 // client's request for the SendTaskFailure operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1440,7 +1440,7 @@ const opSendTaskHeartbeat = "SendTaskHeartbeat"
 
 // SendTaskHeartbeatRequest generates a "aws/request.Request" representing the
 // client's request for the SendTaskHeartbeat operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1535,7 +1535,7 @@ const opSendTaskSuccess = "SendTaskSuccess"
 
 // SendTaskSuccessRequest generates a "aws/request.Request" representing the
 // client's request for the SendTaskSuccess operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1622,7 +1622,7 @@ const opStartExecution = "StartExecution"
 
 // StartExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1722,7 +1722,7 @@ const opStopExecution = "StopExecution"
 
 // StopExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StopExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1804,7 +1804,7 @@ const opUpdateStateMachine = "UpdateStateMachine"
 
 // UpdateStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateStateMachine operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1900,7 +1900,6 @@ func (c *SFN) UpdateStateMachineWithContext(ctx aws.Context, input *UpdateStateM
 }
 
 // Contains details about an activity which failed during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivityFailedEventDetails
 type ActivityFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -1934,7 +1933,6 @@ func (s *ActivityFailedEventDetails) SetError(v string) *ActivityFailedEventDeta
 }
 
 // Contains details about an activity.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivityListItem
 type ActivityListItem struct {
 	_ struct{} `type:"structure"`
 
@@ -1946,7 +1944,7 @@ type ActivityListItem struct {
 	// The date the activity is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The name of the activity.
 	//
@@ -1996,7 +1994,6 @@ func (s *ActivityListItem) SetName(v string) *ActivityListItem {
 
 // Contains details about an activity schedule failure which occurred during
 // an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivityScheduleFailedEventDetails
 type ActivityScheduleFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -2030,7 +2027,6 @@ func (s *ActivityScheduleFailedEventDetails) SetError(v string) *ActivitySchedul
 }
 
 // Contains details about an activity scheduled during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivityScheduledEventDetails
 type ActivityScheduledEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -2084,7 +2080,6 @@ func (s *ActivityScheduledEventDetails) SetTimeoutInSeconds(v int64) *ActivitySc
 }
 
 // Contains details about the start of an activity during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivityStartedEventDetails
 type ActivityStartedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -2111,7 +2106,6 @@ func (s *ActivityStartedEventDetails) SetWorkerName(v string) *ActivityStartedEv
 
 // Contains details about an activity which successfully terminated during an
 // execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivitySucceededEventDetails
 type ActivitySucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -2136,7 +2130,6 @@ func (s *ActivitySucceededEventDetails) SetOutput(v string) *ActivitySucceededEv
 }
 
 // Contains details about an activity timeout which occurred during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ActivityTimedOutEventDetails
 type ActivityTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -2169,7 +2162,6 @@ func (s *ActivityTimedOutEventDetails) SetError(v string) *ActivityTimedOutEvent
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/CreateActivityInput
 type CreateActivityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2226,7 +2218,6 @@ func (s *CreateActivityInput) SetName(v string) *CreateActivityInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/CreateActivityOutput
 type CreateActivityOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2238,7 +2229,7 @@ type CreateActivityOutput struct {
 	// The date the activity is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -2263,7 +2254,6 @@ func (s *CreateActivityOutput) SetCreationDate(v time.Time) *CreateActivityOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/CreateStateMachineInput
 type CreateStateMachineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2354,14 +2344,13 @@ func (s *CreateStateMachineInput) SetRoleArn(v string) *CreateStateMachineInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/CreateStateMachineOutput
 type CreateStateMachineOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date the state machine is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) that identifies the created state machine.
 	//
@@ -2391,7 +2380,6 @@ func (s *CreateStateMachineOutput) SetStateMachineArn(v string) *CreateStateMach
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DeleteActivityInput
 type DeleteActivityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2433,7 +2421,6 @@ func (s *DeleteActivityInput) SetActivityArn(v string) *DeleteActivityInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DeleteActivityOutput
 type DeleteActivityOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2448,7 +2435,6 @@ func (s DeleteActivityOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DeleteStateMachineInput
 type DeleteStateMachineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2490,7 +2476,6 @@ func (s *DeleteStateMachineInput) SetStateMachineArn(v string) *DeleteStateMachi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DeleteStateMachineOutput
 type DeleteStateMachineOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2505,7 +2490,6 @@ func (s DeleteStateMachineOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeActivityInput
 type DescribeActivityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2547,7 +2531,6 @@ func (s *DescribeActivityInput) SetActivityArn(v string) *DescribeActivityInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeActivityOutput
 type DescribeActivityOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2559,7 +2542,7 @@ type DescribeActivityOutput struct {
 	// The date the activity is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The name of the activity.
 	//
@@ -2607,7 +2590,6 @@ func (s *DescribeActivityOutput) SetName(v string) *DescribeActivityOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeExecutionInput
 type DescribeExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2649,7 +2631,6 @@ func (s *DescribeExecutionInput) SetExecutionArn(v string) *DescribeExecutionInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeExecutionOutput
 type DescribeExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2687,7 +2668,7 @@ type DescribeExecutionOutput struct {
 	// The date the execution is started.
 	//
 	// StartDate is a required field
-	StartDate *time.Time `locationName:"startDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartDate *time.Time `locationName:"startDate" type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the executed stated machine.
 	//
@@ -2700,7 +2681,7 @@ type DescribeExecutionOutput struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"ExecutionStatus"`
 
 	// If the execution has already ended, the date the execution stopped.
-	StopDate *time.Time `locationName:"stopDate" type:"timestamp" timestampFormat:"unix"`
+	StopDate *time.Time `locationName:"stopDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -2761,7 +2742,6 @@ func (s *DescribeExecutionOutput) SetStopDate(v time.Time) *DescribeExecutionOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeStateMachineForExecutionInput
 type DescribeStateMachineForExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2804,7 +2784,6 @@ func (s *DescribeStateMachineForExecutionInput) SetExecutionArn(v string) *Descr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeStateMachineForExecutionOutput
 type DescribeStateMachineForExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2833,7 +2812,7 @@ type DescribeStateMachineForExecutionOutput struct {
 	// For a newly created state machine, this is the creation date.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -2876,7 +2855,6 @@ func (s *DescribeStateMachineForExecutionOutput) SetUpdateDate(v time.Time) *Des
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeStateMachineInput
 type DescribeStateMachineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2918,14 +2896,13 @@ func (s *DescribeStateMachineInput) SetStateMachineArn(v string) *DescribeStateM
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeStateMachineOutput
 type DescribeStateMachineOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date the state machine is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The Amazon States Language definition of the state machine.
 	//
@@ -3012,7 +2989,6 @@ func (s *DescribeStateMachineOutput) SetStatus(v string) *DescribeStateMachineOu
 }
 
 // Contains details about an abort of an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ExecutionAbortedEventDetails
 type ExecutionAbortedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3046,7 +3022,6 @@ func (s *ExecutionAbortedEventDetails) SetError(v string) *ExecutionAbortedEvent
 }
 
 // Contains details about an execution failure event.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ExecutionFailedEventDetails
 type ExecutionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3080,7 +3055,6 @@ func (s *ExecutionFailedEventDetails) SetError(v string) *ExecutionFailedEventDe
 }
 
 // Contains details about an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ExecutionListItem
 type ExecutionListItem struct {
 	_ struct{} `type:"structure"`
 
@@ -3109,7 +3083,7 @@ type ExecutionListItem struct {
 	// The date the execution started.
 	//
 	// StartDate is a required field
-	StartDate *time.Time `locationName:"startDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartDate *time.Time `locationName:"startDate" type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the executed state machine.
 	//
@@ -3122,7 +3096,7 @@ type ExecutionListItem struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"ExecutionStatus"`
 
 	// If the execution already ended, the date the execution stopped.
-	StopDate *time.Time `locationName:"stopDate" type:"timestamp" timestampFormat:"unix"`
+	StopDate *time.Time `locationName:"stopDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -3172,7 +3146,6 @@ func (s *ExecutionListItem) SetStopDate(v time.Time) *ExecutionListItem {
 }
 
 // Contains details about the start of the execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ExecutionStartedEventDetails
 type ExecutionStartedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3207,7 +3180,6 @@ func (s *ExecutionStartedEventDetails) SetRoleArn(v string) *ExecutionStartedEve
 }
 
 // Contains details about the successful termination of the execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ExecutionSucceededEventDetails
 type ExecutionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3232,7 +3204,6 @@ func (s *ExecutionSucceededEventDetails) SetOutput(v string) *ExecutionSucceeded
 }
 
 // Contains details about the execution timeout which occurred during the execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ExecutionTimedOutEventDetails
 type ExecutionTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3265,7 +3236,6 @@ func (s *ExecutionTimedOutEventDetails) SetError(v string) *ExecutionTimedOutEve
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/GetActivityTaskInput
 type GetActivityTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3322,7 +3292,6 @@ func (s *GetActivityTaskInput) SetWorkerName(v string) *GetActivityTaskInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/GetActivityTaskOutput
 type GetActivityTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3357,7 +3326,6 @@ func (s *GetActivityTaskOutput) SetTaskToken(v string) *GetActivityTaskOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/GetExecutionHistoryInput
 type GetExecutionHistoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3439,7 +3407,6 @@ func (s *GetExecutionHistoryInput) SetReverseOrder(v bool) *GetExecutionHistoryI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/GetExecutionHistoryOutput
 type GetExecutionHistoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3480,7 +3447,6 @@ func (s *GetExecutionHistoryOutput) SetNextToken(v string) *GetExecutionHistoryO
 }
 
 // Contains details about the events of an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/HistoryEvent
 type HistoryEvent struct {
 	_ struct{} `type:"structure"`
 
@@ -3558,7 +3524,7 @@ type HistoryEvent struct {
 	// The date the event occurred.
 	//
 	// Timestamp is a required field
-	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" timestampFormat:"unix" required:"true"`
+	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" required:"true"`
 
 	// The type of the event.
 	//
@@ -3715,7 +3681,6 @@ func (s *HistoryEvent) SetType(v string) *HistoryEvent {
 }
 
 // Contains details about a lambda function which failed during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/LambdaFunctionFailedEventDetails
 type LambdaFunctionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3750,7 +3715,6 @@ func (s *LambdaFunctionFailedEventDetails) SetError(v string) *LambdaFunctionFai
 
 // Contains details about a failed lambda function schedule event which occurred
 // during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/LambdaFunctionScheduleFailedEventDetails
 type LambdaFunctionScheduleFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3784,7 +3748,6 @@ func (s *LambdaFunctionScheduleFailedEventDetails) SetError(v string) *LambdaFun
 }
 
 // Contains details about a lambda function scheduled during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/LambdaFunctionScheduledEventDetails
 type LambdaFunctionScheduledEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3830,7 +3793,6 @@ func (s *LambdaFunctionScheduledEventDetails) SetTimeoutInSeconds(v int64) *Lamb
 
 // Contains details about a lambda function which failed to start during an
 // execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/LambdaFunctionStartFailedEventDetails
 type LambdaFunctionStartFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3865,7 +3827,6 @@ func (s *LambdaFunctionStartFailedEventDetails) SetError(v string) *LambdaFuncti
 
 // Contains details about a lambda function which successfully terminated during
 // an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/LambdaFunctionSucceededEventDetails
 type LambdaFunctionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3891,7 +3852,6 @@ func (s *LambdaFunctionSucceededEventDetails) SetOutput(v string) *LambdaFunctio
 
 // Contains details about a lambda function timeout which occurred during an
 // execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/LambdaFunctionTimedOutEventDetails
 type LambdaFunctionTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3924,7 +3884,6 @@ func (s *LambdaFunctionTimedOutEventDetails) SetError(v string) *LambdaFunctionT
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListActivitiesInput
 type ListActivitiesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3980,7 +3939,6 @@ func (s *ListActivitiesInput) SetNextToken(v string) *ListActivitiesInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListActivitiesOutput
 type ListActivitiesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4020,7 +3978,6 @@ func (s *ListActivitiesOutput) SetNextToken(v string) *ListActivitiesOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListExecutionsInput
 type ListExecutionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4103,7 +4060,6 @@ func (s *ListExecutionsInput) SetStatusFilter(v string) *ListExecutionsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListExecutionsOutput
 type ListExecutionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4143,7 +4099,6 @@ func (s *ListExecutionsOutput) SetNextToken(v string) *ListExecutionsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListStateMachinesInput
 type ListStateMachinesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4199,7 +4154,6 @@ func (s *ListStateMachinesInput) SetNextToken(v string) *ListStateMachinesInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListStateMachinesOutput
 type ListStateMachinesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4237,7 +4191,6 @@ func (s *ListStateMachinesOutput) SetStateMachines(v []*StateMachineListItem) *L
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskFailureInput
 type SendTaskFailureInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4298,7 +4251,6 @@ func (s *SendTaskFailureInput) SetTaskToken(v string) *SendTaskFailureInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskFailureOutput
 type SendTaskFailureOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4313,7 +4265,6 @@ func (s SendTaskFailureOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskHeartbeatInput
 type SendTaskHeartbeatInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4356,7 +4307,6 @@ func (s *SendTaskHeartbeatInput) SetTaskToken(v string) *SendTaskHeartbeatInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskHeartbeatOutput
 type SendTaskHeartbeatOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4371,7 +4321,6 @@ func (s SendTaskHeartbeatOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskSuccessInput
 type SendTaskSuccessInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4428,7 +4377,6 @@ func (s *SendTaskSuccessInput) SetTaskToken(v string) *SendTaskSuccessInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskSuccessOutput
 type SendTaskSuccessOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4443,7 +4391,6 @@ func (s SendTaskSuccessOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StartExecutionInput
 type StartExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4540,7 +4487,6 @@ func (s *StartExecutionInput) SetStateMachineArn(v string) *StartExecutionInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StartExecutionOutput
 type StartExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4552,7 +4498,7 @@ type StartExecutionOutput struct {
 	// The date the execution is started.
 	//
 	// StartDate is a required field
-	StartDate *time.Time `locationName:"startDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartDate *time.Time `locationName:"startDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -4578,7 +4524,6 @@ func (s *StartExecutionOutput) SetStartDate(v time.Time) *StartExecutionOutput {
 }
 
 // Contains details about a state entered during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StateEnteredEventDetails
 type StateEnteredEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -4614,7 +4559,6 @@ func (s *StateEnteredEventDetails) SetName(v string) *StateEnteredEventDetails {
 }
 
 // Contains details about an exit from a state during an execution.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StateExitedEventDetails
 type StateExitedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -4662,14 +4606,13 @@ func (s *StateExitedEventDetails) SetOutput(v string) *StateExitedEventDetails {
 }
 
 // Contains details about the state machine.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StateMachineListItem
 type StateMachineListItem struct {
 	_ struct{} `type:"structure"`
 
 	// The date the state machine is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The name of the state machine.
 	//
@@ -4722,7 +4665,6 @@ func (s *StateMachineListItem) SetStateMachineArn(v string) *StateMachineListIte
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StopExecutionInput
 type StopExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4782,14 +4724,13 @@ func (s *StopExecutionInput) SetExecutionArn(v string) *StopExecutionInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StopExecutionOutput
 type StopExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date the execution is stopped.
 	//
 	// StopDate is a required field
-	StopDate *time.Time `locationName:"stopDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StopDate *time.Time `locationName:"stopDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -4808,7 +4749,6 @@ func (s *StopExecutionOutput) SetStopDate(v time.Time) *StopExecutionOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/UpdateStateMachineInput
 type UpdateStateMachineInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4874,14 +4814,13 @@ func (s *UpdateStateMachineInput) SetStateMachineArn(v string) *UpdateStateMachi
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/UpdateStateMachineOutput
 type UpdateStateMachineOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the state machine was updated.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation

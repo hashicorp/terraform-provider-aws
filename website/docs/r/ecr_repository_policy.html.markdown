@@ -66,7 +66,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `repository` - The name of the repository.
 * `registry_id` - The registry ID where the repository was created.

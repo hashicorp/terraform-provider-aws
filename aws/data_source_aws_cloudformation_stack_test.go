@@ -17,12 +17,12 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "outputs.%", "1"),
 					resource.TestMatchResourceAttr("data.aws_cloudformation_stack.network", "outputs.VPCId",
-						regexp.MustCompile("^vpc-[a-z0-9]{8}$")),
+						regexp.MustCompile("^vpc-[a-z0-9]+")),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "capabilities.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "disable_rollback", "false"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "notification_arns.#", "0"),
@@ -92,12 +92,12 @@ func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "outputs.%", "1"),
 					resource.TestMatchResourceAttr("data.aws_cloudformation_stack.yaml", "outputs.VPCId",
-						regexp.MustCompile("^vpc-[a-z0-9]{8}$")),
+						regexp.MustCompile("^vpc-[a-z0-9]+")),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "capabilities.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "disable_rollback", "false"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "notification_arns.#", "0"),

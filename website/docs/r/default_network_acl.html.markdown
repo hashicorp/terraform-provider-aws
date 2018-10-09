@@ -135,7 +135,7 @@ valid network mask.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ### Managing Subnets in the Default Network ACL
 
@@ -171,12 +171,12 @@ can resume managing them via the AWS Console.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Default Network ACL
 * `vpc_id` -  The ID of the associated VPC
 * `ingress` - Set of ingress rules
 * `egress` - Set of egress rules
-* `subnet_ids` – IDs of associated Subnets
+* `subnet_ids` – IDs of associated Subnets
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html

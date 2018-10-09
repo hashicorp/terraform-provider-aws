@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_domain"
-side_bar_current: "docs-aws-resource-cognito-user-pool-domain"
+sidebar_current: "docs-aws-resource-cognito-user-pool-domain"
 description: |-
   Provides a Cognito User Pool Domain resource.
 ---
@@ -32,9 +32,17 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `aws_account_id` - The AWS account ID for the user pool owner.
 * `cloudfront_distribution_arn` - The ARN of the CloudFront distribution.
 * `s3_bucket` - The S3 bucket where the static files for this domain are stored.
 * `version` - The app version.
+
+## Import
+
+Cognito User Pool Domains can be imported using the `domain`, e.g.
+
+```
+$ terraform import aws_cognito_user_pool_domain.main <domain>
+```

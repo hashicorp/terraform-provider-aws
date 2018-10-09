@@ -35,6 +35,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The computed id. Please note that this is only used internally to identify the stack <-> instance relation. This value is not used in aws.

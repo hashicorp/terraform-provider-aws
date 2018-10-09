@@ -3,6 +3,8 @@
 package mediapackage
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -12,7 +14,7 @@ const opCreateChannel = "CreateChannel"
 
 // CreateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -100,7 +102,7 @@ const opCreateOriginEndpoint = "CreateOriginEndpoint"
 
 // CreateOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -188,7 +190,7 @@ const opDeleteChannel = "DeleteChannel"
 
 // DeleteChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -276,7 +278,7 @@ const opDeleteOriginEndpoint = "DeleteOriginEndpoint"
 
 // DeleteOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -364,7 +366,7 @@ const opDescribeChannel = "DescribeChannel"
 
 // DescribeChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -452,7 +454,7 @@ const opDescribeOriginEndpoint = "DescribeOriginEndpoint"
 
 // DescribeOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -540,7 +542,7 @@ const opListChannels = "ListChannels"
 
 // ListChannelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListChannels operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -684,7 +686,7 @@ const opListOriginEndpoints = "ListOriginEndpoints"
 
 // ListOriginEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the ListOriginEndpoints operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -828,7 +830,7 @@ const opRotateChannelCredentials = "RotateChannelCredentials"
 
 // RotateChannelCredentialsRequest generates a "aws/request.Request" representing the
 // client's request for the RotateChannelCredentials operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -850,7 +852,12 @@ const opRotateChannelCredentials = "RotateChannelCredentials"
 //    }
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentials
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCredentialsInput) (req *request.Request, output *RotateChannelCredentialsOutput) {
+	if c.Client.Config.Logger != nil {
+		c.Client.Config.Logger.Log("This operation, RotateChannelCredentials, has been deprecated")
+	}
 	op := &request.Operation{
 		Name:       opRotateChannelCredentials,
 		HTTPMethod: "PUT",
@@ -868,7 +875,8 @@ func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCrede
 
 // RotateChannelCredentials API operation for AWS Elemental MediaPackage.
 //
-// Changes the Channel ingest username and password.
+// Changes the Channel's first IngestEndpoint's username and password. WARNING
+// - This API is deprecated. Please use RotateIngestEndpointCredentials instead
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -891,6 +899,8 @@ func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCrede
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentials
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentials(input *RotateChannelCredentialsInput) (*RotateChannelCredentialsOutput, error) {
 	req, out := c.RotateChannelCredentialsRequest(input)
 	return out, req.Send()
@@ -905,8 +915,99 @@ func (c *MediaPackage) RotateChannelCredentials(input *RotateChannelCredentialsI
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentialsWithContext(ctx aws.Context, input *RotateChannelCredentialsInput, opts ...request.Option) (*RotateChannelCredentialsOutput, error) {
 	req, out := c.RotateChannelCredentialsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRotateIngestEndpointCredentials = "RotateIngestEndpointCredentials"
+
+// RotateIngestEndpointCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the RotateIngestEndpointCredentials operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RotateIngestEndpointCredentials for more information on using the RotateIngestEndpointCredentials
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RotateIngestEndpointCredentialsRequest method.
+//    req, resp := client.RotateIngestEndpointCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateIngestEndpointCredentials
+func (c *MediaPackage) RotateIngestEndpointCredentialsRequest(input *RotateIngestEndpointCredentialsInput) (req *request.Request, output *RotateIngestEndpointCredentialsOutput) {
+	op := &request.Operation{
+		Name:       opRotateIngestEndpointCredentials,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/channels/{id}/ingest_endpoints/{ingest_endpoint_id}/credentials",
+	}
+
+	if input == nil {
+		input = &RotateIngestEndpointCredentialsInput{}
+	}
+
+	output = &RotateIngestEndpointCredentialsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RotateIngestEndpointCredentials API operation for AWS Elemental MediaPackage.
+//
+// Rotate the IngestEndpoint's username and password, as specified by the IngestEndpoint's
+// id.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaPackage's
+// API operation RotateIngestEndpointCredentials for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateIngestEndpointCredentials
+func (c *MediaPackage) RotateIngestEndpointCredentials(input *RotateIngestEndpointCredentialsInput) (*RotateIngestEndpointCredentialsOutput, error) {
+	req, out := c.RotateIngestEndpointCredentialsRequest(input)
+	return out, req.Send()
+}
+
+// RotateIngestEndpointCredentialsWithContext is the same as RotateIngestEndpointCredentials with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RotateIngestEndpointCredentials for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaPackage) RotateIngestEndpointCredentialsWithContext(ctx aws.Context, input *RotateIngestEndpointCredentialsInput, opts ...request.Option) (*RotateIngestEndpointCredentialsOutput, error) {
+	req, out := c.RotateIngestEndpointCredentialsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -916,7 +1017,7 @@ const opUpdateChannel = "UpdateChannel"
 
 // UpdateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateChannel operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1004,7 +1105,7 @@ const opUpdateOriginEndpoint = "UpdateOriginEndpoint"
 
 // UpdateOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateOriginEndpoint operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1089,7 +1190,6 @@ func (c *MediaPackage) UpdateOriginEndpointWithContext(ctx aws.Context, input *U
 }
 
 // A Channel resource configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/Channel
 type Channel struct {
 	_ struct{} `type:"structure"`
 
@@ -1140,7 +1240,209 @@ func (s *Channel) SetId(v string) *Channel {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/CreateChannelRequest
+// A Common Media Application Format (CMAF) encryption configuration.
+type CmafEncryption struct {
+	_ struct{} `type:"structure"`
+
+	// Time (in seconds) between each encryption key rotation.
+	KeyRotationIntervalSeconds *int64 `locationName:"keyRotationIntervalSeconds" type:"integer"`
+
+	// A configuration for accessing an external Secure Packager and Encoder Key
+	// Exchange (SPEKE) service that will provide encryption keys.
+	//
+	// SpekeKeyProvider is a required field
+	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CmafEncryption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CmafEncryption) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CmafEncryption) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CmafEncryption"}
+	if s.SpekeKeyProvider == nil {
+		invalidParams.Add(request.NewErrParamRequired("SpekeKeyProvider"))
+	}
+	if s.SpekeKeyProvider != nil {
+		if err := s.SpekeKeyProvider.Validate(); err != nil {
+			invalidParams.AddNested("SpekeKeyProvider", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKeyRotationIntervalSeconds sets the KeyRotationIntervalSeconds field's value.
+func (s *CmafEncryption) SetKeyRotationIntervalSeconds(v int64) *CmafEncryption {
+	s.KeyRotationIntervalSeconds = &v
+	return s
+}
+
+// SetSpekeKeyProvider sets the SpekeKeyProvider field's value.
+func (s *CmafEncryption) SetSpekeKeyProvider(v *SpekeKeyProvider) *CmafEncryption {
+	s.SpekeKeyProvider = v
+	return s
+}
+
+// A Common Media Application Format (CMAF) packaging configuration.
+type CmafPackage struct {
+	_ struct{} `type:"structure"`
+
+	// A Common Media Application Format (CMAF) encryption configuration.
+	Encryption *CmafEncryption `locationName:"encryption" type:"structure"`
+
+	// A list of HLS manifest configurations
+	HlsManifests []*HlsManifest `locationName:"hlsManifests" type:"list"`
+
+	// Duration (in seconds) of each segment. Actual segments will berounded to
+	// the nearest multiple of the source segment duration.
+	SegmentDurationSeconds *int64 `locationName:"segmentDurationSeconds" type:"integer"`
+
+	// An optional custom string that is prepended to the name of each segment.
+	// If not specified, it defaults to the ChannelId.
+	SegmentPrefix *string `locationName:"segmentPrefix" type:"string"`
+
+	// A StreamSelection configuration.
+	StreamSelection *StreamSelection `locationName:"streamSelection" type:"structure"`
+}
+
+// String returns the string representation
+func (s CmafPackage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CmafPackage) GoString() string {
+	return s.String()
+}
+
+// SetEncryption sets the Encryption field's value.
+func (s *CmafPackage) SetEncryption(v *CmafEncryption) *CmafPackage {
+	s.Encryption = v
+	return s
+}
+
+// SetHlsManifests sets the HlsManifests field's value.
+func (s *CmafPackage) SetHlsManifests(v []*HlsManifest) *CmafPackage {
+	s.HlsManifests = v
+	return s
+}
+
+// SetSegmentDurationSeconds sets the SegmentDurationSeconds field's value.
+func (s *CmafPackage) SetSegmentDurationSeconds(v int64) *CmafPackage {
+	s.SegmentDurationSeconds = &v
+	return s
+}
+
+// SetSegmentPrefix sets the SegmentPrefix field's value.
+func (s *CmafPackage) SetSegmentPrefix(v string) *CmafPackage {
+	s.SegmentPrefix = &v
+	return s
+}
+
+// SetStreamSelection sets the StreamSelection field's value.
+func (s *CmafPackage) SetStreamSelection(v *StreamSelection) *CmafPackage {
+	s.StreamSelection = v
+	return s
+}
+
+// A Common Media Application Format (CMAF) packaging configuration.
+type CmafPackageCreateOrUpdateParameters struct {
+	_ struct{} `type:"structure"`
+
+	// A Common Media Application Format (CMAF) encryption configuration.
+	Encryption *CmafEncryption `locationName:"encryption" type:"structure"`
+
+	// A list of HLS manifest configurations
+	HlsManifests []*HlsManifestCreateOrUpdateParameters `locationName:"hlsManifests" type:"list"`
+
+	// Duration (in seconds) of each segment. Actual segments will berounded to
+	// the nearest multiple of the source segment duration.
+	SegmentDurationSeconds *int64 `locationName:"segmentDurationSeconds" type:"integer"`
+
+	// An optional custom string that is prepended to the name of each segment.
+	// If not specified, it defaults to the ChannelId.
+	SegmentPrefix *string `locationName:"segmentPrefix" type:"string"`
+
+	// A StreamSelection configuration.
+	StreamSelection *StreamSelection `locationName:"streamSelection" type:"structure"`
+}
+
+// String returns the string representation
+func (s CmafPackageCreateOrUpdateParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CmafPackageCreateOrUpdateParameters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CmafPackageCreateOrUpdateParameters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CmafPackageCreateOrUpdateParameters"}
+	if s.Encryption != nil {
+		if err := s.Encryption.Validate(); err != nil {
+			invalidParams.AddNested("Encryption", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.HlsManifests != nil {
+		for i, v := range s.HlsManifests {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "HlsManifests", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEncryption sets the Encryption field's value.
+func (s *CmafPackageCreateOrUpdateParameters) SetEncryption(v *CmafEncryption) *CmafPackageCreateOrUpdateParameters {
+	s.Encryption = v
+	return s
+}
+
+// SetHlsManifests sets the HlsManifests field's value.
+func (s *CmafPackageCreateOrUpdateParameters) SetHlsManifests(v []*HlsManifestCreateOrUpdateParameters) *CmafPackageCreateOrUpdateParameters {
+	s.HlsManifests = v
+	return s
+}
+
+// SetSegmentDurationSeconds sets the SegmentDurationSeconds field's value.
+func (s *CmafPackageCreateOrUpdateParameters) SetSegmentDurationSeconds(v int64) *CmafPackageCreateOrUpdateParameters {
+	s.SegmentDurationSeconds = &v
+	return s
+}
+
+// SetSegmentPrefix sets the SegmentPrefix field's value.
+func (s *CmafPackageCreateOrUpdateParameters) SetSegmentPrefix(v string) *CmafPackageCreateOrUpdateParameters {
+	s.SegmentPrefix = &v
+	return s
+}
+
+// SetStreamSelection sets the StreamSelection field's value.
+func (s *CmafPackageCreateOrUpdateParameters) SetStreamSelection(v *StreamSelection) *CmafPackageCreateOrUpdateParameters {
+	s.StreamSelection = v
+	return s
+}
+
 type CreateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1185,7 +1487,6 @@ func (s *CreateChannelInput) SetId(v string) *CreateChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/CreateChannelResponse
 type CreateChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1233,12 +1534,14 @@ func (s *CreateChannelOutput) SetId(v string) *CreateChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/CreateOriginEndpointRequest
 type CreateOriginEndpointInput struct {
 	_ struct{} `type:"structure"`
 
 	// ChannelId is a required field
 	ChannelId *string `locationName:"channelId" type:"string" required:"true"`
+
+	// A Common Media Application Format (CMAF) packaging configuration.
+	CmafPackage *CmafPackageCreateOrUpdateParameters `locationName:"cmafPackage" type:"structure"`
 
 	// A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
 	DashPackage *DashPackage `locationName:"dashPackage" type:"structure"`
@@ -1282,6 +1585,11 @@ func (s *CreateOriginEndpointInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.CmafPackage != nil {
+		if err := s.CmafPackage.Validate(); err != nil {
+			invalidParams.AddNested("CmafPackage", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.DashPackage != nil {
 		if err := s.DashPackage.Validate(); err != nil {
 			invalidParams.AddNested("DashPackage", err.(request.ErrInvalidParams))
@@ -1307,6 +1615,12 @@ func (s *CreateOriginEndpointInput) Validate() error {
 // SetChannelId sets the ChannelId field's value.
 func (s *CreateOriginEndpointInput) SetChannelId(v string) *CreateOriginEndpointInput {
 	s.ChannelId = &v
+	return s
+}
+
+// SetCmafPackage sets the CmafPackage field's value.
+func (s *CreateOriginEndpointInput) SetCmafPackage(v *CmafPackageCreateOrUpdateParameters) *CreateOriginEndpointInput {
+	s.CmafPackage = v
 	return s
 }
 
@@ -1364,13 +1678,15 @@ func (s *CreateOriginEndpointInput) SetWhitelist(v []*string) *CreateOriginEndpo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/CreateOriginEndpointResponse
 type CreateOriginEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
 	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// A Common Media Application Format (CMAF) packaging configuration.
+	CmafPackage *CmafPackage `locationName:"cmafPackage" type:"structure"`
 
 	// A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
 	DashPackage *DashPackage `locationName:"dashPackage" type:"structure"`
@@ -1415,6 +1731,12 @@ func (s *CreateOriginEndpointOutput) SetArn(v string) *CreateOriginEndpointOutpu
 // SetChannelId sets the ChannelId field's value.
 func (s *CreateOriginEndpointOutput) SetChannelId(v string) *CreateOriginEndpointOutput {
 	s.ChannelId = &v
+	return s
+}
+
+// SetCmafPackage sets the CmafPackage field's value.
+func (s *CreateOriginEndpointOutput) SetCmafPackage(v *CmafPackage) *CreateOriginEndpointOutput {
+	s.CmafPackage = v
 	return s
 }
 
@@ -1479,7 +1801,6 @@ func (s *CreateOriginEndpointOutput) SetWhitelist(v []*string) *CreateOriginEndp
 }
 
 // A Dynamic Adaptive Streaming over HTTP (DASH) encryption configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DashEncryption
 type DashEncryption struct {
 	_ struct{} `type:"structure"`
 
@@ -1534,7 +1855,6 @@ func (s *DashEncryption) SetSpekeKeyProvider(v *SpekeKeyProvider) *DashEncryptio
 }
 
 // A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DashPackage
 type DashPackage struct {
 	_ struct{} `type:"structure"`
 
@@ -1551,6 +1871,13 @@ type DashPackage struct {
 	// Minimum duration (in seconds) between potential changes to the Dynamic Adaptive
 	// Streaming over HTTP (DASH) Media Presentation Description (MPD).
 	MinUpdatePeriodSeconds *int64 `locationName:"minUpdatePeriodSeconds" type:"integer"`
+
+	// A list of triggers that controls when the outgoing Dynamic Adaptive Streaming
+	// over HTTP (DASH)Media Presentation Description (MPD) will be partitioned
+	// into multiple periods. If empty, the content will notbe partitioned into
+	// more than one period. If the list contains "ADS", new periods will be created
+	// wherethe Channel source contains SCTE-35 ad markers.
+	PeriodTriggers []*string `locationName:"periodTriggers" type:"list"`
 
 	// The Dynamic Adaptive Streaming over HTTP (DASH) profile type. When set to
 	// "HBBTV_1_5", HbbTV 1.5 compliant output is enabled.
@@ -1616,6 +1943,12 @@ func (s *DashPackage) SetMinUpdatePeriodSeconds(v int64) *DashPackage {
 	return s
 }
 
+// SetPeriodTriggers sets the PeriodTriggers field's value.
+func (s *DashPackage) SetPeriodTriggers(v []*string) *DashPackage {
+	s.PeriodTriggers = v
+	return s
+}
+
 // SetProfile sets the Profile field's value.
 func (s *DashPackage) SetProfile(v string) *DashPackage {
 	s.Profile = &v
@@ -1640,7 +1973,6 @@ func (s *DashPackage) SetSuggestedPresentationDelaySeconds(v int64) *DashPackage
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DeleteChannelRequest
 type DeleteChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1677,7 +2009,6 @@ func (s *DeleteChannelInput) SetId(v string) *DeleteChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DeleteChannelResponse
 type DeleteChannelOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1692,7 +2023,6 @@ func (s DeleteChannelOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DeleteOriginEndpointRequest
 type DeleteOriginEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1729,7 +2059,6 @@ func (s *DeleteOriginEndpointInput) SetId(v string) *DeleteOriginEndpointInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DeleteOriginEndpointResponse
 type DeleteOriginEndpointOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1744,7 +2073,6 @@ func (s DeleteOriginEndpointOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DescribeChannelRequest
 type DescribeChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1781,7 +2109,6 @@ func (s *DescribeChannelInput) SetId(v string) *DescribeChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DescribeChannelResponse
 type DescribeChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1829,7 +2156,6 @@ func (s *DescribeChannelOutput) SetId(v string) *DescribeChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DescribeOriginEndpointRequest
 type DescribeOriginEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1866,13 +2192,15 @@ func (s *DescribeOriginEndpointInput) SetId(v string) *DescribeOriginEndpointInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/DescribeOriginEndpointResponse
 type DescribeOriginEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
 	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// A Common Media Application Format (CMAF) packaging configuration.
+	CmafPackage *CmafPackage `locationName:"cmafPackage" type:"structure"`
 
 	// A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
 	DashPackage *DashPackage `locationName:"dashPackage" type:"structure"`
@@ -1917,6 +2245,12 @@ func (s *DescribeOriginEndpointOutput) SetArn(v string) *DescribeOriginEndpointO
 // SetChannelId sets the ChannelId field's value.
 func (s *DescribeOriginEndpointOutput) SetChannelId(v string) *DescribeOriginEndpointOutput {
 	s.ChannelId = &v
+	return s
+}
+
+// SetCmafPackage sets the CmafPackage field's value.
+func (s *DescribeOriginEndpointOutput) SetCmafPackage(v *CmafPackage) *DescribeOriginEndpointOutput {
+	s.CmafPackage = v
 	return s
 }
 
@@ -1981,7 +2315,6 @@ func (s *DescribeOriginEndpointOutput) SetWhitelist(v []*string) *DescribeOrigin
 }
 
 // An HTTP Live Streaming (HLS) encryption configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/HlsEncryption
 type HlsEncryption struct {
 	_ struct{} `type:"structure"`
 
@@ -2064,7 +2397,6 @@ func (s *HlsEncryption) SetSpekeKeyProvider(v *SpekeKeyProvider) *HlsEncryption 
 }
 
 // An HTTP Live Streaming (HLS) ingest resource configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/HlsIngest
 type HlsIngest struct {
 	_ struct{} `type:"structure"`
 
@@ -2088,8 +2420,219 @@ func (s *HlsIngest) SetIngestEndpoints(v []*IngestEndpoint) *HlsIngest {
 	return s
 }
 
+// A HTTP Live Streaming (HLS) manifest configuration.
+type HlsManifest struct {
+	_ struct{} `type:"structure"`
+
+	// This setting controls how ad markers are included in the packaged OriginEndpoint."NONE"
+	// will omit all SCTE-35 ad markers from the output."PASSTHROUGH" causes the
+	// manifest to contain a copy of the SCTE-35 admarkers (comments) taken directly
+	// from the input HTTP Live Streaming (HLS) manifest."SCTE35_ENHANCED" generates
+	// ad markers and blackout tags based on SCTE-35messages in the input source.
+	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
+
+	// The ID of the manifest. The ID must be unique within the OriginEndpoint and
+	// it cannot be changed after it is created.
+	//
+	// Id is a required field
+	Id *string `locationName:"id" type:"string" required:"true"`
+
+	// When enabled, an I-Frame only stream will be included in the output.
+	IncludeIframeOnlyStream *bool `locationName:"includeIframeOnlyStream" type:"boolean"`
+
+	// An optional short string appended to the end of the OriginEndpoint URL. If
+	// not specified, defaults to the manifestName for the OriginEndpoint.
+	ManifestName *string `locationName:"manifestName" type:"string"`
+
+	// The HTTP Live Streaming (HLS) playlist type.When either "EVENT" or "VOD"
+	// is specified, a corresponding EXT-X-PLAYLIST-TYPEentry will be included in
+	// the media playlist.
+	PlaylistType *string `locationName:"playlistType" type:"string" enum:"PlaylistType"`
+
+	// Time window (in seconds) contained in each parent manifest.
+	PlaylistWindowSeconds *int64 `locationName:"playlistWindowSeconds" type:"integer"`
+
+	// The interval (in seconds) between each EXT-X-PROGRAM-DATE-TIME taginserted
+	// into manifests. Additionally, when an interval is specifiedID3Timed Metadata
+	// messages will be generated every 5 seconds using theingest time of the content.If
+	// the interval is not specified, or set to 0, thenno EXT-X-PROGRAM-DATE-TIME
+	// tags will be inserted into manifests and noID3Timed Metadata messages will
+	// be generated. Note that irrespectiveof this parameter, if any ID3 Timed Metadata
+	// is found in HTTP Live Streaming (HLS) input,it will be passed through to
+	// HLS output.
+	ProgramDateTimeIntervalSeconds *int64 `locationName:"programDateTimeIntervalSeconds" type:"integer"`
+
+	// The URL of the packaged OriginEndpoint for consumption.
+	Url *string `locationName:"url" type:"string"`
+}
+
+// String returns the string representation
+func (s HlsManifest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HlsManifest) GoString() string {
+	return s.String()
+}
+
+// SetAdMarkers sets the AdMarkers field's value.
+func (s *HlsManifest) SetAdMarkers(v string) *HlsManifest {
+	s.AdMarkers = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *HlsManifest) SetId(v string) *HlsManifest {
+	s.Id = &v
+	return s
+}
+
+// SetIncludeIframeOnlyStream sets the IncludeIframeOnlyStream field's value.
+func (s *HlsManifest) SetIncludeIframeOnlyStream(v bool) *HlsManifest {
+	s.IncludeIframeOnlyStream = &v
+	return s
+}
+
+// SetManifestName sets the ManifestName field's value.
+func (s *HlsManifest) SetManifestName(v string) *HlsManifest {
+	s.ManifestName = &v
+	return s
+}
+
+// SetPlaylistType sets the PlaylistType field's value.
+func (s *HlsManifest) SetPlaylistType(v string) *HlsManifest {
+	s.PlaylistType = &v
+	return s
+}
+
+// SetPlaylistWindowSeconds sets the PlaylistWindowSeconds field's value.
+func (s *HlsManifest) SetPlaylistWindowSeconds(v int64) *HlsManifest {
+	s.PlaylistWindowSeconds = &v
+	return s
+}
+
+// SetProgramDateTimeIntervalSeconds sets the ProgramDateTimeIntervalSeconds field's value.
+func (s *HlsManifest) SetProgramDateTimeIntervalSeconds(v int64) *HlsManifest {
+	s.ProgramDateTimeIntervalSeconds = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *HlsManifest) SetUrl(v string) *HlsManifest {
+	s.Url = &v
+	return s
+}
+
+// A HTTP Live Streaming (HLS) manifest configuration.
+type HlsManifestCreateOrUpdateParameters struct {
+	_ struct{} `type:"structure"`
+
+	// This setting controls how ad markers are included in the packaged OriginEndpoint."NONE"
+	// will omit all SCTE-35 ad markers from the output."PASSTHROUGH" causes the
+	// manifest to contain a copy of the SCTE-35 admarkers (comments) taken directly
+	// from the input HTTP Live Streaming (HLS) manifest."SCTE35_ENHANCED" generates
+	// ad markers and blackout tags based on SCTE-35messages in the input source.
+	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
+
+	// The ID of the manifest. The ID must be unique within the OriginEndpoint and
+	// it cannot be changed after it is created.
+	//
+	// Id is a required field
+	Id *string `locationName:"id" type:"string" required:"true"`
+
+	// When enabled, an I-Frame only stream will be included in the output.
+	IncludeIframeOnlyStream *bool `locationName:"includeIframeOnlyStream" type:"boolean"`
+
+	// An optional short string appended to the end of the OriginEndpoint URL. If
+	// not specified, defaults to the manifestName for the OriginEndpoint.
+	ManifestName *string `locationName:"manifestName" type:"string"`
+
+	// The HTTP Live Streaming (HLS) playlist type.When either "EVENT" or "VOD"
+	// is specified, a corresponding EXT-X-PLAYLIST-TYPEentry will be included in
+	// the media playlist.
+	PlaylistType *string `locationName:"playlistType" type:"string" enum:"PlaylistType"`
+
+	// Time window (in seconds) contained in each parent manifest.
+	PlaylistWindowSeconds *int64 `locationName:"playlistWindowSeconds" type:"integer"`
+
+	// The interval (in seconds) between each EXT-X-PROGRAM-DATE-TIME taginserted
+	// into manifests. Additionally, when an interval is specifiedID3Timed Metadata
+	// messages will be generated every 5 seconds using theingest time of the content.If
+	// the interval is not specified, or set to 0, thenno EXT-X-PROGRAM-DATE-TIME
+	// tags will be inserted into manifests and noID3Timed Metadata messages will
+	// be generated. Note that irrespectiveof this parameter, if any ID3 Timed Metadata
+	// is found in HTTP Live Streaming (HLS) input,it will be passed through to
+	// HLS output.
+	ProgramDateTimeIntervalSeconds *int64 `locationName:"programDateTimeIntervalSeconds" type:"integer"`
+}
+
+// String returns the string representation
+func (s HlsManifestCreateOrUpdateParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HlsManifestCreateOrUpdateParameters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsManifestCreateOrUpdateParameters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsManifestCreateOrUpdateParameters"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAdMarkers sets the AdMarkers field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetAdMarkers(v string) *HlsManifestCreateOrUpdateParameters {
+	s.AdMarkers = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetId(v string) *HlsManifestCreateOrUpdateParameters {
+	s.Id = &v
+	return s
+}
+
+// SetIncludeIframeOnlyStream sets the IncludeIframeOnlyStream field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetIncludeIframeOnlyStream(v bool) *HlsManifestCreateOrUpdateParameters {
+	s.IncludeIframeOnlyStream = &v
+	return s
+}
+
+// SetManifestName sets the ManifestName field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetManifestName(v string) *HlsManifestCreateOrUpdateParameters {
+	s.ManifestName = &v
+	return s
+}
+
+// SetPlaylistType sets the PlaylistType field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetPlaylistType(v string) *HlsManifestCreateOrUpdateParameters {
+	s.PlaylistType = &v
+	return s
+}
+
+// SetPlaylistWindowSeconds sets the PlaylistWindowSeconds field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetPlaylistWindowSeconds(v int64) *HlsManifestCreateOrUpdateParameters {
+	s.PlaylistWindowSeconds = &v
+	return s
+}
+
+// SetProgramDateTimeIntervalSeconds sets the ProgramDateTimeIntervalSeconds field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetProgramDateTimeIntervalSeconds(v int64) *HlsManifestCreateOrUpdateParameters {
+	s.ProgramDateTimeIntervalSeconds = &v
+	return s
+}
+
 // An HTTP Live Streaming (HLS) packaging configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/HlsPackage
 type HlsPackage struct {
 	_ struct{} `type:"structure"`
 
@@ -2116,7 +2659,7 @@ type HlsPackage struct {
 
 	// The interval (in seconds) between each EXT-X-PROGRAM-DATE-TIME taginserted
 	// into manifests. Additionally, when an interval is specifiedID3Timed Metadata
-	// messages will be generated every 5 seconds using the ingest time of the content.If
+	// messages will be generated every 5 seconds using theingest time of the content.If
 	// the interval is not specified, or set to 0, thenno EXT-X-PROGRAM-DATE-TIME
 	// tags will be inserted into manifests and noID3Timed Metadata messages will
 	// be generated. Note that irrespectiveof this parameter, if any ID3 Timed Metadata
@@ -2215,9 +2758,11 @@ func (s *HlsPackage) SetUseAudioRenditionGroup(v bool) *HlsPackage {
 }
 
 // An endpoint for ingesting source content for a Channel.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/IngestEndpoint
 type IngestEndpoint struct {
 	_ struct{} `type:"structure"`
+
+	// The system generated unique identifier for the IngestEndpoint
+	Id *string `locationName:"id" type:"string"`
 
 	// The system generated password for ingest authentication.
 	Password *string `locationName:"password" type:"string"`
@@ -2239,6 +2784,12 @@ func (s IngestEndpoint) GoString() string {
 	return s.String()
 }
 
+// SetId sets the Id field's value.
+func (s *IngestEndpoint) SetId(v string) *IngestEndpoint {
+	s.Id = &v
+	return s
+}
+
 // SetPassword sets the Password field's value.
 func (s *IngestEndpoint) SetPassword(v string) *IngestEndpoint {
 	s.Password = &v
@@ -2257,7 +2808,6 @@ func (s *IngestEndpoint) SetUsername(v string) *IngestEndpoint {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/ListChannelsRequest
 type ListChannelsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2301,7 +2851,6 @@ func (s *ListChannelsInput) SetNextToken(v string) *ListChannelsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/ListChannelsResponse
 type ListChannelsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2332,7 +2881,6 @@ func (s *ListChannelsOutput) SetNextToken(v string) *ListChannelsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/ListOriginEndpointsRequest
 type ListOriginEndpointsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2384,7 +2932,6 @@ func (s *ListOriginEndpointsInput) SetNextToken(v string) *ListOriginEndpointsIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/ListOriginEndpointsResponse
 type ListOriginEndpointsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2416,7 +2963,6 @@ func (s *ListOriginEndpointsOutput) SetOriginEndpoints(v []*OriginEndpoint) *Lis
 }
 
 // A Microsoft Smooth Streaming (MSS) encryption configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/MssEncryption
 type MssEncryption struct {
 	_ struct{} `type:"structure"`
 
@@ -2462,7 +3008,6 @@ func (s *MssEncryption) SetSpekeKeyProvider(v *SpekeKeyProvider) *MssEncryption 
 }
 
 // A Microsoft Smooth Streaming (MSS) packaging configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/MssPackage
 type MssPackage struct {
 	_ struct{} `type:"structure"`
 
@@ -2529,7 +3074,6 @@ func (s *MssPackage) SetStreamSelection(v *StreamSelection) *MssPackage {
 }
 
 // An OriginEndpoint resource configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/OriginEndpoint
 type OriginEndpoint struct {
 	_ struct{} `type:"structure"`
 
@@ -2538,6 +3082,9 @@ type OriginEndpoint struct {
 
 	// The ID of the Channel the OriginEndpoint is associated with.
 	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// A Common Media Application Format (CMAF) packaging configuration.
+	CmafPackage *CmafPackage `locationName:"cmafPackage" type:"structure"`
 
 	// A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
 	DashPackage *DashPackage `locationName:"dashPackage" type:"structure"`
@@ -2591,6 +3138,12 @@ func (s *OriginEndpoint) SetArn(v string) *OriginEndpoint {
 // SetChannelId sets the ChannelId field's value.
 func (s *OriginEndpoint) SetChannelId(v string) *OriginEndpoint {
 	s.ChannelId = &v
+	return s
+}
+
+// SetCmafPackage sets the CmafPackage field's value.
+func (s *OriginEndpoint) SetCmafPackage(v *CmafPackage) *OriginEndpoint {
+	s.CmafPackage = v
 	return s
 }
 
@@ -2654,9 +3207,9 @@ func (s *OriginEndpoint) SetWhitelist(v []*string) *OriginEndpoint {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentialsRequest
+// Deprecated: RotateChannelCredentialsInput has been deprecated
 type RotateChannelCredentialsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `deprecated:"true" type:"structure"`
 
 	// Id is a required field
 	Id *string `location:"uri" locationName:"id" type:"string" required:"true"`
@@ -2691,9 +3244,9 @@ func (s *RotateChannelCredentialsInput) SetId(v string) *RotateChannelCredential
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentialsResponse
+// Deprecated: RotateChannelCredentialsOutput has been deprecated
 type RotateChannelCredentialsOutput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `deprecated:"true" type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -2739,9 +3292,103 @@ func (s *RotateChannelCredentialsOutput) SetId(v string) *RotateChannelCredentia
 	return s
 }
 
+type RotateIngestEndpointCredentialsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Id is a required field
+	Id *string `location:"uri" locationName:"id" type:"string" required:"true"`
+
+	// IngestEndpointId is a required field
+	IngestEndpointId *string `location:"uri" locationName:"ingest_endpoint_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RotateIngestEndpointCredentialsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RotateIngestEndpointCredentialsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RotateIngestEndpointCredentialsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RotateIngestEndpointCredentialsInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.IngestEndpointId == nil {
+		invalidParams.Add(request.NewErrParamRequired("IngestEndpointId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *RotateIngestEndpointCredentialsInput) SetId(v string) *RotateIngestEndpointCredentialsInput {
+	s.Id = &v
+	return s
+}
+
+// SetIngestEndpointId sets the IngestEndpointId field's value.
+func (s *RotateIngestEndpointCredentialsInput) SetIngestEndpointId(v string) *RotateIngestEndpointCredentialsInput {
+	s.IngestEndpointId = &v
+	return s
+}
+
+type RotateIngestEndpointCredentialsOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	Description *string `locationName:"description" type:"string"`
+
+	// An HTTP Live Streaming (HLS) ingest resource configuration.
+	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
+
+	Id *string `locationName:"id" type:"string"`
+}
+
+// String returns the string representation
+func (s RotateIngestEndpointCredentialsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RotateIngestEndpointCredentialsOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetArn(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetDescription(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Description = &v
+	return s
+}
+
+// SetHlsIngest sets the HlsIngest field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetHlsIngest(v *HlsIngest) *RotateIngestEndpointCredentialsOutput {
+	s.HlsIngest = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetId(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Id = &v
+	return s
+}
+
 // A configuration for accessing an external Secure Packager and Encoder Key
 // Exchange (SPEKE) service that will provide encryption keys.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/SpekeKeyProvider
 type SpekeKeyProvider struct {
 	_ struct{} `type:"structure"`
 
@@ -2824,7 +3471,6 @@ func (s *SpekeKeyProvider) SetUrl(v string) *SpekeKeyProvider {
 }
 
 // A StreamSelection configuration.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/StreamSelection
 type StreamSelection struct {
 	_ struct{} `type:"structure"`
 
@@ -2866,7 +3512,6 @@ func (s *StreamSelection) SetStreamOrder(v string) *StreamSelection {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/UpdateChannelRequest
 type UpdateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2911,7 +3556,6 @@ func (s *UpdateChannelInput) SetId(v string) *UpdateChannelInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/UpdateChannelResponse
 type UpdateChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2959,9 +3603,11 @@ func (s *UpdateChannelOutput) SetId(v string) *UpdateChannelOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/UpdateOriginEndpointRequest
 type UpdateOriginEndpointInput struct {
 	_ struct{} `type:"structure"`
+
+	// A Common Media Application Format (CMAF) packaging configuration.
+	CmafPackage *CmafPackageCreateOrUpdateParameters `locationName:"cmafPackage" type:"structure"`
 
 	// A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
 	DashPackage *DashPackage `locationName:"dashPackage" type:"structure"`
@@ -3002,6 +3648,11 @@ func (s *UpdateOriginEndpointInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.CmafPackage != nil {
+		if err := s.CmafPackage.Validate(); err != nil {
+			invalidParams.AddNested("CmafPackage", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.DashPackage != nil {
 		if err := s.DashPackage.Validate(); err != nil {
 			invalidParams.AddNested("DashPackage", err.(request.ErrInvalidParams))
@@ -3022,6 +3673,12 @@ func (s *UpdateOriginEndpointInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCmafPackage sets the CmafPackage field's value.
+func (s *UpdateOriginEndpointInput) SetCmafPackage(v *CmafPackageCreateOrUpdateParameters) *UpdateOriginEndpointInput {
+	s.CmafPackage = v
+	return s
 }
 
 // SetDashPackage sets the DashPackage field's value.
@@ -3078,13 +3735,15 @@ func (s *UpdateOriginEndpointInput) SetWhitelist(v []*string) *UpdateOriginEndpo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/UpdateOriginEndpointResponse
 type UpdateOriginEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
 	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// A Common Media Application Format (CMAF) packaging configuration.
+	CmafPackage *CmafPackage `locationName:"cmafPackage" type:"structure"`
 
 	// A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
 	DashPackage *DashPackage `locationName:"dashPackage" type:"structure"`
@@ -3129,6 +3788,12 @@ func (s *UpdateOriginEndpointOutput) SetArn(v string) *UpdateOriginEndpointOutpu
 // SetChannelId sets the ChannelId field's value.
 func (s *UpdateOriginEndpointOutput) SetChannelId(v string) *UpdateOriginEndpointOutput {
 	s.ChannelId = &v
+	return s
+}
+
+// SetCmafPackage sets the CmafPackage field's value.
+func (s *UpdateOriginEndpointOutput) SetCmafPackage(v *CmafPackage) *UpdateOriginEndpointOutput {
+	s.CmafPackage = v
 	return s
 }
 
@@ -3239,4 +3904,9 @@ const (
 
 	// StreamOrderVideoBitrateDescending is a StreamOrder enum value
 	StreamOrderVideoBitrateDescending = "VIDEO_BITRATE_DESCENDING"
+)
+
+const (
+	// __PeriodTriggersElementAds is a __PeriodTriggersElement enum value
+	__PeriodTriggersElementAds = "ADS"
 )

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +14,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 		Create: resourceAwsServiceDiscoveryPublicDnsNamespaceCreate,
 		Read:   resourceAwsServiceDiscoveryPublicDnsNamespaceRead,
 		Delete: resourceAwsServiceDiscoveryPublicDnsNamespaceDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -42,9 +45,17 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", d.Get("name").(string)))
+	name := d.Get("name").(string)
+	// The CreatorRequestId has a limit of 64 bytes
+	var requestId string
+	if len(name) > (64 - resource.UniqueIDSuffixLength) {
+		requestId = resource.PrefixedUniqueId(name[0:(64 - resource.UniqueIDSuffixLength - 1)])
+	} else {
+		requestId = resource.PrefixedUniqueId(name)
+	}
+
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(name),
 		CreatorRequestId: aws.String(requestId),
 	}
 
@@ -89,6 +100,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, m
 		return err
 	}
 
+	d.Set("name", resp.Namespace.Name)
 	d.Set("description", resp.Namespace.Description)
 	d.Set("arn", resp.Namespace.Arn)
 	if resp.Namespace.Properties != nil {
@@ -121,7 +133,6 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceDelete(d *schema.ResourceData,
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }
 

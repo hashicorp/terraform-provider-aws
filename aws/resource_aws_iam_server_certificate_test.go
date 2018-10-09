@@ -58,10 +58,39 @@ func testSweepIamServerCertificates(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Server Certificate sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving IAM Server Certificates: %s", err)
 	}
 
 	return nil
+}
+
+func TestAccAWSIAMServerCertificate_importBasic(t *testing.T) {
+	resourceName := "aws_iam_server_certificate.test_cert"
+	rInt := acctest.RandInt()
+	resourceId := fmt.Sprintf("terraform-test-cert-%d", rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMServerCertConfig(rInt),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     resourceId,
+				ImportStateVerifyIgnore: []string{
+					"private_key"},
+			},
+		},
+	})
 }
 
 func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
@@ -144,7 +173,7 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 }
 
 func TestAccAWSIAMServerCertificate_file(t *testing.T) {
-	var _cert iam.ServerCertificate
+	var cert iam.ServerCertificate
 
 	rInt := acctest.RandInt()
 	unixFile := "test-fixtures/iam-ssl-unix-line-endings.pem"
@@ -158,13 +187,13 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, unixFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
 				),
 			},
 			{
 				Config: testAccIAMServerCertConfig_file(rInt, winFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &_cert),
+					testAccCheckCertExists("aws_iam_server_certificate.test_cert", &cert),
 				),
 			},
 		},
@@ -295,6 +324,19 @@ resource "aws_iam_server_certificate" "test_cert" {
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
 `, testAccTLSServerCert)
+}
+
+func testAccIAMServerCertConfig_path(rInt int, path string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_iam_server_certificate" "test_cert" {
+  name = "terraform-test-cert-%d"
+  path = "%s"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = "${tls_private_key.example.private_key_pem}"
+}
+`, testAccTLSServerCert, rInt, path)
 }
 
 // iam-ssl-unix-line-endings

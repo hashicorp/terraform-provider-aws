@@ -10,6 +10,8 @@ description: |-
 
 Attaches a Managed IAM Policy to an IAM role
 
+## Example Usage
+
 ```hcl
 resource "aws_iam_role" "role" {
     name = "test-role"
@@ -61,3 +63,11 @@ The following arguments are supported:
 
 * `role`		(Required) - The role the policy should be applied to
 * `policy_arn`	(Required) - The ARN of the policy you want to apply
+
+## Import
+
+IAM role policy attachments can be imported using the role name and policy arn separated by `/`.
+
+```
+$ terraform import aws_iam_role_policy_attachment.test-attach test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
+```

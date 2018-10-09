@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -23,7 +22,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafXssMatchSetConfig(xssMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists("aws_waf_xss_match_set.xss_match_set", &v),
@@ -220,7 +219,7 @@ func testAccCheckAWSWafXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCh
 			return conn.UpdateXssMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating XssMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating XssMatchSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -231,7 +230,7 @@ func testAccCheckAWSWafXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCh
 			return conn.DeleteXssMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting XssMatchSet: {{err}}", err)
+			return fmt.Errorf("Error deleting XssMatchSet: %s", err)
 		}
 		return nil
 	}

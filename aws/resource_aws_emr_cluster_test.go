@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,7 +25,51 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrClusterConfig(r),
-				Check:  testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigAdditionalInfo(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigConfigurationsJson(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestMatchResourceAttr("aws_emr_cluster.tf-test-cluster", "configurations_json",
+						regexp.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
+				),
 			},
 		},
 	})
@@ -50,6 +95,49 @@ func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigInstanceGroups_st1(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr(
+						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	password := fmt.Sprintf("NeverKeepPasswordsInPlainText%d!", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_Kerberos_ClusterDedicatedKdc(r, password),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.kdc_admin_password", password),
+					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.realm", "EC2.INTERNAL"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_security_config(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
@@ -61,6 +149,64 @@ func TestAccAWSEMRCluster_security_config(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig_SecurityConfiguration(r),
 				Check:  testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
+	var cluster emr.Cluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_Step_Single(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.jar", "command-runner.jar"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.main_class", ""),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.properties.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.name", "Setup Hadoop Debugging"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
+	var cluster emr.Cluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_Step_Multiple(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.jar", "command-runner.jar"),
+					resource.TestCheckResourceAttr(resourceName, "step.0.name", "Setup Hadoop Debugging"),
+					resource.TestCheckResourceAttr(resourceName, "step.1.action_on_failure", "CONTINUE"),
+					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.0", "spark-example"),
+					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.1", "SparkPi"),
+					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.2", "10"),
+					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.jar", "command-runner.jar"),
+					resource.TestCheckResourceAttr(resourceName, "step.1.name", "Spark Step"),
+				),
 			},
 		},
 	})
@@ -134,6 +280,26 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
 						"aws_emr_cluster.tf-test-cluster", "termination_protection", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_keepJob(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_keepJop(r, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					resource.TestCheckResourceAttr(
+						"aws_emr_cluster.tf-test-cluster", "keep_job_flow_alive_when_no_steps", "false"),
 				),
 			},
 		},
@@ -283,7 +449,7 @@ func testAccCheck_bootstrap_order(cluster *emr.Cluster, argsInts, argsStrings []
 
 		resp, err := emrconn.ListBootstrapActions(&req)
 		if err != nil {
-			return fmt.Errorf("[ERR] Error listing boostrap actions in test: %s", err)
+			return fmt.Errorf("Error listing boostrap actions in test: %s", err)
 		}
 
 		// make sure we actually checked something
@@ -361,16 +527,17 @@ func testAccCheckAWSEmrClusterExists(n string, v *emr.Cluster) resource.TestChec
 			return fmt.Errorf("EMR error: %v", err)
 		}
 
-		if describe.Cluster != nil &&
-			*describe.Cluster.Id != rs.Primary.ID {
-			return fmt.Errorf("EMR cluser not found")
+		if describe.Cluster == nil || *describe.Cluster.Id != rs.Primary.ID {
+			return fmt.Errorf("EMR cluster %q not found", rs.Primary.ID)
 		}
 
 		*v = *describe.Cluster
 
-		if describe.Cluster != nil &&
-			*describe.Cluster.Status.State != "WAITING" {
-			return fmt.Errorf("EMR cluser is not up yet")
+		if describe.Cluster.Status != nil {
+			state := aws.StringValue(describe.Cluster.Status.State)
+			if state != emr.ClusterStateRunning && state != emr.ClusterStateWaiting {
+				return fmt.Errorf("EMR cluster %q is not RUNNING or WAITING, currently: %s", rs.Primary.ID, state)
+			}
 		}
 
 		return nil
@@ -591,7 +758,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_cts"
+    Name = "terraform-testacc-emr-cluster-bootstrap"
   }
 }
 
@@ -600,7 +767,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_cts"
+    Name = "tf-acc-emr-cluster-bootstrap"
   }
 }
 
@@ -681,12 +848,8 @@ POLICY
 
 func testAccAWSEmrClusterConfig(r int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "emr-test-%d"
+  name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
 
@@ -711,6 +874,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   keep_job_flow_alive_when_no_steps = true
   termination_protection = false
 
+  scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
+
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
     name = "runif"
@@ -727,7 +892,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 resource "aws_security_group" "allow_all" {
-  name        = "allow_all_%d"
+  name        = "allow_all_%[1]d"
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -761,7 +926,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster"
   }
 }
 
@@ -770,7 +935,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster"
   }
 }
 
@@ -800,7 +965,7 @@ resource "aws_main_route_table_association" "a" {
 
 # IAM role for EMR Service
 resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%d"
+  name = "iam_emr_default_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -825,7 +990,7 @@ resource "aws_iam_role_policy_attachment" "service-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%d"
+  name = "iam_emr_default_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -895,7 +1060,7 @@ EOT
 
 # IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%d"
+  name = "iam_emr_profile_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -915,7 +1080,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name  = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -925,7 +1090,7 @@ resource "aws_iam_role_policy_attachment" "profile-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%d"
+  name = "iam_emr_profile_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -964,7 +1129,7 @@ EOT
 
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
-  name               = "EMR_AutoScaling_DefaultRole_%d"
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
   assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
 }
 
@@ -983,7 +1148,745 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r)
+}
+
+func testAccAWSEmrClusterConfigAdditionalInfo(r int) string {
+	return fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "emr-test-%[1]d"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
+  additional_info = <<EOF
+{
+	"instanceAwsClientConfiguration": {
+		"proxyPort": 8099,
+		"proxyHost": "myproxy.example.com"
+	}
+}
+EOF
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.main.id}"
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
+  core_instance_count  = 1
+
+  tags {
+    role     = "rolename"
+    dns_zone = "env_zone"
+    env      = "env"
+    name     = "name-env"
+  }
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection = false
+
+  scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  configurations = "test-fixtures/emr_configurations.json"
+
+  depends_on = ["aws_main_route_table_association.a"]
+
+  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  ebs_root_volume_size = 21
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "168.31.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster"
+  }
+}
+
+resource "aws_subnet" "main" {
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "168.31.0.0/20"
+
+  tags {
+    Name = "tf-acc-emr-cluster"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  vpc_id         = "${aws_vpc.main.id}"
+  route_table_id = "${aws_route_table.r.id}"
+}
+
+###
+
+# IAM things
+
+###
+
+# IAM role for EMR Service
+resource "aws_iam_role" "iam_emr_default_role" {
+  name = "iam_emr_default_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "elasticmapreduce.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role_policy_attachment" "service-attach" {
+  role       = "${aws_iam_role.iam_emr_default_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_default_policy" {
+  name = "iam_emr_default_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "ec2:AuthorizeSecurityGroupEgress",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CancelSpotInstanceRequests",
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateSecurityGroup",
+            "ec2:CreateTags",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DeleteSecurityGroup",
+            "ec2:DeleteTags",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeInstances",
+            "ec2:DescribeKeyPairs",
+            "ec2:DescribeNetworkAcls",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribePrefixLists",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSpotInstanceRequests",
+            "ec2:DescribeSpotPriceHistory",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeVpcEndpoints",
+            "ec2:DescribeVpcEndpointServices",
+            "ec2:DescribeVpcs",
+            "ec2:DetachNetworkInterface",
+            "ec2:ModifyImageAttribute",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:RequestSpotInstances",
+            "ec2:RevokeSecurityGroupEgress",
+            "ec2:RunInstances",
+            "ec2:TerminateInstances",
+            "ec2:DeleteVolume",
+            "ec2:DescribeVolumeStatus",
+            "ec2:DescribeVolumes",
+            "ec2:DetachVolume",
+            "iam:GetRole",
+            "iam:GetRolePolicy",
+            "iam:ListInstanceProfiles",
+            "iam:ListRolePolicies",
+            "iam:PassRole",
+            "s3:CreateBucket",
+            "s3:Get*",
+            "s3:List*",
+            "sdb:BatchPutAttributes",
+            "sdb:Select",
+            "sqs:CreateQueue",
+            "sqs:Delete*",
+            "sqs:GetQueue*",
+            "sqs:PurgeQueue",
+            "sqs:ReceiveMessage"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for EC2 Instance Profile
+resource "aws_iam_role" "iam_emr_profile_role" {
+  name = "iam_emr_profile_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "emr_profile" {
+  name  = "emr_profile_%[1]d"
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "profile-attach" {
+  role       = "${aws_iam_role.iam_emr_profile_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_profile_policy" {
+  name = "iam_emr_profile_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "cloudwatch:*",
+            "dynamodb:*",
+            "ec2:Describe*",
+            "elasticmapreduce:Describe*",
+            "elasticmapreduce:ListBootstrapActions",
+            "elasticmapreduce:ListClusters",
+            "elasticmapreduce:ListInstanceGroups",
+            "elasticmapreduce:ListInstances",
+            "elasticmapreduce:ListSteps",
+            "kinesis:CreateStream",
+            "kinesis:DeleteStream",
+            "kinesis:DescribeStream",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:MergeShards",
+            "kinesis:PutRecord",
+            "kinesis:SplitShard",
+            "rds:Describe*",
+            "s3:*",
+            "sdb:*",
+            "sns:*",
+            "sqs:*"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for autoscaling
+resource "aws_iam_role" "emr-autoscaling-role" {
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
+  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+}
+
+data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals = {
+      type        = "Service"
+      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
+  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+}
+`, r)
+}
+
+func testAccAWSEmrClusterConfigConfigurationsJson(r int) string {
+	return fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "emr-test-%[1]d"
+  release_label = "emr-4.6.0"
+  applications  = ["Hadoop","Spark"]
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.main.id}"
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
+  core_instance_count  = 1
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection = false
+
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  configurations_json = <<EOF
+ [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    {
+      "Classification": "spark-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+ ]
+EOF
+
+  depends_on = ["aws_main_route_table_association.a"]
+
+  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  ebs_root_volume_size = 21
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "168.31.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster"
+  }
+}
+
+resource "aws_subnet" "main" {
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "168.31.0.0/20"
+
+  tags {
+    Name = "tf-acc-emr-cluster"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  vpc_id         = "${aws_vpc.main.id}"
+  route_table_id = "${aws_route_table.r.id}"
+}
+
+###
+
+# IAM things
+
+###
+
+# IAM role for EMR Service
+resource "aws_iam_role" "iam_emr_default_role" {
+  name = "iam_emr_default_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "elasticmapreduce.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role_policy_attachment" "service-attach" {
+  role       = "${aws_iam_role.iam_emr_default_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_default_policy" {
+  name = "iam_emr_default_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "ec2:AuthorizeSecurityGroupEgress",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CancelSpotInstanceRequests",
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateSecurityGroup",
+            "ec2:CreateTags",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DeleteSecurityGroup",
+            "ec2:DeleteTags",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeInstances",
+            "ec2:DescribeKeyPairs",
+            "ec2:DescribeNetworkAcls",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribePrefixLists",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSpotInstanceRequests",
+            "ec2:DescribeSpotPriceHistory",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeVpcEndpoints",
+            "ec2:DescribeVpcEndpointServices",
+            "ec2:DescribeVpcs",
+            "ec2:DetachNetworkInterface",
+            "ec2:ModifyImageAttribute",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:RequestSpotInstances",
+            "ec2:RevokeSecurityGroupEgress",
+            "ec2:RunInstances",
+            "ec2:TerminateInstances",
+            "ec2:DeleteVolume",
+            "ec2:DescribeVolumeStatus",
+            "ec2:DescribeVolumes",
+            "ec2:DetachVolume",
+            "iam:GetRole",
+            "iam:GetRolePolicy",
+            "iam:ListInstanceProfiles",
+            "iam:ListRolePolicies",
+            "iam:PassRole",
+            "s3:CreateBucket",
+            "s3:Get*",
+            "s3:List*",
+            "sdb:BatchPutAttributes",
+            "sdb:Select",
+            "sqs:CreateQueue",
+            "sqs:Delete*",
+            "sqs:GetQueue*",
+            "sqs:PurgeQueue",
+            "sqs:ReceiveMessage"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for EC2 Instance Profile
+resource "aws_iam_role" "iam_emr_profile_role" {
+  name = "iam_emr_profile_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "emr_profile" {
+  name  = "emr_profile_%[1]d"
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "profile-attach" {
+  role       = "${aws_iam_role.iam_emr_profile_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_profile_policy" {
+  name = "iam_emr_profile_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "cloudwatch:*",
+            "dynamodb:*",
+            "ec2:Describe*",
+            "elasticmapreduce:Describe*",
+            "elasticmapreduce:ListBootstrapActions",
+            "elasticmapreduce:ListClusters",
+            "elasticmapreduce:ListInstanceGroups",
+            "elasticmapreduce:ListInstances",
+            "elasticmapreduce:ListSteps",
+            "kinesis:CreateStream",
+            "kinesis:DeleteStream",
+            "kinesis:DescribeStream",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:MergeShards",
+            "kinesis:PutRecord",
+            "kinesis:SplitShard",
+            "rds:Describe*",
+            "s3:*",
+            "sdb:*",
+            "sns:*",
+            "sqs:*"
+        ]
+    }]
+}
+EOT
+}
+`, r)
+}
+
+func testAccAWSEmrClusterConfig_Kerberos_ClusterDedicatedKdc(r int, password string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-west-2"
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_emr_security_configuration" "foo" {
+  configuration = <<EOF
+{
+  "AuthenticationConfiguration": {
+    "KerberosConfiguration": {
+      "Provider": "ClusterDedicatedKdc",
+      "ClusterDedicatedKdcConfiguration": {
+        "TicketLifetimeInHours": 24
+      }
+    }
+  }
+}
+EOF
+}
+
+resource "aws_emr_cluster" "tf-test-cluster" {
+  applications                      = ["Spark"]
+  core_instance_count               = 1
+  core_instance_type                = "c4.large"
+  keep_job_flow_alive_when_no_steps = true
+  master_instance_type              = "c4.large"
+  name                              = "emr-test-%[1]d"
+  release_label                     = "emr-5.12.0"
+  security_configuration            = "${aws_emr_security_configuration.foo.name}"
+  service_role                      = "EMR_DefaultRole"
+  termination_protection            = false
+
+  ec2_attributes {
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = "${aws_subnet.main.0.id}"
+  }
+
+  kerberos_attributes {
+    kdc_admin_password = "%[2]s"
+    realm              = "EC2.INTERNAL"
+  }
+
+  depends_on = ["aws_main_route_table_association.a"]
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-kerberos-cluster-dedicated-kdc"
+  }
+}
+
+resource "aws_subnet" "main" {
+  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  count             = 2
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "tf-acc-emr-cluster-kerberos-cluster-dedicated-kdc"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-kerberos-cluster-dedicated-kdc"
+  }
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = "${aws_vpc.main.id}"
+}
+`, r, password)
 }
 
 func testAccAWSEmrClusterConfig_SecurityConfiguration(r int) string {
@@ -1069,7 +1972,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-security-configuration"
   }
 }
 
@@ -1078,7 +1981,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-security-configuration"
   }
 }
 
@@ -1333,17 +2236,159 @@ resource "aws_kms_key" "foo" {
 }
 POLICY
 }
-`, r, r, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r, r)
 }
 
-func testAccAWSEmrClusterConfigInstanceGroups(r int) string {
+const testAccAWSEmrClusterConfig_Step_DebugLoggingStep = `
+  # Example from: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-debugging.html
+  step {
+    action_on_failure = "TERMINATE_CLUSTER"
+    name              = "Setup Hadoop Debugging"
+
+    hadoop_jar_step {
+      jar  = "command-runner.jar"
+      args = ["state-pusher-script"]
+    }
+  }
+`
+
+const testAccAWSEmrClusterConfig_Step_SparkStep = `
+  # Example from: https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark-submit-step.html
+  step {
+    action_on_failure = "CONTINUE"
+    name              = "Spark Step"
+
+    hadoop_jar_step {
+      jar  = "command-runner.jar"
+      args = ["spark-example", "SparkPi", "10"]
+    }
+  }
+`
+
+func testAccAWSEmrClusterConfig_Step_Multiple(rInt int) string {
+	stepConfig := testAccAWSEmrClusterConfig_Step_DebugLoggingStep + testAccAWSEmrClusterConfig_Step_SparkStep
+	return testAccAWSEmrClusterConfig_Step(rInt, stepConfig)
+}
+
+func testAccAWSEmrClusterConfig_Step_Single(rInt int) string {
+	return testAccAWSEmrClusterConfig_Step(rInt, testAccAWSEmrClusterConfig_Step_DebugLoggingStep)
+}
+
+func testAccAWSEmrClusterConfig_Step(rInt int, stepConfig string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "emr-test-%d"
+  applications                      = ["Spark"]
+  core_instance_count               = 1
+  core_instance_type                = "c4.large"
+  keep_job_flow_alive_when_no_steps = true
+  log_uri                           = "s3://${aws_s3_bucket.test.bucket}/"
+  master_instance_type              = "c4.large"
+  name                              = "emr-test-%[1]d"
+  release_label                     = "emr-5.12.0"
+  service_role                      = "EMR_DefaultRole"
+  termination_protection            = false
+
+  ec2_attributes {
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = "${aws_subnet.main.0.id}"
+  }
+
+%[2]s
+
+  depends_on = ["aws_main_route_table_association.a"]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "tf-acc-test-%[1]d"
+  force_destroy = true
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-step"
+  }
+}
+
+resource "aws_subnet" "main" {
+  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  count             = 2
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-step"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-step"
+  }
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = "${aws_vpc.main.id}"
+}
+`, rInt, stepConfig)
+}
+
+func testAccAWSEmrClusterConfigInstanceGroups(r int) string {
+	return fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
 
@@ -1365,6 +2410,39 @@ resource "aws_emr_cluster" "tf-test-cluster" {
         volumes_per_instance = 1
       }
       bid_price = "0.30"
+      autoscaling_policy = <<EOT
+{
+  "Constraints": {
+    "MinCapacity": 1,
+    "MaxCapacity": 2
+  },
+  "Rules": [
+    {
+      "Name": "ScaleOutMemoryPercentage",
+      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
+      "Action": {
+        "SimpleScalingPolicyConfiguration": {
+          "AdjustmentType": "CHANGE_IN_CAPACITY",
+          "ScalingAdjustment": 1,
+          "CoolDown": 300
+        }
+      },
+      "Trigger": {
+        "CloudWatchAlarmDefinition": {
+          "ComparisonOperator": "LESS_THAN",
+          "EvaluationPeriods": 1,
+          "MetricName": "YARNMemoryAvailablePercentage",
+          "Namespace": "AWS/ElasticMapReduce",
+          "Period": 300,
+          "Statistic": "AVERAGE",
+          "Threshold": 15.0,
+          "Unit": "PERCENT"
+        }
+      }
+    }
+  ]
+}
+EOT
     },
     {
       instance_role = "MASTER"
@@ -1398,7 +2476,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 resource "aws_security_group" "allow_all" {
-  name        = "allow_all_%d"
+  name        = "allow_all_%[1]d"
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -1432,7 +2510,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-instance-groups"
   }
 }
 
@@ -1441,7 +2519,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-instance-groups"
   }
 }
 
@@ -1471,7 +2549,7 @@ resource "aws_main_route_table_association" "a" {
 
 # IAM role for EMR Service
 resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%d"
+  name = "iam_emr_default_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -1496,7 +2574,7 @@ resource "aws_iam_role_policy_attachment" "service-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%d"
+  name = "iam_emr_default_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -1566,7 +2644,7 @@ EOT
 
 # IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%d"
+  name = "iam_emr_profile_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -1586,7 +2664,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name  = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -1596,7 +2674,7 @@ resource "aws_iam_role_policy_attachment" "profile-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%d"
+  name = "iam_emr_profile_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -1635,7 +2713,7 @@ EOT
 
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
-  name               = "EMR_AutoScaling_DefaultRole_%d"
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
   assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
 }
 
@@ -1654,18 +2732,361 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
+`, r)
+}
 
-`, r, r, r, r, r, r, r, r, r, r)
+func testAccAWSEmrClusterConfigInstanceGroups_st1(r int) string {
+	return fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "emr-test-%[1]d"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.main.id}"
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  instance_group = [
+    {
+      instance_role = "CORE"
+      instance_type = "c4.large"
+      instance_count = "1"
+      ebs_config {
+        size = "500"
+        type = "st1"
+        volumes_per_instance = 1
+      }
+      bid_price = "0.30"
+      autoscaling_policy = <<EOT
+{
+  "Constraints": {
+    "MinCapacity": 1,
+    "MaxCapacity": 2
+  },
+  "Rules": [
+    {
+      "Name": "ScaleOutMemoryPercentage",
+      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
+      "Action": {
+        "SimpleScalingPolicyConfiguration": {
+          "AdjustmentType": "CHANGE_IN_CAPACITY",
+          "ScalingAdjustment": 1,
+          "CoolDown": 300
+        }
+      },
+      "Trigger": {
+        "CloudWatchAlarmDefinition": {
+          "ComparisonOperator": "LESS_THAN",
+          "EvaluationPeriods": 1,
+          "MetricName": "YARNMemoryAvailablePercentage",
+          "Namespace": "AWS/ElasticMapReduce",
+          "Period": 300,
+          "Statistic": "AVERAGE",
+          "Threshold": 15.0,
+          "Unit": "PERCENT"
+        }
+      }
+    }
+  ]
+}
+EOT
+    },
+    {
+      instance_role = "MASTER"
+      instance_type = "c4.large"
+      instance_count = 1
+    }
+  ]
+
+  tags {
+    role     = "rolename"
+    dns_zone = "env_zone"
+    env      = "env"
+    name     = "name-env"
+  }
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection = false
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  depends_on = ["aws_main_route_table_association.a"]
+
+  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "168.31.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-instance-groups"
+  }
+}
+
+resource "aws_subnet" "main" {
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "168.31.0.0/20"
+
+  tags {
+    Name = "tf-acc-emr-cluster-instance-groups"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  vpc_id         = "${aws_vpc.main.id}"
+  route_table_id = "${aws_route_table.r.id}"
+}
+
+###
+
+# IAM things
+
+###
+
+# IAM role for EMR Service
+resource "aws_iam_role" "iam_emr_default_role" {
+  name = "iam_emr_default_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "elasticmapreduce.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role_policy_attachment" "service-attach" {
+  role       = "${aws_iam_role.iam_emr_default_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_default_policy" {
+  name = "iam_emr_default_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "ec2:AuthorizeSecurityGroupEgress",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CancelSpotInstanceRequests",
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateSecurityGroup",
+            "ec2:CreateTags",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DeleteSecurityGroup",
+            "ec2:DeleteTags",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeInstances",
+            "ec2:DescribeKeyPairs",
+            "ec2:DescribeNetworkAcls",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribePrefixLists",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSpotInstanceRequests",
+            "ec2:DescribeSpotPriceHistory",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeVpcEndpoints",
+            "ec2:DescribeVpcEndpointServices",
+            "ec2:DescribeVpcs",
+            "ec2:DetachNetworkInterface",
+            "ec2:ModifyImageAttribute",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:RequestSpotInstances",
+            "ec2:RevokeSecurityGroupEgress",
+            "ec2:RunInstances",
+            "ec2:TerminateInstances",
+            "ec2:DeleteVolume",
+            "ec2:DescribeVolumeStatus",
+            "ec2:DescribeVolumes",
+            "ec2:DetachVolume",
+            "iam:GetRole",
+            "iam:GetRolePolicy",
+            "iam:ListInstanceProfiles",
+            "iam:ListRolePolicies",
+            "iam:PassRole",
+            "s3:CreateBucket",
+            "s3:Get*",
+            "s3:List*",
+            "sdb:BatchPutAttributes",
+            "sdb:Select",
+            "sqs:CreateQueue",
+            "sqs:Delete*",
+            "sqs:GetQueue*",
+            "sqs:PurgeQueue",
+            "sqs:ReceiveMessage"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for EC2 Instance Profile
+resource "aws_iam_role" "iam_emr_profile_role" {
+  name = "iam_emr_profile_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "emr_profile" {
+  name  = "emr_profile_%[1]d"
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "profile-attach" {
+  role       = "${aws_iam_role.iam_emr_profile_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_profile_policy" {
+  name = "iam_emr_profile_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "cloudwatch:*",
+            "dynamodb:*",
+            "ec2:Describe*",
+            "elasticmapreduce:Describe*",
+            "elasticmapreduce:ListBootstrapActions",
+            "elasticmapreduce:ListClusters",
+            "elasticmapreduce:ListInstanceGroups",
+            "elasticmapreduce:ListInstances",
+            "elasticmapreduce:ListSteps",
+            "kinesis:CreateStream",
+            "kinesis:DeleteStream",
+            "kinesis:DescribeStream",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:MergeShards",
+            "kinesis:PutRecord",
+            "kinesis:SplitShard",
+            "rds:Describe*",
+            "s3:*",
+            "sdb:*",
+            "sns:*",
+            "sqs:*"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for autoscaling
+resource "aws_iam_role" "emr-autoscaling-role" {
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
+  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+}
+
+data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals = {
+      type        = "Service"
+      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
+  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+}
+`, r)
 }
 
 func testAccAWSEmrClusterConfigTerminationPolicy(r int, term string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "emr-test-%d"
+  name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
 
@@ -1688,7 +3109,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = %s
+  termination_protection = %[2]s
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -1705,7 +3126,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 resource "aws_security_group" "allow_all" {
-  name        = "allow_all_%d"
+  name        = "allow_all_%[1]d"
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -1739,7 +3160,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-termination-policy"
   }
 }
 
@@ -1748,7 +3169,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-termination-policy"
   }
 }
 
@@ -1778,7 +3199,7 @@ resource "aws_main_route_table_association" "a" {
 
 # IAM role for EMR Service
 resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%d"
+  name = "iam_emr_default_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -1803,7 +3224,7 @@ resource "aws_iam_role_policy_attachment" "service-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%d"
+  name = "iam_emr_default_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -1873,7 +3294,7 @@ EOT
 
 # IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%d"
+  name = "iam_emr_profile_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -1893,7 +3314,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name  = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -1903,7 +3324,7 @@ resource "aws_iam_role_policy_attachment" "profile-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%d"
+  name = "iam_emr_profile_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -1942,7 +3363,7 @@ EOT
 
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
-  name               = "EMR_AutoScaling_DefaultRole_%d"
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
   assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
 }
 
@@ -1962,7 +3383,320 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, term, r, r, r, r, r, r, r, r, r)
+`, r, term)
+}
+
+func testAccAWSEmrClusterConfig_keepJop(r int, keepJob string) string {
+	return fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "emr-test-%[1]d"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.main.id}"
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
+  core_instance_count  = 1
+
+  tags {
+    role     = "rolename"
+    dns_zone = "env_zone"
+    env      = "env"
+    name     = "name-env"
+  }
+
+  keep_job_flow_alive_when_no_steps = %s
+  termination_protection = false
+
+  step {
+    action_on_failure = "CONTINUE"
+    name              = "Sleep Step"
+
+    hadoop_jar_step {
+      jar  = "command-runner.jar"
+      args = ["/bin/sleep", "60"]
+    }
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  configurations = "test-fixtures/emr_configurations.json"
+
+  depends_on = ["aws_main_route_table_association.a"]
+
+  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all_%[1]d"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  depends_on = ["aws_subnet.main"]
+
+  lifecycle {
+    ignore_changes = ["ingress", "egress"]
+  }
+
+  tags {
+    Name = "emr_test"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block           = "168.31.0.0/16"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "terraform-testacc-emr-cluster-termination-policy"
+  }
+}
+
+resource "aws_subnet" "main" {
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "168.31.0.0/20"
+
+  tags {
+    Name = "tf-acc-emr-cluster-termination-policy"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_route_table" "r" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+}
+
+resource "aws_main_route_table_association" "a" {
+  vpc_id         = "${aws_vpc.main.id}"
+  route_table_id = "${aws_route_table.r.id}"
+}
+
+###
+
+# IAM things
+
+###
+
+# IAM role for EMR Service
+resource "aws_iam_role" "iam_emr_default_role" {
+  name = "iam_emr_default_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "elasticmapreduce.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_role_policy_attachment" "service-attach" {
+  role       = "${aws_iam_role.iam_emr_default_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_default_policy" {
+  name = "iam_emr_default_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "ec2:AuthorizeSecurityGroupEgress",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CancelSpotInstanceRequests",
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateSecurityGroup",
+            "ec2:CreateTags",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DeleteSecurityGroup",
+            "ec2:DeleteTags",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeInstances",
+            "ec2:DescribeKeyPairs",
+            "ec2:DescribeNetworkAcls",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribePrefixLists",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSpotInstanceRequests",
+            "ec2:DescribeSpotPriceHistory",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeVpcEndpoints",
+            "ec2:DescribeVpcEndpointServices",
+            "ec2:DescribeVpcs",
+            "ec2:DetachNetworkInterface",
+            "ec2:ModifyImageAttribute",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:RequestSpotInstances",
+            "ec2:RevokeSecurityGroupEgress",
+            "ec2:RunInstances",
+            "ec2:TerminateInstances",
+            "ec2:DeleteVolume",
+            "ec2:DescribeVolumeStatus",
+            "ec2:DescribeVolumes",
+            "ec2:DetachVolume",
+            "iam:GetRole",
+            "iam:GetRolePolicy",
+            "iam:ListInstanceProfiles",
+            "iam:ListRolePolicies",
+            "iam:PassRole",
+            "s3:CreateBucket",
+            "s3:Get*",
+            "s3:List*",
+            "sdb:BatchPutAttributes",
+            "sdb:Select",
+            "sqs:CreateQueue",
+            "sqs:Delete*",
+            "sqs:GetQueue*",
+            "sqs:PurgeQueue",
+            "sqs:ReceiveMessage"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for EC2 Instance Profile
+resource "aws_iam_role" "iam_emr_profile_role" {
+  name = "iam_emr_profile_role_%[1]d"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "emr_profile" {
+  name  = "emr_profile_%[1]d"
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "profile-attach" {
+  role       = "${aws_iam_role.iam_emr_profile_role.id}"
+  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+}
+
+resource "aws_iam_policy" "iam_emr_profile_policy" {
+  name = "iam_emr_profile_policy_%[1]d"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "cloudwatch:*",
+            "dynamodb:*",
+            "ec2:Describe*",
+            "elasticmapreduce:Describe*",
+            "elasticmapreduce:ListBootstrapActions",
+            "elasticmapreduce:ListClusters",
+            "elasticmapreduce:ListInstanceGroups",
+            "elasticmapreduce:ListInstances",
+            "elasticmapreduce:ListSteps",
+            "kinesis:CreateStream",
+            "kinesis:DeleteStream",
+            "kinesis:DescribeStream",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:MergeShards",
+            "kinesis:PutRecord",
+            "kinesis:SplitShard",
+            "rds:Describe*",
+            "s3:*",
+            "sdb:*",
+            "sns:*",
+            "sqs:*"
+        ]
+    }]
+}
+EOT
+}
+
+# IAM Role for autoscaling
+resource "aws_iam_role" "emr-autoscaling-role" {
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
+  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+}
+
+data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals = {
+      type        = "Service"
+      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
+  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+}
+`, r, keepJob)
 }
 
 func testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(r int) string {
@@ -2046,7 +3780,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-visible-to-all-users"
   }
 }
 
@@ -2055,7 +3789,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-visible-to-all-users"
   }
 }
 
@@ -2269,17 +4003,13 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfigUpdatedTags(r int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "emr-test-%d"
+  name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
 
@@ -2318,7 +4048,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 resource "aws_security_group" "allow_all" {
-  name        = "allow_all_%d"
+  name        = "allow_all_%[1]d"
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -2352,7 +4082,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-updated-tags"
   }
 }
 
@@ -2361,7 +4091,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-updated-tags"
   }
 }
 
@@ -2391,7 +4121,7 @@ resource "aws_main_route_table_association" "a" {
 
 # IAM role for EMR Service
 resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%d"
+  name = "iam_emr_default_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -2416,7 +4146,7 @@ resource "aws_iam_role_policy_attachment" "service-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%d"
+  name = "iam_emr_default_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -2486,7 +4216,7 @@ EOT
 
 # IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%d"
+  name = "iam_emr_profile_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -2506,7 +4236,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name  = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -2516,7 +4246,7 @@ resource "aws_iam_role_policy_attachment" "profile-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%d"
+  name = "iam_emr_profile_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -2555,7 +4285,7 @@ EOT
 
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
-  name               = "EMR_AutoScaling_DefaultRole_%d"
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
   assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
 }
 
@@ -2575,7 +4305,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r)
 }
 
 func testAccAWSEmrClusterConfigUpdatedRootVolumeSize(r int) string {
@@ -2660,7 +4390,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-updated-root-volume-size"
   }
 }
 
@@ -2669,7 +4399,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-updated-root-volume-size"
   }
 }
 
@@ -2882,7 +4612,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfigS3Logging(rInt int) string {
@@ -2894,11 +4624,17 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
+  tags {
+    Name = "terraform-testacc-emr-cluster-s3-logging"
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
+  tags {
+    Name = "tf-acc-emr-cluster-s3-logging"
+  }
 }
 
 resource "aws_internet_gateway" "main" {
@@ -3048,7 +4784,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "emr_test_%d"
+    Name = "terraform-testacc-emr-cluster-custom-ami-id"
   }
 }
 
@@ -3057,7 +4793,7 @@ resource "aws_subnet" "main" {
   cidr_block = "168.31.0.0/20"
 
   tags {
-    Name = "emr_test_%d"
+    Name = "tf-acc-emr-cluster-custom-ami-id"
   }
 }
 
@@ -3296,5 +5032,5 @@ data "aws_ami" "emr-custom-ami" {
     values = ["hvm"]
   }
 }
-`, r, r, r, r, r, r, r, r, r, r)
+`, r, r, r, r, r, r, r, r)
 }

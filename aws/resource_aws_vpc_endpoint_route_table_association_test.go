@@ -19,7 +19,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointRouteTableAssociationExists(
@@ -109,6 +109,9 @@ provider "aws" {
 
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
+    tags {
+        Name = "terraform-testacc-vpc-endpoint-route-table-association"
+    }
 }
 
 resource "aws_vpc_endpoint" "s3" {

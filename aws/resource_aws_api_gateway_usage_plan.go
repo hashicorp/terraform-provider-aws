@@ -1,17 +1,18 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
-	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGatewayUsagePlan() *schema.Resource {
@@ -71,9 +72,13 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 						},
 
 						"period": {
-							Type:         schema.TypeString,
-							Required:     true, // Required as not removable
-							ValidateFunc: validateApiGatewayUsagePlanQuotaSettingsPeriod,
+							Type:     schema.TypeString,
+							Required: true, // Required as not removable
+							ValidateFunc: validation.StringInSlice([]string{
+								apigateway.QuotaPeriodTypeDay,
+								apigateway.QuotaPeriodTypeWeek,
+								apigateway.QuotaPeriodTypeMonth,
+							}, false),
 						},
 					},
 				},
@@ -246,19 +251,19 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 
 	if up.ApiStages != nil {
 		if err := d.Set("api_stages", flattenApiGatewayUsageApiStages(up.ApiStages)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting api_stages error: %#v", err)
+			return fmt.Errorf("Error setting api_stages error: %#v", err)
 		}
 	}
 
 	if up.Throttle != nil {
 		if err := d.Set("throttle_settings", flattenApiGatewayUsagePlanThrottling(up.Throttle)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting throttle_settings error: %#v", err)
+			return fmt.Errorf("Error setting throttle_settings error: %#v", err)
 		}
 	}
 
 	if up.Quota != nil {
 		if err := d.Set("quota_settings", flattenApiGatewayUsagePlanQuota(up.Quota)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting quota_settings error: %#v", err)
+			return fmt.Errorf("Error setting quota_settings error: %#v", err)
 		}
 	}
 

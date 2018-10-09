@@ -20,7 +20,7 @@ func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(
@@ -29,7 +29,7 @@ func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLBCookieStickinessPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(
@@ -102,7 +102,7 @@ func testAccCheckLBCookieStickinessPolicy(elbResource string, policyResource str
 	}
 }
 
-func TestAccCheckLBCookieStickinessPolicy_drift(t *testing.T) {
+func TestAccAWSLBCookieStickinessPolicy_drift(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
 
 	// We only want to remove the reference to the policy from the listner,
@@ -126,7 +126,7 @@ func TestAccCheckLBCookieStickinessPolicy_drift(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(
@@ -135,7 +135,7 @@ func TestAccCheckLBCookieStickinessPolicy_drift(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				PreConfig: removePolicy,
 				Config:    testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
@@ -168,7 +168,7 @@ func TestAccAWSLBCookieStickinessPolicy_missingLB(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(
@@ -177,7 +177,7 @@ func TestAccAWSLBCookieStickinessPolicy_missingLB(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				PreConfig: removeLB,
 				Config:    testAccLBCookieStickinessPolicyConfigDestroy(lbName),
 			},

@@ -13,6 +13,26 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEBSVolume_importBasic(t *testing.T) {
+	resourceName := "aws_ebs_volume.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_basic(t *testing.T) {
 	var v ec2.Volume
 	resource.Test(t, resource.TestCase{
@@ -135,7 +155,7 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 	var v ec2.Volume
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAwsEbsVolumeConfigWithKmsKey, ri)
-	keyRegex := regexp.MustCompile("^arn:aws:([a-zA-Z0-9\\-])+:([a-z]{2}-[a-z]+-\\d{1})?:(\\d{12})?:(.*)$")
+	keyRegex := regexp.MustCompile("^arn:aws[\\w-]*:([a-zA-Z0-9\\-])+:([a-z-]+-\\d{1})?:(\\d{12})?:(.*)$")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -216,8 +236,10 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 }
 
 const testAccAwsEbsVolumeConfig = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 1
   tags {
@@ -232,7 +254,7 @@ data "aws_ami" "debian_jessie_latest" {
 
   filter {
     name   = "name"
-    values = ["debian-jessie-*"]
+    values = ["amzn-ami-*"]
   }
 
   filter {
@@ -250,7 +272,7 @@ data "aws_ami" "debian_jessie_latest" {
     values = ["ebs"]
   }
 
-  owners = ["379101102735"] # Debian
+  owners = ["amazon"]
 }
 
 resource "aws_instance" "test" {
@@ -269,6 +291,8 @@ resource "aws_instance" "test" {
     Name    = "test-terraform"
   }
 }
+
+data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "test" {
   depends_on = ["aws_instance.test"]
@@ -291,7 +315,7 @@ data "aws_ami" "debian_jessie_latest" {
 
   filter {
     name   = "name"
-    values = ["debian-jessie-*"]
+    values = ["amzn-ami-*"]
   }
 
   filter {
@@ -309,7 +333,7 @@ data "aws_ami" "debian_jessie_latest" {
     values = ["ebs"]
   }
 
-  owners = ["379101102735"] # Debian
+  owners = ["amazon"]
 }
 
 resource "aws_instance" "test" {
@@ -345,8 +369,10 @@ resource "aws_volume_attachment" "test" {
 `
 
 const testAccAwsEbsVolumeConfigUpdateSize = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 10
   tags {
@@ -356,8 +382,10 @@ resource "aws_ebs_volume" "test" {
 `
 
 const testAccAwsEbsVolumeConfigUpdateType = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "sc1"
   size = 500
   tags {
@@ -367,8 +395,10 @@ resource "aws_ebs_volume" "test" {
 `
 
 const testAccAwsEbsVolumeConfigWithIops = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "io1"
   size = 4
   iops = 100
@@ -379,8 +409,10 @@ resource "aws_ebs_volume" "test" {
 `
 
 const testAccAwsEbsVolumeConfigWithIopsUpdated = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "io1"
   size = 4
   iops = 200
@@ -412,8 +444,10 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
   encrypted = true
   kms_key_id = "${aws_kms_key.foo.arn}"
@@ -421,8 +455,10 @@ resource "aws_ebs_volume" "test" {
 `
 
 const testAccAwsEbsVolumeConfigWithTags = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "tags_test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
   tags {
     Name = "TerraformTest"
@@ -431,8 +467,10 @@ resource "aws_ebs_volume" "tags_test" {
 `
 
 const testAccAwsEbsVolumeConfigWithNoIops = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "iops_test" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 10
   type = "gp2"
   iops = 0

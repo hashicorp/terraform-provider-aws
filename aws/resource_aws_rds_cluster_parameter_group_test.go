@@ -15,6 +15,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDBClusterParameterGroup_importBasic(t *testing.T) {
+	resourceName := "aws_rds_cluster_parameter_group.bar"
+
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBClusterParameterGroupConfig(parameterGroupName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 
@@ -30,6 +53,7 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists("aws_rds_cluster_parameter_group.bar", &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestMatchResourceAttr("aws_rds_cluster_parameter_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-pg:.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster_parameter_group.bar", "name", parameterGroupName),
 					resource.TestCheckResourceAttr(
@@ -176,46 +200,6 @@ func TestAccAWSDBClusterParameterGroupOnly(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestResourceAWSDBClusterParameterGroupName_validation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "tEsting123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing123!",
-			ErrCount: 1,
-		},
-		{
-			Value:    "1testing123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing--123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing123-",
-			ErrCount: 1,
-		},
-		{
-			Value:    randomString(256),
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateDbParamGroupName(tc.Value, "aws_rds_cluster_parameter_group_name")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatal("Expected the DB Cluster Parameter Group Name to trigger a validation error")
-		}
-	}
 }
 
 func testAccCheckAWSDBClusterParameterGroupDestroy(s *terraform.State) error {

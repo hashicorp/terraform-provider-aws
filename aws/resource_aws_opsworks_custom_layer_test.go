@@ -16,7 +16,30 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksCustomLayer(t *testing.T) {
+func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resourceName := "aws_opsworks_custom_layer.tf-acc"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
 	var opslayer opsworks.Layer
 	resource.Test(t, resource.TestCase{
@@ -298,11 +321,12 @@ func testAccCheckAWSOpsworksCreateLayerAttributes(
 
 		expectedEbsVolumes := []*opsworks.VolumeConfiguration{
 			{
-				VolumeType:    aws.String("gp2"),
-				NumberOfDisks: aws.Int64(2),
+				Encrypted:     aws.Bool(false),
 				MountPoint:    aws.String("/home"),
-				Size:          aws.Int64(100),
+				NumberOfDisks: aws.Int64(2),
 				RaidLevel:     aws.Int64(0),
+				Size:          aws.Int64(100),
+				VolumeType:    aws.String("gp2"),
 			},
 		}
 

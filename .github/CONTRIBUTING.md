@@ -15,6 +15,31 @@ Specifically, we have provided checklists below for each type of issue and pull
 request that can happen on the project. These checklists represent everything
 we need to be able to review and respond quickly.
 
+<!-- TOC depthFrom:2 -->
+
+- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+- [Issues](#issues)
+    - [Issue Reporting Checklists](#issue-reporting-checklists)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
+    - [Issue Lifecycle](#issue-lifecycle)
+- [Pull Requests](#pull-requests)
+    - [Pull Request Lifecycle](#pull-request-lifecycle)
+    - [Checklists for Contribution](#checklists-for-contribution)
+        - [Documentation Update](#documentation-update)
+        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [New Resource](#new-resource)
+        - [New Provider](#new-provider)
+        - [New Region](#new-region)
+        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+    - [Writing Acceptance Tests](#writing-acceptance-tests)
+        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+        - [Running an Acceptance Test](#running-an-acceptance-test)
+        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+
+<!-- /TOC -->
+
 ## HashiCorp vs. Community Providers
 
 We separate providers out into what we call "HashiCorp Providers" and
@@ -255,16 +280,16 @@ into Terraform.
 
 #### New Region
 
-Implementing a new region gives Terraform the ability to connect and interact
-with endpoints in a new geographic area. While baseline region support is fairly
-trivial to add, new regions are generally limited in which services they support.
+While region validation is automatically added with SDK updates, new regions
+are generally limited in which services they support. Below are some
+manually sourced values from documentation.
 
- - [ ] Add region to `aws/config.go`
  - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
  - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
  - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
  - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`]
 
 #### Terraform Schema and Code Idiosyncracies
 
@@ -280,17 +305,17 @@ and style
  - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
    any IDs or anything not defined in the config and returned by the API.
  - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
-   in conjunction with `Optional` when the API automatically sets unpredictable 
-   default value or when the value is generally not static and depends on other 
+   in conjunction with `Optional` when the API automatically sets unpredictable
+   default value or when the value is generally not static and depends on other
    attributes.
- - [ ] __Spelling__: When referencing reosources in the AWS API, use spelling which 
+ - [ ] __Spelling__: When referencing resources in the AWS API, use spelling which
    matches that of official AWS documentation. In all other cases, use American
    spelling for variables, functions, and constants.
  - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
    Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
    Print a `[WARN]` log message, and use `d.SetId("")` to remove the resource from
    state inside `Read()`.
- 
+
 
 ### Writing Acceptance Tests
 

@@ -15,6 +15,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIAMRole_importBasic(t *testing.T) {
+	resourceName := "aws_iam_role.role"
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRole_basic(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
@@ -138,6 +160,29 @@ func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_disappears(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_role.role"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					testAccCheckAWSRoleDisappears(&role),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
@@ -152,6 +197,117 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists("aws_iam_role.test", &conf),
 					testAccAddAwsIAMRolePolicy("aws_iam_role.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandString(10)
+	resourceName := "aws_iam_role.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3599),
+				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
+			},
+			{
+				Config:      testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 43201),
+				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
+			},
+			{
+				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3700),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
+				),
+			},
+			{
+				Config: testAccCheckIAMRoleConfig_MaxSessionDuration(rName, 3701),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3701"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
+	var role iam.GetRoleOutput
+
+	rName := acctest.RandString(10)
+	resourceName := "aws_iam_role.role"
+
+	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", testAccGetPartition())
+	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", testAccGetPartition())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			// Test creation
+			{
+				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckAWSRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test update
+			{
+				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
+					testAccCheckAWSRolePermissionsBoundary(&role, permissionsBoundary2),
+				),
+			},
+			// Test import
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			// Test removal
+			{
+				Config: testAccAWSIAMRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					testAccCheckAWSRolePermissionsBoundary(&role, ""),
+				),
+			},
+			// Test addition
+			{
+				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckAWSRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test empty value
+			{
+				Config: testAccCheckIAMRoleConfig_PermissionsBoundary(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					testAccCheckAWSRolePermissionsBoundary(&role, ""),
 				),
 			},
 		},
@@ -213,6 +369,23 @@ func testAccCheckAWSRoleExists(n string, res *iam.GetRoleOutput) resource.TestCh
 	}
 }
 
+func testAccCheckAWSRoleDisappears(getRoleOutput *iam.GetRoleOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		roleName := aws.StringValue(getRoleOutput.Role.RoleName)
+
+		_, err := iamconn.DeleteRole(&iam.DeleteRoleInput{
+			RoleName: aws.String(roleName),
+		})
+		if err != nil {
+			return fmt.Errorf("error deleting role %q: %s", roleName, err)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSRoleGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources[resource]
@@ -261,6 +434,44 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		actualPermissionsBoundaryArn := ""
+
+		if getRoleOutput.Role.PermissionsBoundary != nil {
+			actualPermissionsBoundaryArn = *getRoleOutput.Role.PermissionsBoundary.PermissionsBoundaryArn
+		}
+
+		if actualPermissionsBoundaryArn != expectedPermissionsBoundaryArn {
+			return fmt.Errorf("PermissionsBoundary: '%q', expected '%q'.", actualPermissionsBoundaryArn, expectedPermissionsBoundaryArn)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name   = "test-role-%s"
+	path = "/"
+	max_session_duration = %d
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName, maxSessionDuration)
+}
+
+func testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  assume_role_policy   = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name                 = "test-role-%s"
+  path                 = "/"
+  permissions_boundary = %q
+}
+`, rName, permissionsBoundary)
+}
+
 func testAccAWSIAMRoleConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
@@ -305,6 +516,8 @@ resource "aws_iam_role" "role" {
 
 func testAccAWSIAMRolePre(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "role_update_test" {
   name = "tf_old_name_%s"
   path = "/test/"
@@ -338,7 +551,7 @@ resource "aws_iam_role_policy" "role_update_test" {
         "s3:GetBucketLocation",
         "s3:ListAllMyBuckets"
       ],
-      "Resource": "arn:aws:s3:::*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
     }
   ]
 }
@@ -355,6 +568,8 @@ resource "aws_iam_instance_profile" "role_update_test" {
 
 func testAccAWSIAMRolePost(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "role_update_test" {
   name = "tf_new_name_%s"
   path = "/test/"
@@ -388,7 +603,7 @@ resource "aws_iam_role_policy" "role_update_test" {
         "s3:GetBucketLocation",
         "s3:ListAllMyBuckets"
       ],
-      "Resource": "arn:aws:s3:::*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
     }
   ]
 }

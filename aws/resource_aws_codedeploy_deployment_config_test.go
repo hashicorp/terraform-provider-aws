@@ -1,21 +1,21 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
-	var config codedeploy.DeploymentConfigInfo
-
-	rName := acctest.RandString(5)
+func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
+	var config1 codedeploy.DeploymentConfigInfo
+	resourceName := "aws_codedeploy_deployment_config.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,23 +23,63 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName),
+				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists("aws_codedeploy_deployment_config.foo", &config),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_config.foo", "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_config.foo", "minimum_healthy_hosts.0.value", "75"),
+					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
+	var config1, config2 codedeploy.DeploymentConfigInfo
+	resourceName := "aws_codedeploy_deployment_config.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName, 75),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "75"),
+				),
+			},
+			{
+				Config: testAccAWSCodeDeployDeploymentConfigFleet(rName, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config2),
+					testAccCheckAWSCodeDeployDeploymentConfigRecreated(&config1, &config2),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "50"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
-	var config codedeploy.DeploymentConfigInfo
-
-	rName := acctest.RandString(5)
+	var config1, config2 codedeploy.DeploymentConfigInfo
+	resourceName := "aws_codedeploy_deployment_config.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -47,60 +87,31 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeDeployDeploymentConfigHostCount(rName),
+				Config: testAccAWSCodeDeployDeploymentConfigHostCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentConfigExists("aws_codedeploy_deployment_config.foo", &config),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_config.foo", "minimum_healthy_hosts.0.type", "HOST_COUNT"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_config.foo", "minimum_healthy_hosts.0.value", "1"),
+					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config1),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "1"),
 				),
+			},
+			{
+				Config: testAccAWSCodeDeployDeploymentConfigHostCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentConfigExists(resourceName, &config2),
+					testAccCheckAWSCodeDeployDeploymentConfigRecreated(&config1, &config2),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func TestValidateAWSCodeDeployMinimumHealthyHostsType(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "FLEET_PERCENT",
-			ErrCount: 0,
-		},
-		{
-			Value:    "HOST_COUNT",
-			ErrCount: 0,
-		},
-		{
-			Value:    "host_count",
-			ErrCount: 1,
-		},
-		{
-			Value:    "hostcount",
-			ErrCount: 1,
-		},
-		{
-			Value:    "FleetPercent",
-			ErrCount: 1,
-		},
-		{
-			Value:    "Foo",
-			ErrCount: 1,
-		},
-		{
-			Value:    "",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateMinimumHealtyHostsType(tc.Value, "minimum_healthy_hosts_type")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Minimum Healthy Hosts validation failed for type %q: %q", tc.Value, errors)
-		}
-	}
 }
 
 func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error {
@@ -115,7 +126,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error 
 			DeploymentConfigName: aws.String(rs.Primary.ID),
 		})
 
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "DeploymentConfigDoesNotExistException" {
+		if isAWSErr(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException, "") {
 			continue
 		}
 
@@ -154,24 +165,38 @@ func testAccCheckAWSCodeDeployDeploymentConfigExists(name string, config *codede
 	}
 }
 
-func testAccAWSCodeDeployDeploymentConfigFleet(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_codedeploy_deployment_config" "foo" {
-	deployment_config_name = "test-deployment-config-%s"
-	minimum_healthy_hosts {
-		type = "FLEET_PERCENT"
-		value = 75
+func testAccCheckAWSCodeDeployDeploymentConfigRecreated(i, j *codedeploy.DeploymentConfigInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreateTime) == aws.TimeValue(j.CreateTime) {
+			return errors.New("CodeDeploy Deployment Config was not recreated")
+		}
+
+		return nil
 	}
-}`, rName)
 }
 
-func testAccAWSCodeDeployDeploymentConfigHostCount(rName string) string {
+func testAccAWSCodeDeployDeploymentConfigFleet(rName string, value int) string {
 	return fmt.Sprintf(`
-resource "aws_codedeploy_deployment_config" "foo" {
-	deployment_config_name = "test-deployment-config-%s"
-	minimum_healthy_hosts {
-		type = "HOST_COUNT"
-		value = 1
-	}
-}`, rName)
+resource "aws_codedeploy_deployment_config" "test" {
+  deployment_config_name = %q
+
+  minimum_healthy_hosts {
+    type  = "FLEET_PERCENT"
+    value = %d
+  }
+}
+`, rName, value)
+}
+
+func testAccAWSCodeDeployDeploymentConfigHostCount(rName string, value int) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_deployment_config" "test" {
+  deployment_config_name = %q
+
+  minimum_healthy_hosts {
+    type  = "HOST_COUNT"
+    value = %d
+  }
+}
+`, rName, value)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsMqConfiguration_basic(t *testing.T) {
+func TestAccAWSMqConfiguration_basic(t *testing.T) {
 	configurationName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccAwsMqConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMqConfiguration_withData(t *testing.T) {
+func TestAccAWSMqConfiguration_withData(t *testing.T) {
 	configurationName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{

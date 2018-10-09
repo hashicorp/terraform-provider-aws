@@ -15,7 +15,7 @@ const opCreateByteMatchSet = "CreateByteMatchSet"
 
 // CreateByteMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateByteMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -86,18 +86,18 @@ func (c *WAF) CreateByteMatchSetRequest(input *CreateByteMatchSetInput) (req *re
 // API operation CreateByteMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -126,11 +126,11 @@ func (c *WAF) CreateByteMatchSetRequest(input *CreateByteMatchSetInput) (req *re
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -162,7 +162,7 @@ const opCreateGeoMatchSet = "CreateGeoMatchSet"
 
 // CreateGeoMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateGeoMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -232,22 +232,22 @@ func (c *WAF) CreateGeoMatchSetRequest(input *CreateGeoMatchSetInput) (req *requ
 // API operation CreateGeoMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -276,7 +276,7 @@ func (c *WAF) CreateGeoMatchSetRequest(input *CreateGeoMatchSetInput) (req *requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -308,7 +308,7 @@ const opCreateIPSet = "CreateIPSet"
 
 // CreateIPSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateIPSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -379,22 +379,22 @@ func (c *WAF) CreateIPSetRequest(input *CreateIPSetInput) (req *request.Request,
 // API operation CreateIPSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -423,7 +423,7 @@ func (c *WAF) CreateIPSetRequest(input *CreateIPSetInput) (req *request.Request,
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -455,7 +455,7 @@ const opCreateRateBasedRule = "CreateRateBasedRule"
 
 // CreateRateBasedRuleRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRateBasedRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -565,18 +565,18 @@ func (c *WAF) CreateRateBasedRuleRequest(input *CreateRateBasedRuleInput) (req *
 // API operation CreateRateBasedRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -605,7 +605,7 @@ func (c *WAF) CreateRateBasedRuleRequest(input *CreateRateBasedRuleInput) (req *
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -637,7 +637,7 @@ const opCreateRegexMatchSet = "CreateRegexMatchSet"
 
 // CreateRegexMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRegexMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -709,18 +709,18 @@ func (c *WAF) CreateRegexMatchSetRequest(input *CreateRegexMatchSetInput) (req *
 // API operation CreateRegexMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -752,7 +752,7 @@ const opCreateRegexPatternSet = "CreateRegexPatternSet"
 
 // CreateRegexPatternSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRegexPatternSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -820,18 +820,18 @@ func (c *WAF) CreateRegexPatternSetRequest(input *CreateRegexPatternSetInput) (r
 // API operation CreateRegexPatternSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -863,7 +863,7 @@ const opCreateRule = "CreateRule"
 
 // CreateRuleRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -948,18 +948,18 @@ func (c *WAF) CreateRuleRequest(input *CreateRuleInput) (req *request.Request, o
 // API operation CreateRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -988,7 +988,7 @@ func (c *WAF) CreateRuleRequest(input *CreateRuleInput) (req *request.Request, o
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -1020,7 +1020,7 @@ const opCreateRuleGroup = "CreateRuleGroup"
 
 // CreateRuleGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRuleGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1083,18 +1083,18 @@ func (c *WAF) CreateRuleGroupRequest(input *CreateRuleGroupInput) (req *request.
 // API operation CreateRuleGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -1126,7 +1126,7 @@ const opCreateSizeConstraintSet = "CreateSizeConstraintSet"
 
 // CreateSizeConstraintSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateSizeConstraintSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1198,22 +1198,22 @@ func (c *WAF) CreateSizeConstraintSetRequest(input *CreateSizeConstraintSetInput
 // API operation CreateSizeConstraintSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1242,7 +1242,7 @@ func (c *WAF) CreateSizeConstraintSetRequest(input *CreateSizeConstraintSetInput
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -1274,7 +1274,7 @@ const opCreateSqlInjectionMatchSet = "CreateSqlInjectionMatchSet"
 
 // CreateSqlInjectionMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateSqlInjectionMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1342,18 +1342,18 @@ func (c *WAF) CreateSqlInjectionMatchSetRequest(input *CreateSqlInjectionMatchSe
 // API operation CreateSqlInjectionMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1382,11 +1382,11 @@ func (c *WAF) CreateSqlInjectionMatchSetRequest(input *CreateSqlInjectionMatchSe
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -1418,7 +1418,7 @@ const opCreateWebACL = "CreateWebACL"
 
 // CreateWebACLRequest generates a "aws/request.Request" representing the
 // client's request for the CreateWebACL operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1498,22 +1498,22 @@ func (c *WAF) CreateWebACLRequest(input *CreateWebACLInput) (req *request.Reques
 // API operation CreateWebACL for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1542,7 +1542,7 @@ func (c *WAF) CreateWebACLRequest(input *CreateWebACLInput) (req *request.Reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -1574,7 +1574,7 @@ const opCreateXssMatchSet = "CreateXssMatchSet"
 
 // CreateXssMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateXssMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1643,18 +1643,18 @@ func (c *WAF) CreateXssMatchSetRequest(input *CreateXssMatchSetInput) (req *requ
 // API operation CreateXssMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1683,11 +1683,11 @@ func (c *WAF) CreateXssMatchSetRequest(input *CreateXssMatchSetInput) (req *requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -1719,7 +1719,7 @@ const opDeleteByteMatchSet = "DeleteByteMatchSet"
 
 // DeleteByteMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteByteMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1783,18 +1783,18 @@ func (c *WAF) DeleteByteMatchSetRequest(input *DeleteByteMatchSetInput) (req *re
 // API operation DeleteByteMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -1802,11 +1802,11 @@ func (c *WAF) DeleteByteMatchSetRequest(input *DeleteByteMatchSetInput) (req *re
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -1846,7 +1846,7 @@ const opDeleteGeoMatchSet = "DeleteGeoMatchSet"
 
 // DeleteGeoMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteGeoMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1909,22 +1909,22 @@ func (c *WAF) DeleteGeoMatchSetRequest(input *DeleteGeoMatchSetInput) (req *requ
 // API operation DeleteGeoMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -1932,7 +1932,7 @@ func (c *WAF) DeleteGeoMatchSetRequest(input *DeleteGeoMatchSetInput) (req *requ
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -1972,7 +1972,7 @@ const opDeleteIPSet = "DeleteIPSet"
 
 // DeleteIPSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteIPSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2035,22 +2035,22 @@ func (c *WAF) DeleteIPSetRequest(input *DeleteIPSetInput) (req *request.Request,
 // API operation DeleteIPSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2058,7 +2058,7 @@ func (c *WAF) DeleteIPSetRequest(input *DeleteIPSetInput) (req *request.Request,
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2094,11 +2094,187 @@ func (c *WAF) DeleteIPSetWithContext(ctx aws.Context, input *DeleteIPSetInput, o
 	return out, req.Send()
 }
 
+const opDeleteLoggingConfiguration = "DeleteLoggingConfiguration"
+
+// DeleteLoggingConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteLoggingConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteLoggingConfiguration for more information on using the DeleteLoggingConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteLoggingConfigurationRequest method.
+//    req, resp := client.DeleteLoggingConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteLoggingConfiguration
+func (c *WAF) DeleteLoggingConfigurationRequest(input *DeleteLoggingConfigurationInput) (req *request.Request, output *DeleteLoggingConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteLoggingConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteLoggingConfigurationInput{}
+	}
+
+	output = &DeleteLoggingConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteLoggingConfiguration API operation for AWS WAF.
+//
+// Permanently deletes the LoggingConfiguration from the specified web ACL.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation DeleteLoggingConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteLoggingConfiguration
+func (c *WAF) DeleteLoggingConfiguration(input *DeleteLoggingConfigurationInput) (*DeleteLoggingConfigurationOutput, error) {
+	req, out := c.DeleteLoggingConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteLoggingConfigurationWithContext is the same as DeleteLoggingConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteLoggingConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) DeleteLoggingConfigurationWithContext(ctx aws.Context, input *DeleteLoggingConfigurationInput, opts ...request.Option) (*DeleteLoggingConfigurationOutput, error) {
+	req, out := c.DeleteLoggingConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeletePermissionPolicy = "DeletePermissionPolicy"
+
+// DeletePermissionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeletePermissionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeletePermissionPolicy for more information on using the DeletePermissionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeletePermissionPolicyRequest method.
+//    req, resp := client.DeletePermissionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeletePermissionPolicy
+func (c *WAF) DeletePermissionPolicyRequest(input *DeletePermissionPolicyInput) (req *request.Request, output *DeletePermissionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeletePermissionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeletePermissionPolicyInput{}
+	}
+
+	output = &DeletePermissionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeletePermissionPolicy API operation for AWS WAF.
+//
+// Permanently deletes an IAM policy from the specified RuleGroup.
+//
+// The user making the request must be the owner of the RuleGroup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation DeletePermissionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeletePermissionPolicy
+func (c *WAF) DeletePermissionPolicy(input *DeletePermissionPolicyInput) (*DeletePermissionPolicyOutput, error) {
+	req, out := c.DeletePermissionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeletePermissionPolicyWithContext is the same as DeletePermissionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeletePermissionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) DeletePermissionPolicyWithContext(ctx aws.Context, input *DeletePermissionPolicyInput, opts ...request.Option) (*DeletePermissionPolicyOutput, error) {
+	req, out := c.DeletePermissionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRateBasedRule = "DeleteRateBasedRule"
 
 // DeleteRateBasedRuleRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRateBasedRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2163,22 +2339,22 @@ func (c *WAF) DeleteRateBasedRuleRequest(input *DeleteRateBasedRuleInput) (req *
 // API operation DeleteRateBasedRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2186,7 +2362,7 @@ func (c *WAF) DeleteRateBasedRuleRequest(input *DeleteRateBasedRuleInput) (req *
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2226,7 +2402,7 @@ const opDeleteRegexMatchSet = "DeleteRegexMatchSet"
 
 // DeleteRegexMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRegexMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2290,18 +2466,18 @@ func (c *WAF) DeleteRegexMatchSetRequest(input *DeleteRegexMatchSetInput) (req *
 // API operation DeleteRegexMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2309,11 +2485,11 @@ func (c *WAF) DeleteRegexMatchSetRequest(input *DeleteRegexMatchSetInput) (req *
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2353,7 +2529,7 @@ const opDeleteRegexPatternSet = "DeleteRegexPatternSet"
 
 // DeleteRegexPatternSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRegexPatternSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2405,18 +2581,18 @@ func (c *WAF) DeleteRegexPatternSetRequest(input *DeleteRegexPatternSetInput) (r
 // API operation DeleteRegexPatternSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2424,11 +2600,11 @@ func (c *WAF) DeleteRegexPatternSetRequest(input *DeleteRegexPatternSetInput) (r
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2468,7 +2644,7 @@ const opDeleteRule = "DeleteRule"
 
 // DeleteRuleRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2531,22 +2707,22 @@ func (c *WAF) DeleteRuleRequest(input *DeleteRuleInput) (req *request.Request, o
 // API operation DeleteRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2554,7 +2730,7 @@ func (c *WAF) DeleteRuleRequest(input *DeleteRuleInput) (req *request.Request, o
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2594,7 +2770,7 @@ const opDeleteRuleGroup = "DeleteRuleGroup"
 
 // DeleteRuleGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRuleGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2656,18 +2832,18 @@ func (c *WAF) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *request.
 // API operation DeleteRuleGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2675,7 +2851,7 @@ func (c *WAF) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *request.
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2688,6 +2864,24 @@ func (c *WAF) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *request.
 //      objects.
 //
 //      * You tried to delete an IPSet that references one or more IP addresses.
+//
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
+//   The operation failed because there was nothing to do. For example:
+//
+//      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
+//      specified WebACL.
+//
+//      * You tried to remove an IP address from an IPSet, but the IP address
+//      isn't in the specified IPSet.
+//
+//      * You tried to remove a ByteMatchTuple from a ByteMatchSet, but the ByteMatchTuple
+//      isn't in the specified WebACL.
+//
+//      * You tried to add a Rule to a WebACL, but the Rule already exists in
+//      the specified WebACL.
+//
+//      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
+//      already exists in the specified WebACL.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroup
 func (c *WAF) DeleteRuleGroup(input *DeleteRuleGroupInput) (*DeleteRuleGroupOutput, error) {
@@ -2715,7 +2909,7 @@ const opDeleteSizeConstraintSet = "DeleteSizeConstraintSet"
 
 // DeleteSizeConstraintSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSizeConstraintSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2779,22 +2973,22 @@ func (c *WAF) DeleteSizeConstraintSetRequest(input *DeleteSizeConstraintSetInput
 // API operation DeleteSizeConstraintSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2802,7 +2996,7 @@ func (c *WAF) DeleteSizeConstraintSetRequest(input *DeleteSizeConstraintSetInput
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2842,7 +3036,7 @@ const opDeleteSqlInjectionMatchSet = "DeleteSqlInjectionMatchSet"
 
 // DeleteSqlInjectionMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSqlInjectionMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2907,18 +3101,18 @@ func (c *WAF) DeleteSqlInjectionMatchSetRequest(input *DeleteSqlInjectionMatchSe
 // API operation DeleteSqlInjectionMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -2926,11 +3120,11 @@ func (c *WAF) DeleteSqlInjectionMatchSetRequest(input *DeleteSqlInjectionMatchSe
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -2970,7 +3164,7 @@ const opDeleteWebACL = "DeleteWebACL"
 
 // DeleteWebACLRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteWebACL operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3030,22 +3224,22 @@ func (c *WAF) DeleteWebACLRequest(input *DeleteWebACLInput) (req *request.Reques
 // API operation DeleteWebACL for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -3053,7 +3247,7 @@ func (c *WAF) DeleteWebACLRequest(input *DeleteWebACLInput) (req *request.Reques
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -3093,7 +3287,7 @@ const opDeleteXssMatchSet = "DeleteXssMatchSet"
 
 // DeleteXssMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteXssMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3157,18 +3351,18 @@ func (c *WAF) DeleteXssMatchSetRequest(input *DeleteXssMatchSetInput) (req *requ
 // API operation DeleteXssMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -3176,11 +3370,11 @@ func (c *WAF) DeleteXssMatchSetRequest(input *DeleteXssMatchSetInput) (req *requ
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeNonEmptyEntityException "NonEmptyEntityException"
+//   * ErrCodeNonEmptyEntityException "WAFNonEmptyEntityException"
 //   The operation failed because you tried to delete an object that isn't empty.
 //   For example:
 //
@@ -3220,7 +3414,7 @@ const opGetByteMatchSet = "GetByteMatchSet"
 
 // GetByteMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetByteMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3270,15 +3464,15 @@ func (c *WAF) GetByteMatchSetRequest(input *GetByteMatchSetInput) (req *request.
 // API operation GetByteMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetByteMatchSet
@@ -3307,7 +3501,7 @@ const opGetChangeToken = "GetChangeToken"
 
 // GetChangeTokenRequest generates a "aws/request.Request" representing the
 // client's request for the GetChangeToken operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3371,7 +3565,7 @@ func (c *WAF) GetChangeTokenRequest(input *GetChangeTokenInput) (req *request.Re
 // API operation GetChangeToken for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -3401,7 +3595,7 @@ const opGetChangeTokenStatus = "GetChangeTokenStatus"
 
 // GetChangeTokenStatusRequest generates a "aws/request.Request" representing the
 // client's request for the GetChangeTokenStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3461,10 +3655,10 @@ func (c *WAF) GetChangeTokenStatusRequest(input *GetChangeTokenStatusInput) (req
 // API operation GetChangeTokenStatus for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -3494,7 +3688,7 @@ const opGetGeoMatchSet = "GetGeoMatchSet"
 
 // GetGeoMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetGeoMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3544,15 +3738,15 @@ func (c *WAF) GetGeoMatchSetRequest(input *GetGeoMatchSetInput) (req *request.Re
 // API operation GetGeoMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetGeoMatchSet
@@ -3581,7 +3775,7 @@ const opGetIPSet = "GetIPSet"
 
 // GetIPSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetIPSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3631,15 +3825,15 @@ func (c *WAF) GetIPSetRequest(input *GetIPSetInput) (req *request.Request, outpu
 // API operation GetIPSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetIPSet
@@ -3664,11 +3858,177 @@ func (c *WAF) GetIPSetWithContext(ctx aws.Context, input *GetIPSetInput, opts ..
 	return out, req.Send()
 }
 
+const opGetLoggingConfiguration = "GetLoggingConfiguration"
+
+// GetLoggingConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the GetLoggingConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLoggingConfiguration for more information on using the GetLoggingConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLoggingConfigurationRequest method.
+//    req, resp := client.GetLoggingConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetLoggingConfiguration
+func (c *WAF) GetLoggingConfigurationRequest(input *GetLoggingConfigurationInput) (req *request.Request, output *GetLoggingConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opGetLoggingConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetLoggingConfigurationInput{}
+	}
+
+	output = &GetLoggingConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLoggingConfiguration API operation for AWS WAF.
+//
+// Returns the LoggingConfiguration for the specified web ACL.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation GetLoggingConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetLoggingConfiguration
+func (c *WAF) GetLoggingConfiguration(input *GetLoggingConfigurationInput) (*GetLoggingConfigurationOutput, error) {
+	req, out := c.GetLoggingConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// GetLoggingConfigurationWithContext is the same as GetLoggingConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLoggingConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) GetLoggingConfigurationWithContext(ctx aws.Context, input *GetLoggingConfigurationInput, opts ...request.Option) (*GetLoggingConfigurationOutput, error) {
+	req, out := c.GetLoggingConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetPermissionPolicy = "GetPermissionPolicy"
+
+// GetPermissionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetPermissionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPermissionPolicy for more information on using the GetPermissionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPermissionPolicyRequest method.
+//    req, resp := client.GetPermissionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetPermissionPolicy
+func (c *WAF) GetPermissionPolicyRequest(input *GetPermissionPolicyInput) (req *request.Request, output *GetPermissionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetPermissionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetPermissionPolicyInput{}
+	}
+
+	output = &GetPermissionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPermissionPolicy API operation for AWS WAF.
+//
+// Returns the IAM policy attached to the RuleGroup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation GetPermissionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetPermissionPolicy
+func (c *WAF) GetPermissionPolicy(input *GetPermissionPolicyInput) (*GetPermissionPolicyOutput, error) {
+	req, out := c.GetPermissionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetPermissionPolicyWithContext is the same as GetPermissionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPermissionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) GetPermissionPolicyWithContext(ctx aws.Context, input *GetPermissionPolicyInput, opts ...request.Option) (*GetPermissionPolicyOutput, error) {
+	req, out := c.GetPermissionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetRateBasedRule = "GetRateBasedRule"
 
 // GetRateBasedRuleRequest generates a "aws/request.Request" representing the
 // client's request for the GetRateBasedRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3719,15 +4079,15 @@ func (c *WAF) GetRateBasedRuleRequest(input *GetRateBasedRuleInput) (req *reques
 // API operation GetRateBasedRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRateBasedRule
@@ -3756,7 +4116,7 @@ const opGetRateBasedRuleManagedKeys = "GetRateBasedRuleManagedKeys"
 
 // GetRateBasedRuleManagedKeysRequest generates a "aws/request.Request" representing the
 // client's request for the GetRateBasedRuleManagedKeys operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3809,18 +4169,18 @@ func (c *WAF) GetRateBasedRuleManagedKeysRequest(input *GetRateBasedRuleManagedK
 // API operation GetRateBasedRuleManagedKeys for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3875,7 +4235,7 @@ const opGetRegexMatchSet = "GetRegexMatchSet"
 
 // GetRegexMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetRegexMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3925,15 +4285,15 @@ func (c *WAF) GetRegexMatchSetRequest(input *GetRegexMatchSetInput) (req *reques
 // API operation GetRegexMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRegexMatchSet
@@ -3962,7 +4322,7 @@ const opGetRegexPatternSet = "GetRegexPatternSet"
 
 // GetRegexPatternSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetRegexPatternSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4012,15 +4372,15 @@ func (c *WAF) GetRegexPatternSetRequest(input *GetRegexPatternSetInput) (req *re
 // API operation GetRegexPatternSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRegexPatternSet
@@ -4049,7 +4409,7 @@ const opGetRule = "GetRule"
 
 // GetRuleRequest generates a "aws/request.Request" representing the
 // client's request for the GetRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4100,15 +4460,15 @@ func (c *WAF) GetRuleRequest(input *GetRuleInput) (req *request.Request, output 
 // API operation GetRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRule
@@ -4137,7 +4497,7 @@ const opGetRuleGroup = "GetRuleGroup"
 
 // GetRuleGroupRequest generates a "aws/request.Request" representing the
 // client's request for the GetRuleGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4190,11 +4550,11 @@ func (c *WAF) GetRuleGroupRequest(input *GetRuleGroupInput) (req *request.Reques
 // API operation GetRuleGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroup
@@ -4223,7 +4583,7 @@ const opGetSampledRequests = "GetSampledRequests"
 
 // GetSampledRequestsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSampledRequests operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4283,10 +4643,10 @@ func (c *WAF) GetSampledRequestsRequest(input *GetSampledRequestsInput) (req *re
 // API operation GetSampledRequests for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -4316,7 +4676,7 @@ const opGetSizeConstraintSet = "GetSizeConstraintSet"
 
 // GetSizeConstraintSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetSizeConstraintSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4366,15 +4726,15 @@ func (c *WAF) GetSizeConstraintSetRequest(input *GetSizeConstraintSetInput) (req
 // API operation GetSizeConstraintSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSizeConstraintSet
@@ -4403,7 +4763,7 @@ const opGetSqlInjectionMatchSet = "GetSqlInjectionMatchSet"
 
 // GetSqlInjectionMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetSqlInjectionMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4453,15 +4813,15 @@ func (c *WAF) GetSqlInjectionMatchSetRequest(input *GetSqlInjectionMatchSetInput
 // API operation GetSqlInjectionMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSqlInjectionMatchSet
@@ -4490,7 +4850,7 @@ const opGetWebACL = "GetWebACL"
 
 // GetWebACLRequest generates a "aws/request.Request" representing the
 // client's request for the GetWebACL operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4540,15 +4900,15 @@ func (c *WAF) GetWebACLRequest(input *GetWebACLInput) (req *request.Request, out
 // API operation GetWebACL for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetWebACL
@@ -4577,7 +4937,7 @@ const opGetXssMatchSet = "GetXssMatchSet"
 
 // GetXssMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the GetXssMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4627,15 +4987,15 @@ func (c *WAF) GetXssMatchSetRequest(input *GetXssMatchSetInput) (req *request.Re
 // API operation GetXssMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetXssMatchSet
@@ -4664,7 +5024,7 @@ const opListActivatedRulesInRuleGroup = "ListActivatedRulesInRuleGroup"
 
 // ListActivatedRulesInRuleGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ListActivatedRulesInRuleGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4714,14 +5074,14 @@ func (c *WAF) ListActivatedRulesInRuleGroupRequest(input *ListActivatedRulesInRu
 // API operation ListActivatedRulesInRuleGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -4776,7 +5136,7 @@ const opListByteMatchSets = "ListByteMatchSets"
 
 // ListByteMatchSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListByteMatchSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4826,11 +5186,11 @@ func (c *WAF) ListByteMatchSetsRequest(input *ListByteMatchSetsInput) (req *requ
 // API operation ListByteMatchSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -4860,7 +5220,7 @@ const opListGeoMatchSets = "ListGeoMatchSets"
 
 // ListGeoMatchSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListGeoMatchSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4910,11 +5270,11 @@ func (c *WAF) ListGeoMatchSetsRequest(input *ListGeoMatchSetsInput) (req *reques
 // API operation ListGeoMatchSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -4944,7 +5304,7 @@ const opListIPSets = "ListIPSets"
 
 // ListIPSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListIPSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -4994,11 +5354,11 @@ func (c *WAF) ListIPSetsRequest(input *ListIPSetsInput) (req *request.Request, o
 // API operation ListIPSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5024,11 +5384,123 @@ func (c *WAF) ListIPSetsWithContext(ctx aws.Context, input *ListIPSetsInput, opt
 	return out, req.Send()
 }
 
+const opListLoggingConfigurations = "ListLoggingConfigurations"
+
+// ListLoggingConfigurationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListLoggingConfigurations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListLoggingConfigurations for more information on using the ListLoggingConfigurations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListLoggingConfigurationsRequest method.
+//    req, resp := client.ListLoggingConfigurationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListLoggingConfigurations
+func (c *WAF) ListLoggingConfigurationsRequest(input *ListLoggingConfigurationsInput) (req *request.Request, output *ListLoggingConfigurationsOutput) {
+	op := &request.Operation{
+		Name:       opListLoggingConfigurations,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListLoggingConfigurationsInput{}
+	}
+
+	output = &ListLoggingConfigurationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListLoggingConfigurations API operation for AWS WAF.
+//
+// Returns an array of LoggingConfiguration objects.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation ListLoggingConfigurations for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
+//   The operation failed because AWS WAF didn't recognize a parameter in the
+//   request. For example:
+//
+//      * You specified an invalid parameter name.
+//
+//      * You specified an invalid value.
+//
+//      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
+//      using an action other than INSERT or DELETE.
+//
+//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to create a RateBasedRule with a RateKey value other than
+//      IP.
+//
+//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      BLOCK, or COUNT.
+//
+//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      HEADER, METHOD, QUERY_STRING, URI, or BODY.
+//
+//      * You tried to update a ByteMatchSet with a Field of HEADER but no value
+//      for Data.
+//
+//      * Your request references an ARN that is malformed, or corresponds to
+//      a resource with which a web ACL cannot be associated.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListLoggingConfigurations
+func (c *WAF) ListLoggingConfigurations(input *ListLoggingConfigurationsInput) (*ListLoggingConfigurationsOutput, error) {
+	req, out := c.ListLoggingConfigurationsRequest(input)
+	return out, req.Send()
+}
+
+// ListLoggingConfigurationsWithContext is the same as ListLoggingConfigurations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListLoggingConfigurations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) ListLoggingConfigurationsWithContext(ctx aws.Context, input *ListLoggingConfigurationsInput, opts ...request.Option) (*ListLoggingConfigurationsOutput, error) {
+	req, out := c.ListLoggingConfigurationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListRateBasedRules = "ListRateBasedRules"
 
 // ListRateBasedRulesRequest generates a "aws/request.Request" representing the
 // client's request for the ListRateBasedRules operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5078,11 +5550,11 @@ func (c *WAF) ListRateBasedRulesRequest(input *ListRateBasedRulesInput) (req *re
 // API operation ListRateBasedRules for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5112,7 +5584,7 @@ const opListRegexMatchSets = "ListRegexMatchSets"
 
 // ListRegexMatchSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListRegexMatchSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5162,11 +5634,11 @@ func (c *WAF) ListRegexMatchSetsRequest(input *ListRegexMatchSetsInput) (req *re
 // API operation ListRegexMatchSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5196,7 +5668,7 @@ const opListRegexPatternSets = "ListRegexPatternSets"
 
 // ListRegexPatternSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListRegexPatternSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5246,11 +5718,11 @@ func (c *WAF) ListRegexPatternSetsRequest(input *ListRegexPatternSetsInput) (req
 // API operation ListRegexPatternSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5280,7 +5752,7 @@ const opListRuleGroups = "ListRuleGroups"
 
 // ListRuleGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the ListRuleGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5330,7 +5802,7 @@ func (c *WAF) ListRuleGroupsRequest(input *ListRuleGroupsInput) (req *request.Re
 // API operation ListRuleGroups for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -5360,7 +5832,7 @@ const opListRules = "ListRules"
 
 // ListRulesRequest generates a "aws/request.Request" representing the
 // client's request for the ListRules operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5410,11 +5882,11 @@ func (c *WAF) ListRulesRequest(input *ListRulesInput) (req *request.Request, out
 // API operation ListRules for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5444,7 +5916,7 @@ const opListSizeConstraintSets = "ListSizeConstraintSets"
 
 // ListSizeConstraintSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListSizeConstraintSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5494,11 +5966,11 @@ func (c *WAF) ListSizeConstraintSetsRequest(input *ListSizeConstraintSetsInput) 
 // API operation ListSizeConstraintSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5528,7 +6000,7 @@ const opListSqlInjectionMatchSets = "ListSqlInjectionMatchSets"
 
 // ListSqlInjectionMatchSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListSqlInjectionMatchSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5578,11 +6050,11 @@ func (c *WAF) ListSqlInjectionMatchSetsRequest(input *ListSqlInjectionMatchSetsI
 // API operation ListSqlInjectionMatchSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5612,7 +6084,7 @@ const opListSubscribedRuleGroups = "ListSubscribedRuleGroups"
 
 // ListSubscribedRuleGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the ListSubscribedRuleGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5662,10 +6134,10 @@ func (c *WAF) ListSubscribedRuleGroupsRequest(input *ListSubscribedRuleGroupsInp
 // API operation ListSubscribedRuleGroups for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -5695,7 +6167,7 @@ const opListWebACLs = "ListWebACLs"
 
 // ListWebACLsRequest generates a "aws/request.Request" representing the
 // client's request for the ListWebACLs operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5745,11 +6217,11 @@ func (c *WAF) ListWebACLsRequest(input *ListWebACLsInput) (req *request.Request,
 // API operation ListWebACLs for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5779,7 +6251,7 @@ const opListXssMatchSets = "ListXssMatchSets"
 
 // ListXssMatchSetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListXssMatchSets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5829,11 +6301,11 @@ func (c *WAF) ListXssMatchSetsRequest(input *ListXssMatchSetsInput) (req *reques
 // API operation ListXssMatchSets for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -5859,11 +6331,250 @@ func (c *WAF) ListXssMatchSetsWithContext(ctx aws.Context, input *ListXssMatchSe
 	return out, req.Send()
 }
 
+const opPutLoggingConfiguration = "PutLoggingConfiguration"
+
+// PutLoggingConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the PutLoggingConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutLoggingConfiguration for more information on using the PutLoggingConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutLoggingConfigurationRequest method.
+//    req, resp := client.PutLoggingConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/PutLoggingConfiguration
+func (c *WAF) PutLoggingConfigurationRequest(input *PutLoggingConfigurationInput) (req *request.Request, output *PutLoggingConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opPutLoggingConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutLoggingConfigurationInput{}
+	}
+
+	output = &PutLoggingConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutLoggingConfiguration API operation for AWS WAF.
+//
+// Associates a LoggingConfiguration with a specified web ACL.
+//
+// You can access information about all traffic that AWS WAF inspects using
+// the following steps:
+//
+// Create an Amazon Kinesis Data Firehose delivery stream. For more information,
+// see Creating an Amazon Kinesis Data Firehose Delivery Stream (https://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html).
+//
+// Associate that delivery stream to your web ACL using a PutLoggingConfiguration
+// request.
+//
+// When you successfully enable logging using a PutLoggingConfiguration request,
+// AWS WAF will create a service linked role with the necessary permissions
+// to write logs to the Amazon Kinesis Data Firehose delivery stream. For more
+// information, see Logging Web ACL Traffic Information (http://docs.aws.amazon.com/waf/latest/developerguide/logging.html)
+// in the AWS WAF Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation PutLoggingConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/PutLoggingConfiguration
+func (c *WAF) PutLoggingConfiguration(input *PutLoggingConfigurationInput) (*PutLoggingConfigurationOutput, error) {
+	req, out := c.PutLoggingConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// PutLoggingConfigurationWithContext is the same as PutLoggingConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutLoggingConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) PutLoggingConfigurationWithContext(ctx aws.Context, input *PutLoggingConfigurationInput, opts ...request.Option) (*PutLoggingConfigurationOutput, error) {
+	req, out := c.PutLoggingConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutPermissionPolicy = "PutPermissionPolicy"
+
+// PutPermissionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutPermissionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutPermissionPolicy for more information on using the PutPermissionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutPermissionPolicyRequest method.
+//    req, resp := client.PutPermissionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/PutPermissionPolicy
+func (c *WAF) PutPermissionPolicyRequest(input *PutPermissionPolicyInput) (req *request.Request, output *PutPermissionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutPermissionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutPermissionPolicyInput{}
+	}
+
+	output = &PutPermissionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutPermissionPolicy API operation for AWS WAF.
+//
+// Attaches a IAM policy to the specified resource. The only supported use for
+// this action is to share a RuleGroup across accounts.
+//
+// The PutPermissionPolicy is subject to the following restrictions:
+//
+//    * You can attach only one policy with each PutPermissionPolicy request.
+//
+//    * The policy must include an Effect, Action and Principal.
+//
+//    * Effect must specify Allow.
+//
+//    * The Action in the policy must be waf:UpdateWebACL, waf-regional:UpdateWebACL,
+//    waf:GetRuleGroup and waf-regional:GetRuleGroup . Any extra or wildcard
+//    actions in the policy will be rejected.
+//
+//    * The policy cannot include a Resource parameter.
+//
+//    * The ARN in the request must be a valid WAF RuleGroup ARN and the RuleGroup
+//    must exist in the same region.
+//
+//    * The user making the request must be the owner of the RuleGroup.
+//
+//    * Your policy must be composed using IAM Policy version 2012-10-17.
+//
+// For more information, see IAM Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html).
+//
+// An example of a valid policy parameter is shown in the Examples section below.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS WAF's
+// API operation PutPermissionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * ErrCodeStaleDataException "WAFStaleDataException"
+//   The operation failed because you tried to create, update, or delete an object
+//   by using a change token that has already been used.
+//
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
+//   The operation failed because the referenced object doesn't exist.
+//
+//   * ErrCodeInvalidPermissionPolicyException "WAFInvalidPermissionPolicyException"
+//   The operation failed because the specified policy is not in the proper format.
+//
+//   The policy is subject to the following restrictions:
+//
+//      * You can attach only one policy with each PutPermissionPolicy request.
+//
+//      * The policy must include an Effect, Action and Principal.
+//
+//      * Effect must specify Allow.
+//
+//      * The Action in the policy must be waf:UpdateWebACL, waf-regional:UpdateWebACL,
+//      waf:GetRuleGroup and waf-regional:GetRuleGroup . Any extra or wildcard
+//      actions in the policy will be rejected.
+//
+//      * The policy cannot include a Resource parameter.
+//
+//      * The ARN in the request must be a valid WAF RuleGroup ARN and the RuleGroup
+//      must exist in the same region.
+//
+//      * The user making the request must be the owner of the RuleGroup.
+//
+//      * Your policy must be composed using IAM Policy version 2012-10-17.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/PutPermissionPolicy
+func (c *WAF) PutPermissionPolicy(input *PutPermissionPolicyInput) (*PutPermissionPolicyOutput, error) {
+	req, out := c.PutPermissionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutPermissionPolicyWithContext is the same as PutPermissionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutPermissionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WAF) PutPermissionPolicyWithContext(ctx aws.Context, input *PutPermissionPolicyInput, opts ...request.Option) (*PutPermissionPolicyOutput, error) {
+	req, out := c.PutPermissionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateByteMatchSet = "UpdateByteMatchSet"
 
 // UpdateByteMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateByteMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -5949,15 +6660,15 @@ func (c *WAF) UpdateByteMatchSetRequest(input *UpdateByteMatchSetInput) (req *re
 // API operation UpdateByteMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -5972,13 +6683,10 @@ func (c *WAF) UpdateByteMatchSetRequest(input *UpdateByteMatchSetInput) (req *re
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -6007,7 +6715,7 @@ func (c *WAF) UpdateByteMatchSetRequest(input *UpdateByteMatchSetInput) (req *re
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -6023,14 +6731,14 @@ func (c *WAF) UpdateByteMatchSetRequest(input *UpdateByteMatchSetInput) (req *re
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -6062,7 +6770,7 @@ const opUpdateGeoMatchSet = "UpdateGeoMatchSet"
 
 // UpdateGeoMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateGeoMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6139,19 +6847,19 @@ func (c *WAF) UpdateGeoMatchSetRequest(input *UpdateGeoMatchSetInput) (req *requ
 // API operation UpdateGeoMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -6166,13 +6874,10 @@ func (c *WAF) UpdateGeoMatchSetRequest(input *UpdateGeoMatchSetInput) (req *requ
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -6201,7 +6906,7 @@ func (c *WAF) UpdateGeoMatchSetRequest(input *UpdateGeoMatchSetInput) (req *requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -6217,10 +6922,10 @@ func (c *WAF) UpdateGeoMatchSetRequest(input *UpdateGeoMatchSetInput) (req *requ
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -6228,7 +6933,7 @@ func (c *WAF) UpdateGeoMatchSetRequest(input *UpdateGeoMatchSetInput) (req *requ
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -6260,7 +6965,7 @@ const opUpdateIPSet = "UpdateIPSet"
 
 // UpdateIPSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateIPSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6313,9 +7018,10 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 //    range of IP addresses from 192.0.2.0 to 192.0.2.255) or 192.0.2.44/32
 //    (for the individual IP address 192.0.2.44).
 //
-// AWS WAF supports /8, /16, /24, and /32 IP address ranges for IPv4, and /24,
-// /32, /48, /56, /64 and /128 for IPv6. For more information about CIDR notation,
-// see the Wikipedia entry Classless Inter-Domain Routing (https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing).
+// AWS WAF supports IPv4 address ranges: /8 and any range between /16 through
+// /32. AWS WAF supports IPv6 address ranges: /16, /24, /32, /48, /56, /64,
+// and /128. For more information about CIDR notation, see the Wikipedia entry
+// Classless Inter-Domain Routing (https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing).
 //
 // IPv6 addresses can be represented using any of the following formats:
 //
@@ -6347,6 +7053,8 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 // and/or the IP addresses that you want to delete. If you want to change an
 // IP address, you delete the existing IP address and add the new one.
 //
+// You can insert a maximum of 1000 addresses in a single request.
+//
 // For more information about how to use the AWS WAF API to allow or block HTTP
 // requests, see the AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/).
 //
@@ -6358,19 +7066,19 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 // API operation UpdateIPSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -6385,13 +7093,10 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -6420,7 +7125,7 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -6436,10 +7141,10 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -6447,7 +7152,7 @@ func (c *WAF) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Request,
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -6479,7 +7184,7 @@ const opUpdateRateBasedRule = "UpdateRateBasedRule"
 
 // UpdateRateBasedRuleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRateBasedRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6566,19 +7271,19 @@ func (c *WAF) UpdateRateBasedRuleRequest(input *UpdateRateBasedRuleInput) (req *
 // API operation UpdateRateBasedRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -6593,13 +7298,10 @@ func (c *WAF) UpdateRateBasedRuleRequest(input *UpdateRateBasedRuleInput) (req *
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -6628,7 +7330,7 @@ func (c *WAF) UpdateRateBasedRuleRequest(input *UpdateRateBasedRuleInput) (req *
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -6644,10 +7346,10 @@ func (c *WAF) UpdateRateBasedRuleRequest(input *UpdateRateBasedRuleInput) (req *
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -6655,7 +7357,7 @@ func (c *WAF) UpdateRateBasedRuleRequest(input *UpdateRateBasedRuleInput) (req *
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -6687,7 +7389,7 @@ const opUpdateRegexMatchSet = "UpdateRegexMatchSet"
 
 // UpdateRegexMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRegexMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6770,27 +7472,27 @@ func (c *WAF) UpdateRegexMatchSetRequest(input *UpdateRegexMatchSetInput) (req *
 // API operation UpdateRegexMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeDisallowedNameException "DisallowedNameException"
+//   * ErrCodeDisallowedNameException "WAFDisallowedNameException"
 //   The name specified is invalid.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -6806,7 +7508,7 @@ func (c *WAF) UpdateRegexMatchSetRequest(input *UpdateRegexMatchSetInput) (req *
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -6821,13 +7523,10 @@ func (c *WAF) UpdateRegexMatchSetRequest(input *UpdateRegexMatchSetInput) (req *
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
@@ -6857,7 +7556,7 @@ const opUpdateRegexPatternSet = "UpdateRegexPatternSet"
 
 // UpdateRegexPatternSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRegexPatternSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -6937,24 +7636,24 @@ func (c *WAF) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) (r
 // API operation UpdateRegexPatternSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -6970,7 +7669,7 @@ func (c *WAF) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) (r
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -6985,17 +7684,14 @@ func (c *WAF) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) (r
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidRegexPatternException "InvalidRegexPatternException"
+//   * ErrCodeInvalidRegexPatternException "WAFInvalidRegexPatternException"
 //   The regular expression (regex) you specified in RegexPatternString is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRegexPatternSet
@@ -7024,7 +7720,7 @@ const opUpdateRule = "UpdateRule"
 
 // UpdateRuleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRule operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7106,19 +7802,19 @@ func (c *WAF) UpdateRuleRequest(input *UpdateRuleInput) (req *request.Request, o
 // API operation UpdateRule for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -7133,13 +7829,10 @@ func (c *WAF) UpdateRuleRequest(input *UpdateRuleInput) (req *request.Request, o
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -7168,7 +7861,7 @@ func (c *WAF) UpdateRuleRequest(input *UpdateRuleInput) (req *request.Request, o
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -7184,10 +7877,10 @@ func (c *WAF) UpdateRuleRequest(input *UpdateRuleInput) (req *request.Request, o
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -7195,7 +7888,7 @@ func (c *WAF) UpdateRuleRequest(input *UpdateRuleInput) (req *request.Request, o
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -7227,7 +7920,7 @@ const opUpdateRuleGroup = "UpdateRuleGroup"
 
 // UpdateRuleGroupRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRuleGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7299,15 +7992,15 @@ func (c *WAF) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *request.
 // API operation UpdateRuleGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -7323,10 +8016,10 @@ func (c *WAF) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *request.
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -7341,19 +8034,16 @@ func (c *WAF) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *request.
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -7408,7 +8098,7 @@ const opUpdateSizeConstraintSet = "UpdateSizeConstraintSet"
 
 // UpdateSizeConstraintSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateSizeConstraintSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7463,6 +8153,8 @@ func (c *WAF) UpdateSizeConstraintSetRequest(input *UpdateSizeConstraintSetInput
 //    of the request body are not supported because the AWS resource forwards
 //    only the first 8192 bytes of your request to AWS WAF.
 //
+// You can only specify a single type of TextTransformation.
+//
 //    * A ComparisonOperator used for evaluating the selected part of the request
 //    against the specified Size, such as equals, greater than, less than, and
 //    so on.
@@ -7496,19 +8188,19 @@ func (c *WAF) UpdateSizeConstraintSetRequest(input *UpdateSizeConstraintSetInput
 // API operation UpdateSizeConstraintSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -7523,13 +8215,10 @@ func (c *WAF) UpdateSizeConstraintSetRequest(input *UpdateSizeConstraintSetInput
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -7558,7 +8247,7 @@ func (c *WAF) UpdateSizeConstraintSetRequest(input *UpdateSizeConstraintSetInput
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -7574,10 +8263,10 @@ func (c *WAF) UpdateSizeConstraintSetRequest(input *UpdateSizeConstraintSetInput
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -7585,7 +8274,7 @@ func (c *WAF) UpdateSizeConstraintSetRequest(input *UpdateSizeConstraintSetInput
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -7617,7 +8306,7 @@ const opUpdateSqlInjectionMatchSet = "UpdateSqlInjectionMatchSet"
 
 // UpdateSqlInjectionMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateSqlInjectionMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7665,11 +8354,14 @@ func (c *WAF) UpdateSqlInjectionMatchSetRequest(input *UpdateSqlInjectionMatchSe
 //    object and add a new one.
 //
 //    * FieldToMatch: The part of web requests that you want AWS WAF to inspect
-//    and, if you want AWS WAF to inspect a header, the name of the header.
+//    and, if you want AWS WAF to inspect a header or custom query parameter,
+//    the name of the header or parameter.
 //
 //    * TextTransformation: Which text transformation, if any, to perform on
 //    the web request before inspecting the request for snippets of malicious
 //    SQL code.
+//
+// You can only specify a single type of TextTransformation.
 //
 // You use SqlInjectionMatchSet objects to specify which CloudFront requests
 // you want to allow, block, or count. For example, if you're receiving requests
@@ -7698,15 +8390,15 @@ func (c *WAF) UpdateSqlInjectionMatchSetRequest(input *UpdateSqlInjectionMatchSe
 // API operation UpdateSqlInjectionMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -7721,13 +8413,10 @@ func (c *WAF) UpdateSqlInjectionMatchSetRequest(input *UpdateSqlInjectionMatchSe
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -7756,7 +8445,7 @@ func (c *WAF) UpdateSqlInjectionMatchSetRequest(input *UpdateSqlInjectionMatchSe
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -7772,14 +8461,14 @@ func (c *WAF) UpdateSqlInjectionMatchSetRequest(input *UpdateSqlInjectionMatchSe
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -7811,7 +8500,7 @@ const opUpdateWebACL = "UpdateWebACL"
 
 // UpdateWebACLRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateWebACL operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -7908,19 +8597,19 @@ func (c *WAF) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Reques
 // API operation UpdateWebACL for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -7935,13 +8624,10 @@ func (c *WAF) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Reques
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -7970,7 +8656,7 @@ func (c *WAF) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -7986,10 +8672,10 @@ func (c *WAF) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Reques
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeReferencedItemException "ReferencedItemException"
+//   * ErrCodeReferencedItemException "WAFReferencedItemException"
 //   The operation failed because you tried to delete an object that is still
 //   in use. For example:
 //
@@ -7997,13 +8683,13 @@ func (c *WAF) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Reques
 //
 //      * You tried to delete a Rule that is still referenced by a WebACL.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeSubscriptionNotFoundException "SubscriptionNotFoundException"
+//   * ErrCodeSubscriptionNotFoundException "WAFSubscriptionNotFoundException"
 //   The specified subscription does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateWebACL
@@ -8032,7 +8718,7 @@ const opUpdateXssMatchSet = "UpdateXssMatchSet"
 
 // UpdateXssMatchSetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateXssMatchSet operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -8080,11 +8766,14 @@ func (c *WAF) UpdateXssMatchSetRequest(input *UpdateXssMatchSetInput) (req *requ
 //    add a new one.
 //
 //    * FieldToMatch: The part of web requests that you want AWS WAF to inspect
-//    and, if you want AWS WAF to inspect a header, the name of the header.
+//    and, if you want AWS WAF to inspect a header or custom query parameter,
+//    the name of the header or parameter.
 //
 //    * TextTransformation: Which text transformation, if any, to perform on
 //    the web request before inspecting the request for cross-site scripting
 //    attacks.
+//
+// You can only specify a single type of TextTransformation.
 //
 // You use XssMatchSet objects to specify which CloudFront requests you want
 // to allow, block, or count. For example, if you're receiving requests that
@@ -8113,15 +8802,15 @@ func (c *WAF) UpdateXssMatchSetRequest(input *UpdateXssMatchSetInput) (req *requ
 // API operation UpdateXssMatchSet for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * ErrCodeInternalErrorException "WAFInternalErrorException"
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidAccountException "InvalidAccountException"
+//   * ErrCodeInvalidAccountException "WAFInvalidAccountException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using an invalid account identifier.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * ErrCodeInvalidOperationException "WAFInvalidOperationException"
 //   The operation failed because there was nothing to do. For example:
 //
 //      * You tried to remove a Rule from a WebACL, but the Rule isn't in the
@@ -8136,13 +8825,10 @@ func (c *WAF) UpdateXssMatchSetRequest(input *UpdateXssMatchSetInput) (req *requ
 //      * You tried to add a Rule to a WebACL, but the Rule already exists in
 //      the specified WebACL.
 //
-//      * You tried to add an IP address to an IPSet, but the IP address already
-//      exists in the specified IPSet.
-//
 //      * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 //      already exists in the specified WebACL.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * ErrCodeInvalidParameterException "WAFInvalidParameterException"
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -8171,7 +8857,7 @@ func (c *WAF) UpdateXssMatchSetRequest(input *UpdateXssMatchSetInput) (req *requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a web ACL cannot be associated.
 //
-//   * ErrCodeNonexistentContainerException "NonexistentContainerException"
+//   * ErrCodeNonexistentContainerException "WAFNonexistentContainerException"
 //   The operation failed because you tried to add an object to or delete an object
 //   from another object that doesn't exist. For example:
 //
@@ -8187,14 +8873,14 @@ func (c *WAF) UpdateXssMatchSetRequest(input *UpdateXssMatchSetInput) (req *requ
 //      * You tried to add a ByteMatchTuple to or delete a ByteMatchTuple from
 //      a ByteMatchSet that doesn't exist.
 //
-//   * ErrCodeNonexistentItemException "NonexistentItemException"
+//   * ErrCodeNonexistentItemException "WAFNonexistentItemException"
 //   The operation failed because the referenced object doesn't exist.
 //
-//   * ErrCodeStaleDataException "StaleDataException"
+//   * ErrCodeStaleDataException "WAFStaleDataException"
 //   The operation failed because you tried to create, update, or delete an object
 //   by using a change token that has already been used.
 //
-//   * ErrCodeLimitsExceededException "LimitsExceededException"
+//   * ErrCodeLimitsExceededException "WAFLimitsExceededException"
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   WebACL objects that you can create for an AWS account. For more information,
 //   see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -8229,7 +8915,6 @@ func (c *WAF) UpdateXssMatchSetWithContext(ctx aws.Context, input *UpdateXssMatc
 //
 // To specify whether to insert or delete a Rule, use the Action parameter in
 // the WebACLUpdate data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ActivatedRule
 type ActivatedRule struct {
 	_ struct{} `type:"structure"`
 
@@ -8244,9 +8929,9 @@ type ActivatedRule struct {
 	//    in the rule and then continues to inspect the web request based on the
 	//    remaining rules in the web ACL.
 	//
-	// The Action data type within ActivatedRule is used only when submitting an
-	// UpdateWebACL request. ActivatedRule|Action is not applicable and therefore
-	// not available for UpdateRuleGroup.
+	// ActivatedRule|OverrideAction applies only when updating or adding a RuleGroup
+	// to a WebACL. In this case you do not use ActivatedRule|Action. For all other
+	// update requests, ActivatedRule|Action is used instead of ActivatedRule|OverrideAction.
 	Action *WafAction `type:"structure"`
 
 	// Use the OverrideAction to test your RuleGroup.
@@ -8260,9 +8945,9 @@ type ActivatedRule struct {
 	// those requests will be counted. You can view a record of counted requests
 	// using GetSampledRequests.
 	//
-	// The OverrideAction data type within ActivatedRule is used only when submitting
-	// an UpdateRuleGroup request. ActivatedRule|OverrideAction is not applicable
-	// and therefore not available for UpdateWebACL.
+	// ActivatedRule|OverrideAction applies only when updating or adding a RuleGroup
+	// to a WebACL. In this case you do not use ActivatedRule|Action. For all other
+	// update requests, ActivatedRule|Action is used instead of ActivatedRule|OverrideAction.
 	OverrideAction *WafOverrideAction `type:"structure"`
 
 	// Specifies the order in which the Rules in a WebACL are evaluated. Rules with
@@ -8370,7 +9055,6 @@ func (s *ActivatedRule) SetType(v string) *ActivatedRule {
 // want AWS WAF to search for. If a ByteMatchSet contains more than one ByteMatchTuple
 // object, a request needs to match the settings in only one ByteMatchTuple
 // to be considered a match.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ByteMatchSet
 type ByteMatchSet struct {
 	_ struct{} `type:"structure"`
 
@@ -8426,7 +9110,6 @@ func (s *ByteMatchSet) SetName(v string) *ByteMatchSet {
 
 // Returned by ListByteMatchSets. Each ByteMatchSetSummary object includes the
 // Name and ByteMatchSetId for one ByteMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ByteMatchSetSummary
 type ByteMatchSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -8470,7 +9153,6 @@ func (s *ByteMatchSetSummary) SetName(v string) *ByteMatchSetSummary {
 
 // In an UpdateByteMatchSet request, ByteMatchSetUpdate specifies whether to
 // insert or delete a ByteMatchTuple and includes the settings for the ByteMatchTuple.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ByteMatchSetUpdate
 type ByteMatchSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -8534,7 +9216,6 @@ func (s *ByteMatchSetUpdate) SetByteMatchTuple(v *ByteMatchTuple) *ByteMatchSetU
 // The bytes (typically a string that corresponds with ASCII characters) that
 // you want AWS WAF to search for in web requests, the location in requests
 // that you want AWS WAF to search, and other settings.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ByteMatchTuple
 type ByteMatchTuple struct {
 	_ struct{} `type:"structure"`
 
@@ -8621,6 +9302,14 @@ type ByteMatchTuple struct {
 	//    of the body, you can create a size constraint set. For more information,
 	//    see CreateSizeConstraintSet.
 	//
+	//    * SINGLE_QUERY_ARG: The parameter in the query string that you will inspect,
+	//    such as UserName or SalesRegion. The maximum length for SINGLE_QUERY_ARG
+	//    is 30 characters.
+	//
+	//    * ALL_QUERY_ARGS: Similar to SINGLE_QUERY_ARG, but instead of inspecting
+	//    a single parameter, AWS WAF inspects all parameters within the query string
+	//    for the value or regex pattern that you specify in TargetString.
+	//
 	// If TargetString includes alphabetic characters A-Z and a-z, note that the
 	// value is case sensitive.
 	//
@@ -8649,11 +9338,13 @@ type ByteMatchTuple struct {
 	// AWS WAF performs the transformation on TargetString before inspecting a request
 	// for a match.
 	//
+	// You can only specify a single type of TextTransformation.
+	//
 	// CMD_LINE
 	//
-	// When you're concerned that attackers are injecting an operating system commandline
-	// command and using unusual formatting to disguise some or all of the command,
-	// use this option to perform the following transformations:
+	// When you're concerned that attackers are injecting an operating system command
+	// line command and using unusual formatting to disguise some or all of the
+	// command, use this option to perform the following transformations:
 	//
 	//    * Delete the following characters: \ " ' ^
 	//
@@ -8780,7 +9471,6 @@ func (s *ByteMatchTuple) SetTextTransformation(v string) *ByteMatchTuple {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateByteMatchSetRequest
 type CreateByteMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8840,7 +9530,6 @@ func (s *CreateByteMatchSetInput) SetName(v string) *CreateByteMatchSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateByteMatchSetResponse
 type CreateByteMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8875,7 +9564,6 @@ func (s *CreateByteMatchSetOutput) SetChangeToken(v string) *CreateByteMatchSetO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateGeoMatchSetRequest
 type CreateGeoMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8935,7 +9623,6 @@ func (s *CreateGeoMatchSetInput) SetName(v string) *CreateGeoMatchSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateGeoMatchSetResponse
 type CreateGeoMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8971,7 +9658,6 @@ func (s *CreateGeoMatchSetOutput) SetGeoMatchSet(v *GeoMatchSet) *CreateGeoMatch
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateIPSetRequest
 type CreateIPSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9031,7 +9717,6 @@ func (s *CreateIPSetInput) SetName(v string) *CreateIPSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateIPSetResponse
 type CreateIPSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9066,7 +9751,6 @@ func (s *CreateIPSetOutput) SetIPSet(v *IPSet) *CreateIPSetOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRateBasedRuleRequest
 type CreateRateBasedRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9183,7 +9867,6 @@ func (s *CreateRateBasedRuleInput) SetRateLimit(v int64) *CreateRateBasedRuleInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRateBasedRuleResponse
 type CreateRateBasedRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9218,7 +9901,6 @@ func (s *CreateRateBasedRuleOutput) SetRule(v *RateBasedRule) *CreateRateBasedRu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRegexMatchSetRequest
 type CreateRegexMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9278,7 +9960,6 @@ func (s *CreateRegexMatchSetInput) SetName(v string) *CreateRegexMatchSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRegexMatchSetResponse
 type CreateRegexMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9313,7 +9994,6 @@ func (s *CreateRegexMatchSetOutput) SetRegexMatchSet(v *RegexMatchSet) *CreateRe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRegexPatternSetRequest
 type CreateRegexPatternSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9373,7 +10053,6 @@ func (s *CreateRegexPatternSetInput) SetName(v string) *CreateRegexPatternSetInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRegexPatternSetResponse
 type CreateRegexPatternSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9408,7 +10087,6 @@ func (s *CreateRegexPatternSetOutput) SetRegexPatternSet(v *RegexPatternSet) *Cr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleGroupRequest
 type CreateRuleGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9485,7 +10163,6 @@ func (s *CreateRuleGroupInput) SetName(v string) *CreateRuleGroupInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleGroupResponse
 type CreateRuleGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9520,7 +10197,6 @@ func (s *CreateRuleGroupOutput) SetRuleGroup(v *RuleGroup) *CreateRuleGroupOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleRequest
 type CreateRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9597,7 +10273,6 @@ func (s *CreateRuleInput) SetName(v string) *CreateRuleInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateRuleResponse
 type CreateRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9632,7 +10307,6 @@ func (s *CreateRuleOutput) SetRule(v *Rule) *CreateRuleOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateSizeConstraintSetRequest
 type CreateSizeConstraintSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9692,7 +10366,6 @@ func (s *CreateSizeConstraintSetInput) SetName(v string) *CreateSizeConstraintSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateSizeConstraintSetResponse
 type CreateSizeConstraintSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9728,7 +10401,6 @@ func (s *CreateSizeConstraintSetOutput) SetSizeConstraintSet(v *SizeConstraintSe
 }
 
 // A request to create a SqlInjectionMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateSqlInjectionMatchSetRequest
 type CreateSqlInjectionMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9789,7 +10461,6 @@ func (s *CreateSqlInjectionMatchSetInput) SetName(v string) *CreateSqlInjectionM
 }
 
 // The response to a CreateSqlInjectionMatchSet request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateSqlInjectionMatchSetResponse
 type CreateSqlInjectionMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9824,7 +10495,6 @@ func (s *CreateSqlInjectionMatchSetOutput) SetSqlInjectionMatchSet(v *SqlInjecti
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateWebACLRequest
 type CreateWebACLInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9921,7 +10591,6 @@ func (s *CreateWebACLInput) SetName(v string) *CreateWebACLInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateWebACLResponse
 type CreateWebACLOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9957,7 +10626,6 @@ func (s *CreateWebACLOutput) SetWebACL(v *WebACL) *CreateWebACLOutput {
 }
 
 // A request to create an XssMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateXssMatchSetRequest
 type CreateXssMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10018,7 +10686,6 @@ func (s *CreateXssMatchSetInput) SetName(v string) *CreateXssMatchSetInput {
 }
 
 // The response to a CreateXssMatchSet request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/CreateXssMatchSetResponse
 type CreateXssMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10053,7 +10720,6 @@ func (s *CreateXssMatchSetOutput) SetXssMatchSet(v *XssMatchSet) *CreateXssMatch
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteByteMatchSetRequest
 type DeleteByteMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10113,7 +10779,6 @@ func (s *DeleteByteMatchSetInput) SetChangeToken(v string) *DeleteByteMatchSetIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteByteMatchSetResponse
 type DeleteByteMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10139,7 +10804,6 @@ func (s *DeleteByteMatchSetOutput) SetChangeToken(v string) *DeleteByteMatchSetO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteGeoMatchSetRequest
 type DeleteGeoMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10199,7 +10863,6 @@ func (s *DeleteGeoMatchSetInput) SetGeoMatchSetId(v string) *DeleteGeoMatchSetIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteGeoMatchSetResponse
 type DeleteGeoMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10225,7 +10888,6 @@ func (s *DeleteGeoMatchSetOutput) SetChangeToken(v string) *DeleteGeoMatchSetOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteIPSetRequest
 type DeleteIPSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10285,7 +10947,6 @@ func (s *DeleteIPSetInput) SetIPSetId(v string) *DeleteIPSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteIPSetResponse
 type DeleteIPSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10311,7 +10972,120 @@ func (s *DeleteIPSetOutput) SetChangeToken(v string) *DeleteIPSetOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRateBasedRuleRequest
+type DeleteLoggingConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the web ACL from which you want to delete
+	// the LoggingConfiguration.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteLoggingConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLoggingConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteLoggingConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteLoggingConfigurationInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *DeleteLoggingConfigurationInput) SetResourceArn(v string) *DeleteLoggingConfigurationInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type DeleteLoggingConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteLoggingConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLoggingConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+type DeletePermissionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the RuleGroup from which you want to delete
+	// the policy.
+	//
+	// The user making the request must be the owner of the RuleGroup.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePermissionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePermissionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeletePermissionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeletePermissionPolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *DeletePermissionPolicyInput) SetResourceArn(v string) *DeletePermissionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type DeletePermissionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeletePermissionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePermissionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteRateBasedRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10371,7 +11145,6 @@ func (s *DeleteRateBasedRuleInput) SetRuleId(v string) *DeleteRateBasedRuleInput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRateBasedRuleResponse
 type DeleteRateBasedRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10397,7 +11170,6 @@ func (s *DeleteRateBasedRuleOutput) SetChangeToken(v string) *DeleteRateBasedRul
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRegexMatchSetRequest
 type DeleteRegexMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10457,7 +11229,6 @@ func (s *DeleteRegexMatchSetInput) SetRegexMatchSetId(v string) *DeleteRegexMatc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRegexMatchSetResponse
 type DeleteRegexMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10483,7 +11254,6 @@ func (s *DeleteRegexMatchSetOutput) SetChangeToken(v string) *DeleteRegexMatchSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRegexPatternSetRequest
 type DeleteRegexPatternSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10543,7 +11313,6 @@ func (s *DeleteRegexPatternSetInput) SetRegexPatternSetId(v string) *DeleteRegex
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRegexPatternSetResponse
 type DeleteRegexPatternSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10569,7 +11338,6 @@ func (s *DeleteRegexPatternSetOutput) SetChangeToken(v string) *DeleteRegexPatte
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroupRequest
 type DeleteRuleGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10629,7 +11397,6 @@ func (s *DeleteRuleGroupInput) SetRuleGroupId(v string) *DeleteRuleGroupInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleGroupResponse
 type DeleteRuleGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10655,7 +11422,6 @@ func (s *DeleteRuleGroupOutput) SetChangeToken(v string) *DeleteRuleGroupOutput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleRequest
 type DeleteRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10715,7 +11481,6 @@ func (s *DeleteRuleInput) SetRuleId(v string) *DeleteRuleInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteRuleResponse
 type DeleteRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10741,7 +11506,6 @@ func (s *DeleteRuleOutput) SetChangeToken(v string) *DeleteRuleOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteSizeConstraintSetRequest
 type DeleteSizeConstraintSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10801,7 +11565,6 @@ func (s *DeleteSizeConstraintSetInput) SetSizeConstraintSetId(v string) *DeleteS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteSizeConstraintSetResponse
 type DeleteSizeConstraintSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10828,7 +11591,6 @@ func (s *DeleteSizeConstraintSetOutput) SetChangeToken(v string) *DeleteSizeCons
 }
 
 // A request to delete a SqlInjectionMatchSet from AWS WAF.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteSqlInjectionMatchSetRequest
 type DeleteSqlInjectionMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10889,7 +11651,6 @@ func (s *DeleteSqlInjectionMatchSetInput) SetSqlInjectionMatchSetId(v string) *D
 }
 
 // The response to a request to delete a SqlInjectionMatchSet from AWS WAF.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteSqlInjectionMatchSetResponse
 type DeleteSqlInjectionMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10915,7 +11676,6 @@ func (s *DeleteSqlInjectionMatchSetOutput) SetChangeToken(v string) *DeleteSqlIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteWebACLRequest
 type DeleteWebACLInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10975,7 +11735,6 @@ func (s *DeleteWebACLInput) SetWebACLId(v string) *DeleteWebACLInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteWebACLResponse
 type DeleteWebACLOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11002,7 +11761,6 @@ func (s *DeleteWebACLOutput) SetChangeToken(v string) *DeleteWebACLOutput {
 }
 
 // A request to delete an XssMatchSet from AWS WAF.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteXssMatchSetRequest
 type DeleteXssMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11063,7 +11821,6 @@ func (s *DeleteXssMatchSetInput) SetXssMatchSetId(v string) *DeleteXssMatchSetIn
 }
 
 // The response to a request to delete an XssMatchSet from AWS WAF.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/DeleteXssMatchSetResponse
 type DeleteXssMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11090,15 +11847,18 @@ func (s *DeleteXssMatchSetOutput) SetChangeToken(v string) *DeleteXssMatchSetOut
 }
 
 // Specifies where in a web request to look for TargetString.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/FieldToMatch
 type FieldToMatch struct {
 	_ struct{} `type:"structure"`
 
 	// When the value of Type is HEADER, enter the name of the header that you want
-	// AWS WAF to search, for example, User-Agent or Referer. If the value of Type
-	// is any other value, omit Data.
+	// AWS WAF to search, for example, User-Agent or Referer. The name of the header
+	// is not case sensitive.
 	//
-	// The name of the header is not case sensitive.
+	// When the value of Type is SINGLE_QUERY_ARG, enter the name of the parameter
+	// that you want AWS WAF to search, for example, UserName or SalesRegion. The
+	// parameter name is not case sensitive.
+	//
+	// If the value of Type is any other value, omit Data.
 	Data *string `type:"string"`
 
 	// The part of the web request that you want AWS WAF to search for a specified
@@ -11125,6 +11885,14 @@ type FieldToMatch struct {
 	//    to AWS WAF for inspection. To allow or block requests based on the length
 	//    of the body, you can create a size constraint set. For more information,
 	//    see CreateSizeConstraintSet.
+	//
+	//    * SINGLE_QUERY_ARG: The parameter in the query string that you will inspect,
+	//    such as UserName or SalesRegion. The maximum length for SINGLE_QUERY_ARG
+	//    is 30 characters.
+	//
+	//    * ALL_QUERY_ARGS: Similar to SINGLE_QUERY_ARG, but rather than inspecting
+	//    a single parameter, AWS WAF will inspect all parameters within the query
+	//    for the value or regex pattern that you specify in TargetString.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"MatchFieldType"`
@@ -11167,7 +11935,6 @@ func (s *FieldToMatch) SetType(v string) *FieldToMatch {
 
 // The country from which web requests originate that you want AWS WAF to search
 // for.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GeoMatchConstraint
 type GeoMatchConstraint struct {
 	_ struct{} `type:"structure"`
 
@@ -11222,7 +11989,6 @@ func (s *GeoMatchConstraint) SetValue(v string) *GeoMatchConstraint {
 }
 
 // Contains one or more countries that AWS WAF will search for.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GeoMatchSet
 type GeoMatchSet struct {
 	_ struct{} `type:"structure"`
 
@@ -11276,7 +12042,6 @@ func (s *GeoMatchSet) SetName(v string) *GeoMatchSet {
 }
 
 // Contains the identifier and the name of the GeoMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GeoMatchSetSummary
 type GeoMatchSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -11316,7 +12081,6 @@ func (s *GeoMatchSetSummary) SetName(v string) *GeoMatchSetSummary {
 }
 
 // Specifies the type of update to perform to an GeoMatchSet with UpdateGeoMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GeoMatchSetUpdate
 type GeoMatchSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -11375,7 +12139,6 @@ func (s *GeoMatchSetUpdate) SetGeoMatchConstraint(v *GeoMatchConstraint) *GeoMat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetByteMatchSetRequest
 type GetByteMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11418,7 +12181,6 @@ func (s *GetByteMatchSetInput) SetByteMatchSetId(v string) *GetByteMatchSetInput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetByteMatchSetResponse
 type GetByteMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11451,7 +12213,6 @@ func (s *GetByteMatchSetOutput) SetByteMatchSet(v *ByteMatchSet) *GetByteMatchSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetChangeTokenRequest
 type GetChangeTokenInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -11466,7 +12227,6 @@ func (s GetChangeTokenInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetChangeTokenResponse
 type GetChangeTokenOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11491,7 +12251,6 @@ func (s *GetChangeTokenOutput) SetChangeToken(v string) *GetChangeTokenOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetChangeTokenStatusRequest
 type GetChangeTokenStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11534,7 +12293,6 @@ func (s *GetChangeTokenStatusInput) SetChangeToken(v string) *GetChangeTokenStat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetChangeTokenStatusResponse
 type GetChangeTokenStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11558,7 +12316,6 @@ func (s *GetChangeTokenStatusOutput) SetChangeTokenStatus(v string) *GetChangeTo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetGeoMatchSetRequest
 type GetGeoMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11601,7 +12358,6 @@ func (s *GetGeoMatchSetInput) SetGeoMatchSetId(v string) *GetGeoMatchSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetGeoMatchSetResponse
 type GetGeoMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11627,7 +12383,6 @@ func (s *GetGeoMatchSetOutput) SetGeoMatchSet(v *GeoMatchSet) *GetGeoMatchSetOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetIPSetRequest
 type GetIPSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11670,7 +12425,6 @@ func (s *GetIPSetInput) SetIPSetId(v string) *GetIPSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetIPSetResponse
 type GetIPSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11700,7 +12454,136 @@ func (s *GetIPSetOutput) SetIPSet(v *IPSet) *GetIPSetOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRateBasedRuleRequest
+type GetLoggingConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the web ACL for which you want to get the
+	// LoggingConfiguration.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLoggingConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoggingConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLoggingConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLoggingConfigurationInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetLoggingConfigurationInput) SetResourceArn(v string) *GetLoggingConfigurationInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type GetLoggingConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The LoggingConfiguration for the specified web ACL.
+	LoggingConfiguration *LoggingConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetLoggingConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLoggingConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *GetLoggingConfigurationOutput) SetLoggingConfiguration(v *LoggingConfiguration) *GetLoggingConfigurationOutput {
+	s.LoggingConfiguration = v
+	return s
+}
+
+type GetPermissionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the RuleGroup for which you want to get
+	// the policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPermissionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPermissionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPermissionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPermissionPolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetPermissionPolicyInput) SetResourceArn(v string) *GetPermissionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type GetPermissionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The IAM policy attached to the specified RuleGroup.
+	Policy *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetPermissionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPermissionPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *GetPermissionPolicyOutput) SetPolicy(v string) *GetPermissionPolicyOutput {
+	s.Policy = &v
+	return s
+}
+
 type GetRateBasedRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11743,7 +12626,6 @@ func (s *GetRateBasedRuleInput) SetRuleId(v string) *GetRateBasedRuleInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRateBasedRuleManagedKeysRequest
 type GetRateBasedRuleManagedKeysInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11798,7 +12680,6 @@ func (s *GetRateBasedRuleManagedKeysInput) SetRuleId(v string) *GetRateBasedRule
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRateBasedRuleManagedKeysResponse
 type GetRateBasedRuleManagedKeysOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11831,7 +12712,6 @@ func (s *GetRateBasedRuleManagedKeysOutput) SetNextMarker(v string) *GetRateBase
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRateBasedRuleResponse
 type GetRateBasedRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11856,7 +12736,6 @@ func (s *GetRateBasedRuleOutput) SetRule(v *RateBasedRule) *GetRateBasedRuleOutp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRegexMatchSetRequest
 type GetRegexMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11899,7 +12778,6 @@ func (s *GetRegexMatchSetInput) SetRegexMatchSetId(v string) *GetRegexMatchSetIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRegexMatchSetResponse
 type GetRegexMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11924,7 +12802,6 @@ func (s *GetRegexMatchSetOutput) SetRegexMatchSet(v *RegexMatchSet) *GetRegexMat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRegexPatternSetRequest
 type GetRegexPatternSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11967,7 +12844,6 @@ func (s *GetRegexPatternSetInput) SetRegexPatternSetId(v string) *GetRegexPatter
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRegexPatternSetResponse
 type GetRegexPatternSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11993,7 +12869,6 @@ func (s *GetRegexPatternSetOutput) SetRegexPatternSet(v *RegexPatternSet) *GetRe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroupRequest
 type GetRuleGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12036,7 +12911,6 @@ func (s *GetRuleGroupInput) SetRuleGroupId(v string) *GetRuleGroupInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleGroupResponse
 type GetRuleGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12060,7 +12934,6 @@ func (s *GetRuleGroupOutput) SetRuleGroup(v *RuleGroup) *GetRuleGroupOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleRequest
 type GetRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12103,7 +12976,6 @@ func (s *GetRuleInput) SetRuleId(v string) *GetRuleInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetRuleResponse
 type GetRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12133,7 +13005,6 @@ func (s *GetRuleOutput) SetRule(v *Rule) *GetRuleOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSampledRequestsRequest
 type GetSampledRequestsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12241,7 +13112,6 @@ func (s *GetSampledRequestsInput) SetWebAclId(v string) *GetSampledRequestsInput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSampledRequestsResponse
 type GetSampledRequestsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12289,7 +13159,6 @@ func (s *GetSampledRequestsOutput) SetTimeWindow(v *TimeWindow) *GetSampledReque
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSizeConstraintSetRequest
 type GetSizeConstraintSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12332,7 +13201,6 @@ func (s *GetSizeConstraintSetInput) SetSizeConstraintSetId(v string) *GetSizeCon
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSizeConstraintSetResponse
 type GetSizeConstraintSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12367,7 +13235,6 @@ func (s *GetSizeConstraintSetOutput) SetSizeConstraintSet(v *SizeConstraintSet) 
 }
 
 // A request to get a SqlInjectionMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSqlInjectionMatchSetRequest
 type GetSqlInjectionMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12411,7 +13278,6 @@ func (s *GetSqlInjectionMatchSetInput) SetSqlInjectionMatchSetId(v string) *GetS
 }
 
 // The response to a GetSqlInjectionMatchSet request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetSqlInjectionMatchSetResponse
 type GetSqlInjectionMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12444,7 +13310,6 @@ func (s *GetSqlInjectionMatchSetOutput) SetSqlInjectionMatchSet(v *SqlInjectionM
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetWebACLRequest
 type GetWebACLInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12487,7 +13352,6 @@ func (s *GetWebACLInput) SetWebACLId(v string) *GetWebACLInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetWebACLResponse
 type GetWebACLOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12523,7 +13387,6 @@ func (s *GetWebACLOutput) SetWebACL(v *WebACL) *GetWebACLOutput {
 }
 
 // A request to get an XssMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetXssMatchSetRequest
 type GetXssMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12567,7 +13430,6 @@ func (s *GetXssMatchSetInput) SetXssMatchSetId(v string) *GetXssMatchSetInput {
 }
 
 // The response to a GetXssMatchSet request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/GetXssMatchSetResponse
 type GetXssMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12603,7 +13465,6 @@ func (s *GetXssMatchSetOutput) SetXssMatchSet(v *XssMatchSet) *GetXssMatchSetOut
 // type that appears as Headers in the response syntax. HTTPHeader contains
 // the names and values of all of the headers that appear in one of the web
 // requests that were returned by GetSampledRequests.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/HTTPHeader
 type HTTPHeader struct {
 	_ struct{} `type:"structure"`
 
@@ -12639,7 +13500,6 @@ func (s *HTTPHeader) SetValue(v string) *HTTPHeader {
 // The response from a GetSampledRequests request includes an HTTPRequest complex
 // type that appears as Request in the response syntax. HTTPRequest contains
 // information about one of the web requests that were returned by GetSampledRequests.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/HTTPRequest
 type HTTPRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -12721,16 +13581,15 @@ func (s *HTTPRequest) SetURI(v string) *HTTPRequest {
 }
 
 // Contains one or more IP addresses or blocks of IP addresses specified in
-// Classless Inter-Domain Routing (CIDR) notation. AWS WAF supports /8, /16,
-// /24, and /32 IP address ranges for IPv4, and /24, /32, /48, /56, /64 and
-// /128 for IPv6.
+// Classless Inter-Domain Routing (CIDR) notation. AWS WAF supports IPv4 address
+// ranges: /8 and any range between /16 through /32. AWS WAF supports IPv6 address
+// ranges: /16, /24, /32, /48, /56, /64, and /128.
 //
 // To specify an individual IP address, you specify the four-part IP address
 // followed by a /32, for example, 192.0.2.0/31. To block a range of IP addresses,
-// you can specify a /128, /64, /56, /48, /32, /24, /16, or /8 CIDR. For more
-// information about CIDR notation, see the Wikipedia entry Classless Inter-Domain
-// Routing (https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing).
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/IPSet
+// you can specify /8 or any range between /16 through /32 (for IPv4) or /16,
+// /24, /32, /48, /56, /64, or /128 (for IPv6). For more information about CIDR
+// notation, see the Wikipedia entry Classless Inter-Domain Routing (https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing).
 type IPSet struct {
 	_ struct{} `type:"structure"`
 
@@ -12788,7 +13647,6 @@ func (s *IPSet) SetName(v string) *IPSet {
 
 // Specifies the IP address type (IPV4 or IPV6) and the IP address range (in
 // CIDR format) that web requests originate from.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/IPSetDescriptor
 type IPSetDescriptor struct {
 	_ struct{} `type:"structure"`
 
@@ -12860,7 +13718,6 @@ func (s *IPSetDescriptor) SetValue(v string) *IPSetDescriptor {
 }
 
 // Contains the identifier and the name of the IPSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/IPSetSummary
 type IPSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -12900,7 +13757,6 @@ func (s *IPSetSummary) SetName(v string) *IPSetSummary {
 }
 
 // Specifies the type of update to perform to an IPSet with UpdateIPSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/IPSetUpdate
 type IPSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -12959,7 +13815,6 @@ func (s *IPSetUpdate) SetIPSetDescriptor(v *IPSetDescriptor) *IPSetUpdate {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListActivatedRulesInRuleGroupRequest
 type ListActivatedRulesInRuleGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13025,7 +13880,6 @@ func (s *ListActivatedRulesInRuleGroupInput) SetRuleGroupId(v string) *ListActiv
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListActivatedRulesInRuleGroupResponse
 type ListActivatedRulesInRuleGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13061,7 +13915,6 @@ func (s *ListActivatedRulesInRuleGroupOutput) SetNextMarker(v string) *ListActiv
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListByteMatchSetsRequest
 type ListByteMatchSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13114,7 +13967,6 @@ func (s *ListByteMatchSetsInput) SetNextMarker(v string) *ListByteMatchSetsInput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListByteMatchSetsResponse
 type ListByteMatchSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13151,7 +14003,6 @@ func (s *ListByteMatchSetsOutput) SetNextMarker(v string) *ListByteMatchSetsOutp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListGeoMatchSetsRequest
 type ListGeoMatchSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13204,7 +14055,6 @@ func (s *ListGeoMatchSetsInput) SetNextMarker(v string) *ListGeoMatchSetsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListGeoMatchSetsResponse
 type ListGeoMatchSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13241,7 +14091,6 @@ func (s *ListGeoMatchSetsOutput) SetNextMarker(v string) *ListGeoMatchSetsOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListIPSetsRequest
 type ListIPSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13294,7 +14143,6 @@ func (s *ListIPSetsInput) SetNextMarker(v string) *ListIPSetsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListIPSetsResponse
 type ListIPSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13330,7 +14178,94 @@ func (s *ListIPSetsOutput) SetNextMarker(v string) *ListIPSetsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRateBasedRulesRequest
+type ListLoggingConfigurationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the number of LoggingConfigurations that you want AWS WAF to return
+	// for this request. If you have more LoggingConfigurations than the number
+	// that you specify for Limit, the response includes a NextMarker value that
+	// you can use to get another batch of LoggingConfigurations.
+	Limit *int64 `type:"integer"`
+
+	// If you specify a value for Limit and you have more LoggingConfigurations
+	// than the value of Limit, AWS WAF returns a NextMarker value in the response
+	// that allows you to list another group of LoggingConfigurations. For the second
+	// and subsequent ListLoggingConfigurations requests, specify the value of NextMarker
+	// from the previous response to get information about another batch of ListLoggingConfigurations.
+	NextMarker *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListLoggingConfigurationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLoggingConfigurationsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListLoggingConfigurationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListLoggingConfigurationsInput"}
+	if s.NextMarker != nil && len(*s.NextMarker) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextMarker", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListLoggingConfigurationsInput) SetLimit(v int64) *ListLoggingConfigurationsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListLoggingConfigurationsInput) SetNextMarker(v string) *ListLoggingConfigurationsInput {
+	s.NextMarker = &v
+	return s
+}
+
+type ListLoggingConfigurationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of LoggingConfiguration objects.
+	LoggingConfigurations []*LoggingConfiguration `type:"list"`
+
+	// If you have more LoggingConfigurations than the number that you specified
+	// for Limit in the request, the response includes a NextMarker value. To list
+	// more LoggingConfigurations, submit another ListLoggingConfigurations request,
+	// and specify the NextMarker value from the response in the NextMarker value
+	// in the next request.
+	NextMarker *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListLoggingConfigurationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLoggingConfigurationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetLoggingConfigurations sets the LoggingConfigurations field's value.
+func (s *ListLoggingConfigurationsOutput) SetLoggingConfigurations(v []*LoggingConfiguration) *ListLoggingConfigurationsOutput {
+	s.LoggingConfigurations = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListLoggingConfigurationsOutput) SetNextMarker(v string) *ListLoggingConfigurationsOutput {
+	s.NextMarker = &v
+	return s
+}
+
 type ListRateBasedRulesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13382,7 +14317,6 @@ func (s *ListRateBasedRulesInput) SetNextMarker(v string) *ListRateBasedRulesInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRateBasedRulesResponse
 type ListRateBasedRulesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13418,7 +14352,6 @@ func (s *ListRateBasedRulesOutput) SetRules(v []*RuleSummary) *ListRateBasedRule
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRegexMatchSetsRequest
 type ListRegexMatchSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13472,7 +14405,6 @@ func (s *ListRegexMatchSetsInput) SetNextMarker(v string) *ListRegexMatchSetsInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRegexMatchSetsResponse
 type ListRegexMatchSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13509,7 +14441,6 @@ func (s *ListRegexMatchSetsOutput) SetRegexMatchSets(v []*RegexMatchSetSummary) 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRegexPatternSetsRequest
 type ListRegexPatternSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13563,7 +14494,6 @@ func (s *ListRegexPatternSetsInput) SetNextMarker(v string) *ListRegexPatternSet
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRegexPatternSetsResponse
 type ListRegexPatternSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13600,7 +14530,6 @@ func (s *ListRegexPatternSetsOutput) SetRegexPatternSets(v []*RegexPatternSetSum
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRuleGroupsRequest
 type ListRuleGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13653,7 +14582,6 @@ func (s *ListRuleGroupsInput) SetNextMarker(v string) *ListRuleGroupsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRuleGroupsResponse
 type ListRuleGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13689,7 +14617,6 @@ func (s *ListRuleGroupsOutput) SetRuleGroups(v []*RuleGroupSummary) *ListRuleGro
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRulesRequest
 type ListRulesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13741,7 +14668,6 @@ func (s *ListRulesInput) SetNextMarker(v string) *ListRulesInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListRulesResponse
 type ListRulesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13777,7 +14703,6 @@ func (s *ListRulesOutput) SetRules(v []*RuleSummary) *ListRulesOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSizeConstraintSetsRequest
 type ListSizeConstraintSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13830,7 +14755,6 @@ func (s *ListSizeConstraintSetsInput) SetNextMarker(v string) *ListSizeConstrain
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSizeConstraintSetsResponse
 type ListSizeConstraintSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13869,7 +14793,6 @@ func (s *ListSizeConstraintSetsOutput) SetSizeConstraintSets(v []*SizeConstraint
 
 // A request to list the SqlInjectionMatchSet objects created by the current
 // AWS account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSqlInjectionMatchSetsRequest
 type ListSqlInjectionMatchSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13923,7 +14846,6 @@ func (s *ListSqlInjectionMatchSetsInput) SetNextMarker(v string) *ListSqlInjecti
 }
 
 // The response to a ListSqlInjectionMatchSets request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSqlInjectionMatchSetsResponse
 type ListSqlInjectionMatchSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13960,7 +14882,6 @@ func (s *ListSqlInjectionMatchSetsOutput) SetSqlInjectionMatchSets(v []*SqlInjec
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSubscribedRuleGroupsRequest
 type ListSubscribedRuleGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14014,7 +14935,6 @@ func (s *ListSubscribedRuleGroupsInput) SetNextMarker(v string) *ListSubscribedR
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListSubscribedRuleGroupsResponse
 type ListSubscribedRuleGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14050,7 +14970,6 @@ func (s *ListSubscribedRuleGroupsOutput) SetRuleGroups(v []*SubscribedRuleGroupS
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListWebACLsRequest
 type ListWebACLsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14104,7 +15023,6 @@ func (s *ListWebACLsInput) SetNextMarker(v string) *ListWebACLsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListWebACLsResponse
 type ListWebACLsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14141,7 +15059,6 @@ func (s *ListWebACLsOutput) SetWebACLs(v []*WebACLSummary) *ListWebACLsOutput {
 }
 
 // A request to list the XssMatchSet objects created by the current AWS account.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListXssMatchSetsRequest
 type ListXssMatchSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14195,7 +15112,6 @@ func (s *ListXssMatchSetsInput) SetNextMarker(v string) *ListXssMatchSetsInput {
 }
 
 // The response to a ListXssMatchSets request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/ListXssMatchSetsResponse
 type ListXssMatchSetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -14232,11 +15148,92 @@ func (s *ListXssMatchSetsOutput) SetXssMatchSets(v []*XssMatchSetSummary) *ListX
 	return s
 }
 
+// The Amazon Kinesis Data Firehose delivery streams, RedactedFields information,
+// and the web ACL Amazon Resource Name (ARN).
+type LoggingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// An array of Amazon Kinesis Data Firehose delivery stream ARNs.
+	//
+	// LogDestinationConfigs is a required field
+	LogDestinationConfigs []*string `min:"1" type:"list" required:"true"`
+
+	// The parts of the request that you want redacted from the logs. For example,
+	// if you redact the cookie field, the cookie field in the delivery stream will
+	// be xxx.
+	RedactedFields []*FieldToMatch `type:"list"`
+
+	// The Amazon Resource Name (ARN) of the web ACL that you want to associate
+	// with LogDestinationConfigs.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s LoggingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoggingConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LoggingConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LoggingConfiguration"}
+	if s.LogDestinationConfigs == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogDestinationConfigs"))
+	}
+	if s.LogDestinationConfigs != nil && len(s.LogDestinationConfigs) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LogDestinationConfigs", 1))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.RedactedFields != nil {
+		for i, v := range s.RedactedFields {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RedactedFields", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogDestinationConfigs sets the LogDestinationConfigs field's value.
+func (s *LoggingConfiguration) SetLogDestinationConfigs(v []*string) *LoggingConfiguration {
+	s.LogDestinationConfigs = v
+	return s
+}
+
+// SetRedactedFields sets the RedactedFields field's value.
+func (s *LoggingConfiguration) SetRedactedFields(v []*FieldToMatch) *LoggingConfiguration {
+	s.RedactedFields = v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *LoggingConfiguration) SetResourceArn(v string) *LoggingConfiguration {
+	s.ResourceArn = &v
+	return s
+}
+
 // Specifies the ByteMatchSet, IPSet, SqlInjectionMatchSet, XssMatchSet, RegexMatchSet,
 // GeoMatchSet, and SizeConstraintSet objects that you want to add to a Rule
 // and, for each object, indicates whether you want to negate the settings,
 // for example, requests that do NOT originate from the IP address 192.0.2.44.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/Predicate
 type Predicate struct {
 	_ struct{} `type:"structure"`
 
@@ -14261,7 +15258,7 @@ type Predicate struct {
 	// Negated is a required field
 	Negated *bool `type:"boolean" required:"true"`
 
-	// The type of predicate in a Rule, such as ByteMatchSet or IPSet.
+	// The type of predicate in a Rule, such as ByteMatch or IPSet.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"PredicateType"`
@@ -14317,6 +15314,147 @@ func (s *Predicate) SetType(v string) *Predicate {
 	return s
 }
 
+type PutLoggingConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Kinesis Data Firehose delivery streams that contains the inspected
+	// traffic information, the redacted fields details, and the Amazon Resource
+	// Name (ARN) of the web ACL to monitor.
+	//
+	// LoggingConfiguration is a required field
+	LoggingConfiguration *LoggingConfiguration `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutLoggingConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLoggingConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutLoggingConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutLoggingConfigurationInput"}
+	if s.LoggingConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("LoggingConfiguration"))
+	}
+	if s.LoggingConfiguration != nil {
+		if err := s.LoggingConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("LoggingConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *PutLoggingConfigurationInput) SetLoggingConfiguration(v *LoggingConfiguration) *PutLoggingConfigurationInput {
+	s.LoggingConfiguration = v
+	return s
+}
+
+type PutLoggingConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The LoggingConfiguration that you submitted in the request.
+	LoggingConfiguration *LoggingConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutLoggingConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLoggingConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *PutLoggingConfigurationOutput) SetLoggingConfiguration(v *LoggingConfiguration) *PutLoggingConfigurationOutput {
+	s.LoggingConfiguration = v
+	return s
+}
+
+type PutPermissionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The policy to attach to the specified RuleGroup.
+	//
+	// Policy is a required field
+	Policy *string `min:"1" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the RuleGroup to which you want to attach
+	// the policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutPermissionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutPermissionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutPermissionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutPermissionPolicyInput"}
+	if s.Policy == nil {
+		invalidParams.Add(request.NewErrParamRequired("Policy"))
+	}
+	if s.Policy != nil && len(*s.Policy) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Policy", 1))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *PutPermissionPolicyInput) SetPolicy(v string) *PutPermissionPolicyInput {
+	s.Policy = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *PutPermissionPolicyInput) SetResourceArn(v string) *PutPermissionPolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type PutPermissionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutPermissionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutPermissionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 // A RateBasedRule is identical to a regular Rule, with one addition: a RateBasedRule
 // counts the number of requests that arrive from a specified IP address every
 // five minutes. For example, based on recent requests that you've seen from
@@ -14332,7 +15470,6 @@ func (s *Predicate) SetType(v string) *Predicate {
 // Requests that meet both of these conditions and exceed 15,000 requests every
 // five minutes trigger the rule's action (block or count), which is defined
 // in the web ACL.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RateBasedRule
 type RateBasedRule struct {
 	_ struct{} `type:"structure"`
 
@@ -14434,7 +15571,6 @@ func (s *RateBasedRule) SetRuleId(v string) *RateBasedRule {
 // want AWS WAF to search for. If a RegexMatchSet contains more than one RegexMatchTuple
 // object, a request needs to match the settings in only one ByteMatchTuple
 // to be considered a match.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexMatchSet
 type RegexMatchSet struct {
 	_ struct{} `type:"structure"`
 
@@ -14494,7 +15630,6 @@ func (s *RegexMatchSet) SetRegexMatchTuples(v []*RegexMatchTuple) *RegexMatchSet
 
 // Returned by ListRegexMatchSets. Each RegexMatchSetSummary object includes
 // the Name and RegexMatchSetId for one RegexMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexMatchSetSummary
 type RegexMatchSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -14538,7 +15673,6 @@ func (s *RegexMatchSetSummary) SetRegexMatchSetId(v string) *RegexMatchSetSummar
 
 // In an UpdateRegexMatchSet request, RegexMatchSetUpdate specifies whether
 // to insert or delete a RegexMatchTuple and includes the settings for the RegexMatchTuple.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexMatchSetUpdate
 type RegexMatchSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -14612,7 +15746,6 @@ func (s *RegexMatchSetUpdate) SetRegexMatchTuple(v *RegexMatchTuple) *RegexMatch
 //
 //    * Whether to perform any conversions on the request, such as converting
 //    it to lowercase, before inspecting it for the specified string.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexMatchTuple
 type RegexMatchTuple struct {
 	_ struct{} `type:"structure"`
 
@@ -14636,6 +15769,8 @@ type RegexMatchTuple struct {
 	// use in web requests in an effort to bypass AWS WAF. If you specify a transformation,
 	// AWS WAF performs the transformation on RegexPatternSet before inspecting
 	// a request for a match.
+	//
+	// You can only specify a single type of TextTransformation.
 	//
 	// CMD_LINE
 	//
@@ -14765,7 +15900,6 @@ func (s *RegexMatchTuple) SetTextTransformation(v string) *RegexMatchTuple {
 // The RegexPatternSet specifies the regular expression (regex) pattern that
 // you want AWS WAF to search for, such as B[a@]dB[o0]t. You can then configure
 // AWS WAF to reject those requests.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexPatternSet
 type RegexPatternSet struct {
 	_ struct{} `type:"structure"`
 
@@ -14819,7 +15953,6 @@ func (s *RegexPatternSet) SetRegexPatternStrings(v []*string) *RegexPatternSet {
 
 // Returned by ListRegexPatternSets. Each RegexPatternSetSummary object includes
 // the Name and RegexPatternSetId for one RegexPatternSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexPatternSetSummary
 type RegexPatternSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -14865,7 +15998,6 @@ func (s *RegexPatternSetSummary) SetRegexPatternSetId(v string) *RegexPatternSet
 // In an UpdateRegexPatternSet request, RegexPatternSetUpdate specifies whether
 // to insert or delete a RegexPatternString and includes the settings for the
 // RegexPatternString.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RegexPatternSetUpdate
 type RegexPatternSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -14934,7 +16066,6 @@ func (s *RegexPatternSetUpdate) SetRegexPatternString(v string) *RegexPatternSet
 //
 // To match the settings in this Rule, a request must originate from 192.0.2.44
 // AND include a User-Agent header for which the value is BadBot.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/Rule
 type Rule struct {
 	_ struct{} `type:"structure"`
 
@@ -15008,7 +16139,6 @@ func (s *Rule) SetRuleId(v string) *Rule {
 //    * One rule group per web ACL.
 //
 //    * Ten rules per rule group.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleGroup
 type RuleGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -15062,7 +16192,6 @@ func (s *RuleGroup) SetRuleGroupId(v string) *RuleGroup {
 }
 
 // Contains the identifier and the friendly name or description of the RuleGroup.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleGroupSummary
 type RuleGroupSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -15107,7 +16236,6 @@ func (s *RuleGroupSummary) SetRuleGroupId(v string) *RuleGroupSummary {
 
 // Specifies an ActivatedRule and indicates whether you want to add it to a
 // RuleGroup or delete it from a RuleGroup.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleGroupUpdate
 type RuleGroupUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -15169,7 +16297,6 @@ func (s *RuleGroupUpdate) SetActivatedRule(v *ActivatedRule) *RuleGroupUpdate {
 }
 
 // Contains the identifier and the friendly name or description of the Rule.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleSummary
 type RuleSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -15214,7 +16341,6 @@ func (s *RuleSummary) SetRuleId(v string) *RuleSummary {
 
 // Specifies a Predicate (such as an IPSet) and indicates whether you want to
 // add it to a Rule or delete it from a Rule.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/RuleUpdate
 type RuleUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -15277,7 +16403,6 @@ func (s *RuleUpdate) SetPredicate(v *Predicate) *RuleUpdate {
 // complex type that appears as SampledRequests in the response syntax. SampledHTTPRequests
 // contains one SampledHTTPRequest object for each web request that is returned
 // by GetSampledRequests.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SampledHTTPRequest
 type SampledHTTPRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -15297,7 +16422,7 @@ type SampledHTTPRequest struct {
 
 	// The time at which AWS WAF received the request from your AWS resource, in
 	// Unix time format (in seconds).
-	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	Timestamp *time.Time `type:"timestamp"`
 
 	// A value that indicates how one result in the response relates proportionally
 	// to other results in the response. A result that has a weight of 2 represents
@@ -15352,7 +16477,6 @@ func (s *SampledHTTPRequest) SetWeight(v int64) *SampledHTTPRequest {
 // uses the Size, ComparisonOperator, and FieldToMatch to build an expression
 // in the form of "SizeComparisonOperator size in bytes of FieldToMatch". If
 // that expression is true, the SizeConstraint is considered to match.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SizeConstraint
 type SizeConstraint struct {
 	_ struct{} `type:"structure"`
 
@@ -15400,6 +16524,8 @@ type SizeConstraint struct {
 	// use in web requests in an effort to bypass AWS WAF. If you specify a transformation,
 	// AWS WAF performs the transformation on FieldToMatch before inspecting a request
 	// for a match.
+	//
+	// You can only specify a single type of TextTransformation.
 	//
 	// Note that if you choose BODY for the value of Type, you must choose NONE
 	// for TextTransformation because CloudFront forwards only the first 8192 bytes
@@ -15540,7 +16666,6 @@ func (s *SizeConstraint) SetTextTransformation(v string) *SizeConstraint {
 // of web requests that you want AWS WAF to inspect the size of. If a SizeConstraintSet
 // contains more than one SizeConstraint object, a request only needs to match
 // one constraint to be considered a match.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SizeConstraintSet
 type SizeConstraintSet struct {
 	_ struct{} `type:"structure"`
 
@@ -15593,7 +16718,6 @@ func (s *SizeConstraintSet) SetSizeConstraints(v []*SizeConstraint) *SizeConstra
 }
 
 // The Id and Name of a SizeConstraintSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SizeConstraintSetSummary
 type SizeConstraintSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -15639,7 +16763,6 @@ func (s *SizeConstraintSetSummary) SetSizeConstraintSetId(v string) *SizeConstra
 // Specifies the part of a web request that you want to inspect the size of
 // and indicates whether you want to add the specification to a SizeConstraintSet
 // or delete it from a SizeConstraintSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SizeConstraintSetUpdate
 type SizeConstraintSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -15707,7 +16830,6 @@ func (s *SizeConstraintSetUpdate) SetSizeConstraint(v *SizeConstraint) *SizeCons
 // of the header. If a SqlInjectionMatchSet contains more than one SqlInjectionMatchTuple
 // object, a request needs to include snippets of SQL code in only one of the
 // specified parts of the request to be considered a match.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SqlInjectionMatchSet
 type SqlInjectionMatchSet struct {
 	_ struct{} `type:"structure"`
 
@@ -15761,7 +16883,6 @@ func (s *SqlInjectionMatchSet) SetSqlInjectionMatchTuples(v []*SqlInjectionMatch
 }
 
 // The Id and Name of a SqlInjectionMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SqlInjectionMatchSetSummary
 type SqlInjectionMatchSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -15807,7 +16928,6 @@ func (s *SqlInjectionMatchSetSummary) SetSqlInjectionMatchSetId(v string) *SqlIn
 // Specifies the part of a web request that you want to inspect for snippets
 // of malicious SQL code and indicates whether you want to add the specification
 // to a SqlInjectionMatchSet or delete it from a SqlInjectionMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SqlInjectionMatchSetUpdate
 type SqlInjectionMatchSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -15871,7 +16991,6 @@ func (s *SqlInjectionMatchSetUpdate) SetSqlInjectionMatchTuple(v *SqlInjectionMa
 // Specifies the part of a web request that you want AWS WAF to inspect for
 // snippets of malicious SQL code and, if you want AWS WAF to inspect a header,
 // the name of the header.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SqlInjectionMatchTuple
 type SqlInjectionMatchTuple struct {
 	_ struct{} `type:"structure"`
 
@@ -15885,11 +17004,13 @@ type SqlInjectionMatchTuple struct {
 	// AWS WAF performs the transformation on FieldToMatch before inspecting a request
 	// for a match.
 	//
+	// You can only specify a single type of TextTransformation.
+	//
 	// CMD_LINE
 	//
-	// When you're concerned that attackers are injecting an operating system commandline
-	// command and using unusual formatting to disguise some or all of the command,
-	// use this option to perform the following transformations:
+	// When you're concerned that attackers are injecting an operating system command
+	// line command and using unusual formatting to disguise some or all of the
+	// command, use this option to perform the following transformations:
 	//
 	//    * Delete the following characters: \ " ' ^
 	//
@@ -15999,7 +17120,6 @@ func (s *SqlInjectionMatchTuple) SetTextTransformation(v string) *SqlInjectionMa
 }
 
 // A summary of the rule groups you are subscribed to.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/SubscribedRuleGroupSummary
 type SubscribedRuleGroupSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -16061,7 +17181,6 @@ func (s *SubscribedRuleGroupSummary) SetRuleGroupId(v string) *SubscribedRuleGro
 // If your resource receives more than 5,000 requests during that period, AWS
 // WAF stops sampling after the 5,000th request. In that case, EndTime is the
 // time that AWS WAF received the 5,000th request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/TimeWindow
 type TimeWindow struct {
 	_ struct{} `type:"structure"`
 
@@ -16071,7 +17190,7 @@ type TimeWindow struct {
 	// time range in the previous three hours.
 	//
 	// EndTime is a required field
-	EndTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	EndTime *time.Time `type:"timestamp" required:"true"`
 
 	// The beginning of the time range from which you want GetSampledRequests to
 	// return a sample of the requests that your AWS resource received. Specify
@@ -16079,7 +17198,7 @@ type TimeWindow struct {
 	// any time range in the previous three hours.
 	//
 	// StartTime is a required field
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartTime *time.Time `type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -16120,7 +17239,6 @@ func (s *TimeWindow) SetStartTime(v time.Time) *TimeWindow {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateByteMatchSetRequest
 type UpdateByteMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16215,7 +17333,6 @@ func (s *UpdateByteMatchSetInput) SetUpdates(v []*ByteMatchSetUpdate) *UpdateByt
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateByteMatchSetResponse
 type UpdateByteMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16241,7 +17358,6 @@ func (s *UpdateByteMatchSetOutput) SetChangeToken(v string) *UpdateByteMatchSetO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateGeoMatchSetRequest
 type UpdateGeoMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16336,7 +17452,6 @@ func (s *UpdateGeoMatchSetInput) SetUpdates(v []*GeoMatchSetUpdate) *UpdateGeoMa
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateGeoMatchSetResponse
 type UpdateGeoMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16362,7 +17477,6 @@ func (s *UpdateGeoMatchSetOutput) SetChangeToken(v string) *UpdateGeoMatchSetOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateIPSetRequest
 type UpdateIPSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16383,6 +17497,8 @@ type UpdateIPSetInput struct {
 	//    * IPSetUpdate: Contains Action and IPSetDescriptor
 	//
 	//    * IPSetDescriptor: Contains Type and Value
+	//
+	// You can insert a maximum of 1000 addresses in a single request.
 	//
 	// Updates is a required field
 	Updates []*IPSetUpdate `min:"1" type:"list" required:"true"`
@@ -16454,7 +17570,6 @@ func (s *UpdateIPSetInput) SetUpdates(v []*IPSetUpdate) *UpdateIPSetInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateIPSetResponse
 type UpdateIPSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16480,7 +17595,6 @@ func (s *UpdateIPSetOutput) SetChangeToken(v string) *UpdateIPSetOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRateBasedRuleRequest
 type UpdateRateBasedRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16586,7 +17700,6 @@ func (s *UpdateRateBasedRuleInput) SetUpdates(v []*RuleUpdate) *UpdateRateBasedR
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRateBasedRuleResponse
 type UpdateRateBasedRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16612,7 +17725,6 @@ func (s *UpdateRateBasedRuleOutput) SetChangeToken(v string) *UpdateRateBasedRul
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRegexMatchSetRequest
 type UpdateRegexMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16700,7 +17812,6 @@ func (s *UpdateRegexMatchSetInput) SetUpdates(v []*RegexMatchSetUpdate) *UpdateR
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRegexMatchSetResponse
 type UpdateRegexMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16726,7 +17837,6 @@ func (s *UpdateRegexMatchSetOutput) SetChangeToken(v string) *UpdateRegexMatchSe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRegexPatternSetRequest
 type UpdateRegexPatternSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16814,7 +17924,6 @@ func (s *UpdateRegexPatternSetInput) SetUpdates(v []*RegexPatternSetUpdate) *Upd
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRegexPatternSetResponse
 type UpdateRegexPatternSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16840,7 +17949,6 @@ func (s *UpdateRegexPatternSetOutput) SetChangeToken(v string) *UpdateRegexPatte
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleGroupRequest
 type UpdateRuleGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16860,9 +17968,9 @@ type UpdateRuleGroupInput struct {
 	//
 	// You can only insert REGULAR rules into a rule group.
 	//
-	// The Action data type within ActivatedRule is used only when submitting an
-	// UpdateWebACL request. ActivatedRule|Action is not applicable and therefore
-	// not available for UpdateRuleGroup.
+	// ActivatedRule|OverrideAction applies only when updating or adding a RuleGroup
+	// to a WebACL. In this case you do not use ActivatedRule|Action. For all other
+	// update requests, ActivatedRule|Action is used instead of ActivatedRule|OverrideAction.
 	//
 	// Updates is a required field
 	Updates []*RuleGroupUpdate `min:"1" type:"list" required:"true"`
@@ -16934,7 +18042,6 @@ func (s *UpdateRuleGroupInput) SetUpdates(v []*RuleGroupUpdate) *UpdateRuleGroup
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleGroupResponse
 type UpdateRuleGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16960,7 +18067,6 @@ func (s *UpdateRuleGroupOutput) SetChangeToken(v string) *UpdateRuleGroupOutput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleRequest
 type UpdateRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17051,7 +18157,6 @@ func (s *UpdateRuleInput) SetUpdates(v []*RuleUpdate) *UpdateRuleInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateRuleResponse
 type UpdateRuleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17077,7 +18182,6 @@ func (s *UpdateRuleOutput) SetChangeToken(v string) *UpdateRuleOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateSizeConstraintSetRequest
 type UpdateSizeConstraintSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17173,7 +18277,6 @@ func (s *UpdateSizeConstraintSetInput) SetUpdates(v []*SizeConstraintSetUpdate) 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateSizeConstraintSetResponse
 type UpdateSizeConstraintSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17200,7 +18303,6 @@ func (s *UpdateSizeConstraintSetOutput) SetChangeToken(v string) *UpdateSizeCons
 }
 
 // A request to update a SqlInjectionMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateSqlInjectionMatchSetRequest
 type UpdateSqlInjectionMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17296,7 +18398,6 @@ func (s *UpdateSqlInjectionMatchSetInput) SetUpdates(v []*SqlInjectionMatchSetUp
 }
 
 // The response to an UpdateSqlInjectionMatchSets request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateSqlInjectionMatchSetResponse
 type UpdateSqlInjectionMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17322,7 +18423,6 @@ func (s *UpdateSqlInjectionMatchSetOutput) SetChangeToken(v string) *UpdateSqlIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateWebACLRequest
 type UpdateWebACLInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17343,10 +18443,11 @@ type UpdateWebACLInput struct {
 	//
 	//    * WebACLUpdate: Contains Action and ActivatedRule
 	//
-	//    * ActivatedRule: Contains Action, Priority, RuleId, and Type. The OverrideAction
-	//    data type within ActivatedRule is used only when submitting an UpdateRuleGroup
-	//    request. ActivatedRule|OverrideAction is not applicable and therefore
-	//    not available for UpdateWebACL.
+	//    * ActivatedRule: Contains Action, OverrideAction, Priority, RuleId, and
+	//    Type. ActivatedRule|OverrideAction applies only when updating or adding
+	//    a RuleGroup to a WebACL. In this case you do not use ActivatedRule|Action.
+	//    For all other update requests, ActivatedRule|Action is used instead of
+	//    ActivatedRule|OverrideAction.
 	//
 	//    * WafAction: Contains Type
 	Updates []*WebACLUpdate `type:"list"`
@@ -17429,7 +18530,6 @@ func (s *UpdateWebACLInput) SetWebACLId(v string) *UpdateWebACLInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateWebACLResponse
 type UpdateWebACLOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17456,7 +18556,6 @@ func (s *UpdateWebACLOutput) SetChangeToken(v string) *UpdateWebACLOutput {
 }
 
 // A request to update an XssMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateXssMatchSetRequest
 type UpdateXssMatchSetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17551,7 +18650,6 @@ func (s *UpdateXssMatchSetInput) SetXssMatchSetId(v string) *UpdateXssMatchSetIn
 }
 
 // The response to an UpdateXssMatchSets request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/UpdateXssMatchSetResponse
 type UpdateXssMatchSetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -17582,7 +18680,6 @@ func (s *UpdateXssMatchSetOutput) SetChangeToken(v string) *UpdateXssMatchSetOut
 // the conditions in a rule. For the default action in a WebACL, specifies the
 // action that you want AWS WAF to take when a web request doesn't match all
 // of the conditions in any of the rules in a WebACL.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/WafAction
 type WafAction struct {
 	_ struct{} `type:"structure"`
 
@@ -17632,7 +18729,6 @@ func (s *WafAction) SetType(v string) *WafAction {
 }
 
 // The action to take if any rule within the RuleGroup matches a request.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/WafOverrideAction
 type WafOverrideAction struct {
 	_ struct{} `type:"structure"`
 
@@ -17680,7 +18776,6 @@ func (s *WafOverrideAction) SetType(v string) *WafOverrideAction {
 // the requests that you want AWS WAF to filter. If you add more than one Rule
 // to a WebACL, a request needs to match only one of the specifications to be
 // allowed, blocked, or counted. For more information, see UpdateWebACL.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/WebACL
 type WebACL struct {
 	_ struct{} `type:"structure"`
 
@@ -17756,7 +18851,6 @@ func (s *WebACL) SetWebACLId(v string) *WebACL {
 }
 
 // Contains the identifier and the name or description of the WebACL.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/WebACLSummary
 type WebACLSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -17799,7 +18893,6 @@ func (s *WebACLSummary) SetWebACLId(v string) *WebACLSummary {
 }
 
 // Specifies whether to insert a Rule into or delete a Rule from a WebACL.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/WebACLUpdate
 type WebACLUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -17866,7 +18959,6 @@ func (s *WebACLUpdate) SetActivatedRule(v *ActivatedRule) *WebACLUpdate {
 // If a XssMatchSet contains more than one XssMatchTuple object, a request needs
 // to include cross-site scripting attacks in only one of the specified parts
 // of the request to be considered a match.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/XssMatchSet
 type XssMatchSet struct {
 	_ struct{} `type:"structure"`
 
@@ -17919,7 +19011,6 @@ func (s *XssMatchSet) SetXssMatchTuples(v []*XssMatchTuple) *XssMatchSet {
 }
 
 // The Id and Name of an XssMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/XssMatchSetSummary
 type XssMatchSetSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -17964,7 +19055,6 @@ func (s *XssMatchSetSummary) SetXssMatchSetId(v string) *XssMatchSetSummary {
 // Specifies the part of a web request that you want to inspect for cross-site
 // scripting attacks and indicates whether you want to add the specification
 // to an XssMatchSet or delete it from an XssMatchSet.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/XssMatchSetUpdate
 type XssMatchSetUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -18028,7 +19118,6 @@ func (s *XssMatchSetUpdate) SetXssMatchTuple(v *XssMatchTuple) *XssMatchSetUpdat
 // Specifies the part of a web request that you want AWS WAF to inspect for
 // cross-site scripting attacks and, if you want AWS WAF to inspect a header,
 // the name of the header.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/waf-2015-08-24/XssMatchTuple
 type XssMatchTuple struct {
 	_ struct{} `type:"structure"`
 
@@ -18042,11 +19131,13 @@ type XssMatchTuple struct {
 	// AWS WAF performs the transformation on FieldToMatch before inspecting a request
 	// for a match.
 	//
+	// You can only specify a single type of TextTransformation.
+	//
 	// CMD_LINE
 	//
-	// When you're concerned that attackers are injecting an operating system commandline
-	// command and using unusual formatting to disguise some or all of the command,
-	// use this option to perform the following transformations:
+	// When you're concerned that attackers are injecting an operating system command
+	// line command and using unusual formatting to disguise some or all of the
+	// command, use this option to perform the following transformations:
 	//
 	//    * Delete the following characters: \ " ' ^
 	//
@@ -18971,6 +20062,12 @@ const (
 
 	// MatchFieldTypeBody is a MatchFieldType enum value
 	MatchFieldTypeBody = "BODY"
+
+	// MatchFieldTypeSingleQueryArg is a MatchFieldType enum value
+	MatchFieldTypeSingleQueryArg = "SINGLE_QUERY_ARG"
+
+	// MatchFieldTypeAllQueryArgs is a MatchFieldType enum value
+	MatchFieldTypeAllQueryArgs = "ALL_QUERY_ARGS"
 )
 
 const (

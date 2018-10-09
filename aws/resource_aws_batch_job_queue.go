@@ -73,7 +73,7 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for JobQueue state to be \"VALID\": %s", err)
+		return fmt.Errorf("Error waiting for JobQueue state to be \"VALID\": %s", err)
 	}
 
 	arn := *out.JobQueueArn
@@ -91,7 +91,7 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 	if jq == nil {
-		return fmt.Errorf("[WARN] Error reading JobQueue: \"%s\"", err)
+		return fmt.Errorf("Error reading JobQueue: \"%s\"", err)
 	}
 	d.Set("arn", jq.JobQueueArn)
 	d.Set("compute_environments", jq.ComputeEnvironmentOrder)
@@ -133,53 +133,20 @@ func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsBatchJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
-	sn := d.Get("name").(string)
-	_, err := conn.UpdateJobQueue(&batch.UpdateJobQueueInput{
-		JobQueue: aws.String(sn),
-		State:    aws.String(batch.JQStateDisabled),
-	})
+	name := d.Get("name").(string)
+
+	log.Printf("[DEBUG] Disabling Batch Job Queue %s", name)
+	err := disableBatchJobQueue(name, 10*time.Minute, conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
 	}
 
-	// Wait until the Job Queue is disabled before deleting
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{batch.JQStatusUpdating},
-		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, sn),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
+	log.Printf("[DEBUG] Deleting Batch Job Queue %s", name)
+	err = deleteBatchJobQueue(name, 10*time.Minute, conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Batch Job Queue (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] Trying to delete Job Queue %s", sn)
-	_, err = conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
-		JobQueue: aws.String(sn),
-	})
-	if err != nil {
-		return err
-	}
-
-	deleteStateConf := &resource.StateChangeConf{
-		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
-		Target:     []string{batch.JQStatusDeleted},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, sn),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = deleteStateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Job Queue (%s) to be deleted: %s",
-			sn, err)
-	}
-	d.SetId("")
 	return nil
 }
 
@@ -191,6 +158,48 @@ func createComputeEnvironmentOrder(order []interface{}) (envs []*batch.ComputeEn
 		})
 	}
 	return
+}
+
+func deleteBatchJobQueue(jobQueue string, timeout time.Duration, conn *batch.Batch) error {
+	_, err := conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
+		JobQueue: aws.String(jobQueue),
+	})
+	if err != nil {
+		return err
+	}
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
+		Target:     []string{batch.JQStatusDeleted},
+		Refresh:    batchJobQueueRefreshStatusFunc(conn, jobQueue),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err = stateChangeConf.WaitForState()
+	return err
+}
+
+func disableBatchJobQueue(jobQueue string, timeout time.Duration, conn *batch.Batch) error {
+	_, err := conn.UpdateJobQueue(&batch.UpdateJobQueueInput{
+		JobQueue: aws.String(jobQueue),
+		State:    aws.String(batch.JQStateDisabled),
+	})
+	if err != nil {
+		return err
+	}
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending:    []string{batch.JQStatusUpdating},
+		Target:     []string{batch.JQStatusValid},
+		Refresh:    batchJobQueueRefreshStatusFunc(conn, jobQueue),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err = stateChangeConf.WaitForState()
+	return err
 }
 
 func getJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {

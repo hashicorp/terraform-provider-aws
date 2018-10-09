@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsAutoscalingAttachment_elb(t *testing.T) {
+func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
@@ -53,7 +53,7 @@ func TestAccAwsAutoscalingAttachment_elb(t *testing.T) {
 	})
 }
 
-func TestAccAwsAutoscalingAttachment_albTargetGroup(t *testing.T) {
+func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
@@ -136,7 +136,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 		})
 
 		if err != nil {
-			return fmt.Errorf("Recieved an error when attempting to load %s:  %s", asg, err)
+			return fmt.Errorf("Received an error when attempting to load %s:  %s", asg, err)
 		}
 
 		if targetGroupCount != len(actual.AutoScalingGroups[0].TargetGroupARNs) {
@@ -234,7 +234,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags {
-    TestName = "TestAccAWSLBTargetGroup_basic"
+    Name = "terraform-testacc-autoscaling-attachment-alb"
   }
 }
 `, rInt, rInt, rInt, rInt)

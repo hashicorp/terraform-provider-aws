@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -161,10 +160,10 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isTargetGroupNotFound(err) || isInvalidTarget(err) {
+		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || isAWSErr(err, elbv2.ErrCodeInvalidTargetException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking LB destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)
 		}
 	}
 
@@ -177,11 +176,13 @@ resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = "${aws_lb_target_group.test.arn}"
   target_id = "${aws_instance.test.id}"
 }
+
 resource "aws_instance" "test" {
   ami = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
@@ -203,14 +204,19 @@ resource "aws_lb_target_group" "test" {
     matcher = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-without-port"
+  }
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfigWithoutPort"
+		Name = "terraform-testacc-lb-target-group-attachment-without-port"
 	}
 }`, targetGroupName)
 }
@@ -222,11 +228,13 @@ resource "aws_lb_target_group_attachment" "test" {
   target_id = "${aws_instance.test.id}"
   port = 80
 }
+
 resource "aws_instance" "test" {
   ami = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
@@ -248,14 +256,19 @@ resource "aws_lb_target_group" "test" {
     matcher = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-basic"
+  }
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+		Name = "terraform-testacc-lb-target-group-attachment-basic"
 	}
 }`, targetGroupName)
 }
@@ -267,11 +280,13 @@ resource "aws_alb_target_group_attachment" "test" {
   target_id = "${aws_instance.test.id}"
   port = 80
 }
+
 resource "aws_instance" "test" {
   ami = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
@@ -293,14 +308,19 @@ resource "aws_alb_target_group" "test" {
     matcher = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-bc"
+  }
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSLBTargetGroupAttachmentConfig_basic"
+		Name = "terraform-testacc-lb-target-group-attachment-bc"
 	}
 }`, targetGroupName)
 }
@@ -342,11 +362,14 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  tags {
+    Name = "tf-acc-lb-target-group-attachment-with-ip-address"
+  }
 }
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSALBTargetGroupAttachmentConfigWithoutPort"
+		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
 	}
 }`, targetGroupName)
 }

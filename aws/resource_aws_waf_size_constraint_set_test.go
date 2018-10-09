@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 )
 
@@ -23,7 +22,7 @@ func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafSizeConstraintSetExists("aws_waf_size_constraint_set.size_constraint_set", &v),
@@ -162,7 +161,7 @@ func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
 }
 
 func TestAccAWSWafSizeConstraintSet_noConstraints(t *testing.T) {
-	var ipset waf.SizeConstraintSet
+	var contraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -173,7 +172,7 @@ func TestAccAWSWafSizeConstraintSet_noConstraints(t *testing.T) {
 			{
 				Config: testAccAWSWafSizeConstraintSetConfig_noConstraints(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafSizeConstraintSetExists("aws_waf_size_constraint_set.size_constraint_set", &ipset),
+					testAccCheckAWSWafSizeConstraintSetExists("aws_waf_size_constraint_set.size_constraint_set", &contraints),
 					resource.TestCheckResourceAttr(
 						"aws_waf_size_constraint_set.size_constraint_set", "name", setName),
 					resource.TestCheckResourceAttr(
@@ -210,7 +209,7 @@ func testAccCheckAWSWafSizeConstraintSetDisappears(v *waf.SizeConstraintSet) res
 			return conn.UpdateSizeConstraintSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating SizeConstraintSet: {{err}}", err)
+			return fmt.Errorf("Error updating SizeConstraintSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -258,7 +257,7 @@ func testAccCheckAWSWafSizeConstraintSetExists(n string, v *waf.SizeConstraintSe
 
 func testAccCheckAWSWafSizeConstraintSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_waf_byte_match_set" {
+		if rs.Type != "aws_waf_size_contraint_set" {
 			continue
 		}
 

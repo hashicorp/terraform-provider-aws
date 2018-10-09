@@ -70,6 +70,10 @@ func testSweepKmsKeys(region string) error {
 		return !lastPage
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing KMS keys: %s", err)
 	}
 
@@ -83,6 +87,29 @@ func kmsTagHasPrefix(tags []*kms.Tag, key, prefix string) bool {
 		}
 	}
 	return false
+}
+
+func TestAccAWSKmsKey_importBasic(t *testing.T) {
+	resourceName := "aws_kms_key.foo"
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsKey(rName),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+			},
+		},
+	})
 }
 
 func TestAccAWSKmsKey_basic(t *testing.T) {

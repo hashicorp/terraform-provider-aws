@@ -2,6 +2,8 @@
 layout: "aws"
 page_title: "AWS: aws_elasticache_parameter_group"
 sidebar_current: "docs-aws-resource-elasticache-parameter-group"
+description: |-
+  Provides an ElastiCache parameter group resource.
 ---
 
 # aws_elasticache_parameter_group
@@ -43,7 +45,7 @@ Parameter blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ElastiCache parameter group name.
 

@@ -15,6 +15,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEFSMountTarget_importBasic(t *testing.T) {
+	resourceName := "aws_efs_mount_target.alpha"
+
+	ct := fmt.Sprintf("createtoken-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsMountTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSMountTargetConfig(ct),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 	var mount efs.MountTargetDescription
 	ct := fmt.Sprintf("createtoken-%d", acctest.RandInt())
@@ -24,7 +46,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -38,7 +60,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 					),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfigModified(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -75,7 +97,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(
@@ -235,7 +257,7 @@ resource "aws_efs_mount_target" "alpha" {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSEFSMountTargetConfig"
+		Name = "terraform-testacc-efs-mount-target"
 	}
 }
 
@@ -243,6 +265,9 @@ resource "aws_subnet" "alpha" {
 	vpc_id = "${aws_vpc.foo.id}"
 	availability_zone = "us-west-2a"
 	cidr_block = "10.0.1.0/24"
+	tags {
+		Name = "tf-acc-efs-mount-target-alpha"
+	}
 }
 `, ct)
 }
@@ -266,7 +291,7 @@ resource "aws_efs_mount_target" "beta" {
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	tags {
-		Name = "testAccAWSEFSMountTargetConfigModified"
+		Name = "terraform-testacc-efs-mount-target-modified"
 	}
 }
 
@@ -274,12 +299,18 @@ resource "aws_subnet" "alpha" {
 	vpc_id = "${aws_vpc.foo.id}"
 	availability_zone = "us-west-2a"
 	cidr_block = "10.0.1.0/24"
+	tags {
+		Name = "tf-acc-efs-mount-target-alpha"
+	}
 }
 
 resource "aws_subnet" "beta" {
 	vpc_id = "${aws_vpc.foo.id}"
 	availability_zone = "us-west-2b"
 	cidr_block = "10.0.2.0/24"
+	tags {
+		Name = "tf-acc-efs-mount-target-beta"
+	}
 }
 `, ct)
 }

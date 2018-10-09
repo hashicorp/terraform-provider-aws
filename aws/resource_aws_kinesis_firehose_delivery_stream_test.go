@@ -15,6 +15,48 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
+	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
+	rInt := acctest.RandInt()
+
+	funcName := fmt.Sprintf("aws_kinesis_firehose_ds_import_%d", rInt)
+	policyName := fmt.Sprintf("tf_acc_policy_%d", rInt)
+	roleName := fmt.Sprintf("tf_acc_role_%d", rInt)
+
+	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
+			rInt, rInt, rInt, rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Ensure we properly error on malformed import IDs
+			{
+				ResourceName:  resName,
+				ImportState:   true,
+				ImportStateId: "just-a-name",
+				ExpectError:   regexp.MustCompile(`Expected ID in format`),
+			},
+			{
+				ResourceName:  resName,
+				ImportState:   true,
+				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash",
+				ExpectError:   regexp.MustCompile(`Expected ID in format`),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -30,7 +72,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -52,7 +94,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -72,7 +114,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -104,7 +146,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 
@@ -112,7 +154,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, updatedS3DestinationConfig, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, updatedS3DestinationConfig, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -140,7 +182,273 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Enabled(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_Enabled(rName, rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_Enabled(rName, rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Deserializer_Update(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_OrcSerDe_Empty(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OrcSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Serializer_Update(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OrcSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test_stream"
+
+	var stream firehose.DeliveryStreamDescription
+	ri := acctest.RandInt()
+	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3KmsKeyArn,
+			ri, ri, ri, ri, ri)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestMatchResourceAttr(resourceName, "extended_s3_configuration.0.kms_key_arn", regexp.MustCompile(`^arn:[^:]+:kms:[^:]+:[^:]+:key/.+$`)),
 				),
 			},
 		},
@@ -219,10 +527,69 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
-				&firehose.Processor{
+				{
 					Type: aws.String("Lambda"),
 					Parameters: []*firehose.ProcessorParameter{
-						&firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+		S3BackupMode: aws.String("Enabled"),
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+				),
+			},
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, updatedExtendedS3DestinationConfig, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+
+	ri := acctest.RandInt()
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_RedshiftBasic,
+		ri, ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_RedshiftUpdates,
+			ri, ri, ri, ri, ri)
+
+	updatedRedshiftConfig := &firehose.RedshiftDestinationDescription{
+		CopyCommand: &firehose.CopyCommand{
+			CopyOptions: aws.String("GZIP"),
+		},
+		S3BackupMode: aws.String("Enabled"),
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
 							ParameterName:  aws.String("LambdaArn"),
 							ParameterValue: aws.String("valueNotTested"),
 						},
@@ -235,40 +602,61 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
+
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, updatedExtendedS3DestinationConfig, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T) {
+func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	ri := acctest.RandInt()
-	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_RedshiftBasic,
-		ri, ri, ri, ri, ri)
-	postConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_RedshiftUpdates,
-		ri, ri, ri, ri, ri)
 
-	updatedRedshiftConfig := &firehose.RedshiftDestinationDescription{
-		CopyCommand: &firehose.CopyCommand{
-			CopyOptions: aws.String("GZIP"),
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+
+	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic,
+		ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates,
+			ri, ri, ri, ri)
+
+	updatedSplunkConfig := &firehose.SplunkDestinationDescription{
+		HECEndpointType:                   aws.String("Event"),
+		HECAcknowledgmentTimeoutInSeconds: aws.Int64(600),
+		S3BackupMode:                      aws.String("FailedEventsOnly"),
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
 		},
-		S3BackupMode: aws.String("Enabled"),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -280,7 +668,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 
@@ -288,7 +676,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, updatedSplunkConfig),
 				),
 			},
 		},
@@ -299,14 +687,33 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 	var stream firehose.DeliveryStreamDescription
 
 	ri := acctest.RandInt()
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic,
-		ri, ri, ri, ri, ri, ri)
-	postConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
-		ri, ri, ri, ri, ri, ri)
+		ri, ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
+			ri, ri, ri, ri, ri)
 
 	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
 			IntervalInSeconds: aws.Int64(500),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -319,14 +726,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream_es", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream_es", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
 				),
 			},
 		},
@@ -347,7 +754,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *t
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -381,7 +788,7 @@ func testAccCheckKinesisFirehoseDeliveryStreamExists(n string, stream *firehose.
 	}
 }
 
-func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}) resource.TestCheckFunc {
+func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
@@ -420,11 +827,14 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 				// destination. For simplicity, our test only have a single S3 or
 				// Redshift destination, so at this time it's safe to match on the first
 				// one
-				var match, processingConfigMatch bool
+				var match, processingConfigMatch, matchS3BackupMode bool
 				for _, d := range stream.Destinations {
 					if d.ExtendedS3DestinationDescription != nil {
 						if *d.ExtendedS3DestinationDescription.BufferingHints.SizeInMBs == *es.BufferingHints.SizeInMBs {
 							match = true
+						}
+						if *d.ExtendedS3DestinationDescription.S3BackupMode == *es.S3BackupMode {
+							matchS3BackupMode = true
 						}
 
 						processingConfigMatch = len(es.ProcessingConfiguration.Processors) == len(d.ExtendedS3DestinationDescription.ProcessingConfiguration.Processors)
@@ -436,13 +846,16 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 				if !processingConfigMatch {
 					return fmt.Errorf("Mismatch extended s3 ProcessingConfiguration.Processors count, expected: %s, got: %s", es, stream.Destinations)
 				}
+				if !matchS3BackupMode {
+					return fmt.Errorf("Mismatch extended s3 S3BackupMode, expected: %s, got: %s", es, stream.Destinations)
+				}
 			}
 
 			if redshiftConfig != nil {
 				r := redshiftConfig.(*firehose.RedshiftDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching Redshift
 				// destination
-				var matchCopyOptions, matchS3BackupMode bool
+				var matchCopyOptions, matchS3BackupMode, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.RedshiftDestinationDescription != nil {
 						if *d.RedshiftDestinationDescription.CopyCommand.CopyOptions == *r.CopyCommand.CopyOptions {
@@ -451,24 +864,65 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 						if *d.RedshiftDestinationDescription.S3BackupMode == *r.S3BackupMode {
 							matchS3BackupMode = true
 						}
+						if r.ProcessingConfiguration != nil && d.RedshiftDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(r.ProcessingConfiguration.Processors) == len(d.RedshiftDestinationDescription.ProcessingConfiguration.Processors)
+						}
 					}
 				}
 				if !matchCopyOptions || !matchS3BackupMode {
 					return fmt.Errorf("Mismatch Redshift CopyOptions or S3BackupMode, expected: %s, got: %s", r, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch Redshift ProcessingConfiguration.Processors count, expected: %s, got: %s", r, stream.Destinations)
 				}
 			}
 
 			if elasticsearchConfig != nil {
 				es := elasticsearchConfig.(*firehose.ElasticsearchDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching Elasticsearch destination
-				var match bool
+				var match, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.ElasticsearchDestinationDescription != nil {
 						match = true
+						if es.ProcessingConfiguration != nil && d.ElasticsearchDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(es.ProcessingConfiguration.Processors) == len(d.ElasticsearchDestinationDescription.ProcessingConfiguration.Processors)
+						}
 					}
 				}
 				if !match {
 					return fmt.Errorf("Mismatch Elasticsearch Buffering Interval, expected: %s, got: %s", es, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch Elasticsearch ProcessingConfiguration.Processors count, expected: %s, got: %s", es, stream.Destinations)
+				}
+			}
+
+			if splunkConfig != nil {
+				s := splunkConfig.(*firehose.SplunkDestinationDescription)
+				// Range over the Stream Destinations, looking for the matching Splunk destination
+				var matchHECEndpointType, matchHECAcknowledgmentTimeoutInSeconds, matchS3BackupMode, processingConfigMatch bool
+				for _, d := range stream.Destinations {
+					if d.SplunkDestinationDescription != nil {
+
+						if *d.SplunkDestinationDescription.HECEndpointType == *s.HECEndpointType {
+							matchHECEndpointType = true
+						}
+						if *d.SplunkDestinationDescription.HECAcknowledgmentTimeoutInSeconds == *s.HECAcknowledgmentTimeoutInSeconds {
+							matchHECAcknowledgmentTimeoutInSeconds = true
+						}
+						if *d.SplunkDestinationDescription.S3BackupMode == *s.S3BackupMode {
+							matchS3BackupMode = true
+						}
+						if s.ProcessingConfiguration != nil && d.SplunkDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.SplunkDestinationDescription.ProcessingConfiguration.Processors)
+						}
+					}
+				}
+				if !matchHECEndpointType || !matchHECAcknowledgmentTimeoutInSeconds || !matchS3BackupMode {
+					return fmt.Errorf("Mismatch Splunk HECEndpointType or HECAcknowledgmentTimeoutInSeconds or S3BackupMode, expected: %s, got: %s", s, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch extended splunk ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
 				}
 			}
 		}
@@ -647,6 +1101,16 @@ resource "aws_iam_role_policy" "firehose" {
       "Resource": [
         "arn:aws:s3:::${aws_s3_bucket.bucket.id}",
         "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*"
+      ]
+    },
+    {
+      "Sid": "GlueAccess",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTableVersions"
+      ],
+      "Resource": [
+        "*"
       ]
     }
   ]
@@ -865,6 +1329,306 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
     		}]
     	}]
+    }],
+    s3_backup_mode = "Disabled"
+  }
+}
+`
+
+func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_Enabled(rName string, rInt int, enabled bool) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%s"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = "%s"
+
+  storage_descriptor {
+    columns {
+      name = "test"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = "%s"
+
+  extended_s3_configuration {
+    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
+    buffer_size = 128
+    role_arn    = "${aws_iam_role.firehose.arn}"
+
+    data_format_conversion_configuration {
+      enabled = %t
+
+      input_format_configuration {
+        deserializer {
+          hive_json_ser_de {} # we have to pick one
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          orc_ser_de {} # we have to pick one
+        }
+      }
+
+      schema_configuration {
+        database_name = "${aws_glue_catalog_table.test.database_name}"
+        role_arn      = "${aws_iam_role.firehose.arn}"
+        table_name    = "${aws_glue_catalog_table.test.name}"
+      }
+    }
+  }
+
+  depends_on = ["aws_iam_role_policy.firehose"]
+}
+`, rName, rName, rName, enabled)
+}
+
+func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%s"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = "%s"
+
+  storage_descriptor {
+    columns {
+      name = "test"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = "%s"
+
+  extended_s3_configuration {
+    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
+    buffer_size = 128
+    role_arn    = "${aws_iam_role.firehose.arn}"
+
+    data_format_conversion_configuration {
+      input_format_configuration {
+        deserializer {
+          hive_json_ser_de {}
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          orc_ser_de {} # we have to pick one
+        }
+      }
+
+      schema_configuration {
+        database_name = "${aws_glue_catalog_table.test.database_name}"
+        role_arn      = "${aws_iam_role.firehose.arn}"
+        table_name    = "${aws_glue_catalog_table.test.name}"
+      }
+    }
+  }
+
+  depends_on = ["aws_iam_role_policy.firehose"]
+}
+`, rName, rName, rName)
+}
+
+func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%s"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = "%s"
+
+  storage_descriptor {
+    columns {
+      name = "test"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = "%s"
+
+  extended_s3_configuration {
+    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
+    buffer_size = 128
+    role_arn    = "${aws_iam_role.firehose.arn}"
+
+    data_format_conversion_configuration {
+      input_format_configuration {
+        deserializer {
+          open_x_json_ser_de {}
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          orc_ser_de {} # we have to pick one
+        }
+      }
+
+      schema_configuration {
+        database_name = "${aws_glue_catalog_table.test.database_name}"
+        role_arn      = "${aws_iam_role.firehose.arn}"
+        table_name    = "${aws_glue_catalog_table.test.name}"
+      }
+    }
+  }
+
+  depends_on = ["aws_iam_role_policy.firehose"]
+}
+`, rName, rName, rName)
+}
+
+func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OrcSerDe_Empty(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%s"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = "%s"
+
+  storage_descriptor {
+    columns {
+      name = "test"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = "%s"
+
+  extended_s3_configuration {
+    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
+    buffer_size = 128
+    role_arn    = "${aws_iam_role.firehose.arn}"
+
+    data_format_conversion_configuration {
+      input_format_configuration {
+        deserializer {
+          hive_json_ser_de {} # we have to pick one
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          orc_ser_de {}
+        }
+      }
+
+      schema_configuration {
+        database_name = "${aws_glue_catalog_table.test.database_name}"
+        role_arn      = "${aws_iam_role.firehose.arn}"
+        table_name    = "${aws_glue_catalog_table.test.name}"
+      }
+    }
+  }
+
+  depends_on = ["aws_iam_role_policy.firehose"]
+}
+`, rName, rName, rName)
+}
+
+func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%s"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = "%s"
+
+  storage_descriptor {
+    columns {
+      name = "test"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = "%s"
+
+  extended_s3_configuration {
+    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
+    buffer_size = 128
+    role_arn    = "${aws_iam_role.firehose.arn}"
+
+    data_format_conversion_configuration {
+      input_format_configuration {
+        deserializer {
+          hive_json_ser_de {} # we have to pick one
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          parquet_ser_de {}
+        }
+      }
+
+      schema_configuration {
+        database_name = "${aws_glue_catalog_table.test.database_name}"
+        role_arn      = "${aws_iam_role.firehose.arn}"
+        table_name    = "${aws_glue_catalog_table.test.name}"
+      }
+    }
+  }
+
+  depends_on = ["aws_iam_role_policy.firehose"]
+}
+`, rName, rName, rName)
+}
+
+var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3KmsKeyArn = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test %s"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  depends_on = ["aws_iam_role_policy.firehose"]
+  name = "terraform-kinesis-firehose-basictest-%d"
+  destination = "extended_s3"
+  extended_s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    kms_key_arn = "${aws_kms_key.test.arn}"
+    processing_configuration = [{
+    	enabled = "false",
+    	processors = [{
+    		type = "Lambda"
+    		parameters = [{
+    			parameter_name = "LambdaArn"
+    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+    		}]
+    	}]
     }]
   }
 }
@@ -935,6 +1699,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     buffer_size = 10
     buffer_interval = 400
     compression_format = "GZIP"
+    s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      role_arn = "${aws_iam_role.firehose.arn}"
+      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    }
   }
 }
 `
@@ -993,6 +1762,80 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     data_table_name = "test-table"
     copy_options = "GZIP"
     data_table_columns = "test-col"
+    processing_configuration = [{
+      enabled = false,
+      processors = [{
+        type = "Lambda"
+        parameters = [{
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }]
+      }]
+    }]
+  }
+}`
+
+var testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  depends_on = ["aws_iam_role_policy.firehose"]
+  name = "terraform-kinesis-firehose-basicsplunktest-%d"
+  destination = "splunk"
+  s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+  }
+  splunk_configuration {
+    hec_endpoint = "https://input-test.com:443"
+    hec_token = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+  }
+}`
+
+var testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  depends_on = ["aws_iam_role_policy.firehose"]
+  name = "terraform-kinesis-firehose-basicsplunktest-%d"
+  destination = "splunk"
+  s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    buffer_size = 10
+    buffer_interval = 400
+    compression_format = "GZIP"
+  }
+  splunk_configuration {
+    hec_endpoint = "https://input-test.com:443"
+    hec_token = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+    hec_acknowledgment_timeout = 600
+    hec_endpoint_type = "Event"
+    s3_backup_mode = "FailedEventsOnly"
+    processing_configuration = [
+      {
+        enabled = "true"
+        processors = [
+          {
+            type = "Lambda"
+            parameters = [
+              {
+                parameter_name = "LambdaArn"
+                parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+              },
+              {
+                parameter_name = "RoleArn"
+                parameter_value = "${aws_iam_role.firehose.arn}"
+              },
+              {
+                parameter_name = "BufferSizeInMBs"
+                parameter_value = 1
+              },
+              {
+                parameter_name = "BufferIntervalInSeconds"
+                parameter_value = 120
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }`
 
@@ -1002,27 +1845,35 @@ resource "aws_elasticsearch_domain" "test_cluster" {
   cluster_config {
     instance_type = "m3.medium.elasticsearch"
   }
+}
 
-  access_policies = <<CONFIG
+resource "aws_iam_role_policy" "firehose-elasticsearch" {
+  name   = "elasticsearch"
+  role   = "${aws_iam_role.firehose.id}"
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "es:*",
-      "Resource": "arn:aws:es:us-east-1:${data.aws_caller_identity.current.account_id}:domain/es-test-%d/*"
+      "Action": [
+        "es:*"
+      ],
+      "Resource": [
+        "${aws_elasticsearch_domain.test_cluster.arn}",
+        "${aws_elasticsearch_domain.test_cluster.arn}/*"
+      ]
     }
   ]
 }
-CONFIG
-}`
+EOF
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_elasticsearch_domain.test_cluster"]
+  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+
   name = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
   s3_configuration {
@@ -1039,7 +1890,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_elasticsearch_domain.test_cluster"]
+  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+
   name = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
   s3_configuration {
@@ -1052,6 +1904,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
     index_name = "test"
     type_name = "test"
     buffering_interval = 500
+    processing_configuration = [{
+      enabled = "false",
+      processors = [{
+        type = "Lambda"
+        parameters = [{
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }]
+      }]
+    }]
   }
 }`
 

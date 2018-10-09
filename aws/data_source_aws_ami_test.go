@@ -65,7 +65,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "architecture", "x86_64"),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "block_device_mappings.#", "27"),
 					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "description", regexp.MustCompile("^Microsoft Windows Server 2012")),
+					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "description", regexp.MustCompile("^Microsoft Windows Server")),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "hypervisor", "xen"),
 					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "image_id", regexp.MustCompile("^ami-")),
 					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "image_location", regexp.MustCompile("^amazon/")),
@@ -172,57 +172,6 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestResourceValidateNameRegex(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    `\`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `**`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `(.+`,
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateNameRegex(tc.Value, "name_regex")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    `\/`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `.*`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `\b(?:\d{1,3}\.){3}\d{1,3}\b`,
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateNameRegex(tc.Value, "name_regex")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
 }
 
 func testAccCheckAwsAmiDataSourceDestroy(s *terraform.State) error {
@@ -336,6 +285,23 @@ const testAccCheckAwsAmiDataSourceEmptyOwnersConfig = `
 data "aws_ami" "amazon_ami" {
   most_recent = true
   owners = [""]
+
+  # we need to test the owners = [""] for regressions but we want to filter the results
+  # beyond all public AWS AMIs :)
+  filter {
+    name = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
 }
 `
 

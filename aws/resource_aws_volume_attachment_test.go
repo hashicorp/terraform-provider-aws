@@ -72,13 +72,16 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(*i.InstanceId)},
+			InstanceIds: []*string{i.InstanceId},
 		})
+		if err != nil {
+			t.Fatalf("error stopping instance (%s): %s", aws.StringValue(i.InstanceId), err)
+		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "running", "stopping"},
 			Target:     []string{"stopped"},
-			Refresh:    InstanceStateRefreshFunc(conn, *i.InstanceId, ""),
+			Refresh:    InstanceStateRefreshFunc(conn, *i.InstanceId, []string{}),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -114,6 +117,34 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 						"aws_ebs_volume.example", &v),
 					testAccCheckVolumeAttachmentExists(
 						"aws_volume_attachment.ebs_att", &i, &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVolumeAttachment_update(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeAttachmentConfig_update(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "force_detach", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "skip_destroy", "false"),
+				),
+			},
+			{
+				Config: testAccVolumeAttachmentConfig_update(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "force_detach", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "skip_destroy", "true"),
 				),
 			},
 		},
@@ -156,74 +187,97 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 
 const testAccVolumeAttachmentConfigInstanceOnly = `
 resource "aws_instance" "web" {
-	ami = "ami-21f78e11"
+  ami = "ami-21f78e11"
   availability_zone = "us-west-2a"
-	instance_type = "t1.micro"
-	tags {
-		Name = "HelloWorld"
-	}
+  instance_type = "t1.micro"
+  tags {
+    Name = "HelloWorld"
+  }
 }
 `
 
 const testAccVolumeAttachmentConfig = `
 resource "aws_instance" "web" {
-	ami = "ami-21f78e11"
+  ami = "ami-21f78e11"
   availability_zone = "us-west-2a"
-	instance_type = "t1.micro"
-	tags {
-		Name = "HelloWorld"
-	}
+  instance_type = "t1.micro"
+  tags {
+    Name = "HelloWorld"
+  }
 }
 
 resource "aws_ebs_volume" "example" {
   availability_zone = "us-west-2a"
-	size = 1
+  size = 1
 }
 
 resource "aws_volume_attachment" "ebs_att" {
   device_name = "/dev/sdh"
-	volume_id = "${aws_ebs_volume.example.id}"
-	instance_id = "${aws_instance.web.id}"
+  volume_id = "${aws_ebs_volume.example.id}"
+  instance_id = "${aws_instance.web.id}"
 }
 `
 
 const testAccVolumeAttachmentConfigSkipDestroy = `
 resource "aws_instance" "web" {
-	ami = "ami-21f78e11"
-  	availability_zone = "us-west-2a"
-	instance_type = "t1.micro"
-	tags {
-		Name = "HelloWorld"
-	}
+  ami = "ami-21f78e11"
+  availability_zone = "us-west-2a"
+  instance_type = "t1.micro"
+  tags {
+    Name = "HelloWorld"
+  }
 }
 
 resource "aws_ebs_volume" "example" {
-  	availability_zone = "us-west-2a"
-	size = 1
-	tags {
-		Name = "TestVolume"
-	}
+  availability_zone = "us-west-2a"
+  size = 1
+  tags {
+    Name = "TestVolume"
+  }
 }
 
 data "aws_ebs_volume" "ebs_volume" {
-    filter {
-	name = "size"
-	values = ["${aws_ebs_volume.example.size}"]
-    }
-    filter {
-	name = "availability-zone"
-	values = ["${aws_ebs_volume.example.availability_zone}"]
-    }
-    filter {
-	name = "tag:Name"
-	values = ["TestVolume"]
-    }
+  filter {
+    name = "size"
+    values = ["${aws_ebs_volume.example.size}"]
+  }
+  filter {
+    name = "availability-zone"
+    values = ["${aws_ebs_volume.example.availability_zone}"]
+  }
+  filter {
+    name = "tag:Name"
+    values = ["TestVolume"]
+  }
 }
 
 resource "aws_volume_attachment" "ebs_att" {
-  	device_name = "/dev/sdh"
-	volume_id = "${data.aws_ebs_volume.ebs_volume.id}"
-	instance_id = "${aws_instance.web.id}"
-	skip_destroy = true
+  device_name = "/dev/sdh"
+  volume_id = "${data.aws_ebs_volume.ebs_volume.id}"
+  instance_id = "${aws_instance.web.id}"
+  skip_destroy = true
 }
 `
+
+func testAccVolumeAttachmentConfig_update(detach bool) string {
+	return fmt.Sprintf(`
+resource "aws_instance" "web" {
+  ami = "ami-21f78e11"
+  availability_zone = "us-west-2a"
+  instance_type = "t1.micro"
+}
+
+resource "aws_ebs_volume" "example" {
+  availability_zone = "us-west-2a"
+  size = 1
+}
+
+resource "aws_volume_attachment" "ebs_att" {
+  device_name = "/dev/sdh"
+  volume_id = "${aws_ebs_volume.example.id}"
+  instance_id = "${aws_instance.web.id}"
+  force_detach = %t
+  skip_destroy = %t
+}
+`, detach, detach)
+}

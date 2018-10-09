@@ -50,13 +50,13 @@ func testAccAwsGuardDutyDetector_import(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
+		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGuardDutyDetectorConfig_basic1,
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

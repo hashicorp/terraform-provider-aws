@@ -40,16 +40,14 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 				Computed: true,
 			},
 			"scalable_dimension": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAppautoscalingScalableDimension,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"service_namespace": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAppautoscalingServiceNamespace,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -132,7 +130,6 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 	}
 	if t == nil {
 		log.Printf("[INFO] Application AutoScaling Target %q not found", d.Id())
-		d.SetId("")
 		return nil
 	}
 

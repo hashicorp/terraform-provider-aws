@@ -10,6 +10,12 @@ description: |-
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 
+~> **NOTE on Network ACLs and Network ACL Rules:** Terraform currently
+provides both a standalone Network ACL Rule resource and a [Network ACL](network_acl.html) resource with rules
+defined in-line. At this time you cannot use a Network ACL with in-line rules
+in conjunction with any Network ACL Rule resources. Doing so will cause
+a conflict of rule settings and will overwrite rules.
+
 ## Example Usage
 
 ```hcl
@@ -51,10 +57,10 @@ The following arguments are supported:
 
 ~> **NOTE:** If the value of `icmp_type` is `-1` (which results in a wildcard ICMP type), the `icmp_code` must also be set to `-1` (wildcard ICMP code).
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the network ACL Rule

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsSESDomainDkim_basic(t *testing.T) {
+func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
