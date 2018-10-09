@@ -126,6 +126,7 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 			"platform_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"solution_stack_name", "template_name"},
 			},
 			"template_name": {
