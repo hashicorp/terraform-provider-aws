@@ -128,6 +128,31 @@ resource "aws_lb_listener_rule" "admin" {
     target_group_arn = "${aws_lb_target_group.static.arn}"
   }
 }
+
+# Authenticate-oidc Action
+
+resource "aws_lb_listener" "admin" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+
+  action {
+    order = 1
+    type  = "authenticate-oidc"
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "client_id"
+      client_secret          = "client_secret"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+    }
+  }
+
+  action {
+    order            = 2
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
+  }
+}
 ```
 
 ## Argument Reference
