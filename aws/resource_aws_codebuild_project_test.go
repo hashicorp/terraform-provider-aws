@@ -286,6 +286,29 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 	})
 }
 
+func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	oName := "certificate.pem"
+	resourceName := "aws_codebuild_project.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName, bName, oName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.certificate", fmt.Sprintf("%s/%s", bName, oName)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1015,6 +1038,37 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, environmentVariableType)
+}
+
+func testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName string, bName string, oName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_s3_bucket_object" "test" {
+  bucket  = "${aws_s3_bucket.test.bucket}"
+  key     = "%s"
+  content = "foo"
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, oName, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Auth(rName, authResource, authType string) string {

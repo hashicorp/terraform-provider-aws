@@ -177,6 +177,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"certificate": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 				Set: resourceAwsCodeBuildProjectEnvironmentHash,
@@ -619,6 +623,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 		projectEnv.Type = aws.String(v.(string))
 	}
 
+	if v := envConfig["certificate"]; v != nil {
+		projectEnv.Certificate = aws.String(v.(string))
+	}
+
 	if v := envConfig["environment_variable"]; v != nil {
 		envVariables := v.([]interface{})
 		if len(envVariables) > 0 {
@@ -984,6 +992,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["type"] = *environment.Type
 	envConfig["compute_type"] = *environment.ComputeType
 	envConfig["image"] = *environment.Image
+	envConfig["certificate"] = aws.StringValue(environment.Certificate)
 	envConfig["privileged_mode"] = *environment.PrivilegedMode
 
 	if environment.EnvironmentVariables != nil {
