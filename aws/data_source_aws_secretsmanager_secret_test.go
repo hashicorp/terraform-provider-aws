@@ -171,7 +171,7 @@ data "aws_secretsmanager_secret" "test" {
 func testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name = "%[1]s"
+  name   = "%[1]s"
 
 	policy = <<POLICY
 {
@@ -192,8 +192,7 @@ POLICY
 }
 
 data "aws_secretsmanager_secret" "test" {
-  name = "${aws_secretsmanager_secret.test.name}"
-	policy = "${aws_secretsmanager_secret.test.policy}"
+  name   = "${aws_secretsmanager_secret.test.name}"
 }
 `, rName)
 }

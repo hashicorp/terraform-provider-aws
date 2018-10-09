@@ -37,7 +37,6 @@ func dataSourceAwsSecretsManagerSecret() *schema.Resource {
 			},
 			"policy": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"rotation_enabled": {
@@ -109,6 +108,7 @@ func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interfac
 	d.Set("name", output.Name)
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
+	d.Set("policy", "")
 
 	pIn := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
@@ -119,7 +119,7 @@ func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error reading Secrets Manager Secret policy: %s", err)
 	}
 
-	if pOut.ResourcePolicy != nil {
+	if pOut != nil && pOut.ResourcePolicy != nil {
 		policy, err := structure.NormalizeJsonString(aws.StringValue(pOut.ResourcePolicy))
 		if err != nil {
 			return fmt.Errorf("policy contains an invalid JSON: %s", err)
