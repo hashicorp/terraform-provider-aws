@@ -302,7 +302,7 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName, bName, oName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.certificate", fmt.Sprintf("%s/%s", bName, oName)),
+					testAccCheckAWSCodeBuildProjectCertificate(&project, fmt.Sprintf("%s/%s", bName, oName)),
 				),
 			},
 		},
@@ -774,6 +774,15 @@ func testAccCheckAWSCodeBuildProjectDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSCodeBuildProjectCertificate(project *codebuild.Project, expectedCertificate string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(project.Environment.Certificate) != expectedCertificate {
+			return fmt.Errorf("CodeBuild Project certificate (%s) did not match: %s", aws.StringValue(project.Environment.Certificate), expectedCertificate)
+		}
+		return nil
+	}
 }
 
 func testAccAWSCodeBuildProjectConfig_Base_Bucket(rName string) string {
