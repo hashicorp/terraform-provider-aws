@@ -112,6 +112,8 @@ Action Blocks (for `action`) support the following:
 * `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic. Required if `type` is `forward`.
 * `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+* `authenticate_cognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
+* `authenticate_oidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
 
 Redirect Blocks (for `redirect`) support the following:
 
@@ -129,6 +131,36 @@ Fixed-response Blocks (for `fixed_response`) support the following:
 * `content_type` - (Required) The content type. Valid values are `text/plain`, `text/css`, `text/html`, `application/javascript` and `application/json`.
 * `message_body` - (Optional) The message body.
 * `status_code` - (Optional) The HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
+
+Authenticate Cognito Blocks (for `authenticate_cognito`) supports the following:
+
+* `authentication_request_extra_params` - (Optional) The query parameters to include in the redirect request to the authorization endpoint. Max: 10.
+* `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
+* `scope` - (Optional) The set of user claims to be requested from the IdP.
+* `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
+* `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
+* `user_pool_arn` - (Required) The ARN of the Cognito user pool.
+* `user_pool_client` - (Required) The ID of the Cognito user pool client.
+* `user_pool_domain` - (Required) The domain prefix or fully-qualified domain name of the Cognito user pool.
+
+Authenticate OIDC Blocks (for `authenticate_oidc`) supports the following:
+
+* `authentication_request_extra_params` - (Optional) The query parameters to include in the redirect request to the authorization endpoint. Max: 10.
+* `authorization_endpoint` - (Required) The authorization endpoint of the IdP.
+* `client_id` - (Required) The OAuth 2.0 client identifier.
+* `client_secret` - (Required) The OAuth 2.0 client secret.
+* `issuer` - (Required) The OIDC issuer identifier of the IdP.
+* `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
+* `scope` - (Optional) The set of user claims to be requested from the IdP.
+* `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
+* `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
+* `token_endpoint` - (Required) The token endpoint of the IdP.
+* `user_info_endpoint` - (Required) The user info endpoint of the IdP.
+
+Authentication Request Extra Params Blocks (for `authentication_request_extra_params`) supports the following:
+
+* `key` - (Required) The key of query parameter
+* `value` - (Required) The value of query parameter
 
 Condition Blocks (for `condition`) support the following:
 
