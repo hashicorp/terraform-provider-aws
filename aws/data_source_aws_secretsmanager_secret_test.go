@@ -69,6 +69,25 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+	datasourceName := "data.aws_secretsmanager_secret.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resource, ok := s.RootModule().Resources[datasourceName]
@@ -86,6 +105,7 @@ func testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName 
 			"description",
 			"kms_key_id",
 			"name",
+			"policy",
 			"rotation_enabled",
 			"rotation_lambda_arn",
 			"rotation_rules.#",
@@ -144,6 +164,35 @@ resource "aws_secretsmanager_secret" "test" {
 
 data "aws_secretsmanager_secret" "test" {
   name = "${aws_secretsmanager_secret.test.name}"
+}
+`, rName)
+}
+
+func testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name   = "%[1]s"
+
+	policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+	{
+	  "Sid": "EnableAllPermissions",
+	  "Effect": "Allow",
+	  "Principal": {
+		"AWS": "*"
+	  },
+	  "Action": "secretsmanager:GetSecretValue",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
+}
+
+data "aws_secretsmanager_secret" "test" {
+  name   = "${aws_secretsmanager_secret.test.name}"
 }
 `, rName)
 }
