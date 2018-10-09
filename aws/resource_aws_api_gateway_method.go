@@ -158,7 +158,19 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 		input.RequestValidatorId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutMethod(&input)
+	//Creating a lot of methods at once can cause concurrency issues
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutMethod(&input)
+		if err != nil {
+			if isAWSErr(err, "ConflictException", "Unable to complete operation due to concurrent modification. Please try again later.") {
+				log.Printf("[DEBUG] Received %s, retrying PutMethod", err)
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Method: %s", err)
 	}
