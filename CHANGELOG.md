@@ -7,7 +7,7 @@ FEATURES:
 * **New Resource:** `aws_pinpoint_event_stream` [GH-6069]
 * **New Resource:** `aws_pinpoint_gcm_channel` [GH-6089]
 * **New Resource:** `aws_pinpoint_sms_channel` [GH-6088]
-* **New Resource:** `aws_redshift__snapshot_copy_grant` [GH-5134]
+* **New Resource:** `aws_redshift_snapshot_copy_grant` [GH-5134]
 
 ENHANCEMENTS:
 
