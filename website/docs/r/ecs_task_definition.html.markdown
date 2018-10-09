@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_ecs_task_definition"
 sidebar_current: "docs-aws-resource-ecs-task-definition"
 description: |-
-  Provides an ECS task definition.
+  Manages a revision of an ECS task definition.
 ---
 
 # aws_ecs_task_definition
 
-Provides an ECS task definition to be used in `aws_ecs_service`.
+Manages a revision of an ECS task definition to be used in `aws_ecs_service`.
 
 ## Example Usage
 
