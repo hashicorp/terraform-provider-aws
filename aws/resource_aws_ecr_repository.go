@@ -23,7 +23,6 @@ func resourceAwsEcrRepository() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Read:   schema.DefaultTimeout(1 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -82,23 +81,25 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 		RepositoryNames: []*string{aws.String(d.Id())},
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeRepositories(input)
+		if d.IsNewResource() && isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 
+	if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		log.Printf("[WARN] ECR Repository (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 

@@ -42,7 +42,6 @@ In addition to all arguments above, the following attributes are exported:
 `aws_ecr_repository` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-- `read` - (Default `1 minute`) How long to wait for a repository to be listed after creation.
 - `delete` - (Default `20 minutes`) How long to wait for a repository to be deleted.
 
 ## Import
