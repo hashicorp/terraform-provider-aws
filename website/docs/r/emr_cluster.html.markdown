@@ -15,7 +15,7 @@ for more information.
 ## Example Usage
 
 ```hcl
-resource "aws_emr_cluster" "emr-test-cluster" {
+resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
@@ -37,7 +37,7 @@ EOF
     emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
-  
+
   instance_group {
       instance_role = "CORE"
       instance_type = "c4.large"
@@ -175,7 +175,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the job flow
 * `release_label` - (Required) The release label for the Amazon EMR release
 * `master_instance_type` - (Optional) The EC2 instance type of the master node. Exactly one of `master_instance_type` and `instance_group` must be specified.
-* `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized. 
+* `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `additional_info` - (Optional) A JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
@@ -343,7 +343,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_emr_cluster" "tf-test-cluster" {
+resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
@@ -631,4 +631,12 @@ resource "aws_iam_role_policy" "iam_emr_profile_policy" {
 }
 EOF
 }
+```
+
+## Import
+
+EMR clusters can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_emr_cluster.cluster j-123456ABCDEF
 ```
