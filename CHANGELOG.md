@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_batch_job_queue: Prevent error during read of non-existent Job Queue [GH-6085]
 * resource/aws_ecr_repository: Retry read for eventual consistency after resource creation [GH-3910]
 * resource/aws_ecs_service: Properly remove non-existent services from Terraform state [GH-6039]
+* resource/aws_iam_instance_profile: Retry for eventual consistency when adding a role [GH-6079]
 * resource/aws_lb_listener: Retry read for eventual consistency after resource creation [GH-5167]
 
 ## 1.39.0 (October 03, 2018)
