@@ -16,7 +16,6 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 			"bundle_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -31,7 +30,7 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 				Computed: true,
 			},
 			"compute_type": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -43,7 +42,7 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 				},
 			},
 			"user_storage": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -55,7 +54,7 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 				},
 			},
 			"root_storage": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -71,7 +70,7 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 }
 
 func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wsconn
+	conn := meta.(*AWSClient).workspacesconn
 
 	bundleID := d.Get("bundle_id").(string)
 	input := &workspaces.DescribeWorkspaceBundlesInput{
@@ -92,26 +91,35 @@ func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("description", bundle.Description)
 	d.Set("name", bundle.Name)
 	d.Set("owner", bundle.Owner)
+
+	computeType := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {
-		r := map[string]interface{}{
-			"name": *bundle.ComputeType.Name,
+		computeType[0] = map[string]interface{}{
+			"name": aws.StringValue(bundle.ComputeType.Name),
 		}
-		ct := []map[string]interface{}{r}
-		d.Set("compute_type", ct)
 	}
+	if err := d.Set("compute_type", computeType); err != nil {
+		return fmt.Errorf("error setting compute_type: %s", err)
+	}
+
+	rootStorage := make([]map[string]interface{}, 1)
 	if bundle.RootStorage != nil {
-		r := map[string]interface{}{
-			"capacity": *bundle.RootStorage.Capacity,
+		rootStorage[0] = map[string]interface{}{
+			"capacity": aws.StringValue(bundle.RootStorage.Capacity),
 		}
-		rs := []map[string]interface{}{r}
-		d.Set("root_storage", rs)
 	}
+	if err := d.Set("root_storage", rootStorage); err != nil {
+		return fmt.Errorf("error setting root_storage: %s", err)
+	}
+
+	userStorage := make([]map[string]interface{}, 1)
 	if bundle.UserStorage != nil {
-		r := map[string]interface{}{
-			"capacity": *bundle.UserStorage.Capacity,
+		userStorage[0] = map[string]interface{}{
+			"capacity": aws.StringValue(bundle.UserStorage.Capacity),
 		}
-		us := []map[string]interface{}{r}
-		d.Set("user_storage", us)
+	}
+	if err := d.Set("user_storage", userStorage); err != nil {
+		return fmt.Errorf("error setting user_storage: %s", err)
 	}
 
 	return nil

@@ -242,7 +242,7 @@ type AWSClient struct {
 	neptuneconn           *neptune.Neptune
 	pricingconn           *pricing.Pricing
 	pinpointconn          *pinpoint.Pinpoint
-	wsconn                *workspaces.WorkSpaces
+	workspacesconn        *workspaces.WorkSpaces
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -568,7 +568,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.neptuneconn = neptune.New(sess)
 	client.pricingconn = pricing.New(sess)
 	client.pinpointconn = pinpoint.New(sess)
-	client.wsconn = workspaces.New(sess)
+	client.workspacesconn = workspaces.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

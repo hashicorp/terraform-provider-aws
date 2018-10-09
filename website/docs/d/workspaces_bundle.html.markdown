@@ -2,11 +2,11 @@
 layout: "aws"
 page_title: "AWS: aws_workspaces_bundle"
 sidebar_current: "docs-aws-datasource-workspaces-bundle"
-description: |-  
+description: |-
   Get information on a Workspaces Bundle.
 ---
 
-# aws_workspaces_bundle
+# Data Source: aws_workspaces_bundle
 
 Use this data source to get information about a Workspaces Bundle.
 
@@ -22,7 +22,7 @@ data "aws_workspaces_bundle" "example" {
 
 The following arguments are supported:
 
-* `bundle_id` – (Required, ForceNew) The ID of the bundle.
+* `bundle_id` – (Required) The ID of the bundle.
 
 ## Attributes Reference
 
