@@ -71,7 +71,6 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 			"on_failure": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
