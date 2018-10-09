@@ -56,7 +56,7 @@ The following arguments are supported:
 * `configuration` - (Optional) Configuration of the broker. See below.
 * `deployment_mode` - (Optional) The deployment mode of the broker. Supported: `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Defaults to `SINGLE_INSTANCE`.
 * `engine_type` - (Required) The type of broker engine. Currently, Amazon MQ supports only `ActiveMQ`.
-* `engine_version` - (Required) The version of the broker engine. Currently, Amazon MQ supports only `5.15.0`.
+* `engine_version` - (Required) The version of the broker engine. Currently, Amazon MQ supports only `5.15.0` or `5.15.6`.
 * `host_instance_type` - (Required) The broker's instance type. e.g. `mq.t2.micro` or `mq.m4.large`
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Required) The list of security group IDs assigned to the broker.
@@ -92,6 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the broker.
 * `instances` - A list of information about allocated brokers (both active & standby).
   * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
+  * `instances.0.ip_address` - The IP Address of the broker.
   * `instances.0.endpoints` - The broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
      * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
      * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
