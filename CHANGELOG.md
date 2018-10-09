@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
 * data-source/aws_secretsmanager_secret: Add `policy` attribute [GH-6091]
 * data-source/aws_secretsmanager_secret_version: Add `secret_binary` attribute [GH-6070]
+* resource/aws_ecr_repository: Add configurable `delete` timeout [GH-3910]
 * resource/aws_lb_listener: Support Cognito and OIDC authentication [GH-6094]
 * resource/aws_lb_listener_rule: Support Cognito and OIDC authentication [GH-6094]
 * resource/aws_rds_cluster: Support `engine_version` updates [GH-5010]
@@ -26,6 +27,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_policy: Properly handle negative values in step scaling metric intervals [GH-3480]
 * resource/aws_appsync_datasource: Properly pass all attributes during update [GH-5814]
 * resource/aws_batch_job_queue: Prevent error during read of non-existent Job Queue [GH-6085]
+* resource/aws_ecr_repository: Retry read for eventual consistency after resource creation [GH-3910]
 * resource/aws_ecs_service: Properly remove non-existent services from Terraform state [GH-6039]
 * resource/aws_lb_listener: Retry read for eventual consistency after resource creation [GH-5167]
 
