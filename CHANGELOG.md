@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * resource/aws_elastic_beanstalk_environment: Add `platform_arn` argument (support custom platforms) [GH-6093]
 * resource/aws_lb_listener: Support Cognito and OIDC authentication [GH-6094]
 * resource/aws_lb_listener_rule: Support Cognito and OIDC authentication [GH-6094]
+* resource/aws_mq_broker: Add `instances` `ip_address` attribute [GH-6103]
 * resource/aws_rds_cluster: Support `engine_version` updates [GH-5010]
 * resource/aws_s3_bucket: Add replication `access_control_translation` and `account_id` arguments (support cross-account replication ownership) [GH-3577]
 * resource/aws_secretsmanager_secret_version: Add `secret_binary` argument [GH-6070]
