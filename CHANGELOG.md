@@ -1,43 +1,43 @@
-## 1.40.0 (Unreleased)
+## 1.40.0 (October 10, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_launch_template` [GH-6064]
-* **New Data Source:** `aws_workspaces_bundle` [GH-3243]
-* **New Resource:** `aws_ebs_snapshot_copy` [GH-3086]
-* **New Resource:** `aws_pinpoint_adm_channel` [GH-6038]
-* **New Resource:** `aws_pinpoint_baidu_channel` [GH-6111]
-* **New Resource:** `aws_pinpoint_email_channel` [GH-6110]
-* **New Resource:** `aws_pinpoint_event_stream` [GH-6069]
-* **New Resource:** `aws_pinpoint_gcm_channel` [GH-6089]
-* **New Resource:** `aws_pinpoint_sms_channel` [GH-6088]
-* **New Resource:** `aws_redshift_snapshot_copy_grant` [GH-5134]
+* **New Data Source:** `aws_launch_template` ([#6064](https://github.com/terraform-providers/terraform-provider-aws/issues/6064))
+* **New Data Source:** `aws_workspaces_bundle` ([#3243](https://github.com/terraform-providers/terraform-provider-aws/issues/3243))
+* **New Resource:** `aws_ebs_snapshot_copy` ([#3086](https://github.com/terraform-providers/terraform-provider-aws/issues/3086))
+* **New Resource:** `aws_pinpoint_adm_channel` ([#6038](https://github.com/terraform-providers/terraform-provider-aws/issues/6038))
+* **New Resource:** `aws_pinpoint_baidu_channel` ([#6111](https://github.com/terraform-providers/terraform-provider-aws/issues/6111))
+* **New Resource:** `aws_pinpoint_email_channel` ([#6110](https://github.com/terraform-providers/terraform-provider-aws/issues/6110))
+* **New Resource:** `aws_pinpoint_event_stream` ([#6069](https://github.com/terraform-providers/terraform-provider-aws/issues/6069))
+* **New Resource:** `aws_pinpoint_gcm_channel` ([#6089](https://github.com/terraform-providers/terraform-provider-aws/issues/6089))
+* **New Resource:** `aws_pinpoint_sms_channel` ([#6088](https://github.com/terraform-providers/terraform-provider-aws/issues/6088))
+* **New Resource:** `aws_redshift_snapshot_copy_grant` ([#5134](https://github.com/terraform-providers/terraform-provider-aws/issues/5134))
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_policy_document: Make `statement` argument optional [GH-6052]
-* data-source/aws_secretsmanager_secret: Add `policy` attribute [GH-6091]
-* data-source/aws_secretsmanager_secret_version: Add `secret_binary` attribute [GH-6070]
-* resource/aws_codebuild_project: Add `environment` `certificate` argument [GH-6087]
-* resource/aws_ecr_repository: Add configurable `delete` timeout [GH-3910]
-* resource/aws_elastic_beanstalk_environment: Add `platform_arn` argument (support custom platforms) [GH-6093]
-* resource/aws_lb_listener: Support Cognito and OIDC authentication [GH-6094]
-* resource/aws_lb_listener_rule: Support Cognito and OIDC authentication [GH-6094]
-* resource/aws_mq_broker: Add `instances` `ip_address` attribute [GH-6103]
-* resource/aws_rds_cluster: Support `engine_version` updates [GH-5010]
-* resource/aws_s3_bucket: Add replication `access_control_translation` and `account_id` arguments (support cross-account replication ownership) [GH-3577]
-* resource/aws_secretsmanager_secret_version: Add `secret_binary` argument [GH-6070]
-* resource/aws_security_group_rule: Support resource import [GH-6027]
+* data-source/aws_iam_policy_document: Make `statement` argument optional ([#6052](https://github.com/terraform-providers/terraform-provider-aws/issues/6052))
+* data-source/aws_secretsmanager_secret: Add `policy` attribute ([#6091](https://github.com/terraform-providers/terraform-provider-aws/issues/6091))
+* data-source/aws_secretsmanager_secret_version: Add `secret_binary` attribute ([#6070](https://github.com/terraform-providers/terraform-provider-aws/issues/6070))
+* resource/aws_codebuild_project: Add `environment` `certificate` argument ([#6087](https://github.com/terraform-providers/terraform-provider-aws/issues/6087))
+* resource/aws_ecr_repository: Add configurable `delete` timeout ([#3910](https://github.com/terraform-providers/terraform-provider-aws/issues/3910))
+* resource/aws_elastic_beanstalk_environment: Add `platform_arn` argument (support custom platforms) ([#6093](https://github.com/terraform-providers/terraform-provider-aws/issues/6093))
+* resource/aws_lb_listener: Support Cognito and OIDC authentication ([#6094](https://github.com/terraform-providers/terraform-provider-aws/issues/6094))
+* resource/aws_lb_listener_rule: Support Cognito and OIDC authentication ([#6094](https://github.com/terraform-providers/terraform-provider-aws/issues/6094))
+* resource/aws_mq_broker: Add `instances` `ip_address` attribute ([#6103](https://github.com/terraform-providers/terraform-provider-aws/issues/6103))
+* resource/aws_rds_cluster: Support `engine_version` updates ([#5010](https://github.com/terraform-providers/terraform-provider-aws/issues/5010))
+* resource/aws_s3_bucket: Add replication `access_control_translation` and `account_id` arguments (support cross-account replication ownership) ([#3577](https://github.com/terraform-providers/terraform-provider-aws/issues/3577))
+* resource/aws_secretsmanager_secret_version: Add `secret_binary` argument ([#6070](https://github.com/terraform-providers/terraform-provider-aws/issues/6070))
+* resource/aws_security_group_rule: Support resource import ([#6027](https://github.com/terraform-providers/terraform-provider-aws/issues/6027))
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_policy: Properly handle negative values in step scaling metric intervals [GH-3480]
-* resource/aws_appsync_datasource: Properly pass all attributes during update [GH-5814]
-* resource/aws_batch_job_queue: Prevent error during read of non-existent Job Queue [GH-6085]
-* resource/aws_ecr_repository: Retry read for eventual consistency after resource creation [GH-3910]
-* resource/aws_ecs_service: Properly remove non-existent services from Terraform state [GH-6039]
-* resource/aws_iam_instance_profile: Retry for eventual consistency when adding a role [GH-6079]
-* resource/aws_lb_listener: Retry read for eventual consistency after resource creation [GH-5167]
+* resource/aws_appautoscaling_policy: Properly handle negative values in step scaling metric intervals ([#3480](https://github.com/terraform-providers/terraform-provider-aws/issues/3480))
+* resource/aws_appsync_datasource: Properly pass all attributes during update ([#5814](https://github.com/terraform-providers/terraform-provider-aws/issues/5814))
+* resource/aws_batch_job_queue: Prevent error during read of non-existent Job Queue ([#6085](https://github.com/terraform-providers/terraform-provider-aws/issues/6085))
+* resource/aws_ecr_repository: Retry read for eventual consistency after resource creation ([#3910](https://github.com/terraform-providers/terraform-provider-aws/issues/3910))
+* resource/aws_ecs_service: Properly remove non-existent services from Terraform state ([#6039](https://github.com/terraform-providers/terraform-provider-aws/issues/6039))
+* resource/aws_iam_instance_profile: Retry for eventual consistency when adding a role ([#6079](https://github.com/terraform-providers/terraform-provider-aws/issues/6079))
+* resource/aws_lb_listener: Retry read for eventual consistency after resource creation ([#5167](https://github.com/terraform-providers/terraform-provider-aws/issues/5167))
 
 ## 1.39.0 (October 03, 2018)
 
