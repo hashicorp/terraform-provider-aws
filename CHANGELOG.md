@@ -6,6 +6,7 @@ FEATURES:
 * **New Data Source:** `aws_workspaces_bundle` [GH-3243]
 * **New Resource:** `aws_ebs_snapshot_copy` [GH-3086]
 * **New Resource:** `aws_pinpoint_adm_channel` [GH-6038]
+* **New Resource:** `aws_pinpoint_email_channel` [GH-6110]
 * **New Resource:** `aws_pinpoint_event_stream` [GH-6069]
 * **New Resource:** `aws_pinpoint_gcm_channel` [GH-6089]
 * **New Resource:** `aws_pinpoint_sms_channel` [GH-6088]
