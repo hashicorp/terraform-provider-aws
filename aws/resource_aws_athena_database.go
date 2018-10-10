@@ -59,9 +59,7 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 	}
 }
 
-func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
-
+func getResultConfig(d *schema.ResourceData) (athena.ResultConfiguration, error) {
 	e := d.Get("encryption_key").([]interface{})
 	data := e[0].(map[string]interface{})
 	keyType := data["type"].(string)
@@ -87,6 +85,17 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 		resultConfig.EncryptionConfiguration = &encryptionConfig
 	}
 
+	return resultConfig, nil
+}
+
+func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).athenaconn
+
+	resultConfig, err := getResultConfig(d)
+	if err != nil {
+		return err
+	}
+
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
 		ResultConfiguration: &resultConfig,
@@ -107,12 +116,15 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
+	resultConfig, err := getResultConfig(d)
+	if err != nil {
+		return err
+	}
+
 	bucket := d.Get("bucket").(string)
 	input := &athena.StartQueryExecutionInput{
-		QueryString: aws.String(fmt.Sprint("show databases;")),
-		ResultConfiguration: &athena.ResultConfiguration{
-			OutputLocation: aws.String("s3://" + bucket),
-		},
+		QueryString:         aws.String(fmt.Sprint("show databases;")),
+		ResultConfiguration: &resultConfig,
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -133,6 +145,11 @@ func resourceAwsAthenaDatabaseUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
+	resultConfig, err := getResultConfig(d)
+	if err != nil {
+		return err
+	}
+
 	name := d.Get("name").(string)
 	bucket := d.Get("bucket").(string)
 
@@ -143,10 +160,8 @@ func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) e
 	queryString += ";"
 
 	input := &athena.StartQueryExecutionInput{
-		QueryString: aws.String(queryString),
-		ResultConfiguration: &athena.ResultConfiguration{
-			OutputLocation: aws.String("s3://" + bucket),
-		},
+		QueryString:         aws.String(queryString),
+		ResultConfiguration: &resultConfig,
 	}
 
 	resp, err := conn.StartQueryExecution(input)
