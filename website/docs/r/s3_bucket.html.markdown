@@ -420,6 +420,9 @@ The `destination` object supports the following:
 * `storage_class` - (Optional) The class of storage used to store the object.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
+* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with   `account` owner override configuration.
+* `account` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with
+  `access_control_translation` override configuration.
 
 The `source_selection_criteria` object supports the following:
 
@@ -442,6 +445,10 @@ The `apply_server_side_encryption_by_default` object supports the following:
 
 * `sse_algorithm` - (required) The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
 * `kms_master_key_id` - (optional) The AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
+
+The `access_control_translation` object supports the following:
+
+* `owner` - (Required) The override value for the owner on replicated objects. Currently only `Destination` is supported.
 
 ## Attributes Reference
 

@@ -731,6 +731,42 @@ func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
 					),
 				),
 			},
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjectsAndAccessControlTranslation(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
+					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketReplicationRules(
+						"aws_s3_bucket.bucket",
+						testAccAwsRegionProviderFunc("us-west-2", &providers),
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Account:      aws.String("${data.aws_caller_identity.current.account_id}"),
+									Bucket:       aws.String(fmt.Sprintf("arn:aws:s3:::tf-test-bucket-destination-%d", rInt)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+									EncryptionConfiguration: &s3.EncryptionConfiguration{
+										ReplicaKmsKeyID: aws.String("${aws_kms_key.replica.arn}"),
+									},
+									AccessControlTranslation: &s3.AccessControlTranslation{
+										Owner: aws.String("Destination"),
+									},
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								SourceSelectionCriteria: &s3.SourceSelectionCriteria{
+									SseKmsEncryptedObjects: &s3.SseKmsEncryptedObjects{
+										Status: aws.String(s3.SseKmsEncryptedObjectsStatusEnabled),
+									},
+								},
+							},
+						},
+					),
+				),
+			},
 		},
 	})
 }
@@ -2184,6 +2220,64 @@ resource "aws_s3_bucket" "bucket" {
                 bucket        = "${aws_s3_bucket.destination.arn}"
                 storage_class = "STANDARD"
                 replica_kms_key_id = "${aws_kms_key.replica.arn}"
+            }
+
+            source_selection_criteria {
+                sse_kms_encrypted_objects {
+                  enabled = true
+                }
+            }
+        }
+    }
+}
+
+resource "aws_s3_bucket" "destination" {
+    provider = "aws.euwest"
+    bucket   = "tf-test-bucket-destination-%d"
+    region   = "eu-west-1"
+
+    versioning {
+        enabled = true
+    }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjectsAndAccessControlTranslation(randInt int) string {
+	return fmt.Sprintf(testAccAWSS3BucketConfigReplicationBasic+`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "replica" {
+  provider                = "aws.euwest"
+  description             = "TF Acceptance Test S3 repl KMS key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "bucket" {
+    provider = "aws.uswest2"
+    bucket   = "tf-test-bucket-%d"
+    acl      = "private"
+
+    versioning {
+        enabled = true
+    }
+
+    replication_configuration {
+        role = "${aws_iam_role.role.arn}"
+        rules {
+            id     = "foobar"
+            prefix = "foo"
+            status = "Enabled"
+
+            destination {
+				account		  = "${data.aws_caller_identity.current.account_id}"
+                bucket        = "${aws_s3_bucket.destination.arn}"
+                storage_class = "STANDARD"
+				replica_kms_key_id = "${aws_kms_key.replica.arn}"
+
+				access_control_translation {
+					owner = "Destination"
+				}
             }
 
             source_selection_criteria {
