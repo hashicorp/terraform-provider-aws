@@ -44,13 +44,8 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 
 	params := &pinpoint.WriteEventStream{}
 
-	if d.HasChange("destination_stream_arn") {
-		params.DestinationStreamArn = aws.String(d.Get("destination_stream_arn").(string))
-	}
-
-	if d.HasChange("role_arn") {
-		params.RoleArn = aws.String(d.Get("role_arn").(string))
-	}
+	params.DestinationStreamArn = aws.String(d.Get("destination_stream_arn").(string))
+	params.RoleArn = aws.String(d.Get("role_arn").(string))
 
 	req := pinpoint.PutEventStreamInput{
 		ApplicationId:    aws.String(applicationId),
