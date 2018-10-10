@@ -38,6 +38,23 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"encryption_key": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -45,11 +62,34 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
+	e := d.Get("encryption_key").([]interface{})
+	data := e[0].(map[string]interface{})
+	keyType := data["type"].(string)
+	keyID := data["id"].(string)
+
+	resultConfig := athena.ResultConfiguration{
+		OutputLocation: aws.String("s3://" + d.Get("bucket").(string)),
+	}
+
+	if len(keyType) > 0 {
+		if strings.HasSuffix(keyType, "_KMS") && len(keyID) <= 0 {
+			return fmt.Errorf("Key type %s requires a valid KMS key ID", keyType)
+		}
+
+		encryptionConfig := athena.EncryptionConfiguration{
+			EncryptionOption: aws.String(keyType),
+		}
+
+		if len(keyID) > 0 {
+			encryptionConfig.KmsKey = aws.String(keyID)
+		}
+
+		resultConfig.EncryptionConfiguration = &encryptionConfig
+	}
+
 	input := &athena.StartQueryExecutionInput{
-		QueryString: aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
-		ResultConfiguration: &athena.ResultConfiguration{
-			OutputLocation: aws.String("s3://" + d.Get("bucket").(string)),
-		},
+		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
+		ResultConfiguration: &resultConfig,
 	}
 
 	resp, err := conn.StartQueryExecution(input)
