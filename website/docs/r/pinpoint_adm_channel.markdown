@@ -36,7 +36,7 @@ The following arguments are supported:
 * `application_id` - (Required) The application ID.
 * `client_id` - (Required) Client ID (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.
-* `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `false`.
+* `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 
 ## Import
 
