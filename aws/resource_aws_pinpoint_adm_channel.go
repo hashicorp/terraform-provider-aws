@@ -51,17 +51,9 @@ func resourceAwsPinpointADMChannelUpsert(d *schema.ResourceData, meta interface{
 
 	params := &pinpoint.ADMChannelRequest{}
 
-	if d.HasChange("client_id") {
-		params.ClientId = aws.String(d.Get("client_id").(string))
-	}
-
-	if d.HasChange("client_secret") {
-		params.ClientSecret = aws.String(d.Get("client_secret").(string))
-	}
-
-	if d.HasChange("enabled") {
-		params.Enabled = aws.Bool(d.Get("enabled").(bool))
-	}
+	params.ClientId = aws.String(d.Get("client_id").(string))
+	params.ClientSecret = aws.String(d.Get("client_secret").(string))
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 	req := pinpoint.UpdateAdmChannelInput{
 		ApplicationId:     aws.String(applicationId),
