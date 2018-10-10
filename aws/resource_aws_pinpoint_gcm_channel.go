@@ -46,13 +46,8 @@ func resourceAwsPinpointGCMChannelUpsert(d *schema.ResourceData, meta interface{
 
 	params := &pinpoint.GCMChannelRequest{}
 
-	if d.HasChange("api_key") {
-		params.ApiKey = aws.String(d.Get("api_key").(string))
-	}
-
-	if d.HasChange("enabled") {
-		params.Enabled = aws.Bool(d.Get("enabled").(bool))
-	}
+	params.ApiKey = aws.String(d.Get("api_key").(string))
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 	req := pinpoint.UpdateGcmChannelInput{
 		ApplicationId:     aws.String(applicationId),

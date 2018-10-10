@@ -42,6 +42,7 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 				Config: testAccAWSPinpointGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointGCMChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 			{
@@ -49,6 +50,13 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"api_key"},
+			},
+			{
+				Config: testAccAWSPinpointGCMChannelConfig_basic(apiKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointGCMChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
 			},
 		},
 	})
@@ -93,7 +101,7 @@ resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
-  enabled        = "true"
+  enabled        = "false"
   api_key        = "%s"
 }`, apiKey)
 }
