@@ -59,7 +59,7 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 	}
 }
 
-func getResultConfig(d *schema.ResourceData) (athena.ResultConfiguration, error) {
+func getResultConfig(d *schema.ResourceData) (*athena.ResultConfiguration, error) {
 	e := d.Get("encryption_key").([]interface{})
 	data := e[0].(map[string]interface{})
 	keyType := data["type"].(string)
@@ -71,7 +71,7 @@ func getResultConfig(d *schema.ResourceData) (athena.ResultConfiguration, error)
 
 	if len(keyType) > 0 {
 		if strings.HasSuffix(keyType, "_KMS") && len(keyID) <= 0 {
-			return fmt.Errorf("Key type %s requires a valid KMS key ID", keyType)
+			return nil, fmt.Errorf("Key type %s requires a valid KMS key ID", keyType)
 		}
 
 		encryptionConfig := athena.EncryptionConfiguration{
@@ -85,7 +85,7 @@ func getResultConfig(d *schema.ResourceData) (athena.ResultConfiguration, error)
 		resultConfig.EncryptionConfiguration = &encryptionConfig
 	}
 
-	return resultConfig, nil
+	return &resultConfig, nil
 }
 
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
@@ -98,7 +98,7 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
-		ResultConfiguration: &resultConfig,
+		ResultConfiguration: resultConfig,
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -121,10 +121,9 @@ func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	bucket := d.Get("bucket").(string)
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(fmt.Sprint("show databases;")),
-		ResultConfiguration: &resultConfig,
+		ResultConfiguration: resultConfig,
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -151,7 +150,6 @@ func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	name := d.Get("name").(string)
-	bucket := d.Get("bucket").(string)
 
 	queryString := fmt.Sprintf("drop database `%s`", name)
 	if d.Get("force_destroy").(bool) {
@@ -161,7 +159,7 @@ func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) e
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
-		ResultConfiguration: &resultConfig,
+		ResultConfiguration: resultConfig,
 	}
 
 	resp, err := conn.StartQueryExecution(input)
