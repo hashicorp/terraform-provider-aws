@@ -377,6 +377,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 										Set:      destinationHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"account_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateAwsAccountId,
+												},
 												"bucket": {
 													Type:         schema.TypeString,
 													Required:     true,
@@ -395,6 +400,23 @@ func resourceAwsS3Bucket() *schema.Resource {
 												"replica_kms_key_id": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"access_control_translation": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"owner": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	s3.OwnerOverrideDestination,
+																}, false),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -1755,6 +1777,18 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 					ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
 				}
 			}
+
+			if account, ok := bd["account_id"]; ok && account != "" {
+				ruleDestination.Account = aws.String(account.(string))
+			}
+
+			if aclTranslation, ok := bd["access_control_translation"].([]interface{}); ok && len(aclTranslation) > 0 {
+				aclTranslationValues := aclTranslation[0].(map[string]interface{})
+				ruleAclTranslation := &s3.AccessControlTranslation{}
+				ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
+				ruleDestination.AccessControlTranslation = ruleAclTranslation
+			}
+
 		}
 		rcRule.Destination = ruleDestination
 
@@ -2000,6 +2034,15 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 					rd["replica_kms_key_id"] = *v.Destination.EncryptionConfiguration.ReplicaKmsKeyID
 				}
 			}
+			if v.Destination.Account != nil {
+				rd["account_id"] = *v.Destination.Account
+			}
+			if v.Destination.AccessControlTranslation != nil {
+				rdt := map[string]interface{}{
+					"owner": aws.StringValue(v.Destination.AccessControlTranslation.Owner),
+				}
+				rd["access_control_translation"] = []interface{}{rdt}
+			}
 			t["destination"] = schema.NewSet(destinationHash, []interface{}{rd})
 		}
 
@@ -2184,6 +2227,26 @@ func destinationHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["replica_kms_key_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["account"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
+	}
+	return hashcode.String(buf.String())
+}
+
+func accessControlTranslationHash(v interface{}) int {
+	// v is nil if empty access_control_translation is given.
+	if v == nil {
+		return 0
+	}
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["owner"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	return hashcode.String(buf.String())
