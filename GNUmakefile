@@ -16,7 +16,7 @@ sweep:
 test: fmtcheck
 	go test $(TEST) -timeout=30s -parallel=4
 
-testacc:
+testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 fmt:
