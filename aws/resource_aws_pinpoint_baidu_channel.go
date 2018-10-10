@@ -51,17 +51,9 @@ func resourceAwsPinpointBaiduChannelUpsert(d *schema.ResourceData, meta interfac
 
 	params := &pinpoint.BaiduChannelRequest{}
 
-	if d.HasChange("enabled") {
-		params.Enabled = aws.Bool(d.Get("enabled").(bool))
-	}
-
-	if d.HasChange("api_key") {
-		params.ApiKey = aws.String(d.Get("api_key").(string))
-	}
-
-	if d.HasChange("secret_key") {
-		params.SecretKey = aws.String(d.Get("secret_key").(string))
-	}
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.ApiKey = aws.String(d.Get("api_key").(string))
+	params.SecretKey = aws.String(d.Get("secret_key").(string))
 
 	req := pinpoint.UpdateBaiduChannelInput{
 		ApplicationId:       aws.String(applicationId),

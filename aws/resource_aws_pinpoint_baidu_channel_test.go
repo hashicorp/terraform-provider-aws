@@ -21,6 +21,7 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_baidu_channel.channel"
 
 	apiKey := "123"
+	apikeyUpdated := "234"
 	secretKey := "456"
 
 	resource.Test(t, resource.TestCase{
@@ -33,7 +34,7 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 				Config: testAccAWSPinpointBaiduChannelConfig_basic(apiKey, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointBaiduChannelExists(resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
 					resource.TestCheckResourceAttr(resourceName, "secret_key", secretKey),
 				),
@@ -43,6 +44,15 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"api_key", "secret_key"},
+			},
+			{
+				Config: testAccAWSPinpointBaiduChannelConfig_update(apikeyUpdated, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointBaiduChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key", apikeyUpdated),
+					resource.TestCheckResourceAttr(resourceName, "secret_key", secretKey),
+				),
 			},
 		},
 	})
@@ -87,7 +97,26 @@ resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {
     application_id = "${aws_pinpoint_app.test_app.application_id}"
+    
+    enabled    = "false"
+    api_key    = "%s"
+    secret_key = "%s"
+}
+`, apiKey, secretKey)
+}
 
+func testAccAWSPinpointBaiduChannelConfig_update(apiKey, secretKey string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	region = "us-east-1"
+}
+
+resource "aws_pinpoint_app" "test_app" {}
+
+resource "aws_pinpoint_baidu_channel" "channel" {
+    application_id = "${aws_pinpoint_app.test_app.application_id}"
+    
+    enabled    = "false"
     api_key    = "%s"
     secret_key = "%s"
 }
