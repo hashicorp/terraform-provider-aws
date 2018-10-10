@@ -907,6 +907,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
+	var acctId string
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -919,19 +920,19 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers), nil),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers), nil),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers), nil),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
 					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws[\\w-]*:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers), &acctId),
 					testAccCheckAWSS3BucketReplicationRules(
 						"aws_s3_bucket.bucket",
 						testAccAwsRegionProviderFunc(region, &providers),
@@ -950,9 +951,38 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSS3BucketConfigReplicationWithAclOverwriteConfiguration(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers), nil),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
+					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws[\\w-]*:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers), &acctId),
+					testAccCheckAWSS3BucketReplicationRules(
+						"aws_s3_bucket.bucket",
+						testAccAwsRegionProviderFunc(region, &providers),
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									Account:      &acctId,
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+									AccessControlTranslation: &s3.AccessControlTranslation{
+										Owner: aws.String(s3.OwnerOverrideDestination),
+									},
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+							},
+						},
+					),
+				),
+			},
+			{
 				Config: testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers), nil),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
 					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws[\\w-]*:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
@@ -1004,8 +1034,8 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithoutStorageClass(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
-					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers), nil),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers), nil),
 				),
 			},
 		},
@@ -1175,10 +1205,10 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 }
 
 func testAccCheckAWSS3BucketExists(n string) resource.TestCheckFunc {
-	return testAccCheckAWSS3BucketExistsWithProvider(n, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSS3BucketExistsWithProvider(n, func() *schema.Provider { return testAccProvider }, nil)
 }
 
-func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schema.Provider, acctId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1201,6 +1231,9 @@ func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schem
 				return fmt.Errorf("S3 bucket not found")
 			}
 			return err
+		}
+		if acctId != nil {
+			*acctId = provider.Meta().(*AWSClient).accountid
 		}
 		return nil
 
@@ -2074,6 +2107,10 @@ provider "aws" {
   region = "us-west-2"
 }
 
+data "aws_caller_identity" "destination" {
+  provider = "aws.euwest"
+}
+
 resource "aws_iam_role" "role" {
   name               = "tf-iam-role-replication-%d"
   assume_role_policy = <<POLICY
@@ -2139,6 +2176,46 @@ resource "aws_s3_bucket" "bucket" {
             destination {
                 bucket        = "${aws_s3_bucket.destination.arn}"
                 storage_class = "STANDARD"
+            }
+        }
+    }
+}
+
+resource "aws_s3_bucket" "destination" {
+    provider = "aws.euwest"
+    bucket   = "tf-test-bucket-destination-%d"
+    region   = "eu-west-1"
+
+    versioning {
+        enabled = true
+    }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccAWSS3BucketConfigReplicationWithAclOverwriteConfiguration(randInt int) string {
+	return fmt.Sprintf(testAccAWSS3BucketConfigReplicationBasic+`
+resource "aws_s3_bucket" "bucket" {
+    provider = "aws.uswest2"
+    bucket   = "tf-test-bucket-%d"
+    acl      = "private"
+
+    versioning {
+        enabled = true
+    }
+
+    replication_configuration {
+        role = "${aws_iam_role.role.arn}"
+        rules {
+            id     = "foobar"
+            prefix = "foo"
+            status = "Enabled"
+
+            destination {
+				bucket              = "${aws_s3_bucket.destination.arn}"
+				account_id          = "${data.aws_caller_identity.destination.account_id}"
+				storage_class       = "STANDARD"
+				overwrite_owner_acl = "Destination"
             }
         }
     }
