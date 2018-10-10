@@ -30,7 +30,7 @@ func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 				Config: testAccAWSPinpointEmailChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEmailChannelExists(resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
 				),
 			},
@@ -38,6 +38,14 @@ func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSPinpointEmailChannelConfig_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointEmailChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
+				),
 			},
 		},
 	})
@@ -81,7 +89,66 @@ resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_email_channel" "test_email_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
+  enabled        = "false"
   from_address   = "user@example.com"
+  identity       = "${aws_ses_domain_identity.test_identity.arn}"
+  role_arn       = "${aws_iam_role.test_role.arn}"
+}
+
+resource "aws_ses_domain_identity" "test_identity" {
+  domain = "example.com"
+}
+
+resource "aws_iam_role" "test_role" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "pinpoint.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_role_policy" {
+  name   = "test_policy"
+  role   = "${aws_iam_role.test_role.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Action": [
+      "mobileanalytics:PutEvents",
+      "mobileanalytics:PutItems"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "*"
+    ]
+  }
+}
+EOF
+}
+`
+
+const testAccAWSPinpointEmailChannelConfig_update = `
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_pinpoint_app" "test_app" {}
+
+resource "aws_pinpoint_email_channel" "test_email_channel" {
+  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  enabled        = "false"
+  from_address   = "userupdate@example.com"
   identity       = "${aws_ses_domain_identity.test_identity.arn}"
   role_arn       = "${aws_iam_role.test_role.arn}"
 }

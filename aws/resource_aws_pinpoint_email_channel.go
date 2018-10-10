@@ -57,21 +57,10 @@ func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interfac
 
 	params := &pinpoint.EmailChannelRequest{}
 
-	if d.HasChange("enabled") {
-		params.Enabled = aws.Bool(d.Get("enabled").(bool))
-	}
-
-	if d.HasChange("from_address") {
-		params.FromAddress = aws.String(d.Get("from_address").(string))
-	}
-
-	if d.HasChange("identity") {
-		params.Identity = aws.String(d.Get("identity").(string))
-	}
-
-	if d.HasChange("role_arn") {
-		params.RoleArn = aws.String(d.Get("role_arn").(string))
-	}
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.FromAddress = aws.String(d.Get("from_address").(string))
+	params.Identity = aws.String(d.Get("identity").(string))
+	params.RoleArn = aws.String(d.Get("role_arn").(string))
 
 	req := pinpoint.UpdateEmailChannelInput{
 		ApplicationId:       aws.String(applicationId),
