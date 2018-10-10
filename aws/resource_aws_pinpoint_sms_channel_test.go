@@ -38,6 +38,13 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSPinpointSMSChannelConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
 		},
 	})
 }
@@ -50,6 +57,7 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test_sms_channel"
 	senderId := "1234"
 	shortCode := "5678"
+	newShortCode := "7890"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -63,6 +71,7 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", shortCode),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "promotional_messages_per_second"),
 					resource.TestCheckResourceAttrSet(resourceName, "transactional_messages_per_second"),
 				),
@@ -71,6 +80,17 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSPinpointSMSChannelConfig_full(senderId, newShortCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
+					resource.TestCheckResourceAttr(resourceName, "short_code", newShortCode),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "promotional_messages_per_second"),
+					resource.TestCheckResourceAttrSet(resourceName, "transactional_messages_per_second"),
+				),
 			},
 		},
 	})
@@ -126,7 +146,7 @@ resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_sms_channel" "test_sms_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
-  enabled        = "true"
+  enabled        = "false"
   sender_id      = "%s"
   short_code     = "%s"
 }`, senderId, shortCode)

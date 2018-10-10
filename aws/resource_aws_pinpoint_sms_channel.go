@@ -57,9 +57,7 @@ func resourceAwsPinpointSMSChannelUpsert(d *schema.ResourceData, meta interface{
 
 	params := &pinpoint.SMSChannelRequest{}
 
-	if d.HasChange("enabled") {
-		params.Enabled = aws.Bool(d.Get("enabled").(bool))
-	}
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 	if d.HasChange("sender_id") {
 		params.SenderId = aws.String(d.Get("sender_id").(string))
