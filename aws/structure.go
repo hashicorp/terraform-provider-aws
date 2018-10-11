@@ -3989,6 +3989,34 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	return l
 }
 
+func flattenMqLogs(logs *mq.LogsSummary) []interface{} {
+	if logs == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"general": aws.BoolValue(logs.General),
+		"audit":   aws.BoolValue(logs.Audit),
+	}
+
+	return []interface{}{m}
+}
+
+func expandMqLogs(l []interface{}) *mq.Logs {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	logs := &mq.Logs{
+		Audit:   aws.Bool(m["audit"].(bool)),
+		General: aws.Bool(m["general"].(bool)),
+	}
+
+	return logs
+}
+
 func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLifecycleConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
