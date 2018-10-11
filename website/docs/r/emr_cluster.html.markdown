@@ -184,7 +184,7 @@ The following arguments are supported:
 * `instance_group` - (Optional) A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Defined below
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value
 	is not provided, logs are not created
-* `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, and `Spark`. Case insensitive
+* `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
 * `termination_protection` - (Optional) Switch on/off termination protection (default is off)
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job
