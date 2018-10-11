@@ -18,7 +18,7 @@ defined in-line. At this time you cannot use a Security Group with in-line rules
 in conjunction with any Security Group Rule resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
 
-**WARNING on Using Protocol = "all" with from_port and to_port:** Using protocol = "all" with from_port and to_port will result in the AWS API silently creating a security group with Port Range = ALL (the from_port and to_port sections are removed entirely during creation). This may result in a security group that is MUCH more wide open than anticipated.
+~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
 
 ## Example Usage
 
