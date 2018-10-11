@@ -92,6 +92,7 @@ func resourceAwsLbListener() *schema.Resource {
 						"order": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 50000),
 						},
 
