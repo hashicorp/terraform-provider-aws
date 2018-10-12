@@ -113,7 +113,6 @@ resource "aws_lb_listener_rule" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
-    order = 1
     type  = "authenticate-cognito"
     authenticate_cognito {
       user_pool_arn       = "${aws_cognito_user_pool.pool.arn}"
@@ -123,7 +122,6 @@ resource "aws_lb_listener_rule" "admin" {
   }
 
   action {
-    order            = 2
     type             = "forward"
     target_group_arn = "${aws_lb_target_group.static.arn}"
   }
@@ -135,7 +133,6 @@ resource "aws_lb_listener" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
-    order = 1
     type  = "authenticate-oidc"
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
@@ -148,7 +145,6 @@ resource "aws_lb_listener" "admin" {
   }
 
   action {
-    order            = 2
     type             = "forward"
     target_group_arn = "${aws_lb_target_group.static.arn}"
   }
