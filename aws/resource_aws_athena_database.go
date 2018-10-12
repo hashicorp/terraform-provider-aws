@@ -60,30 +60,36 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 }
 
 func getResultConfig(d *schema.ResourceData) (*athena.ResultConfiguration, error) {
-	e := d.Get("encryption_key").([]interface{})
-	data := e[0].(map[string]interface{})
-	keyType := data["type"].(string)
-	keyID := data["id"].(string)
-
 	resultConfig := athena.ResultConfiguration{
 		OutputLocation: aws.String("s3://" + d.Get("bucket").(string)),
 	}
 
-	if len(keyType) > 0 {
-		if strings.HasSuffix(keyType, "_KMS") && len(keyID) <= 0 {
-			return nil, fmt.Errorf("Key type %s requires a valid KMS key ID", keyType)
-		}
-
-		encryptionConfig := athena.EncryptionConfiguration{
-			EncryptionOption: aws.String(keyType),
-		}
-
-		if len(keyID) > 0 {
-			encryptionConfig.KmsKey = aws.String(keyID)
-		}
-
-		resultConfig.EncryptionConfiguration = &encryptionConfig
+	e := d.Get("encryption_key").([]interface{})
+	if len(e) <= 0 {
+		return &resultConfig
 	}
+
+	data := e[0].(map[string]interface{})
+	keyType := data["type"].(string)
+	keyID := data["id"].(string)
+
+	if len(keyType) <= 0 {
+		return fmt.Errorf("An encryption key type is required")
+	}
+
+	if strings.HasSuffix(keyType, "_KMS") && len(keyID) <= 0 {
+		return nil, fmt.Errorf("Key type %s requires a valid KMS key ID", keyType)
+	}
+
+	encryptionConfig := athena.EncryptionConfiguration{
+		EncryptionOption: aws.String(keyType),
+	}
+
+	if len(keyID) > 0 {
+		encryptionConfig.KmsKey = aws.String(keyID)
+	}
+
+	resultConfig.EncryptionConfiguration = &encryptionConfig
 
 	return &resultConfig, nil
 }
