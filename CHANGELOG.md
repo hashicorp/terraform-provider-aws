@@ -1,4 +1,10 @@
 ## 1.41.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lb_listener: Prevent unconfigured `default_action` `order` from showing difference [GH-6119]
+* resource/aws_lb_listener_rule: Prevent unconfigured `action` `order` from showing difference [GH-6119]
+
 ## 1.40.0 (October 10, 2018)
 
 FEATURES:
