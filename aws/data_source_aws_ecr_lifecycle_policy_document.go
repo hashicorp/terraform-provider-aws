@@ -167,9 +167,8 @@ func dataSourceAwsEcrLifecyclePolicyDocumentRead(d *schema.ResourceData, meta in
 }
 
 func dataSourceAwsEcrLifecyclePolicyDocumentMakeSelection(in []interface{}) EcrLifecyclePolicyStatementSelectionSet {
-	out := EcrLifecyclePolicySelection{}
 	item := in[0].(map[string]interface{})
-	out = EcrLifecyclePolicySelection{
+	out := EcrLifecyclePolicySelection{
 		TagStatus:     item["tag_status"].(string),
 		TagPrefixList: item["tag_prefix_list"].([]interface{}),
 		CountType:     item["count_type"].(string),
