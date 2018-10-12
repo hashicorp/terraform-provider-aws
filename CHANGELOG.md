@@ -1,5 +1,10 @@
 ## 1.41.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_lb_listener: Allow `default_action` `order` to be based on Terraform configuration ordering [GH-6124]
+* resource/aws_lb_listener_rule: Allow `action` `order` to be based on Terraform configuration ordering [GH-6124]
+
 BUG FIXES:
 
 * resource/aws_lb_listener: Prevent unconfigured `default_action` `order` from showing difference [GH-6119]
