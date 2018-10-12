@@ -16,7 +16,7 @@ const opAcceptPortfolioShare = "AcceptPortfolioShare"
 // AcceptPortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the AcceptPortfolioShare operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -103,7 +103,7 @@ const opAssociatePrincipalWithPortfolio = "AssociatePrincipalWithPortfolio"
 // AssociatePrincipalWithPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the AssociatePrincipalWithPortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -190,7 +190,7 @@ const opAssociateProductWithPortfolio = "AssociateProductWithPortfolio"
 // AssociateProductWithPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the AssociateProductWithPortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -277,7 +277,7 @@ const opAssociateTagOptionWithResource = "AssociateTagOptionWithResource"
 // AssociateTagOptionWithResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AssociateTagOptionWithResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -377,7 +377,7 @@ const opCopyProduct = "CopyProduct"
 // CopyProductRequest generates a "aws/request.Request" representing the
 // client's request for the CopyProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -466,7 +466,7 @@ const opCreateConstraint = "CreateConstraint"
 // CreateConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the CreateConstraint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -556,7 +556,7 @@ const opCreatePortfolio = "CreatePortfolio"
 // CreatePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -645,7 +645,7 @@ const opCreatePortfolioShare = "CreatePortfolioShare"
 // CreatePortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePortfolioShare operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -732,7 +732,7 @@ const opCreateProduct = "CreateProduct"
 // CreateProductRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -821,7 +821,7 @@ const opCreateProvisionedProductPlan = "CreateProvisionedProductPlan"
 // CreateProvisionedProductPlanRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProvisionedProductPlan operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -916,7 +916,7 @@ const opCreateProvisioningArtifact = "CreateProvisioningArtifact"
 // CreateProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProvisioningArtifact operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1007,7 +1007,7 @@ const opCreateTagOption = "CreateTagOption"
 // CreateTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTagOption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1096,7 +1096,7 @@ const opDeleteConstraint = "DeleteConstraint"
 // DeleteConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteConstraint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1178,7 +1178,7 @@ const opDeletePortfolio = "DeletePortfolio"
 // DeletePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1272,7 +1272,7 @@ const opDeletePortfolioShare = "DeletePortfolioShare"
 // DeletePortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePortfolioShare operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1351,7 +1351,7 @@ const opDeleteProduct = "DeleteProduct"
 // DeleteProductRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1445,7 +1445,7 @@ const opDeleteProvisionedProductPlan = "DeleteProvisionedProductPlan"
 // DeleteProvisionedProductPlanRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProvisionedProductPlan operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1527,7 +1527,7 @@ const opDeleteProvisioningArtifact = "DeleteProvisioningArtifact"
 // DeleteProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProvisioningArtifact operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1618,7 +1618,7 @@ const opDeleteTagOption = "DeleteTagOption"
 // DeleteTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTagOption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1708,7 +1708,7 @@ const opDescribeConstraint = "DescribeConstraint"
 // DescribeConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeConstraint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1787,7 +1787,7 @@ const opDescribeCopyProductStatus = "DescribeCopyProductStatus"
 // DescribeCopyProductStatusRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCopyProductStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1866,7 +1866,7 @@ const opDescribePortfolio = "DescribePortfolio"
 // DescribePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1945,7 +1945,7 @@ const opDescribeProduct = "DescribeProduct"
 // DescribeProductRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2027,7 +2027,7 @@ const opDescribeProductAsAdmin = "DescribeProductAsAdmin"
 // DescribeProductAsAdminRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProductAsAdmin operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2107,7 +2107,7 @@ const opDescribeProductView = "DescribeProductView"
 // DescribeProductViewRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProductView operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2189,7 +2189,7 @@ const opDescribeProvisionedProduct = "DescribeProvisionedProduct"
 // DescribeProvisionedProductRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisionedProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2268,7 +2268,7 @@ const opDescribeProvisionedProductPlan = "DescribeProvisionedProductPlan"
 // DescribeProvisionedProductPlanRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisionedProductPlan operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2350,7 +2350,7 @@ const opDescribeProvisioningArtifact = "DescribeProvisioningArtifact"
 // DescribeProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisioningArtifact operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2430,7 +2430,7 @@ const opDescribeProvisioningParameters = "DescribeProvisioningParameters"
 // DescribeProvisioningParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisioningParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2520,7 +2520,7 @@ const opDescribeRecord = "DescribeRecord"
 // DescribeRecordRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeRecord operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2602,7 +2602,7 @@ const opDescribeTagOption = "DescribeTagOption"
 // DescribeTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTagOption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2686,7 +2686,7 @@ const opDisassociatePrincipalFromPortfolio = "DisassociatePrincipalFromPortfolio
 // DisassociatePrincipalFromPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DisassociatePrincipalFromPortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2768,7 +2768,7 @@ const opDisassociateProductFromPortfolio = "DisassociateProductFromPortfolio"
 // DisassociateProductFromPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DisassociateProductFromPortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2854,7 +2854,7 @@ const opDisassociateTagOptionFromResource = "DisassociateTagOptionFromResource"
 // DisassociateTagOptionFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the DisassociateTagOptionFromResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2938,7 +2938,7 @@ const opExecuteProvisionedProductPlan = "ExecuteProvisionedProductPlan"
 // ExecuteProvisionedProductPlanRequest generates a "aws/request.Request" representing the
 // client's request for the ExecuteProvisionedProductPlan operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3026,7 +3026,7 @@ const opListAcceptedPortfolioShares = "ListAcceptedPortfolioShares"
 // ListAcceptedPortfolioSharesRequest generates a "aws/request.Request" representing the
 // client's request for the ListAcceptedPortfolioShares operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3161,7 +3161,7 @@ const opListConstraintsForPortfolio = "ListConstraintsForPortfolio"
 // ListConstraintsForPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the ListConstraintsForPortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3299,7 +3299,7 @@ const opListLaunchPaths = "ListLaunchPaths"
 // ListLaunchPathsRequest generates a "aws/request.Request" representing the
 // client's request for the ListLaunchPaths operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3439,7 +3439,7 @@ const opListPortfolioAccess = "ListPortfolioAccess"
 // ListPortfolioAccessRequest generates a "aws/request.Request" representing the
 // client's request for the ListPortfolioAccess operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3518,7 +3518,7 @@ const opListPortfolios = "ListPortfolios"
 // ListPortfoliosRequest generates a "aws/request.Request" representing the
 // client's request for the ListPortfolios operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3653,7 +3653,7 @@ const opListPortfoliosForProduct = "ListPortfoliosForProduct"
 // ListPortfoliosForProductRequest generates a "aws/request.Request" representing the
 // client's request for the ListPortfoliosForProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3791,7 +3791,7 @@ const opListPrincipalsForPortfolio = "ListPrincipalsForPortfolio"
 // ListPrincipalsForPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the ListPrincipalsForPortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3929,7 +3929,7 @@ const opListProvisionedProductPlans = "ListProvisionedProductPlans"
 // ListProvisionedProductPlansRequest generates a "aws/request.Request" representing the
 // client's request for the ListProvisionedProductPlans operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4012,7 +4012,7 @@ const opListProvisioningArtifacts = "ListProvisioningArtifacts"
 // ListProvisioningArtifactsRequest generates a "aws/request.Request" representing the
 // client's request for the ListProvisioningArtifacts operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4095,7 +4095,7 @@ const opListRecordHistory = "ListRecordHistory"
 // ListRecordHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the ListRecordHistory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4174,7 +4174,7 @@ const opListResourcesForTagOption = "ListResourcesForTagOption"
 // ListResourcesForTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the ListResourcesForTagOption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4317,7 +4317,7 @@ const opListTagOptions = "ListTagOptions"
 // ListTagOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagOptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4457,7 +4457,7 @@ const opProvisionProduct = "ProvisionProduct"
 // ProvisionProductRequest generates a "aws/request.Request" representing the
 // client's request for the ProvisionProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4552,7 +4552,7 @@ const opRejectPortfolioShare = "RejectPortfolioShare"
 // RejectPortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the RejectPortfolioShare operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4631,7 +4631,7 @@ const opScanProvisionedProducts = "ScanProvisionedProducts"
 // ScanProvisionedProductsRequest generates a "aws/request.Request" representing the
 // client's request for the ScanProvisionedProducts operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4712,7 +4712,7 @@ const opSearchProducts = "SearchProducts"
 // SearchProductsRequest generates a "aws/request.Request" representing the
 // client's request for the SearchProducts operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4847,7 +4847,7 @@ const opSearchProductsAsAdmin = "SearchProductsAsAdmin"
 // SearchProductsAsAdminRequest generates a "aws/request.Request" representing the
 // client's request for the SearchProductsAsAdmin operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4985,7 +4985,7 @@ const opSearchProvisionedProducts = "SearchProvisionedProducts"
 // SearchProvisionedProductsRequest generates a "aws/request.Request" representing the
 // client's request for the SearchProvisionedProducts operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5120,7 +5120,7 @@ const opTerminateProvisionedProduct = "TerminateProvisionedProduct"
 // TerminateProvisionedProductRequest generates a "aws/request.Request" representing the
 // client's request for the TerminateProvisionedProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5204,7 +5204,7 @@ const opUpdateConstraint = "UpdateConstraint"
 // UpdateConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateConstraint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5286,7 +5286,7 @@ const opUpdatePortfolio = "UpdatePortfolio"
 // UpdatePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePortfolio operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5380,7 +5380,7 @@ const opUpdateProduct = "UpdateProduct"
 // UpdateProductRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5467,7 +5467,7 @@ const opUpdateProvisionedProduct = "UpdateProvisionedProduct"
 // UpdateProvisionedProductRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProvisionedProduct operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5556,7 +5556,7 @@ const opUpdateProvisioningArtifact = "UpdateProvisioningArtifact"
 // UpdateProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProvisioningArtifact operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5642,7 +5642,7 @@ const opUpdateTagOption = "UpdateTagOption"
 // UpdateTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTagOption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
