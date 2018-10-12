@@ -30,6 +30,7 @@ data "aws_iam_policy" "example" {
 
 * `arn` - (Optional) The ARN of the IAM policy.
 * `name` - (Optional) The name of the IAM policy. You must use either ARN or name to fetch information about IAM policy.
+* `path_prefix` - (Optional) The path to the IAM policy. This parameter allows a string of characters consisting of either a forward slash (/) by itself or a string that must begin and end with forward slashes. E.G. `/service-role/`
 
 ## Attributes Reference
 

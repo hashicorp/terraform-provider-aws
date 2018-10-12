@@ -29,6 +29,12 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"arn"},
 			},
+			"path_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "/",
+				ConflictsWith: []string{"arn"},
+			},
 			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -52,105 +58,42 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 }
 
 func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	iamconn := meta.(*AWSClient).iamconn
 
-	arn := d.Get("arn").(string)
-
-	input := &iam.GetPolicyInput{
-		PolicyArn: aws.String(arn),
-	}
-
-	// Handle IAM eventual consistency
-	var output *iam.GetPolicyOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		output, err = conn.GetPolicy(input)
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+	var iamPolicyARN string
+	if v, ok := d.GetOk("name"); ok {
+		input := &iam.ListPoliciesInput{
+			PathPrefix: aws.String(d.Get("path_prefix").(string)),
 		}
 
-		if err != nil {
-			return resource.NonRetryableError(err)
+		policyArns := make([]string, 0)
+		if err := iamconn.ListPoliciesPages(input, func(res *iam.ListPoliciesOutput, lastPage bool) bool {
+			for _, policy := range res.Policies {
+				if v.(string) == aws.StringValue(policy.PolicyName) {
+					policyArns = append(policyArns, aws.StringValue(policy.Arn))
+				}
+			}
+			return !lastPage
+		}); err != nil {
+			return err
 		}
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.GetPolicy(input)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading IAM policy %s: %w", arn, err)
-	}
-
-	if output == nil || output.Policy == nil {
-		return fmt.Errorf("error reading IAM policy %s: empty output", arn)
-	}
-
-	policy := output.Policy
-
-	d.SetId(aws.StringValue(policy.Arn))
-
-	d.Set("arn", policy.Arn)
-	d.Set("description", policy.Description)
-	d.Set("name", policy.PolicyName)
-	d.Set("path", policy.Path)
-	d.Set("policy_id", policy.PolicyId)
-
-	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	// Retrieve policy
-
-	policyVersionInput := &iam.GetPolicyVersionInput{
-		PolicyArn: aws.String(arn),
-		VersionId: policy.DefaultVersionId,
-	}
-
-	// Handle IAM eventual consistency
-	var policyVersionOutput *iam.GetPolicyVersionOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		policyVersionOutput, err = conn.GetPolicyVersion(policyVersionInput)
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+		if len(policyArns) == 0 {
+			return fmt.Errorf("no matching IAM policy found")
+		}
+		if len(policyArns) > 1 {
+			return fmt.Errorf("multiple IAM policies matched; use additional constraints to reduce matches to a single IAM policy")
 		}
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+		iamPolicyARN = policyArns[0]
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		policyVersionOutput, err = conn.GetPolicyVersion(policyVersionInput)
+	} else if v, ok := d.GetOk("arn"); ok {
+		iamPolicyARN = v.(string)
+	} else {
+		return fmt.Errorf(
+			"ARN or name must be set to query IAM policy")
 	}
 
-	if err != nil {
-		return fmt.Errorf("error reading IAM Policy (%s) version: %w", arn, err)
-	}
-
-	if policyVersionOutput == nil || policyVersionOutput.PolicyVersion == nil {
-		return fmt.Errorf("error reading IAM Policy (%s) version: empty output", arn)
-	}
-
-	policyVersion := policyVersionOutput.PolicyVersion
-
-	var policyDocument string
-	if policyVersion != nil {
-		policyDocument, err = url.QueryUnescape(aws.StringValue(policyVersion.Document))
-		if err != nil {
-			return fmt.Errorf("error parsing IAM Policy (%s) document: %w", arn, err)
-		}
-	}
-
-	d.Set("policy", policyDocument)
-
-	return nil
+	d.SetId(iamPolicyARN)
+	return resourceAwsIamPolicyRead(d, meta)
 }
