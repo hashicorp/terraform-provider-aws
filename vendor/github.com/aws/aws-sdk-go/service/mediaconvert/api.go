@@ -16,7 +16,7 @@ const opCancelJob = "CancelJob"
 // CancelJobRequest generates a "aws/request.Request" representing the
 // client's request for the CancelJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -105,7 +105,7 @@ const opCreateJob = "CreateJob"
 // CreateJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -194,7 +194,7 @@ const opCreateJobTemplate = "CreateJobTemplate"
 // CreateJobTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the CreateJobTemplate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -283,7 +283,7 @@ const opCreatePreset = "CreatePreset"
 // CreatePresetRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePreset operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -372,7 +372,7 @@ const opCreateQueue = "CreateQueue"
 // CreateQueueRequest generates a "aws/request.Request" representing the
 // client's request for the CreateQueue operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -461,7 +461,7 @@ const opDeleteJobTemplate = "DeleteJobTemplate"
 // DeleteJobTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteJobTemplate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -549,7 +549,7 @@ const opDeletePreset = "DeletePreset"
 // DeletePresetRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePreset operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -637,7 +637,7 @@ const opDeleteQueue = "DeleteQueue"
 // DeleteQueueRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteQueue operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -725,7 +725,7 @@ const opDescribeEndpoints = "DescribeEndpoints"
 // DescribeEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -751,6 +751,12 @@ func (c *MediaConvert) DescribeEndpointsRequest(input *DescribeEndpointsInput) (
 		Name:       opDescribeEndpoints,
 		HTTPMethod: "POST",
 		HTTPPath:   "/2017-08-29/endpoints",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -809,12 +815,62 @@ func (c *MediaConvert) DescribeEndpointsWithContext(ctx aws.Context, input *Desc
 	return out, req.Send()
 }
 
+// DescribeEndpointsPages iterates over the pages of a DescribeEndpoints operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeEndpoints method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeEndpoints operation.
+//    pageNum := 0
+//    err := client.DescribeEndpointsPages(params,
+//        func(page *DescribeEndpointsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConvert) DescribeEndpointsPages(input *DescribeEndpointsInput, fn func(*DescribeEndpointsOutput, bool) bool) error {
+	return c.DescribeEndpointsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeEndpointsPagesWithContext same as DescribeEndpointsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) DescribeEndpointsPagesWithContext(ctx aws.Context, input *DescribeEndpointsInput, fn func(*DescribeEndpointsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeEndpointsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeEndpointsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opGetJob = "GetJob"
 
 // GetJobRequest generates a "aws/request.Request" representing the
 // client's request for the GetJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -902,7 +958,7 @@ const opGetJobTemplate = "GetJobTemplate"
 // GetJobTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobTemplate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -990,7 +1046,7 @@ const opGetPreset = "GetPreset"
 // GetPresetRequest generates a "aws/request.Request" representing the
 // client's request for the GetPreset operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1078,7 +1134,7 @@ const opGetQueue = "GetQueue"
 // GetQueueRequest generates a "aws/request.Request" representing the
 // client's request for the GetQueue operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1166,7 +1222,7 @@ const opListJobTemplates = "ListJobTemplates"
 // ListJobTemplatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListJobTemplates operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1192,6 +1248,12 @@ func (c *MediaConvert) ListJobTemplatesRequest(input *ListJobTemplatesInput) (re
 		Name:       opListJobTemplates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2017-08-29/jobTemplates",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1251,12 +1313,62 @@ func (c *MediaConvert) ListJobTemplatesWithContext(ctx aws.Context, input *ListJ
 	return out, req.Send()
 }
 
+// ListJobTemplatesPages iterates over the pages of a ListJobTemplates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobTemplates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobTemplates operation.
+//    pageNum := 0
+//    err := client.ListJobTemplatesPages(params,
+//        func(page *ListJobTemplatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConvert) ListJobTemplatesPages(input *ListJobTemplatesInput, fn func(*ListJobTemplatesOutput, bool) bool) error {
+	return c.ListJobTemplatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobTemplatesPagesWithContext same as ListJobTemplatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) ListJobTemplatesPagesWithContext(ctx aws.Context, input *ListJobTemplatesInput, fn func(*ListJobTemplatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobTemplatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobTemplatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListJobTemplatesOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListJobs = "ListJobs"
 
 // ListJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1282,6 +1394,12 @@ func (c *MediaConvert) ListJobsRequest(input *ListJobsInput) (req *request.Reque
 		Name:       opListJobs,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2017-08-29/jobs",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1342,12 +1460,62 @@ func (c *MediaConvert) ListJobsWithContext(ctx aws.Context, input *ListJobsInput
 	return out, req.Send()
 }
 
+// ListJobsPages iterates over the pages of a ListJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobs operation.
+//    pageNum := 0
+//    err := client.ListJobsPages(params,
+//        func(page *ListJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConvert) ListJobsPages(input *ListJobsInput, fn func(*ListJobsOutput, bool) bool) error {
+	return c.ListJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobsPagesWithContext same as ListJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, fn func(*ListJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListPresets = "ListPresets"
 
 // ListPresetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPresets operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1373,6 +1541,12 @@ func (c *MediaConvert) ListPresetsRequest(input *ListPresetsInput) (req *request
 		Name:       opListPresets,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2017-08-29/presets",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1432,12 +1606,62 @@ func (c *MediaConvert) ListPresetsWithContext(ctx aws.Context, input *ListPreset
 	return out, req.Send()
 }
 
+// ListPresetsPages iterates over the pages of a ListPresets operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPresets method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPresets operation.
+//    pageNum := 0
+//    err := client.ListPresetsPages(params,
+//        func(page *ListPresetsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConvert) ListPresetsPages(input *ListPresetsInput, fn func(*ListPresetsOutput, bool) bool) error {
+	return c.ListPresetsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPresetsPagesWithContext same as ListPresetsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) ListPresetsPagesWithContext(ctx aws.Context, input *ListPresetsInput, fn func(*ListPresetsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPresetsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPresetsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListPresetsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListQueues = "ListQueues"
 
 // ListQueuesRequest generates a "aws/request.Request" representing the
 // client's request for the ListQueues operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1463,6 +1687,12 @@ func (c *MediaConvert) ListQueuesRequest(input *ListQueuesInput) (req *request.R
 		Name:       opListQueues,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2017-08-29/queues",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1522,12 +1752,62 @@ func (c *MediaConvert) ListQueuesWithContext(ctx aws.Context, input *ListQueuesI
 	return out, req.Send()
 }
 
+// ListQueuesPages iterates over the pages of a ListQueues operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListQueues method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListQueues operation.
+//    pageNum := 0
+//    err := client.ListQueuesPages(params,
+//        func(page *ListQueuesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConvert) ListQueuesPages(input *ListQueuesInput, fn func(*ListQueuesOutput, bool) bool) error {
+	return c.ListQueuesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListQueuesPagesWithContext same as ListQueuesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConvert) ListQueuesPagesWithContext(ctx aws.Context, input *ListQueuesInput, fn func(*ListQueuesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListQueuesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListQueuesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListQueuesOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1615,7 +1895,7 @@ const opTagResource = "TagResource"
 // TagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the TagResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1704,7 +1984,7 @@ const opUntagResource = "UntagResource"
 // UntagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the UntagResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1793,7 +2073,7 @@ const opUpdateJobTemplate = "UpdateJobTemplate"
 // UpdateJobTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateJobTemplate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1881,7 +2161,7 @@ const opUpdatePreset = "UpdatePreset"
 // UpdatePresetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePreset operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1969,7 +2249,7 @@ const opUpdateQueue = "UpdateQueue"
 // UpdateQueueRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateQueue operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.

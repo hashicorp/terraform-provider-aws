@@ -18,7 +18,7 @@ const opAddRoleToDBCluster = "AddRoleToDBCluster"
 // AddRoleToDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the AddRoleToDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -113,7 +113,7 @@ const opAddSourceIdentifierToSubscription = "AddSourceIdentifierToSubscription"
 // AddSourceIdentifierToSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the AddSourceIdentifierToSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -195,7 +195,7 @@ const opAddTagsToResource = "AddTagsToResource"
 // AddTagsToResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -287,7 +287,7 @@ const opApplyPendingMaintenanceAction = "ApplyPendingMaintenanceAction"
 // ApplyPendingMaintenanceActionRequest generates a "aws/request.Request" representing the
 // client's request for the ApplyPendingMaintenanceAction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -373,7 +373,7 @@ const opAuthorizeDBSecurityGroupIngress = "AuthorizeDBSecurityGroupIngress"
 // AuthorizeDBSecurityGroupIngressRequest generates a "aws/request.Request" representing the
 // client's request for the AuthorizeDBSecurityGroupIngress operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -474,7 +474,7 @@ const opBacktrackDBCluster = "BacktrackDBCluster"
 // BacktrackDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the BacktrackDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -560,7 +560,7 @@ const opCopyDBClusterParameterGroup = "CopyDBClusterParameterGroup"
 // CopyDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -646,7 +646,7 @@ const opCopyDBClusterSnapshot = "CopyDBClusterSnapshot"
 // CopyDBClusterSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBClusterSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -801,7 +801,7 @@ const opCopyDBParameterGroup = "CopyDBParameterGroup"
 // CopyDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -887,7 +887,7 @@ const opCopyDBSnapshot = "CopyDBSnapshot"
 // CopyDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -986,7 +986,7 @@ const opCopyOptionGroup = "CopyOptionGroup"
 // CopyOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CopyOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1071,7 +1071,7 @@ const opCreateDBCluster = "CreateDBCluster"
 // CreateDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1208,7 +1208,7 @@ const opCreateDBClusterParameterGroup = "CreateDBClusterParameterGroup"
 // CreateDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1318,7 +1318,7 @@ const opCreateDBClusterSnapshot = "CreateDBClusterSnapshot"
 // CreateDBClusterSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBClusterSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1411,7 +1411,7 @@ const opCreateDBInstance = "CreateDBInstance"
 // CreateDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1552,7 +1552,7 @@ const opCreateDBInstanceReadReplica = "CreateDBInstanceReadReplica"
 // CreateDBInstanceReadReplicaRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBInstanceReadReplica operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1702,7 +1702,7 @@ const opCreateDBParameterGroup = "CreateDBParameterGroup"
 // CreateDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1805,7 +1805,7 @@ const opCreateDBSecurityGroup = "CreateDBSecurityGroup"
 // CreateDBSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBSecurityGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1896,7 +1896,7 @@ const opCreateDBSnapshot = "CreateDBSnapshot"
 // CreateDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1984,7 +1984,7 @@ const opCreateDBSubnetGroup = "CreateDBSubnetGroup"
 // CreateDBSubnetGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBSubnetGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2080,7 +2080,7 @@ const opCreateEventSubscription = "CreateEventSubscription"
 // CreateEventSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEventSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2194,7 +2194,7 @@ const opCreateOptionGroup = "CreateOptionGroup"
 // CreateOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2276,7 +2276,7 @@ const opDeleteDBCluster = "DeleteDBCluster"
 // DeleteDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2372,7 +2372,7 @@ const opDeleteDBClusterParameterGroup = "DeleteDBClusterParameterGroup"
 // DeleteDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2462,7 +2462,7 @@ const opDeleteDBClusterSnapshot = "DeleteDBClusterSnapshot"
 // DeleteDBClusterSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBClusterSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2550,7 +2550,7 @@ const opDeleteDBInstance = "DeleteDBInstance"
 // DeleteDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2665,7 +2665,7 @@ const opDeleteDBParameterGroup = "DeleteDBParameterGroup"
 // DeleteDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2752,7 +2752,7 @@ const opDeleteDBSecurityGroup = "DeleteDBSecurityGroup"
 // DeleteDBSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBSecurityGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2838,7 +2838,7 @@ const opDeleteDBSnapshot = "DeleteDBSnapshot"
 // DeleteDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2923,7 +2923,7 @@ const opDeleteDBSubnetGroup = "DeleteDBSubnetGroup"
 // DeleteDBSubnetGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBSubnetGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3012,7 +3012,7 @@ const opDeleteEventSubscription = "DeleteEventSubscription"
 // DeleteEventSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEventSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3095,7 +3095,7 @@ const opDeleteOptionGroup = "DeleteOptionGroup"
 // DeleteOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3179,7 +3179,7 @@ const opDescribeAccountAttributes = "DescribeAccountAttributes"
 // DescribeAccountAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAccountAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3258,7 +3258,7 @@ const opDescribeCertificates = "DescribeCertificates"
 // DescribeCertificatesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCertificates operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3337,7 +3337,7 @@ const opDescribeDBClusterBacktracks = "DescribeDBClusterBacktracks"
 // DescribeDBClusterBacktracksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterBacktracks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3422,7 +3422,7 @@ const opDescribeDBClusterParameterGroups = "DescribeDBClusterParameterGroups"
 // DescribeDBClusterParameterGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterParameterGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3506,7 +3506,7 @@ const opDescribeDBClusterParameters = "DescribeDBClusterParameters"
 // DescribeDBClusterParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3589,7 +3589,7 @@ const opDescribeDBClusterSnapshotAttributes = "DescribeDBClusterSnapshotAttribut
 // DescribeDBClusterSnapshotAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterSnapshotAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3679,7 +3679,7 @@ const opDescribeDBClusterSnapshots = "DescribeDBClusterSnapshots"
 // DescribeDBClusterSnapshotsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterSnapshots operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3762,7 +3762,7 @@ const opDescribeDBClusters = "DescribeDBClusters"
 // DescribeDBClustersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3901,7 +3901,7 @@ const opDescribeDBEngineVersions = "DescribeDBEngineVersions"
 // DescribeDBEngineVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBEngineVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4031,7 +4031,7 @@ const opDescribeDBInstances = "DescribeDBInstances"
 // DescribeDBInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4166,7 +4166,7 @@ const opDescribeDBLogFiles = "DescribeDBLogFiles"
 // DescribeDBLogFilesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBLogFiles operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4301,7 +4301,7 @@ const opDescribeDBParameterGroups = "DescribeDBParameterGroups"
 // DescribeDBParameterGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBParameterGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4438,7 +4438,7 @@ const opDescribeDBParameters = "DescribeDBParameters"
 // DescribeDBParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4573,7 +4573,7 @@ const opDescribeDBSecurityGroups = "DescribeDBSecurityGroups"
 // DescribeDBSecurityGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSecurityGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4710,7 +4710,7 @@ const opDescribeDBSnapshotAttributes = "DescribeDBSnapshotAttributes"
 // DescribeDBSnapshotAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSnapshotAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4800,7 +4800,7 @@ const opDescribeDBSnapshots = "DescribeDBSnapshots"
 // DescribeDBSnapshotsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSnapshots operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4935,7 +4935,7 @@ const opDescribeDBSubnetGroups = "DescribeDBSubnetGroups"
 // DescribeDBSubnetGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSubnetGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5073,7 +5073,7 @@ const opDescribeEngineDefaultClusterParameters = "DescribeEngineDefaultClusterPa
 // DescribeEngineDefaultClusterParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEngineDefaultClusterParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5151,7 +5151,7 @@ const opDescribeEngineDefaultParameters = "DescribeEngineDefaultParameters"
 // DescribeEngineDefaultParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEngineDefaultParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5282,7 +5282,7 @@ const opDescribeEventCategories = "DescribeEventCategories"
 // DescribeEventCategoriesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEventCategories operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5359,7 +5359,7 @@ const opDescribeEventSubscriptions = "DescribeEventSubscriptions"
 // DescribeEventSubscriptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEventSubscriptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5498,7 +5498,7 @@ const opDescribeEvents = "DescribeEvents"
 // DescribeEventsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEvents operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5632,7 +5632,7 @@ const opDescribeOptionGroupOptions = "DescribeOptionGroupOptions"
 // DescribeOptionGroupOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOptionGroupOptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5762,7 +5762,7 @@ const opDescribeOptionGroups = "DescribeOptionGroups"
 // DescribeOptionGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOptionGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5897,7 +5897,7 @@ const opDescribeOrderableDBInstanceOptions = "DescribeOrderableDBInstanceOptions
 // DescribeOrderableDBInstanceOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOrderableDBInstanceOptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6027,7 +6027,7 @@ const opDescribePendingMaintenanceActions = "DescribePendingMaintenanceActions"
 // DescribePendingMaintenanceActionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePendingMaintenanceActions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6107,7 +6107,7 @@ const opDescribeReservedDBInstances = "DescribeReservedDBInstances"
 // DescribeReservedDBInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeReservedDBInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6243,7 +6243,7 @@ const opDescribeReservedDBInstancesOfferings = "DescribeReservedDBInstancesOffer
 // DescribeReservedDBInstancesOfferingsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeReservedDBInstancesOfferings operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6378,7 +6378,7 @@ const opDescribeSourceRegions = "DescribeSourceRegions"
 // DescribeSourceRegionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeSourceRegions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6454,7 +6454,7 @@ const opDescribeValidDBInstanceModifications = "DescribeValidDBInstanceModificat
 // DescribeValidDBInstanceModificationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeValidDBInstanceModifications operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6538,7 +6538,7 @@ const opDownloadDBLogFilePortion = "DownloadDBLogFilePortion"
 // DownloadDBLogFilePortionRequest generates a "aws/request.Request" representing the
 // client's request for the DownloadDBLogFilePortion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6676,7 +6676,7 @@ const opFailoverDBCluster = "FailoverDBCluster"
 // FailoverDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the FailoverDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6774,7 +6774,7 @@ const opListTagsForResource = "ListTagsForResource"
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6863,7 +6863,7 @@ const opModifyCurrentDBClusterCapacity = "ModifyCurrentDBClusterCapacity"
 // ModifyCurrentDBClusterCapacityRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyCurrentDBClusterCapacity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6968,7 +6968,7 @@ const opModifyDBCluster = "ModifyDBCluster"
 // ModifyDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7085,7 +7085,7 @@ const opModifyDBClusterParameterGroup = "ModifyDBClusterParameterGroup"
 // ModifyDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7189,7 +7189,7 @@ const opModifyDBClusterSnapshotAttribute = "ModifyDBClusterSnapshotAttribute"
 // ModifyDBClusterSnapshotAttributeRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBClusterSnapshotAttribute operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7291,7 +7291,7 @@ const opModifyDBInstance = "ModifyDBInstance"
 // ModifyDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7427,7 +7427,7 @@ const opModifyDBParameterGroup = "ModifyDBParameterGroup"
 // ModifyDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7528,7 +7528,7 @@ const opModifyDBSnapshot = "ModifyDBSnapshot"
 // ModifyDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7610,7 +7610,7 @@ const opModifyDBSnapshotAttribute = "ModifyDBSnapshotAttribute"
 // ModifyDBSnapshotAttributeRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBSnapshotAttribute operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7712,7 +7712,7 @@ const opModifyDBSubnetGroup = "ModifyDBSubnetGroup"
 // ModifyDBSubnetGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBSubnetGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7807,7 +7807,7 @@ const opModifyEventSubscription = "ModifyEventSubscription"
 // ModifyEventSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyEventSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7909,7 +7909,7 @@ const opModifyOptionGroup = "ModifyOptionGroup"
 // ModifyOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7991,7 +7991,7 @@ const opPromoteReadReplica = "PromoteReadReplica"
 // PromoteReadReplicaRequest generates a "aws/request.Request" representing the
 // client's request for the PromoteReadReplica operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8083,7 +8083,7 @@ const opPromoteReadReplicaDBCluster = "PromoteReadReplicaDBCluster"
 // PromoteReadReplicaDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the PromoteReadReplicaDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8165,7 +8165,7 @@ const opPurchaseReservedDBInstancesOffering = "PurchaseReservedDBInstancesOfferi
 // PurchaseReservedDBInstancesOfferingRequest generates a "aws/request.Request" representing the
 // client's request for the PurchaseReservedDBInstancesOffering operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8250,7 +8250,7 @@ const opRebootDBInstance = "RebootDBInstance"
 // RebootDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the RebootDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8342,7 +8342,7 @@ const opRemoveRoleFromDBCluster = "RemoveRoleFromDBCluster"
 // RemoveRoleFromDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveRoleFromDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8433,7 +8433,7 @@ const opRemoveSourceIdentifierFromSubscription = "RemoveSourceIdentifierFromSubs
 // RemoveSourceIdentifierFromSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveSourceIdentifierFromSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8515,7 +8515,7 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 // RemoveTagsFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8606,7 +8606,7 @@ const opResetDBClusterParameterGroup = "ResetDBClusterParameterGroup"
 // ResetDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ResetDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8702,7 +8702,7 @@ const opResetDBParameterGroup = "ResetDBParameterGroup"
 // ResetDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ResetDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8792,7 +8792,7 @@ const opRestoreDBClusterFromS3 = "RestoreDBClusterFromS3"
 // RestoreDBClusterFromS3Request generates a "aws/request.Request" representing the
 // client's request for the RestoreDBClusterFromS3 operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8920,7 +8920,7 @@ const opRestoreDBClusterFromSnapshot = "RestoreDBClusterFromSnapshot"
 // RestoreDBClusterFromSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBClusterFromSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9069,7 +9069,7 @@ const opRestoreDBClusterToPointInTime = "RestoreDBClusterToPointInTime"
 // RestoreDBClusterToPointInTimeRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBClusterToPointInTime operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9217,7 +9217,7 @@ const opRestoreDBInstanceFromDBSnapshot = "RestoreDBInstanceFromDBSnapshot"
 // RestoreDBInstanceFromDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBInstanceFromDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9382,7 +9382,7 @@ const opRestoreDBInstanceFromS3 = "RestoreDBInstanceFromS3"
 // RestoreDBInstanceFromS3Request generates a "aws/request.Request" representing the
 // client's request for the RestoreDBInstanceFromS3 operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9525,7 +9525,7 @@ const opRestoreDBInstanceToPointInTime = "RestoreDBInstanceToPointInTime"
 // RestoreDBInstanceToPointInTimeRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBInstanceToPointInTime operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9687,7 +9687,7 @@ const opRevokeDBSecurityGroupIngress = "RevokeDBSecurityGroupIngress"
 // RevokeDBSecurityGroupIngressRequest generates a "aws/request.Request" representing the
 // client's request for the RevokeDBSecurityGroupIngress operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9779,7 +9779,7 @@ const opStartDBCluster = "StartDBCluster"
 // StartDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the StartDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9868,7 +9868,7 @@ const opStartDBInstance = "StartDBInstance"
 // StartDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StartDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9993,7 +9993,7 @@ const opStopDBCluster = "StopDBCluster"
 // StopDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the StopDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -10084,7 +10084,7 @@ const opStopDBInstance = "StopDBInstance"
 // StopDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StopDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
