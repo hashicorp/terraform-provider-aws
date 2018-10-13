@@ -84,6 +84,12 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"mtu": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"tags": tagsSchema(),
 		},
 
@@ -111,6 +117,7 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
+			Mtu:                  aws.Int64(int64(d.Get("mtu").(int))),
 		},
 	}
 	if vgwOk && vgwIdRaw.(string) != "" {
@@ -127,6 +134,9 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	}
 	if v, ok := d.GetOk("amazon_address"); ok && v.(string) != "" {
 		req.NewPrivateVirtualInterface.AmazonAddress = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("mtu"); ok && v.(int) != 0 {
+		req.NewPrivateVirtualInterface.Mtu = aws.Int64(v.(int64))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect private virtual interface: %#v", req)
@@ -175,6 +185,7 @@ func resourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
+	d.Set("mtu", vif.Mtu)
 	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
