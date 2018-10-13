@@ -417,7 +417,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	if err := d.Set("member_clusters", flattenStringList(rgp.MemberClusters)); err != nil {
 		return fmt.Errorf("error setting member_clusters: %s", err)
 	}
-	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(aws.BoolValue(rgp.ClusterEnabled), rgp.NodeGroups)); err != nil {
+	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
 		return fmt.Errorf("error setting cluster_mode attribute: %s", err)
 	}
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
@@ -861,23 +861,11 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, timeout time.D
 	return err
 }
 
-func flattenElasticacheNodeGroupsToClusterMode(clusterEnabled bool, nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
-	if !clusterEnabled {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"num_node_groups":         0,
-		"replicas_per_node_group": 0,
-	}
-
-	if len(nodeGroups) == 0 {
-		return []map[string]interface{}{m}
-	}
-
-	m["num_node_groups"] = len(nodeGroups)
-	m["replicas_per_node_group"] = (len(nodeGroups[0].NodeGroupMembers) - 1)
-	return []map[string]interface{}{m}
+func flattenElasticacheNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
+	return []map[string]interface{}{map[string]interface{}{
+		"num_node_groups":         len(nodeGroups),
+		"replicas_per_node_group": (len(nodeGroups[0].NodeGroupMembers) - 1),
+	}}
 }
 
 func waitForModifyElasticacheReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
