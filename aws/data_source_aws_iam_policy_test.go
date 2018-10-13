@@ -59,6 +59,30 @@ func TestAccAWSDataSourceIAMPolicy_withName(t *testing.T) {
 
 }
 
+func TestAccAWSDataSourceIAMPolicy_withPath(t *testing.T) {
+	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	policyPath := "/describe/"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsDataSourceIamPolicyConfig_withPath(policyName, policyPath),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy.test", "name", policyName),
+					resource.TestCheckResourceAttr("data.aws_iam_policy.test", "description", "My test policy"),
+					resource.TestCheckResourceAttr("data.aws_iam_policy.test", "path", policyPath),
+					resource.TestCheckResourceAttrSet("data.aws_iam_policy.test", "policy"),
+					resource.TestMatchResourceAttr("data.aws_iam_policy.test", "arn",
+						regexp.MustCompile(`^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`)),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccAwsDataSourceIamPolicyConfig(policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
@@ -114,4 +138,33 @@ data "aws_iam_policy" "test" {
   name = "${aws_iam_policy.test_policy.name}"
 }
 `, policyName)
+}
+
+func testAccAwsDataSourceIamPolicyConfig_withPath(policyName, policyPath string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test_policy" {
+    name = "%s"
+    path = "%s"
+    description = "My test policy"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+data "aws_iam_policy" "test" {
+  name = "${aws_iam_policy.test_policy.name}"
+  path_prefix = "%s"
+}
+`, policyName, policyPath, policyPath)
 }
