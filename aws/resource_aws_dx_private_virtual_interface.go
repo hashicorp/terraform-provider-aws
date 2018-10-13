@@ -86,8 +86,8 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 			},
 			"mtu": {
 				Type:     schema.TypeInt,
+				Default:  1500,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"jumbo_frame_capable": {

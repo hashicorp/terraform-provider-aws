@@ -203,7 +203,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9001
+  mtu			 			 = 9001
 }
 `, n, cid, n, bgpAsn)
 }
