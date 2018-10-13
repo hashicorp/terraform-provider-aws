@@ -90,6 +90,10 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"jumbo_frame_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 
@@ -186,6 +190,7 @@ func resourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("mtu", vif.Mtu)
+	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
