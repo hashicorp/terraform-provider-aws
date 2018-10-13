@@ -38,6 +38,15 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
 				),
 			},
+			{
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_mtuCapable(connectionId, ownerAccountId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "9001"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
+				),
+			},
 			// Test import.
 			{
 				ResourceName:      "aws_dx_hosted_private_virtual_interface.foo",
@@ -85,6 +94,20 @@ func testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(name string) resource.
 }
 
 func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, ownerAcctId, n string, bgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_hosted_private_virtual_interface" "foo" {
+  connection_id    = "%s"
+  owner_account_id = "%s"
+
+  name           = "%s"
+  vlan           = 4094
+  address_family = "ipv4"
+  bgp_asn        = %d
+}
+`, cid, ownerAcctId, n, bgpAsn)
+}
+
+func testAccDxHostedPrivateVirtualInterfaceConfig_mtuCapable(cid, ownerAcctId, n string, bgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface" "foo" {
   connection_id    = "%s"
