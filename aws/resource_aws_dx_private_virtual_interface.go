@@ -85,7 +85,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				ForceNew: true,
 			},
 			"mtu": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -136,7 +136,7 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 		req.NewPrivateVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("mtu"); ok && v.(int) != 0 {
-		req.NewPrivateVirtualInterface.Mtu = aws.Int64(v.(int64))
+		req.NewPrivateVirtualInterface.Mtu = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect private virtual interface: %#v", req)

@@ -131,7 +131,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9100
+  mtu			 = 9001
 }
 `, n, cid, n, bgpAsn)
 }
@@ -152,7 +152,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9100
+  mtu			 = 9001
 
   tags {
     Environment = "test"
@@ -176,7 +176,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9100
+  mtu			 = 9001
 }
 `, n, amzAsn, cid, n, bgpAsn)
 }
