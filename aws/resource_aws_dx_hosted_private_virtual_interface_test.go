@@ -94,6 +94,7 @@ resource "aws_dx_hosted_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
+  mtu			 = 9001
 }
 `, cid, ownerAcctId, n, bgpAsn)
 }

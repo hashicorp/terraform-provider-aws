@@ -77,6 +77,12 @@ func resourceAwsDxHostedPrivateVirtualInterface() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateAwsAccountId,
 			},
+			"mtu": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -97,6 +103,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, me
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
+			Mtu:                  aws.Int64(int64(d.Get("mtu").(int))),
 		},
 	}
 	if v, ok := d.GetOk("bgp_auth_key"); ok && v.(string) != "" {
@@ -107,6 +114,9 @@ func resourceAwsDxHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, me
 	}
 	if v, ok := d.GetOk("amazon_address"); ok && v.(string) != "" {
 		req.NewPrivateVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("mtu"); ok && v.(int) != 0 {
+		req.NewPrivateVirtualInterfaceAllocation.Mtu = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect hosted private virtual interface: %#v", req)
@@ -154,6 +164,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceRead(d *schema.ResourceData, meta
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set("mtu", vif.Mtu)
 
 	return nil
 }
