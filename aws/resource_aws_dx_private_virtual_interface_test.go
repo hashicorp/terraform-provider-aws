@@ -43,6 +43,15 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "tags.Environment", "test"),
 				),
 			},
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_mtuCapable(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "9001"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
+				),
+			},
 			// Test import.
 			{
 				ResourceName:      "aws_dx_private_virtual_interface.foo",
@@ -131,7 +140,6 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9001
 }
 `, n, cid, n, bgpAsn)
 }
@@ -152,7 +160,6 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9001
 
   tags {
     Environment = "test"
@@ -176,7 +183,27 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 = 9001
 }
 `, n, amzAsn, cid, n, bgpAsn)
+}
+
+func testAccDxPrivateVirtualInterfaceConfig_mtuCapable(cid, n string, bgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "foo" {
+  tags {
+    Name = "%s"
+  }
+}
+
+resource "aws_dx_private_virtual_interface" "foo" {
+  connection_id    = "%s"
+
+  vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
+  name           = "%s"
+  vlan           = 4094
+  address_family = "ipv4"
+  bgp_asn        = %d
+  mtu			 = 9001
+}
+`, n, cid, n, bgpAsn)
 }
