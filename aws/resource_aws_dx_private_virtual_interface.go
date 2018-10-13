@@ -90,7 +90,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"jumbo_frame_enabled": {
+			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
