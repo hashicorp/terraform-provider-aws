@@ -83,6 +83,10 @@ func resourceAwsDxHostedPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"jumbo_frame_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -165,6 +169,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceRead(d *schema.ResourceData, meta
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("owner_account_id", vif.OwnerAccount)
 	d.Set("mtu", vif.Mtu)
+	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 
 	return nil
 }
