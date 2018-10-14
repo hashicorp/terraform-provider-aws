@@ -11,6 +11,7 @@ BUG FIXES:
 
 * resource/aws_lb_listener: Prevent unconfigured `default_action` `order` from showing difference [GH-6119]
 * resource/aws_lb_listener_rule: Prevent unconfigured `action` `order` from showing difference [GH-6119]
+* resource/aws_lb_listener_rule: Retry read for eventual consistency after resource creation [GH-6154]
 
 ## 1.40.0 (October 10, 2018)
 
