@@ -23,15 +23,6 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-// When released, replace all usage with upstream validation function:
-// https://github.com/hashicorp/terraform/pull/17484
-func validateRFC3339TimeString(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := time.Parse(time.RFC3339, v.(string)); err != nil {
-		errors = append(errors, fmt.Errorf("%q: %s", k, err))
-	}
-	return
-}
-
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with
