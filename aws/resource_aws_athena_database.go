@@ -66,7 +66,7 @@ func getResultConfig(d *schema.ResourceData) (*athena.ResultConfiguration, error
 
 	e := d.Get("encryption_key").([]interface{})
 	if len(e) <= 0 {
-		return &resultConfig
+		return &resultConfig, nil
 	}
 
 	data := e[0].(map[string]interface{})
@@ -74,7 +74,7 @@ func getResultConfig(d *schema.ResourceData) (*athena.ResultConfiguration, error
 	keyID := data["id"].(string)
 
 	if len(keyType) <= 0 {
-		return fmt.Errorf("An encryption key type is required")
+		return nil, fmt.Errorf("An encryption key type is required")
 	}
 
 	if strings.HasSuffix(keyType, "_KMS") && len(keyID) <= 0 {
