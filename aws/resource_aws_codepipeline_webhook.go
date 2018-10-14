@@ -324,5 +324,7 @@ func resourceAwsCodePipelineWebhookDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Could not delete webhook: %s", err)
 	}
 
+	d.SetId("")
+
 	return nil
 }
