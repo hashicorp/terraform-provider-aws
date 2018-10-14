@@ -28,6 +28,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
 					testAccCheckAWSCodePipelineWebhookExists("aws_codepipeline_webhook.bar"),
 					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "id"),
+					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "url"),
 				),
 			},
 		},

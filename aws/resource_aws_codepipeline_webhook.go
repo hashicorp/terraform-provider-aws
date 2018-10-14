@@ -65,6 +65,12 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"target": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -176,6 +182,9 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 
 	arn := *webhook.Webhook.Arn
 	d.SetId(arn)
+
+	url := *webhook.Webhook.Url
+	d.Set("url", url)
 
 	return resourceAwsCodePipelineWebhookRead(d, meta)
 }

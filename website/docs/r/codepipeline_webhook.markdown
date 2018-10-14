@@ -136,3 +136,4 @@ A `target` block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The CodePipeline webhook's ARN.
+* `url` - The CodePipeline webhook's URL. Send events to this endpoint to trigger the target.
