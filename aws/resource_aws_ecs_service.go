@@ -106,12 +106,6 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  100,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
-						return true
-					}
-					return false
-				},
 			},
 
 			"load_balancer": {
@@ -354,7 +348,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	input.SchedulingStrategy = aws.String(schedulingStrategy)
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
 		// unset these if DAEMON
-		input.DeploymentConfiguration = nil
+		input.DeploymentConfiguration.MaximumPercent = aws.Int64(100)
 		input.DesiredCount = nil
 	}
 
@@ -767,9 +761,16 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		input.TaskDefinition = aws.String(n.(string))
 	}
 
-	if schedulingStrategy != ecs.SchedulingStrategyDaemon && (d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent")) {
+	if schedulingStrategy == ecs.SchedulingStrategyReplica && (d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent")) {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
 			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
+			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
+		}
+	}
+
+	if schedulingStrategy == ecs.SchedulingStrategyDaemon && d.HasChange("deployment_minimum_healthy_percent") {
+		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+			MaximumPercent:        aws.Int64(100),
 			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
 		}
 	}
