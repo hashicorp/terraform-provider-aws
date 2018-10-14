@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
@@ -690,16 +689,8 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]stri
 		ResourceArn: aws.String(arn),
 	})
 
-	// Do not fail when interfacing with dynamodb-local
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Message() == "Tagging is not currently supported in DynamoDB Local." {
-				err = nil
-			}
-		}
-	}
-
-	if err != nil {
+	// Do not fail if interfacing with dynamodb-local
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 		return nil, fmt.Errorf("Error reading tags from dynamodb resource: %s", err)
 	}
 
