@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -85,7 +86,7 @@ func expandListeners(configured []interface{}) ([]*elb.Listener, error) {
 		if valid {
 			listeners = append(listeners, l)
 		} else {
-			return nil, fmt.Errorf("[ERR] ELB Listener: ssl_certificate_id may be set only when protocol is 'https' or 'ssl'")
+			return nil, fmt.Errorf("ELB Listener: ssl_certificate_id may be set only when protocol is 'https' or 'ssl'")
 		}
 	}
 
@@ -122,8 +123,11 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				l.DockerVolumeConfiguration.Scope = aws.String(v)
 			}
 
-			if v, ok := config["autoprovision"]; ok {
-				l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+			if v, ok := config["autoprovision"]; ok && v != "" {
+				scope := l.DockerVolumeConfiguration.Scope
+				if scope == nil || *scope != ecs.ScopeTask || v.(bool) {
+					l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+				}
 			}
 
 			if v, ok := config["driver"].(string); ok && v != "" {
@@ -1904,6 +1908,20 @@ func sortListBasedonTFFile(in []string, d *schema.ResourceData, listName string)
 	return in, fmt.Errorf("Could not find list: %s", listName)
 }
 
+// This function sorts LB Actions to look like whats found in the tf file
+func sortActionsBasedonTypeinTFFile(actionName string, actions []*elbv2.Action, d *schema.ResourceData) []*elbv2.Action {
+	actionCount := d.Get(actionName + ".#").(int)
+	for i := 0; i < actionCount; i++ {
+		currAction := d.Get(actionName + "." + strconv.Itoa(i)).(map[string]interface{})
+		for j, action := range actions {
+			if currAction["type"].(string) == aws.StringValue(action.Type) {
+				actions[i], actions[j] = actions[j], actions[i]
+			}
+		}
+	}
+	return actions
+}
+
 func flattenApiGatewayThrottleSettings(settings *apigateway.ThrottleSettings) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
@@ -2259,7 +2277,11 @@ func flattenConfigRuleScope(scope *configservice.Scope) []interface{} {
 	return items
 }
 
-func expandConfigRuleScope(configured map[string]interface{}) *configservice.Scope {
+func expandConfigRuleScope(l []interface{}) *configservice.Scope {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	configured := l[0].(map[string]interface{})
 	scope := &configservice.Scope{}
 
 	if v, ok := configured["compliance_resource_id"].(string); ok && v != "" {
@@ -3957,6 +3979,9 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 		}
 		if len(instance.Endpoints) > 0 {
 			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
+		}
+		if instance.IpAddress != nil {
+			m["ip_address"] = *instance.IpAddress
 		}
 		l[i] = m
 	}

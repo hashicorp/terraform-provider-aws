@@ -319,7 +319,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
@@ -496,19 +496,30 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
-	if err != nil {
-		if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
-			log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error getting launch template: %s", err)
-	}
-	if len(dlt.LaunchTemplates) == 0 {
+
+	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	// AWS SDK constant above is currently incorrect
+	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error getting launch template: %s", err)
+	}
+
+	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
+		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if *dlt.LaunchTemplates[0].LaunchTemplateId != d.Id() {
 		return fmt.Errorf("Unable to find launch template: %#v", dlt.LaunchTemplates)
 	}
@@ -563,7 +574,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return err
 		}
@@ -641,10 +652,15 @@ func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+		return nil
+	}
+	// AWS SDK constant above is currently incorrect
+	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
-			return nil
-		}
 		return err
 	}
 
@@ -727,17 +743,31 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 		mo := map[string]interface{}{
 			"market_type": aws.StringValue(m.MarketType),
 		}
-		spot := []interface{}{}
 		so := m.SpotOptions
 		if so != nil {
-			spot = append(spot, map[string]interface{}{
-				"block_duration_minutes":         aws.Int64Value(so.BlockDurationMinutes),
-				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
-				"max_price":                      aws.StringValue(so.MaxPrice),
-				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
-				"valid_until":                    aws.TimeValue(so.ValidUntil).Format(time.RFC3339),
-			})
-			mo["spot_options"] = spot
+			spotOptions := map[string]interface{}{}
+
+			if so.BlockDurationMinutes != nil {
+				spotOptions["block_duration_minutes"] = aws.Int64Value(so.BlockDurationMinutes)
+			}
+
+			if so.InstanceInterruptionBehavior != nil {
+				spotOptions["instance_interruption_behavior"] = aws.StringValue(so.InstanceInterruptionBehavior)
+			}
+
+			if so.MaxPrice != nil {
+				spotOptions["max_price"] = aws.StringValue(so.MaxPrice)
+			}
+
+			if so.SpotInstanceType != nil {
+				spotOptions["spot_instance_type"] = aws.StringValue(so.SpotInstanceType)
+			}
+
+			if so.ValidUntil != nil {
+				spotOptions["valid_until"] = aws.TimeValue(so.ValidUntil).Format(time.RFC3339)
+			}
+
+			mo["spot_options"] = []interface{}{spotOptions}
 		}
 		s = append(s, mo)
 	}
@@ -758,7 +788,6 @@ func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
-		var ipv6Addresses []string
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
@@ -773,11 +802,19 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
-		for _, address := range v.Ipv6Addresses {
-			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
-		}
-		if len(ipv6Addresses) > 0 {
-			networkInterface["ipv6_addresses"] = ipv6Addresses
+		if len(v.Ipv6Addresses) > 0 {
+			raw, ok := networkInterface["ipv6_addresses"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+
+			list := raw.(*schema.Set)
+
+			for _, address := range v.Ipv6Addresses {
+				list.Add(aws.StringValue(address.Ipv6Address))
+			}
+
+			networkInterface["ipv6_addresses"] = list
 		}
 
 		for _, address := range v.PrivateIpAddresses {
@@ -896,7 +933,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
+	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 {

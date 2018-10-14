@@ -458,6 +458,15 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 	schedule_expression = "rate(5 minutes)"
 }
 
+resource "aws_vpc" "vpc" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "subnet" {
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.1.1.0/24"
+}
+
 resource "aws_cloudwatch_event_target" "test" {
 	arn = "${aws_ecs_cluster.test.id}"
   rule = "${aws_cloudwatch_event_rule.schedule.id}"
@@ -466,6 +475,10 @@ resource "aws_cloudwatch_event_target" "test" {
   ecs_target {
     task_count = 1
     task_definition_arn = "${aws_ecs_task_definition.task.arn}"
+    launch_type = "FARGATE"
+    network_configuration {
+      subnets = ["${aws_subnet.subnet.id}"]
+    }
   }
 }
 
@@ -517,6 +530,11 @@ resource "aws_ecs_cluster" "test" {
 
 resource "aws_ecs_task_definition" "task" {
   family                = "%s"
+  cpu = 256
+  memory = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode = "awsvpc"
+
   container_definitions = <<EOF
 [
   {

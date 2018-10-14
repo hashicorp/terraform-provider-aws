@@ -76,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -95,8 +96,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
@@ -240,6 +241,8 @@ type AWSClient struct {
 	budgetconn            *budgets.Budgets
 	neptuneconn           *neptune.Neptune
 	pricingconn           *pricing.Pricing
+	pinpointconn          *pinpoint.Pinpoint
+	workspacesconn        *workspaces.WorkSpaces
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -347,7 +350,7 @@ func (c *Config) Client() (interface{}, error) {
   Please see https://terraform.io/docs/providers/aws/index.html for more information on
   providing credentials for the AWS Provider`)
 		}
-		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
+		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
 	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)
@@ -564,6 +567,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.appsyncconn = appsync.New(sess)
 	client.neptuneconn = neptune.New(sess)
 	client.pricingconn = pricing.New(sess)
+	client.pinpointconn = pinpoint.New(sess)
+	client.workspacesconn = workspaces.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

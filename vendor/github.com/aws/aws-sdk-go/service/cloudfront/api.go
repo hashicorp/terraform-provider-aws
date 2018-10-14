@@ -18,7 +18,7 @@ const opCreateCloudFrontOriginAccessIdentity = "CreateCloudFrontOriginAccessIden
 // CreateCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCloudFrontOriginAccessIdentity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -119,7 +119,7 @@ const opCreateDistribution = "CreateDistribution2018_06_18"
 // CreateDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -158,8 +158,21 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 
 // CreateDistribution API operation for Amazon CloudFront.
 //
-// Creates a new web distribution. Send a POST request to the /CloudFront API
-// version/distribution/distribution ID resource.
+// Creates a new web distribution. You create a CloudFront distribution to tell
+// CloudFront where you want content to be delivered from, and the details about
+// how to track and manage content delivery. Send a POST request to the /CloudFront
+// API version/distribution/distribution ID resource.
+//
+// When you update a distribution, there are more required fields than when
+// you create a distribution. When you update your distribution by using UpdateDistribution,
+// follow the steps included in the documentation to get the current configuration
+// and then make your updates. This helps to make sure that you include all
+// of the required fields. To view a summary, see Required Fields for Create
+// Distribution and Update Distribution (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-overview-required-fields.html)
+// in the Amazon CloudFront Developer Guide.
+//
+// If you are using Adobe Flash Media Server's RTMP protocol, you set up a different
+// kind of CloudFront distribution. For more information, see CreateStreamingDistribution.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -325,7 +338,7 @@ const opCreateDistributionWithTags = "CreateDistributionWithTags2018_06_18"
 // CreateDistributionWithTagsRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDistributionWithTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -532,7 +545,7 @@ const opCreateFieldLevelEncryptionConfig = "CreateFieldLevelEncryptionConfig2018
 // CreateFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateFieldLevelEncryptionConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -635,7 +648,7 @@ const opCreateFieldLevelEncryptionProfile = "CreateFieldLevelEncryptionProfile20
 // CreateFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the CreateFieldLevelEncryptionProfile operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -737,7 +750,7 @@ const opCreateInvalidation = "CreateInvalidation2018_06_18"
 // CreateInvalidationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateInvalidation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -835,7 +848,7 @@ const opCreatePublicKey = "CreatePublicKey2018_06_18"
 // CreatePublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePublicKey operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -922,7 +935,7 @@ const opCreateStreamingDistribution = "CreateStreamingDistribution2018_06_18"
 // CreateStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStreamingDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1061,7 +1074,7 @@ const opCreateStreamingDistributionWithTags = "CreateStreamingDistributionWithTa
 // CreateStreamingDistributionWithTagsRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStreamingDistributionWithTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1175,7 +1188,7 @@ const opDeleteCloudFrontOriginAccessIdentity = "DeleteCloudFrontOriginAccessIden
 // DeleteCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCloudFrontOriginAccessIdentity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1268,7 +1281,7 @@ const opDeleteDistribution = "DeleteDistribution2018_06_18"
 // DeleteDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1361,7 +1374,7 @@ const opDeleteFieldLevelEncryptionConfig = "DeleteFieldLevelEncryptionConfig2018
 // DeleteFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteFieldLevelEncryptionConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1455,7 +1468,7 @@ const opDeleteFieldLevelEncryptionProfile = "DeleteFieldLevelEncryptionProfile20
 // DeleteFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteFieldLevelEncryptionProfile operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1549,7 +1562,7 @@ const opDeletePublicKey = "DeletePublicKey2018_06_18"
 // DeletePublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePublicKey operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1643,7 +1656,7 @@ const opDeleteStreamingDistribution = "DeleteStreamingDistribution2018_06_18"
 // DeleteStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteStreamingDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1771,7 +1784,7 @@ const opGetCloudFrontOriginAccessIdentity = "GetCloudFrontOriginAccessIdentity20
 // GetCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the GetCloudFrontOriginAccessIdentity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1853,7 +1866,7 @@ const opGetCloudFrontOriginAccessIdentityConfig = "GetCloudFrontOriginAccessIden
 // GetCloudFrontOriginAccessIdentityConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetCloudFrontOriginAccessIdentityConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1935,7 +1948,7 @@ const opGetDistribution = "GetDistribution2018_06_18"
 // GetDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the GetDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2017,7 +2030,7 @@ const opGetDistributionConfig = "GetDistributionConfig2018_06_18"
 // GetDistributionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetDistributionConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2099,7 +2112,7 @@ const opGetFieldLevelEncryption = "GetFieldLevelEncryption2018_06_18"
 // GetFieldLevelEncryptionRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2181,7 +2194,7 @@ const opGetFieldLevelEncryptionConfig = "GetFieldLevelEncryptionConfig2018_06_18
 // GetFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryptionConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2263,7 +2276,7 @@ const opGetFieldLevelEncryptionProfile = "GetFieldLevelEncryptionProfile2018_06_
 // GetFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryptionProfile operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2345,7 +2358,7 @@ const opGetFieldLevelEncryptionProfileConfig = "GetFieldLevelEncryptionProfileCo
 // GetFieldLevelEncryptionProfileConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryptionProfileConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2427,7 +2440,7 @@ const opGetInvalidation = "GetInvalidation2018_06_18"
 // GetInvalidationRequest generates a "aws/request.Request" representing the
 // client's request for the GetInvalidation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2512,7 +2525,7 @@ const opGetPublicKey = "GetPublicKey2018_06_18"
 // GetPublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the GetPublicKey operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2594,7 +2607,7 @@ const opGetPublicKeyConfig = "GetPublicKeyConfig2018_06_18"
 // GetPublicKeyConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetPublicKeyConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2676,7 +2689,7 @@ const opGetStreamingDistribution = "GetStreamingDistribution2018_06_18"
 // GetStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the GetStreamingDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2759,7 +2772,7 @@ const opGetStreamingDistributionConfig = "GetStreamingDistributionConfig2018_06_
 // GetStreamingDistributionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetStreamingDistributionConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2841,7 +2854,7 @@ const opListCloudFrontOriginAccessIdentities = "ListCloudFrontOriginAccessIdenti
 // ListCloudFrontOriginAccessIdentitiesRequest generates a "aws/request.Request" representing the
 // client's request for the ListCloudFrontOriginAccessIdentities operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2976,7 +2989,7 @@ const opListDistributions = "ListDistributions2018_06_18"
 // ListDistributionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDistributions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3111,7 +3124,7 @@ const opListDistributionsByWebACLId = "ListDistributionsByWebACLId2018_06_18"
 // ListDistributionsByWebACLIdRequest generates a "aws/request.Request" representing the
 // client's request for the ListDistributionsByWebACLId operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3192,7 +3205,7 @@ const opListFieldLevelEncryptionConfigs = "ListFieldLevelEncryptionConfigs2018_0
 // ListFieldLevelEncryptionConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListFieldLevelEncryptionConfigs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3272,7 +3285,7 @@ const opListFieldLevelEncryptionProfiles = "ListFieldLevelEncryptionProfiles2018
 // ListFieldLevelEncryptionProfilesRequest generates a "aws/request.Request" representing the
 // client's request for the ListFieldLevelEncryptionProfiles operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3352,7 +3365,7 @@ const opListInvalidations = "ListInvalidations2018_06_18"
 // ListInvalidationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListInvalidations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3493,7 +3506,7 @@ const opListPublicKeys = "ListPublicKeys2018_06_18"
 // ListPublicKeysRequest generates a "aws/request.Request" representing the
 // client's request for the ListPublicKeys operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3572,7 +3585,7 @@ const opListStreamingDistributions = "ListStreamingDistributions2018_06_18"
 // ListStreamingDistributionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListStreamingDistributions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3707,7 +3720,7 @@ const opListTagsForResource = "ListTagsForResource2018_06_18"
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3793,7 +3806,7 @@ const opTagResource = "TagResource2018_06_18"
 // TagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the TagResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3881,7 +3894,7 @@ const opUntagResource = "UntagResource2018_06_18"
 // UntagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the UntagResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3969,7 +3982,7 @@ const opUpdateCloudFrontOriginAccessIdentity = "UpdateCloudFrontOriginAccessIden
 // UpdateCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCloudFrontOriginAccessIdentity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4071,7 +4084,7 @@ const opUpdateDistribution = "UpdateDistribution2018_06_18"
 // UpdateDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4110,11 +4123,22 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 
 // UpdateDistribution API operation for Amazon CloudFront.
 //
-// Updates the configuration for a web distribution. Perform the following steps.
+// Updates the configuration for a web distribution.
 //
-// For information about updating a distribution using the CloudFront console,
-// see Creating or Updating a Web Distribution Using the CloudFront Console
-//  (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-creating-console.html)
+// When you update a distribution, there are more required fields than when
+// you create a distribution. When you update your distribution by using this
+// API action, follow the steps here to get the current configuration and then
+// make your updates, to make sure that you include all of the required fields.
+// To view a summary, see Required Fields for Create Distribution and Update
+// Distribution (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-overview-required-fields.html)
+// in the Amazon CloudFront Developer Guide.
+//
+// The update process includes getting the current distribution configuration,
+// updating the XML document that is returned to make your changes, and then
+// submitting an UpdateDistribution request to make the updates.
+//
+// For information about updating a distribution using the CloudFront console
+// instead, see Creating a Distribution (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-creating-console.html)
 // in the Amazon CloudFront Developer Guide.
 //
 // To update a web distribution using the CloudFront API
@@ -4122,15 +4146,25 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 // Submit a GetDistributionConfig request to get the current configuration and
 // an Etag header for the distribution.
 //
-// If you update the distribution again, you need to get a new Etag header.
+// If you update the distribution again, you must get a new Etag header.
 //
 // Update the XML document that was returned in the response to your GetDistributionConfig
-// request to include the desired changes. You can't change the value of CallerReference.
-// If you try to change this value, CloudFront returns an IllegalUpdate error.
-// Note that you must strip out the ETag parameter that is returned.
+// request to include your changes.
+//
+// When you edit the XML file, be aware of the following:
+//
+// You must strip out the ETag parameter that is returned.
+//
+// Additional fields are required when you update a distribution. There may
+// be fields included in the XML file for features that you haven't configured
+// for your distribution. This is expected and required to successfully update
+// the distribution.
+//
+// You can't change the value of CallerReference. If you try to change this
+// value, CloudFront returns an IllegalUpdate error.
 //
 // The new configuration replaces the existing configuration; the values that
-// you specify in an UpdateDistribution request are not merged into the existing
+// you specify in an UpdateDistribution request are not merged into your existing
 // configuration. When you add, delete, or replace values in an element that
 // allows multiple values (for example, CNAME), you must specify all of the
 // values that you want to appear in the updated distribution. In addition,
@@ -4151,16 +4185,6 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //
 // Optional: Submit a GetDistribution request to confirm that your changes have
 // propagated. When propagation is complete, the value of Status is Deployed.
-//
-// Beginning with the 2012-05-05 version of the CloudFront API, we made substantial
-// changes to the format of the XML document that you include in the request
-// body when you create or update a distribution. With previous versions of
-// the API, we discovered that it was too easy to accidentally delete one or
-// more values for an element that accepts multiple values, for example, CNAMEs
-// and trusted signers. Our changes for the 2012-05-05 release are intended
-// to prevent these accidental deletions and to notify you when there's a mismatch
-// between the number of values you say you're specifying in the Quantity element
-// and the number of values you're actually specifying.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4323,7 +4347,7 @@ const opUpdateFieldLevelEncryptionConfig = "UpdateFieldLevelEncryptionConfig2018
 // UpdateFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateFieldLevelEncryptionConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4435,7 +4459,7 @@ const opUpdateFieldLevelEncryptionProfile = "UpdateFieldLevelEncryptionProfile20
 // UpdateFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateFieldLevelEncryptionProfile operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4550,7 +4574,7 @@ const opUpdatePublicKey = "UpdatePublicKey2018_06_18"
 // UpdatePublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePublicKey operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4649,7 +4673,7 @@ const opUpdateStreamingDistribution = "UpdateStreamingDistribution2018_06_18"
 // UpdateStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateStreamingDistribution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -10809,7 +10833,8 @@ type LambdaFunctionAssociation struct {
 	EventType *string `type:"string" required:"true" enum:"EventType"`
 
 	// A flag that allows a Lambda function to have read access to the body content.
-	// For more information, see Accessing Body Content (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/)
+	// For more information, see Accessing the Request Body by Choosing the Include
+	// Body Option (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-include-body-access.html)
 	// in the Amazon CloudFront Developer Guide.
 	IncludeBody *bool `type:"boolean"`
 

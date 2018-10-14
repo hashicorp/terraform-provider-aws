@@ -15,6 +15,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIAMRole_importBasic(t *testing.T) {
+	resourceName := "aws_iam_role.role"
+	rName := acctest.RandString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRole_basic(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)

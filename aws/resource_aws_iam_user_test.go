@@ -48,6 +48,31 @@ func TestValidateIamUserName(t *testing.T) {
 	}
 }
 
+func TestAccAWSUser_importBasic(t *testing.T) {
+	resourceName := "aws_iam_user.user"
+
+	n := fmt.Sprintf("test-user-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(n, "/"),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSUser_basic(t *testing.T) {
 	var conf iam.GetUserOutput
 

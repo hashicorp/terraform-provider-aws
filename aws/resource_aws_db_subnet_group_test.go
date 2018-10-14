@@ -14,6 +14,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
+func TestAccAWSDBSubnetGroup_importBasic(t *testing.T) {
+	resourceName := "aws_db_subnet_group.foo"
+
+	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBSubnetGroupConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 

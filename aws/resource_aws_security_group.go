@@ -110,6 +110,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							},
 						},
 
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -440,7 +446,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d); err != nil {
+	if err := deleteLingeringLambdaENIs(conn, d, "group-id"); err != nil {
 		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
 	}
 
@@ -1392,12 +1398,12 @@ func sgProtocolIntegers() map[string]int {
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
+func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName string) error {
 	// Here we carefully find the offenders
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("group-id"),
+				Name:   aws.String(filterName),
 				Values: []*string{aws.String(d.Id())},
 			},
 			{
@@ -1407,6 +1413,11 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 		},
 	}
 	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
+
+	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -1419,6 +1430,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 				AttachmentId: eni.Attachment.AttachmentId,
 			}
 			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+
+			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+				return nil
+			}
 
 			if detachNetworkInterfaceErr != nil {
 				return detachNetworkInterfaceErr
@@ -1442,6 +1457,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 		}
 		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
 
+		if isAWSErr(deleteNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+			return nil
+		}
+
 		if deleteNetworkInterfaceErr != nil {
 			return deleteNetworkInterfaceErr
 		}
@@ -1458,8 +1477,11 @@ func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 		}
 		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			return 42, "false", nil
+		}
+
 		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
 			return nil, "", err
 		}
 

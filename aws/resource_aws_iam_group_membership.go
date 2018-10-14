@@ -88,7 +88,7 @@ func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err := d.Set("users", ul); err != nil {
-		return fmt.Errorf("[WARN] Error setting user list from IAM Group Membership (%s), error: %s", group, err)
+		return fmt.Errorf("Error setting user list from IAM Group Membership (%s), error: %s", group, err)
 	}
 
 	return nil

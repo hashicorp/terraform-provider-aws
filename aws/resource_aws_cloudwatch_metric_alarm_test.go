@@ -12,6 +12,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCloudWatchMetricAlarm_importBasic(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_metric_alarm.foobar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfig(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 	var alarm cloudwatch.MetricAlarm
 	rInt := acctest.RandInt()

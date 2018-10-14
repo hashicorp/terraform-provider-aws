@@ -97,6 +97,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -126,6 +131,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ForceNew: true,
 				Default:  "provisioned",
 				ValidateFunc: validation.StringInSlice([]string{
+					"parallelquery",
 					"provisioned",
 					"serverless",
 				}, false),
@@ -134,7 +140,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -408,6 +413,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier:  aws.String(identifier),
+			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
@@ -427,6 +433,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
 			opts.AvailabilityZones = expandStringList(attr.List())
+		}
+
+		if attr, ok := d.GetOk("kms_key_id"); ok {
+			opts.KmsKeyId = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
@@ -512,6 +522,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier:         aws.String(identifier),
+			DeletionProtection:          aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                      aws.String(d.Get("engine").(string)),
 			EngineMode:                  aws.String(d.Get("engine_mode").(string)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
@@ -606,6 +617,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		s3_bucket := v.([]interface{})[0].(map[string]interface{})
 		createOpts := &rds.RestoreDBClusterFromS3Input{
 			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
@@ -717,6 +729,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier:  aws.String(identifier),
+			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			MasterUserPassword:   aws.String(d.Get("master_password").(string)),
@@ -830,7 +843,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	// Wait, catching any errors
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for RDS Cluster state to be \"available\": %s", err)
+		return fmt.Errorf("Error waiting for RDS Cluster state to be \"available\": %s", err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
@@ -912,6 +925,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("deletion_protection", dbc.DeletionProtection)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -981,6 +995,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("engine_version") {
+		req.EngineVersion = aws.String(d.Get("engine_version").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			req.VpcSecurityGroupIds = expandStringList(attr.List())
@@ -1011,6 +1030,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("deletion_protection") {
+		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		requestUpdate = true
+	}
+
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
@@ -1035,6 +1059,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
+
+				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
+					return resource.NonRetryableError(err)
+				}
+
 				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 					return resource.RetryableError(err)
 				}
@@ -1153,7 +1182,7 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error deleting RDS Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -1244,4 +1273,5 @@ var resourceAwsRdsClusterUpdatePendingStates = []string{
 	"backing-up",
 	"modifying",
 	"resetting-master-credentials",
+	"upgrading",
 }

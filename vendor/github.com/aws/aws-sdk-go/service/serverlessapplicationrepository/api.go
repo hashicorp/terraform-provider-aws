@@ -17,7 +17,7 @@ const opCreateApplication = "CreateApplication"
 // CreateApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -111,7 +111,7 @@ const opCreateApplicationVersion = "CreateApplicationVersion"
 // CreateApplicationVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateApplicationVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -204,7 +204,7 @@ const opCreateCloudFormationChangeSet = "CreateCloudFormationChangeSet"
 // CreateCloudFormationChangeSetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCloudFormationChangeSet operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -294,7 +294,7 @@ const opDeleteApplication = "DeleteApplication"
 // DeleteApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -393,7 +393,7 @@ const opGetApplication = "GetApplication"
 // GetApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the GetApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -487,7 +487,7 @@ const opGetApplicationPolicy = "GetApplicationPolicy"
 // GetApplicationPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the GetApplicationPolicy operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -581,7 +581,7 @@ const opListApplicationVersions = "ListApplicationVersions"
 // ListApplicationVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListApplicationVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -731,7 +731,7 @@ const opListApplications = "ListApplications"
 // ListApplicationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListApplications operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -877,7 +877,7 @@ const opPutApplicationPolicy = "PutApplicationPolicy"
 // PutApplicationPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the PutApplicationPolicy operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -973,7 +973,7 @@ const opUpdateApplication = "UpdateApplication"
 // UpdateApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.

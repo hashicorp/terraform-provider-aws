@@ -27,6 +27,16 @@ const (
 func resourceAwsAmi() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAmiCreate,
+		// The Read, Update and Delete operations are shared with aws_ami_copy
+		// and aws_ami_from_instance, since they differ only in how the image
+		// is created.
+		Read:   resourceAwsAmiRead,
+		Update: resourceAwsAmiUpdate,
+		Delete: resourceAwsAmiDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
@@ -195,13 +205,6 @@ func resourceAwsAmi() *schema.Resource {
 				Default:  "paravirtual",
 			},
 		},
-
-		// The Read, Update and Delete operations are shared with aws_ami_copy
-		// and aws_ami_from_instance, since they differ only in how the image
-		// is created.
-		Read:   resourceAwsAmiRead,
-		Update: resourceAwsAmiUpdate,
-		Delete: resourceAwsAmiDelete,
 	}
 }
 

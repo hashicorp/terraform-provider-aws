@@ -33,6 +33,10 @@ func testSweepEksClusters(region string) error {
 	for {
 		out, err := conn.ListClusters(input)
 		if err != nil {
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+				return nil
+			}
 			return fmt.Errorf("Error retrieving EKS Clusters: %s", err)
 		}
 

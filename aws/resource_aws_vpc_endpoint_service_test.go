@@ -13,6 +13,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSVpcEndpointService_importBasic(t *testing.T) {
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_vpc_endpoint_service.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointServiceBasicConfig(lbName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	lb1Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))

@@ -122,8 +122,7 @@ to understand the implications of using these attributes.
 
 The `root_block_device` mapping supports the following:
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
-  or `"io1"`. (Default: `"standard"`).
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"sc1"`, or `"st1"`. (Default: `"standard"`).
 * `volume_size` - (Optional) The size of the volume in gigabytes.
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
@@ -191,6 +190,8 @@ Each `network_interface` block supports the following:
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 
 ### Credit Specification
+
+~> **NOTE:** Removing this configuration on existing instances will only stop managing it. It will not change the configuration back to the default for the instance type.
 
 Credit specification can be applied/modified to the EC2 Instance at any time.
 

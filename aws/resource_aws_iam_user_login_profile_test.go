@@ -3,7 +3,6 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -136,7 +135,6 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
-	passwordLength := acctest.RandIntRange(4, 128)
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
@@ -145,10 +143,10 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, passwordLength),
+				Config: testAccAWSUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, 128),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
-					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", strconv.Itoa(passwordLength)),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "128"),
 				),
 			},
 		},

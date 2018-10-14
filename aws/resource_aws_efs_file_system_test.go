@@ -54,6 +54,29 @@ func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 
 }
 
+func TestAccAWSEFSFileSystem_importBasic(t *testing.T) {
+	resourceName := "aws_efs_file_system.foo-with-tags"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithTags(rInt),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+			},
+		},
+	})
+}
+
 func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{

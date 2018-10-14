@@ -313,7 +313,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	db, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
 	// Errors from this helper are always reportable
 	if err != nil {
-		return fmt.Errorf("[WARN] Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 	// A nil response means "not found"
 	if db == nil {
@@ -340,7 +340,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if dbc == nil {
-		return fmt.Errorf("[WARN] Error finding RDS Cluster (%s) for Cluster Instance (%s): %s",
+		return fmt.Errorf("Error finding RDS Cluster (%s) for Cluster Instance (%s): %s",
 			*db.DBClusterIdentifier, *db.DBInstanceIdentifier, err)
 	}
 
@@ -464,6 +464,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("promotion_tier") {
 		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("publicly_accessible") {
+		d.SetPartial("publicly_accessible")
+		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
 		requestUpdate = true
 	}
 

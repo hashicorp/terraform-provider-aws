@@ -18,7 +18,7 @@ const opAddRoleToDBCluster = "AddRoleToDBCluster"
 // AddRoleToDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the AddRoleToDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -113,7 +113,7 @@ const opAddSourceIdentifierToSubscription = "AddSourceIdentifierToSubscription"
 // AddSourceIdentifierToSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the AddSourceIdentifierToSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -195,7 +195,7 @@ const opAddTagsToResource = "AddTagsToResource"
 // AddTagsToResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -287,7 +287,7 @@ const opApplyPendingMaintenanceAction = "ApplyPendingMaintenanceAction"
 // ApplyPendingMaintenanceActionRequest generates a "aws/request.Request" representing the
 // client's request for the ApplyPendingMaintenanceAction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -340,6 +340,12 @@ func (c *RDS) ApplyPendingMaintenanceActionRequest(input *ApplyPendingMaintenanc
 //   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
 //   The specified resource ID was not found.
 //
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
+//   The DB instance isn't in a valid state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ApplyPendingMaintenanceAction
 func (c *RDS) ApplyPendingMaintenanceAction(input *ApplyPendingMaintenanceActionInput) (*ApplyPendingMaintenanceActionOutput, error) {
 	req, out := c.ApplyPendingMaintenanceActionRequest(input)
@@ -367,7 +373,7 @@ const opAuthorizeDBSecurityGroupIngress = "AuthorizeDBSecurityGroupIngress"
 // AuthorizeDBSecurityGroupIngressRequest generates a "aws/request.Request" representing the
 // client's request for the AuthorizeDBSecurityGroupIngress operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -468,7 +474,7 @@ const opBacktrackDBCluster = "BacktrackDBCluster"
 // BacktrackDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the BacktrackDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -554,7 +560,7 @@ const opCopyDBClusterParameterGroup = "CopyDBClusterParameterGroup"
 // CopyDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -640,7 +646,7 @@ const opCopyDBClusterSnapshot = "CopyDBClusterSnapshot"
 // CopyDBClusterSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBClusterSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -795,7 +801,7 @@ const opCopyDBParameterGroup = "CopyDBParameterGroup"
 // CopyDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -881,7 +887,7 @@ const opCopyDBSnapshot = "CopyDBSnapshot"
 // CopyDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CopyDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -980,7 +986,7 @@ const opCopyOptionGroup = "CopyOptionGroup"
 // CopyOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CopyOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1065,7 +1071,7 @@ const opCreateDBCluster = "CreateDBCluster"
 // CreateDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1156,7 +1162,7 @@ func (c *RDS) CreateDBClusterRequest(input *CreateDBClusterInput) (req *request.
 //   are not all in a common VPC.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBClusterParameterGroupNotFoundFault "DBClusterParameterGroupNotFound"
 //   DBClusterParameterGroupName doesn't refer to an existing DB cluster parameter
@@ -1202,7 +1208,7 @@ const opCreateDBClusterParameterGroup = "CreateDBClusterParameterGroup"
 // CreateDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1312,7 +1318,7 @@ const opCreateDBClusterSnapshot = "CreateDBClusterSnapshot"
 // CreateDBClusterSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBClusterSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1405,7 +1411,7 @@ const opCreateDBInstance = "CreateDBInstance"
 // CreateDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1546,7 +1552,7 @@ const opCreateDBInstanceReadReplica = "CreateDBInstanceReadReplica"
 // CreateDBInstanceReadReplicaRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBInstanceReadReplica operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1632,7 +1638,7 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBSubnetGroupNotFoundFault "DBSubnetGroupNotFoundFault"
 //   DBSubnetGroupName doesn't refer to an existing DB subnet group.
@@ -1696,7 +1702,7 @@ const opCreateDBParameterGroup = "CreateDBParameterGroup"
 // CreateDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1799,7 +1805,7 @@ const opCreateDBSecurityGroup = "CreateDBSecurityGroup"
 // CreateDBSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBSecurityGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1890,7 +1896,7 @@ const opCreateDBSnapshot = "CreateDBSnapshot"
 // CreateDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1943,7 +1949,7 @@ func (c *RDS) CreateDBSnapshotRequest(input *CreateDBSnapshotInput) (req *reques
 //   DBSnapshotIdentifier is already used by an existing snapshot.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBInstanceNotFoundFault "DBInstanceNotFound"
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
@@ -1978,7 +1984,7 @@ const opCreateDBSubnetGroup = "CreateDBSubnetGroup"
 // CreateDBSubnetGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDBSubnetGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2074,7 +2080,7 @@ const opCreateEventSubscription = "CreateEventSubscription"
 // CreateEventSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEventSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2188,7 +2194,7 @@ const opCreateOptionGroup = "CreateOptionGroup"
 // CreateOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2270,7 +2276,7 @@ const opDeleteDBCluster = "DeleteDBCluster"
 // DeleteDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2366,7 +2372,7 @@ const opDeleteDBClusterParameterGroup = "DeleteDBClusterParameterGroup"
 // DeleteDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2456,7 +2462,7 @@ const opDeleteDBClusterSnapshot = "DeleteDBClusterSnapshot"
 // DeleteDBClusterSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBClusterSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2544,7 +2550,7 @@ const opDeleteDBInstance = "DeleteDBInstance"
 // DeleteDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2621,7 +2627,7 @@ func (c *RDS) DeleteDBInstanceRequest(input *DeleteDBInstanceInput) (req *reques
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBSnapshotAlreadyExistsFault "DBSnapshotAlreadyExists"
 //   DBSnapshotIdentifier is already used by an existing snapshot.
@@ -2659,7 +2665,7 @@ const opDeleteDBParameterGroup = "DeleteDBParameterGroup"
 // DeleteDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2746,7 +2752,7 @@ const opDeleteDBSecurityGroup = "DeleteDBSecurityGroup"
 // DeleteDBSecurityGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBSecurityGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2832,7 +2838,7 @@ const opDeleteDBSnapshot = "DeleteDBSnapshot"
 // DeleteDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2917,7 +2923,7 @@ const opDeleteDBSubnetGroup = "DeleteDBSubnetGroup"
 // DeleteDBSubnetGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDBSubnetGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3006,7 +3012,7 @@ const opDeleteEventSubscription = "DeleteEventSubscription"
 // DeleteEventSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEventSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3089,7 +3095,7 @@ const opDeleteOptionGroup = "DeleteOptionGroup"
 // DeleteOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3173,7 +3179,7 @@ const opDescribeAccountAttributes = "DescribeAccountAttributes"
 // DescribeAccountAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAccountAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3252,7 +3258,7 @@ const opDescribeCertificates = "DescribeCertificates"
 // DescribeCertificatesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCertificates operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3331,7 +3337,7 @@ const opDescribeDBClusterBacktracks = "DescribeDBClusterBacktracks"
 // DescribeDBClusterBacktracksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterBacktracks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3416,7 +3422,7 @@ const opDescribeDBClusterParameterGroups = "DescribeDBClusterParameterGroups"
 // DescribeDBClusterParameterGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterParameterGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3500,7 +3506,7 @@ const opDescribeDBClusterParameters = "DescribeDBClusterParameters"
 // DescribeDBClusterParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3583,7 +3589,7 @@ const opDescribeDBClusterSnapshotAttributes = "DescribeDBClusterSnapshotAttribut
 // DescribeDBClusterSnapshotAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterSnapshotAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3673,7 +3679,7 @@ const opDescribeDBClusterSnapshots = "DescribeDBClusterSnapshots"
 // DescribeDBClusterSnapshotsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusterSnapshots operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3756,7 +3762,7 @@ const opDescribeDBClusters = "DescribeDBClusters"
 // DescribeDBClustersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBClusters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3895,7 +3901,7 @@ const opDescribeDBEngineVersions = "DescribeDBEngineVersions"
 // DescribeDBEngineVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBEngineVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4025,7 +4031,7 @@ const opDescribeDBInstances = "DescribeDBInstances"
 // DescribeDBInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4160,7 +4166,7 @@ const opDescribeDBLogFiles = "DescribeDBLogFiles"
 // DescribeDBLogFilesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBLogFiles operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4295,7 +4301,7 @@ const opDescribeDBParameterGroups = "DescribeDBParameterGroups"
 // DescribeDBParameterGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBParameterGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4432,7 +4438,7 @@ const opDescribeDBParameters = "DescribeDBParameters"
 // DescribeDBParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4567,7 +4573,7 @@ const opDescribeDBSecurityGroups = "DescribeDBSecurityGroups"
 // DescribeDBSecurityGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSecurityGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4704,7 +4710,7 @@ const opDescribeDBSnapshotAttributes = "DescribeDBSnapshotAttributes"
 // DescribeDBSnapshotAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSnapshotAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4794,7 +4800,7 @@ const opDescribeDBSnapshots = "DescribeDBSnapshots"
 // DescribeDBSnapshotsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSnapshots operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4929,7 +4935,7 @@ const opDescribeDBSubnetGroups = "DescribeDBSubnetGroups"
 // DescribeDBSubnetGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDBSubnetGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5067,7 +5073,7 @@ const opDescribeEngineDefaultClusterParameters = "DescribeEngineDefaultClusterPa
 // DescribeEngineDefaultClusterParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEngineDefaultClusterParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5145,7 +5151,7 @@ const opDescribeEngineDefaultParameters = "DescribeEngineDefaultParameters"
 // DescribeEngineDefaultParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEngineDefaultParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5276,7 +5282,7 @@ const opDescribeEventCategories = "DescribeEventCategories"
 // DescribeEventCategoriesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEventCategories operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5353,7 +5359,7 @@ const opDescribeEventSubscriptions = "DescribeEventSubscriptions"
 // DescribeEventSubscriptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEventSubscriptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5492,7 +5498,7 @@ const opDescribeEvents = "DescribeEvents"
 // DescribeEventsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEvents operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5626,7 +5632,7 @@ const opDescribeOptionGroupOptions = "DescribeOptionGroupOptions"
 // DescribeOptionGroupOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOptionGroupOptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5756,7 +5762,7 @@ const opDescribeOptionGroups = "DescribeOptionGroups"
 // DescribeOptionGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOptionGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5891,7 +5897,7 @@ const opDescribeOrderableDBInstanceOptions = "DescribeOrderableDBInstanceOptions
 // DescribeOrderableDBInstanceOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOrderableDBInstanceOptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6021,7 +6027,7 @@ const opDescribePendingMaintenanceActions = "DescribePendingMaintenanceActions"
 // DescribePendingMaintenanceActionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePendingMaintenanceActions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6101,7 +6107,7 @@ const opDescribeReservedDBInstances = "DescribeReservedDBInstances"
 // DescribeReservedDBInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeReservedDBInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6237,7 +6243,7 @@ const opDescribeReservedDBInstancesOfferings = "DescribeReservedDBInstancesOffer
 // DescribeReservedDBInstancesOfferingsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeReservedDBInstancesOfferings operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6372,7 +6378,7 @@ const opDescribeSourceRegions = "DescribeSourceRegions"
 // DescribeSourceRegionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeSourceRegions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6448,7 +6454,7 @@ const opDescribeValidDBInstanceModifications = "DescribeValidDBInstanceModificat
 // DescribeValidDBInstanceModificationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeValidDBInstanceModifications operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6503,7 +6509,7 @@ func (c *RDS) DescribeValidDBInstanceModificationsRequest(input *DescribeValidDB
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DescribeValidDBInstanceModifications
 func (c *RDS) DescribeValidDBInstanceModifications(input *DescribeValidDBInstanceModificationsInput) (*DescribeValidDBInstanceModificationsOutput, error) {
@@ -6532,7 +6538,7 @@ const opDownloadDBLogFilePortion = "DownloadDBLogFilePortion"
 // DownloadDBLogFilePortionRequest generates a "aws/request.Request" representing the
 // client's request for the DownloadDBLogFilePortion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6670,7 +6676,7 @@ const opFailoverDBCluster = "FailoverDBCluster"
 // FailoverDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the FailoverDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6739,7 +6745,7 @@ func (c *RDS) FailoverDBClusterRequest(input *FailoverDBClusterInput) (req *requ
 //   The DB cluster isn't in a valid state.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/FailoverDBCluster
 func (c *RDS) FailoverDBCluster(input *FailoverDBClusterInput) (*FailoverDBClusterOutput, error) {
@@ -6768,7 +6774,7 @@ const opListTagsForResource = "ListTagsForResource"
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6857,7 +6863,7 @@ const opModifyCurrentDBClusterCapacity = "ModifyCurrentDBClusterCapacity"
 // ModifyCurrentDBClusterCapacityRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyCurrentDBClusterCapacity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6962,7 +6968,7 @@ const opModifyDBCluster = "ModifyDBCluster"
 // ModifyDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7047,7 +7053,7 @@ func (c *RDS) ModifyDBClusterRequest(input *ModifyDBClusterInput) (req *request.
 //   The state of the DB security group doesn't allow deletion.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBClusterAlreadyExistsFault "DBClusterAlreadyExistsFault"
 //   The user already has a DB cluster with the given identifier.
@@ -7079,7 +7085,7 @@ const opModifyDBClusterParameterGroup = "ModifyDBClusterParameterGroup"
 // ModifyDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7183,7 +7189,7 @@ const opModifyDBClusterSnapshotAttribute = "ModifyDBClusterSnapshotAttribute"
 // ModifyDBClusterSnapshotAttributeRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBClusterSnapshotAttribute operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7285,7 +7291,7 @@ const opModifyDBInstance = "ModifyDBInstance"
 // ModifyDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7338,7 +7344,7 @@ func (c *RDS) ModifyDBInstanceRequest(input *ModifyDBInstanceInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeInvalidDBSecurityGroupStateFault "InvalidDBSecurityGroupState"
 //   The state of the DB security group doesn't allow deletion.
@@ -7421,7 +7427,7 @@ const opModifyDBParameterGroup = "ModifyDBParameterGroup"
 // ModifyDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7522,7 +7528,7 @@ const opModifyDBSnapshot = "ModifyDBSnapshot"
 // ModifyDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7604,7 +7610,7 @@ const opModifyDBSnapshotAttribute = "ModifyDBSnapshotAttribute"
 // ModifyDBSnapshotAttributeRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBSnapshotAttribute operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7706,7 +7712,7 @@ const opModifyDBSubnetGroup = "ModifyDBSubnetGroup"
 // ModifyDBSubnetGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDBSubnetGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7801,7 +7807,7 @@ const opModifyEventSubscription = "ModifyEventSubscription"
 // ModifyEventSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyEventSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7903,7 +7909,7 @@ const opModifyOptionGroup = "ModifyOptionGroup"
 // ModifyOptionGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyOptionGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7985,7 +7991,7 @@ const opPromoteReadReplica = "PromoteReadReplica"
 // PromoteReadReplicaRequest generates a "aws/request.Request" representing the
 // client's request for the PromoteReadReplica operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8045,7 +8051,7 @@ func (c *RDS) PromoteReadReplicaRequest(input *PromoteReadReplicaInput) (req *re
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBInstanceNotFoundFault "DBInstanceNotFound"
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
@@ -8077,7 +8083,7 @@ const opPromoteReadReplicaDBCluster = "PromoteReadReplicaDBCluster"
 // PromoteReadReplicaDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the PromoteReadReplicaDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8159,7 +8165,7 @@ const opPurchaseReservedDBInstancesOffering = "PurchaseReservedDBInstancesOfferi
 // PurchaseReservedDBInstancesOfferingRequest generates a "aws/request.Request" representing the
 // client's request for the PurchaseReservedDBInstancesOffering operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8244,7 +8250,7 @@ const opRebootDBInstance = "RebootDBInstance"
 // RebootDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the RebootDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8304,7 +8310,7 @@ func (c *RDS) RebootDBInstanceRequest(input *RebootDBInstanceInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBInstanceNotFoundFault "DBInstanceNotFound"
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
@@ -8336,7 +8342,7 @@ const opRemoveRoleFromDBCluster = "RemoveRoleFromDBCluster"
 // RemoveRoleFromDBClusterRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveRoleFromDBCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8427,7 +8433,7 @@ const opRemoveSourceIdentifierFromSubscription = "RemoveSourceIdentifierFromSubs
 // RemoveSourceIdentifierFromSubscriptionRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveSourceIdentifierFromSubscription operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8509,7 +8515,7 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 // RemoveTagsFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8600,7 +8606,7 @@ const opResetDBClusterParameterGroup = "ResetDBClusterParameterGroup"
 // ResetDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ResetDBClusterParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8696,7 +8702,7 @@ const opResetDBParameterGroup = "ResetDBParameterGroup"
 // ResetDBParameterGroupRequest generates a "aws/request.Request" representing the
 // client's request for the ResetDBParameterGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8786,7 +8792,7 @@ const opRestoreDBClusterFromS3 = "RestoreDBClusterFromS3"
 // RestoreDBClusterFromS3Request generates a "aws/request.Request" representing the
 // client's request for the RestoreDBClusterFromS3 operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8914,7 +8920,7 @@ const opRestoreDBClusterFromSnapshot = "RestoreDBClusterFromSnapshot"
 // RestoreDBClusterFromSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBClusterFromSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9063,7 +9069,7 @@ const opRestoreDBClusterToPointInTime = "RestoreDBClusterToPointInTime"
 // RestoreDBClusterToPointInTimeRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBClusterToPointInTime operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9211,7 +9217,7 @@ const opRestoreDBInstanceFromDBSnapshot = "RestoreDBInstanceFromDBSnapshot"
 // RestoreDBInstanceFromDBSnapshotRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBInstanceFromDBSnapshot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9376,7 +9382,7 @@ const opRestoreDBInstanceFromS3 = "RestoreDBInstanceFromS3"
 // RestoreDBInstanceFromS3Request generates a "aws/request.Request" representing the
 // client's request for the RestoreDBInstanceFromS3 operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9519,7 +9525,7 @@ const opRestoreDBInstanceToPointInTime = "RestoreDBInstanceToPointInTime"
 // RestoreDBInstanceToPointInTimeRequest generates a "aws/request.Request" representing the
 // client's request for the RestoreDBInstanceToPointInTime operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9596,7 +9602,7 @@ func (c *RDS) RestoreDBInstanceToPointInTimeRequest(input *RestoreDBInstanceToPo
 //   Zone.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodePointInTimeRestoreNotEnabledFault "PointInTimeRestoreNotEnabled"
 //   SourceDBInstanceIdentifier refers to a DB instance with BackupRetentionPeriod
@@ -9681,7 +9687,7 @@ const opRevokeDBSecurityGroupIngress = "RevokeDBSecurityGroupIngress"
 // RevokeDBSecurityGroupIngressRequest generates a "aws/request.Request" representing the
 // client's request for the RevokeDBSecurityGroupIngress operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9768,12 +9774,101 @@ func (c *RDS) RevokeDBSecurityGroupIngressWithContext(ctx aws.Context, input *Re
 	return out, req.Send()
 }
 
+const opStartDBCluster = "StartDBCluster"
+
+// StartDBClusterRequest generates a "aws/request.Request" representing the
+// client's request for the StartDBCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartDBCluster for more information on using the StartDBCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartDBClusterRequest method.
+//    req, resp := client.StartDBClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/StartDBCluster
+func (c *RDS) StartDBClusterRequest(input *StartDBClusterInput) (req *request.Request, output *StartDBClusterOutput) {
+	op := &request.Operation{
+		Name:       opStartDBCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartDBClusterInput{}
+	}
+
+	output = &StartDBClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartDBCluster API operation for Amazon Relational Database Service.
+//
+// Starts an Amazon Aurora DB cluster that was stopped using the AWS console,
+// the stop-db-cluster AWS CLI command, or the StopDBCluster action.
+//
+// For more information, see  Stopping and Starting an Aurora Cluster (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-cluster-stop-start.html)
+// in the Amazon Aurora User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation StartDBCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
+//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
+//   The DB instance isn't in a valid state.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/StartDBCluster
+func (c *RDS) StartDBCluster(input *StartDBClusterInput) (*StartDBClusterOutput, error) {
+	req, out := c.StartDBClusterRequest(input)
+	return out, req.Send()
+}
+
+// StartDBClusterWithContext is the same as StartDBCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartDBCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) StartDBClusterWithContext(ctx aws.Context, input *StartDBClusterInput, opts ...request.Option) (*StartDBClusterOutput, error) {
+	req, out := c.StartDBClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStartDBInstance = "StartDBInstance"
 
 // StartDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StartDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9812,11 +9907,15 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 
 // StartDBInstance API operation for Amazon Relational Database Service.
 //
-// Starts a DB instance that was stopped using the AWS console, the stop-db-instance
-// AWS CLI command, or the StopDBInstance action. For more information, see
-// Stopping and Starting a DB instance in the AWS RDS user guide.
+// Starts an Amazon RDS DB instance that was stopped using the AWS console,
+// the stop-db-instance AWS CLI command, or the StopDBInstance action.
 //
-// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL.
+// For more information, see  Starting an Amazon RDS DB Instance That Was Previously
+// Stopped (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_StartInstance.html)
+// in the Amazon RDS User Guide.
+//
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL. For Aurora
+// DB clusters, use StartDBCluster instead.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9830,7 +9929,7 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeInsufficientDBInstanceCapacityFault "InsufficientDBInstanceCapacity"
 //   The specified DB instance class isn't available in the specified Availability
@@ -9889,12 +9988,103 @@ func (c *RDS) StartDBInstanceWithContext(ctx aws.Context, input *StartDBInstance
 	return out, req.Send()
 }
 
+const opStopDBCluster = "StopDBCluster"
+
+// StopDBClusterRequest generates a "aws/request.Request" representing the
+// client's request for the StopDBCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopDBCluster for more information on using the StopDBCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopDBClusterRequest method.
+//    req, resp := client.StopDBClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/StopDBCluster
+func (c *RDS) StopDBClusterRequest(input *StopDBClusterInput) (req *request.Request, output *StopDBClusterOutput) {
+	op := &request.Operation{
+		Name:       opStopDBCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopDBClusterInput{}
+	}
+
+	output = &StopDBClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StopDBCluster API operation for Amazon Relational Database Service.
+//
+// Stops an Amazon Aurora DB cluster. When you stop a DB cluster, Aurora retains
+// the DB cluster's metadata, including its endpoints and DB parameter groups.
+// Aurora also retains the transaction logs so you can do a point-in-time restore
+// if necessary.
+//
+// For more information, see  Stopping and Starting an Aurora Cluster (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-cluster-stop-start.html)
+// in the Amazon Aurora User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation StopDBCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
+//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
+//   The DB instance isn't in a valid state.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/StopDBCluster
+func (c *RDS) StopDBCluster(input *StopDBClusterInput) (*StopDBClusterOutput, error) {
+	req, out := c.StopDBClusterRequest(input)
+	return out, req.Send()
+}
+
+// StopDBClusterWithContext is the same as StopDBCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopDBCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) StopDBClusterWithContext(ctx aws.Context, input *StopDBClusterInput, opts ...request.Option) (*StopDBClusterOutput, error) {
+	req, out := c.StopDBClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopDBInstance = "StopDBInstance"
 
 // StopDBInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StopDBInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9933,13 +10123,17 @@ func (c *RDS) StopDBInstanceRequest(input *StopDBInstanceInput) (req *request.Re
 
 // StopDBInstance API operation for Amazon Relational Database Service.
 //
-// Stops a DB instance. When you stop a DB instance, Amazon RDS retains the
-// DB instance's metadata, including its endpoint, DB parameter group, and option
-// group membership. Amazon RDS also retains the transaction logs so you can
-// do a point-in-time restore if necessary. For more information, see Stopping
-// and Starting a DB instance in the AWS RDS user guide.
+// Stops an Amazon RDS DB instance. When you stop a DB instance, Amazon RDS
+// retains the DB instance's metadata, including its endpoint, DB parameter
+// group, and option group membership. Amazon RDS also retains the transaction
+// logs so you can do a point-in-time restore if necessary.
 //
-// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL.
+// For more information, see  Stopping an Amazon RDS DB Instance Temporarily
+// (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_StopInstance.html)
+// in the Amazon RDS User Guide.
+//
+// This command doesn't apply to Aurora MySQL and Aurora PostgreSQL. For Aurora
+// clusters, use StopDBCluster instead.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9953,7 +10147,7 @@ func (c *RDS) StopDBInstanceRequest(input *StopDBInstanceInput) (req *request.Re
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
 //
 //   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
-//   The specified DB instance isn't in the available state.
+//   The DB instance isn't in a valid state.
 //
 //   * ErrCodeDBSnapshotAlreadyExistsFault "DBSnapshotAlreadyExists"
 //   DBSnapshotIdentifier is already used by an existing snapshot.
@@ -11761,6 +11955,11 @@ type CreateDBClusterInput struct {
 	// you are creating.
 	DatabaseName *string `type:"string"`
 
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
+
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
@@ -11784,7 +11983,8 @@ type CreateDBClusterInput struct {
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
 
-	// The DB engine mode of the DB cluster, either provisioned or serverless.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, or
+	// parallelquery.
 	EngineMode *string `type:"string"`
 
 	// The version number of the database engine to use.
@@ -12015,6 +12215,12 @@ func (s *CreateDBClusterInput) SetDatabaseName(v string) *CreateDBClusterInput {
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBClusterInput) SetDeletionProtection(v bool) *CreateDBClusterInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetDestinationRegion sets the DestinationRegion field's value.
 func (s *CreateDBClusterInput) SetDestinationRegion(v string) *CreateDBClusterInput {
 	s.DestinationRegion = &v
@@ -12138,9 +12344,10 @@ func (s *CreateDBClusterInput) SetVpcSecurityGroupIds(v []*string) *CreateDBClus
 type CreateDBClusterOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -12635,6 +12842,11 @@ type CreateDBInstanceInput struct {
 	//
 	// If there is no DB subnet group, then it is a non-VPC DB instance.
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
 
 	// Specify the Active Directory Domain to create the instance in.
 	Domain *string `type:"string"`
@@ -13202,6 +13414,12 @@ func (s *CreateDBInstanceInput) SetDBSubnetGroupName(v string) *CreateDBInstance
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBInstanceInput) SetDeletionProtection(v bool) *CreateDBInstanceInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetDomain sets the Domain field's value.
 func (s *CreateDBInstanceInput) SetDomain(v string) *CreateDBInstanceInput {
 	s.Domain = &v
@@ -13476,6 +13694,11 @@ type CreateDBInstanceReadReplicaInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
@@ -13739,6 +13962,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetDBInstanceIdentifier(v string) *Cr
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetDBSubnetGroupName(v string) *CreateDBInstanceReadReplicaInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetDeletionProtection(v bool) *CreateDBInstanceReadReplicaInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -14604,9 +14833,10 @@ func (s *CreateOptionGroupOutput) SetOptionGroup(v *OptionGroup) *CreateOptionGr
 	return s
 }
 
-// Contains the details of an Amazon RDS DB cluster.
+// Contains the details of an Amazon Aurora DB cluster.
 //
-// This data type is used as a response element in the DescribeDBClusters action.
+// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+// and StartDBCluster actions.
 type DBCluster struct {
 	_ struct{} `type:"structure"`
 
@@ -14679,6 +14909,10 @@ type DBCluster struct {
 	// cluster is accessed.
 	DbClusterResourceId *string `type:"string"`
 
+	// Indicates if the DB cluster has deletion protection enabled. The database
+	// can't be deleted when this value is set to true.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The earliest time to which a DB cluster can be backtracked.
 	EarliestBacktrackTime *time.Time `type:"timestamp"`
 
@@ -14700,7 +14934,8 @@ type DBCluster struct {
 	// Provides the name of the database engine to be used for this DB cluster.
 	Engine *string `type:"string"`
 
-	// The DB engine mode of the DB cluster, either provisioned or serverless.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, or
+	// parallelquery.
 	EngineMode *string `type:"string"`
 
 	// Indicates the database engine version.
@@ -14894,6 +15129,12 @@ func (s *DBCluster) SetDatabaseName(v string) *DBCluster {
 // SetDbClusterResourceId sets the DbClusterResourceId field's value.
 func (s *DBCluster) SetDbClusterResourceId(v string) *DBCluster {
 	s.DbClusterResourceId = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *DBCluster) SetDeletionProtection(v bool) *DBCluster {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -15788,6 +16029,11 @@ type DBInstance struct {
 	// instance is accessed.
 	DbiResourceId *string `type:"string"`
 
+	// Indicates if the DB instance has deletion protection enabled. The database
+	// can't be deleted when this value is set to true. For more information, see
+	//  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// The Active Directory Domain membership records associated with the DB instance.
 	DomainMemberships []*DomainMembership `locationNameList:"DomainMembership" type:"list"`
 
@@ -16058,6 +16304,12 @@ func (s *DBInstance) SetDbInstancePort(v int64) *DBInstance {
 // SetDbiResourceId sets the DbiResourceId field's value.
 func (s *DBInstance) SetDbiResourceId(v string) *DBInstance {
 	s.DbiResourceId = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *DBInstance) SetDeletionProtection(v bool) *DBInstance {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -17091,9 +17343,10 @@ func (s *DeleteDBClusterInput) SetSkipFinalSnapshot(v bool) *DeleteDBClusterInpu
 type DeleteDBClusterOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -22230,9 +22483,10 @@ func (s *FailoverDBClusterInput) SetTargetDBInstanceIdentifier(v string) *Failov
 type FailoverDBClusterOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -22435,6 +22689,40 @@ func (s ListTagsForResourceOutput) GoString() string {
 // SetTagList sets the TagList field's value.
 func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOutput {
 	s.TagList = v
+	return s
+}
+
+// The minimum DB engine version required for each corresponding allowed value
+// for an option setting.
+type MinimumEngineVersionPerAllowedValue struct {
+	_ struct{} `type:"structure"`
+
+	// The allowed value for an option setting.
+	AllowedValue *string `type:"string"`
+
+	// The minimum DB engine version required for the allowed value.
+	MinimumEngineVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s MinimumEngineVersionPerAllowedValue) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MinimumEngineVersionPerAllowedValue) GoString() string {
+	return s.String()
+}
+
+// SetAllowedValue sets the AllowedValue field's value.
+func (s *MinimumEngineVersionPerAllowedValue) SetAllowedValue(v string) *MinimumEngineVersionPerAllowedValue {
+	s.AllowedValue = &v
+	return s
+}
+
+// SetMinimumEngineVersion sets the MinimumEngineVersion field's value.
+func (s *MinimumEngineVersionPerAllowedValue) SetMinimumEngineVersion(v string) *MinimumEngineVersionPerAllowedValue {
+	s.MinimumEngineVersion = &v
 	return s
 }
 
@@ -22642,6 +22930,10 @@ type ModifyDBClusterInput struct {
 	// The name of the DB cluster parameter group to use for the DB cluster.
 	DBClusterParameterGroupName *string `type:"string"`
 
+	// Indicates if the DB cluster has deletion protection enabled. The database
+	// can't be deleted when this value is set to true.
+	DeletionProtection *bool `type:"boolean"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -22796,6 +23088,12 @@ func (s *ModifyDBClusterInput) SetDBClusterParameterGroupName(v string) *ModifyD
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *ModifyDBClusterInput) SetDeletionProtection(v bool) *ModifyDBClusterInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *ModifyDBClusterInput) SetEnableIAMDatabaseAuthentication(v bool) *ModifyDBClusterInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -22859,9 +23157,10 @@ func (s *ModifyDBClusterInput) SetVpcSecurityGroupIds(v []*string) *ModifyDBClus
 type ModifyDBClusterOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -23243,6 +23542,11 @@ type ModifyDBInstanceInput struct {
 	//
 	// Example: mySubnetGroup
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB instance has deletion protection enabled. The database
+	// can't be deleted when this value is set to true. For more information, see
+	//  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
 
 	// The Active Directory Domain to move the instance to. Specify none to remove
 	// the instance from its current domain. The domain must be created prior to
@@ -23650,6 +23954,12 @@ func (s *ModifyDBInstanceInput) SetDBSecurityGroups(v []*string) *ModifyDBInstan
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *ModifyDBInstanceInput) SetDBSubnetGroupName(v string) *ModifyDBInstanceInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *ModifyDBInstanceInput) SetDeletionProtection(v bool) *ModifyDBInstanceInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -24909,6 +25219,14 @@ type OptionGroupOptionSetting struct {
 	// from the default value.
 	IsModifiable *bool `type:"boolean"`
 
+	// Boolean value where true indicates that a value must be specified for this
+	// option setting of the option group option.
+	IsRequired *bool `type:"boolean"`
+
+	// The minimum DB engine version required for the corresponding allowed value
+	// for this option setting.
+	MinimumEngineVersionPerAllowedValue []*MinimumEngineVersionPerAllowedValue `locationNameList:"MinimumEngineVersionPerAllowedValue" type:"list"`
+
 	// The description of the option group option.
 	SettingDescription *string `type:"string"`
 
@@ -24947,6 +25265,18 @@ func (s *OptionGroupOptionSetting) SetDefaultValue(v string) *OptionGroupOptionS
 // SetIsModifiable sets the IsModifiable field's value.
 func (s *OptionGroupOptionSetting) SetIsModifiable(v bool) *OptionGroupOptionSetting {
 	s.IsModifiable = &v
+	return s
+}
+
+// SetIsRequired sets the IsRequired field's value.
+func (s *OptionGroupOptionSetting) SetIsRequired(v bool) *OptionGroupOptionSetting {
+	s.IsRequired = &v
+	return s
+}
+
+// SetMinimumEngineVersionPerAllowedValue sets the MinimumEngineVersionPerAllowedValue field's value.
+func (s *OptionGroupOptionSetting) SetMinimumEngineVersionPerAllowedValue(v []*MinimumEngineVersionPerAllowedValue) *OptionGroupOptionSetting {
+	s.MinimumEngineVersionPerAllowedValue = v
 	return s
 }
 
@@ -25823,9 +26153,10 @@ func (s *PromoteReadReplicaDBClusterInput) SetDBClusterIdentifier(v string) *Pro
 type PromoteReadReplicaDBClusterOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -26927,6 +27258,11 @@ type RestoreDBClusterFromS3Input struct {
 	// The database name for the restored DB cluster.
 	DatabaseName *string `type:"string"`
 
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The list of logs that the restored DB cluster is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
@@ -27178,6 +27514,12 @@ func (s *RestoreDBClusterFromS3Input) SetDatabaseName(v string) *RestoreDBCluste
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterFromS3Input) SetDeletionProtection(v bool) *RestoreDBClusterFromS3Input {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterFromS3Input) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterFromS3Input {
 	s.EnableCloudwatchLogsExports = v
@@ -27295,9 +27637,10 @@ func (s *RestoreDBClusterFromS3Input) SetVpcSecurityGroupIds(v []*string) *Resto
 type RestoreDBClusterFromS3Output struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -27361,6 +27704,11 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// The database name for the restored DB cluster.
 	DatabaseName *string `type:"string"`
 
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The list of logs that the restored DB cluster is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
@@ -27382,7 +27730,8 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
 
-	// The DB engine mode of the DB cluster, either provisioned or serverless.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, or
+	// parallelquery.
 	EngineMode *string `type:"string"`
 
 	// The version of the database engine to use for the new DB cluster.
@@ -27500,6 +27849,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetDatabaseName(v string) *RestoreDB
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetDeletionProtection(v bool) *RestoreDBClusterFromSnapshotInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterFromSnapshotInput {
 	s.EnableCloudwatchLogsExports = v
@@ -27575,9 +27930,10 @@ func (s *RestoreDBClusterFromSnapshotInput) SetVpcSecurityGroupIds(v []*string) 
 type RestoreDBClusterFromSnapshotOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -27630,6 +27986,11 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB cluster should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false.
+	DeletionProtection *bool `type:"boolean"`
 
 	// The list of logs that the restored DB cluster is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
@@ -27781,6 +28142,12 @@ func (s *RestoreDBClusterToPointInTimeInput) SetDBSubnetGroupName(v string) *Res
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterToPointInTimeInput) SetDeletionProtection(v bool) *RestoreDBClusterToPointInTimeInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterToPointInTimeInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterToPointInTimeInput {
 	s.EnableCloudwatchLogsExports = v
@@ -27850,9 +28217,10 @@ func (s *RestoreDBClusterToPointInTimeInput) SetVpcSecurityGroupIds(v []*string)
 type RestoreDBClusterToPointInTimeOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Contains the details of an Amazon RDS DB cluster.
+	// Contains the details of an Amazon Aurora DB cluster.
 	//
-	// This data type is used as a response element in the DescribeDBClusters action.
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
 	DBCluster *DBCluster `type:"structure"`
 }
 
@@ -27941,6 +28309,11 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
 
 	// Specify the Active Directory Domain to restore the instance in.
 	Domain *string `type:"string"`
@@ -28148,6 +28521,12 @@ func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBSnapshotIdentifier(v string)
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBSubnetGroupName(v string) *RestoreDBInstanceFromDBSnapshotInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBInstanceFromDBSnapshotInput) SetDeletionProtection(v bool) *RestoreDBInstanceFromDBSnapshotInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -28364,6 +28743,11 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// A DB subnet group to associate with this DB instance.
 	DBSubnetGroupName *string `type:"string"`
+
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
 
 	// The list of logs that the restored DB instance is to export to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
@@ -28687,6 +29071,12 @@ func (s *RestoreDBInstanceFromS3Input) SetDBSubnetGroupName(v string) *RestoreDB
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBInstanceFromS3Input) SetDeletionProtection(v bool) *RestoreDBInstanceFromS3Input {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBInstanceFromS3Input) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBInstanceFromS3Input {
 	s.EnableCloudwatchLogsExports = v
@@ -28940,6 +29330,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Indicates if the DB instance should have deletion protection enabled. The
+	// database can't be deleted when this value is set to true. The default is
+	// false. For more information, see  Deleting a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	DeletionProtection *bool `type:"boolean"`
+
 	// Specify the Active Directory Domain to restore the instance in.
 	Domain *string `type:"string"`
 
@@ -29171,6 +29566,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetDBName(v string) *RestoreDBInst
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetDBSubnetGroupName(v string) *RestoreDBInstanceToPointInTimeInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetDeletionProtection(v bool) *RestoreDBInstanceToPointInTimeInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -29604,6 +30005,71 @@ func (s *SourceRegion) SetStatus(v string) *SourceRegion {
 	return s
 }
 
+type StartDBClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The DB cluster identifier of the Amazon Aurora DB cluster to be started.
+	// This parameter is stored as a lowercase string.
+	//
+	// DBClusterIdentifier is a required field
+	DBClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartDBClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartDBClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartDBClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartDBClusterInput"}
+	if s.DBClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("DBClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
+func (s *StartDBClusterInput) SetDBClusterIdentifier(v string) *StartDBClusterInput {
+	s.DBClusterIdentifier = &v
+	return s
+}
+
+type StartDBClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains the details of an Amazon Aurora DB cluster.
+	//
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
+	DBCluster *DBCluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartDBClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartDBClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetDBCluster sets the DBCluster field's value.
+func (s *StartDBClusterOutput) SetDBCluster(v *DBCluster) *StartDBClusterOutput {
+	s.DBCluster = v
+	return s
+}
+
 type StartDBInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29664,6 +30130,71 @@ func (s StartDBInstanceOutput) GoString() string {
 // SetDBInstance sets the DBInstance field's value.
 func (s *StartDBInstanceOutput) SetDBInstance(v *DBInstance) *StartDBInstanceOutput {
 	s.DBInstance = v
+	return s
+}
+
+type StopDBClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The DB cluster identifier of the Amazon Aurora DB cluster to be stopped.
+	// This parameter is stored as a lowercase string.
+	//
+	// DBClusterIdentifier is a required field
+	DBClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopDBClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopDBClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopDBClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopDBClusterInput"}
+	if s.DBClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("DBClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
+func (s *StopDBClusterInput) SetDBClusterIdentifier(v string) *StopDBClusterInput {
+	s.DBClusterIdentifier = &v
+	return s
+}
+
+type StopDBClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains the details of an Amazon Aurora DB cluster.
+	//
+	// This data type is used as a response element in the DescribeDBClusters, StopDBCluster,
+	// and StartDBCluster actions.
+	DBCluster *DBCluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopDBClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopDBClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetDBCluster sets the DBCluster field's value.
+func (s *StopDBClusterOutput) SetDBCluster(v *DBCluster) *StopDBClusterOutput {
+	s.DBCluster = v
 	return s
 }
 

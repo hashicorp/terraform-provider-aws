@@ -82,7 +82,8 @@ func testSweepDbInstances(region string) error {
 }
 
 func TestAccAWSDBInstance_basic(t *testing.T) {
-	var v rds.DBInstance
+	var dbInstance1 rds.DBInstance
+	resourceName := "aws_db_instance.bar"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -92,30 +93,48 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 			{
 				Config: testAccAWSDBInstanceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					testAccCheckAWSDBInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "allocated_storage", "10"),
-					resource.TestMatchResourceAttr("aws_db_instance.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:db:.+`)),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "engine", "mysql"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "license_model", "general-public-license"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "instance_class", "db.t2.micro"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "name", "baz"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "username", "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "parameter_group_name", "default.mysql5.6"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "hosted_zone_id"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.bar", "ca_cert_identifier"),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.bar", "resource_id"),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					testAccCheckAWSDBInstanceAttributes(&dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "mysql"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_class", "db.t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "name", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-5-6"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "status", "available"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "username", "foo"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
 			},
 		},
 	})
@@ -253,6 +272,46 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 					testAccCheckAWSDBInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "iam_database_authentication_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_DeletionProtection(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_DeletionProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_DeletionProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 		},
@@ -477,6 +536,53 @@ func TestAccAWSDBInstance_ReplicateSourceDb_BackupWindow(t *testing.T) {
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection(t *testing.T) {
+	t.Skip("CreateDBInstanceReadReplica API currently ignores DeletionProtection=true with SourceDBInstanceIdentifier set")
+	// --- FAIL: TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection (1624.88s)
+	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'deletion_protection' expected "true", got "false"
+	//
+	// Action=CreateDBInstanceReadReplica&AutoMinorVersionUpgrade=true&CopyTagsToSnapshot=false&DBInstanceClass=db.t2.micro&DBInstanceIdentifier=tf-acc-test-6591588621809891413&DeletionProtection=true&PubliclyAccessible=false&SourceDBInstanceIdentifier=tf-acc-test-6591588621809891413-source&Tags=&Version=2014-10-31
+	// <RestoreDBInstanceFromDBSnapshotResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
+	//   <RestoreDBInstanceFromDBSnapshotResult>
+	//     <DBInstance>
+	//       <DeletionProtection>false</DeletionProtection>
+	//
+	// AWS Support has confirmed this issue and noted that it will be fixed in the future.
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+				),
+			},
+			// Ensure we disable deletion protection before attempting to delete :)
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 		},
@@ -813,6 +919,33 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupRetentionPeriod(t *testing.T)
 	})
 }
 
+func TestAccAWSDBInstance_SnapshotIdentifier_BackupRetentionPeriod_Unset(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod_Unset(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
@@ -834,6 +967,43 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_DeletionProtection(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+				),
+			},
+			// Ensure we disable deletion protection before attempting to delete :)
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 		},
@@ -1052,6 +1222,37 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset(t *testing.T) {
+	t.Skip("To be fixed: https://github.com/terraform-providers/terraform-provider-aws/issues/5959")
+	// --- FAIL: TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset (1086.15s)
+	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'tags.%' expected "0", got "1"
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_Tags_Unset(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -3163,6 +3364,21 @@ resource "aws_db_instance" "test" {
 `, rName)
 }
 
+func testAccAWSDBInstanceConfig_DeletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  deletion_protection = %t
+  engine              = "mysql"
+  identifier          = %q
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+`, deletionProtection, rName)
+}
+
 func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Oracle(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -3315,6 +3531,29 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, backupWindow, rName)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  deletion_protection = %t
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  replicate_source_db = "${aws_db_instance.source.id}"
+  skip_final_snapshot = true
+}
+`, rName, deletionProtection, rName)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_IamDatabaseAuthenticationEnabled(rName string, iamDatabaseAuthenticationEnabled bool) string {
@@ -3661,6 +3900,34 @@ resource "aws_db_instance" "test" {
 `, rName, rName, backupRetentionPeriod, rName)
 }
 
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod_Unset(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = "mariadb"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  backup_retention_period = 0
+  identifier              = %q
+  instance_class          = "${aws_db_instance.source.instance_class}"
+  snapshot_identifier     = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot     = true
+}
+`, rName, rName, rName)
+}
+
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, backupWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -3686,6 +3953,33 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, rName, backupWindow, rName)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mysql"
+  identifier          = "%s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  deletion_protection = %t
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  snapshot_identifier = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot = true
+}
+`, rName, rName, deletionProtection, rName)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_IamDatabaseAuthenticationEnabled(rName string, iamDatabaseAuthenticationEnabled bool) string {
@@ -3944,6 +4238,38 @@ resource "aws_db_instance" "test" {
   tags {
     key1 = "value1"
   }
+}
+`, rName, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_Tags_Unset(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mariadb"
+  identifier          = "%s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+
+  tags {
+    key1 = "value1"
+  }
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  snapshot_identifier = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot = true
+
+  tags {}
 }
 `, rName, rName, rName)
 }

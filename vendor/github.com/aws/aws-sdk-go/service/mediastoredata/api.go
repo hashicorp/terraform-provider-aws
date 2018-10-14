@@ -17,7 +17,7 @@ const opDeleteObject = "DeleteObject"
 // DeleteObjectRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteObject operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -102,7 +102,7 @@ const opDescribeObject = "DescribeObject"
 // DescribeObjectRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeObject operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -187,7 +187,7 @@ const opGetObject = "GetObject"
 // GetObjectRequest generates a "aws/request.Request" representing the
 // client's request for the GetObject operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -275,7 +275,7 @@ const opListItems = "ListItems"
 // ListItemsRequest generates a "aws/request.Request" representing the
 // client's request for the ListItems operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -358,7 +358,7 @@ const opPutObject = "PutObject"
 // PutObjectRequest generates a "aws/request.Request" representing the
 // client's request for the PutObject operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.

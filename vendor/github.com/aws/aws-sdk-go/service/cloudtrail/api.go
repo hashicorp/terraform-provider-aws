@@ -16,7 +16,7 @@ const opAddTags = "AddTags"
 // AddTagsRequest generates a "aws/request.Request" representing the
 // client's request for the AddTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -140,7 +140,7 @@ const opCreateTrail = "CreateTrail"
 // CreateTrailRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrail operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -298,7 +298,7 @@ const opDeleteTrail = "DeleteTrail"
 // DeleteTrailRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTrail operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -399,7 +399,7 @@ const opDescribeTrails = "DescribeTrails"
 // DescribeTrailsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTrails operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -482,7 +482,7 @@ const opGetEventSelectors = "GetEventSelectors"
 // GetEventSelectorsRequest generates a "aws/request.Request" representing the
 // client's request for the GetEventSelectors operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -595,7 +595,7 @@ const opGetTrailStatus = "GetTrailStatus"
 // GetTrailStatusRequest generates a "aws/request.Request" representing the
 // client's request for the GetTrailStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -694,7 +694,7 @@ const opListPublicKeys = "ListPublicKeys"
 // ListPublicKeysRequest generates a "aws/request.Request" representing the
 // client's request for the ListPublicKeys operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -790,7 +790,7 @@ const opListTags = "ListTags"
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -904,7 +904,7 @@ const opLookupEvents = "LookupEvents"
 // LookupEventsRequest generates a "aws/request.Request" representing the
 // client's request for the LookupEvents operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1075,7 +1075,7 @@ const opPutEventSelectors = "PutEventSelectors"
 // PutEventSelectorsRequest generates a "aws/request.Request" representing the
 // client's request for the PutEventSelectors operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1219,7 +1219,7 @@ const opRemoveTags = "RemoveTags"
 // RemoveTagsRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1334,7 +1334,7 @@ const opStartLogging = "StartLogging"
 // StartLoggingRequest generates a "aws/request.Request" representing the
 // client's request for the StartLogging operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1437,7 +1437,7 @@ const opStopLogging = "StopLogging"
 // StopLoggingRequest generates a "aws/request.Request" representing the
 // client's request for the StopLogging operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1542,7 +1542,7 @@ const opUpdateTrail = "UpdateTrail"
 // UpdateTrailRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTrail operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.

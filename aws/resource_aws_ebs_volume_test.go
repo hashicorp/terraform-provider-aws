@@ -13,6 +13,26 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEBSVolume_importBasic(t *testing.T) {
+	resourceName := "aws_ebs_volume.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_basic(t *testing.T) {
 	var v ec2.Volume
 	resource.Test(t, resource.TestCase{

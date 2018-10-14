@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -52,7 +51,7 @@ func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[INFO] registering asg %s with ELBs %s", asgName, v.(string))
 
 		if _, err := asgconn.AttachLoadBalancers(attachOpts); err != nil {
-			return errwrap.Wrapf(fmt.Sprintf("Failure attaching AutoScaling Group %s with Elastic Load Balancer: %s: {{err}}", asgName, v.(string)), err)
+			return fmt.Errorf("Failure attaching AutoScaling Group %s with Elastic Load Balancer: %s: %s", asgName, v.(string), err)
 		}
 	}
 
@@ -65,7 +64,7 @@ func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[INFO] registering asg %s with ALB Target Group %s", asgName, v.(string))
 
 		if _, err := asgconn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
-			return errwrap.Wrapf(fmt.Sprintf("Failure attaching AutoScaling Group %s with ALB Target Group: %s: {{err}}", asgName, v.(string)), err)
+			return fmt.Errorf("Failure attaching AutoScaling Group %s with ALB Target Group: %s: %s", asgName, v.(string), err)
 		}
 	}
 
@@ -137,7 +136,7 @@ func resourceAwsAutoscalingAttachmentDelete(d *schema.ResourceData, meta interfa
 
 		log.Printf("[INFO] Deleting ELB %s association from: %s", v.(string), asgName)
 		if _, err := asgconn.DetachLoadBalancers(detachOpts); err != nil {
-			return errwrap.Wrapf(fmt.Sprintf("Failure detaching AutoScaling Group %s with Elastic Load Balancer: %s: {{err}}", asgName, v.(string)), err)
+			return fmt.Errorf("Failure detaching AutoScaling Group %s with Elastic Load Balancer: %s: %s", asgName, v.(string), err)
 		}
 	}
 
@@ -149,7 +148,7 @@ func resourceAwsAutoscalingAttachmentDelete(d *schema.ResourceData, meta interfa
 
 		log.Printf("[INFO] Deleting ALB Target Group %s association from: %s", v.(string), asgName)
 		if _, err := asgconn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
-			return errwrap.Wrapf(fmt.Sprintf("Failure detaching AutoScaling Group %s with ALB Target Group: %s: {{err}}", asgName, v.(string)), err)
+			return fmt.Errorf("Failure detaching AutoScaling Group %s with ALB Target Group: %s: %s", asgName, v.(string), err)
 		}
 	}
 

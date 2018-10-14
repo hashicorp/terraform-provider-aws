@@ -16,7 +16,7 @@ const opBatchCreatePartition = "BatchCreatePartition"
 // BatchCreatePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchCreatePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -113,7 +113,7 @@ const opBatchDeleteConnection = "BatchDeleteConnection"
 // BatchDeleteConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeleteConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -195,7 +195,7 @@ const opBatchDeletePartition = "BatchDeletePartition"
 // BatchDeletePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeletePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -283,7 +283,7 @@ const opBatchDeleteTable = "BatchDeleteTable"
 // BatchDeleteTableRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeleteTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -380,7 +380,7 @@ const opBatchDeleteTableVersion = "BatchDeleteTableVersion"
 // BatchDeleteTableVersionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeleteTableVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -468,7 +468,7 @@ const opBatchGetPartition = "BatchGetPartition"
 // BatchGetPartitionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetPartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -559,7 +559,7 @@ const opBatchStopJobRun = "BatchStopJobRun"
 // BatchStopJobRunRequest generates a "aws/request.Request" representing the
 // client's request for the BatchStopJobRun operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -644,7 +644,7 @@ const opCreateClassifier = "CreateClassifier"
 // CreateClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the CreateClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -731,7 +731,7 @@ const opCreateConnection = "CreateConnection"
 // CreateConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -822,7 +822,7 @@ const opCreateCrawler = "CreateCrawler"
 // CreateCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -912,7 +912,7 @@ const opCreateDatabase = "CreateDatabase"
 // CreateDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1006,7 +1006,7 @@ const opCreateDevEndpoint = "CreateDevEndpoint"
 // CreateDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1106,7 +1106,7 @@ const opCreateJob = "CreateJob"
 // CreateJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1203,7 +1203,7 @@ const opCreatePartition = "CreatePartition"
 // CreatePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1300,7 +1300,7 @@ const opCreateScript = "CreateScript"
 // CreateScriptRequest generates a "aws/request.Request" representing the
 // client's request for the CreateScript operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1385,7 +1385,7 @@ const opCreateSecurityConfiguration = "CreateSecurityConfiguration"
 // CreateSecurityConfigurationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateSecurityConfiguration operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1476,7 +1476,7 @@ const opCreateTable = "CreateTable"
 // CreateTableRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1573,7 +1573,7 @@ const opCreateTrigger = "CreateTrigger"
 // CreateTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1670,7 +1670,7 @@ const opCreateUserDefinedFunction = "CreateUserDefinedFunction"
 // CreateUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1767,7 +1767,7 @@ const opDeleteClassifier = "DeleteClassifier"
 // DeleteClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1849,7 +1849,7 @@ const opDeleteConnection = "DeleteConnection"
 // DeleteConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1931,7 +1931,7 @@ const opDeleteCrawler = "DeleteCrawler"
 // DeleteCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2020,7 +2020,7 @@ const opDeleteDatabase = "DeleteDatabase"
 // DeleteDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2119,7 +2119,7 @@ const opDeleteDevEndpoint = "DeleteDevEndpoint"
 // DeleteDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2207,7 +2207,7 @@ const opDeleteJob = "DeleteJob"
 // DeleteJobRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2293,7 +2293,7 @@ const opDeletePartition = "DeletePartition"
 // DeletePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2381,7 +2381,7 @@ const opDeleteSecurityConfiguration = "DeleteSecurityConfiguration"
 // DeleteSecurityConfigurationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSecurityConfiguration operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2469,7 +2469,7 @@ const opDeleteTable = "DeleteTable"
 // DeleteTableRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2566,7 +2566,7 @@ const opDeleteTableVersion = "DeleteTableVersion"
 // DeleteTableVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTableVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2654,7 +2654,7 @@ const opDeleteTrigger = "DeleteTrigger"
 // DeleteTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2743,7 +2743,7 @@ const opDeleteUserDefinedFunction = "DeleteUserDefinedFunction"
 // DeleteUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2831,7 +2831,7 @@ const opGetCatalogImportStatus = "GetCatalogImportStatus"
 // GetCatalogImportStatusRequest generates a "aws/request.Request" representing the
 // client's request for the GetCatalogImportStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2913,7 +2913,7 @@ const opGetClassifier = "GetClassifier"
 // GetClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the GetClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2995,7 +2995,7 @@ const opGetClassifiers = "GetClassifiers"
 // GetClassifiersRequest generates a "aws/request.Request" representing the
 // client's request for the GetClassifiers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3130,7 +3130,7 @@ const opGetConnection = "GetConnection"
 // GetConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the GetConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3218,7 +3218,7 @@ const opGetConnections = "GetConnections"
 // GetConnectionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetConnections operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3362,7 +3362,7 @@ const opGetCrawler = "GetCrawler"
 // GetCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the GetCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3444,7 +3444,7 @@ const opGetCrawlerMetrics = "GetCrawlerMetrics"
 // GetCrawlerMetricsRequest generates a "aws/request.Request" representing the
 // client's request for the GetCrawlerMetrics operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3579,7 +3579,7 @@ const opGetCrawlers = "GetCrawlers"
 // GetCrawlersRequest generates a "aws/request.Request" representing the
 // client's request for the GetCrawlers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3709,12 +3709,97 @@ func (c *Glue) GetCrawlersPagesWithContext(ctx aws.Context, input *GetCrawlersIn
 	return p.Err()
 }
 
+const opGetDataCatalogEncryptionSettings = "GetDataCatalogEncryptionSettings"
+
+// GetDataCatalogEncryptionSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the GetDataCatalogEncryptionSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDataCatalogEncryptionSettings for more information on using the GetDataCatalogEncryptionSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDataCatalogEncryptionSettingsRequest method.
+//    req, resp := client.GetDataCatalogEncryptionSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
+func (c *Glue) GetDataCatalogEncryptionSettingsRequest(input *GetDataCatalogEncryptionSettingsInput) (req *request.Request, output *GetDataCatalogEncryptionSettingsOutput) {
+	op := &request.Operation{
+		Name:       opGetDataCatalogEncryptionSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDataCatalogEncryptionSettingsInput{}
+	}
+
+	output = &GetDataCatalogEncryptionSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDataCatalogEncryptionSettings API operation for AWS Glue.
+//
+// Retrieves the security configuration for a specified catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetDataCatalogEncryptionSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
+func (c *Glue) GetDataCatalogEncryptionSettings(input *GetDataCatalogEncryptionSettingsInput) (*GetDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.GetDataCatalogEncryptionSettingsRequest(input)
+	return out, req.Send()
+}
+
+// GetDataCatalogEncryptionSettingsWithContext is the same as GetDataCatalogEncryptionSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDataCatalogEncryptionSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetDataCatalogEncryptionSettingsWithContext(ctx aws.Context, input *GetDataCatalogEncryptionSettingsInput, opts ...request.Option) (*GetDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.GetDataCatalogEncryptionSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetDatabase = "GetDatabase"
 
 // GetDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the GetDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3805,7 +3890,7 @@ const opGetDatabases = "GetDatabases"
 // GetDatabasesRequest generates a "aws/request.Request" representing the
 // client's request for the GetDatabases operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3949,7 +4034,7 @@ const opGetDataflowGraph = "GetDataflowGraph"
 // GetDataflowGraphRequest generates a "aws/request.Request" representing the
 // client's request for the GetDataflowGraph operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4034,7 +4119,7 @@ const opGetDevEndpoint = "GetDevEndpoint"
 // GetDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the GetDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4122,7 +4207,7 @@ const opGetDevEndpoints = "GetDevEndpoints"
 // GetDevEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the GetDevEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4266,7 +4351,7 @@ const opGetJob = "GetJob"
 // GetJobRequest generates a "aws/request.Request" representing the
 // client's request for the GetJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4354,7 +4439,7 @@ const opGetJobRun = "GetJobRun"
 // GetJobRunRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobRun operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4442,7 +4527,7 @@ const opGetJobRuns = "GetJobRuns"
 // GetJobRunsRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobRuns operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4586,7 +4671,7 @@ const opGetJobs = "GetJobs"
 // GetJobsRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4730,7 +4815,7 @@ const opGetMapping = "GetMapping"
 // GetMappingRequest generates a "aws/request.Request" representing the
 // client's request for the GetMapping operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4818,7 +4903,7 @@ const opGetPartition = "GetPartition"
 // GetPartitionRequest generates a "aws/request.Request" representing the
 // client's request for the GetPartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4909,7 +4994,7 @@ const opGetPartitions = "GetPartitions"
 // GetPartitionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetPartitions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5056,7 +5141,7 @@ const opGetPlan = "GetPlan"
 // GetPlanRequest generates a "aws/request.Request" representing the
 // client's request for the GetPlan operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5141,7 +5226,7 @@ const opGetSecurityConfiguration = "GetSecurityConfiguration"
 // GetSecurityConfigurationRequest generates a "aws/request.Request" representing the
 // client's request for the GetSecurityConfiguration operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5229,7 +5314,7 @@ const opGetSecurityConfigurations = "GetSecurityConfigurations"
 // GetSecurityConfigurationsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSecurityConfigurations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5317,7 +5402,7 @@ const opGetTable = "GetTable"
 // GetTableRequest generates a "aws/request.Request" representing the
 // client's request for the GetTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5408,7 +5493,7 @@ const opGetTableVersion = "GetTableVersion"
 // GetTableVersionRequest generates a "aws/request.Request" representing the
 // client's request for the GetTableVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5499,7 +5584,7 @@ const opGetTableVersions = "GetTableVersions"
 // GetTableVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetTableVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5647,7 +5732,7 @@ const opGetTables = "GetTables"
 // GetTablesRequest generates a "aws/request.Request" representing the
 // client's request for the GetTables operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5794,7 +5879,7 @@ const opGetTrigger = "GetTrigger"
 // GetTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the GetTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5882,7 +5967,7 @@ const opGetTriggers = "GetTriggers"
 // GetTriggersRequest generates a "aws/request.Request" representing the
 // client's request for the GetTriggers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6026,7 +6111,7 @@ const opGetUserDefinedFunction = "GetUserDefinedFunction"
 // GetUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the GetUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6117,7 +6202,7 @@ const opGetUserDefinedFunctions = "GetUserDefinedFunctions"
 // GetUserDefinedFunctionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetUserDefinedFunctions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6264,7 +6349,7 @@ const opImportCatalogToGlue = "ImportCatalogToGlue"
 // ImportCatalogToGlueRequest generates a "aws/request.Request" representing the
 // client's request for the ImportCatalogToGlue operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6346,7 +6431,7 @@ const opPutDataCatalogEncryptionSettings = "PutDataCatalogEncryptionSettings"
 // PutDataCatalogEncryptionSettingsRequest generates a "aws/request.Request" representing the
 // client's request for the PutDataCatalogEncryptionSettings operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6433,7 +6518,7 @@ const opResetJobBookmark = "ResetJobBookmark"
 // ResetJobBookmarkRequest generates a "aws/request.Request" representing the
 // client's request for the ResetJobBookmark operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6521,7 +6606,7 @@ const opStartCrawler = "StartCrawler"
 // StartCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the StartCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6607,7 +6692,7 @@ const opStartCrawlerSchedule = "StartCrawlerSchedule"
 // StartCrawlerScheduleRequest generates a "aws/request.Request" representing the
 // client's request for the StartCrawlerSchedule operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6699,7 +6784,7 @@ const opStartJobRun = "StartJobRun"
 // StartJobRunRequest generates a "aws/request.Request" representing the
 // client's request for the StartJobRun operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6793,7 +6878,7 @@ const opStartTrigger = "StartTrigger"
 // StartTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the StartTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6888,7 +6973,7 @@ const opStopCrawler = "StopCrawler"
 // StopCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the StopCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6976,7 +7061,7 @@ const opStopCrawlerSchedule = "StopCrawlerSchedule"
 // StopCrawlerScheduleRequest generates a "aws/request.Request" representing the
 // client's request for the StopCrawlerSchedule operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7065,7 +7150,7 @@ const opStopTrigger = "StopTrigger"
 // StopTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the StopTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7156,7 +7241,7 @@ const opUpdateClassifier = "UpdateClassifier"
 // UpdateClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7245,7 +7330,7 @@ const opUpdateConnection = "UpdateConnection"
 // UpdateConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7336,7 +7421,7 @@ const opUpdateCrawler = "UpdateCrawler"
 // UpdateCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7428,7 +7513,7 @@ const opUpdateCrawlerSchedule = "UpdateCrawlerSchedule"
 // UpdateCrawlerScheduleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCrawlerSchedule operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7519,7 +7604,7 @@ const opUpdateDatabase = "UpdateDatabase"
 // UpdateDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7610,7 +7695,7 @@ const opUpdateDevEndpoint = "UpdateDevEndpoint"
 // UpdateDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7701,7 +7786,7 @@ const opUpdateJob = "UpdateJob"
 // UpdateJobRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7792,7 +7877,7 @@ const opUpdatePartition = "UpdatePartition"
 // UpdatePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7883,7 +7968,7 @@ const opUpdateTable = "UpdateTable"
 // UpdateTableRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7980,7 +8065,7 @@ const opUpdateTrigger = "UpdateTrigger"
 // UpdateTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8071,7 +8156,7 @@ const opUpdateUserDefinedFunction = "UpdateUserDefinedFunction"
 // UpdateUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -14001,6 +14086,66 @@ func (s *GetCrawlersOutput) SetCrawlers(v []*Crawler) *GetCrawlersOutput {
 // SetNextToken sets the NextToken field's value.
 func (s *GetCrawlersOutput) SetNextToken(v string) *GetCrawlersOutput {
 	s.NextToken = &v
+	return s
+}
+
+type GetDataCatalogEncryptionSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog for which to retrieve the security configuration.
+	// If none is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogEncryptionSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogEncryptionSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDataCatalogEncryptionSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDataCatalogEncryptionSettingsInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetDataCatalogEncryptionSettingsInput) SetCatalogId(v string) *GetDataCatalogEncryptionSettingsInput {
+	s.CatalogId = &v
+	return s
+}
+
+type GetDataCatalogEncryptionSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The requested security configuration.
+	DataCatalogEncryptionSettings *DataCatalogEncryptionSettings `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogEncryptionSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogEncryptionSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDataCatalogEncryptionSettings sets the DataCatalogEncryptionSettings field's value.
+func (s *GetDataCatalogEncryptionSettingsOutput) SetDataCatalogEncryptionSettings(v *DataCatalogEncryptionSettings) *GetDataCatalogEncryptionSettingsOutput {
+	s.DataCatalogEncryptionSettings = v
 	return s
 }
 

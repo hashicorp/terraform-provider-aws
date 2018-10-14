@@ -15,6 +15,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCustomerGateway_importBasic(t *testing.T) {
+	resourceName := "aws_customer_gateway.foo"
+	rInt := acctest.RandInt()
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomerGatewayConfig(rInt, rBgpAsn),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := acctest.RandIntRange(64512, 65534)

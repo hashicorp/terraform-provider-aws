@@ -162,7 +162,7 @@ func resourceAwsLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("[WARN] Error deleting Flow Log with ID (%s), error: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting Flow Log with ID (%s), error: %s", d.Id(), err)
 	}
 
 	return nil

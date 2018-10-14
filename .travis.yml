@@ -4,7 +4,7 @@ services:
   - docker
 language: go
 go:
-- "1.11"
+- "1.11.1"
 
 git:
   depth: 1

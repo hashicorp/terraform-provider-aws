@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -172,7 +171,7 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating SSM document: {{err}}", err)
+		return fmt.Errorf("Error creating SSM document: %s", err)
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && v != nil {
@@ -206,7 +205,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return errwrap.Wrapf("[ERROR] Error describing SSM document: {{err}}", err)
+		return fmt.Errorf("Error describing SSM document: %s", err)
 	}
 
 	doc := resp.Document
@@ -235,7 +234,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Resource:  fmt.Sprintf("document/%s", *doc.Name),
 	}.String()
 	if err := d.Set("arn", arn); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting arn error: %#v", err)
+		return fmt.Errorf("Error setting arn error: %#v", err)
 	}
 
 	d.Set("status", doc.Status)
@@ -243,7 +242,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	gp, err := getDocumentPermissions(d, meta)
 
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error reading SSM document permissions: {{err}}", err)
+		return fmt.Errorf("Error reading SSM document permissions: %s", err)
 	}
 
 	d.Set("permissions", gp)
@@ -447,7 +446,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 	resp, err := ssmconn.DescribeDocumentPermission(permInput)
 
 	if err != nil {
-		return nil, errwrap.Wrapf("[ERROR] Error setting permissions for SSM document: {{err}}", err)
+		return nil, fmt.Errorf("Error setting permissions for SSM document: %s", err)
 	}
 
 	var account_ids = make([]string, len(resp.AccountIds))
@@ -496,7 +495,7 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	_, err := ssmconn.ModifyDocumentPermission(permInput)
 
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error removing permissions for SSM document: {{err}}", err)
+		return fmt.Errorf("Error removing permissions for SSM document: %s", err)
 	}
 
 	return nil
@@ -525,7 +524,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 
 		newDefaultVersion = d.Get("latest_version").(string)
 	} else if err != nil {
-		return errwrap.Wrapf("Error updating SSM document: {{err}}", err)
+		return fmt.Errorf("Error updating SSM document: %s", err)
 	} else {
 		log.Printf("[INFO] Updating the default version to the new version %s: %s", newDefaultVersion, d.Id())
 		newDefaultVersion = *updated.DocumentDescription.DocumentVersion
@@ -539,7 +538,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 	_, err = ssmconn.UpdateDocumentDefaultVersion(updateDefaultInput)
 
 	if err != nil {
-		return errwrap.Wrapf("Error updating the default document version to that of the updated document: {{err}}", err)
+		return fmt.Errorf("Error updating the default document version to that of the updated document: %s", err)
 	}
 	return nil
 }

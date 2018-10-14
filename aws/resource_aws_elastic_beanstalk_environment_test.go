@@ -113,6 +113,43 @@ func testSweepBeanstalkEnvironments(region string) error {
 	return nil
 }
 
+func TestAWSElasticBeanstalkEnvironment_importBasic(t *testing.T) {
+	resourceName := "aws_elastic_beanstalk_application.tftest"
+
+	applicationName := fmt.Sprintf("tf-test-name-%d", acctest.RandInt())
+	environmentName := fmt.Sprintf("tf-test-env-name-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkEnvImportConfig(applicationName, environmentName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccBeanstalkEnvImportConfig(appName, envName string) string {
+	return fmt.Sprintf(`resource "aws_elastic_beanstalk_application" "tftest" {
+	  name = "%s"
+	  description = "tf-test-desc"
+	}
+
+	resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+	  name = "%s"
+	  application = "${aws_elastic_beanstalk_application.tftest.name}"
+	  solution_stack_name = "64bit Amazon Linux running Python"
+	}`, appName, envName)
+}
+
 func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
@@ -136,7 +173,6 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
@@ -502,6 +538,30 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 	})
 }
 
+func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
+	var app elasticbeanstalk.EnvironmentDescription
+
+	rString := acctest.RandString(8)
+	appName := fmt.Sprintf("tf_acc_app_env_platform_arn_%s", rString)
+	envName := fmt.Sprintf("tf-acc-env-platform-arn-%s", rString)
+	platformArn := "arn:aws:elasticbeanstalk:us-east-1::platform/Go 1 running on 64bit Amazon Linux/2.9.0"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkEnvConfig_platform_arn(appName, envName, platformArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_environment.tfenvtest", "platform_arn", platformArn),
+				),
+			},
+		},
+	})
+}
+
 func testAccVerifyBeanstalkConfig(env *elasticbeanstalk.EnvironmentDescription, expected []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if env == nil {
@@ -771,6 +831,25 @@ func testAccBeanstalkEnvConfig(appName, envName string) string {
 	 depends_on = ["aws_elastic_beanstalk_application.tftest"]
  }
  `, appName, envName)
+}
+
+func testAccBeanstalkEnvConfig_platform_arn(appName, envName, platformArn string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_elastic_beanstalk_application" "tftest" {
+  name = "%s"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+  name = "%s"
+  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  platform_arn = "%s"
+}
+`, appName, envName, platformArn)
 }
 
 func testAccBeanstalkEnvConfig_empty_settings(appName, envName string) string {

@@ -15,6 +15,28 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDBParameterGroup_importBasic(t *testing.T) {
+	resourceName := "aws_db_parameter_group.bar"
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 	var v rds.DBParameterGroup
 

@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -124,7 +123,7 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 		return true
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+		return fmt.Errorf("Error describing certificates: %s", err)
 	}
 
 	if len(metadatas) == 0 {

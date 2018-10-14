@@ -10,6 +10,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCloudwatchLogDestination_importBasic(t *testing.T) {
+	resourceName := "aws_cloudwatch_log_destination.test"
+
+	rstring := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchLogDestinationConfig(rstring),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 

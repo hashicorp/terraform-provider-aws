@@ -44,7 +44,7 @@ func validateTypeStringNullableBoolean(v interface{}, k string) (ws []string, es
 		return
 	}
 
-	for _, str := range []string{"", "0", "1"} {
+	for _, str := range []string{"", "0", "1", "false", "true"} {
 		if value == str {
 			return
 		}
@@ -1717,7 +1717,15 @@ func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors
 }
 
 func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{"1Gbps", "10Gbps"}, false)
+	return validation.StringInSlice([]string{
+		"1Gbps",
+		"10Gbps",
+		"50Mbps",
+		"100Mbps",
+		"200Mbps",
+		"300Mbps",
+		"400Mbps",
+		"500Mbps"}, false)
 }
 
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {

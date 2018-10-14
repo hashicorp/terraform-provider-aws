@@ -444,6 +444,25 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigwithNodeToNodeEncryption(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESNodetoNodeEncrypted(true, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	var td elasticsearch.ListTagsOutput
@@ -581,6 +600,16 @@ func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.Elasticsearch
 		conf := status.EncryptionAtRestOptions
 		if *conf.Enabled != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESNodetoNodeEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		options := status.NodeToNodeEncryptionOptions
+		if aws.BoolValue(options.Enabled) != encrypted {
+			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
 		}
 		return nil
 	}
@@ -885,6 +914,30 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randESId, randESId)
+}
+
+func testAccESDomainConfigwithNodeToNodeEncryption(randInt int) string {
+	return fmt.Sprintf(`
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  node_to_node_encryption {
+  	enabled = true
+  }
+}
+`, randInt)
 }
 
 func testAccESDomainConfig_complex(randInt int) string {

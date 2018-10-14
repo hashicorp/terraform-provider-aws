@@ -165,6 +165,10 @@ func resourceAwsMqBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"endpoints": {
 							Type:     schema.TypeList,
 							Computed: true,
