@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Support `NO_SOURCE` in `source` `type` [GH-6140]
 * resource/aws_dx_connection: Add `jumbo_frame_capable` attribute [GH-6143]
+* resource/aws_dynamodb_table: Prevent error `UnknownOperationException: Tagging is not currently supported in DynamoDB Local` [GH-6149]
 * resource/aws_lb_listener: Allow `default_action` `order` to be based on Terraform configuration ordering [GH-6124]
 * resource/aws_lb_listener_rule: Allow `action` `order` to be based on Terraform configuration ordering [GH-6124]
 
