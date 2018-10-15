@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_athena_database: Add `encryption_configuration` argument [GH-6117]
 * resource/aws_cloudwatch_metric_alarm: Validate `alarm_actions` [GH-6151]
 * resource/aws_codebuild_project: Support `NO_SOURCE` in `source` `type` [GH-6140]
 * resource/aws_dx_connection: Add `jumbo_frame_capable` attribute [GH-6143]
