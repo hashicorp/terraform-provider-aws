@@ -88,6 +88,55 @@ func TestAccAwsDxPrivateVirtualInterface_dxGateway(t *testing.T) {
 	})
 }
 
+func TestAccAwsDxPrivateVirtualInterface_mtuUpdate(t *testing.T) {
+	key := "DX_CONNECTION_ID"
+	connectionId := os.Getenv(key)
+	if connectionId == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
+	bgpAsn := randIntRange(64512, 65534)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_noTags(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+				),
+			},
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_mtuCapable(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "9001"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
+				),
+			},
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_noTags(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "0"),
+				),
+			},
+			// Test import.
+			{
+				ResourceName:      "aws_dx_private_virtual_interface.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsDxPrivateVirtualInterfaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dxconn
 
