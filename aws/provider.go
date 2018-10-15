@@ -554,6 +554,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_parameter_group":                     resourceAwsRedshiftParameterGroup(),
 			"aws_redshift_subnet_group":                        resourceAwsRedshiftSubnetGroup(),
 			"aws_redshift_snapshot_copy_grant":                 resourceAwsRedshiftSnapshotCopyGrant(),
+			"aws_redshift_event_subscription":                  resourceAwsRedshiftEventSubscription(),
 			"aws_route53_delegation_set":                       resourceAwsRoute53DelegationSet(),
 			"aws_route53_query_log":                            resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                               resourceAwsRoute53Record(),
