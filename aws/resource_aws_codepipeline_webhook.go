@@ -179,6 +179,9 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 	}
 
 	authConfig, err := extractCodePipelineWebhookAuthConfig(auth)
+	if err != nil {
+		return err
+	}
 
 	request := &codepipeline.PutWebhookInput{
 		Webhook: &codepipeline.WebhookDefinition{
