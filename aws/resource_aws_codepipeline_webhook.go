@@ -50,7 +50,7 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 			},
 			"filter": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
@@ -126,10 +126,6 @@ func extractCodePipelineWebhookRules(filters *schema.Set) ([]*codepipeline.Webho
 		}
 
 		rules = append(rules, &filter)
-	}
-
-	if len(rules) <= 0 {
-		return nil, fmt.Errorf("One or more webhook filter rule is required (%d rules from %d filter blocks)", len(rules), len(filters.List()))
 	}
 
 	return rules, nil
