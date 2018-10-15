@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,30 +11,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
-
-func TestAccAWSRedshiftEventSubscription_importBasic(t *testing.T) {
-	resourceName := "aws_redshift_event_subscription.bar"
-	rInt := acctest.RandInt()
-	subscriptionName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRedshiftEventSubscriptionConfig(rInt),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateId:     subscriptionName,
-			},
-		},
-	})
-}
 
 func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	var v redshift.EventSubscription
@@ -68,6 +43,11 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_redshift_event_subscription.bar", "tags.Name", "new-name"),
 				),
 			},
+			{
+				ResourceName:      "aws_redshift_event_subscription.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -75,75 +55,7 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 	var v redshift.EventSubscription
 	rInt := acctest.RandInt()
-	startsWithPrefix := regexp.MustCompile("^tf-acc-test-redshift-event-subs-")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRedshiftEventSubscriptionConfigWithPrefix(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftEventSubscriptionExists("aws_redshift_event_subscription.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "source_type", "cluster"),
-					resource.TestMatchResourceAttr(
-						"aws_redshift_event_subscription.bar", "name", startsWithPrefix),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "tags.Name", "name"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
-	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRedshiftEventSubscriptionConfigWithSourceIds(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftEventSubscriptionExists("aws_redshift_event_subscription.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "source_type", "cluster-parameter-group"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "name", fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "source_ids.#", "1"),
-				),
-			},
-			{
-				Config: testAccAWSRedshiftEventSubscriptionConfigUpdateSourceIds(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftEventSubscriptionExists("aws_redshift_event_subscription.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "source_type", "cluster-parameter-group"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "name", fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "source_ids.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
-	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -159,7 +71,87 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_event_subscription.bar", "source_type", "cluster"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_event_subscription.bar", "name", fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)),
+						"aws_redshift_event_subscription.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "tags.Name", "name"),
+				),
+			},
+			{
+				ResourceName:      "aws_redshift_event_subscription.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
+	var v redshift.EventSubscription
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftEventSubscriptionConfigWithSourceIds(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftEventSubscriptionExists("aws_redshift_event_subscription.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "source_type", "cluster-parameter-group"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "source_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSRedshiftEventSubscriptionConfigUpdateSourceIds(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftEventSubscriptionExists("aws_redshift_event_subscription.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "source_type", "cluster-parameter-group"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "name", rName),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "source_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      "aws_redshift_event_subscription.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
+	var v redshift.EventSubscription
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftEventSubscriptionConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftEventSubscriptionExists("aws_redshift_event_subscription.bar", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "source_type", "cluster"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_event_subscription.bar", "name", rName),
 				),
 			},
 			{
@@ -171,6 +163,11 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_event_subscription.bar", "source_type", "cluster"),
 				),
+			},
+			{
+				ResourceName:      "aws_redshift_event_subscription.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -255,30 +252,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "cluster"
-  severity = "INFO"
-  event_categories = [
-    "configuration",
-    "management",
-    "monitoring",
-    "security",
-  ]
-  tags {
-    Name = "name"
-  }
-}`, rInt, rInt)
-}
-
-func testAccAWSRedshiftEventSubscriptionConfigWithPrefix(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-redshift-event-subs-sns-topic-%d"
-}
-
-resource "aws_redshift_event_subscription" "bar" {
-  name = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "cluster"
   severity = "INFO"
   event_categories = [
@@ -301,7 +275,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
   enabled = false
   source_type = "cluster-snapshot"
   severity = "INFO"
@@ -328,7 +302,7 @@ resource "aws_redshift_parameter_group" "bar" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name = "tf-acc-test-redshift-event-subs-with-ids-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "cluster-parameter-group"
   severity = "INFO"
   source_ids = ["${aws_redshift_parameter_group.bar.id}"]
@@ -348,20 +322,20 @@ func testAccAWSRedshiftEventSubscriptionConfigUpdateSourceIds(rInt int) string {
     }
 
     resource "aws_redshift_parameter_group" "bar" {
-        name = "redshift-parameter-group-event-%d"
+        name = "tf-acc-redshift-parameter-group-event-%d"
         family = "redshift-1.0"
         description = "Test parameter group for terraform"
     }
 
     resource "aws_redshift_parameter_group" "foo" {
-        name = "redshift-parameter-group-event-2-%d"
+        name = "tf-acc-redshift-parameter-group-event-2-%d"
         family = "redshift-1.0"
         description = "Test parameter group for terraform"
     }
 
     resource "aws_redshift_event_subscription" "bar" {
         name = "tf-acc-test-redshift-event-subs-with-ids-%d"
-        sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+        sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
         source_type = "cluster-parameter-group"
         severity = "INFO"
         source_ids = ["${aws_redshift_parameter_group.bar.id}","${aws_redshift_parameter_group.foo.id}"]
@@ -382,7 +356,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "cluster"
   severity = "INFO"
   event_categories = [

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -18,7 +17,7 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 		Update: resourceAwsRedshiftEventSubscriptionUpdate,
 		Delete: resourceAwsRedshiftEventSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRedshiftEventSubscriptionImport,
+			State: schema.ImportStatePassthrough,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
@@ -31,9 +30,10 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"sns_topic": {
-				Type:     schema.TypeString,
-				Required: true,
+			"sns_topic_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -79,43 +79,23 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 
 func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else {
-		name = resource.UniqueId()
-	}
-
-	tags := tagsFromMapRedshift(d.Get("tags").(map[string]interface{}))
-
-	sourceIdsSet := d.Get("source_ids").(*schema.Set)
-	sourceIds := make([]*string, sourceIdsSet.Len())
-	for i, sourceId := range sourceIdsSet.List() {
-		sourceIds[i] = aws.String(sourceId.(string))
-	}
-
-	eventCategoriesSet := d.Get("event_categories").(*schema.Set)
-	eventCategories := make([]*string, eventCategoriesSet.Len())
-	for i, eventCategory := range eventCategoriesSet.List() {
-		eventCategories[i] = aws.String(eventCategory.(string))
-	}
 
 	request := &redshift.CreateEventSubscriptionInput{
-		SubscriptionName: aws.String(name),
-		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
+		SubscriptionName: aws.String(d.Get("name").(string)),
+		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		SourceIds:        sourceIds,
+		SourceIds:        expandStringSet(d.Get("source_ids").(*schema.Set)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		Severity:         aws.String(d.Get("severity").(string)),
-		EventCategories:  eventCategories,
-		Tags:             tags,
+		EventCategories:  expandStringSet(d.Get("event_categories").(*schema.Set)),
+		Tags:             tagsFromMapRedshift(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Println("[DEBUG] Create Redshift Event Subscription:", request)
 
 	output, err := conn.CreateEventSubscription(request)
 	if err != nil || output.EventSubscription == nil {
-		return fmt.Errorf("Error creating Redshift Event Subscription %s: %s", name, err)
+		return fmt.Errorf("Error creating Redshift Event Subscription %s: %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
@@ -139,7 +119,7 @@ func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta inter
 	if err := d.Set("name", sub.CustSubscriptionId); err != nil {
 		return err
 	}
-	if err := d.Set("sns_topic", sub.SnsTopicArn); err != nil {
+	if err := d.Set("sns_topic_arn", sub.SnsTopicArn); err != nil {
 		return err
 	}
 	if err := d.Set("status", sub.Status); err != nil {
@@ -195,57 +175,20 @@ func resourceAwsRedshiftEventSubscriptionRetrieve(name string, conn *redshift.Re
 func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
-	requestUpdate := false
-
 	req := &redshift.ModifyEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
+		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		SourceIds:        expandStringSet(d.Get("source_ids").(*schema.Set)),
+		SourceType:       aws.String(d.Get("source_type").(string)),
+		Severity:         aws.String(d.Get("severity").(string)),
+		EventCategories:  expandStringSet(d.Get("event_categories").(*schema.Set)),
 	}
 
-	eventCategoriesSet := d.Get("event_categories").(*schema.Set)
-	req.EventCategories = make([]*string, eventCategoriesSet.Len())
-	for i, eventCategory := range eventCategoriesSet.List() {
-		req.EventCategories[i] = aws.String(eventCategory.(string))
-	}
-	if d.HasChange("event_categories") {
-		requestUpdate = true
-	}
-
-	req.Enabled = aws.Bool(d.Get("enabled").(bool))
-	if d.HasChange("enabled") {
-		requestUpdate = true
-	}
-
-	req.SnsTopicArn = aws.String(d.Get("sns_topic").(string))
-	if d.HasChange("sns_topic") {
-		requestUpdate = true
-	}
-
-	req.SourceType = aws.String(d.Get("source_type").(string))
-	if d.HasChange("source_type") {
-		requestUpdate = true
-	}
-
-	req.Severity = aws.String(d.Get("severity").(string))
-	if d.HasChange("severity") {
-		requestUpdate = true
-	}
-
-	sourceIdsSet := d.Get("source_ids").(*schema.Set)
-	req.SourceIds = make([]*string, sourceIdsSet.Len())
-	for i, sourceId := range sourceIdsSet.List() {
-		req.SourceIds[i] = aws.String(sourceId.(string))
-	}
-	if d.HasChange("source_ids") {
-		requestUpdate = true
-	}
-
-	log.Printf("[DEBUG] Should send Redshift Event Subscription modification request: %#v", requestUpdate)
-	if requestUpdate {
-		log.Printf("[DEBUG] Redshift Event Subscription modification request: %#v", req)
-		_, err := conn.ModifyEventSubscription(req)
-		if err != nil {
-			return fmt.Errorf("Modifying Redshift Event Subscription %s failed: %s", d.Id(), err)
-		}
+	log.Printf("[DEBUG] Redshift Event Subscription modification request: %#v", req)
+	_, err := conn.ModifyEventSubscription(req)
+	if err != nil {
+		return fmt.Errorf("Modifying Redshift Event Subscription %s failed: %s", d.Id(), err)
 	}
 
 	return nil
