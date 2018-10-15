@@ -94,7 +94,7 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 	}
 }
 
-func flattenWebhookAttr(d *schema.ResourceData, attr string) (map[string]interface{}, error) {
+func extractCodePipelineWebhookAttr(d *schema.ResourceData, attr string) (map[string]interface{}, error) {
 	if v, ok := d.GetOk(attr); ok {
 		l := v.([]interface{})
 		if len(l) <= 0 {
@@ -108,21 +108,7 @@ func flattenWebhookAttr(d *schema.ResourceData, attr string) (map[string]interfa
 	return nil, fmt.Errorf("Could not find attribute %s", attr)
 }
 
-func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-
-	auth, err := flattenWebhookAttr(d, "auth")
-	if err != nil {
-		return err
-	}
-
-	target, err := flattenWebhookAttr(d, "target")
-	if err != nil {
-		return err
-	}
-
-	filters := d.Get("filter").(*schema.Set)
-
+func extractCodePipelineWebhookRules(filters *schema.Set) ([]*codepipeline.WebhookFilterRule, error) {
 	var rules []*codepipeline.WebhookFilterRule
 
 	for _, f := range filters.List() {
@@ -136,15 +122,19 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 	}
 
 	if len(rules) <= 0 {
-		return fmt.Errorf("One or more webhook filter rule is required (%d rules from %d filter blocks)", len(rules), len(filters.List()))
+		return nil, fmt.Errorf("One or more webhook filter rule is required (%d rules from %d filter blocks)", len(rules), len(filters.List()))
 	}
 
+	return rules, nil
+}
+
+func extractCodePipelineWebhookAuthConfig(auth map[string]interface{}) (*codepipeline.WebhookAuthConfiguration, error) {
 	var authConfig codepipeline.WebhookAuthConfiguration
 	switch auth["type"].(string) {
 	case "IP":
 		ipRange := auth["allowed_ip_range"].(string)
 		if ipRange == "" {
-			return fmt.Errorf("An IP range must be set when using IP-based auth")
+			return nil, fmt.Errorf("An IP range must be set when using IP-based auth")
 		}
 
 		authConfig.AllowedIPRange = &ipRange
@@ -153,7 +143,7 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 	case "GITHUB_HMAC":
 		secretToken := auth["secret_token"].(string)
 		if secretToken == "" {
-			return fmt.Errorf("Secret token must be set when using GITHUB_HMAC")
+			return nil, fmt.Errorf("Secret token must be set when using GITHUB_HMAC")
 		}
 
 		authConfig.SecretToken = &secretToken
@@ -161,20 +151,43 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 	case "UNAUTHENTICATED":
 		break
 	default:
-		return fmt.Errorf("Invalid authentication type %s", auth["type"])
+		return nil, fmt.Errorf("Invalid authentication type %s", auth["type"])
 	}
+
+	return &authConfig, nil
+}
+
+func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).codepipelineconn
+
+	auth, err := extractCodePipelineWebhookAttr(d, "auth")
+	if err != nil {
+		return err
+	}
+
+	target, err := extractCodePipelineWebhookAttr(d, "target")
+	if err != nil {
+		return err
+	}
+
+	rules, err := extractCodePipelineWebhookRules(d.Get("filter").(*schema.Set))
+	if err != nil {
+		return err
+	}
+
+	authConfig, err := extractCodePipelineWebhookAuthConfig(auth)
 
 	request := &codepipeline.PutWebhookInput{
 		Webhook: &codepipeline.WebhookDefinition{
-			Authentication: aws.String(auth["type"].(string)),
-			Filters:        rules,
-			Name:           aws.String(d.Get("name").(string)),
-			TargetAction:   aws.String(target["action"].(string)),
-			TargetPipeline: aws.String(target["pipeline"].(string)),
+			Authentication:              aws.String(auth["type"].(string)),
+			Filters:                     rules,
+			Name:                        aws.String(d.Get("name").(string)),
+			TargetAction:                aws.String(target["action"].(string)),
+			TargetPipeline:              aws.String(target["pipeline"].(string)),
+			AuthenticationConfiguration: authConfig,
 		},
 	}
 
-	request.Webhook.AuthenticationConfiguration = &authConfig
 	webhook, err := conn.PutWebhook(request)
 	if err != nil {
 		return fmt.Errorf("Error creating webhook: %s", err)
@@ -261,6 +274,21 @@ func setCodePipelineWebhookAuthentication(webhook codepipeline.WebhookDefinition
 	return nil
 }
 
+func setCodePipelineWebhookTarget(webhook codepipeline.WebhookDefinition, d *schema.ResourceData) error {
+	var t []interface{}
+	target := map[string]interface{}{
+		"action":   *webhook.TargetAction,
+		"pipeline": *webhook.TargetPipeline,
+	}
+	t = append(t, target)
+
+	if err := d.Set("target", t); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codepipelineconn
 	arn := d.Id()
@@ -297,14 +325,7 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	var t []interface{}
-	target := map[string]interface{}{
-		"action":   *found.TargetAction,
-		"pipeline": *found.TargetPipeline,
-	}
-	t = append(t, target)
-
-	if err := d.Set("target", t); err != nil {
+	if err = setCodePipelineWebhookTarget(found, d); err != nil {
 		return err
 	}
 
