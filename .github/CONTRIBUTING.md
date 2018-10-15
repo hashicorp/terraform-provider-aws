@@ -237,6 +237,13 @@ existing resources, but you still get to implement something completely new.
    covering their behavior. See [Writing Acceptance
    Tests](#writing-acceptance-tests) below for a detailed guide on how to
    approach these.
+ - [ ] __Naming__: Resources should be named `aws_<service>_<name>` where 
+   `service` is the AWS short service name and `name` is a short, preferably
+   single word, description of the resource. Use `_` as a separator.
+   resources. We therefore encourage you to only submit **1 resource at a time**.
+ - [ ] __Arguments_and_Attributes__: The HCL for Arguments and attributes should
+   mimic the types and structs presented by the AWS API. API arguments should be
+   converted from `CamelCase` to `camel_case`.
  - [ ] __Documentation__: Each resource gets a page in the Terraform
    documentation. The [Terraform website][website] source is in this
    repo and includes instructions for getting a local copy of the site up and
