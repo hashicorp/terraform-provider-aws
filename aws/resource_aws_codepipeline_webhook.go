@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -29,14 +30,20 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codepipeline.WebhookAuthenticationTypeGithubHmac,
+								codepipeline.WebhookAuthenticationTypeIp,
+								codepipeline.WebhookAuthenticationTypeUnauthenticated,
+							}, false),
 						},
 						"secret_token": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"allowed_ip_range": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.CIDRNetwork(0, 32),
 						},
 					},
 				},
@@ -131,7 +138,7 @@ func extractCodePipelineWebhookRules(filters *schema.Set) ([]*codepipeline.Webho
 func extractCodePipelineWebhookAuthConfig(auth map[string]interface{}) (*codepipeline.WebhookAuthConfiguration, error) {
 	var authConfig codepipeline.WebhookAuthConfiguration
 	switch auth["type"].(string) {
-	case "IP":
+	case codepipeline.WebhookAuthenticationTypeIp:
 		ipRange := auth["allowed_ip_range"].(string)
 		if ipRange == "" {
 			return nil, fmt.Errorf("An IP range must be set when using IP-based auth")
@@ -140,7 +147,7 @@ func extractCodePipelineWebhookAuthConfig(auth map[string]interface{}) (*codepip
 		authConfig.AllowedIPRange = &ipRange
 
 		break
-	case "GITHUB_HMAC":
+	case codepipeline.WebhookAuthenticationTypeGithubHmac:
 		secretToken := auth["secret_token"].(string)
 		if secretToken == "" {
 			return nil, fmt.Errorf("Secret token must be set when using GITHUB_HMAC")
@@ -148,7 +155,7 @@ func extractCodePipelineWebhookAuthConfig(auth map[string]interface{}) (*codepip
 
 		authConfig.SecretToken = &secretToken
 		break
-	case "UNAUTHENTICATED":
+	case codepipeline.WebhookAuthenticationTypeUnauthenticated:
 		break
 	default:
 		return nil, fmt.Errorf("Invalid authentication type %s", auth["type"])
