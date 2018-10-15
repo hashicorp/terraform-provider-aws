@@ -26,6 +26,24 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
+	req := &directconnect.UpdateVirtualInterfaceAttributesInput{
+		VirtualInterfaceId: aws.String(d.Id()),
+	}
+
+	requestUpdate := false
+	if d.HasChange("mtu") {
+		req.Mtu = aws.Int64(int64(d.Get("mtu").(int)))
+		requestUpdate = true
+	}
+
+	if requestUpdate {
+		log.Printf("[DEBUG] Modifying Virtual Interface attributes (%s), opts:\n%s", d.Id(), req)
+		_, err := conn.UpdateVirtualInterfaceAttributes(req)
+		if err != nil {
+			return fmt.Errorf("Error updating Virtual Interface attributes (%s), error: %s", d.Id(), err)
+		}
+	}
+
 	if err := setTagsDX(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
