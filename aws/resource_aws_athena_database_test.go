@@ -43,7 +43,7 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 				Config: testAccAthenaDatabaseWithKMSConfig(rInt, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaDatabaseExists("aws_athena_database.hoge"),
-					resource.TestCheckResourceAttr("aws_athena_database.hoge", "encryption_key.0.type", "SSE_KMS"),
+					resource.TestCheckResourceAttr("aws_athena_database.hoge", "encryption_configuration.0.encryption_option", "SSE_KMS"),
 				),
 			},
 		},
@@ -378,9 +378,9 @@ resource "aws_athena_database" "hoge" {
   bucket        = "${aws_s3_bucket.hoge.bucket}"
   force_destroy = %[3]t
 
-  encryption_key {
-    type = "SSE_KMS"
-    id   = "${aws_kms_key.hoge.arn}" 
+  encryption_configuration {
+    encryption_option = "SSE_KMS"
+    kms_key           = "${aws_kms_key.hoge.arn}" 
   }
 }
     `, randInt, dbName, forceDestroy)

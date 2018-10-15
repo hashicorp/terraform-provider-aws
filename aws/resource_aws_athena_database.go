@@ -38,17 +38,17 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"encryption_key": {
+			"encryption_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"kms_key": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						"encryption_option": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -74,8 +74,8 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 	}
 
 	data := encryptionConfigurationList[0].(map[string]interface{})
-	keyType := data["type"].(string)
-	keyID := data["id"].(string)
+	keyType := data["encryption_option"].(string)
+	keyID := data["kms_key"].(string)
 
 	encryptionConfig := athena.EncryptionConfiguration{
 		EncryptionOption: aws.String(keyType),
@@ -93,7 +93,7 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_key").([]interface{}))
+	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_key").([]interface{}))
+	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func resourceAwsAthenaDatabaseUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_key").([]interface{}))
+	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
 	if err != nil {
 		return err
 	}
