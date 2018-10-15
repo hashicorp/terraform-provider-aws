@@ -1,5 +1,9 @@
 ## 1.41.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_redshift_event_subscription` [GH-6146]
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_metric_alarm: Validate `alarm_actions` [GH-6151]
