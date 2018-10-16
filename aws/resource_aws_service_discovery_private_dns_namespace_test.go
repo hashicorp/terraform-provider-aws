@@ -14,7 +14,7 @@ import (
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	rName := acctest.RandString(5) + ".example.com"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
@@ -34,7 +34,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 	rName := acctest.RandString(64-len("example.com")) + ".example.com"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,

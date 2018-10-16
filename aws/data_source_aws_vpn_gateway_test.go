@@ -12,7 +12,7 @@ import (
 func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

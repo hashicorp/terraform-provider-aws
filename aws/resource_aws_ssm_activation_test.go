@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSSSMActivation_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 	expirationDateS := expirationTime.Format(time.RFC3339)
 	resourceName := "aws_ssm_activation.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,

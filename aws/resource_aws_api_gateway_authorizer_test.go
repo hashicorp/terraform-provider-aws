@@ -24,7 +24,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 		"arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:" + lambdaName + "/invocations")
 	expectedCreds := regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/" + apiGatewayName + "_auth_invocation_role")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
@@ -79,7 +79,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 	authorizerName := "tf-acctest-igw-authorizer-" + rString
 	cognitoName := "tf-acctest-cognito-user-pool-" + rString
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
@@ -113,7 +113,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 		"arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:" + lambdaName + "/invocations")
 	expectedCreds := regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/" + apiGatewayName + "_auth_invocation_role")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
@@ -155,7 +155,7 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	cognitoName := "tf-acctest-cognito-user-pool-" + rString
 	lambdaName := "tf-acctest-igw-auth-lambda-" + rString
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,

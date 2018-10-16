@@ -16,7 +16,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
@@ -34,7 +34,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,

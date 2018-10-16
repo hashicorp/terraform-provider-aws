@@ -14,7 +14,7 @@ import (
 func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.origin_access_identity"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
@@ -33,7 +33,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
@@ -62,7 +62,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,

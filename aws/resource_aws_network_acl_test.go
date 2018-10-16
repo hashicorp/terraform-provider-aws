@@ -111,7 +111,7 @@ func testSweepNetworkAcls(region string) error {
 }
 
 func TestAccAWSNetworkAcl_importBasic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
@@ -132,7 +132,7 @@ func TestAccAWSNetworkAcl_importBasic(t *testing.T) {
 func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.bar",
 		Providers:     testAccProviders,
@@ -175,7 +175,7 @@ func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.foos",
 		Providers:     testAccProviders,
@@ -206,7 +206,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.foos",
 		Providers:     testAccProviders,
@@ -261,7 +261,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.foos",
 		Providers:     testAccProviders,
@@ -280,7 +280,7 @@ func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
 func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.bond",
 		Providers:     testAccProviders,
@@ -300,7 +300,7 @@ func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.bar",
 		Providers:     testAccProviders,
@@ -339,7 +339,7 @@ func TestAccAWSNetworkAcl_Subnets(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.bar",
 		Providers:     testAccProviders,
@@ -382,7 +382,7 @@ func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.bar",
 		Providers:     testAccProviders,
@@ -413,7 +413,7 @@ func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
 func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.foos",
 		Providers:     testAccProviders,
@@ -446,7 +446,7 @@ func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.foos",
 		Providers:     testAccProviders,
@@ -469,7 +469,7 @@ func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 func TestAccAWSNetworkAcl_espProtocol(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_acl.testesp",
 		Providers:     testAccProviders,

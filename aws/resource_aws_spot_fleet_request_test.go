@@ -61,7 +61,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -88,7 +88,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -113,7 +113,7 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -162,7 +162,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -203,7 +203,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -228,7 +228,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -257,7 +257,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -282,7 +282,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -315,7 +315,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -340,7 +340,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -375,7 +375,7 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -400,7 +400,7 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -427,7 +427,7 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -470,7 +470,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -504,7 +504,7 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -527,7 +527,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -550,7 +550,7 @@ func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -684,7 +684,7 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -734,7 +734,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,

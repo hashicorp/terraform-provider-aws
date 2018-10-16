@@ -17,7 +17,7 @@ func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
@@ -43,7 +43,7 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,

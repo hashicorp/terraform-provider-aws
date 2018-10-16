@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAwsRouteTables(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,

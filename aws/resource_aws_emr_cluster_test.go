@@ -18,7 +18,7 @@ import (
 func TestAccAWSEMRCluster_basic(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -58,7 +58,7 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -78,7 +78,7 @@ func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -98,7 +98,7 @@ func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -120,7 +120,7 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 	r := acctest.RandInt()
 	password := fmt.Sprintf("NeverKeepPasswordsInPlainText%d!", r)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -141,7 +141,7 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 func TestAccAWSEMRCluster_security_config(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -159,7 +159,7 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_emr_cluster.tf-test-cluster"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -186,7 +186,7 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_emr_cluster.tf-test-cluster"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -233,7 +233,7 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 		"echo running on master node",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -252,7 +252,7 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -289,7 +289,7 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -309,7 +309,7 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -339,7 +339,7 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 	r := acctest.RandInt()
 	bucketName := fmt.Sprintf("s3n://tf-acc-test-%d/", r)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -358,7 +358,7 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 func TestAccAWSEMRCluster_tags(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -397,7 +397,7 @@ func TestAccAWSEMRCluster_tags(t *testing.T) {
 func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -423,7 +423,7 @@ func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,

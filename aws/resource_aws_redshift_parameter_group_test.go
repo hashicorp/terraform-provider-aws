@@ -16,7 +16,7 @@ func TestAccAWSRedshiftParameterGroup_importBasic(t *testing.T) {
 	resourceName := "aws_redshift_parameter_group.bar"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 	var v redshift.ClusterParameterGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
@@ -75,7 +75,7 @@ func TestAccAWSRedshiftParameterGroup_withoutParameters(t *testing.T) {
 	var v redshift.ClusterParameterGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,

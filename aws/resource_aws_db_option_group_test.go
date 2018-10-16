@@ -80,7 +80,7 @@ func TestAccAWSDBOptionGroup_importBasic(t *testing.T) {
 	resourceName := "aws_db_option_group.bar"
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -102,7 +102,7 @@ func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -125,7 +125,7 @@ func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -146,7 +146,7 @@ func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
 func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
 	var v rds.OptionGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -167,7 +167,7 @@ func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
 func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 	var v rds.OptionGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -186,7 +186,7 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 func TestAccAWSDBOptionGroup_defaultDescription(t *testing.T) {
 	var v rds.OptionGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -206,7 +206,7 @@ func TestAccAWSDBOptionGroup_defaultDescription(t *testing.T) {
 func TestAccAWSDBOptionGroup_basicDestroyWithInstance(t *testing.T) {
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -222,7 +222,7 @@ func TestAccAWSDBOptionGroup_OptionSettings(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -259,7 +259,7 @@ func TestAccAWSDBOptionGroup_OptionSettingsIAMRole(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -283,7 +283,7 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -315,7 +315,7 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
@@ -351,7 +351,7 @@ func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,

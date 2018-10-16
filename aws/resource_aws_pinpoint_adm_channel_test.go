@@ -52,7 +52,7 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 
 	config := testAccAwsPinpointADMChannelConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,

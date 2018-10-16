@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAwsSubnetIDs(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsSubnetIDs_filter(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	rName := "data.aws_subnet_ids.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,

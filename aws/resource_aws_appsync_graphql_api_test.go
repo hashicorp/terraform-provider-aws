@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
@@ -29,7 +29,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 }
 
 func TestAccAWSAppsyncGraphqlApi_iam(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
@@ -46,7 +46,7 @@ func TestAccAWSAppsyncGraphqlApi_iam(t *testing.T) {
 }
 
 func TestAccAWSAppsyncGraphqlApi_cognito(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSAppsyncGraphqlApi_cognito(t *testing.T) {
 func TestAccAWSAppsyncGraphqlApi_import(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test_apikey"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,

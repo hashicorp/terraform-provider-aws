@@ -60,7 +60,7 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -101,7 +101,7 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -118,7 +118,7 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -137,7 +137,7 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,

@@ -18,7 +18,7 @@ func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -47,7 +47,7 @@ func TestAccAWSWafRegionalWebAcl_createRateBased(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -76,7 +76,7 @@ func TestAccAWSWafRegionalWebAcl_createGroup(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -106,7 +106,7 @@ func TestAccAWSWafRegionalWebAcl_changeNameForceNew(t *testing.T) {
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -152,7 +152,7 @@ func TestAccAWSWafRegionalWebAcl_changeDefaultAction(t *testing.T) {
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -197,7 +197,7 @@ func TestAccAWSWafRegionalWebAcl_disappears(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -218,7 +218,7 @@ func TestAccAWSWafRegionalWebAcl_noRules(t *testing.T) {
 	var v waf.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
@@ -247,7 +247,7 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 	var idx int
 	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,

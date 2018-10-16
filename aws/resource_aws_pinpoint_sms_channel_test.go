@@ -20,7 +20,7 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 	var channel pinpoint.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test_sms_channel"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -59,7 +59,7 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	shortCode := "5678"
 	newShortCode := "7890"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,

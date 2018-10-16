@@ -73,7 +73,7 @@ func testSweepCloudWatchEventRules(region string) error {
 func TestAccAWSCloudWatchEventRule_importBasic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
@@ -95,7 +95,7 @@ func TestAccAWSCloudWatchEventRule_importBasic(t *testing.T) {
 func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
@@ -122,7 +122,7 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 	var rule events.DescribeRuleOutput
 	startsWithPrefix := regexp.MustCompile("^tf-acc-cw-event-rule-prefix-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
@@ -141,7 +141,7 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
@@ -165,7 +165,7 @@ func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,

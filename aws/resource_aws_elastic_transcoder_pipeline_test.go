@@ -19,7 +19,7 @@ import (
 func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 	pipeline := &elastictranscoder.Pipeline{}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
@@ -41,7 +41,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	config := fmt.Sprintf(awsElasticTranscoderPipelineConfigKmsKey, ri, ri, ri)
 	keyRegex := regexp.MustCompile("^arn:aws:([a-zA-Z0-9\\-])+:([a-z]{2}-[a-z]+-\\d{1})?:(\\d{12})?:(.*)$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
@@ -63,7 +63,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
@@ -128,7 +128,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
@@ -155,7 +155,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.baz",
 		Providers:     testAccProviders,

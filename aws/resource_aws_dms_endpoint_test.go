@@ -15,7 +15,7 @@ func TestAccAwsDmsEndpointBasic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-basic"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -54,7 +54,7 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-s3"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -100,7 +100,7 @@ func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-dynamodb"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -132,7 +132,7 @@ func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-mongodb"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,

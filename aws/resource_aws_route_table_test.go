@@ -125,7 +125,7 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -175,7 +175,7 @@ func TestAccAWSRouteTable_instance(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -205,7 +205,7 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -225,7 +225,7 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 func TestAccAWSRouteTable_tags(t *testing.T) {
 	var route_table ec2.RouteTable
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -253,7 +253,7 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 
 // For GH-13545, Fixes panic on an empty route config block
 func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -352,7 +352,7 @@ func TestAccAWSRouteTable_vpcPeering(t *testing.T) {
 
 		return nil
 	}
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableDestroy,
@@ -390,7 +390,7 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 		return nil
 
 	}
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: resource.ComposeTestCheckFunc(

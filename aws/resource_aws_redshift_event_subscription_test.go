@@ -17,7 +17,7 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
@@ -90,7 +90,7 @@ func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
@@ -137,7 +137,7 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,

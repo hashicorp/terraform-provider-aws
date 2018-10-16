@@ -62,7 +62,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
@@ -100,7 +100,7 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
 	filterPolicy2 := `{"key3": ["val3"], "key4": ["val4"]}`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
@@ -146,7 +146,7 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
@@ -204,7 +204,7 @@ func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
@@ -250,7 +250,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
@@ -279,7 +279,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,

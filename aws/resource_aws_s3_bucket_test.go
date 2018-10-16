@@ -26,7 +26,7 @@ func TestAccAWSS3Bucket_importBasic(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -72,7 +72,7 @@ func TestAccAWSS3Bucket_importWithPolicy(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -96,7 +96,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 	region := testAccGetRegion()
 	hostedZoneID, _ := HostedZoneIDForRegion(region)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		/*
 			IDRefreshName:   "aws_s3_bucket.bucket",
@@ -131,7 +131,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 
 func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -144,7 +144,7 @@ func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
 }
 
 func TestAccAWSS3Bucket_namePrefix(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -162,7 +162,7 @@ func TestAccAWSS3Bucket_namePrefix(t *testing.T) {
 }
 
 func TestAccAWSS3Bucket_generatedName(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -180,7 +180,7 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 func TestAccAWSS3Bucket_region(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
@@ -202,7 +202,7 @@ func TestAccAWSS3Bucket_region(t *testing.T) {
 func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccHasServicePreCheck("cloudfront", t)
@@ -233,7 +233,7 @@ func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 func TestAccAWSS3Bucket_RequestPayer(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -272,7 +272,7 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 	rInt := acctest.RandInt()
 	partition := testAccGetPartition()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -310,7 +310,7 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 	preConfig := fmt.Sprintf(testAccAWSS3BucketConfigWithAcl, ri)
 	postConfig := fmt.Sprintf(testAccAWSS3BucketConfigWithAclUpdate, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -338,7 +338,7 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -380,7 +380,7 @@ func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -422,7 +422,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -467,7 +467,7 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 
 func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -489,7 +489,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
 
 func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -511,7 +511,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
 
 func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -538,7 +538,7 @@ func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(
 // See https://github.com/hashicorp/terraform/pull/2925
 func TestAccAWSS3Bucket_shouldFailNotFound(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -557,7 +557,7 @@ func TestAccAWSS3Bucket_shouldFailNotFound(t *testing.T) {
 
 func TestAccAWSS3Bucket_Versioning(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -620,7 +620,7 @@ func TestAccAWSS3Bucket_Cors_Update(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -688,7 +688,7 @@ func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -708,7 +708,7 @@ func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
 func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -737,7 +737,7 @@ func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
 
 func TestAccAWSS3Bucket_Logging(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -756,7 +756,7 @@ func TestAccAWSS3Bucket_Logging(t *testing.T) {
 
 func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -869,7 +869,7 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 
 func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -908,7 +908,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
@@ -993,7 +993,7 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlT
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
@@ -1077,7 +1077,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
@@ -1102,7 +1102,7 @@ func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T)
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)

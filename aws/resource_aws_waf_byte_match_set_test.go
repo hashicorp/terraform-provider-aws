@@ -17,7 +17,7 @@ func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
@@ -51,7 +51,7 @@ func TestAccAWSWafByteMatchSet_changeNameForceNew(t *testing.T) {
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
@@ -84,7 +84,7 @@ func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
@@ -137,7 +137,7 @@ func TestAccAWSWafByteMatchSet_noTuples(t *testing.T) {
 	var byteSet waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
@@ -160,7 +160,7 @@ func TestAccAWSWafByteMatchSet_disappears(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,

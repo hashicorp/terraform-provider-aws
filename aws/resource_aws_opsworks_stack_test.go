@@ -18,7 +18,7 @@ func TestAccAWSOpsworksStackImportBasic(t *testing.T) {
 
 	resourceName := "aws_opsworks_stack.tf-acc"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
@@ -43,7 +43,7 @@ func TestAccAWSOpsworksStackImportBasic(t *testing.T) {
 func TestAccAWSOpsworksStackNoVpc(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
@@ -66,7 +66,7 @@ func TestAccAWSOpsworksStackNoVpc(t *testing.T) {
 func TestAccAWSOpsworksStackNoVpcChangeServiceRoleForceNew(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var before, after opsworks.Stack
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
@@ -93,7 +93,7 @@ func TestAccAWSOpsworksStackNoVpcChangeServiceRoleForceNew(t *testing.T) {
 func TestAccAWSOpsworksStackVpc(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
@@ -127,7 +127,7 @@ func TestAccAWSOpsworksStackVpc(t *testing.T) {
 func TestAccAWSOpsworksStackNoVpcCreateTags(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
@@ -161,7 +161,7 @@ func TestAccAWSOpsWorksStack_classic_endpoints(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	rInt := acctest.RandInt()
 	var opsstack opsworks.Stack
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
