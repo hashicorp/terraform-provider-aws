@@ -29,6 +29,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 					testAccCheckAWSCodePipelineWebhookExists("aws_codepipeline_webhook.bar"),
 					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "id"),
 					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "url"),
+					resource.TestCheckResourceAttr("aws_codepipeline_webhook.bar", "authentication_configuration.0.secret_token", "super-secret"),
 				),
 			},
 		},

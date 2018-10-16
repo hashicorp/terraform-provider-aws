@@ -243,7 +243,6 @@ func setCodePipelineWebhookFilters(webhook codepipeline.WebhookDefinition, d *sc
 }
 
 func setCodePipelineWebhookAuthenticationConfiguration(webhook codepipeline.WebhookDefinition, d *schema.ResourceData) error {
-	var result []interface{}
 	conf := map[string]interface{}{}
 	if webhook.AuthenticationConfiguration.AllowedIPRange != nil {
 		ipRange := *webhook.AuthenticationConfiguration.AllowedIPRange
@@ -255,7 +254,11 @@ func setCodePipelineWebhookAuthenticationConfiguration(webhook codepipeline.Webh
 		conf["secret_token"] = secretToken
 	}
 
+	var result []interface{}
 	result = append(result, conf)
+	if err := d.Set("authentication_configuration", result); err != nil {
+		return err
+	}
 
 	return nil
 }
