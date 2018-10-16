@@ -83,6 +83,22 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "tags.TestName", "TestAccAWSALBTargetGroup_basic"),
 				),
 			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_basic(acctest.RandString(33)),
+				ExpectError: regexp.MustCompile(`cannot be longer than 32 characters`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_basic("test_target_group"),
+				ExpectError: regexp.MustCompile(`only alphanumeric characters and hyphens allowed`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_basic("-test-target-group"),
+				ExpectError: regexp.MustCompile(`cannot begin with a hyphen`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_basic("test-target-group-"),
+				ExpectError: regexp.MustCompile(`cannot end with a hyphen`),
+			},
 		},
 	})
 }

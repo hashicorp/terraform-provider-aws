@@ -45,7 +45,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 32),
+				ValidateFunc:  validateElbName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
