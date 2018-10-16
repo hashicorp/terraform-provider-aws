@@ -500,7 +500,7 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "random"),
-					resource.TestCheckNoResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", ""),
 				),
 			},
 			{
