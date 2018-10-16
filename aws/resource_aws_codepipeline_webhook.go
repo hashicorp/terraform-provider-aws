@@ -19,7 +19,17 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"auth": {
+			"authentication": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					codepipeline.WebhookAuthenticationTypeGithubHmac,
+					codepipeline.WebhookAuthenticationTypeIp,
+					codepipeline.WebhookAuthenticationTypeUnauthenticated,
+				}, false),
+			},
+			"authentication_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				MinItems: 1,
@@ -27,15 +37,6 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codepipeline.WebhookAuthenticationTypeGithubHmac,
-								codepipeline.WebhookAuthenticationTypeIp,
-								codepipeline.WebhookAuthenticationTypeUnauthenticated,
-							}, false),
-						},
 						"secret_token": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -50,8 +51,8 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 			},
 			"filter": {
 				Type:     schema.TypeSet,
-				Required: true,
 				ForceNew: true,
+				Required: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -78,24 +79,15 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 				Computed: true,
 			},
 
-			"target": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				MinItems: 1,
-				Required: true,
+			"target_action": {
+				Type:     schema.TypeString,
 				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"pipeline": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
+				Required: true,
+			},
+			"target_pipeline": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
 			},
 		},
 	}
@@ -131,44 +123,40 @@ func extractCodePipelineWebhookRules(filters *schema.Set) ([]*codepipeline.Webho
 	return rules, nil
 }
 
-func extractCodePipelineWebhookAuthConfig(auth map[string]interface{}) (*codepipeline.WebhookAuthConfiguration, error) {
-	var authConfig codepipeline.WebhookAuthConfiguration
-	switch auth["type"].(string) {
+func extractCodePipelineWebhookAuthConfig(authType string, authConfig map[string]interface{}) (*codepipeline.WebhookAuthConfiguration, error) {
+	var conf codepipeline.WebhookAuthConfiguration
+	switch authType {
 	case codepipeline.WebhookAuthenticationTypeIp:
-		ipRange := auth["allowed_ip_range"].(string)
+		ipRange := authConfig["allowed_ip_range"].(string)
 		if ipRange == "" {
 			return nil, fmt.Errorf("An IP range must be set when using IP-based auth")
 		}
 
-		authConfig.AllowedIPRange = &ipRange
+		conf.AllowedIPRange = &ipRange
 
 		break
 	case codepipeline.WebhookAuthenticationTypeGithubHmac:
-		secretToken := auth["secret_token"].(string)
+		secretToken := authConfig["secret_token"].(string)
 		if secretToken == "" {
 			return nil, fmt.Errorf("Secret token must be set when using GITHUB_HMAC")
 		}
 
-		authConfig.SecretToken = &secretToken
+		conf.SecretToken = &secretToken
 		break
 	case codepipeline.WebhookAuthenticationTypeUnauthenticated:
 		break
 	default:
-		return nil, fmt.Errorf("Invalid authentication type %s", auth["type"])
+		return nil, fmt.Errorf("Invalid authentication type %s", authType)
 	}
 
-	return &authConfig, nil
+	return &conf, nil
 }
 
 func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codepipelineconn
+	authType := d.Get("authentication").(string)
 
-	auth, err := extractCodePipelineWebhookAttr(d, "auth")
-	if err != nil {
-		return err
-	}
-
-	target, err := extractCodePipelineWebhookAttr(d, "target")
+	authConfig, err := extractCodePipelineWebhookAttr(d, "authentication_configuration")
 	if err != nil {
 		return err
 	}
@@ -178,19 +166,19 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	authConfig, err := extractCodePipelineWebhookAuthConfig(auth)
+	conf, err := extractCodePipelineWebhookAuthConfig(authType, authConfig)
 	if err != nil {
 		return err
 	}
 
 	request := &codepipeline.PutWebhookInput{
 		Webhook: &codepipeline.WebhookDefinition{
-			Authentication:              aws.String(auth["type"].(string)),
+			Authentication:              aws.String(authType),
 			Filters:                     rules,
 			Name:                        aws.String(d.Get("name").(string)),
-			TargetAction:                aws.String(target["action"].(string)),
-			TargetPipeline:              aws.String(target["pipeline"].(string)),
-			AuthenticationConfiguration: authConfig,
+			TargetAction:                aws.String(d.Get("target_action").(string)),
+			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
+			AuthenticationConfiguration: conf,
 		},
 	}
 
@@ -254,43 +242,20 @@ func setCodePipelineWebhookFilters(webhook codepipeline.WebhookDefinition, d *sc
 	return nil
 }
 
-func setCodePipelineWebhookAuthentication(webhook codepipeline.WebhookDefinition, d *schema.ResourceData) error {
+func setCodePipelineWebhookAuthenticationConfiguration(webhook codepipeline.WebhookDefinition, d *schema.ResourceData) error {
 	var result []interface{}
-
-	auth := map[string]interface{}{}
-
-	authType := *webhook.Authentication
-	auth["type"] = authType
-
+	conf := map[string]interface{}{}
 	if webhook.AuthenticationConfiguration.AllowedIPRange != nil {
 		ipRange := *webhook.AuthenticationConfiguration.AllowedIPRange
-		auth["allowed_ip_range"] = ipRange
+		conf["allowed_ip_range"] = ipRange
 	}
 
 	if webhook.AuthenticationConfiguration.SecretToken != nil {
 		secretToken := *webhook.AuthenticationConfiguration.SecretToken
-		auth["secret_token"] = secretToken
+		conf["secret_token"] = secretToken
 	}
 
-	result = append(result, auth)
-	if err := d.Set("auth", result); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func setCodePipelineWebhookTarget(webhook codepipeline.WebhookDefinition, d *schema.ResourceData) error {
-	var t []interface{}
-	target := map[string]interface{}{
-		"action":   *webhook.TargetAction,
-		"pipeline": *webhook.TargetPipeline,
-	}
-	t = append(t, target)
-
-	if err := d.Set("target", t); err != nil {
-		return err
-	}
+	result = append(result, conf)
 
 	return nil
 }
@@ -323,15 +288,26 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("name", name)
 
-	if err = setCodePipelineWebhookAuthentication(found, d); err != nil {
+	targetAction := *found.TargetAction
+	if err := d.Set("target_action", targetAction); err != nil {
+		return err
+	}
+
+	targetPipeline := *found.TargetPipeline
+	if err := d.Set("target_pipeline", targetPipeline); err != nil {
+		return err
+	}
+
+	authType := *found.Authentication
+	if err := d.Set("authentication", authType); err != nil {
+		return err
+	}
+
+	if err = setCodePipelineWebhookAuthenticationConfiguration(found, d); err != nil {
 		return err
 	}
 
 	if err = setCodePipelineWebhookFilters(found, d); err != nil {
-		return err
-	}
-
-	if err = setCodePipelineWebhookTarget(found, d); err != nil {
 		return err
 	}
 

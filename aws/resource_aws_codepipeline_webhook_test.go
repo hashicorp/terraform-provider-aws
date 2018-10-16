@@ -176,10 +176,12 @@ resource "aws_codepipeline" "bar" {
 }
 
 resource "aws_codepipeline_webhook" "bar" {
-    name = "test-webhook-%s" 
+    name            = "test-webhook-%s" 
+    authentication  = "GITHUB_HMAC" 
+    target_action   = "Source"
+    target_pipeline = "${aws_codepipeline.bar.name}"
 
-    auth {
-      type         = "GITHUB_HMAC" 
+    authentication_configuration {
       secret_token = "super-secret"
     }
 
@@ -187,11 +189,6 @@ resource "aws_codepipeline_webhook" "bar" {
       json_path    = "$.ref"
       match_equals = "refs/head/{Branch}"
     }
-
-    target {
-        action   = "Source"
-        pipeline = "${aws_codepipeline.bar.name}"
-    }    
 }
 `, rName, rName, rName, rName)
 }

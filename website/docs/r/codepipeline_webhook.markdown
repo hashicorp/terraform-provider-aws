@@ -72,10 +72,12 @@ locals {
 }
 
 resource "aws_codepipeline_webhook" "bar" {
-    name = "test-webhook-github-bar" 
+    name            = "test-webhook-github-bar" 
+    authentication  = "GITHUB_HMAC" 
+    target_action   = "Source"
+    target_pipeline = "${aws_codepipeline.bar.name}"
 
-    auth {
-      type         = "GITHUB_HMAC" 
+    authentication_configuration {
       secret_token = "${local.webhook_secret}"
     }
 
@@ -83,11 +85,6 @@ resource "aws_codepipeline_webhook" "bar" {
       json_path    = "$.ref"
       match_equals = "refs/heads/{Branch}"
     }
-
-    target {
-        action   = "Source"
-        pipeline = "${aws_codepipeline.bar.name}"
-    }    
 }
 
 # Wire the CodePipeline webhook into a GitHub repository.
@@ -111,13 +108,14 @@ resource "github_repository_webhook" "bar" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the webhook.
-* `auth` - (Required) An `auth` block. Auth blocks are documented below.
+* `authentication` - (Required) The type of authentication  to use. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
+* `authentication_configuration` - (Required) An `auth` block. Auth blocks are documented below.
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
-* `target` (Required) A `target` block. Target blocks are documented below. 
+* `target_action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
+* `target_pipeline` - (Required) The name of the pipeline.
 
-An `auth` block supports the following arguments:
+An `authentication_configuration` block supports the following arguments:
 
-* `type` - (Required) The type of the filter. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
 * `secret_token` - (Optional) The shared secret for the GitHub repository webhook. Set this as `secret` in your `github_repository_webhook`'s `configuration` block. Required for `GITHUB_HMAC`.
 * `allowed_ip_range` - (Optional) A valid CIDR block for `IP` filtering. Required for `IP`.
 
@@ -126,14 +124,9 @@ A `filter` block supports the following arguments:
 * `json_path` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
 * `match_equals` - (Required) The value to match on (e.g. `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
-A `target` block supports the following arguments:
-
-* `action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
-* `pipeline` - (Required) The name of the pipeline.
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The CodePipeline webhook's ARN.
-* `url` - The CodePipeline webhook's URL. Send events to this endpoint to trigger the target.
+* `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.
