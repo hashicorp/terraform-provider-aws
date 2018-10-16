@@ -68,7 +68,7 @@ resource "aws_iam_policy" "example" {
 
 ### Multiple Line Heredoc Syntax
 
-Interpolation is available within the heredoc string if necessary.
+Multiline strings can use shell-style "here doc" syntax, with the string starting with a marker like <<EOF and then the string ending with EOF on a line of its own. The lines of the string and the end marker must *not* be indented. Interpolation is available within the heredoc string if necessary.
 
 For example:
 
