@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -64,7 +64,7 @@ data "aws_network_interface" "test" {
 
 func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

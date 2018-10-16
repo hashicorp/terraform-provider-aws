@@ -16,7 +16,7 @@ func TestAccAWSGlueCatalogTable_importBasic(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -68,7 +68,7 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	description := "A test table from terraform"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -126,7 +126,7 @@ func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
 	description := "A test table from terraform"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -201,7 +201,7 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 	description := "A test table from terraform"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,

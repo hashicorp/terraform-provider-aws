@@ -93,7 +93,7 @@ func TestAccAWSEcsService_withARN(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -130,7 +130,7 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 	resourceName := "aws_ecs_service.jenkins"
 	importInput := fmt.Sprintf("%s/%s", clusterName, svcName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -168,7 +168,7 @@ func TestAccAWSEcsService_disappears(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -193,7 +193,7 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -216,7 +216,7 @@ func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-far-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-far-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -253,7 +253,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	modifiedRegexp := regexp.MustCompile(
 		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -293,7 +293,7 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 
 	resourceName := "aws_ecs_service.with_alb"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -338,7 +338,7 @@ func TestAccAWSEcsService_withIamRole(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-svc-w-iam-role-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-iam-role-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -361,7 +361,7 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-dv-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-dv-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -391,7 +391,7 @@ func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-svc-w-lbc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-lbc-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -421,7 +421,7 @@ func TestAccAWSEcsService_withEcsClusterName(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-cluster-name-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-cluster-name-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -449,7 +449,7 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -473,7 +473,7 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ps-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ps-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -517,7 +517,7 @@ func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-pc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-pc-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -541,7 +541,7 @@ func TestAccAWSEcsService_withPlacementConstraints_emptyExpression(t *testing.T)
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-pc-ee-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-pc-ee-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -624,7 +624,7 @@ func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T)
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-nc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-nc-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -659,7 +659,7 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ss-daemon-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ss-daemon-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -683,7 +683,7 @@ func TestAccAWSEcsService_withReplicaSchedulingStrategy(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ss-replica-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ss-replica-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -707,7 +707,7 @@ func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -731,7 +731,7 @@ func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,

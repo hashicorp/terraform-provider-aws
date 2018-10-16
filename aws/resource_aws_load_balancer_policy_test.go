@@ -21,7 +21,7 @@ func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
@@ -44,7 +44,7 @@ func TestAccAWSLoadBalancerPolicy_disappears(t *testing.T) {
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
@@ -77,7 +77,7 @@ func TestAccAWSLoadBalancerPolicy_updateWhileAssigned(t *testing.T) {
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,

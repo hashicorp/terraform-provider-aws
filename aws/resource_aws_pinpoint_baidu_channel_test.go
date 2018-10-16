@@ -24,7 +24,7 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	apikeyUpdated := "234"
 	secretKey := "456"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,

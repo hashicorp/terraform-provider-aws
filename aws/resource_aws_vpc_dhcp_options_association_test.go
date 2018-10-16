@@ -13,7 +13,7 @@ func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 	var v ec2.Vpc
 	var d ec2.DhcpOptions
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,

@@ -22,7 +22,7 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_func_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
@@ -52,7 +52,7 @@ func TestAccAWSLambdaAlias_nameupdate(t *testing.T) {
 	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
 	aliasNameUpdate := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
@@ -89,7 +89,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_func_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,

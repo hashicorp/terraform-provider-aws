@@ -133,7 +133,7 @@ func TestDiffTagsDirectoryService(t *testing.T) {
 func TestAccAWSDirectoryServiceDirectory_importBasic(t *testing.T) {
 	resourceName := "aws_directory_service_directory.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
@@ -154,7 +154,7 @@ func TestAccAWSDirectoryServiceDirectory_importBasic(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
@@ -171,7 +171,7 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
@@ -188,7 +188,7 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
@@ -205,7 +205,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
@@ -222,7 +222,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
@@ -238,7 +238,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,

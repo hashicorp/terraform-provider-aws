@@ -14,7 +14,7 @@ import (
 func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,

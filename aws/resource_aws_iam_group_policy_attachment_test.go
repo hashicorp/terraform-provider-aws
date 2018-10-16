@@ -21,7 +21,7 @@ func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName2 := fmt.Sprintf("tf-acc-policy-gpa-basic-2-%s", rString)
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupPolicyAttachmentDestroy,

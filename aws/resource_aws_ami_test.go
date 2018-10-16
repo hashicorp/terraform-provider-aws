@@ -20,7 +20,7 @@ func TestAccAWSAMI_basic(t *testing.T) {
 	resourceName := "aws_ami.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAmiDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSAMI_snapshotSize(t *testing.T) {
 		VolumeType:          aws.String("standard"),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAmiDestroy,

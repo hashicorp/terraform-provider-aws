@@ -23,7 +23,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 	sesEventDstNameCw := fmt.Sprintf("tf_acc_event_dst_cloudwatch_%s", rString)
 	sesEventDstNameSns := fmt.Sprintf("tf_acc_event_dst_sns_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},

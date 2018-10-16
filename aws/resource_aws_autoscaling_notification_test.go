@@ -17,7 +17,7 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 func TestAccAWSASGNotification_Pagination(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,

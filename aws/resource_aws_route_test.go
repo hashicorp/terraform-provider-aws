@@ -31,7 +31,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -74,7 +74,7 @@ func TestAccAWSRoute_ipv6Support(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -101,7 +101,7 @@ func TestAccAWSRoute_ipv6Support(t *testing.T) {
 func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 	var route ec2.Route
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -127,7 +127,7 @@ func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
 	var route ec2.Route
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -153,7 +153,7 @@ func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
 func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
 	var route ec2.Route
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -179,7 +179,7 @@ func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
 func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
 	var route ec2.Route
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -206,7 +206,7 @@ func TestAccAWSRoute_changeRouteTable(t *testing.T) {
 	var before ec2.Route
 	var after ec2.Route
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -280,7 +280,7 @@ func TestAccAWSRoute_changeCidr(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -324,7 +324,7 @@ func TestAccAWSRoute_noopdiff(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -359,7 +359,7 @@ func TestAccAWSRoute_noopdiff(t *testing.T) {
 func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	var route ec2.Route
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,

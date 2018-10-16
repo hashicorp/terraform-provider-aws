@@ -113,7 +113,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -155,7 +155,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -230,7 +230,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -259,7 +259,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 	rString := acctest.RandString(8)
 	targetGroupName := fmt.Sprintf("test-tg-tcp-http-hc-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -325,7 +325,7 @@ func TestAccAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -366,7 +366,7 @@ func TestAccAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -386,7 +386,7 @@ func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
 func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -407,7 +407,7 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 	targetGroupNameBefore := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	targetGroupNameAfter := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -435,7 +435,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -463,7 +463,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -491,7 +491,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -517,7 +517,7 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -548,7 +548,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -616,7 +616,7 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -701,7 +701,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -760,7 +760,7 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
     protocol = "TCP"
     `
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -807,7 +807,7 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -828,7 +828,7 @@ func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

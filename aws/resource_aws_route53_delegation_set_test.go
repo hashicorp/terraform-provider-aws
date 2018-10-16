@@ -18,7 +18,7 @@ func TestAccAWSRoute53DelegationSet_importBasic(t *testing.T) {
 	resourceName := "aws_route53_delegation_set.test"
 	refName := acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	refName := fmt.Sprintf("tf_acc_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_route53_delegation_set.test",
 		IDRefreshIgnore: []string{"reference_name"},
@@ -65,7 +65,7 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	zoneName1 := fmt.Sprintf("%s-primary.terraformtest.com", rString)
 	zoneName2 := fmt.Sprintf("%s-secondary.terraformtest.com", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_route53_delegation_set.main",
 		IDRefreshIgnore: []string{"reference_name"},

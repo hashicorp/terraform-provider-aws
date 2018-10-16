@@ -71,7 +71,7 @@ func TestAccAWSRoute53Zone_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -97,7 +97,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_zone.main",
 		Providers:     testAccProviders,
@@ -141,7 +141,7 @@ func TestAccAWSRoute53Zone_forceDestroy(t *testing.T) {
 	// check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		IDRefreshName:     "aws_route53_zone.destroyable",
 		ProviderFactories: testAccProviderFactories(&providers),
@@ -178,7 +178,7 @@ func TestAccAWSRoute53Zone_updateComment(t *testing.T) {
 	rString := acctest.RandString(8)
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_zone.main",
 		Providers:     testAccProviders,
@@ -214,7 +214,7 @@ func TestAccAWSRoute53Zone_private_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_zone.main",
 		Providers:     testAccProviders,
@@ -241,7 +241,7 @@ func TestAccAWSRoute53Zone_private_region(t *testing.T) {
 	// check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		IDRefreshName:     "aws_route53_zone.main",
 		ProviderFactories: testAccProviderFactories(&providers),

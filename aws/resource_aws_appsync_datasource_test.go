@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAwsAppsyncDatasource_ddb(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
@@ -29,7 +29,7 @@ func TestAccAwsAppsyncDatasource_ddb(t *testing.T) {
 }
 
 func TestAccAwsAppsyncDatasource_es(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
@@ -47,7 +47,7 @@ func TestAccAwsAppsyncDatasource_es(t *testing.T) {
 
 func TestAccAwsAppsyncDatasource_lambda(t *testing.T) {
 	Desc := "appsync datasource"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
@@ -65,7 +65,7 @@ func TestAccAwsAppsyncDatasource_lambda(t *testing.T) {
 
 func TestAccAwsAppsyncDatasource_update(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
@@ -94,7 +94,7 @@ func TestAccAwsAppsyncDatasource_update(t *testing.T) {
 
 func TestAccAwsAppsyncDatasource_updateDescription(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,

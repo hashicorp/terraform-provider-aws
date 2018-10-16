@@ -78,7 +78,7 @@ func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
 	statementID := acctest.RandomWithPrefix(t.Name())
 	resourceName := "aws_cloudwatch_event_permission.test1"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -136,7 +136,7 @@ func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 	statementID := acctest.RandomWithPrefix(t.Name())
 	resourceName := "aws_cloudwatch_event_permission.test1"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -173,7 +173,7 @@ func TestAccAWSCloudWatchEventPermission_Import(t *testing.T) {
 	statementID := acctest.RandomWithPrefix(t.Name())
 	resourceName := "aws_cloudwatch_event_permission.test1"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
@@ -202,7 +202,7 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 	resourceName1 := "aws_cloudwatch_event_permission.test1"
 	resourceName2 := "aws_cloudwatch_event_permission.test2"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,

@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSDbEventCategories_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -29,7 +29,7 @@ func TestAccAWSDbEventCategories_basic(t *testing.T) {
 }
 
 func TestAccAWSDbEventCategories_sourceType(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

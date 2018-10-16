@@ -18,7 +18,7 @@ func TestAccAWSIAMRolePolicy_importBasic(t *testing.T) {
 	suffix := randomString(10)
 	resourceName := fmt.Sprintf("aws_iam_role_policy.foo_%s", suffix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 	policy1 := acctest.RandString(10)
 	policy2 := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
@@ -82,7 +82,7 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
 	role := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_iam_role_policy.test",
 		Providers:     testAccProviders,
@@ -117,7 +117,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
 	role := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_iam_role_policy.test",
 		Providers:     testAccProviders,
@@ -151,7 +151,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 func TestAccAWSIAMRolePolicy_invalidJSON(t *testing.T) {
 	role := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,

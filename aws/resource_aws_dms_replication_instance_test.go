@@ -15,7 +15,7 @@ func TestAccAWSDmsReplicationInstance_Basic(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -53,7 +53,7 @@ func TestAccAWSDmsReplicationInstance_AllocatedStorage(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSDmsReplicationInstance_AutoMinorVersionUpgrade(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -127,7 +127,7 @@ func TestAccAWSDmsReplicationInstance_AvailabilityZone(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -153,7 +153,7 @@ func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -187,7 +187,7 @@ func TestAccAWSDmsReplicationInstance_KmsKeyArn(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -213,7 +213,7 @@ func TestAccAWSDmsReplicationInstance_MultiAz(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -253,7 +253,7 @@ func TestAccAWSDmsReplicationInstance_PreferredMaintenanceWindow(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -286,7 +286,7 @@ func TestAccAWSDmsReplicationInstance_PubliclyAccessible(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -313,7 +313,7 @@ func TestAccAWSDmsReplicationInstance_ReplicationInstanceClass(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -347,7 +347,7 @@ func TestAccAWSDmsReplicationInstance_ReplicationSubnetGroupId(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -373,7 +373,7 @@ func TestAccAWSDmsReplicationInstance_Tags(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,
@@ -417,7 +417,7 @@ func TestAccAWSDmsReplicationInstance_VpcSecurityGroupIds(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsReplicationInstanceDestroy,

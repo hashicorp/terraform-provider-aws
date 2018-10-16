@@ -22,7 +22,7 @@ func TestAccAWSDBSecurityGroup_importBasic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
 	resourceName := "aws_db_security_group.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
@@ -49,7 +49,7 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,

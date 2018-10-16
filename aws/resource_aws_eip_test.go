@@ -21,7 +21,7 @@ func TestAccAWSEIP_importEc2Classic(t *testing.T) {
 
 	resourceName := "aws_eip.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSEIP_importEc2Classic(t *testing.T) {
 func TestAccAWSEIP_importVpc(t *testing.T) {
 	resourceName := "aws_eip.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSEIP_importVpc(t *testing.T) {
 func TestAccAWSEIP_basic(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
@@ -81,7 +81,7 @@ func TestAccAWSEIP_basic(t *testing.T) {
 func TestAccAWSEIP_instance(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
@@ -109,7 +109,7 @@ func TestAccAWSEIP_instance(t *testing.T) {
 func TestAccAWSEIP_network_interface(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
@@ -130,7 +130,7 @@ func TestAccAWSEIP_network_interface(t *testing.T) {
 func TestAccAWSEIP_twoEIPsOneNetworkInterface(t *testing.T) {
 	var one, two ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.one",
 		Providers:     testAccProviders,
@@ -156,7 +156,7 @@ func TestAccAWSEIP_twoEIPsOneNetworkInterface(t *testing.T) {
 func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 	var one ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
@@ -190,7 +190,7 @@ func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
@@ -224,7 +224,7 @@ func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 func TestAccAWSEIP_disappears(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
@@ -244,7 +244,7 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
@@ -276,7 +276,7 @@ func TestAccAWSEIP_tags(t *testing.T) {
 	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 	rName2 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
