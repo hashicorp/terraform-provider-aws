@@ -53,6 +53,37 @@ func TestAccAwsServerlessRepositoryApplication_Versioned(t *testing.T) {
 	})
 }
 
+func TestAccAwsServerlessRepositoryApplication_UpdateVersion(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := fmt.Sprintf("tf-acc-test-update-%s", acctest.RandString(10))
+	const initialVersion = "1.0.15"
+	const updateVersion = "1.0.36"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServerlessRepositoryApplicationConfig_versioned(stackName, initialVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "semantic_version", initialVersion),
+				),
+			},
+			{
+				Config: testAccAWSServerlessRepositoryApplicationConfig_versioned(stackName, updateVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "semantic_version", updateVersion),
+				),
+			},
+		},
+	})
+}
+
 func testAccAwsServerlessRepositoryApplicationConfig(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_serverlessrepository_application" "postgres-rotator" {
