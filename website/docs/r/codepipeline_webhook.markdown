@@ -109,7 +109,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the webhook.
 * `authentication` - (Required) The type of authentication  to use. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
-* `authentication_configuration` - (Required) An `auth` block. Auth blocks are documented below.
+* `authentication_configuration` - (Optional) An `auth` block. Required for `IP` and `GITHUB_HMAC`. Auth blocks are documented below.
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
 * `target_action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
 * `target_pipeline` - (Required) The name of the pipeline.
