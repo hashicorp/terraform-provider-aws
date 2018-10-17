@@ -1762,21 +1762,6 @@ func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func validateStringIn(validValues ...string) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		for _, s := range validValues {
-			if value == s {
-				return
-			}
-		}
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid value %q. Valid values are %q.",
-			k, value, validValues))
-		return
-	}
-}
-
 func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
