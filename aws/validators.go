@@ -633,13 +633,6 @@ func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
-	}
-	return
-}
-
 func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)

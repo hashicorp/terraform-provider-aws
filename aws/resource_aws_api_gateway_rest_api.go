@@ -45,7 +45,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
