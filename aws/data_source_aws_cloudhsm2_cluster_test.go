@@ -9,6 +9,9 @@ import (
 )
 
 func TestAccDataSourceCloudHsm2Cluster_basic(t *testing.T) {
+	resourceName := "aws_cloudhsm_v2_cluster.cluster"
+	dataSourceName := "data.aws_cloudhsm_v2_cluster.default"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -16,7 +19,12 @@ func TestAccDataSourceCloudHsm2Cluster_basic(t *testing.T) {
 			{
 				Config: testAccCheckCloudHsm2ClusterDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cloudhsm_v2_cluster.default", "cluster_state", "UNINITIALIZED"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_state", "UNINITIALIZED"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_id", resourceName, "cluster_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_state", resourceName, "cluster_state"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_id", resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
 				),
 			},
 		},

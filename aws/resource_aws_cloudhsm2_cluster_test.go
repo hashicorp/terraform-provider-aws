@@ -16,7 +16,7 @@ func TestAccAWSCloudHsm2Cluster_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudHsm2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudHsm2Cluster(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsm2ClusterExists("aws_cloudhsm_v2_cluster.cluster"),
@@ -25,6 +25,25 @@ func TestAccAWSCloudHsm2Cluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "security_group_id"),
 					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "cluster_state"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudHsm2Cluster_importBasic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudHsm2ClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudHsm2Cluster(),
+			},
+			{
+				ResourceName:            "aws_cloudhsm_v2_cluster.cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_certificates", "tags"},
 			},
 		},
 	})

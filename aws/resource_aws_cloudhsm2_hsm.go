@@ -79,37 +79,20 @@ func resourceAwsCloudHsm2HsmImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func describeHsm(d *schema.ResourceData, meta interface{}) (*cloudhsmv2.Hsm, error) {
-	conn := meta.(*AWSClient).cloudhsmv2conn
-
-	clusterId := d.Get("cluster_id").(string)
-	hsmId := d.Id()
-	filters := []*string{&clusterId}
-	result := int64(1)
-	out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{
-		Filters: map[string][]*string{
-			"clusterIds": filters,
-		},
-		MaxResults: &result,
-	})
+func describeHsm(id string, conn *cloudhsmv2.CloudHSMV2) (*cloudhsmv2.Hsm, error) {
+	out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{})
 	if err != nil {
-		log.Printf("[WARN] Error on retrieving CloudHSMv2 Cluster (%s) when waiting: %s", d.Id(), err)
+		log.Printf("[WARN] Error on descibing CloudHSM v2 Cluster: %s", err)
 		return nil, err
 	}
 
-	var cluster *cloudhsmv2.Cluster
+	var hsm *cloudhsmv2.Hsm
 
 	for _, c := range out.Clusters {
-		if *c.ClusterId == clusterId {
-			cluster = c
-		}
-	}
-
-	var hsm *cloudhsmv2.Hsm
-	if cluster != nil {
-		for _, h := range cluster.Hsms {
-			if *h.HsmId == hsmId {
+		for _, h := range c.Hsms {
+			if *h.HsmId == id {
 				hsm = h
+				break
 			}
 		}
 	}
@@ -120,7 +103,7 @@ func describeHsm(d *schema.ResourceData, meta interface{}) (*cloudhsmv2.Hsm, err
 func resourceAwsCloudHsm2HsmRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := describeHsm(d, meta)
+		hsm, err := describeHsm(d.Id(), meta.(*AWSClient).cloudhsmv2conn)
 
 		if hsm == nil {
 			return 42, "destroyed", nil
@@ -150,7 +133,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 	if len(availabilityZone) == 0 {
 		subnetId := d.Get("subnet_id").(string)
 		for az, sn := range cluster.SubnetMapping {
-			if *sn == subnetId {
+			if aws.StringValue(sn) == subnetId {
 				availabilityZone = az
 			}
 		}
@@ -211,7 +194,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsCloudHsm2HsmRead(d *schema.ResourceData, meta interface{}) error {
 
-	hsm, err := describeHsm(d, meta)
+	hsm, err := describeHsm(d.Id(), meta.(*AWSClient).cloudhsmv2conn)
 
 	if hsm == nil {
 		log.Printf("[WARN] CloudHSMv2 HSM (%s) not found", d.Id())

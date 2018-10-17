@@ -78,7 +78,7 @@ func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	clusterId := d.Get("cluster_id").(string)
 	filters := []*string{&clusterId}
-	log.Printf("[DEBUG] Reading CloudHSMv2 Cluster %s", clusterId)
+	log.Printf("[DEBUG] Reading CloudHSM v2 Cluster %s", clusterId)
 	result := int64(1)
 	input := &cloudhsmv2.DescribeClustersInput{
 		Filters: map[string][]*string{
@@ -94,35 +94,38 @@ func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) er
 	out, err := conn.DescribeClusters(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing CloudHSM v2 Cluster: %s", err)
 	}
 
 	var cluster *cloudhsmv2.Cluster
 	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterId) != clusterId {
-			continue
+		if aws.StringValue(c.ClusterId) == clusterId {
+			cluster = c
+			break
 		}
-		cluster = c
 	}
 
-	if cluster != nil {
-		d.SetId(clusterId)
-		d.Set("vpc_id", cluster.VpcId)
-		d.Set("security_group_id", cluster.SecurityGroup)
-		d.Set("cluster_state", cluster.State)
-		certs := readCloudHsm2ClusterCertificates(cluster)
-		if err := d.Set("cluster_certificates", certs); err != nil {
-			return err
-		}
-		var subnets []string
-		for _, sn := range cluster.SubnetMapping {
-			subnets = append(subnets, *sn)
-		}
-		if err := d.Set("subnet_ids", subnets); err != nil {
-			return fmt.Errorf("[DEBUG] Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
-		}
-	} else {
+	if cluster == nil {
 		return fmt.Errorf("cluster with id %s not found", clusterId)
 	}
+
+	d.SetId(clusterId)
+	d.Set("vpc_id", cluster.VpcId)
+	d.Set("security_group_id", cluster.SecurityGroup)
+	d.Set("cluster_state", cluster.State)
+	certs := readCloudHsm2ClusterCertificates(cluster)
+	if err := d.Set("cluster_certificates", certs); err != nil {
+		return err
+	}
+
+	var subnets []string
+	for _, sn := range cluster.SubnetMapping {
+		subnets = append(subnets, *sn)
+	}
+
+	if err := d.Set("subnet_ids", subnets); err != nil {
+		return fmt.Errorf("[DEBUG] Error saving Subnet IDs to state for CloudHSM v2 Cluster (%s): %s", d.Id(), err)
+	}
+
 	return nil
 }

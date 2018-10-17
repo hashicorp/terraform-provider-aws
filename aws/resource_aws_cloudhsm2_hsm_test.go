@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -17,7 +16,7 @@ func TestAccAWSCloudHsm2Hsm_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudHsm2HsmDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudHsm2Hsm(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsm2HsmExists("aws_cloudhsm_v2_hsm.hsm"),
@@ -26,6 +25,24 @@ func TestAccAWSCloudHsm2Hsm_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_hsm.hsm", "hsm_eni_id"),
 					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_hsm.hsm", "ip_address"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudHsm2Hsm_importBasic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudHsm2HsmDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudHsm2Hsm(),
+			},
+			{
+				ResourceName:      "aws_cloudhsm_v2_hsm.hsm",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -83,15 +100,7 @@ func testAccCheckAWSCloudHsm2HsmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		var hsm *cloudhsmv2.Hsm
-		out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{})
-		for _, c := range out.Clusters {
-			for _, h := range c.Hsms {
-				if aws.StringValue(h.HsmId) == rs.Primary.ID {
-					hsm = h
-				}
-			}
-		}
+		hsm, err := describeHsm(rs.Primary.ID, conn)
 
 		if err != nil {
 			return err

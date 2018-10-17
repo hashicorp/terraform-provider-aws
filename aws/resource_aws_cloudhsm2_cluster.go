@@ -131,7 +131,7 @@ func describeCloudHsm2Cluster(clusterId string, meta interface{}) (*cloudhsmv2.C
 	var cluster *cloudhsmv2.Cluster
 
 	for _, c := range out.Clusters {
-		if *c.ClusterId == clusterId {
+		if aws.StringValue(c.ClusterId) == clusterId {
 			cluster = c
 		}
 	}
@@ -322,7 +322,7 @@ func setTagsAwsCloudHsm2Cluster(conn *cloudhsmv2.CloudHSMV2, d *schema.ResourceD
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
 			keys := make([]*string, 0, len(remove))
-			for k, _ := range remove {
+			for k := range remove {
 				keys = append(keys, aws.String(k))
 			}
 

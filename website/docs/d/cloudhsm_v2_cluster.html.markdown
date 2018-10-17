@@ -30,10 +30,11 @@ The following attributes are exported:
 
 * `vpc_id` - The id of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - The ID of the security group associated with the CloudHSM cluster.
-* `cluster_certificates` - The list of cluster certificates.
+* `subnet_ids` - The IDs of subnets in which cluster operates.
+* `cluster_certificates` - The set of cluster certificates.
   * `cluster_certificates.#.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
   * `cluster_certificates.#.cluster_csr` - The certificate signing request (CSR). Available only in UNINITIALIZED state.
   * `cluster_certificates.#.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
   * `cluster_certificates.#.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
   * `cluster_certificates.#.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
-* `subnet_ids` - The IDs of subnets in which cluster operates.
+The number of available cluster certificates may vary depending on state of the cluster.
