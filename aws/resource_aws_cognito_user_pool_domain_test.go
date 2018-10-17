@@ -70,7 +70,7 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolDomainConfig_custom(customDomainName, poolName, certificateArn, customSubDomainName),
+				Config: testAccAWSCognitoUserPoolDomainConfig_custom(customSubDomainName, poolName, certificateArn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolDomainExists("aws_cognito_user_pool_domain.main"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_domain.main", "domain", customSubDomainName),
@@ -168,13 +168,8 @@ resource "aws_cognito_user_pool" "main" {
 `, domainName, poolName)
 }
 
-func testAccAWSCognitoUserPoolDomainConfig_custom(customDomainName, poolName, certificateArn, customSubDomainName string) string {
+func testAccAWSCognitoUserPoolDomainConfig_custom(customSubDomainName, poolName, certificateArn string) string {
 	return fmt.Sprintf(`
-
-data "aws_route53_zone" "tf-zone" {
-  name = "%s"
-}
-
 resource "aws_cognito_user_pool_domain" "main" {
   domain = "%s"
   user_pool_id = "${aws_cognito_user_pool.main.id}"
@@ -184,5 +179,5 @@ resource "aws_cognito_user_pool_domain" "main" {
 resource "aws_cognito_user_pool" "main" {
   name = "%s"
 }
-`, customDomainName, customSubDomainName, certificateArn, poolName)
+`, customSubDomainName, certificateArn, poolName)
 }
