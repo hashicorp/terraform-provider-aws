@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -1761,10 +1760,6 @@ func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 		return errors.New("stream_view_type is required when stream_enabled = true")
 	}
 	return nil
-}
-
-func validateVpcEndpointType(v interface{}, k string) (ws []string, errors []error) {
-	return validateStringIn(ec2.VpcEndpointTypeGateway, ec2.VpcEndpointTypeInterface)(v, k)
 }
 
 func validateStringIn(validValues ...string) schema.SchemaValidateFunc {
