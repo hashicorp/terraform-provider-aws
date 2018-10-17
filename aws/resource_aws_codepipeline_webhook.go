@@ -260,7 +260,7 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err := d.Set("authentication_configuration", flattenCodePipelineWebhookAuthenticationConfiguration(webhook.Definition.AuthenticationConfiguration)); err != nil {
-		return fmt.Errorf("error setting filter: %s", err)
+		return fmt.Errorf("error setting authentication_configuration: %s", err)
 	}
 
 	if err := d.Set("filter", flattenCodePipelineWebhookFilters(webhook.Definition.Filters)); err != nil {
