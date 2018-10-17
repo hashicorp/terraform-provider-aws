@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -341,21 +340,6 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 	return
 }
 
-func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(int)
-		if value < min {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be lower than %d: %d", k, min, value))
-		}
-		if value > max {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be higher than %d: %d", k, max, value))
-		}
-		return
-	}
-}
-
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {
@@ -630,13 +614,6 @@ func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, erro
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 255 characters", k))
-	}
-	return
-}
-
-func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
 }
@@ -1761,25 +1738,6 @@ func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 		return errors.New("stream_view_type is required when stream_enabled = true")
 	}
 	return nil
-}
-
-func validateVpcEndpointType(v interface{}, k string) (ws []string, errors []error) {
-	return validateStringIn(ec2.VpcEndpointTypeGateway, ec2.VpcEndpointTypeInterface)(v, k)
-}
-
-func validateStringIn(validValues ...string) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		for _, s := range validValues {
-			if value == s {
-				return
-			}
-		}
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid value %q. Valid values are %q.",
-			k, value, validValues))
-		return
-	}
 }
 
 func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {

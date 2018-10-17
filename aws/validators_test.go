@@ -556,26 +556,6 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 	}
 }
 
-func TestValidateIntegerInRange(t *testing.T) {
-	validIntegers := []int{-259, 0, 1, 5, 999}
-	min := -259
-	max := 999
-	for _, v := range validIntegers {
-		_, errors := validateIntegerInRange(min, max)(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be an integer in range (%d, %d): %q", v, min, max, errors)
-		}
-	}
-
-	invalidIntegers := []int{-260, -99999, 1000, 25678}
-	for _, v := range invalidIntegers {
-		_, errors := validateIntegerInRange(min, max)(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an integer outside range (%d, %d)", v, min, max)
-		}
-	}
-}
-
 func TestResourceAWSElastiCacheClusterIdValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -645,61 +625,6 @@ func TestValidateDbEventSubscriptionName(t *testing.T) {
 		_, errors := validateDbEventSubscriptionName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid RDS Event Subscription Name", v)
-		}
-	}
-}
-
-func TestValidateJsonString(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    `{0:"1"}`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `{'abc':1}`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `{"def":}`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `{"xyz":[}}`,
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateJsonString(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    ``,
-			ErrCount: 0,
-		},
-		{
-			Value:    `{}`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `{"abc":["1","2"]}`,
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateJsonString(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
 	}
 }
