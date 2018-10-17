@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -27,6 +27,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "JSON"),
 					resource.TestMatchResourceAttr("aws_ssm_document.foo", "arn",
 						regexp.MustCompile(`^arn:aws:ssm:[a-z]{2}-[a-z]+-\d{1}:\d{12}:document/.*$`)),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "0"),
 				),
 			},
 		},
@@ -35,7 +36,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 
 func TestAccAWSSSMDocument_update(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -66,15 +67,15 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_permission(t *testing.T) {
+func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMDocumentPermissionConfig(name),
+				Config: testAccAWSSSMDocumentPublicPermissionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
 					resource.TestCheckResourceAttr(
@@ -87,9 +88,70 @@ func TestAccAWSSSMDocument_permission(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_permission_private(t *testing.T) {
+	name := acctest.RandString(10)
+	ids := "123456789012"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, ids),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_permission_change(t *testing.T) {
+	name := acctest.RandString(10)
+	idsInitial := "123456789012,123456789013"
+	idsRemove := "123456789012"
+	idsAdd := "123456789012,123456789014"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsInitial),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsInitial),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsRemove),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsRemove),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsAdd),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsAdd),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_params(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -118,7 +180,7 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 
 func TestAccAWSSSMDocument_automation(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -129,6 +191,25 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "document_type", "Automation"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_session(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentTypeSessionConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "document_type", "Session"),
 				),
 			},
 		},
@@ -159,7 +240,7 @@ mainSteps:
     runCommand:
       - Get-Process
 `
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -178,6 +259,44 @@ mainSteps:
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "content", content2+"\n"),
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "YAML"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_Tags(t *testing.T) {
+	rName := acctest.RandString(10)
+	resourceName := "aws_ssm_document.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentConfig_Tags_Single(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentConfig_Tags_Multiple(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentConfig_Tags_Single(rName, "key2", "value2updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2updated"),
 				),
 			},
 		},
@@ -332,7 +451,7 @@ DOC
 `, rName)
 }
 
-func testAccAWSSSMDocumentPermissionConfig(rName string) string {
+func testAccAWSSSMDocumentPublicPermissionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
   name = "test_document-%s"
@@ -364,6 +483,40 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName)
+}
+
+func testAccAWSSSMDocumentPrivatePermissionConfig(rName string, rIds string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  name = "test_document-%s"
+	document_type = "Command"
+
+  permissions = {
+    type        = "Share"
+    account_ids = "%s"
+  }
+
+  content = <<DOC
+    {
+      "schemaVersion": "1.2",
+      "description": "Check ip configuration of a Linux instance.",
+      "parameters": {
+
+      },
+      "runtimeConfig": {
+        "aws:runShellScript": {
+          "properties": [
+            {
+              "id": "0.aws:runShellScript",
+              "runCommand": ["ifconfig"]
+            }
+          ]
+        }
+      }
+    }
+DOC
+}
+`, rName, rIds)
 }
 
 func testAccAWSSSMDocumentParamConfig(rName string) string {
@@ -505,6 +658,29 @@ DOC
 `, rName, rName, rName)
 }
 
+func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  name = "test_document-%s"
+	document_type = "Session"
+  content = <<DOC
+{
+    "schemaVersion": "1.0",
+    "description": "Document to hold regional settings for Session Manager",
+    "sessionType": "Standard_Stream",
+    "inputs": {
+        "s3BucketName": "test",
+        "s3KeyPrefix": "test",
+        "s3EncryptionEnabled": true,
+        "cloudWatchLogGroupName": "/logs/sessions",
+        "cloudWatchEncryptionEnabled": false
+    }
+}
+DOC
+}
+`, rName)
+}
+
 func testAccAWSSSMDocumentConfig_DocumentFormat_YAML(rName, content string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
@@ -517,4 +693,71 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName, content)
+}
+
+func testAccAWSSSMDocumentConfig_Tags_Single(rName, key1, value1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  document_type = "Command"
+  name          = "test_document-%s"
+
+  content = <<DOC
+    {
+      "schemaVersion": "1.2",
+      "description": "Check ip configuration of a Linux instance.",
+      "parameters": {
+
+      },
+      "runtimeConfig": {
+        "aws:runShellScript": {
+          "properties": [
+            {
+              "id": "0.aws:runShellScript",
+              "runCommand": ["ifconfig"]
+            }
+          ]
+        }
+      }
+    }
+DOC
+
+  tags {
+    %s = %q
+  }
+}
+`, rName, key1, value1)
+}
+
+func testAccAWSSSMDocumentConfig_Tags_Multiple(rName, key1, value1, key2, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  document_type = "Command"
+  name          = "test_document-%s"
+
+  content = <<DOC
+    {
+      "schemaVersion": "1.2",
+      "description": "Check ip configuration of a Linux instance.",
+      "parameters": {
+
+      },
+      "runtimeConfig": {
+        "aws:runShellScript": {
+          "properties": [
+            {
+              "id": "0.aws:runShellScript",
+              "runCommand": ["ifconfig"]
+            }
+          ]
+        }
+      }
+    }
+DOC
+
+  tags {
+    %s = %q
+    %s = %q
+  }
+}
+`, rName, key1, value1, key2, value2)
 }

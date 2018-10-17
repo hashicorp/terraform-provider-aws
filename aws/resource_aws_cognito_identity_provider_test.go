@@ -14,7 +14,7 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,

@@ -19,18 +19,18 @@ func TestAccDataSourceAWSS3BucketObject_basic(t *testing.T) {
 	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
 		Providers:                 testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &rObj),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectDataSourceExists("data.aws_s3_bucket_object.obj", &dsObj),
@@ -53,18 +53,18 @@ func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
 	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
 		Providers:                 testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &rObj),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectDataSourceExists("data.aws_s3_bucket_object.obj", &dsObj),
@@ -87,18 +87,18 @@ func TestAccDataSourceAWSS3BucketObject_kmsEncrypted(t *testing.T) {
 	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
 		Providers:                 testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &rObj),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectDataSourceExists("data.aws_s3_bucket_object.obj", &dsObj),
@@ -124,18 +124,18 @@ func TestAccDataSourceAWSS3BucketObject_allParams(t *testing.T) {
 	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
 		Providers:                 testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &rObj),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectDataSourceExists("data.aws_s3_bucket_object.obj", &dsObj),

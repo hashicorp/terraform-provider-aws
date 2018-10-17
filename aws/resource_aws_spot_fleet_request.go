@@ -285,6 +285,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  "lowestPrice",
 				ForceNew: true,
 			},
+			"instance_pools_to_use_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
+				ForceNew: true,
+			},
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -311,13 +317,23 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
 			"valid_until": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
+			},
+			"fleet_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.FleetTypeMaintain,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.FleetTypeMaintain,
+					ec2.FleetTypeRequest,
+				}, false),
 			},
 			"spot_request_state": {
 				Type:     schema.TypeString,
@@ -600,6 +616,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
+		Type:                             aws.String(d.Get("fleet_type").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -610,6 +627,10 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.AllocationStrategy = aws.String(v.(string))
 	} else {
 		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
+	}
+
+	if v, ok := d.GetOk("instance_pools_to_use_count"); ok && v.(int) != 1 {
+		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
@@ -685,7 +706,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 				// IAM is eventually consistent :/
 				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
 					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error creating Spot fleet request, retrying: %s", err))
+						fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 				}
 			}
 			return resource.NonRetryableError(err)
@@ -868,6 +889,10 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("allocation_strategy", aws.StringValue(config.AllocationStrategy))
 	}
 
+	if config.InstancePoolsToUseCount != nil {
+		d.Set("instance_pools_to_use_count", aws.Int64Value(config.InstancePoolsToUseCount))
+	}
+
 	if config.ClientToken != nil {
 		d.Set("client_token", aws.StringValue(config.ClientToken))
 	}
@@ -906,6 +931,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
+	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 
 	return nil

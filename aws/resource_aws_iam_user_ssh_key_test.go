@@ -18,12 +18,12 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAWSSSHKeyConfig_sshEncoding, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", "Inactive", &conf),
@@ -39,12 +39,12 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAWSSSHKeyConfig_pemEncoding, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserSSHKeyExists("aws_iam_user_ssh_key.user", "Active", &conf),

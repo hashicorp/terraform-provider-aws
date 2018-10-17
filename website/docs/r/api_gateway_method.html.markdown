@@ -95,3 +95,11 @@ request_parameters = {
 ```
 would define that the header `X-Some-Header` and the query string `some-query-param` must be provided on the request, or
 * `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
+
+## Import
+
+`aws_api_gateway_method` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`, e.g.
+
+```
+$ terraform import aws_api_gateway_method.example 12345abcde/67890fghij/GET
+```

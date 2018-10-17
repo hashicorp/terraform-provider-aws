@@ -13,7 +13,7 @@ import (
 
 func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
@@ -44,14 +44,14 @@ func TestAccAWSAPIGatewayVpcLink_importBasic(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAPIGatewayVpcLinkConfig(rName),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

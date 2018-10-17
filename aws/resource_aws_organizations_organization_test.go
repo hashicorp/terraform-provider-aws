@@ -9,11 +9,32 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func testAccAwsOrganizationsOrganization_importBasic(t *testing.T) {
+	resourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsOrganizationConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 	var organization organizations.Organization
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
@@ -38,7 +59,7 @@ func testAccAwsOrganizationsOrganization_consolidatedBilling(t *testing.T) {
 	feature_set := organizations.OrganizationFeatureSetConsolidatedBilling
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{

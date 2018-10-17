@@ -11,18 +11,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSFlowLog_importBasic(t *testing.T) {
+	resourceName := "aws_flow_log.test_flow_log"
+
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_basic(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSFlowLog_basic(t *testing.T) {
 	var flowLog ec2.FlowLog
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_flow_log.test_flow_log",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccFlowLogConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists("aws_flow_log.test_flow_log", &flowLog),
@@ -38,13 +61,13 @@ func TestAccAWSFlowLog_subnet(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_flow_log.test_flow_log_subnet",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccFlowLogConfig_subnet(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists("aws_flow_log.test_flow_log_subnet", &flowLog),

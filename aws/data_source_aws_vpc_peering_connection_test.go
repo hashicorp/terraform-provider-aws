@@ -9,11 +9,11 @@ import (
 )
 
 func TestAccDataSourceAwsVpcPeeringConnection_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcPeeringConnectionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_id"),

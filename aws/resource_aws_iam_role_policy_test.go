@@ -14,13 +14,35 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIAMRolePolicy_importBasic(t *testing.T) {
+	suffix := randomString(10)
+	resourceName := fmt.Sprintf("aws_iam_role_policy.foo_%s", suffix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIamRolePolicyConfig(suffix),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 	var rolePolicy1, rolePolicy2, rolePolicy3 iam.GetRolePolicyOutput
 	role := acctest.RandString(10)
 	policy1 := acctest.RandString(10)
 	policy2 := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
@@ -60,7 +82,7 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
 	role := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_iam_role_policy.test",
 		Providers:     testAccProviders,
@@ -95,7 +117,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
 	role := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_iam_role_policy.test",
 		Providers:     testAccProviders,
@@ -129,7 +151,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 func TestAccAWSIAMRolePolicy_invalidJSON(t *testing.T) {
 	role := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
@@ -234,6 +256,31 @@ func testAccCheckAWSIAMRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) reso
 
 		return nil
 	}
+}
+
+func testAccAwsIamRolePolicyConfig(suffix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role_%[1]s" {
+	name = "tf_test_role_test_%[1]s"
+	path = "/"
+	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+}
+
+resource "aws_iam_role_policy" "foo_%[1]s" {
+	name = "tf_test_policy_test_%[1]s"
+	role = "${aws_iam_role.role_%[1]s.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, suffix)
 }
 
 func testAccIAMRolePolicyConfig(role, policy1 string) string {

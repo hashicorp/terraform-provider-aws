@@ -35,7 +35,7 @@ resource "aws_inspector_assessment_template" "assessment" {
   target_arn = "${aws_inspector_assessment_target.assessment.arn}"
   duration   = "60"
 
-  rules_package_arns = "${data.aws_inspector_rules_packages.rules.arns}"
+  rules_package_arns = ["${data.aws_inspector_rules_packages.rules.arns}"]
 }
 ```
 

@@ -36,11 +36,12 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 				ValidateFunc:  validateNeptuneSubnetGroupName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateNeptuneSubnetGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateNeptuneSubnetGroupNamePrefix,
 			},
 
 			"description": {

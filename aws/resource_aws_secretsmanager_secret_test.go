@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -42,8 +43,8 @@ func testSweepSecretsManagerSecrets(region string) error {
 			}
 			log.Printf("[INFO] Deleting Secrets Manager Secret: %s", name)
 			input := &secretsmanager.DeleteSecretInput{
-				RecoveryWindowInDays: aws.Int64(7),
-				SecretId:             aws.String(name),
+				ForceDeleteWithoutRecovery: aws.Bool(true),
+				SecretId:                   aws.String(name),
 			}
 
 			_, err := conn.DeleteSecret(input)
@@ -72,7 +73,7 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -107,7 +108,7 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -141,7 +142,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -170,12 +171,47 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 	})
 }
 
+func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) {
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
+				),
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
+				),
+				Taint: []string{resourceName},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+			},
+		},
+	})
+}
+
 func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -227,7 +263,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -281,7 +317,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -324,6 +360,28 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+			},
+		},
+	})
+}
+
+func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Sid":"EnableAllPermissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"secretsmanager:GetSecretValue","Resource":"*"}]}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_Policy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					testAccCheckAwsSecretsManagerSecretHasPolicy(resourceName, expectedPolicyText),
+				),
 			},
 		},
 	})
@@ -387,6 +445,39 @@ func testAccCheckAwsSecretsManagerSecretExists(resourceName string, secret *secr
 	}
 }
 
+func testAccCheckAwsSecretsManagerSecretHasPolicy(name string, expectedPolicyText string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		input := &secretsmanager.GetResourcePolicyInput{
+			SecretId: aws.String(rs.Primary.ID),
+		}
+
+		out, err := conn.GetResourcePolicy(input)
+
+		if err != nil {
+			return err
+		}
+
+		actualPolicyText := *out.ResourcePolicy
+
+		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
+		if err != nil {
+			return fmt.Errorf("Error testing policy equivalence: %s", err)
+		}
+		if !equivalent {
+			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
+				expectedPolicyText, actualPolicyText)
+		}
+
+		return nil
+	}
+}
+
 func testAccAwsSecretsManagerSecretConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -436,6 +527,15 @@ resource "aws_secretsmanager_secret" "test" {
   name       = "%s"
 }
 `, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_RecoveryWindowInDays(rName string, recoveryWindowInDays int) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %q
+  recovery_window_in_days = %d
+}
+`, rName, recoveryWindowInDays)
 }
 
 func testAccAwsSecretsManagerSecretConfig_RotationLambdaARN(rName string) string {
@@ -588,6 +688,31 @@ resource "aws_secretsmanager_secret" "test" {
     tag1 = "tag1value"
     tag2 = "tag2value"
   }
+}
+`, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_Policy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "%s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+	{
+	  "Sid": "EnableAllPermissions",
+	  "Effect": "Allow",
+	  "Principal": {
+		"AWS": "*"
+	  },
+	  "Action": "secretsmanager:GetSecretValue",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
 }
 `, rName)
 }

@@ -16,7 +16,7 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSCognitoUserPoolDomain_import(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,

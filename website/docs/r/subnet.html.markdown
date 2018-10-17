@@ -12,6 +12,8 @@ Provides an VPC subnet resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```hcl
 resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
@@ -20,6 +22,23 @@ resource "aws_subnet" "main" {
   tags {
     Name = "Main"
   }
+}
+```
+
+### Subnets In Secondary VPC CIDR Blocks
+
+When managing subnets in one of a VPC's secondary CIDR blocks created using a [`aws_vpc_ipv4_cidr_block_association`](vpc_ipv4_cidr_block_association.html)
+resource, it is recommended to reference that resource's `vpc_id` attribute to ensure correct dependency ordering.
+
+```hcl
+resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "172.2.0.0/16"
+}
+
+resource "aws_subnet" "in_secondary_cidr" {
+  vpc_id     = "${aws_vpc_ipv4_cidr_block_association.secondary_cidr.vpc_id}"
+  cidr_block = "172.2.0.0/24"
 }
 ```
 
@@ -45,6 +64,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
+* `arn` - The ARN of the subnet.
 * `availability_zone`- The AZ for the subnet.
 * `cidr_block` - The CIDR block for the subnet.
 * `vpc_id` - The VPC ID.

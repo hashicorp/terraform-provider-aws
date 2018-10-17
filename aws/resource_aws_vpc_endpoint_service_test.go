@@ -13,18 +13,40 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSVpcEndpointService_importBasic(t *testing.T) {
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_vpc_endpoint_service.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointServiceBasicConfig(lbName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	lb1Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	lb2Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpc_endpoint_service.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceBasicConfig(lb1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
@@ -33,7 +55,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "allowed_principals.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
@@ -62,12 +84,12 @@ func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),

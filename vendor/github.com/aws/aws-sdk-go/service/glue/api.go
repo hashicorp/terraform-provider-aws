@@ -16,7 +16,7 @@ const opBatchCreatePartition = "BatchCreatePartition"
 // BatchCreatePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchCreatePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -83,6 +83,9 @@ func (c *Glue) BatchCreatePartitionRequest(input *BatchCreatePartitionInput) (re
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartition
 func (c *Glue) BatchCreatePartition(input *BatchCreatePartitionInput) (*BatchCreatePartitionOutput, error) {
 	req, out := c.BatchCreatePartitionRequest(input)
@@ -110,7 +113,7 @@ const opBatchDeleteConnection = "BatchDeleteConnection"
 // BatchDeleteConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeleteConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -192,7 +195,7 @@ const opBatchDeletePartition = "BatchDeletePartition"
 // BatchDeletePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeletePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -280,7 +283,7 @@ const opBatchDeleteTable = "BatchDeleteTable"
 // BatchDeleteTableRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeleteTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -320,6 +323,15 @@ func (c *Glue) BatchDeleteTableRequest(input *BatchDeleteTableInput) (req *reque
 // BatchDeleteTable API operation for AWS Glue.
 //
 // Deletes multiple tables at once.
+//
+// After completing this operation, you will no longer have access to the table
+// versions and partitions that belong to the deleted table. AWS Glue deletes
+// these "orphaned" resources asynchronously in a timely manner, at the discretion
+// of the service.
+//
+// To ensure immediate deletion of all related resources, before calling BatchDeleteTable,
+// use DeleteTableVersion or BatchDeleteTableVersion, and DeletePartition or
+// BatchDeletePartition, to delete any resources that belong to the table.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -368,7 +380,7 @@ const opBatchDeleteTableVersion = "BatchDeleteTableVersion"
 // BatchDeleteTableVersionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchDeleteTableVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -456,7 +468,7 @@ const opBatchGetPartition = "BatchGetPartition"
 // BatchGetPartitionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetPartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -517,6 +529,9 @@ func (c *Glue) BatchGetPartitionRequest(input *BatchGetPartitionInput) (req *req
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartition
 func (c *Glue) BatchGetPartition(input *BatchGetPartitionInput) (*BatchGetPartitionOutput, error) {
 	req, out := c.BatchGetPartitionRequest(input)
@@ -544,7 +559,7 @@ const opBatchStopJobRun = "BatchStopJobRun"
 // BatchStopJobRunRequest generates a "aws/request.Request" representing the
 // client's request for the BatchStopJobRun operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -629,7 +644,7 @@ const opCreateClassifier = "CreateClassifier"
 // CreateClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the CreateClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -716,7 +731,7 @@ const opCreateConnection = "CreateConnection"
 // CreateConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -777,6 +792,9 @@ func (c *Glue) CreateConnectionRequest(input *CreateConnectionInput) (req *reque
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
 func (c *Glue) CreateConnection(input *CreateConnectionInput) (*CreateConnectionOutput, error) {
 	req, out := c.CreateConnectionRequest(input)
@@ -804,7 +822,7 @@ const opCreateCrawler = "CreateCrawler"
 // CreateCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -844,8 +862,8 @@ func (c *Glue) CreateCrawlerRequest(input *CreateCrawlerInput) (req *request.Req
 // CreateCrawler API operation for AWS Glue.
 //
 // Creates a new crawler with specified targets, role, configuration, and optional
-// schedule. At least one crawl target must be specified, in either the s3Targets
-// or the jdbcTargets field.
+// schedule. At least one crawl target must be specified, in the s3Targets field,
+// the jdbcTargets field, or the DynamoDBTargets field.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -894,7 +912,7 @@ const opCreateDatabase = "CreateDatabase"
 // CreateDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -958,6 +976,9 @@ func (c *Glue) CreateDatabaseRequest(input *CreateDatabaseInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabase
 func (c *Glue) CreateDatabase(input *CreateDatabaseInput) (*CreateDatabaseOutput, error) {
 	req, out := c.CreateDatabaseRequest(input)
@@ -985,7 +1006,7 @@ const opCreateDevEndpoint = "CreateDevEndpoint"
 // CreateDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1085,7 +1106,7 @@ const opCreateJob = "CreateJob"
 // CreateJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1182,7 +1203,7 @@ const opCreatePartition = "CreatePartition"
 // CreatePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1249,6 +1270,9 @@ func (c *Glue) CreatePartitionRequest(input *CreatePartitionInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartition
 func (c *Glue) CreatePartition(input *CreatePartitionInput) (*CreatePartitionOutput, error) {
 	req, out := c.CreatePartitionRequest(input)
@@ -1276,7 +1300,7 @@ const opCreateScript = "CreateScript"
 // CreateScriptRequest generates a "aws/request.Request" representing the
 // client's request for the CreateScript operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1356,12 +1380,103 @@ func (c *Glue) CreateScriptWithContext(ctx aws.Context, input *CreateScriptInput
 	return out, req.Send()
 }
 
+const opCreateSecurityConfiguration = "CreateSecurityConfiguration"
+
+// CreateSecurityConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateSecurityConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateSecurityConfiguration for more information on using the CreateSecurityConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateSecurityConfigurationRequest method.
+//    req, resp := client.CreateSecurityConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateSecurityConfiguration
+func (c *Glue) CreateSecurityConfigurationRequest(input *CreateSecurityConfigurationInput) (req *request.Request, output *CreateSecurityConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opCreateSecurityConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateSecurityConfigurationInput{}
+	}
+
+	output = &CreateSecurityConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateSecurityConfiguration API operation for AWS Glue.
+//
+// Creates a new security configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation CreateSecurityConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   A resource to be created or added already exists.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   A resource numerical limit was exceeded.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateSecurityConfiguration
+func (c *Glue) CreateSecurityConfiguration(input *CreateSecurityConfigurationInput) (*CreateSecurityConfigurationOutput, error) {
+	req, out := c.CreateSecurityConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// CreateSecurityConfigurationWithContext is the same as CreateSecurityConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateSecurityConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) CreateSecurityConfigurationWithContext(ctx aws.Context, input *CreateSecurityConfigurationInput, opts ...request.Option) (*CreateSecurityConfigurationOutput, error) {
+	req, out := c.CreateSecurityConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateTable = "CreateTable"
 
 // CreateTableRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1428,6 +1543,9 @@ func (c *Glue) CreateTableRequest(input *CreateTableInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTable
 func (c *Glue) CreateTable(input *CreateTableInput) (*CreateTableOutput, error) {
 	req, out := c.CreateTableRequest(input)
@@ -1455,7 +1573,7 @@ const opCreateTrigger = "CreateTrigger"
 // CreateTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1552,7 +1670,7 @@ const opCreateUserDefinedFunction = "CreateUserDefinedFunction"
 // CreateUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1619,6 +1737,9 @@ func (c *Glue) CreateUserDefinedFunctionRequest(input *CreateUserDefinedFunction
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
 func (c *Glue) CreateUserDefinedFunction(input *CreateUserDefinedFunctionInput) (*CreateUserDefinedFunctionOutput, error) {
 	req, out := c.CreateUserDefinedFunctionRequest(input)
@@ -1646,7 +1767,7 @@ const opDeleteClassifier = "DeleteClassifier"
 // DeleteClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1728,7 +1849,7 @@ const opDeleteConnection = "DeleteConnection"
 // DeleteConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1810,7 +1931,7 @@ const opDeleteCrawler = "DeleteCrawler"
 // DeleteCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1899,7 +2020,7 @@ const opDeleteDatabase = "DeleteDatabase"
 // DeleteDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1939,6 +2060,17 @@ func (c *Glue) DeleteDatabaseRequest(input *DeleteDatabaseInput) (req *request.R
 // DeleteDatabase API operation for AWS Glue.
 //
 // Removes a specified Database from a Data Catalog.
+//
+// After completing this operation, you will no longer have access to the tables
+// (and all table versions and partitions that might belong to the tables) and
+// the user-defined functions in the deleted database. AWS Glue deletes these
+// "orphaned" resources asynchronously in a timely manner, at the discretion
+// of the service.
+//
+// To ensure immediate deletion of all related resources, before calling DeleteDatabase,
+// use DeleteTableVersion or BatchDeleteTableVersion, DeletePartition or BatchDeletePartition,
+// DeleteUserDefinedFunction, and DeleteTable or BatchDeleteTable, to delete
+// any resources that belong to the database.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1987,7 +2119,7 @@ const opDeleteDevEndpoint = "DeleteDevEndpoint"
 // DeleteDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2075,7 +2207,7 @@ const opDeleteJob = "DeleteJob"
 // DeleteJobRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2161,7 +2293,7 @@ const opDeletePartition = "DeletePartition"
 // DeletePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2244,12 +2376,100 @@ func (c *Glue) DeletePartitionWithContext(ctx aws.Context, input *DeletePartitio
 	return out, req.Send()
 }
 
+const opDeleteSecurityConfiguration = "DeleteSecurityConfiguration"
+
+// DeleteSecurityConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSecurityConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteSecurityConfiguration for more information on using the DeleteSecurityConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteSecurityConfigurationRequest method.
+//    req, resp := client.DeleteSecurityConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteSecurityConfiguration
+func (c *Glue) DeleteSecurityConfigurationRequest(input *DeleteSecurityConfigurationInput) (req *request.Request, output *DeleteSecurityConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSecurityConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteSecurityConfigurationInput{}
+	}
+
+	output = &DeleteSecurityConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteSecurityConfiguration API operation for AWS Glue.
+//
+// Deletes a specified security configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation DeleteSecurityConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteSecurityConfiguration
+func (c *Glue) DeleteSecurityConfiguration(input *DeleteSecurityConfigurationInput) (*DeleteSecurityConfigurationOutput, error) {
+	req, out := c.DeleteSecurityConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteSecurityConfigurationWithContext is the same as DeleteSecurityConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteSecurityConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) DeleteSecurityConfigurationWithContext(ctx aws.Context, input *DeleteSecurityConfigurationInput, opts ...request.Option) (*DeleteSecurityConfigurationOutput, error) {
+	req, out := c.DeleteSecurityConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteTable = "DeleteTable"
 
 // DeleteTableRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2289,6 +2509,15 @@ func (c *Glue) DeleteTableRequest(input *DeleteTableInput) (req *request.Request
 // DeleteTable API operation for AWS Glue.
 //
 // Removes a table definition from the Data Catalog.
+//
+// After completing this operation, you will no longer have access to the table
+// versions and partitions that belong to the deleted table. AWS Glue deletes
+// these "orphaned" resources asynchronously in a timely manner, at the discretion
+// of the service.
+//
+// To ensure immediate deletion of all related resources, before calling DeleteTable,
+// use DeleteTableVersion or BatchDeleteTableVersion, and DeletePartition or
+// BatchDeletePartition, to delete any resources that belong to the table.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2337,7 +2566,7 @@ const opDeleteTableVersion = "DeleteTableVersion"
 // DeleteTableVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTableVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2425,7 +2654,7 @@ const opDeleteTrigger = "DeleteTrigger"
 // DeleteTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2514,7 +2743,7 @@ const opDeleteUserDefinedFunction = "DeleteUserDefinedFunction"
 // DeleteUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2602,7 +2831,7 @@ const opGetCatalogImportStatus = "GetCatalogImportStatus"
 // GetCatalogImportStatusRequest generates a "aws/request.Request" representing the
 // client's request for the GetCatalogImportStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2684,7 +2913,7 @@ const opGetClassifier = "GetClassifier"
 // GetClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the GetClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2766,7 +2995,7 @@ const opGetClassifiers = "GetClassifiers"
 // GetClassifiersRequest generates a "aws/request.Request" representing the
 // client's request for the GetClassifiers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2901,7 +3130,7 @@ const opGetConnection = "GetConnection"
 // GetConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the GetConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2956,6 +3185,12 @@ func (c *Glue) GetConnectionRequest(input *GetConnectionInput) (req *request.Req
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnection
 func (c *Glue) GetConnection(input *GetConnectionInput) (*GetConnectionOutput, error) {
 	req, out := c.GetConnectionRequest(input)
@@ -2983,7 +3218,7 @@ const opGetConnections = "GetConnections"
 // GetConnectionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetConnections operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3043,6 +3278,12 @@ func (c *Glue) GetConnectionsRequest(input *GetConnectionsInput) (req *request.R
 //
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnections
 func (c *Glue) GetConnections(input *GetConnectionsInput) (*GetConnectionsOutput, error) {
@@ -3121,7 +3362,7 @@ const opGetCrawler = "GetCrawler"
 // GetCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the GetCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3203,7 +3444,7 @@ const opGetCrawlerMetrics = "GetCrawlerMetrics"
 // GetCrawlerMetricsRequest generates a "aws/request.Request" representing the
 // client's request for the GetCrawlerMetrics operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3338,7 +3579,7 @@ const opGetCrawlers = "GetCrawlers"
 // GetCrawlersRequest generates a "aws/request.Request" representing the
 // client's request for the GetCrawlers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3468,12 +3709,97 @@ func (c *Glue) GetCrawlersPagesWithContext(ctx aws.Context, input *GetCrawlersIn
 	return p.Err()
 }
 
+const opGetDataCatalogEncryptionSettings = "GetDataCatalogEncryptionSettings"
+
+// GetDataCatalogEncryptionSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the GetDataCatalogEncryptionSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDataCatalogEncryptionSettings for more information on using the GetDataCatalogEncryptionSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDataCatalogEncryptionSettingsRequest method.
+//    req, resp := client.GetDataCatalogEncryptionSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
+func (c *Glue) GetDataCatalogEncryptionSettingsRequest(input *GetDataCatalogEncryptionSettingsInput) (req *request.Request, output *GetDataCatalogEncryptionSettingsOutput) {
+	op := &request.Operation{
+		Name:       opGetDataCatalogEncryptionSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDataCatalogEncryptionSettingsInput{}
+	}
+
+	output = &GetDataCatalogEncryptionSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDataCatalogEncryptionSettings API operation for AWS Glue.
+//
+// Retrieves the security configuration for a specified catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetDataCatalogEncryptionSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
+func (c *Glue) GetDataCatalogEncryptionSettings(input *GetDataCatalogEncryptionSettingsInput) (*GetDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.GetDataCatalogEncryptionSettingsRequest(input)
+	return out, req.Send()
+}
+
+// GetDataCatalogEncryptionSettingsWithContext is the same as GetDataCatalogEncryptionSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDataCatalogEncryptionSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetDataCatalogEncryptionSettingsWithContext(ctx aws.Context, input *GetDataCatalogEncryptionSettingsInput, opts ...request.Option) (*GetDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.GetDataCatalogEncryptionSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetDatabase = "GetDatabase"
 
 // GetDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the GetDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3534,6 +3860,9 @@ func (c *Glue) GetDatabaseRequest(input *GetDatabaseInput) (req *request.Request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabase
 func (c *Glue) GetDatabase(input *GetDatabaseInput) (*GetDatabaseOutput, error) {
 	req, out := c.GetDatabaseRequest(input)
@@ -3561,7 +3890,7 @@ const opGetDatabases = "GetDatabases"
 // GetDatabasesRequest generates a "aws/request.Request" representing the
 // client's request for the GetDatabases operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3624,6 +3953,9 @@ func (c *Glue) GetDatabasesRequest(input *GetDatabasesInput) (req *request.Reque
 //
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabases
 func (c *Glue) GetDatabases(input *GetDatabasesInput) (*GetDatabasesOutput, error) {
@@ -3702,7 +4034,7 @@ const opGetDataflowGraph = "GetDataflowGraph"
 // GetDataflowGraphRequest generates a "aws/request.Request" representing the
 // client's request for the GetDataflowGraph operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3787,7 +4119,7 @@ const opGetDevEndpoint = "GetDevEndpoint"
 // GetDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the GetDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3875,7 +4207,7 @@ const opGetDevEndpoints = "GetDevEndpoints"
 // GetDevEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the GetDevEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4019,7 +4351,7 @@ const opGetJob = "GetJob"
 // GetJobRequest generates a "aws/request.Request" representing the
 // client's request for the GetJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4107,7 +4439,7 @@ const opGetJobRun = "GetJobRun"
 // GetJobRunRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobRun operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4195,7 +4527,7 @@ const opGetJobRuns = "GetJobRuns"
 // GetJobRunsRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobRuns operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4339,7 +4671,7 @@ const opGetJobs = "GetJobs"
 // GetJobsRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4483,7 +4815,7 @@ const opGetMapping = "GetMapping"
 // GetMappingRequest generates a "aws/request.Request" representing the
 // client's request for the GetMapping operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4571,7 +4903,7 @@ const opGetPartition = "GetPartition"
 // GetPartitionRequest generates a "aws/request.Request" representing the
 // client's request for the GetPartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4632,6 +4964,9 @@ func (c *Glue) GetPartitionRequest(input *GetPartitionInput) (req *request.Reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartition
 func (c *Glue) GetPartition(input *GetPartitionInput) (*GetPartitionOutput, error) {
 	req, out := c.GetPartitionRequest(input)
@@ -4659,7 +4994,7 @@ const opGetPartitions = "GetPartitions"
 // GetPartitionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetPartitions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4725,6 +5060,9 @@ func (c *Glue) GetPartitionsRequest(input *GetPartitionsInput) (req *request.Req
 //
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitions
 func (c *Glue) GetPartitions(input *GetPartitionsInput) (*GetPartitionsOutput, error) {
@@ -4803,7 +5141,7 @@ const opGetPlan = "GetPlan"
 // GetPlanRequest generates a "aws/request.Request" representing the
 // client's request for the GetPlan operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4883,12 +5221,188 @@ func (c *Glue) GetPlanWithContext(ctx aws.Context, input *GetPlanInput, opts ...
 	return out, req.Send()
 }
 
+const opGetSecurityConfiguration = "GetSecurityConfiguration"
+
+// GetSecurityConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the GetSecurityConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetSecurityConfiguration for more information on using the GetSecurityConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetSecurityConfigurationRequest method.
+//    req, resp := client.GetSecurityConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetSecurityConfiguration
+func (c *Glue) GetSecurityConfigurationRequest(input *GetSecurityConfigurationInput) (req *request.Request, output *GetSecurityConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opGetSecurityConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetSecurityConfigurationInput{}
+	}
+
+	output = &GetSecurityConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSecurityConfiguration API operation for AWS Glue.
+//
+// Retrieves a specified security configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetSecurityConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetSecurityConfiguration
+func (c *Glue) GetSecurityConfiguration(input *GetSecurityConfigurationInput) (*GetSecurityConfigurationOutput, error) {
+	req, out := c.GetSecurityConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// GetSecurityConfigurationWithContext is the same as GetSecurityConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSecurityConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetSecurityConfigurationWithContext(ctx aws.Context, input *GetSecurityConfigurationInput, opts ...request.Option) (*GetSecurityConfigurationOutput, error) {
+	req, out := c.GetSecurityConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetSecurityConfigurations = "GetSecurityConfigurations"
+
+// GetSecurityConfigurationsRequest generates a "aws/request.Request" representing the
+// client's request for the GetSecurityConfigurations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetSecurityConfigurations for more information on using the GetSecurityConfigurations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetSecurityConfigurationsRequest method.
+//    req, resp := client.GetSecurityConfigurationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetSecurityConfigurations
+func (c *Glue) GetSecurityConfigurationsRequest(input *GetSecurityConfigurationsInput) (req *request.Request, output *GetSecurityConfigurationsOutput) {
+	op := &request.Operation{
+		Name:       opGetSecurityConfigurations,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetSecurityConfigurationsInput{}
+	}
+
+	output = &GetSecurityConfigurationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSecurityConfigurations API operation for AWS Glue.
+//
+// Retrieves a list of all security configurations.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetSecurityConfigurations for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetSecurityConfigurations
+func (c *Glue) GetSecurityConfigurations(input *GetSecurityConfigurationsInput) (*GetSecurityConfigurationsOutput, error) {
+	req, out := c.GetSecurityConfigurationsRequest(input)
+	return out, req.Send()
+}
+
+// GetSecurityConfigurationsWithContext is the same as GetSecurityConfigurations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSecurityConfigurations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetSecurityConfigurationsWithContext(ctx aws.Context, input *GetSecurityConfigurationsInput, opts ...request.Option) (*GetSecurityConfigurationsOutput, error) {
+	req, out := c.GetSecurityConfigurationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetTable = "GetTable"
 
 // GetTableRequest generates a "aws/request.Request" representing the
 // client's request for the GetTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4949,6 +5463,9 @@ func (c *Glue) GetTableRequest(input *GetTableInput) (req *request.Request, outp
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
 func (c *Glue) GetTable(input *GetTableInput) (*GetTableOutput, error) {
 	req, out := c.GetTableRequest(input)
@@ -4976,7 +5493,7 @@ const opGetTableVersion = "GetTableVersion"
 // GetTableVersionRequest generates a "aws/request.Request" representing the
 // client's request for the GetTableVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5037,6 +5554,9 @@ func (c *Glue) GetTableVersionRequest(input *GetTableVersionInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersion
 func (c *Glue) GetTableVersion(input *GetTableVersionInput) (*GetTableVersionOutput, error) {
 	req, out := c.GetTableVersionRequest(input)
@@ -5064,7 +5584,7 @@ const opGetTableVersions = "GetTableVersions"
 // GetTableVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetTableVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5131,6 +5651,9 @@ func (c *Glue) GetTableVersionsRequest(input *GetTableVersionsInput) (req *reque
 //
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
 func (c *Glue) GetTableVersions(input *GetTableVersionsInput) (*GetTableVersionsOutput, error) {
@@ -5209,7 +5732,7 @@ const opGetTables = "GetTables"
 // GetTablesRequest generates a "aws/request.Request" representing the
 // client's request for the GetTables operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5275,6 +5798,9 @@ func (c *Glue) GetTablesRequest(input *GetTablesInput) (req *request.Request, ou
 //
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTables
 func (c *Glue) GetTables(input *GetTablesInput) (*GetTablesOutput, error) {
@@ -5353,7 +5879,7 @@ const opGetTrigger = "GetTrigger"
 // GetTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the GetTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5441,7 +5967,7 @@ const opGetTriggers = "GetTriggers"
 // GetTriggersRequest generates a "aws/request.Request" representing the
 // client's request for the GetTriggers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5585,7 +6111,7 @@ const opGetUserDefinedFunction = "GetUserDefinedFunction"
 // GetUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the GetUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5646,6 +6172,9 @@ func (c *Glue) GetUserDefinedFunctionRequest(input *GetUserDefinedFunctionInput)
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunction
 func (c *Glue) GetUserDefinedFunction(input *GetUserDefinedFunctionInput) (*GetUserDefinedFunctionOutput, error) {
 	req, out := c.GetUserDefinedFunctionRequest(input)
@@ -5673,7 +6202,7 @@ const opGetUserDefinedFunctions = "GetUserDefinedFunctions"
 // GetUserDefinedFunctionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetUserDefinedFunctions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5739,6 +6268,9 @@ func (c *Glue) GetUserDefinedFunctionsRequest(input *GetUserDefinedFunctionsInpu
 //
 //   * ErrCodeInternalServiceException "InternalServiceException"
 //   An internal service error occurred.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctions
 func (c *Glue) GetUserDefinedFunctions(input *GetUserDefinedFunctionsInput) (*GetUserDefinedFunctionsOutput, error) {
@@ -5817,7 +6349,7 @@ const opImportCatalogToGlue = "ImportCatalogToGlue"
 // ImportCatalogToGlueRequest generates a "aws/request.Request" representing the
 // client's request for the ImportCatalogToGlue operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5894,12 +6426,99 @@ func (c *Glue) ImportCatalogToGlueWithContext(ctx aws.Context, input *ImportCata
 	return out, req.Send()
 }
 
+const opPutDataCatalogEncryptionSettings = "PutDataCatalogEncryptionSettings"
+
+// PutDataCatalogEncryptionSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the PutDataCatalogEncryptionSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutDataCatalogEncryptionSettings for more information on using the PutDataCatalogEncryptionSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutDataCatalogEncryptionSettingsRequest method.
+//    req, resp := client.PutDataCatalogEncryptionSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PutDataCatalogEncryptionSettings
+func (c *Glue) PutDataCatalogEncryptionSettingsRequest(input *PutDataCatalogEncryptionSettingsInput) (req *request.Request, output *PutDataCatalogEncryptionSettingsOutput) {
+	op := &request.Operation{
+		Name:       opPutDataCatalogEncryptionSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutDataCatalogEncryptionSettingsInput{}
+	}
+
+	output = &PutDataCatalogEncryptionSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutDataCatalogEncryptionSettings API operation for AWS Glue.
+//
+// Sets the security configuration for a specified catalog. Once the configuration
+// has been set, the specified encryption is applied to every catalog write
+// thereafter.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation PutDataCatalogEncryptionSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PutDataCatalogEncryptionSettings
+func (c *Glue) PutDataCatalogEncryptionSettings(input *PutDataCatalogEncryptionSettingsInput) (*PutDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.PutDataCatalogEncryptionSettingsRequest(input)
+	return out, req.Send()
+}
+
+// PutDataCatalogEncryptionSettingsWithContext is the same as PutDataCatalogEncryptionSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutDataCatalogEncryptionSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) PutDataCatalogEncryptionSettingsWithContext(ctx aws.Context, input *PutDataCatalogEncryptionSettingsInput, opts ...request.Option) (*PutDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.PutDataCatalogEncryptionSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opResetJobBookmark = "ResetJobBookmark"
 
 // ResetJobBookmarkRequest generates a "aws/request.Request" representing the
 // client's request for the ResetJobBookmark operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5987,7 +6606,7 @@ const opStartCrawler = "StartCrawler"
 // StartCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the StartCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6027,7 +6646,7 @@ func (c *Glue) StartCrawlerRequest(input *StartCrawlerInput) (req *request.Reque
 // StartCrawler API operation for AWS Glue.
 //
 // Starts a crawl using the specified crawler, regardless of what is scheduled.
-// If the crawler is already running, does nothing.
+// If the crawler is already running, returns a CrawlerRunningException (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-exceptions.html#aws-glue-api-exceptions-CrawlerRunningException).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6073,7 +6692,7 @@ const opStartCrawlerSchedule = "StartCrawlerSchedule"
 // StartCrawlerScheduleRequest generates a "aws/request.Request" representing the
 // client's request for the StartCrawlerSchedule operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6165,7 +6784,7 @@ const opStartJobRun = "StartJobRun"
 // StartJobRunRequest generates a "aws/request.Request" representing the
 // client's request for the StartJobRun operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6259,7 +6878,7 @@ const opStartTrigger = "StartTrigger"
 // StartTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the StartTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6354,7 +6973,7 @@ const opStopCrawler = "StopCrawler"
 // StopCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the StopCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6442,7 +7061,7 @@ const opStopCrawlerSchedule = "StopCrawlerSchedule"
 // StopCrawlerScheduleRequest generates a "aws/request.Request" representing the
 // client's request for the StopCrawlerSchedule operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6531,7 +7150,7 @@ const opStopTrigger = "StopTrigger"
 // StopTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the StopTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6622,7 +7241,7 @@ const opUpdateClassifier = "UpdateClassifier"
 // UpdateClassifierRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateClassifier operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6711,7 +7330,7 @@ const opUpdateConnection = "UpdateConnection"
 // UpdateConnectionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateConnection operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6769,6 +7388,12 @@ func (c *Glue) UpdateConnectionRequest(input *UpdateConnectionInput) (req *reque
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnection
 func (c *Glue) UpdateConnection(input *UpdateConnectionInput) (*UpdateConnectionOutput, error) {
 	req, out := c.UpdateConnectionRequest(input)
@@ -6796,7 +7421,7 @@ const opUpdateCrawler = "UpdateCrawler"
 // UpdateCrawlerRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCrawler operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6888,7 +7513,7 @@ const opUpdateCrawlerSchedule = "UpdateCrawlerSchedule"
 // UpdateCrawlerScheduleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCrawlerSchedule operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6979,7 +7604,7 @@ const opUpdateDatabase = "UpdateDatabase"
 // UpdateDatabaseRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDatabase operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7040,6 +7665,9 @@ func (c *Glue) UpdateDatabaseRequest(input *UpdateDatabaseInput) (req *request.R
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabase
 func (c *Glue) UpdateDatabase(input *UpdateDatabaseInput) (*UpdateDatabaseOutput, error) {
 	req, out := c.UpdateDatabaseRequest(input)
@@ -7067,7 +7695,7 @@ const opUpdateDevEndpoint = "UpdateDevEndpoint"
 // UpdateDevEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDevEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7158,7 +7786,7 @@ const opUpdateJob = "UpdateJob"
 // UpdateJobRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7249,7 +7877,7 @@ const opUpdatePartition = "UpdatePartition"
 // UpdatePartitionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePartition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7310,6 +7938,9 @@ func (c *Glue) UpdatePartitionRequest(input *UpdatePartitionInput) (req *request
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartition
 func (c *Glue) UpdatePartition(input *UpdatePartitionInput) (*UpdatePartitionOutput, error) {
 	req, out := c.UpdatePartitionRequest(input)
@@ -7337,7 +7968,7 @@ const opUpdateTable = "UpdateTable"
 // UpdateTableRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTable operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7404,6 +8035,9 @@ func (c *Glue) UpdateTableRequest(input *UpdateTableInput) (req *request.Request
 //   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
 //   A resource numerical limit was exceeded.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
 func (c *Glue) UpdateTable(input *UpdateTableInput) (*UpdateTableOutput, error) {
 	req, out := c.UpdateTableRequest(input)
@@ -7431,7 +8065,7 @@ const opUpdateTrigger = "UpdateTrigger"
 // UpdateTriggerRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTrigger operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7522,7 +8156,7 @@ const opUpdateUserDefinedFunction = "UpdateUserDefinedFunction"
 // UpdateUserDefinedFunctionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateUserDefinedFunction operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7583,6 +8217,9 @@ func (c *Glue) UpdateUserDefinedFunctionRequest(input *UpdateUserDefinedFunction
 //   * ErrCodeOperationTimeoutException "OperationTimeoutException"
 //   The operation timed out.
 //
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunction
 func (c *Glue) UpdateUserDefinedFunction(input *UpdateUserDefinedFunctionInput) (*UpdateUserDefinedFunctionOutput, error) {
 	req, out := c.UpdateUserDefinedFunctionRequest(input)
@@ -7609,7 +8246,7 @@ func (c *Glue) UpdateUserDefinedFunctionWithContext(ctx aws.Context, input *Upda
 type Action struct {
 	_ struct{} `type:"structure"`
 
-	// Arguments to be passed to the job.
+	// Arguments to be passed to the job run.
 	//
 	// You can specify arguments here that your own job-execution script consumes,
 	// as well as arguments that AWS Glue itself consumes.
@@ -7629,7 +8266,13 @@ type Action struct {
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
-	// The job run timeout in minutes. It overrides the timeout value of the job.
+	// The name of the SecurityConfiguration structure to be used with this action.
+	SecurityConfiguration *string `min:"1" type:"string"`
+
+	// The JobRun timeout in minutes. This is the maximum time that a job run can
+	// consume resources before it is terminated and enters TIMEOUT status. The
+	// default is 2,880 minutes (48 hours). This overrides the timeout value set
+	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
 }
 
@@ -7648,6 +8291,9 @@ func (s *Action) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Action"}
 	if s.JobName != nil && len(*s.JobName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("JobName", 1))
+	}
+	if s.SecurityConfiguration != nil && len(*s.SecurityConfiguration) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityConfiguration", 1))
 	}
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
@@ -7679,6 +8325,12 @@ func (s *Action) SetJobName(v string) *Action {
 // SetNotificationProperty sets the NotificationProperty field's value.
 func (s *Action) SetNotificationProperty(v *NotificationProperty) *Action {
 	s.NotificationProperty = v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *Action) SetSecurityConfiguration(v string) *Action {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -8570,7 +9222,7 @@ type CatalogImportStatus struct {
 	ImportCompleted *bool `type:"boolean"`
 
 	// The time that the migration was started.
-	ImportTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ImportTime *time.Time `type:"timestamp"`
 
 	// The name of the person who initiated the migration.
 	ImportedBy *string `min:"1" type:"string"`
@@ -8604,14 +9256,15 @@ func (s *CatalogImportStatus) SetImportedBy(v string) *CatalogImportStatus {
 	return s
 }
 
-// Classifiers are written in Python and triggered during a crawl task. You
-// can write your own classifiers to best categorize your data sources and specify
-// the appropriate schemas to use for them. A classifier checks whether a given
-// file is in a format it can handle, and if it is, the classifier creates a
-// schema in the form of a StructType object that matches that data format.
+// Classifiers are triggered during a crawl task. A classifier checks whether
+// a given file is in a format it can handle, and if it is, the classifier creates
+// a schema in the form of a StructType object that matches that data format.
 //
-// A classifier can be a grok classifier, an XML classifier, or a JSON classifier,
-// asspecified in one of the fields in the Classifier object.
+// You can use the standard classifiers that AWS Glue supplies, or you can write
+// your own classifiers to best categorize your data sources and specify the
+// appropriate schemas to use for them. A classifier can be a grok classifier,
+// an XML classifier, or a JSON classifier, as specified in one of the fields
+// in the Classifier object.
 type Classifier struct {
 	_ struct{} `type:"structure"`
 
@@ -8650,6 +9303,39 @@ func (s *Classifier) SetJsonClassifier(v *JsonClassifier) *Classifier {
 // SetXMLClassifier sets the XMLClassifier field's value.
 func (s *Classifier) SetXMLClassifier(v *XMLClassifier) *Classifier {
 	s.XMLClassifier = v
+	return s
+}
+
+// Specifies how CloudWatch data should be encrypted.
+type CloudWatchEncryption struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption mode to use for CloudWatch data.
+	CloudWatchEncryptionMode *string `type:"string" enum:"CloudWatchEncryptionMode"`
+
+	// The AWS ARN of the KMS key to be used to encrypt the data.
+	KmsKeyArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CloudWatchEncryption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchEncryption) GoString() string {
+	return s.String()
+}
+
+// SetCloudWatchEncryptionMode sets the CloudWatchEncryptionMode field's value.
+func (s *CloudWatchEncryption) SetCloudWatchEncryptionMode(v string) *CloudWatchEncryption {
+	s.CloudWatchEncryptionMode = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *CloudWatchEncryption) SetKmsKeyArn(v string) *CloudWatchEncryption {
+	s.KmsKeyArn = &v
 	return s
 }
 
@@ -8993,7 +9679,36 @@ func (s *Condition) SetState(v string) *Condition {
 type Connection struct {
 	_ struct{} `type:"structure"`
 
-	// A list of key-value pairs used as parameters for this connection.
+	// These key-value pairs define parameters for the connection:
+	//
+	//    * HOST - The host URI: either the fully qualified domain name (FQDN) or
+	//    the IPv4 address of the database host.
+	//
+	//    * PORT - The port number, between 1024 and 65535, of the port on which
+	//    the database host is listening for database connections.
+	//
+	//    * USER_NAME - The name under which to log in to the database.
+	//
+	//    * PASSWORD - A password, if one is used, for the user name.
+	//
+	//    * JDBC_DRIVER_JAR_URI - The S3 path of the a jar file that contains the
+	//    JDBC driver to use.
+	//
+	//    * JDBC_DRIVER_CLASS_NAME - The class name of the JDBC driver to use.
+	//
+	//    * JDBC_ENGINE - The name of the JDBC engine to use.
+	//
+	//    * JDBC_ENGINE_VERSION - The version of the JDBC engine to use.
+	//
+	//    * CONFIG_FILES - (Reserved for future use).
+	//
+	//    * INSTANCE_ID - The instance ID to use.
+	//
+	//    * JDBC_CONNECTION_URL - The URL for the JDBC connection.
+	//
+	//    * JDBC_ENFORCE_SSL - A Boolean string (true, false) specifying whether
+	//    SSL with hostname matching will be enforced for the JDBC connection on
+	//    the client. The default is false.
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
@@ -9001,7 +9716,7 @@ type Connection struct {
 	ConnectionType *string `type:"string" enum:"ConnectionType"`
 
 	// The time this connection definition was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// Description of the connection.
 	Description *string `type:"string"`
@@ -9010,7 +9725,7 @@ type Connection struct {
 	LastUpdatedBy *string `min:"1" type:"string"`
 
 	// The last time this connection definition was updated.
-	LastUpdatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A list of criteria that can be used in selecting this connection.
 	MatchCriteria []*string `type:"list"`
@@ -9091,7 +9806,7 @@ func (s *Connection) SetPhysicalConnectionRequirements(v *PhysicalConnectionRequ
 type ConnectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of key-value pairs used as parameters for this connection.
+	// These key-value pairs define parameters for the connection.
 	//
 	// ConnectionProperties is a required field
 	ConnectionProperties map[string]*string `type:"map" required:"true"`
@@ -9240,8 +9955,11 @@ type Crawler struct {
 	// crawl began.
 	CrawlElapsedTime *int64 `type:"long"`
 
+	// The name of the SecurityConfiguration structure to be used by this Crawler.
+	CrawlerSecurityConfiguration *string `type:"string"`
+
 	// The time when the crawler was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The database where metadata is written by this crawler.
 	DatabaseName *string `type:"string"`
@@ -9254,7 +9972,7 @@ type Crawler struct {
 	LastCrawl *LastCrawlInfo `type:"structure"`
 
 	// The time the crawler was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The crawler name.
 	Name *string `min:"1" type:"string"`
@@ -9307,6 +10025,12 @@ func (s *Crawler) SetConfiguration(v string) *Crawler {
 // SetCrawlElapsedTime sets the CrawlElapsedTime field's value.
 func (s *Crawler) SetCrawlElapsedTime(v int64) *Crawler {
 	s.CrawlElapsedTime = &v
+	return s
+}
+
+// SetCrawlerSecurityConfiguration sets the CrawlerSecurityConfiguration field's value.
+func (s *Crawler) SetCrawlerSecurityConfiguration(v string) *Crawler {
+	s.CrawlerSecurityConfiguration = &v
 	return s
 }
 
@@ -9480,6 +10204,9 @@ func (s *CrawlerMetrics) SetTimeLeftSeconds(v float64) *CrawlerMetrics {
 type CrawlerTargets struct {
 	_ struct{} `type:"structure"`
 
+	// Specifies DynamoDB targets.
+	DynamoDBTargets []*DynamoDBTarget `type:"list"`
+
 	// Specifies JDBC targets.
 	JdbcTargets []*JdbcTarget `type:"list"`
 
@@ -9495,6 +10222,12 @@ func (s CrawlerTargets) String() string {
 // GoString returns the string representation
 func (s CrawlerTargets) GoString() string {
 	return s.String()
+}
+
+// SetDynamoDBTargets sets the DynamoDBTargets field's value.
+func (s *CrawlerTargets) SetDynamoDBTargets(v []*DynamoDBTarget) *CrawlerTargets {
+	s.DynamoDBTargets = v
+	return s
 }
 
 // SetJdbcTargets sets the JdbcTargets field's value.
@@ -9663,8 +10396,8 @@ type CreateCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of custom classifiers that the user has registered. By default, all
-	// AWS classifiers are included in a crawl, but these custom classifiers always
-	// override the default classifiers for a given classification.
+	// built-in classifiers are included in a crawl, but these custom classifiers
+	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
 	// Crawler configuration information. This versioned JSON string allows users
@@ -9678,6 +10411,9 @@ type CreateCrawlerInput struct {
 	// Example: '{ "Version": 1.0, "CrawlerOutput": { "Partitions": { "AddOrUpdateBehavior":
 	// "InheritFromTable" } } }'
 	Configuration *string `type:"string"`
+
+	// The name of the SecurityConfiguration structure to be used by this Crawler.
+	CrawlerSecurityConfiguration *string `type:"string"`
 
 	// The AWS Glue database where results are written, such as: arn:aws:daylight:us-east-1::database/sometable/*.
 	//
@@ -9760,6 +10496,12 @@ func (s *CreateCrawlerInput) SetClassifiers(v []*string) *CreateCrawlerInput {
 // SetConfiguration sets the Configuration field's value.
 func (s *CreateCrawlerInput) SetConfiguration(v string) *CreateCrawlerInput {
 	s.Configuration = &v
+	return s
+}
+
+// SetCrawlerSecurityConfiguration sets the CrawlerSecurityConfiguration field's value.
+func (s *CreateCrawlerInput) SetCrawlerSecurityConfiguration(v string) *CreateCrawlerInput {
+	s.CrawlerSecurityConfiguration = &v
 	return s
 }
 
@@ -9919,13 +10661,28 @@ type CreateDevEndpointInput struct {
 	// The number of AWS Glue Data Processing Units (DPUs) to allocate to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// The public key to use for authentication.
+	// The public key to be used by this DevEndpoint for authentication. This attribute
+	// is provided for backward compatibility, as the recommended attribute to use
+	// is public keys.
 	PublicKey *string `type:"string"`
+
+	// A list of public keys to be used by the DevEndpoints for authentication.
+	// The use of this attribute is preferred over a single public key because the
+	// public keys allow you to have a different private key per client.
+	//
+	// If you previously created an endpoint with a public key, you must remove
+	// that key to be able to set a list of public keys: call the UpdateDevEndpoint
+	// API with the public key content in the deletePublicKeys attribute, and the
+	// list of new keys in the addPublicKeys attribute.
+	PublicKeys []*string `type:"list"`
 
 	// The IAM role for the DevEndpoint.
 	//
 	// RoleArn is a required field
 	RoleArn *string `type:"string" required:"true"`
+
+	// The name of the SecurityConfiguration structure to be used with this DevEndpoint.
+	SecurityConfiguration *string `min:"1" type:"string"`
 
 	// Security group IDs for the security groups to be used by the new DevEndpoint.
 	SecurityGroupIds []*string `type:"list"`
@@ -9952,6 +10709,9 @@ func (s *CreateDevEndpointInput) Validate() error {
 	}
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.SecurityConfiguration != nil && len(*s.SecurityConfiguration) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityConfiguration", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9990,9 +10750,21 @@ func (s *CreateDevEndpointInput) SetPublicKey(v string) *CreateDevEndpointInput 
 	return s
 }
 
+// SetPublicKeys sets the PublicKeys field's value.
+func (s *CreateDevEndpointInput) SetPublicKeys(v []*string) *CreateDevEndpointInput {
+	s.PublicKeys = v
+	return s
+}
+
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateDevEndpointInput) SetRoleArn(v string) *CreateDevEndpointInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *CreateDevEndpointInput) SetSecurityConfiguration(v string) *CreateDevEndpointInput {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -10015,7 +10787,7 @@ type CreateDevEndpointOutput struct {
 	AvailabilityZone *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was created.
-	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedTimestamp *time.Time `type:"timestamp"`
 
 	// The name assigned to the new DevEndpoint.
 	EndpointName *string `type:"string"`
@@ -10036,6 +10808,9 @@ type CreateDevEndpointOutput struct {
 
 	// The AWS ARN of the role assigned to the new DevEndpoint.
 	RoleArn *string `type:"string"`
+
+	// The name of the SecurityConfiguration structure being used with this DevEndpoint.
+	SecurityConfiguration *string `min:"1" type:"string"`
 
 	// The security groups assigned to the new DevEndpoint.
 	SecurityGroupIds []*string `type:"list"`
@@ -10111,6 +10886,12 @@ func (s *CreateDevEndpointOutput) SetNumberOfNodes(v int64) *CreateDevEndpointOu
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateDevEndpointOutput) SetRoleArn(v string) *CreateDevEndpointOutput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *CreateDevEndpointOutput) SetSecurityConfiguration(v string) *CreateDevEndpointOutput {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -10291,7 +11072,12 @@ type CreateJobInput struct {
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
 
-	// The job timeout in minutes. The default is 2880 minutes (48 hours).
+	// The name of the SecurityConfiguration structure to be used with this job.
+	SecurityConfiguration *string `min:"1" type:"string"`
+
+	// The job timeout in minutes. This is the maximum time that a job run can consume
+	// resources before it is terminated and enters TIMEOUT status. The default
+	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
 }
 
@@ -10319,6 +11105,9 @@ func (s *CreateJobInput) Validate() error {
 	}
 	if s.Role == nil {
 		invalidParams.Add(request.NewErrParamRequired("Role"))
+	}
+	if s.SecurityConfiguration != nil && len(*s.SecurityConfiguration) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityConfiguration", 1))
 	}
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
@@ -10398,6 +11187,12 @@ func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *Creat
 // SetRole sets the Role field's value.
 func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	s.Role = &v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *CreateJobInput) SetSecurityConfiguration(v string) *CreateJobInput {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -10692,6 +11487,93 @@ func (s *CreateScriptOutput) SetPythonScript(v string) *CreateScriptOutput {
 // SetScalaCode sets the ScalaCode field's value.
 func (s *CreateScriptOutput) SetScalaCode(v string) *CreateScriptOutput {
 	s.ScalaCode = &v
+	return s
+}
+
+type CreateSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption configuration for the new security configuration.
+	//
+	// EncryptionConfiguration is a required field
+	EncryptionConfiguration *EncryptionConfiguration `type:"structure" required:"true"`
+
+	// The name for the new security configuration.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateSecurityConfigurationInput"}
+	if s.EncryptionConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("EncryptionConfiguration"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEncryptionConfiguration sets the EncryptionConfiguration field's value.
+func (s *CreateSecurityConfigurationInput) SetEncryptionConfiguration(v *EncryptionConfiguration) *CreateSecurityConfigurationInput {
+	s.EncryptionConfiguration = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateSecurityConfigurationInput) SetName(v string) *CreateSecurityConfigurationInput {
+	s.Name = &v
+	return s
+}
+
+type CreateSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The time at which the new security configuration was created.
+	CreatedTimestamp *time.Time `type:"timestamp"`
+
+	// The name assigned to the new security configuration.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSecurityConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreatedTimestamp sets the CreatedTimestamp field's value.
+func (s *CreateSecurityConfigurationOutput) SetCreatedTimestamp(v time.Time) *CreateSecurityConfigurationOutput {
+	s.CreatedTimestamp = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateSecurityConfigurationOutput) SetName(v string) *CreateSecurityConfigurationOutput {
+	s.Name = &v
 	return s
 }
 
@@ -11090,13 +11972,52 @@ func (s *CreateXMLClassifierRequest) SetRowTag(v string) *CreateXMLClassifierReq
 	return s
 }
 
+// Contains configuration information for maintaining Data Catalog security.
+type DataCatalogEncryptionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies encryption-at-rest configuration for the Data Catalog.
+	EncryptionAtRest *EncryptionAtRest `type:"structure"`
+}
+
+// String returns the string representation
+func (s DataCatalogEncryptionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataCatalogEncryptionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DataCatalogEncryptionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DataCatalogEncryptionSettings"}
+	if s.EncryptionAtRest != nil {
+		if err := s.EncryptionAtRest.Validate(); err != nil {
+			invalidParams.AddNested("EncryptionAtRest", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEncryptionAtRest sets the EncryptionAtRest field's value.
+func (s *DataCatalogEncryptionSettings) SetEncryptionAtRest(v *EncryptionAtRest) *DataCatalogEncryptionSettings {
+	s.EncryptionAtRest = v
+	return s
+}
+
 // The Database object represents a logical grouping of tables that may reside
 // in a Hive metastore or an RDBMS.
 type Database struct {
 	_ struct{} `type:"structure"`
 
 	// The time at which the metadata database was created in the catalog.
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `type:"timestamp"`
 
 	// Description of the database.
 	Description *string `type:"string"`
@@ -11110,7 +12031,7 @@ type Database struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// A list of key-value pairs that define parameters and properties of the database.
+	// These key-value pairs define parameters and properties of the database.
 	Parameters map[string]*string `type:"map"`
 }
 
@@ -11170,7 +12091,7 @@ type DatabaseInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// A list of key-value pairs that define parameters and properties of the database.
+	// Thes key-value pairs define parameters and properties of the database.
 	Parameters map[string]*string `type:"map"`
 }
 
@@ -11689,6 +12610,61 @@ func (s DeletePartitionOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the security configuration to delete.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteSecurityConfigurationInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteSecurityConfigurationInput) SetName(v string) *DeleteSecurityConfigurationInput {
+	s.Name = &v
+	return s
+}
+
+type DeleteSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSecurityConfigurationOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12036,7 +13012,7 @@ type DevEndpoint struct {
 	AvailabilityZone *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was created.
-	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedTimestamp *time.Time `type:"timestamp"`
 
 	// The name of the DevEndpoint.
 	EndpointName *string `type:"string"`
@@ -12061,7 +13037,7 @@ type DevEndpoint struct {
 	FailureReason *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was last modified.
-	LastModifiedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedTimestamp *time.Time `type:"timestamp"`
 
 	// The status of the last update.
 	LastUpdateStatus *string `type:"string"`
@@ -12069,17 +13045,33 @@ type DevEndpoint struct {
 	// The number of AWS Glue Data Processing Units (DPUs) allocated to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// The private address used by this DevEndpoint.
+	// A private DNS to access the DevEndpoint within a VPC, if the DevEndpoint
+	// is created within one.
 	PrivateAddress *string `type:"string"`
 
 	// The public VPC address used by this DevEndpoint.
 	PublicAddress *string `type:"string"`
 
-	// The public key to be used by this DevEndpoint for authentication.
+	// The public key to be used by this DevEndpoint for authentication. This attribute
+	// is provided for backward compatibility, as the recommended attribute to use
+	// is public keys.
 	PublicKey *string `type:"string"`
+
+	// A list of public keys to be used by the DevEndpoints for authentication.
+	// The use of this attribute is preferred over a single public key because the
+	// public keys allow you to have a different private key per client.
+	//
+	// If you previously created an endpoint with a public key, you must remove
+	// that key to be able to set a list of public keys: call the UpdateDevEndpoint
+	// API with the public key content in the deletePublicKeys attribute, and the
+	// list of new keys in the addPublicKeys attribute.
+	PublicKeys []*string `type:"list"`
 
 	// The AWS ARN of the IAM role used in this DevEndpoint.
 	RoleArn *string `type:"string"`
+
+	// The name of the SecurityConfiguration structure to be used with this DevEndpoint.
+	SecurityConfiguration *string `min:"1" type:"string"`
 
 	// A list of security group identifiers used in this DevEndpoint.
 	SecurityGroupIds []*string `type:"list"`
@@ -12182,9 +13174,21 @@ func (s *DevEndpoint) SetPublicKey(v string) *DevEndpoint {
 	return s
 }
 
+// SetPublicKeys sets the PublicKeys field's value.
+func (s *DevEndpoint) SetPublicKeys(v []*string) *DevEndpoint {
+	s.PublicKeys = v
+	return s
+}
+
 // SetRoleArn sets the RoleArn field's value.
 func (s *DevEndpoint) SetRoleArn(v string) *DevEndpoint {
 	s.RoleArn = &v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *DevEndpoint) SetSecurityConfiguration(v string) *DevEndpoint {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -12264,6 +13268,123 @@ func (s *DevEndpointCustomLibraries) SetExtraJarsS3Path(v string) *DevEndpointCu
 // SetExtraPythonLibsS3Path sets the ExtraPythonLibsS3Path field's value.
 func (s *DevEndpointCustomLibraries) SetExtraPythonLibsS3Path(v string) *DevEndpointCustomLibraries {
 	s.ExtraPythonLibsS3Path = &v
+	return s
+}
+
+// Specifies a DynamoDB table to crawl.
+type DynamoDBTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the DynamoDB table to crawl.
+	Path *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DynamoDBTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DynamoDBTarget) GoString() string {
+	return s.String()
+}
+
+// SetPath sets the Path field's value.
+func (s *DynamoDBTarget) SetPath(v string) *DynamoDBTarget {
+	s.Path = &v
+	return s
+}
+
+// Specifies encryption-at-rest configuration for the Data Catalog.
+type EncryptionAtRest struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption-at-rest mode for encrypting Data Catalog data.
+	//
+	// CatalogEncryptionMode is a required field
+	CatalogEncryptionMode *string `type:"string" required:"true" enum:"CatalogEncryptionMode"`
+
+	// The ID of the AWS KMS key to use for encryption at rest.
+	SseAwsKmsKeyId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s EncryptionAtRest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionAtRest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionAtRest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionAtRest"}
+	if s.CatalogEncryptionMode == nil {
+		invalidParams.Add(request.NewErrParamRequired("CatalogEncryptionMode"))
+	}
+	if s.SseAwsKmsKeyId != nil && len(*s.SseAwsKmsKeyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SseAwsKmsKeyId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogEncryptionMode sets the CatalogEncryptionMode field's value.
+func (s *EncryptionAtRest) SetCatalogEncryptionMode(v string) *EncryptionAtRest {
+	s.CatalogEncryptionMode = &v
+	return s
+}
+
+// SetSseAwsKmsKeyId sets the SseAwsKmsKeyId field's value.
+func (s *EncryptionAtRest) SetSseAwsKmsKeyId(v string) *EncryptionAtRest {
+	s.SseAwsKmsKeyId = &v
+	return s
+}
+
+// Specifies an encryption configuration.
+type EncryptionConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption configuration for CloudWatch.
+	CloudWatchEncryption *CloudWatchEncryption `type:"structure"`
+
+	// The encryption configuration for Job Bookmarks.
+	JobBookmarksEncryption *JobBookmarksEncryption `type:"structure"`
+
+	// The encryption configuration for S3 data.
+	S3Encryption []*S3Encryption `type:"list"`
+}
+
+// String returns the string representation
+func (s EncryptionConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetCloudWatchEncryption sets the CloudWatchEncryption field's value.
+func (s *EncryptionConfiguration) SetCloudWatchEncryption(v *CloudWatchEncryption) *EncryptionConfiguration {
+	s.CloudWatchEncryption = v
+	return s
+}
+
+// SetJobBookmarksEncryption sets the JobBookmarksEncryption field's value.
+func (s *EncryptionConfiguration) SetJobBookmarksEncryption(v *JobBookmarksEncryption) *EncryptionConfiguration {
+	s.JobBookmarksEncryption = v
+	return s
+}
+
+// SetS3Encryption sets the S3Encryption field's value.
+func (s *EncryptionConfiguration) SetS3Encryption(v []*S3Encryption) *EncryptionConfiguration {
+	s.S3Encryption = v
 	return s
 }
 
@@ -12965,6 +14086,66 @@ func (s *GetCrawlersOutput) SetCrawlers(v []*Crawler) *GetCrawlersOutput {
 // SetNextToken sets the NextToken field's value.
 func (s *GetCrawlersOutput) SetNextToken(v string) *GetCrawlersOutput {
 	s.NextToken = &v
+	return s
+}
+
+type GetDataCatalogEncryptionSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog for which to retrieve the security configuration.
+	// If none is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogEncryptionSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogEncryptionSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDataCatalogEncryptionSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDataCatalogEncryptionSettingsInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetDataCatalogEncryptionSettingsInput) SetCatalogId(v string) *GetDataCatalogEncryptionSettingsInput {
+	s.CatalogId = &v
+	return s
+}
+
+type GetDataCatalogEncryptionSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The requested security configuration.
+	DataCatalogEncryptionSettings *DataCatalogEncryptionSettings `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogEncryptionSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogEncryptionSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDataCatalogEncryptionSettings sets the DataCatalogEncryptionSettings field's value.
+func (s *GetDataCatalogEncryptionSettingsOutput) SetDataCatalogEncryptionSettings(v *DataCatalogEncryptionSettings) *GetDataCatalogEncryptionSettingsOutput {
+	s.DataCatalogEncryptionSettings = v
 	return s
 }
 
@@ -14145,6 +15326,147 @@ func (s *GetPlanOutput) SetScalaCode(v string) *GetPlanOutput {
 	return s
 }
 
+type GetSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the security configuration to retrieve.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetSecurityConfigurationInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *GetSecurityConfigurationInput) SetName(v string) *GetSecurityConfigurationInput {
+	s.Name = &v
+	return s
+}
+
+type GetSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The requested security configuration
+	SecurityConfiguration *SecurityConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSecurityConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *GetSecurityConfigurationOutput) SetSecurityConfiguration(v *SecurityConfiguration) *GetSecurityConfigurationOutput {
+	s.SecurityConfiguration = v
+	return s
+}
+
+type GetSecurityConfigurationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation call.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetSecurityConfigurationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSecurityConfigurationsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetSecurityConfigurationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetSecurityConfigurationsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetSecurityConfigurationsInput) SetMaxResults(v int64) *GetSecurityConfigurationsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetSecurityConfigurationsInput) SetNextToken(v string) *GetSecurityConfigurationsInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetSecurityConfigurationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A continuation token, if there are more security configurations to return.
+	NextToken *string `type:"string"`
+
+	// A list of security configurations.
+	SecurityConfigurations []*SecurityConfiguration `type:"list"`
+}
+
+// String returns the string representation
+func (s GetSecurityConfigurationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSecurityConfigurationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetSecurityConfigurationsOutput) SetNextToken(v string) *GetSecurityConfigurationsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSecurityConfigurations sets the SecurityConfigurations field's value.
+func (s *GetSecurityConfigurationsOutput) SetSecurityConfigurations(v []*SecurityConfiguration) *GetSecurityConfigurationsOutput {
+	s.SecurityConfigurations = v
+	return s
+}
+
 type GetTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14978,7 +16300,7 @@ type GrokClassifier struct {
 	Classification *string `type:"string" required:"true"`
 
 	// The time this classifier was registered.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// Optional custom grok patterns defined by this classifier. For more information,
 	// see custom patterns in Writing Custom Classifers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
@@ -14991,7 +16313,7 @@ type GrokClassifier struct {
 	GrokPattern *string `min:"1" type:"string" required:"true"`
 
 	// The time this classifier was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
 	//
@@ -15166,7 +16488,7 @@ type Job struct {
 	Connections *ConnectionsList `type:"structure"`
 
 	// The time and date that this job definition was created.
-	CreatedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedOn *time.Time `type:"timestamp"`
 
 	// The default arguments for this job, specified as name-value pairs.
 	//
@@ -15190,7 +16512,7 @@ type Job struct {
 	ExecutionProperty *ExecutionProperty `type:"structure"`
 
 	// The last point in time when this job definition was modified.
-	LastModifiedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedOn *time.Time `type:"timestamp"`
 
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
@@ -15207,7 +16529,12 @@ type Job struct {
 	// The name or ARN of the IAM role associated with this job.
 	Role *string `type:"string"`
 
-	// The job timeout in minutes.
+	// The name of the SecurityConfiguration structure to be used with this job.
+	SecurityConfiguration *string `min:"1" type:"string"`
+
+	// The job timeout in minutes. This is the maximum time that a job run can consume
+	// resources before it is terminated and enters TIMEOUT status. The default
+	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
 }
 
@@ -15299,6 +16626,12 @@ func (s *Job) SetRole(v string) *Job {
 	return s
 }
 
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *Job) SetSecurityConfiguration(v string) *Job {
+	s.SecurityConfiguration = &v
+	return s
+}
+
 // SetTimeout sets the Timeout field's value.
 func (s *Job) SetTimeout(v int64) *Job {
 	s.Timeout = &v
@@ -15365,6 +16698,39 @@ func (s *JobBookmarkEntry) SetVersion(v int64) *JobBookmarkEntry {
 	return s
 }
 
+// Specifies how Job bookmark data should be encrypted.
+type JobBookmarksEncryption struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption mode to use for Job bookmarks data.
+	JobBookmarksEncryptionMode *string `type:"string" enum:"JobBookmarksEncryptionMode"`
+
+	// The AWS ARN of the KMS key to be used to encrypt the data.
+	KmsKeyArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s JobBookmarksEncryption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JobBookmarksEncryption) GoString() string {
+	return s.String()
+}
+
+// SetJobBookmarksEncryptionMode sets the JobBookmarksEncryptionMode field's value.
+func (s *JobBookmarksEncryption) SetJobBookmarksEncryptionMode(v string) *JobBookmarksEncryption {
+	s.JobBookmarksEncryptionMode = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *JobBookmarksEncryption) SetKmsKeyArn(v string) *JobBookmarksEncryption {
+	s.KmsKeyArn = &v
+	return s
+}
+
 // Specifies code executed when a job is run.
 type JobCommand struct {
 	_ struct{} `type:"structure"`
@@ -15428,7 +16794,7 @@ type JobRun struct {
 	Attempt *int64 `type:"integer"`
 
 	// The date and time this job run completed.
-	CompletedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CompletedOn *time.Time `type:"timestamp"`
 
 	// An error message associated with this job run.
 	ErrorMessage *string `type:"string"`
@@ -15446,7 +16812,14 @@ type JobRun struct {
 	JobRunState *string `type:"string" enum:"JobRunState"`
 
 	// The last time this job run was modified.
-	LastModifiedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastModifiedOn *time.Time `type:"timestamp"`
+
+	// The name of the log group for secure logging, that can be server-side encrypted
+	// in CloudWatch using KMS. This name can be /aws-glue/jobs/, in which case
+	// the default encryption is NONE. If you add a role name and SecurityConfiguration
+	// name (in other words, /aws-glue/jobs-yourRoleName-yourSecurityConfigurationName/),
+	// then that security configuration will be used to encrypt the log group.
+	LogGroupName *string `type:"string"`
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
@@ -15458,10 +16831,17 @@ type JobRun struct {
 	// in the StartJobRun action.
 	PreviousRunId *string `min:"1" type:"string"`
 
-	// The date and time at which this job run was started.
-	StartedOn *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The name of the SecurityConfiguration structure to be used with this job
+	// run.
+	SecurityConfiguration *string `min:"1" type:"string"`
 
-	// The job run timeout in minutes.
+	// The date and time at which this job run was started.
+	StartedOn *time.Time `type:"timestamp"`
+
+	// The JobRun timeout in minutes. This is the maximum time that a job run can
+	// consume resources before it is terminated and enters TIMEOUT status. The
+	// default is 2,880 minutes (48 hours). This overrides the timeout value set
+	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
 
 	// The name of the trigger that started this job run.
@@ -15538,6 +16918,12 @@ func (s *JobRun) SetLastModifiedOn(v time.Time) *JobRun {
 	return s
 }
 
+// SetLogGroupName sets the LogGroupName field's value.
+func (s *JobRun) SetLogGroupName(v string) *JobRun {
+	s.LogGroupName = &v
+	return s
+}
+
 // SetNotificationProperty sets the NotificationProperty field's value.
 func (s *JobRun) SetNotificationProperty(v *NotificationProperty) *JobRun {
 	s.NotificationProperty = v
@@ -15553,6 +16939,12 @@ func (s *JobRun) SetPredecessorRuns(v []*Predecessor) *JobRun {
 // SetPreviousRunId sets the PreviousRunId field's value.
 func (s *JobRun) SetPreviousRunId(v string) *JobRun {
 	s.PreviousRunId = &v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *JobRun) SetSecurityConfiguration(v string) *JobRun {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -15625,7 +17017,12 @@ type JobUpdate struct {
 	// The name or ARN of the IAM role associated with this job (required).
 	Role *string `type:"string"`
 
-	// The job timeout in minutes. The default is 2880 minutes (48 hours).
+	// The name of the SecurityConfiguration structure to be used with this job.
+	SecurityConfiguration *string `min:"1" type:"string"`
+
+	// The job timeout in minutes. This is the maximum time that a job run can consume
+	// resources before it is terminated and enters TIMEOUT status. The default
+	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
 }
 
@@ -15642,6 +17039,9 @@ func (s JobUpdate) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *JobUpdate) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "JobUpdate"}
+	if s.SecurityConfiguration != nil && len(*s.SecurityConfiguration) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityConfiguration", 1))
+	}
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
 	}
@@ -15717,6 +17117,12 @@ func (s *JobUpdate) SetRole(v string) *JobUpdate {
 	return s
 }
 
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *JobUpdate) SetSecurityConfiguration(v string) *JobUpdate {
+	s.SecurityConfiguration = &v
+	return s
+}
+
 // SetTimeout sets the Timeout field's value.
 func (s *JobUpdate) SetTimeout(v int64) *JobUpdate {
 	s.Timeout = &v
@@ -15728,7 +17134,7 @@ type JsonClassifier struct {
 	_ struct{} `type:"structure"`
 
 	// The time this classifier was registered.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// A JsonPath string defining the JSON data for the classifier to classify.
 	// AWS Glue supports a subset of JsonPath, as described in Writing JsonPath
@@ -15738,7 +17144,7 @@ type JsonClassifier struct {
 	JsonPath *string `type:"string" required:"true"`
 
 	// The time this classifier was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
 	//
@@ -15806,7 +17212,7 @@ type LastCrawlInfo struct {
 	MessagePrefix *string `min:"1" type:"string"`
 
 	// The time at which the crawl started.
-	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `type:"timestamp"`
 
 	// Status of the last crawl.
 	Status *string `type:"string" enum:"LastCrawlStatus"`
@@ -15862,6 +17268,9 @@ func (s *LastCrawlInfo) SetStatus(v string) *LastCrawlInfo {
 type Location struct {
 	_ struct{} `type:"structure"`
 
+	// A DynamoDB Table location.
+	DynamoDB []*CodeGenNodeArg `type:"list"`
+
 	// A JDBC location.
 	Jdbc []*CodeGenNodeArg `type:"list"`
 
@@ -15882,6 +17291,16 @@ func (s Location) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *Location) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Location"}
+	if s.DynamoDB != nil {
+		for i, v := range s.DynamoDB {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DynamoDB", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Jdbc != nil {
 		for i, v := range s.Jdbc {
 			if v == nil {
@@ -15907,6 +17326,12 @@ func (s *Location) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDynamoDB sets the DynamoDB field's value.
+func (s *Location) SetDynamoDB(v []*CodeGenNodeArg) *Location {
+	s.DynamoDB = v
+	return s
 }
 
 // SetJdbc sets the Jdbc field's value.
@@ -16090,18 +17515,18 @@ type Partition struct {
 	_ struct{} `type:"structure"`
 
 	// The time at which the partition was created.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The name of the catalog database where the table in question is located.
 	DatabaseName *string `min:"1" type:"string"`
 
 	// The last time at which the partition was accessed.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// The last time at which column statistics were computed for this partition.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
-	// Partition parameters, in the form of a list of key-value pairs.
+	// These key-value pairs define partition parameters.
 	Parameters map[string]*string `type:"map"`
 
 	// Provides information about the physical location where the partition is stored.
@@ -16210,12 +17635,12 @@ type PartitionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The last time at which the partition was accessed.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// The last time at which column statistics were computed for this partition.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
-	// Partition parameters, in the form of a list of key-value pairs.
+	// These key-value pairs define partition parameters.
 	Parameters map[string]*string `type:"map"`
 
 	// Provides information about the physical location where the partition is stored.
@@ -16323,7 +17748,9 @@ func (s *PartitionValueList) SetValues(v []*string) *PartitionValueList {
 type PhysicalConnectionRequirements struct {
 	_ struct{} `type:"structure"`
 
-	// The connection's availability zone. This field is deprecated and has no effect.
+	// The connection's availability zone. This field is redundant, since the specified
+	// subnet implies the availability zone to be used. The field must be populated
+	// now, but will be deprecated in the future.
 	AvailabilityZone *string `min:"1" type:"string"`
 
 	// The security group ID list used by the connection.
@@ -16465,6 +17892,76 @@ func (s *Predicate) SetLogical(v string) *Predicate {
 	return s
 }
 
+type PutDataCatalogEncryptionSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog for which to set the security configuration. If
+	// none is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The security configuration to set.
+	//
+	// DataCatalogEncryptionSettings is a required field
+	DataCatalogEncryptionSettings *DataCatalogEncryptionSettings `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutDataCatalogEncryptionSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutDataCatalogEncryptionSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutDataCatalogEncryptionSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutDataCatalogEncryptionSettingsInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.DataCatalogEncryptionSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("DataCatalogEncryptionSettings"))
+	}
+	if s.DataCatalogEncryptionSettings != nil {
+		if err := s.DataCatalogEncryptionSettings.Validate(); err != nil {
+			invalidParams.AddNested("DataCatalogEncryptionSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *PutDataCatalogEncryptionSettingsInput) SetCatalogId(v string) *PutDataCatalogEncryptionSettingsInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetDataCatalogEncryptionSettings sets the DataCatalogEncryptionSettings field's value.
+func (s *PutDataCatalogEncryptionSettingsInput) SetDataCatalogEncryptionSettings(v *DataCatalogEncryptionSettings) *PutDataCatalogEncryptionSettingsInput {
+	s.DataCatalogEncryptionSettings = v
+	return s
+}
+
+type PutDataCatalogEncryptionSettingsOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutDataCatalogEncryptionSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutDataCatalogEncryptionSettingsOutput) GoString() string {
+	return s.String()
+}
+
 type ResetJobBookmarkInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16572,6 +18069,39 @@ func (s *ResourceUri) SetUri(v string) *ResourceUri {
 	return s
 }
 
+// Specifies how S3 data should be encrypted.
+type S3Encryption struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS ARN of the KMS key to be used to encrypt the data.
+	KmsKeyArn *string `type:"string"`
+
+	// The encryption mode to use for S3 data.
+	S3EncryptionMode *string `type:"string" enum:"S3EncryptionMode"`
+}
+
+// String returns the string representation
+func (s S3Encryption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3Encryption) GoString() string {
+	return s.String()
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *S3Encryption) SetKmsKeyArn(v string) *S3Encryption {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetS3EncryptionMode sets the S3EncryptionMode field's value.
+func (s *S3Encryption) SetS3EncryptionMode(v string) *S3Encryption {
+	s.S3EncryptionMode = &v
+	return s
+}
+
 // Specifies a data store in Amazon S3.
 type S3Target struct {
 	_ struct{} `type:"structure"`
@@ -16675,6 +18205,48 @@ func (s *SchemaChangePolicy) SetUpdateBehavior(v string) *SchemaChangePolicy {
 	return s
 }
 
+// Specifies a security configuration.
+type SecurityConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The time at which this security configuration was created.
+	CreatedTimeStamp *time.Time `type:"timestamp"`
+
+	// The encryption configuration associated with this security configuration.
+	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
+
+	// The name of the security configuration.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s SecurityConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SecurityConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetCreatedTimeStamp sets the CreatedTimeStamp field's value.
+func (s *SecurityConfiguration) SetCreatedTimeStamp(v time.Time) *SecurityConfiguration {
+	s.CreatedTimeStamp = &v
+	return s
+}
+
+// SetEncryptionConfiguration sets the EncryptionConfiguration field's value.
+func (s *SecurityConfiguration) SetEncryptionConfiguration(v *EncryptionConfiguration) *SecurityConfiguration {
+	s.EncryptionConfiguration = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *SecurityConfiguration) SetName(v string) *SecurityConfiguration {
+	s.Name = &v
+	return s
+}
+
 // Defines a non-overlapping region of a table's partitions, allowing multiple
 // requests to be executed in parallel.
 type Segment struct {
@@ -16742,7 +18314,7 @@ type SerDeInfo struct {
 	// Name of the SerDe.
 	Name *string `min:"1" type:"string"`
 
-	// A list of initialization parameters for the SerDe, in key-value form.
+	// These key-value pairs define initialization parameters for the SerDe.
 	Parameters map[string]*string `type:"map"`
 
 	// Usually the class that implements the SerDe. An example is: org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe.
@@ -16982,7 +18554,14 @@ type StartJobRunInput struct {
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
-	// The job run timeout in minutes. It overrides the timeout value of the job.
+	// The name of the SecurityConfiguration structure to be used with this job
+	// run.
+	SecurityConfiguration *string `min:"1" type:"string"`
+
+	// The JobRun timeout in minutes. This is the maximum time that a job run can
+	// consume resources before it is terminated and enters TIMEOUT status. The
+	// default is 2,880 minutes (48 hours). This overrides the timeout value set
+	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
 }
 
@@ -17007,6 +18586,9 @@ func (s *StartJobRunInput) Validate() error {
 	}
 	if s.JobRunId != nil && len(*s.JobRunId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("JobRunId", 1))
+	}
+	if s.SecurityConfiguration != nil && len(*s.SecurityConfiguration) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityConfiguration", 1))
 	}
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
@@ -17050,6 +18632,12 @@ func (s *StartJobRunInput) SetJobRunId(v string) *StartJobRunInput {
 // SetNotificationProperty sets the NotificationProperty field's value.
 func (s *StartJobRunInput) SetNotificationProperty(v *NotificationProperty) *StartJobRunInput {
 	s.NotificationProperty = v
+	return s
+}
+
+// SetSecurityConfiguration sets the SecurityConfiguration field's value.
+func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput {
+	s.SecurityConfiguration = &v
 	return s
 }
 
@@ -17489,7 +19077,7 @@ type Table struct {
 	_ struct{} `type:"structure"`
 
 	// Time when the table definition was created in the Data Catalog.
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `type:"timestamp"`
 
 	// Person or entity who created the table.
 	CreatedBy *string `min:"1" type:"string"`
@@ -17503,10 +19091,10 @@ type Table struct {
 
 	// Last time the table was accessed. This is usually taken from HDFS, and may
 	// not be reliable.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// Last time column statistics were computed for this table.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
 	// Name of the table. For Hive compatibility, this must be entirely lowercase.
 	//
@@ -17516,7 +19104,7 @@ type Table struct {
 	// Owner of the table.
 	Owner *string `min:"1" type:"string"`
 
-	// Properties associated with this table, as a list of key-value pairs.
+	// These key-value pairs define properties associated with the table.
 	Parameters map[string]*string `type:"map"`
 
 	// A list of columns by which the table is partitioned. Only primitive types
@@ -17534,7 +19122,7 @@ type Table struct {
 	TableType *string `type:"string"`
 
 	// Last time the table was updated.
-	UpdateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	UpdateTime *time.Time `type:"timestamp"`
 
 	// If the table is a view, the expanded text of the view; otherwise null.
 	ViewExpandedText *string `type:"string"`
@@ -17690,10 +19278,10 @@ type TableInput struct {
 	Description *string `type:"string"`
 
 	// Last time the table was accessed.
-	LastAccessTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAccessTime *time.Time `type:"timestamp"`
 
 	// Last time column statistics were computed for this table.
-	LastAnalyzedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastAnalyzedTime *time.Time `type:"timestamp"`
 
 	// Name of the table. For Hive compatibility, this is folded to lowercase when
 	// it is stored.
@@ -17704,7 +19292,7 @@ type TableInput struct {
 	// Owner of the table.
 	Owner *string `min:"1" type:"string"`
 
-	// Properties associated with this table, as a list of key-value pairs.
+	// These key-value pairs define properties associated with the table.
 	Parameters map[string]*string `type:"map"`
 
 	// A list of columns by which the table is partitioned. Only primitive types
@@ -18272,8 +19860,8 @@ type UpdateCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of custom classifiers that the user has registered. By default, all
-	// classifiers are included in a crawl, but these custom classifiers always
-	// override the default classifiers for a given classification.
+	// built-in classifiers are included in a crawl, but these custom classifiers
+	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
 	// Crawler configuration information. This versioned JSON string allows users
@@ -18287,6 +19875,9 @@ type UpdateCrawlerInput struct {
 	// Example: '{ "Version": 1.0, "CrawlerOutput": { "Partitions": { "AddOrUpdateBehavior":
 	// "InheritFromTable" } } }'
 	Configuration *string `type:"string"`
+
+	// The name of the SecurityConfiguration structure to be used by this Crawler.
+	CrawlerSecurityConfiguration *string `type:"string"`
 
 	// The AWS Glue database where results are stored, such as: arn:aws:daylight:us-east-1::database/sometable/*.
 	DatabaseName *string `type:"string"`
@@ -18354,6 +19945,12 @@ func (s *UpdateCrawlerInput) SetClassifiers(v []*string) *UpdateCrawlerInput {
 // SetConfiguration sets the Configuration field's value.
 func (s *UpdateCrawlerInput) SetConfiguration(v string) *UpdateCrawlerInput {
 	s.Configuration = &v
+	return s
+}
+
+// SetCrawlerSecurityConfiguration sets the CrawlerSecurityConfiguration field's value.
+func (s *UpdateCrawlerInput) SetCrawlerSecurityConfiguration(v string) *UpdateCrawlerInput {
+	s.CrawlerSecurityConfiguration = &v
 	return s
 }
 
@@ -18578,8 +20175,14 @@ func (s UpdateDatabaseOutput) GoString() string {
 type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// The list of public keys for the DevEndpoint to use.
+	AddPublicKeys []*string `type:"list"`
+
 	// Custom Python or Java libraries to be loaded in the DevEndpoint.
 	CustomLibraries *DevEndpointCustomLibraries `type:"structure"`
+
+	// The list of public keys to be deleted from the DevEndpoint.
+	DeletePublicKeys []*string `type:"list"`
 
 	// The name of the DevEndpoint to be updated.
 	//
@@ -18617,9 +20220,21 @@ func (s *UpdateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetAddPublicKeys sets the AddPublicKeys field's value.
+func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpointInput {
+	s.AddPublicKeys = v
+	return s
+}
+
 // SetCustomLibraries sets the CustomLibraries field's value.
 func (s *UpdateDevEndpointInput) SetCustomLibraries(v *DevEndpointCustomLibraries) *UpdateDevEndpointInput {
 	s.CustomLibraries = v
+	return s
+}
+
+// SetDeletePublicKeys sets the DeletePublicKeys field's value.
+func (s *UpdateDevEndpointInput) SetDeletePublicKeys(v []*string) *UpdateDevEndpointInput {
+	s.DeletePublicKeys = v
 	return s
 }
 
@@ -19340,7 +20955,7 @@ type UserDefinedFunction struct {
 	ClassName *string `min:"1" type:"string"`
 
 	// The time at which the function was created.
-	CreateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `type:"timestamp"`
 
 	// The name of the function.
 	FunctionName *string `min:"1" type:"string"`
@@ -19500,10 +21115,10 @@ type XMLClassifier struct {
 	Classification *string `type:"string" required:"true"`
 
 	// The time this classifier was registered.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTime *time.Time `type:"timestamp"`
 
 	// The time this classifier was last updated.
-	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
 	//
@@ -19568,6 +21183,22 @@ func (s *XMLClassifier) SetVersion(v int64) *XMLClassifier {
 }
 
 const (
+	// CatalogEncryptionModeDisabled is a CatalogEncryptionMode enum value
+	CatalogEncryptionModeDisabled = "DISABLED"
+
+	// CatalogEncryptionModeSseKms is a CatalogEncryptionMode enum value
+	CatalogEncryptionModeSseKms = "SSE-KMS"
+)
+
+const (
+	// CloudWatchEncryptionModeDisabled is a CloudWatchEncryptionMode enum value
+	CloudWatchEncryptionModeDisabled = "DISABLED"
+
+	// CloudWatchEncryptionModeSseKms is a CloudWatchEncryptionMode enum value
+	CloudWatchEncryptionModeSseKms = "SSE-KMS"
+)
+
+const (
 	// ConnectionPropertyKeyHost is a ConnectionPropertyKey enum value
 	ConnectionPropertyKeyHost = "HOST"
 
@@ -19600,6 +21231,9 @@ const (
 
 	// ConnectionPropertyKeyJdbcConnectionUrl is a ConnectionPropertyKey enum value
 	ConnectionPropertyKeyJdbcConnectionUrl = "JDBC_CONNECTION_URL"
+
+	// ConnectionPropertyKeyJdbcEnforceSsl is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyJdbcEnforceSsl = "JDBC_ENFORCE_SSL"
 )
 
 const (
@@ -19630,6 +21264,14 @@ const (
 
 	// DeleteBehaviorDeprecateInDatabase is a DeleteBehavior enum value
 	DeleteBehaviorDeprecateInDatabase = "DEPRECATE_IN_DATABASE"
+)
+
+const (
+	// JobBookmarksEncryptionModeDisabled is a JobBookmarksEncryptionMode enum value
+	JobBookmarksEncryptionModeDisabled = "DISABLED"
+
+	// JobBookmarksEncryptionModeCseKms is a JobBookmarksEncryptionMode enum value
+	JobBookmarksEncryptionModeCseKms = "CSE-KMS"
 )
 
 const (
@@ -19707,6 +21349,17 @@ const (
 
 	// ResourceTypeArchive is a ResourceType enum value
 	ResourceTypeArchive = "ARCHIVE"
+)
+
+const (
+	// S3EncryptionModeDisabled is a S3EncryptionMode enum value
+	S3EncryptionModeDisabled = "DISABLED"
+
+	// S3EncryptionModeSseKms is a S3EncryptionMode enum value
+	S3EncryptionModeSseKms = "SSE-KMS"
+
+	// S3EncryptionModeSseS3 is a S3EncryptionMode enum value
+	S3EncryptionModeSseS3 = "SSE-S3"
 )
 
 const (

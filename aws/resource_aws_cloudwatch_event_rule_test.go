@@ -70,22 +70,44 @@ func testSweepCloudWatchEventRules(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
-	var rule events.DescribeRuleOutput
+func TestAccAWSCloudWatchEventRule_importBasic(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_rule.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig,
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_enabled"}, //this has a default value
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
+	var rule events.DescribeRuleOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.foo", &rule),
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.foo", "name", "tf-acc-cw-event-rule"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfigModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.foo", &rule),
@@ -100,12 +122,12 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 	var rule events.DescribeRuleOutput
 	startsWithPrefix := regexp.MustCompile("^tf-acc-cw-event-rule-prefix-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfig_prefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.moobar", &rule),
@@ -119,12 +141,12 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfig_full,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.moobar", &rule),
@@ -143,26 +165,26 @@ func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfigEnabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.moo", &rule),
 					testAccCheckCloudWatchEventRuleEnabled("aws_cloudwatch_event_rule.moo", "ENABLED", &rule),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfigDisabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.moo", &rule),
 					testAccCheckCloudWatchEventRuleEnabled("aws_cloudwatch_event_rule.moo", "DISABLED", &rule),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSCloudWatchEventRuleConfigEnabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.moo", &rule),

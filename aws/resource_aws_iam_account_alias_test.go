@@ -34,6 +34,29 @@ func TestAccAWSIAMAccountAlias(t *testing.T) {
 	}
 }
 
+func testAccAWSIAMAccountAlias_importBasic(t *testing.T) {
+	resourceName := "aws_iam_account_alias.test"
+
+	rstring := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMAccountAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMAccountAliasConfig(rstring),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSIAMAccountAlias_basic_with_datasource(t *testing.T) {
 	var account_alias string
 
@@ -59,7 +82,7 @@ func testAccAWSIAMAccountAlias_basic_with_datasource(t *testing.T) {
 				// We expect a non-empty plan due to the way data sources and depends_on
 				// work, or don't work. See https://github.com/hashicorp/terraform/issues/11139#issuecomment-275121893
 				// We accept this limitation and feel this test is OK because of the
-				// explicity check above
+				// explicitly check above
 				ExpectNonEmptyPlan: true,
 			},
 		},

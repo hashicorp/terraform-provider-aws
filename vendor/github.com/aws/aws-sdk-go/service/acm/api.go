@@ -18,7 +18,7 @@ const opAddTagsToCertificate = "AddTagsToCertificate"
 // AddTagsToCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -126,7 +126,7 @@ const opDeleteCertificate = "DeleteCertificate"
 // DeleteCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -223,7 +223,7 @@ const opDescribeCertificate = "DescribeCertificate"
 // DescribeCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -306,7 +306,7 @@ const opExportCertificate = "ExportCertificate"
 // ExportCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the ExportCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -401,7 +401,7 @@ const opGetCertificate = "GetCertificate"
 // GetCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the GetCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -493,7 +493,7 @@ const opImportCertificate = "ImportCertificate"
 // ImportCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the ImportCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -626,7 +626,7 @@ const opListCertificates = "ListCertificates"
 // ListCertificatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListCertificates operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -758,7 +758,7 @@ const opListTagsForCertificate = "ListTagsForCertificate"
 // ListTagsForCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -844,7 +844,7 @@ const opRemoveTagsFromCertificate = "RemoveTagsFromCertificate"
 // RemoveTagsFromCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -940,7 +940,7 @@ const opRequestCertificate = "RequestCertificate"
 // RequestCertificateRequest generates a "aws/request.Request" representing the
 // client's request for the RequestCertificate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1036,7 +1036,7 @@ const opResendValidationEmail = "ResendValidationEmail"
 // ResendValidationEmailRequest generates a "aws/request.Request" representing the
 // client's request for the ResendValidationEmail operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1137,7 +1137,7 @@ const opUpdateCertificateOptions = "UpdateCertificateOptions"
 // UpdateCertificateOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCertificateOptions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1332,7 +1332,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was requested. This value exists only when
 	// the certificate type is AMAZON_ISSUED.
-	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedAt *time.Time `type:"timestamp"`
 
 	// The fully qualified domain name for the certificate, such as www.example.com
 	// or example.com.
@@ -1356,7 +1356,7 @@ type CertificateDetail struct {
 
 	// The date and time at which the certificate was imported. This value exists
 	// only when the certificate type is IMPORTED.
-	ImportedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	ImportedAt *time.Time `type:"timestamp"`
 
 	// A list of ARNs for the AWS resources that are using the certificate. A certificate
 	// can be used by multiple AWS resources.
@@ -1364,7 +1364,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was issued. This value exists only when
 	// the certificate type is AMAZON_ISSUED.
-	IssuedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	IssuedAt *time.Time `type:"timestamp"`
 
 	// The name of the certificate authority that issued and signed the certificate.
 	Issuer *string `type:"string"`
@@ -1379,10 +1379,10 @@ type CertificateDetail struct {
 	KeyUsages []*KeyUsage `type:"list"`
 
 	// The time after which the certificate is not valid.
-	NotAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
+	NotAfter *time.Time `type:"timestamp"`
 
 	// The time before which the certificate is not valid.
-	NotBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
+	NotBefore *time.Time `type:"timestamp"`
 
 	// Value that specifies whether to add the certificate to a transparency log.
 	// Certificate transparency makes it possible to detect SSL certificates that
@@ -1405,7 +1405,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was revoked. This value exists only when
 	// the certificate status is REVOKED.
-	RevokedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
+	RevokedAt *time.Time `type:"timestamp"`
 
 	// The serial number of the certificate.
 	Serial *string `type:"string"`

@@ -18,7 +18,7 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -39,7 +39,7 @@ func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -74,7 +74,7 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -97,7 +97,7 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -119,7 +119,7 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,

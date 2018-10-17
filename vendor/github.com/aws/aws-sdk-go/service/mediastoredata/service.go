@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "data.mediastore" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName       // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "MediaStore Data" // ServiceID is a unique identifer of a specific service
+	ServiceName = "data.mediastore" // Name of service.
+	EndpointsID = ServiceName       // ID to lookup a service endpoint with.
+	ServiceID   = "MediaStore Data" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the MediaStoreData client with a session.

@@ -17,7 +17,7 @@ func TestAccAwsOrganizationsPolicyAttachment_account(t *testing.T) {
 	resourceName := "aws_organizations_policy_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{

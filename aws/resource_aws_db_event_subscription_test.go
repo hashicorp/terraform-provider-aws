@@ -13,12 +13,36 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDBEventSubscription_importBasic(t *testing.T) {
+	resourceName := "aws_db_event_subscription.bar"
+	rInt := acctest.RandInt()
+	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfig(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     subscriptionName,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -54,7 +78,7 @@ func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-rds-event-subs-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -81,7 +105,7 @@ func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -122,7 +146,7 @@ func TestAccAWSDBEventSubscription_categoryUpdate(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,

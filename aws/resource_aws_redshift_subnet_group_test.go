@@ -12,16 +12,40 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
-	var v redshift.ClusterSubnetGroup
+func TestAccAWSRedshiftSubnetGroup_importBasic(t *testing.T) {
+	resourceName := "aws_redshift_subnet_group.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
+				Config: testAccRedshiftSubnetGroupConfig(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
+	var v redshift.ClusterSubnetGroup
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
@@ -39,12 +63,12 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
@@ -53,7 +77,7 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroup_updateDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
@@ -69,12 +93,12 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
@@ -83,7 +107,7 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
@@ -99,7 +123,7 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,

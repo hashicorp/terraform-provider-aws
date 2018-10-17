@@ -12,16 +12,38 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
-	var v elasticache.CacheParameterGroup
+func TestAccAWSElasticacheParameterGroup_importBasic(t *testing.T) {
+	resourceName := "aws_elasticache_parameter_group.bar"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
+				Config: testAccAWSElasticacheParameterGroupConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
+	var v elasticache.CacheParameterGroup
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
@@ -38,7 +60,7 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 						"aws_elasticache_parameter_group.bar", "parameter.283487565.value", "yes"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupAddParametersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
@@ -67,12 +89,12 @@ func TestAccAWSElasticacheParameterGroup_only(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupOnlyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),
@@ -92,7 +114,7 @@ func TestAccAWSElasticacheParameterGroup_removeParam(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
@@ -128,12 +150,12 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("TF-ELASTIPG-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheParameterGroupConfig_UppercaseName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists("aws_elasticache_parameter_group.bar", &v),

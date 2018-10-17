@@ -133,7 +133,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the pipeline.
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) An artifact_store block. Artifact stores are documented below.
-* `stage` (Required) A stage block. Stages are documented below.
+* `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 
 
 An `artifact_store` block supports the following arguments:
@@ -142,7 +142,7 @@ An `artifact_store` block supports the following arguments:
 * `type` - (Required) The type of the artifact store, such as Amazon S3
 * `encryption_key` - (Optional) The encryption key block AWS CodePipeline uses to encrypt the data in the artifact store, such as an AWS Key Management Service (AWS KMS) key. If you don't specify a key, AWS CodePipeline uses the default key for Amazon Simple Storage Service (Amazon S3). An `encryption_key` block is documented below.
 
-A `encryption_key` block supports the following arguments:
+An `encryption_key` block supports the following arguments:
 
 * `id` - (Required) The KMS key ARN or ID
 * `type` - (Required) The type of key; currently only `KMS` is supported

@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "cloudfront" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName  // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "CloudFront" // ServiceID is a unique identifer of a specific service
+	ServiceName = "cloudfront" // Name of service.
+	EndpointsID = ServiceName  // ID to lookup a service endpoint with.
+	ServiceID   = "CloudFront" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the CloudFront client with a session.
@@ -60,7 +60,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
 				Endpoint:      endpoint,
-				APIVersion:    "2017-10-30",
+				APIVersion:    "2018-06-18",
 			},
 			handlers,
 		),
