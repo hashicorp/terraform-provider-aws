@@ -2,8 +2,8 @@
 
 FEATURES:
 
-* **New Resource:** `aws_redshift_event_subscription` [GH-6146]
 * **New Resource:** `aws_pinpoint_apns_channel` [GH-6194]
+* **New Resource:** `aws_redshift_event_subscription` [GH-6146]
 
 ENHANCEMENTS:
 
