@@ -762,8 +762,11 @@ func validateAwsDynamoDbGlobalTableName(v interface{}, k string) (ws []string, e
 func validateAwsEcsPlacementStrategy(stratType, stratField string) error {
 	switch stratType {
 	case "random":
-		// random does not need the field attribute set, could error, but it isn't read at the API level
-		return nil
+		// random requires the field attribute to be unset.
+		if stratField != "" {
+			return fmt.Errorf("Random type requires the field attribute to be unset. Got: %s",
+				stratField)
+		}
 	case "spread":
 		//  For the spread placement strategy, valid values are instanceId
 		// (or host, which has the same effect), or any platform or custom attribute
