@@ -6,6 +6,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_appsync_datasource: Support resource import [GH-6139]
+* resource/aws_appsync_datasource: Support `HTTP` `type` and add `http_config` argument [GH-6139]
+* resource/aws_appsync_datasource: Make `dynamodb_config` and `elasticsearch_config` `region` configuration optional based on resource current region [GH-6139]
 * resource/aws_appsync_graphql_api: Add `log_config` argument [GH-6138]
 * resource/aws_appsync_graphql_api: Add `openid_connect_config` argument [GH-6138]
 * resource/aws_appsync_graphql_api: Add `uris` attribute [GH-6138]
