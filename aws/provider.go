@@ -678,6 +678,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_job_queue":                              resourceAwsBatchJobQueue(),
 			"aws_pinpoint_app":                                 resourceAwsPinpointApp(),
 			"aws_pinpoint_adm_channel":                         resourceAwsPinpointADMChannel(),
+			"aws_pinpoint_apns_channel":                        resourceAwsPinpointAPNSChannel(),
 			"aws_pinpoint_baidu_channel":                       resourceAwsPinpointBaiduChannel(),
 			"aws_pinpoint_email_channel":                       resourceAwsPinpointEmailChannel(),
 			"aws_pinpoint_event_stream":                        resourceAwsPinpointEventStream(),
