@@ -26,19 +26,6 @@ func TestAccAWSCloudHsm2Cluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "cluster_state"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSCloudHsm2Cluster_importBasic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudHsm2ClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudHsm2Cluster(),
-			},
 			{
 				ResourceName:            "aws_cloudhsm_v2_cluster.cluster",
 				ImportState:             true,
@@ -93,14 +80,14 @@ func testAccCheckAWSCloudHsm2ClusterDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudhsm_v2_cluster" {
 			continue
 		}
-		cluster, err := describeCloudHsm2Cluster(rs.Primary.ID, testAccProvider.Meta())
+		cluster, err := describeCloudHsm2Cluster(testAccProvider.Meta().(*AWSClient).cloudhsmv2conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
 		if cluster != nil && aws.StringValue(cluster.State) != "DELETED" {
-			return fmt.Errorf("CloudHSM cluster still exists:\n%s", cluster)
+			return fmt.Errorf("CloudHSM cluster still exists %s", cluster)
 		}
 	}
 
@@ -109,9 +96,16 @@ func testAccCheckAWSCloudHsm2ClusterDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsm2ClusterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+		it, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		_, err := describeCloudHsm2Cluster(conn, it.Primary.ID)
+
+		if err != nil {
+			return fmt.Errorf("CloudHSM cluster not found: %s", err)
 		}
 
 		return nil

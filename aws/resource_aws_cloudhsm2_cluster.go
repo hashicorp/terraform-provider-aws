@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/validation"
 	"log"
 	"time"
 
@@ -19,7 +20,7 @@ func resourceAwsCloudHsm2Cluster() *schema.Resource {
 		Update: resourceAwsCloudHsm2ClusterUpdate,
 		Delete: resourceAwsCloudHsm2ClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudHsm2ClusterImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -29,19 +30,18 @@ func resourceAwsCloudHsm2Cluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"backup_identifier": {
+			"source_backup_identifier": {
 				Type:     schema.TypeString,
 				Computed: false,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"hsm_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudHsm2HsmType,
+				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium"}, false),
 			},
 
 			"subnet_ids": {
@@ -63,7 +63,8 @@ func resourceAwsCloudHsm2Cluster() *schema.Resource {
 			},
 
 			"cluster_certificates": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -106,15 +107,7 @@ func resourceAwsCloudHsm2Cluster() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudHsm2ClusterImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("cluster_id", d.Id())
-	return []*schema.ResourceData{d}, nil
-}
-
-func describeCloudHsm2Cluster(clusterId string, meta interface{}) (*cloudhsmv2.Cluster, error) {
-	conn := meta.(*AWSClient).cloudhsmv2conn
-
+func describeCloudHsm2Cluster(conn *cloudhsmv2.CloudHSMV2, clusterId string) (*cloudhsmv2.Cluster, error) {
 	filters := []*string{&clusterId}
 	result := int64(1)
 	out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{
@@ -133,43 +126,37 @@ func describeCloudHsm2Cluster(clusterId string, meta interface{}) (*cloudhsmv2.C
 	for _, c := range out.Clusters {
 		if aws.StringValue(c.ClusterId) == clusterId {
 			cluster = c
+			break
 		}
 	}
 	return cluster, nil
 }
 
-func resourceAwsCloudHsm2ClusterRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func resourceAwsCloudHsm2ClusterRefreshFunc(conn *cloudhsmv2.CloudHSMV2, clusterId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := describeCloudHsm2Cluster(d.Id(), meta)
+		cluster, err := describeCloudHsm2Cluster(conn, clusterId)
 
 		if cluster == nil {
 			return 42, "destroyed", nil
 		}
 
 		if cluster.State != nil {
-			log.Printf("[DEBUG] CloudHSMv2 Cluster status (%s): %s", d.Id(), *cluster.State)
+			log.Printf("[DEBUG] CloudHSMv2 Cluster status (%s): %s", clusterId, *cluster.State)
 		}
 
-		return cluster, *cluster.State, err
+		return cluster, aws.StringValue(cluster.State), err
 	}
 }
 
 func resourceAwsCloudHsm2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	cloudhsm2 := meta.(*AWSClient).cloudhsmv2conn
 
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
-	subnetIds := make([]*string, subnetIdsSet.Len())
-	for i, subnetId := range subnetIdsSet.List() {
-		subnetIds[i] = aws.String(subnetId.(string))
-	}
-
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
-		SubnetIds: subnetIds,
+		SubnetIds: expandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
-	backupId := d.Get("backup_identifier").(string)
+	backupId := d.Get("source_backup_identifier").(string)
 	if len(backupId) != 0 {
 		input.SourceBackupId = aws.String(backupId)
 	}
@@ -192,7 +179,7 @@ func resourceAwsCloudHsm2ClusterCreate(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudHSMv2 Cluster: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Cluster.ClusterId))
@@ -207,7 +194,7 @@ func resourceAwsCloudHsm2ClusterCreate(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateCreateInProgress, cloudhsmv2.ClusterStateInitializeInProgress},
 		Target:     []string{targetState},
-		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(d, meta),
+		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(cloudhsm2, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -232,7 +219,7 @@ func resourceAwsCloudHsm2ClusterCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) error {
 
-	cluster, err := describeCloudHsm2Cluster(d.Id(), meta)
+	cluster, err := describeCloudHsm2Cluster(meta.(*AWSClient).cloudhsmv2conn, d.Id())
 
 	if cluster == nil {
 		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found", d.Id())
@@ -246,16 +233,18 @@ func resourceAwsCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("cluster_state", cluster.State)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("vpc_id", cluster.VpcId)
-	d.Set("backup_identifier", cluster.SourceBackupId)
+	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set("hsm_type", cluster.HsmType)
-	d.Set("cluster_certificate", readCloudHsm2ClusterCertificates(cluster))
+	if err := d.Set("cluster_certificates", readCloudHsm2ClusterCertificates(cluster)); err != nil {
+		return fmt.Errorf("error setting cluster_certificates: %s", err)
+	}
 
 	var subnets []string
 	for _, sn := range cluster.SubnetMapping {
-		subnets = append(subnets, *sn)
+		subnets = append(subnets, aws.StringValue(sn))
 	}
 	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -274,11 +263,10 @@ func resourceAwsCloudHsm2ClusterUpdate(d *schema.ResourceData, meta interface{})
 func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	cloudhsm2 := meta.(*AWSClient).cloudhsmv2conn
 
-	var output *cloudhsmv2.DeleteClusterOutput
 	log.Printf("[DEBUG] CloudHSMv2 Delete cluster: %s", d.Id())
 	err := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
-		output, err = cloudhsm2.DeleteCluster(&cloudhsmv2.DeleteClusterInput{
+		_, err = cloudhsm2.DeleteCluster(&cloudhsmv2.DeleteClusterInput{
 			ClusterId: aws.String(d.Id()),
 		})
 		if err != nil {
@@ -299,7 +287,7 @@ func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
 		Target:     []string{cloudhsmv2.ClusterStateDeleted},
-		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(d, meta),
+		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(cloudhsm2, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -308,7 +296,7 @@ func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{})
 	// Wait, catching any errors
 	_, errWait := stateConf.WaitForState()
 	if errWait != nil {
-		return fmt.Errorf("[WARN] Error waiting for CloudHSMv2 Cluster state to be \"DELETED\": %s", errWait)
+		return fmt.Errorf("Error waiting for CloudHSMv2 Cluster state to be \"DELETED\": %s", errWait)
 	}
 
 	return nil
@@ -354,15 +342,6 @@ func setTagsAwsCloudHsm2Cluster(conn *cloudhsmv2.CloudHSMV2, d *schema.ResourceD
 	}
 
 	return nil
-}
-
-func validateCloudHsm2HsmType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	hsmType := "hsm1.medium"
-	if value != hsmType {
-		errors = append(errors, fmt.Errorf("there is only %s HSM type available", hsmType))
-	}
-	return
 }
 
 func readCloudHsm2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]interface{} {

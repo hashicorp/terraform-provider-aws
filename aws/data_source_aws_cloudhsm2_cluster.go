@@ -36,7 +36,8 @@ func dataSourceCloudHsm2Cluster() *schema.Resource {
 			},
 
 			"cluster_certificates": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -113,9 +114,8 @@ func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("vpc_id", cluster.VpcId)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("cluster_state", cluster.State)
-	certs := readCloudHsm2ClusterCertificates(cluster)
-	if err := d.Set("cluster_certificates", certs); err != nil {
-		return err
+	if err := d.Set("cluster_certificates", readCloudHsm2ClusterCertificates(cluster)); err != nil {
+		return fmt.Errorf("error setting cluster_certificates: %s", err)
 	}
 
 	var subnets []string

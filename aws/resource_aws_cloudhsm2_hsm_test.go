@@ -26,19 +26,6 @@ func TestAccAWSCloudHsm2Hsm_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_hsm.hsm", "ip_address"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSCloudHsm2Hsm_importBasic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudHsm2HsmDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudHsm2Hsm(),
-			},
 			{
 				ResourceName:      "aws_cloudhsm_v2_hsm.hsm",
 				ImportState:       true,
@@ -100,7 +87,7 @@ func testAccCheckAWSCloudHsm2HsmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		hsm, err := describeHsm(rs.Primary.ID, conn)
+		hsm, err := describeHsm(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -116,9 +103,16 @@ func testAccCheckAWSCloudHsm2HsmDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsm2HsmExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+
+		it, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		_, err := describeHsm(conn, it.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("CloudHSM cluster not found: %s", err)
 		}
 
 		return nil

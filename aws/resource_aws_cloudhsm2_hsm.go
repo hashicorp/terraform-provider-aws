@@ -16,7 +16,6 @@ func resourceAwsCloudHsm2Hsm() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudHsm2HsmCreate,
 		Read:   resourceAwsCloudHsm2HsmRead,
-		Update: resourceAwsCloudHsm2HsmUpdate,
 		Delete: resourceAwsCloudHsm2HsmDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudHsm2HsmImport,
@@ -39,6 +38,7 @@ func resourceAwsCloudHsm2Hsm() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 
 			"availability_zone": {
@@ -79,7 +79,7 @@ func resourceAwsCloudHsm2HsmImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func describeHsm(id string, conn *cloudhsmv2.CloudHSMV2) (*cloudhsmv2.Hsm, error) {
+func describeHsm(conn *cloudhsmv2.CloudHSMV2, hsmId string) (*cloudhsmv2.Hsm, error) {
 	out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{})
 	if err != nil {
 		log.Printf("[WARN] Error on descibing CloudHSM v2 Cluster: %s", err)
@@ -90,7 +90,7 @@ func describeHsm(id string, conn *cloudhsmv2.CloudHSMV2) (*cloudhsmv2.Hsm, error
 
 	for _, c := range out.Clusters {
 		for _, h := range c.Hsms {
-			if *h.HsmId == id {
+			if aws.StringValue(h.HsmId) == hsmId {
 				hsm = h
 				break
 			}
@@ -103,7 +103,7 @@ func describeHsm(id string, conn *cloudhsmv2.CloudHSMV2) (*cloudhsmv2.Hsm, error
 func resourceAwsCloudHsm2HsmRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := describeHsm(d.Id(), meta.(*AWSClient).cloudhsmv2conn)
+		hsm, err := describeHsm(meta.(*AWSClient).cloudhsmv2conn, d.Id())
 
 		if hsm == nil {
 			return 42, "destroyed", nil
@@ -113,7 +113,7 @@ func resourceAwsCloudHsm2HsmRefreshFunc(
 			log.Printf("[DEBUG] CloudHSMv2 Cluster status (%s): %s", d.Id(), *hsm.State)
 		}
 
-		return hsm, *hsm.State, err
+		return hsm, aws.StringValue(hsm.State), err
 	}
 }
 
@@ -122,7 +122,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 
 	clusterId := d.Get("cluster_id").(string)
 
-	cluster, err := describeCloudHsm2Cluster(clusterId, meta)
+	cluster, err := describeCloudHsm2Cluster(cloudhsm2, clusterId)
 
 	if cluster == nil {
 		log.Printf("[WARN] Error on retrieving CloudHSMv2 Cluster: %s %s", clusterId, err)
@@ -167,7 +167,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if errRetry != nil {
-		return errRetry
+		return fmt.Errorf("error creating CloudHSM v2 HSM module: %s", errRetry)
 	}
 
 	d.SetId(aws.StringValue(output.Hsm.HsmId))
@@ -186,7 +186,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 	// Wait, catching any errors
 	_, errWait := stateConf.WaitForState()
 	if errWait != nil {
-		return fmt.Errorf("[WARN] Error waiting for CloudHSMv2 HSM state to be \"ACTIVE\": %s", errWait)
+		return fmt.Errorf("Error waiting for CloudHSMv2 HSM state to be \"ACTIVE\": %s", errWait)
 	}
 
 	return resourceAwsCloudHsm2HsmRead(d, meta)
@@ -194,7 +194,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsCloudHsm2HsmRead(d *schema.ResourceData, meta interface{}) error {
 
-	hsm, err := describeHsm(d.Id(), meta.(*AWSClient).cloudhsmv2conn)
+	hsm, err := describeHsm(meta.(*AWSClient).cloudhsmv2conn, d.Id())
 
 	if hsm == nil {
 		log.Printf("[WARN] CloudHSMv2 HSM (%s) not found", d.Id())
@@ -215,22 +215,15 @@ func resourceAwsCloudHsm2HsmRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsCloudHsm2HsmUpdate(d *schema.ResourceData, meta interface{}) error {
-	//nothing to update in here
-	return resourceAwsCloudHsm2HsmRead(d, meta)
-}
-
 func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) error {
 	cloudhsm2 := meta.(*AWSClient).cloudhsmv2conn
 	clusterId := d.Get("cluster_id").(string)
 
 	log.Printf("[DEBUG] CloudHSMv2 HSM delete %s %s", clusterId, d.Id())
 
-	var output *cloudhsmv2.DeleteHsmOutput
-
 	errRetry := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
-		output, err = cloudhsm2.DeleteHsm(&cloudhsmv2.DeleteHsmInput{
+		_, err = cloudhsm2.DeleteHsm(&cloudhsmv2.DeleteHsmInput{
 			ClusterId: aws.String(clusterId),
 			HsmId:     aws.String(d.Id()),
 		})
@@ -245,7 +238,7 @@ func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if errRetry != nil {
-		return errRetry
+		return fmt.Errorf("error deleting CloudHSM v2 HSM module (%s): %s", d.Id(), errRetry)
 	}
 	log.Println("[INFO] Waiting for CloudHSMv2 HSM to be deleted")
 
@@ -261,7 +254,7 @@ func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) err
 	// Wait, catching any errors
 	_, errWait := stateConf.WaitForState()
 	if errWait != nil {
-		return fmt.Errorf("[WARN] Error waiting for CloudHSMv2 HSM state to be \"DELETED\": %s", errWait)
+		return fmt.Errorf("Error waiting for CloudHSMv2 HSM state to be \"DELETED\": %s", errWait)
 	}
 
 	return nil
