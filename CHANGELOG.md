@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_cloudhsm_v2_cluster` [GH-4125]
 * **New Resource:** `aws_cloudhsm_v2_cluster` [GH-4125]
 * **New Resource:** `aws_cloudhsm_v2_hsm` [GH-4125]
+* **New Resource:** `aws_codepipeline_webhook` [GH-5875]
 * **New Resource:** `aws_pinpoint_apns_channel` [GH-6194]
 * **New Resource:** `aws_redshift_event_subscription` [GH-6146]
 
