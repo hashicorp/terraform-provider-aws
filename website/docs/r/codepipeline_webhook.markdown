@@ -130,3 +130,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The CodePipeline webhook's ARN.
 * `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.
+
+## Import
+
+CodePipeline Webhooks can be imported by their ARN, e.g.
+
+```
+$ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
+```
