@@ -18,7 +18,7 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
@@ -39,7 +39,7 @@ func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 		"%s.terraformtesting.com.",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,

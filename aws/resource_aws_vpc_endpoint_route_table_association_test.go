@@ -14,12 +14,12 @@ import (
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointRouteTableAssociationExists(

@@ -122,10 +122,11 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the user pool.
 * `arn` - The ARN of the user pool.
+* `endpoint` - The endpoint name of the user pool. Example format: cognito-idp.REGION.amazonaws.com/xxxx_yyyyy
 * `creation_date` - The date the user pool was created.
 * `last_modified_date` - The date the user pool was last modified.
 

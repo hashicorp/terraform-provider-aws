@@ -26,6 +26,7 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {

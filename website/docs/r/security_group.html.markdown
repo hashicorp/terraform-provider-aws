@@ -94,6 +94,7 @@ The `ingress` block supports:
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
+* `prefix_list_ids` - (Optional) List of prefix list IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp")
 * `protocol` - (Required) The protocol. If you select a protocol of
 "-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
@@ -157,7 +158,7 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the security group
 * `arn` - The ARN of the security group

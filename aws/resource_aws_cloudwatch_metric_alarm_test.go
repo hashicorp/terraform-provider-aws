@@ -12,10 +12,32 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCloudWatchMetricAlarm_importBasic(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_metric_alarm.foobar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfig(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 	var alarm cloudwatch.MetricAlarm
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
@@ -26,6 +48,8 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
 					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_name", "CPUUtilization"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "statistic", "Average"),
+					resource.TestMatchResourceAttr("aws_cloudwatch_metric_alarm.foobar", "arn",
+						regexp.MustCompile(`^arn:[\w-]+:cloudwatch:[^:]+:\d{12}:alarm:.+$`)),
 					testAccCheckCloudWatchMetricAlarmDimension(
 						"aws_cloudwatch_metric_alarm.foobar", "InstanceId", "i-abc123"),
 				),
@@ -38,7 +62,7 @@ func TestAccAWSCloudWatchMetricAlarm_datapointsToAlarm(t *testing.T) {
 	var alarm cloudwatch.MetricAlarm
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
@@ -58,7 +82,7 @@ func TestAccAWSCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 	var alarm cloudwatch.MetricAlarm
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
@@ -85,7 +109,7 @@ func TestAccAWSCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testin
 	var alarm cloudwatch.MetricAlarm
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
@@ -112,7 +136,7 @@ func TestAccAWSCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	var alarm cloudwatch.MetricAlarm
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
@@ -130,7 +154,7 @@ func TestAccAWSCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,

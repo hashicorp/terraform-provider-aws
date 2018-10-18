@@ -23,7 +23,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	accountID := "012345678910"
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
@@ -69,7 +69,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
@@ -240,7 +240,7 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
-			"AZ": []*string{
+			"AZ": {
 				aws.String("us-east-2"),
 			},
 		},
@@ -275,7 +275,7 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
-			"AZ": []*string{
+			"AZ": {
 				aws.String("us-east-1"),
 			},
 		},

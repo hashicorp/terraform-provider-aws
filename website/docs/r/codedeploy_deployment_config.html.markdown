@@ -69,7 +69,15 @@ When the type is `HOST_COUNT`, the value represents the minimum number of health
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The deployment group's config name.
 * `deployment_config_id` - The AWS Assigned deployment config id
+
+## Import
+
+CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.
+
+```
+$ terraform import aws_codedeploy_app.example my-deployment-config
+```

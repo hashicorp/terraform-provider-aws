@@ -85,8 +85,8 @@ The following attributes are exported in addition to the arguments listed above:
 
 ## Import
 
-Lightsail Instances can be imported using their ARN, e.g.
+Lightsail Instances can be imported using their name, e.g.
 
 ```
-$ terraform import aws_lightsail_instance.bar <arn>
+$ terraform import aws_lightsail_instance.gitlab_test 'custom gitlab'
 ```

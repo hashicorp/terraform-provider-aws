@@ -74,6 +74,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"sqlserver",
 					"mongodb",
 					"s3",
+					"azuredb",
 				}, false),
 			},
 			"extra_connection_attributes": {
@@ -243,6 +244,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			ServerName:   aws.String(d.Get("server_name").(string)),
 			Port:         aws.Int64(int64(d.Get("port").(int))),
 			DatabaseName: aws.String(d.Get("database_name").(string)),
+			KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 			AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 			AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
@@ -251,6 +253,13 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
 			AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 		}
+
+		// Set connection info in top-level namespace as well
+		request.Username = aws.String(d.Get("username").(string))
+		request.Password = aws.String(d.Get("password").(string))
+		request.ServerName = aws.String(d.Get("server_name").(string))
+		request.Port = aws.Int64(int64(d.Get("port").(int)))
+		request.DatabaseName = aws.String(d.Get("database_name").(string))
 	case "s3":
 		request.S3Settings = &dms.S3Settings{
 			ServiceAccessRoleArn:    aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
@@ -421,6 +430,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ServerName:   aws.String(d.Get("server_name").(string)),
 				Port:         aws.Int64(int64(d.Get("port").(int))),
 				DatabaseName: aws.String(d.Get("database_name").(string)),
+				KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 				AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 				AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
@@ -430,6 +440,14 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 			}
 			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'mongodb')
+
+			// Update connection info in top-level namespace as well
+			request.Username = aws.String(d.Get("username").(string))
+			request.Password = aws.String(d.Get("password").(string))
+			request.ServerName = aws.String(d.Get("server_name").(string))
+			request.Port = aws.Int64(int64(d.Get("port").(int)))
+			request.DatabaseName = aws.String(d.Get("database_name").(string))
+
 			hasChanges = true
 		}
 	case "s3":
@@ -548,9 +566,9 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
-		d.Set("kms_key_arn", endpoint.KmsKeyId)
 	}
 
+	d.Set("kms_key_arn", endpoint.KmsKeyId)
 	d.Set("ssl_mode", endpoint.SslMode)
 
 	return nil

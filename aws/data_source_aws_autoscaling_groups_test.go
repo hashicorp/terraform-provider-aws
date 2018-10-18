@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -25,6 +25,7 @@ func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAutoscalingGroups("data.aws_autoscaling_groups.group_list"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "names.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "arns.#", "3"),
 				),
 			},
 		},

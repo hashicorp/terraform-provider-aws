@@ -11,11 +11,33 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDxLag_importBasic(t *testing.T) {
+	resourceName := "aws_dx_lag.hoge"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxLagConfig(acctest.RandString(5)),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSDxLag_basic(t *testing.T) {
 	lagName1 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 	lagName2 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
@@ -47,7 +69,7 @@ func TestAccAWSDxLag_basic(t *testing.T) {
 func TestAccAWSDxLag_tags(t *testing.T) {
 	lagName := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,

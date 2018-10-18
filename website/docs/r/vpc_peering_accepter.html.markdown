@@ -113,6 +113,6 @@ connection in the peer VPC over the VPC Peering Connection.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC Peering Connection.

@@ -9,11 +9,11 @@ import (
 )
 
 func TestAccDataSourceAwsEip_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsEipConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsEipCheck("data.aws_eip.by_id"),

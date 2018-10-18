@@ -15,7 +15,7 @@ func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	rName := acctest.RandString(15)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
@@ -34,7 +34,7 @@ func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	rName := acctest.RandString(15)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,

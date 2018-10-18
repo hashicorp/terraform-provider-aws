@@ -42,6 +42,7 @@ The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
 * `description` - (Optional) A longer, human-readable description for the AMI.
+* `ena_support` - (Optional) Specifies whether enhanced networking with ENA is enabled. Defaults to `false`.
 * `root_device_name` - (Optional) The name of the root device (for example, `/dev/sda1`, or `/dev/xvda`).
 * `virtualization_type` - (Optional) Keyword to choose what virtualization mode created instances
   will use. Can be either "paravirtual" (the default) or "hvm". The choice of virtualization type
@@ -104,7 +105,15 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the created AMI.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
+
+## Import
+
+`aws_ami` can be imported using the ID of the AMI, e.g.
+
+```
+$ terraform import aws_ami.example ami-12345678
+```

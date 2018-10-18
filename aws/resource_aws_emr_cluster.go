@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -41,6 +42,17 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Required: false,
 				Optional: true,
 				ForceNew: true,
+			},
+			"additional_info": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.ValidateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"core_instance_type": {
 				Type:     schema.TypeString,
@@ -225,7 +237,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
-							ValidateFunc:     validateJsonString,
+							ValidateFunc:     validation.ValidateJsonString,
 							StateFunc: func(v interface{}) string {
 								jsonString, _ := structure.NormalizeJsonString(v)
 								return jsonString
@@ -335,9 +347,22 @@ func resourceAwsEMRCluster() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"configurations": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"configurations_json"},
+			},
+			"configurations_json": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"configurations"},
+				ValidateFunc:     validation.ValidateJsonString,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"service_role": {
 				Type:     schema.TypeString,
@@ -359,7 +384,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"autoscaling_role": &schema.Schema{
+			"autoscaling_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -391,7 +416,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	applications := d.Get("applications").(*schema.Set).List()
 
 	keepJobFlowAliveWhenNoSteps := true
-	if v, ok := d.GetOk("keep_job_flow_alive_when_no_steps"); ok {
+	if v, ok := d.GetOkExists("keep_job_flow_alive_when_no_steps"); ok {
 		keepJobFlowAliveWhenNoSteps = v.(bool)
 	}
 
@@ -478,6 +503,14 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 	}
 
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		params.AdditionalInfo = aws.String(info)
+	}
+
 	if v, ok := d.GetOk("log_uri"); ok {
 		params.LogUri = aws.String(v.(string))
 	}
@@ -521,6 +554,17 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("configurations"); ok {
 		confUrl := v.(string)
 		params.Configurations = expandConfigures(confUrl)
+	}
+
+	if v, ok := d.GetOk("configurations_json"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("configurations_json contains an invalid JSON: %v", err)
+		}
+		params.Configurations, err = expandConfigurationJson(info)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
+		}
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes"); ok {
@@ -571,7 +615,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
+		return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
 	}
 
 	return resourceAwsEMRClusterRead(d, meta)
@@ -647,6 +691,16 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting EMR configurations for cluster (%s): %s", d.Id(), err)
 	}
 
+	if _, ok := d.GetOk("configurations_json"); ok {
+		configOut, err := flattenConfigurationJson(cluster.Configurations)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR cluster configurations: %s", err)
+		}
+		if err := d.Set("configurations_json", configOut); err != nil {
+			return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
+		}
+	}
+
 	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
 		log.Printf("[ERR] Error setting EMR Ec2 Attributes: %s", err)
 	}
@@ -684,6 +738,15 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting step: %s", err)
 	}
 
+	// AWS provides no other way to read back the additional_info
+	if v, ok := d.GetOk("additional_info"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+		}
+		d.Set("additional_info", info)
+	}
+
 	return nil
 }
 
@@ -704,7 +767,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		coreInstanceCount := d.Get("core_instance_count").(int)
 		coreGroup := findGroup(groups, "CORE")
 		if coreGroup == nil {
-			return fmt.Errorf("[ERR] Error finding core group")
+			return fmt.Errorf("Error finding core group")
 		}
 
 		params := &emr.ModifyInstanceGroupsInput{
@@ -742,7 +805,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("[WARN] Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\" after modification: %s", err)
+			return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\" after modification: %s", err)
 		}
 	}
 
@@ -828,7 +891,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[DEBUG] All (%d) EMR Cluster (%s) Instances terminated", instanceCount, d.Id())
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("[DEBUG] EMR Cluster (%s) has (%d) Instances remaining, retrying", d.Id(), len(resp.Instances)))
+		return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining, retrying", d.Id(), len(resp.Instances)))
 	})
 
 	if err != nil {
@@ -1308,6 +1371,25 @@ func expandAutoScalingPolicy(rawDefinitions string) (*emr.AutoScalingPolicy, err
 	}
 
 	return policy, nil
+}
+
+func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
+	configsOut := []*emr.Configuration{}
+	err := json.Unmarshal([]byte(input), &configsOut)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] Expanded EMR Configurations %s", configsOut)
+
+	return configsOut, nil
+}
+
+func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
+	out, err := jsonutil.BuildJSON(config)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }
 
 func expandConfigures(input string) []*emr.Configuration {

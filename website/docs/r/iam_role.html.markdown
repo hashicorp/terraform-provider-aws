@@ -50,10 +50,11 @@ The following arguments are supported:
 * `description` - (Optional) The description of the role.
 
 * `max_session_duration` - (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
+* `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the role.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `create_date` - The creation date of the IAM role.

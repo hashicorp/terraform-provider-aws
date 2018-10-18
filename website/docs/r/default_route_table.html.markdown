@@ -82,7 +82,7 @@ the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the routing table
 

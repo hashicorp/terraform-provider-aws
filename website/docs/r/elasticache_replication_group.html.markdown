@@ -31,7 +31,10 @@ resource "aws_elasticache_replication_group" "example" {
 }
 ```
 
-Additional read replicas can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` to prevent replication group recreation.
+You have two options for adjusting the number of replicas:
+
+* Adjusting `number_cache_clusters` directly. This will attempt to automatically add or remove replicas, but provides no granular control (e.g. preferred availability zone, cache cluster ID) for the added or removed replicas. This also currently expects cache cluster IDs in the form of `replication_group_id-00#`.
+* Otherwise for fine grained control of the underlying cache clusters, they can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` to prevent perpetual differences during Terraform plan with the `number_cache_cluster` attribute.
 
 ```hcl
 resource "aws_elasticache_replication_group" "example" {
@@ -79,8 +82,7 @@ resource "aws_elasticache_replication_group" "baz" {
 ~> **Note:** We currently do not support passing a `primary_cluster_id` in order to create the Replication Group.
 
 ~> **Note:** Automatic Failover is unavailable for Redis versions earlier than 2.8.6,
-and unavailable on T1 and T2 node types. See the [Amazon Replication with
-Redis](http://docs.aws.amazon.com/en_en/AmazonElastiCache/latest/UserGuide/Replication.html) guide
+and unavailable on T1 node types. For T2 node types, it is only available on Redis version 3.2.4 or later with cluster mode enabled. See the [High Availability Using Replication Groups](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Replication.html) guide
 for full details on using Replication Groups.
 
 ## Argument Reference
@@ -89,8 +91,7 @@ The following arguments are supported:
 
 * `replication_group_id` – (Required) The replication group identifier. This parameter is stored as a lowercase string.
 * `replication_group_description` – (Required) A user-created description for the replication group.
-* `number_cache_clusters` - (Required) The number of cache clusters this replication group will have.
- If Multi-AZ is enabled , the value of this parameter must be at least 2. Changing this number will force a new resource
+* `number_cache_clusters` - (Required for Cluster Mode Disabled) The number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications.
 * `node_type` - (Required) The compute and memory capacity of the nodes in the node group.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ is disabled for this replication group. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. Defaults to `true`.
@@ -133,11 +134,12 @@ Cluster Mode (`cluster_mode`) supports the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the ElastiCache Replication Group.
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.
 * `primary_endpoint_address` - (Redis only) The address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
+* `member_clusters` - The identifiers of all the nodes that are part of this replication group.
 
 ## Timeouts
 
@@ -146,7 +148,7 @@ configuration options:
 
 * `create` - (Default `60m`) How long to wait for a replication group to be created.
 * `delete` - (Default `40m`) How long to wait for a replication group to be deleted.
-* `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for online resize operation completion, if necessary.
+* `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for adding/removing replicas and online resize operation completion, if necessary.
 
 ## Import
 

@@ -19,7 +19,7 @@ To exclusively manage the users in a group, see the
 ## Example usage
 
 ```hcl
-resource "aws_iam_user_group_membership" {
+resource "aws_iam_user_group_membership" "example1" {
   user = "${aws_iam_user.user1.name}"
 
   groups = [
@@ -28,7 +28,7 @@ resource "aws_iam_user_group_membership" {
   ]
 }
 
-resource "aws_iam_user_group_membership" {
+resource "aws_iam_user_group_membership" "example2" {
   user = "${aws_iam_user.user1.name}"
 
   groups = [

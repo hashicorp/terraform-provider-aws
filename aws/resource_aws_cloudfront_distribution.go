@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -123,6 +122,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"lambda_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -248,6 +252,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"lambda_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -403,6 +412,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"lambda_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -702,10 +716,25 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 		},
 	}
 
-	resp, err := conn.CreateDistributionWithTags(params)
+	var resp *cloudfront.CreateDistributionWithTagsOutput
+	// Handle eventual consistency issues
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.CreateDistributionWithTags(params)
+		if err != nil {
+			// ACM and IAM certificate eventual consistency
+			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudFront Distribution: %s", err)
 	}
+
 	d.SetId(*resp.Distribution.Id)
 	return resourceAwsCloudFrontDistributionRead(d, meta)
 }
@@ -749,9 +778,9 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		return errwrap.Wrapf(fmt.Sprintf(
-			"Error retrieving EC2 tags for CloudFront Distribution %q (ARN: %q): {{err}}",
-			d.Id(), d.Get("arn").(string)), err)
+		return fmt.Errorf(
+			"Error retrieving EC2 tags for CloudFront Distribution %q (ARN: %q): %s",
+			d.Id(), d.Get("arn").(string), err)
 	}
 
 	if err := d.Set("tags", tagsToMapCloudFront(tagResp.Tags)); err != nil {
@@ -768,9 +797,22 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 		DistributionConfig: expandDistributionConfig(d),
 		IfMatch:            aws.String(d.Get("etag").(string)),
 	}
-	_, err := conn.UpdateDistribution(params)
+
+	// Handle eventual consistency issues
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.UpdateDistribution(params)
+		if err != nil {
+			// ACM and IAM certificate eventual consistency
+			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
 	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {

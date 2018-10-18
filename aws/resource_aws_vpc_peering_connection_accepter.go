@@ -30,7 +30,7 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			schemaNameVPCPeeringConnectionID: &schema.Schema{
+			schemaNameVPCPeeringConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

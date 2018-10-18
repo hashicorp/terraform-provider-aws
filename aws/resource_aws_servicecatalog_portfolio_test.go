@@ -16,12 +16,12 @@ import (
 func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
@@ -34,7 +34,7 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "tags.Key1", "Value One"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic2(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
@@ -48,7 +48,7 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_servicecatalog_portfolio.test", "tags.Key2", "Value Two"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic3(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
@@ -68,12 +68,12 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 func TestAccAWSServiceCatalogPortfolioDisappears(t *testing.T) {
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio("aws_servicecatalog_portfolio.test", &dpo),
@@ -90,16 +90,16 @@ func TestAccAWSServiceCatalogPortfolioImport(t *testing.T) {
 
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

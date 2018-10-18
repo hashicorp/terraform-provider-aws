@@ -72,12 +72,12 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test", &rule),
@@ -102,7 +102,7 @@ func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	newGroupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
@@ -134,7 +134,7 @@ func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
@@ -161,7 +161,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 	ruleName2 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	ruleName3 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
@@ -237,7 +237,7 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("test%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
@@ -263,6 +263,9 @@ func testAccCheckAWSWafRuleGroupDisappears(group *waf.RuleGroup) resource.TestCh
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
+		if err != nil {
+			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
+		}
 
 		wr := newWafRetryer(conn, "global")
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

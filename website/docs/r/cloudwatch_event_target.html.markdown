@@ -19,12 +19,12 @@ resource "aws_cloudwatch_event_target" "yada" {
   arn       = "${aws_kinesis_stream.test_stream.arn}"
 
   run_command_targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["FooBar"]
   }
 
   run_command_targets {
-    key = "InstanceIds"
+    key    = "InstanceIds"
     values = ["i-162058cd308bffec2"]
   }
 }
@@ -168,6 +168,74 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 
 ```
 
+## Example ECS Run Task with Role and Task Override Usage
+
+```
+resource "aws_iam_role" "ecs_events" {
+  name = "ecs_events"
+  assume_role_policy = <<DOC
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+DOC
+}
+
+resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
+  name = "ecs_events_run_task_with_any_role"
+  role = "${aws_iam_role.ecs_events.id}"
+  policy = <<DOC
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ecs:RunTask",
+            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")}"
+        }
+    ]
+}
+DOC
+}
+
+resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
+  target_id = "run-scheduled-task-every-hour"
+  arn       = "${aws_ecs_cluster.cluster_name.arn}"
+  rule      = "${aws_cloudwatch_event_rule.every_hour.name}"
+  role_arn  = "${aws_iam_role.ecs_events.arn}"
+
+  ecs_target = {
+    task_count = 1
+    task_definition_arn = "${aws_ecs_task_definition.task_name.arn}"
+  }
+
+  input = <<DOC
+{
+  "containerOverrides": [
+    {
+      "name": "name-of-container-to-override",
+      "command": ["bin/console", "scheduled-task"]
+    }
+  ]
+}
+DOC
+}
+```
+
 ## Argument Reference
 
 -> **Note:** `input` and `input_path` are mutually exclusive options.
@@ -176,7 +244,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
    SNS topic invoked by a CloudWatch Events rule, you must setup the right permissions
    using [`aws_lambda_permission`](https://www.terraform.io/docs/providers/aws/r/lambda_permission.html)
    or [`aws_sns_topic.policy`](https://www.terraform.io/docs/providers/aws/r/sns_topic.html#policy).
-   More info [here](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/EventsResourceBasedPermissions.html).
+   More info [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/resource-based-policies-cwe.html).
 
 The following arguments are supported:
 
@@ -201,8 +269,20 @@ The following arguments are supported:
 
 `ecs_target` support the following:
 
+* `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
+* `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values are EC2 or FARGATE.
+* `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if launch_type is FARGATE because the awsvpc mode is required for Fargate tasks.
+* `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as 1.1.0. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. The default is 1.
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.
+
+`network_configuration` support the following:
+
+* `subnets` - (Required) The subnets associated with the task or service.
+* `security_groups` - (Optional) The security groups associated with the task or service. If you do not specify a security group, the default security group for the VPC is used.
+* `assign_public_ip` - (Optional) Assign a public IP address to the ENI (Fargate launch type only). Valid values are `true` or `false`. Default `false`.
+
+For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 
 `batch_target` support the following:
 

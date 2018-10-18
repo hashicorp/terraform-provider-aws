@@ -12,7 +12,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -27,6 +27,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_arn", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "stickiness.#", "1"),
@@ -46,6 +47,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_name", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "stickiness.#", "1"),
@@ -67,7 +69,7 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -82,6 +84,7 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_arn", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "stickiness.#", "1"),
@@ -101,6 +104,7 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_name", "vpc_id"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "slow_start", "0"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
 					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "stickiness.#", "1"),

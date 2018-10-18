@@ -74,14 +74,14 @@ func resourceAwsKmsGrant() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							// ConflictsWith encryption_context_subset handled in Create, see kmsGrantConstraintsIsValid
 						},
 						"encryption_context_subset": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							// ConflictsWith encryption_context_equals handled in Create, see kmsGrantConstraintsIsValid
 						},
 					},
@@ -132,7 +132,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("constraints"); ok {
 		if !kmsGrantConstraintsIsValid(v.(*schema.Set)) {
-			return fmt.Errorf("[ERROR] A grant constraint can't have both encryption_context_equals and encryption_context_subset set")
+			return fmt.Errorf("A grant constraint can't have both encryption_context_equals and encryption_context_subset set")
 		}
 		input.Constraints = expandKmsGrantConstraints(v.(*schema.Set))
 	}
@@ -160,10 +160,10 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 				isAWSErr(err, kms.ErrCodeInternalException, "") ||
 				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
 				return resource.RetryableError(
-					fmt.Errorf("[WARN] Error adding new KMS Grant for key: %s, retrying %s",
+					fmt.Errorf("Error adding new KMS Grant for key: %s, retrying %s",
 						*input.KeyId, err))
 			}
-			log.Printf("[ERROR] An error occured creating new AWS KMS Grant: %s", err)
+			log.Printf("[ERROR] An error occurred creating new AWS KMS Grant: %s", err)
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -355,7 +355,7 @@ func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) err
 		if grant != nil {
 			// Force a retry if the grant still exists
 			return resource.RetryableError(
-				fmt.Errorf("[DEBUG] Grant still exists while expected to be revoked, retyring revocation check: %s", *grant.GrantId))
+				fmt.Errorf("Grant still exists while expected to be revoked, retyring revocation check: %s", *grant.GrantId))
 		}
 
 		return resource.NonRetryableError(err)
@@ -393,13 +393,16 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("error listing KMS Grants: %s", err)
+	}
 
 	grant = getKmsGrantById(out.Grants, grantId)
 	if grant != nil {
 		return grant, nil
 	}
-	if *out.Truncated {
-		log.Printf("[DEBUG] KMS Grant list truncated, getting next page via marker: %s", *out.NextMarker)
+	if aws.BoolValue(out.Truncated) {
+		log.Printf("[DEBUG] KMS Grant list truncated, getting next page via marker: %s", aws.StringValue(out.NextMarker))
 		return findKmsGrantById(conn, keyId, grantId, out.NextMarker)
 	}
 
@@ -520,11 +523,24 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 }
 
 func decodeKmsGrantId(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+	if strings.HasPrefix(id, "arn:aws") {
+		arn_parts := strings.Split(id, "/")
+		if len(arn_parts) != 2 {
+			return "", "", fmt.Errorf("unexpected format of ARN (%q), expected KeyID:GrantID", id)
+		}
+		arn_prefix := arn_parts[0]
+		parts := strings.Split(arn_parts[1], ":")
+		if len(parts) != 2 {
+			return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+		}
+		return fmt.Sprintf("%s/%s", arn_prefix, parts[0]), parts[1], nil
+	} else {
+		parts := strings.Split(id, ":")
+		if len(parts) != 2 {
+			return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
+		}
+		return parts[0], parts[1], nil
 	}
-	return parts[0], parts[1], nil
 }
 
 // Custom error, so we don't have to rely on

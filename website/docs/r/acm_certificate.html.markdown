@@ -23,14 +23,22 @@ deploy the required validation records and wait for validation to complete.
 Domain validation through E-Mail is also supported but should be avoided as it requires a manual step outside
 of Terraform.
 
+It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
+which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
+
 ## Example Usage
 
 ```hcl
 resource "aws_acm_certificate" "cert" {
-  domain_name = "example.com"
+  domain_name       = "example.com"
   validation_method = "DNS"
+
   tags {
     Environment = "test"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 ```
@@ -46,7 +54,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
@@ -59,6 +67,8 @@ Domain validation objects export the following attributes:
 * `resource_record_name` - The name of the DNS record to create to validate the certificate
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have
+
+[1]: /docs/configuration/resources.html#lifecycle
 
 ## Import
 

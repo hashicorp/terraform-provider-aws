@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAWSKmsGrant_Basic(t *testing.T) {
+func TestAccAWSKmsGrant_Basic(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -33,10 +33,10 @@ func TestAWSKmsGrant_Basic(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_withConstraints(t *testing.T) {
+func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -69,10 +69,10 @@ func TestAWSKmsGrant_withConstraints(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
+func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -88,10 +88,10 @@ func TestAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_bare(t *testing.T) {
+func TestAccAWSKmsGrant_bare(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -103,6 +103,30 @@ func TestAWSKmsGrant_bare(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_kms_grant.bare", "name"),
 					resource.TestCheckNoResourceAttr("aws_kms_grant.bare", "constraints.#"),
 					resource.TestCheckNoResourceAttr("aws_kms_grant.bare", "retiring_principal"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsGrant_ARN(t *testing.T) {
+	timestamp := time.Now().Format(time.RFC1123)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsGrant_ARN("arn", timestamp, "\"Encrypt\", \"Decrypt\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsGrantExists("aws_kms_grant.arn"),
+					resource.TestCheckResourceAttr("aws_kms_grant.arn", "name", "arn"),
+					resource.TestCheckResourceAttr("aws_kms_grant.arn", "operations.#", "2"),
+					resource.TestCheckResourceAttr("aws_kms_grant.arn", "operations.2238845196", "Encrypt"),
+					resource.TestCheckResourceAttr("aws_kms_grant.arn", "operations.1237510779", "Decrypt"),
+					resource.TestCheckResourceAttrSet("aws_kms_grant.arn", "grantee_principal"),
+					resource.TestCheckResourceAttrSet("aws_kms_grant.arn", "key_id"),
 				),
 			},
 		},
@@ -252,3 +276,27 @@ data "aws_iam_policy_document" "assumerole-policy-template" {
   }
 }
 `
+
+func testAccAWSKmsGrant_ARN(rName string, timestamp string, operations string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "tf-acc-test-key" {
+    description = "Terraform acc test key %s"
+    deletion_window_in_days = 7
+}
+
+%s
+
+resource "aws_iam_role" "tf-acc-test-role" {
+  name               = "tf-acc-test-kms-grant-role-%s"
+  path               = "/service-role/"
+  assume_role_policy = "${data.aws_iam_policy_document.assumerole-policy-template.json}"
+}
+
+resource "aws_kms_grant" "%s" {
+	name = "%s"
+	key_id = "${aws_kms_key.tf-acc-test-key.arn}"
+	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
+	operations = [ %s ]
+}
+`, timestamp, staticAssumeRolePolicyString, rName, rName, rName, operations)
+}

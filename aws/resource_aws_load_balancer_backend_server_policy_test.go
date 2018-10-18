@@ -17,7 +17,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Providers: map[string]terraform.ResourceProvider{
 			"aws": testAccProvider,
@@ -25,7 +25,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 		},
 		CheckDestroy: testAccCheckAWSLoadBalancerBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
@@ -33,7 +33,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
@@ -42,7 +42,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", false),

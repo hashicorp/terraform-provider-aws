@@ -139,7 +139,7 @@ resource "aws_vpc_peering_connection_options" "accepter" {
 
 The following arguments are supported:
 
-* `vpc_peering_connection_id` - (Required) The ID of the requester VPC.
+* `vpc_peering_connection_id` - (Required) The ID of the requester VPC peering connection.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection]
 (http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options to be set for the VPC that accepts
 the peering connection (a maximum of one).
@@ -154,8 +154,10 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 (vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC]
 (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
-* `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to private
-IP addresses when queried from instances in the peer VPC.
+* `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
+private IP addresses when queried from instances in the peer VPC. This is
+[not supported](https://docs.aws.amazon.com/vpc/latest/peering/modify-peering-connections.html) for
+inter-region VPC peering.
 * `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
 with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
 to the remote VPC.
@@ -165,7 +167,7 @@ connection.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC Peering Connection Options.
 
