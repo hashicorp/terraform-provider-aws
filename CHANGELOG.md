@@ -21,10 +21,12 @@ ENHANCEMENTS:
 * resource/aws_athena_database: Add `encryption_configuration` argument [GH-6117]
 * resource/aws_cloudwatch_metric_alarm: Validate `alarm_actions` [GH-6151]
 * resource/aws_codebuild_project: Support `NO_SOURCE` in `source` `type` [GH-6140]
+* resource/aws_db_instance: Directly restore snapshot with `parameter_group_name` set [GH-6200]
 * resource/aws_dx_connection: Add `jumbo_frame_capable` attribute [GH-6143]
 * resource/aws_dynamodb_table: Prevent error `UnknownOperationException: Tagging is not currently supported in DynamoDB Local` [GH-6149]
 * resource/aws_lb_listener: Allow `default_action` `order` to be based on Terraform configuration ordering [GH-6124]
 * resource/aws_lb_listener_rule: Allow `action` `order` to be based on Terraform configuration ordering [GH-6124]
+* resource/aws_rds_cluster: Directly restore snapshot with `db_cluster_parameter_group_name` set [GH-6200]
 
 BUG FIXES:
 
