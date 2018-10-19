@@ -80,6 +80,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -195,6 +196,7 @@ type AWSClient struct {
 	snsconn               *sns.SNS
 	stsconn               *sts.STS
 	redshiftconn          *redshift.Redshift
+	resourcegroupsconn    *resourcegroups.ResourceGroups
 	r53conn               *route53.Route53
 	partition             string
 	accountid             string
@@ -545,6 +547,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.r53conn = route53.New(r53Sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
+	client.resourcegroupsconn = resourcegroups.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
 	client.scconn = servicecatalog.New(sess)

@@ -13,7 +13,7 @@ sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS)
 
-test: fmtcheck
+test:
 	go test $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck

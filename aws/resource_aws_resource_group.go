@@ -33,6 +33,7 @@ func resourceAwsResourceGroup() *schema.Resource {
 			"resource_query": {
 				Type:     schema.TypeSet,
 				Required: true,
+				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -63,40 +64,80 @@ func resourceAwsResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupconn
-	resourceQueryList := d.Get("resource_query").([]interface{})
+func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourcegroups.ResourceQuery {
 	resourceQuery := resourceQueryList[0].(map[string]interface{})
 
+	return &resourcegroups.ResourceQuery{
+		Query: aws.String(resourceQuery["query"].(string)),
+		Type:  aws.String(resourceQuery["type"].(string)),
+	}
+}
+
+func resourceAwsResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).resourcegroupsconn
+
 	input := resourcegroups.CreateGroupInput{
-		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
-		ResourceQuery: &resourcegroups.ResourceQuery{
-			Query: aws.String(resourceQuery["query"].(string)),
-			Type:  aws.String(resourceQuery["type"].(string)),
-		},
+		Description:   aws.String(d.Get("description").(string)),
+		Name:          aws.String(d.Get("name").(string)),
+		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
 	}
 
-	group, err := conn.CreateGroup(input)
+	res, err := conn.CreateGroup(&input)
 	if err != nil {
 		return err
 	}
+
+	d.SetId(aws.StringValue(res.Group.Name))
 
 	return resourceAwsResourceGroupRead(d, meta)
 }
 
 func resourceAwsResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupconn
+	// conn := meta.(*AWSClient).resourcegroupsconn
 	return nil
 }
 
 func resourceAwsResourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupconn
+	conn := meta.(*AWSClient).resourcegroupsconn
+
+	if d.HasChange("description") {
+		input := resourcegroups.UpdateGroupInput{
+			GroupName:   aws.String(d.Id()),
+			Description: aws.String(d.Get("description").(string)),
+		}
+
+		_, err := conn.UpdateGroup(&input)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("resource_query") {
+		input := resourcegroups.UpdateGroupQueryInput{
+			GroupName:     aws.String(d.Id()),
+			ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
+		}
+
+		_, err := conn.UpdateGroupQuery(&input)
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsResourceGroupRead(d, meta)
 }
 
 func resourceAwsResourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupconn
+	conn := meta.(*AWSClient).resourcegroupsconn
+
+	input := resourcegroups.DeleteGroupInput{
+		GroupName: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteGroup(&input)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
