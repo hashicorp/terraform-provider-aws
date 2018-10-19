@@ -18,16 +18,43 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 	desc1 := "Hello World"
 	desc2 := "Foo Bar"
 
+	query1 := `{
+  "ResourceTypeFilters": [
+    "AWS::EC2::Instance"
+  ],
+  "TagFilters": [
+    {
+      "Key": "Stage",
+      "Values": ["Test"]
+    }
+  ]
+}
+`
+
+	query2 := `{
+  "ResourceTypeFilters": [
+    "AWS::EC2::Instance"
+  ],
+  "TagFilters": [
+    {
+      "Key": "Hello",
+      "Values": ["World"]
+    }
+  ]
+}
+`
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSResourceGroupConfig_basic(n, desc1),
+				Config: testAccAWSResourceGroupConfig_basic(n, desc1, query1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSResourceGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", n),
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query1+"\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
@@ -37,9 +64,10 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSResourceGroupConfig_basic(n, desc2),
+				Config: testAccAWSResourceGroupConfig_basic(n, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query2+"\n"),
 				),
 			},
 		},
@@ -71,7 +99,7 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSResourceGroupConfig_basic(rName string, desc string) string {
+func testAccAWSResourceGroupConfig_basic(rName string, desc string, query string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
@@ -79,19 +107,9 @@ resource "aws_resourcegroups_group" "test" {
 
   resource_query {
     query = <<JSON
-{
-  "ResourceTypeFilters": [
-    "AWS::EC2::Instance"
-  ],
-  "TagFilters": [
-    {
-      "Key": "Stage",
-      "Values": ["Test"]
-    }
-  ]
-}
+%s
 JSON
   }
 }
-`, rName, desc)
+`, rName, desc, query)
 }
