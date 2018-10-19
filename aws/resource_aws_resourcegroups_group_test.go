@@ -11,29 +11,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSResourceGroup_importBasic(t *testing.T) {
-	resourceName := "aws_resource_group.test"
-	n := fmt.Sprintf("test-group-%d", acctest.RandInt())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSResourceGroupConfig_basic(n),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSResourceGroup_basic(t *testing.T) {
-	resourceName := "aws_resource_group.test"
+	resourceName := "aws_resourcegroups_group.test"
 	n := fmt.Sprintf("test-group-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,6 +26,11 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", n),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -79,7 +63,7 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 
 func testAccAWSResourceGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_resource_group" "test" {
+resource "aws_resourcegroups_group" "test" {
   name        = "%s"
   description = "Hello World"
 

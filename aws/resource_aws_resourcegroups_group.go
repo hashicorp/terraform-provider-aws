@@ -79,7 +79,7 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 	input := resourcegroups.CreateGroupInput{
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
-		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").(*schema.Set).List()),
+		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
 	}
 
 	res, err := conn.CreateGroup(&input)
