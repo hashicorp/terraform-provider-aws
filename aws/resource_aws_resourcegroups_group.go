@@ -1,6 +1,9 @@
 package aws
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -84,7 +87,7 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 
 	res, err := conn.CreateGroup(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating resource group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(res.Group.Name))
@@ -100,7 +103,13 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		return err
+		if isAWSErr(err, resourcegroups.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] Resource Groups Group (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return fmt.Errorf("error reading resource group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", aws.StringValue(g.Group.Name))
@@ -112,7 +121,7 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading resource query for resource group (%s): %s", d.Id(), err)
 	}
 
 	resultQuery := map[string]interface{}{}
@@ -134,7 +143,7 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 
 		_, err := conn.UpdateGroup(&input)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating resource group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -146,7 +155,7 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 
 		_, err := conn.UpdateGroupQuery(&input)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating resource query for resource group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -162,7 +171,7 @@ func resourceAwsResourceGroupsGroupDelete(d *schema.ResourceData, meta interface
 
 	_, err := conn.DeleteGroup(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting resource group (%s): %s", d.Id(), err)
 	}
 
 	return nil

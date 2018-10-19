@@ -15,15 +15,19 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 	resourceName := "aws_resourcegroups_group.test"
 	n := fmt.Sprintf("test-group-%d", acctest.RandInt())
 
+	desc1 := "Hello World"
+	desc2 := "Foo Bar"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSResourceGroupConfig_basic(n),
+				Config: testAccAWSResourceGroupConfig_basic(n, desc1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSResourceGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", n),
+					resource.TestCheckResourceAttr(resourceName, "description", desc1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
@@ -31,6 +35,12 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSResourceGroupConfig_basic(n, desc2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+				),
 			},
 		},
 	})
@@ -61,11 +71,11 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSResourceGroupConfig_basic(rName string) string {
+func testAccAWSResourceGroupConfig_basic(rName string, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
-  description = "Hello World"
+  description = "%s"
 
   resource_query {
     query = <<JSON
@@ -83,5 +93,5 @@ resource "aws_resourcegroups_group" "test" {
 JSON
   }
 }
-`, rName)
+`, rName, desc)
 }
