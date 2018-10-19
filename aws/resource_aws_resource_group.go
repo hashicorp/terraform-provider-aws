@@ -44,7 +44,7 @@ func resourceAwsResourceGroup() *schema.Resource {
 
 						"type": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							Default:  resourcegroups.QueryTypeTagFilters10,
 							ValidateFunc: validation.StringInSlice([]string{
 								resourcegroups.QueryTypeTagFilters10,
@@ -79,7 +79,7 @@ func resourceAwsResourceGroupCreate(d *schema.ResourceData, meta interface{}) er
 	input := resourcegroups.CreateGroupInput{
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
-		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
+		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").(*schema.Set).List()),
 	}
 
 	res, err := conn.CreateGroup(&input)

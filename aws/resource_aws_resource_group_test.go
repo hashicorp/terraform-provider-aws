@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -16,9 +16,8 @@ func TestAccAWSResourceGroup_importBasic(t *testing.T) {
 	n := fmt.Sprintf("test-group-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSResourceGroupConfig_basic(n),
@@ -42,11 +41,10 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSResourceGroupConfig(name1, path1),
+				Config: testAccAWSResourceGroupConfig_basic(n),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGResourceGroupExists("aws_iam_user.user"),
+					testAccCheckAWSResourceGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", n),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", 2),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
@@ -67,7 +65,7 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).resourcegroupsconn
 
-		_, err := iamconn.GetGroup(&resourcegroups.GetGroupInput{
+		_, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
 
@@ -79,19 +77,26 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSResourceGroupConfig_basic(rName) string {
+func testAccAWSResourceGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resource_group" "test" {
   name        = "%s"
   description = "Hello World"
 
   resource_query {
-
-  }
-
-  tags {
-    Hello = "World"
-    Test  = "True"
+    query = <<JSON
+{
+  "ResourceTypeFilters": [
+    "AWS::EC2::Instance"
+  ],
+  "TagFilters": [
+    {
+      "Key": "Stage",
+      "Values": ["Test"]
+    }
+  ]
+}
+JSON
   }
 }
 `, rName)
