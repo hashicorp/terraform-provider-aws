@@ -31,7 +31,7 @@ func resourceAwsResourceGroup() *schema.Resource {
 			},
 
 			"resource_query": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
 				MaxItems: 1,
