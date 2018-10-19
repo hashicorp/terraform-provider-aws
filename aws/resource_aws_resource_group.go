@@ -93,7 +93,33 @@ func resourceAwsResourceGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).resourcegroupsconn
+	conn := meta.(*AWSClient).resourcegroupsconn
+
+	g, err := conn.GetGroup(&resourcegroups.GetGroupInput{
+		GroupName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("name", aws.StringValue(g.Group.Name))
+	d.Set("description", aws.StringValue(g.Group.Description))
+	d.Set("arn", aws.StringValue(g.Group.GroupArn))
+
+	q, err := conn.GetGroupQuery(&resourcegroups.GetGroupQueryInput{
+		GroupName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	resultQuery := map[string]interface{}{}
+	resultQuery["query"] = aws.StringValue(q.GroupQuery.ResourceQuery.Query)
+	resultQuery["type"] = aws.StringValue(q.GroupQuery.ResourceQuery.Type)
+	d.Set("resource_query", []map[string]interface{}{resultQuery})
+
 	return nil
 }
 
