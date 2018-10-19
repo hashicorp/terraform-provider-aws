@@ -22,6 +22,25 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+// validateAny returns a SchemaValidateFunc which tests if the provided value
+// passes any of the provided SchemaValidateFunc
+// Temporarily added into AWS provider, but will be submitted upstream into provider SDK
+func validateAny(validators ...schema.SchemaValidateFunc) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) ([]string, []error) {
+		var allErrors []error
+		var allWarnings []string
+		for _, validator := range validators {
+			validatorWarnings, validatorErrors := validator(i, k)
+			if len(validatorWarnings) == 0 && len(validatorErrors) == 0 {
+				return []string{}, []error{}
+			}
+			allWarnings = append(allWarnings, validatorWarnings...)
+			allErrors = append(allErrors, validatorErrors...)
+		}
+		return allWarnings, allErrors
+	}
+}
+
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with
@@ -450,6 +469,20 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like a valid ARN (%q): %q",
+			k, pattern, value))
+	}
+
+	return
+}
+
+func validateEC2AutomateARN(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html
+	pattern := `^arn:[\w-]+:automate:[\w-]+:ec2:(recover|stop|terminate)$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q does not match EC2 automation ARN (%q): %q",
 			k, pattern, value))
 	}
 
