@@ -244,7 +244,6 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			ServerName:   aws.String(d.Get("server_name").(string)),
 			Port:         aws.Int64(int64(d.Get("port").(int))),
 			DatabaseName: aws.String(d.Get("database_name").(string)),
-			KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 			AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 			AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
@@ -430,7 +429,6 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ServerName:   aws.String(d.Get("server_name").(string)),
 				Port:         aws.Int64(int64(d.Get("port").(int))),
 				DatabaseName: aws.String(d.Get("database_name").(string)),
-				KmsKeyId:     aws.String(d.Get("kms_key_arn").(string)),
 
 				AuthType:          aws.String(d.Get("mongodb_settings.0.auth_type").(string)),
 				AuthMechanism:     aws.String(d.Get("mongodb_settings.0.auth_mechanism").(string)),
