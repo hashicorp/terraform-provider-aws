@@ -55,8 +55,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Users can be imported using the `name`, e.g.
+Resource groups can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_iam_user.lb resource-group-name
+$ terraform import aws_resourcegroups_group.foo resource-group-name
 ```
