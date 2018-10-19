@@ -7,12 +7,12 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsResourceGroup() *schema.Resource {
+func resourceAwsResourceGroupsGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsResourceGroupCreate,
-		Read:   resourceAwsResourceGroupRead,
-		Update: resourceAwsResourceGroupUpdate,
-		Delete: resourceAwsResourceGroupDelete,
+		Create: resourceAwsResourceGroupsGroupCreate,
+		Read:   resourceAwsResourceGroupsGroupRead,
+		Update: resourceAwsResourceGroupsGroupUpdate,
+		Delete: resourceAwsResourceGroupsGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -73,7 +73,7 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 	}
 }
 
-func resourceAwsResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
 	input := resourcegroups.CreateGroupInput{
@@ -89,10 +89,10 @@ func resourceAwsResourceGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(res.Group.Name))
 
-	return resourceAwsResourceGroupRead(d, meta)
+	return resourceAwsResourceGroupsGroupRead(d, meta)
 }
 
-func resourceAwsResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
 	g, err := conn.GetGroup(&resourcegroups.GetGroupInput{
@@ -123,7 +123,7 @@ func resourceAwsResourceGroupRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsResourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
 	if d.HasChange("description") {
@@ -150,10 +150,10 @@ func resourceAwsResourceGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsResourceGroupRead(d, meta)
+	return resourceAwsResourceGroupsGroupRead(d, meta)
 }
 
-func resourceAwsResourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsResourceGroupsGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
 	input := resourcegroups.DeleteGroupInput{
