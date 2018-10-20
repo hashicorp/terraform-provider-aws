@@ -41,18 +41,17 @@ func resourceAwsIotPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 	})
 
 	if err != nil {
-		log.Printf("[ERROR] Error attaching policy %s to target %s: %s", policyName, target, err)
-		return err
+		return fmt.Errorf("error attaching policy %s to target %s: %s", policyName, target, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", policyName, target))
 	return resourceAwsIotPolicyAttachmentRead(d, meta)
 }
 
-func listIotPolicyAttachmentPages(c *iot.IoT, input *iot.ListAttachedPoliciesInput,
+func listIotPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
 	fn func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool) error {
 	for {
-		page, err := c.ListAttachedPolicies(input)
+		page, err := conn.ListAttachedPolicies(input)
 		if err != nil {
 			return err
 		}
@@ -67,6 +66,28 @@ func listIotPolicyAttachmentPages(c *iot.IoT, input *iot.ListAttachedPoliciesInp
 	return nil
 }
 
+func getIotPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
+	var policy *iot.Policy
+
+	input := &iot.ListAttachedPoliciesInput{
+		PageSize:  aws.Int64(250),
+		Recursive: aws.Bool(false),
+		Target:    aws.String(target),
+	}
+
+	err := listIotPolicyAttachmentPages(conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
+		for _, att := range out.Policies {
+			if policyName == aws.StringValue(att.PolicyName) {
+				policy = att
+				return false
+			}
+		}
+		return true
+	})
+
+	return policy, err
+}
+
 func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
@@ -75,27 +96,14 @@ func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}
 
 	var policy *iot.Policy
 
-	err := listIotPolicyAttachmentPages(conn, &iot.ListAttachedPoliciesInput{
-		PageSize:  aws.Int64(250),
-		Recursive: aws.Bool(false),
-		Target:    aws.String(target),
-	}, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
-		for _, att := range out.Policies {
-			name := aws.StringValue(att.PolicyName)
-			if name == policyName {
-				policy = att
-				return false
-			}
-		}
-		return true
-	})
+	policy, err := getIotPolicyAttachment(conn, target, policyName)
 
 	if err != nil {
-		log.Printf("[ERROR] Error listing policy attachments for target %s: %s", target, err)
-		return err
+		return fmt.Errorf("error listing policy attachments for target %s: %s", target, err)
 	}
 
 	if policy == nil {
+		log.Printf("[WARN] IOT Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -114,9 +122,15 @@ func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 		Target:     aws.String(target),
 	})
 
+	// DetachPolicy doesn't return an error if the policy doesn't exist,
+	// but it returns an error if the Target is not found.
+	if isAWSErr(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
+		log.Printf("[WARN] IOT target (%s) not found, removing attachment to policy (%s) from state", target, policyName)
+		return nil
+	}
+
 	if err != nil {
-		log.Printf("[ERROR] Error detaching policy %s from target %s: %s", policyName, target, err)
-		return err
+		return fmt.Errorf("error detaching policy %s from target %s: %s", policyName, target, err)
 	}
 
 	return nil
