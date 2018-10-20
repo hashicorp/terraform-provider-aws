@@ -17,9 +17,15 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 		Update: resourceAwsResourceGroupsGroupUpdate,
 		Delete: resourceAwsResourceGroupsGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		// As of 10/20/2018 it's not possible to import a complete resource because
+		// a resource group's tags are not returned by GetGroup nor ListGroups. This
+		// leads to dirty plans after an import, which breaks import tests.
+		//
+		// For now we ForceNew on the tags attribute and disable importing.
+		//
+		// Importer: &schema.ResourceImporter{
+		//		State: schema.ImportStatePassthrough,
+		// },
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -62,7 +68,11 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -76,6 +86,15 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 	}
 }
 
+func extractResourceGroupTags(m map[string]interface{}) map[string]*string {
+	result := make(map[string]*string)
+	for k, v := range m {
+		result[k] = aws.String(v.(string))
+	}
+
+	return result
+}
+
 func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
@@ -83,6 +102,7 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
+		Tags:          extractResourceGroupTags(d.Get("tags").(map[string]interface{})),
 	}
 
 	res, err := conn.CreateGroup(&input)

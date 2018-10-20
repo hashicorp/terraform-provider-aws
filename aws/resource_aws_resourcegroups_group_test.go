@@ -45,8 +45,9 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSResourceGroupConfig_basic(n, desc1, query1),
@@ -58,11 +59,12 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			// See comment in resource. We can't cleanly import resources as of 10/20/2018.
+			// {
+			// 	    ResourceName:      resourceName,
+			//	    ImportState:       true,
+			//	    ImportStateVerify: true,
+			// },
 			{
 				Config: testAccAWSResourceGroupConfig_basic(n, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
@@ -97,6 +99,34 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_waf_rule_group" {
+			continue
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).resourcegroupsconn
+		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
+			GroupName: aws.String(rs.Primary.ID),
+		})
+
+		if err == nil {
+			if *resp.Group.Name == rs.Primary.ID {
+				return fmt.Errorf("Resource Group %s still exists", rs.Primary.ID)
+			}
+		}
+
+		if isAWSErr(err, resourcegroups.ErrCodeNotFoundException, "") {
+
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func testAccAWSResourceGroupConfig_basic(rName string, desc string, query string) string {
