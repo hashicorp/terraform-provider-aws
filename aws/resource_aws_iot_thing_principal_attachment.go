@@ -42,12 +42,30 @@ func resourceAwsIotThingPrincipalAttachmentCreate(d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		log.Printf("[ERROR] Error attaching principal %s to thing %s: %s", principal, thing, err)
-		return err
+		return fmt.Errorf("error attaching principal %s to thing %s: %s", principal, thing, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", thing, principal))
 	return resourceAwsIotThingPrincipalAttachmentRead(d, meta)
+}
+
+func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, error) {
+	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
+		ThingName: aws.String(thing),
+	})
+	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	found := false
+	for _, name := range out.Principals {
+		if principal == aws.StringValue(name) {
+			found = true
+			break
+		}
+	}
+	return found, nil
 }
 
 func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
@@ -56,27 +74,15 @@ func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta int
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
 
-	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
-		ThingName: aws.String(thing),
-	})
+	found, err := getIoTThingPricipalAttachment(conn, thing, principal)
 
 	if err != nil {
-		log.Printf("[ERROR] Error listing principals for thing %s: %s", thing, err)
-		return err
-	}
-
-	found := false
-
-	for _, name := range out.Principals {
-		if principal == aws.StringValue(name) {
-			found = true
-			break
-		}
+		return fmt.Errorf("error listing principals for thing %s: %s", thing, err)
 	}
 
 	if !found {
+		log.Printf("[WARN] IoT Thing Principal Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
 	}
 
 	return nil
@@ -94,10 +100,9 @@ func resourceAwsIotThingPrincipalAttachmentDelete(d *schema.ResourceData, meta i
 	})
 
 	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] IoT Principal %s or Thing %s not found - removing from state", principal, thing)
+		log.Printf("[WARN] IoT Principal %s or Thing %s not found, removing from state", principal, thing)
 	} else if err != nil {
-		log.Printf("[ERROR] Error detaching principal %s from thing %s: %s", principal, thing, err)
-		return err
+		return fmt.Errorf("error detaching principal %s from thing %s: %s", principal, thing, err)
 	}
 
 	return nil
