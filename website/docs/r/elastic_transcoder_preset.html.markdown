@@ -44,7 +44,7 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
+  video_codec_options = {
     Profile                  = "main"
     Level                    = "2.2"
     MaxReferenceFrames       = 3
