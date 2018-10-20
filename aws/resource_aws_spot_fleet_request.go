@@ -758,7 +758,7 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData, meta interface{}) ([]*ec
 				}
 
 				if v, ok := ors["weighted_capacity"].(float64); ok && v > 0 {
-					lto.WeightedCapacity = aws.Float64(float64(v))
+					lto.WeightedCapacity = aws.Float64(v)
 				}
 
 				overrides = append(overrides, lto)
