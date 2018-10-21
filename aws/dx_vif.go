@@ -37,10 +37,10 @@ func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requestUpdate {
-		log.Printf("[DEBUG] Modifying Virtual Interface attributes (%s), opts:\n%s", d.Id(), req)
+		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %#v", req)
 		_, err := conn.UpdateVirtualInterfaceAttributes(req)
 		if err != nil {
-			return fmt.Errorf("Error updating Virtual Interface attributes (%s), error: %s", d.Id(), err)
+			return fmt.Errorf("Error modifying Direct Connect virtual interface (%s) attributes, error: %s", d.Id(), err)
 		}
 	}
 
@@ -115,17 +115,17 @@ func dxVirtualInterfaceStateRefresh(conn *directconnect.DirectConnect, vifId str
 	}
 }
 
-func dxVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect, pending, target []string) error {
+func dxVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration, pending, target []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    dxVirtualInterfaceStateRefresh(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Refresh:    dxVirtualInterfaceStateRefresh(conn, vifId),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to become available: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to become available: %s", vifId, err)
 	}
 
 	return nil
