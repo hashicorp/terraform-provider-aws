@@ -27,7 +27,7 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 	}]
 }`, partition, name, partition, name)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -69,7 +69,7 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 	}]
 }`, partition, name, partition, name)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,

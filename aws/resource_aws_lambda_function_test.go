@@ -81,7 +81,7 @@ func TestAccAWSLambdaFunction_importLocalFile(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_import_local_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_import_local_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -109,7 +109,7 @@ func TestAccAWSLambdaFunction_importLocalFile_VPC(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_import_vpc_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_import_vpc_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -136,7 +136,7 @@ func TestAccAWSLambdaFunction_importS3(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_import_s3_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_import_s3_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -164,7 +164,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -191,7 +191,7 @@ func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_concurrency_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_concurrency_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -227,7 +227,7 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_concurrency_cycle_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_concurrency_cycle_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -272,7 +272,7 @@ func TestAccAWSLambdaFunction_updateRuntime(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_update_runtime_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_update_runtime_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -302,7 +302,7 @@ func TestAccAWSLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_expect_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -324,7 +324,7 @@ func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_env_vars_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_env_vars_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -381,7 +381,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_encrypted_env_%s", rString)
 	keyRegex := regexp.MustCompile("^arn:aws[\\w-]*:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -419,7 +419,7 @@ func TestAccAWSLambdaFunction_versioned(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_versioned_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_versioned_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -457,7 +457,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 
 	var timeBeforeUpdate time.Time
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -502,7 +502,7 @@ func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_dlconfig_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_dlconfig_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -553,7 +553,7 @@ func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
 	topic1Name := fmt.Sprintf("tf_acc_topic_lambda_func_dlcfg_upd_%s", rString)
 	topic2Name := fmt.Sprintf("tf_acc_topic_lambda_func_dlcfg_upd_2_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -586,7 +586,7 @@ func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_nil_dlcfg_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_nil_dlcfg_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -613,7 +613,7 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 		t.Skip("Lambda tracing config is not supported in GovCloud partition")
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -649,7 +649,7 @@ func TestAccAWSLambdaFunction_VPC(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -677,7 +677,7 @@ func TestAccAWSLambdaFunction_VPCRemoval(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function.lambda_function_test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -710,7 +710,7 @@ func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_upd_%s", rString)
 	sgName2 := fmt.Sprintf("tf_acc_sg_lambda_func_2nd_vpc_upd_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -754,7 +754,7 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_w_invc_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_w_invc_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -779,7 +779,7 @@ func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_empty_vpc_config_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_empty_vpc_config_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -803,7 +803,7 @@ func TestAccAWSLambdaFunction_s3(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_s3_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_s3_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -836,7 +836,7 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 
 	var timeBeforeUpdate time.Time
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -892,7 +892,7 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 	}
 	defer os.Remove(updatedPath)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -941,7 +941,7 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 
 	key := "lambda-func.zip"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -993,7 +993,7 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 	key := "lambda-func.zip"
 	key2 := "lambda-func-modified.zip"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -1036,7 +1036,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_noRuntime(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_no_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_no_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -1059,7 +1059,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_nodeJs43(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_node43_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_node43_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -1085,7 +1085,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_python27(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_p27_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_p27_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -1111,7 +1111,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_java8(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_j8_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_j8_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -1137,7 +1137,7 @@ func TestAccAWSLambdaFunction_tags(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_tags_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_tags_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -1188,7 +1188,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_python36(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_p36_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_p36_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,

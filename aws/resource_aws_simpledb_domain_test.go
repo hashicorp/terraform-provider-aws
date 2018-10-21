@@ -14,7 +14,7 @@ import (
 func TestAccAWSSimpleDBDomain_importBasic(t *testing.T) {
 	resourceName := "aws_simpledb_domain.test_domain"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSimpleDBDomainDestroy,
@@ -33,7 +33,7 @@ func TestAccAWSSimpleDBDomain_importBasic(t *testing.T) {
 }
 
 func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSimpleDBDomainDestroy,

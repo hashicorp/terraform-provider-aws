@@ -13,7 +13,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	var queueAttributes map[string]*string
 
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSSQSQueuePolicy_import(t *testing.T) {
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
 	resourceName := "aws_sqs_queue_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,

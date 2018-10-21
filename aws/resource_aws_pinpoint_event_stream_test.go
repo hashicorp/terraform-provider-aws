@@ -20,7 +20,7 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 	var stream pinpoint.EventStream
 	resourceName := "aws_pinpoint_event_stream.test_event_stream"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,

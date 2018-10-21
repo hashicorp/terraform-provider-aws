@@ -508,9 +508,24 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	resp, err := elbconn.DescribeRules(&elbv2.DescribeRulesInput{
+	var resp *elbv2.DescribeRulesOutput
+	var req = &elbv2.DescribeRulesInput{
 		RuleArns: []*string{aws.String(d.Id())},
+	}
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = elbconn.DescribeRules(req)
+		if err != nil {
+			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+				return resource.RetryableError(err)
+			} else {
+				return resource.NonRetryableError(err)
+			}
+		}
+		return nil
 	})
+
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())

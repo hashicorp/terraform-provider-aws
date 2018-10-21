@@ -60,7 +60,7 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	rString := acctest.RandStringFromCharSet(12, "0123456789")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,

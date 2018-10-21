@@ -17,7 +17,7 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codedeploy_app.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
@@ -52,7 +52,7 @@ func TestAccAWSCodeDeployApp_computePlatform(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codedeploy_app.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
@@ -87,7 +87,7 @@ func TestAccAWSCodeDeployApp_name(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codedeploy_app.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,

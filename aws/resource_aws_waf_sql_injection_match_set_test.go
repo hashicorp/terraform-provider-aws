@@ -17,7 +17,7 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
@@ -49,7 +49,7 @@ func TestAccAWSWafSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
 	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
 	sqlInjectionMatchSetNewName := fmt.Sprintf("sqlInjectionMatchSetNewName-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
@@ -82,7 +82,7 @@ func TestAccAWSWafSqlInjectionMatchSet_disappears(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
@@ -103,7 +103,7 @@ func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
 	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
@@ -152,7 +152,7 @@ func TestAccAWSWafSqlInjectionMatchSet_noTuples(t *testing.T) {
 	var ipset waf.SqlInjectionMatchSet
 	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,

@@ -14,7 +14,7 @@ func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
 	resourceName := "aws_dx_gateway.test"
 	datasourceName := "data.aws_dx_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	var conf apigateway.Deployment
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 	var conf apigateway.Deployment
 	var stage apigateway.Stage
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,

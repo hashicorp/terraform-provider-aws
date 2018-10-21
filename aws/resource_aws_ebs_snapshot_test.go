@@ -39,7 +39,7 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
@@ -67,7 +67,7 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
@@ -87,7 +87,7 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,

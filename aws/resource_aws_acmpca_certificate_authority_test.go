@@ -63,7 +63,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -109,7 +109,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	// error updating ACMPCA Certificate Authority: InvalidStateException: The certificate authority must be in the Active or DISABLED state to be updated
 	t.Skip("We need to fully sign the certificate authority CSR from another CA in order to test this functionality, which requires another resource")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -144,7 +144,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -226,7 +226,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -292,7 +292,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -346,7 +346,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,

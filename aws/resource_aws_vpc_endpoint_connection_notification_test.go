@@ -17,7 +17,7 @@ func TestAccAWSVpcEndpointConnectionNotification_importBasic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_vpc_endpoint_connection_notification.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointConnectionNotificationDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSVpcEndpointConnectionNotification_importBasic(t *testing.T) {
 func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpc_endpoint_connection_notification.foo",
 		Providers:     testAccProviders,

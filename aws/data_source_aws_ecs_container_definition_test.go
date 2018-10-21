@@ -14,7 +14,7 @@ func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

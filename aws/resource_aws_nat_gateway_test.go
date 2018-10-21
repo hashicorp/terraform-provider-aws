@@ -69,7 +69,7 @@ func testSweepNatGateways(region string) error {
 func TestAccAWSNatGateway_importBasic(t *testing.T) {
 	resourceName := "aws_nat_gateway.gateway"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
@@ -90,7 +90,7 @@ func TestAccAWSNatGateway_importBasic(t *testing.T) {
 func TestAccAWSNatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_nat_gateway.gateway",
 		Providers:     testAccProviders,
@@ -109,7 +109,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 func TestAccAWSNatGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,

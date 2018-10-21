@@ -11,7 +11,7 @@ import (
 func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 	var snapshotId, accountId string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			// Scaffold everything

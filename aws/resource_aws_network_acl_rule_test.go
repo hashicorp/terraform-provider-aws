@@ -16,7 +16,7 @@ import (
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -51,7 +51,7 @@ func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -68,7 +68,7 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -140,7 +140,7 @@ func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 func TestAccAWSNetworkAclRule_deleteRule(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,

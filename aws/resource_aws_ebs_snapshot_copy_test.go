@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 	var v ec2.Snapshot
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -31,7 +31,7 @@ func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 
 func TestAccAWSEbsSnapshotCopy_withDescription(t *testing.T) {
 	var v ec2.Snapshot
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -60,7 +60,7 @@ func TestAccAWSEbsSnapshotCopy_withRegions(t *testing.T) {
 		},
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccAWSEbsSnapshotCopy_withRegions(t *testing.T) {
 
 func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 	var v ec2.Snapshot
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

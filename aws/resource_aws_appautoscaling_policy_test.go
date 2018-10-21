@@ -17,7 +17,7 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(10))
 	randPolicyName := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
@@ -48,7 +48,7 @@ func TestAccAWSAppautoScalingPolicy_nestedSchema(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(10))
 	randPolicyName := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
@@ -80,7 +80,7 @@ func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(10))
 	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
@@ -135,7 +135,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
@@ -160,7 +160,7 @@ func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
@@ -186,7 +186,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	tableName2 := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(5))
 	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
@@ -218,7 +218,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	tableName := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(5))
 	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,

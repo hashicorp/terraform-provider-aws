@@ -17,7 +17,7 @@ func TestAccAWSSfnActivity_importBasic(t *testing.T) {
 	resourceName := "aws_sfn_activity.foo"
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSSfnActivity_importBasic(t *testing.T) {
 func TestAccAWSSfnActivity_basic(t *testing.T) {
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,

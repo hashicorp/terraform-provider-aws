@@ -15,7 +15,7 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_maintenance_window.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
