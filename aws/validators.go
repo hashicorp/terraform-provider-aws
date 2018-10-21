@@ -365,6 +365,25 @@ func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
 	}
 }
 
+func validateIntegerInSlice(valid []int) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(int)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be int", k))
+			return
+		}
+
+		for _, in := range valid {
+			if v == in {
+				return
+			}
+		}
+
+		es = append(es, fmt.Errorf("expected %s to be one of %v, got %d", k, valid, v))
+		return
+	}
+}
+
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {

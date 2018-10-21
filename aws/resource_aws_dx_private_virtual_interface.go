@@ -88,7 +88,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Type:         schema.TypeInt,
 				Default:      1500,
 				Optional:     true,
-				ValidateFunc: IntInSlice([]int{1500, 9001}),
+				ValidateFunc: validateIntegerInSlice([]int{1500, 9001}),
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
@@ -234,23 +234,4 @@ func dxPrivateVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *d
 			directconnect.VirtualInterfaceStateAvailable,
 			directconnect.VirtualInterfaceStateDown,
 		})
-}
-
-func IntInSlice(valid []int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(int)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be int", k))
-			return
-		}
-
-		for _, in := range valid {
-			if v == in {
-				return
-			}
-		}
-
-		es = append(es, fmt.Errorf("expected %s to be one of %v, got %d", k, valid, v))
-		return
-	}
 }
