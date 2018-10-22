@@ -20,7 +20,7 @@ func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test_email_channel"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,

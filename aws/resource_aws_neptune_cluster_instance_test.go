@@ -16,7 +16,7 @@ import (
 func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 	var v neptune.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 	var v neptune.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -108,7 +108,7 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -129,7 +129,7 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
 	var v neptune.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -151,7 +151,7 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 	var v neptune.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,

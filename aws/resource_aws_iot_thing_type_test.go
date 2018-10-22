@@ -15,7 +15,7 @@ func TestAccAWSIotThingType_importBasic(t *testing.T) {
 	resourceName := "aws_iot_thing_type.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSIotThingType_importBasic(t *testing.T) {
 func TestAccAWSIotThingType_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
@@ -54,7 +54,7 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 func TestAccAWSIotThingType_full(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,

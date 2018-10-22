@@ -17,7 +17,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
@@ -39,7 +39,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
@@ -71,7 +71,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_Instance(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
@@ -95,7 +95,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_DataSource(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
@@ -125,7 +125,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_Multiple(t *testing.T) {
 	resourceName4 := "aws_network_interface_sg_attachment.test.3"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,

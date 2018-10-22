@@ -17,7 +17,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Providers: map[string]terraform.ResourceProvider{
 			"aws": testAccProvider,

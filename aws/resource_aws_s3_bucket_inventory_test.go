@@ -22,7 +22,7 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
@@ -67,7 +67,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
@@ -96,7 +96,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,

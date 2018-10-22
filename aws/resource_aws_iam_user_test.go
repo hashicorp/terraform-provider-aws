@@ -53,7 +53,7 @@ func TestAccAWSUser_importBasic(t *testing.T) {
 
 	n := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSUser_basic(t *testing.T) {
 	path1 := "/"
 	path2 := "/path2/"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
@@ -110,7 +110,7 @@ func TestAccAWSUser_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_user.user"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
@@ -134,7 +134,7 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	path := "/"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
@@ -162,7 +162,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 	path1 := "/"
 	path2 := "/updated/"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
@@ -192,7 +192,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", testAccGetPartition())
 	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", testAccGetPartition())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,

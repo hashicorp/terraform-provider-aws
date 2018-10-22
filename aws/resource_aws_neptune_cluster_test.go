@@ -21,7 +21,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_neptune_cluster.default"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -52,7 +52,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 	var v neptune.DBCluster
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -79,7 +79,7 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	var v neptune.DBCluster
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterSnapshot(rInt),
@@ -104,7 +104,7 @@ func TestAccAWSNeptuneCluster_updateTags(t *testing.T) {
 	var v neptune.DBCluster
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -139,7 +139,7 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 	var v neptune.DBCluster
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -180,7 +180,7 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 	var v neptune.DBCluster
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -206,7 +206,7 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 	var v neptune.DBCluster
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -233,7 +233,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 	var v neptune.DBCluster
 
 	ri := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -275,7 +275,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 	var v neptune.DBCluster
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,

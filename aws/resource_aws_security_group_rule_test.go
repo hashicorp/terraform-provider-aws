@@ -129,7 +129,7 @@ func TestAccAWSSecurityGroupRule_Ingress_VPC(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -172,7 +172,7 @@ func TestAccAWSSecurityGroupRule_Ingress_Protocol(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -221,7 +221,7 @@ func TestAccAWSSecurityGroupRule_Ingress_Ipv6(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -262,7 +262,7 @@ func TestAccAWSSecurityGroupRule_Ingress_Classic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -311,7 +311,7 @@ func TestAccAWSSecurityGroupRule_MultiIngress(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -337,7 +337,7 @@ func TestAccAWSSecurityGroupRule_Egress(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -362,7 +362,7 @@ func TestAccAWSSecurityGroupRule_Egress(t *testing.T) {
 func TestAccAWSSecurityGroupRule_SelfReference(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -385,7 +385,7 @@ func TestAccAWSSecurityGroupRule_SelfReference(t *testing.T) {
 
 func TestAccAWSSecurityGroupRule_ExpectInvalidTypeError(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -400,7 +400,7 @@ func TestAccAWSSecurityGroupRule_ExpectInvalidTypeError(t *testing.T) {
 
 func TestAccAWSSecurityGroupRule_ExpectInvalidCIDR(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -442,7 +442,7 @@ func TestAccAWSSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 		},
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -504,7 +504,7 @@ func TestAccAWSSecurityGroupRule_PartialMatching_Source(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -531,7 +531,7 @@ func TestAccAWSSecurityGroupRule_PartialMatching_Source(t *testing.T) {
 func TestAccAWSSecurityGroupRule_Issue5310(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -555,7 +555,7 @@ func TestAccAWSSecurityGroupRule_Issue5310(t *testing.T) {
 func TestAccAWSSecurityGroupRule_Race(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -574,7 +574,7 @@ func TestAccAWSSecurityGroupRule_SelfSource(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -634,7 +634,7 @@ func TestAccAWSSecurityGroupRule_PrefixListEgress(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -664,7 +664,7 @@ func TestAccAWSSecurityGroupRule_IngressDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -691,7 +691,7 @@ func TestAccAWSSecurityGroupRule_EgressDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -718,7 +718,7 @@ func TestAccAWSSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -754,7 +754,7 @@ func TestAccAWSSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
@@ -870,7 +870,7 @@ func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,

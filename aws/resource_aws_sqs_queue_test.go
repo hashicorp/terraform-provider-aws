@@ -18,7 +18,7 @@ func TestAccAWSSQSQueue_importBasic(t *testing.T) {
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSSQSQueue_importFifo(t *testing.T) {
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -66,7 +66,7 @@ func TestAccAWSSQSQueue_importEncryption(t *testing.T) {
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -90,7 +90,7 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]*string
 
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -124,7 +124,7 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 	var queueAttributes map[string]*string
 
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -163,7 +163,7 @@ func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
 	var queueAttributes map[string]*string
 
 	prefix := "acctest-sqs-queue"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -184,7 +184,7 @@ func TestAccAWSSQSQueue_namePrefix_fifo(t *testing.T) {
 	var queueAttributes map[string]*string
 
 	prefix := "acctest-sqs-queue"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -211,7 +211,7 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 		`{"Version": "2012-10-17","Id": "sqspolicy","Statement":[{"Sid": "Stmt1451501026839","Effect": "Allow","Principal":"*","Action":"sqs:SendMessage","Resource":"arn:aws:sqs:us-west-2:470663696735:%s","Condition":{"ArnEquals":{"aws:SourceArn":"arn:aws:sns:us-west-2:470663696735:%s"}}}]}`,
 		topicName, queueName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -231,7 +231,7 @@ func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 	var queueAttributes map[string]*string
 
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -258,7 +258,7 @@ func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 	var queueAttributes map[string]*string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -280,7 +280,7 @@ func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -299,7 +299,7 @@ func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 func TestAccAWSSQSQueue_FIFO(t *testing.T) {
 	var queueAttributes map[string]*string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -316,7 +316,7 @@ func TestAccAWSSQSQueue_FIFO(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -332,7 +332,7 @@ func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
 func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
 	var queueAttributes map[string]*string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -350,7 +350,7 @@ func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -366,7 +366,7 @@ func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
 func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	var queueAttributes map[string]*string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,

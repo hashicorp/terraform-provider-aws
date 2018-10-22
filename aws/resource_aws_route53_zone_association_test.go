@@ -15,7 +15,7 @@ import (
 func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 	var zone route53.HostedZone
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSRoute53ZoneAssociation_region(t *testing.T) {
 	// check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneAssociationDestroyWithProvider, &providers),

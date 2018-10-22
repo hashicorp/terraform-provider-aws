@@ -16,7 +16,7 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	clusterName := fmt.Sprintf("tf-acc-cluster-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
@@ -39,7 +39,7 @@ func TestAccAWSEcsCluster_importBasic(t *testing.T) {
 
 	resourceName := "aws_ecs_cluster.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,

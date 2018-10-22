@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -28,7 +28,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsRouteTable_main(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

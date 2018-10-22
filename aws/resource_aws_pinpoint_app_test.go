@@ -20,7 +20,7 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -51,7 +51,7 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 	appName := "terraform-test-pinpointapp-campaignhooklambda"
 	lambdaName := "test-pinpoint-lambda"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
 		Providers:     testAccProviders,
@@ -82,7 +82,7 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
 		Providers:     testAccProviders,
@@ -113,7 +113,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
 		Providers:     testAccProviders,

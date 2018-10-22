@@ -19,7 +19,7 @@ import (
 func TestAccAWSRDSClusterInstance_importBasic(t *testing.T) {
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -40,7 +40,7 @@ func TestAccAWSRDSClusterInstance_importBasic(t *testing.T) {
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -75,7 +75,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -96,7 +96,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -119,7 +119,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -141,7 +141,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -162,7 +162,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -185,7 +185,7 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -291,7 +291,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -311,7 +311,7 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 	var v rds.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,

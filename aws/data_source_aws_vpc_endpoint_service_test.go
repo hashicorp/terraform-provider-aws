@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -48,7 +48,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -88,7 +88,7 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

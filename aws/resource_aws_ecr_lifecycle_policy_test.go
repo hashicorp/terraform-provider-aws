@@ -15,7 +15,7 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 	randString := acctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSEcrLifecyclePolicy_import(t *testing.T) {
 	randString := acctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,

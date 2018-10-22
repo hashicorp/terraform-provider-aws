@@ -16,7 +16,7 @@ func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDirectoryServiceConditionalForwarderDestroy,

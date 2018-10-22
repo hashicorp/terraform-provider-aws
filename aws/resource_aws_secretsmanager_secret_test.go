@@ -73,7 +73,7 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -108,7 +108,7 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -142,7 +142,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -176,7 +176,7 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -211,7 +211,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -263,7 +263,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -317,7 +317,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
@@ -371,7 +371,7 @@ func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Sid":"EnableAllPermissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"secretsmanager:GetSecretValue","Resource":"*"}]}`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,

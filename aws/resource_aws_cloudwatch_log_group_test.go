@@ -15,7 +15,7 @@ func TestAccAWSCloudWatchLogGroup_importBasic(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_group.foobar"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -77,7 +77,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -105,7 +105,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -124,7 +124,7 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -151,7 +151,7 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -175,7 +175,7 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -196,7 +196,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -251,7 +251,7 @@ func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,

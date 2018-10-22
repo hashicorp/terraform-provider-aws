@@ -15,7 +15,7 @@ import (
 func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
@@ -33,7 +33,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
@@ -51,7 +51,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
