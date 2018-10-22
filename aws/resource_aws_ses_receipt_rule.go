@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,6 +21,9 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 		Update: resourceAwsSesReceiptRuleUpdate,
 		Read:   resourceAwsSesReceiptRuleRead,
 		Delete: resourceAwsSesReceiptRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsSesReceiptRuleImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -354,6 +358,22 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsSesReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), ":")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
+	}
+
+	ruleSetName := idParts[0]
+	ruleName := idParts[1]
+
+	d.Set("rule_set_name", ruleSetName)
+	d.Set("name", ruleName)
+	d.SetId(ruleName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {

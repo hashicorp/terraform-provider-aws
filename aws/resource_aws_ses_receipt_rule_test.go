@@ -27,6 +27,11 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
 				),
 			},
+			{
+				ResourceName:      "aws_ses_receipt_rule.basic",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc("aws_ses_receipt_rule.basic"),
+			},
 		},
 	})
 }
@@ -155,6 +160,17 @@ func testAccCheckAwsSESReceiptRuleExists(n string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func testAccAwsSesReceiptRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["rule_set_name"], rs.Primary.Attributes["name"])
 	}
 }
 
