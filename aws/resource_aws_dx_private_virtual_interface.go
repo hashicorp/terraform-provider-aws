@@ -88,7 +88,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Type:         schema.TypeInt,
 				Default:      1500,
 				Optional:     true,
-				ValidateFunc: IntInSlice([]int{1500, 9001}),
+				ValidateFunc: validateIntegerInSlice([]int{1500, 9001}),
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
@@ -99,6 +99,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
@@ -139,9 +140,6 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("amazon_address"); ok && v.(string) != "" {
 		req.NewPrivateVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("mtu"); ok && v.(int) != 0 {
-		req.NewPrivateVirtualInterface.Mtu = aws.Int64(int64(v.(int)))
-	}
 
 	log.Printf("[DEBUG] Creating Direct Connect private virtual interface: %#v", req)
 	resp, err := conn.CreatePrivateVirtualInterface(req)
@@ -159,7 +157,7 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
+	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -203,6 +201,10 @@ func resourceAwsDxPrivateVirtualInterfaceUpdate(d *schema.ResourceData, meta int
 		return err
 	}
 
+	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(meta.(*AWSClient).dxconn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return err
+	}
+
 	return resourceAwsDxPrivateVirtualInterfaceRead(d, meta)
 }
 
@@ -223,10 +225,11 @@ func resourceAwsDxPrivateVirtualInterfaceImport(d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxPrivateVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
+func dxPrivateVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
 	return dxVirtualInterfaceWaitUntilAvailable(
-		d,
 		conn,
+		vifId,
+		timeout,
 		[]string{
 			directconnect.VirtualInterfaceStatePending,
 		},
@@ -234,23 +237,4 @@ func dxPrivateVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *d
 			directconnect.VirtualInterfaceStateAvailable,
 			directconnect.VirtualInterfaceStateDown,
 		})
-}
-
-func IntInSlice(valid []int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(int)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be int", k))
-			return
-		}
-
-		for _, in := range valid {
-			if v == in {
-				return
-			}
-		}
-
-		es = append(es, fmt.Errorf("expected %s to be one of %v, got %d", k, valid, v))
-		return
-	}
 }

@@ -21,7 +21,7 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
 	bgpAsn := randIntRange(64512, 65534)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
@@ -41,15 +41,6 @@ func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "tags.Environment", "test"),
-				),
-			},
-			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_mtuCapable(connectionId, vifName, bgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "9001"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
 				),
 			},
 			// Test import.
@@ -72,7 +63,7 @@ func TestAccAwsDxPrivateVirtualInterface_dxGateway(t *testing.T) {
 	amzAsn := randIntRange(64512, 65534)
 	bgpAsn := randIntRange(64512, 65534)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
@@ -107,15 +98,16 @@ func TestAccAwsDxPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
 				),
 			},
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfig_mtuCapable(connectionId, vifName, bgpAsn),
+				Config: testAccDxPrivateVirtualInterfaceConfig_jumboFrames(connectionId, vifName, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "9001"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
 				),
 			},
 			{
@@ -124,14 +116,7 @@ func TestAccAwsDxPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "0"),
 				),
-			},
-			// Test import.
-			{
-				ResourceName:      "aws_dx_private_virtual_interface.foo",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -236,7 +221,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
 `, n, amzAsn, cid, n, bgpAsn)
 }
 
-func testAccDxPrivateVirtualInterfaceConfig_mtuCapable(cid, n string, bgpAsn int) string {
+func testAccDxPrivateVirtualInterfaceConfig_jumboFrames(cid, n string, bgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "foo" {
   tags {
@@ -252,7 +237,7 @@ resource "aws_dx_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
-  mtu			 			 = 9001
+  mtu            = 9001
 }
 `, n, cid, n, bgpAsn)
 }
