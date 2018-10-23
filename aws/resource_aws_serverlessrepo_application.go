@@ -54,6 +54,10 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"outputs": {
+				Type:     schema.TypeMap,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -272,6 +276,11 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 
 	originalParams := d.Get("parameters").(map[string]interface{})
 	err = d.Set("parameters", flattenCloudFormationParameters(stack.Parameters, originalParams))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
 	if err != nil {
 		return err
 	}

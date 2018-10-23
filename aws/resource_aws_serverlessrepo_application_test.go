@@ -29,6 +29,8 @@ func TestAccAwsServerlessRepositoryApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.functionName", fmt.Sprintf("func-%s", stackName)),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.endpoint", "secretsmanager.us-east-2.amazonaws.com"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "outputs.%", "1"),
+					resource.TestCheckResourceAttrSet("aws_serverlessrepository_application.postgres-rotator", "outputs.RotationLambdaARN"),
 				),
 			},
 		},
