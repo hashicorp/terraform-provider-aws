@@ -250,7 +250,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "1.5",
-				ForceNew: true,
 			},
 			"cognito_options": {
 				Type:             schema.TypeList,
@@ -749,6 +748,40 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	})
 	if err != nil {
 		return err
+	}
+
+	if d.HasChange("elasticsearch_version") {
+		upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
+			DomainName:    aws.String(d.Get("domain_name").(string)),
+			TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
+		}
+
+		_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
+		if err != nil {
+			return fmt.Errorf("Failed to upgrade elasticsearch domain: %s", err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{elasticsearch.UpgradeStatusInProgress},
+			Target:  []string{elasticsearch.UpgradeStatusSucceeded},
+			Refresh: func() (interface{}, string, error) {
+				out, err := conn.GetUpgradeStatus(&elasticsearch.GetUpgradeStatusInput{
+					DomainName: aws.String(d.Get("domain_name").(string)),
+				})
+				if err != nil {
+					return nil, "", err
+				}
+
+				return out, aws.StringValue(out.StepStatus), nil
+			},
+			Timeout:    60 * time.Minute, // TODO: Make this configurable. Large ES domains may take a very long time to upgrade
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second, // The upgrade status isn't instantly available for the current upgrade so will either be nil or reflect a previous upgrade
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return waitErr
+		}
 	}
 
 	d.Partial(false)

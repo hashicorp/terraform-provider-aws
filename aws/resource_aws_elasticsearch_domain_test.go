@@ -556,6 +556,38 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 		}})
 }
 
+func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
+	var input elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.5"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "5.5"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.6"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "5.6"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "6.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "6.3"),
+				),
+			},
+		}})
+}
+
 func testAccCheckESEBSVolumeSize(ebsVolumeSize int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
@@ -778,6 +810,27 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, volumeSize)
+}
+
+func testAccESDomainConfig_ClusterUpdateVersion(randInt int, version string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "%v"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_count = 1
+    zone_awareness_enabled = false
+    instance_type = "t2.small.elasticsearch"
+  }
+}
+`, randInt, version)
 }
 
 func testAccESDomainConfig_ClusterUpdateInstanceStore(randInt int) string {
