@@ -79,6 +79,49 @@ func TestAccAwsDxPrivateVirtualInterface_dxGateway(t *testing.T) {
 	})
 }
 
+func TestAccAwsDxPrivateVirtualInterface_mtuUpdate(t *testing.T) {
+	key := "DX_CONNECTION_ID"
+	connectionId := os.Getenv(key)
+	if connectionId == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
+	bgpAsn := randIntRange(64512, 65534)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxPrivateVirtualInterfaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_noTags(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "true"),
+				),
+			},
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_jumboFrames(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "9001"),
+				),
+			},
+			{
+				Config: testAccDxPrivateVirtualInterfaceConfig_noTags(connectionId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsDxPrivateVirtualInterfaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dxconn
 
@@ -176,4 +219,25 @@ resource "aws_dx_private_virtual_interface" "foo" {
   bgp_asn        = %d
 }
 `, n, amzAsn, cid, n, bgpAsn)
+}
+
+func testAccDxPrivateVirtualInterfaceConfig_jumboFrames(cid, n string, bgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "foo" {
+  tags {
+    Name = "%s"
+  }
+}
+
+resource "aws_dx_private_virtual_interface" "foo" {
+  connection_id    = "%s"
+
+  vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
+  name           = "%s"
+  vlan           = 4094
+  address_family = "ipv4"
+  bgp_asn        = %d
+  mtu            = 9001
+}
+`, n, cid, n, bgpAsn)
 }

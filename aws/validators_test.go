@@ -585,16 +585,21 @@ func TestValidateIntegerInSlice(t *testing.T) {
 				return true
 			}
 		}
+
 		return false
 	}
+
 	for i, tc := range cases {
 		_, errs := tc.f(tc.val, "test_property")
+
 		if len(errs) == 0 && tc.expectedErr == nil {
 			continue
 		}
+
 		if len(errs) != 0 && tc.expectedErr == nil {
 			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
 		}
+
 		if !matchErr(errs, tc.expectedErr) {
 			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
 		}
