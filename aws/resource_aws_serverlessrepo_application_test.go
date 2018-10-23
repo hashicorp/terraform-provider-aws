@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsServerlessRepositoryApplication_Basic(t *testing.T) {
+func TestAccAwsServerlessRepositoryApplication_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
 
@@ -35,7 +35,7 @@ func TestAccAwsServerlessRepositoryApplication_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsServerlessRepositoryApplication_Versioned(t *testing.T) {
+func TestAccAwsServerlessRepositoryApplication_versioned(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-versioned-%s", acctest.RandString(10))
 	const version = "1.0.15"
@@ -56,7 +56,7 @@ func TestAccAwsServerlessRepositoryApplication_Versioned(t *testing.T) {
 	})
 }
 
-func TestAccAwsServerlessRepositoryApplication_UpdateVersion(t *testing.T) {
+func TestAccAWSServerlessRepositoryApplication_updateVersion(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-update-%s", acctest.RandString(10))
 	const initialVersion = "1.0.15"
