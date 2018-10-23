@@ -70,26 +70,26 @@ func TestAccAwsDxHostedPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 			{
 				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "true"),
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "1500"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "jumbo_frame_capable", "true"),
 				),
 			},
 			{
 				Config: testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(connectionId, ownerAccountId, vifName, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "9001"),
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "9001"),
 				),
 			},
 			{
 				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "1500"),
 				),
 			},
 		},
