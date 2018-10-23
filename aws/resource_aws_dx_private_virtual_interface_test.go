@@ -99,7 +99,7 @@ func TestAccAwsDxPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 					testAccCheckAwsDxPrivateVirtualInterfaceExists("aws_dx_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "name", vifName),
 					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "mtu", "1500"),
-					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "1"),
+					resource.TestCheckResourceAttr("aws_dx_private_virtual_interface.foo", "jumbo_frame_capable", "true"),
 				),
 			},
 			{
