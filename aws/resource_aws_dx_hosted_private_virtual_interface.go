@@ -78,10 +78,11 @@ func resourceAwsDxHostedPrivateVirtualInterface() *schema.Resource {
 				ValidateFunc: validateAwsAccountId,
 			},
 			"mtu": {
-				Type:     schema.TypeInt,
-				Default:  1500,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Default:      1500,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateIntegerInSlice([]int{1500, 9001}),
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
@@ -91,6 +92,7 @@ func resourceAwsDxHostedPrivateVirtualInterface() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
@@ -139,7 +141,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, me
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxHostedPrivateVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
+	if err := dxHostedPrivateVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -191,10 +193,11 @@ func resourceAwsDxHostedPrivateVirtualInterfaceImport(d *schema.ResourceData, me
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxHostedPrivateVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
+func dxHostedPrivateVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
 	return dxVirtualInterfaceWaitUntilAvailable(
-		d,
 		conn,
+		vifId,
+		timeout,
 		[]string{
 			directconnect.VirtualInterfaceStatePending,
 		},
