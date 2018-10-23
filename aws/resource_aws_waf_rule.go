@@ -17,6 +17,9 @@ func resourceAwsWafRule() *schema.Resource {
 		Read:   resourceAwsWafRuleRead,
 		Update: resourceAwsWafRuleUpdate,
 		Delete: resourceAwsWafRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

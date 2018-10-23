@@ -58,10 +58,16 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 * `data_id` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
 * `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
-## Remarks
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule.
+
+## Import
+
+WAF rules can be imported using the id, e.g.
+
+```
+$ terraform import aws_waf_rule.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```
