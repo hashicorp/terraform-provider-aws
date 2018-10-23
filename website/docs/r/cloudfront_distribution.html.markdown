@@ -206,7 +206,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   comment = "A distribution for our S3 Website Endpoint"
 
   default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    allowed_methods  = ["HEAD", "GET", "OPTIONS"]
     cached_methods   = ["HEAD", "GET", "OPTIONS"]
     target_origin_id = "${local.origin_id}"
 
