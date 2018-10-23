@@ -119,13 +119,8 @@ resource "aws_s3_bucket" "bucket" {
     }
 
     transition {
-      days = 15
-      storage_class = "ONEZONE_IA"
-    }
-
-    transition {
       days          = 30
-      storage_class = "STANDARD_IA"
+      storage_class = "STANDARD_IA" # or "ONEZONE_IA"
     }
 
     transition {

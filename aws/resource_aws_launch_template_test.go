@@ -17,7 +17,7 @@ func TestAccAWSLaunchTemplate_importBasic(t *testing.T) {
 	resName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSLaunchTemplate_importData(t *testing.T) {
 	resName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -60,7 +60,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 	resName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -84,7 +84,7 @@ func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
 	resourceName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -106,7 +106,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -135,7 +135,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -176,7 +176,7 @@ func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -230,7 +230,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	resName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -267,7 +267,7 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -302,7 +302,7 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 	resName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -331,7 +331,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_nonBurstable(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resName := "aws_launch_template.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -351,7 +351,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t2(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resName := "aws_launch_template.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -373,7 +373,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resName := "aws_launch_template.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -394,7 +394,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -417,7 +417,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -439,7 +439,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6AddressCount(t *testing.T) {
 	resName := "aws_launch_template.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -462,7 +462,7 @@ func TestAccAWSLaunchTemplate_instanceMarketOptions(t *testing.T) {
 	templateName := "aws_launch_template.test"
 	groupName := "aws_autoscaling_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,

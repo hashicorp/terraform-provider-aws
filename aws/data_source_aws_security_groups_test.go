@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -27,7 +27,7 @@ func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 
 func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

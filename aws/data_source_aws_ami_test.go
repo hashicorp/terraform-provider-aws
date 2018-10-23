@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 	})
 }
 func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 }
 
 func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -128,7 +128,7 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 }
 
 func TestAccAWSAmiDataSource_owners(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -144,7 +144,7 @@ func TestAccAWSAmiDataSource_owners(t *testing.T) {
 
 // Acceptance test for: https://github.com/hashicorp/terraform/issues/10758
 func TestAccAWSAmiDataSource_ownersEmpty(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -159,7 +159,7 @@ func TestAccAWSAmiDataSource_ownersEmpty(t *testing.T) {
 }
 
 func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

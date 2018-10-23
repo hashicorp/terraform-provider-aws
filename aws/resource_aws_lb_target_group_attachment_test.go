@@ -16,7 +16,7 @@ import (
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -35,7 +35,7 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 func TestAccAWSLBTargetGroupAttachmentBackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -54,7 +54,7 @@ func TestAccAWSLBTargetGroupAttachmentBackwardsCompatibility(t *testing.T) {
 func TestAccAWSLBTargetGroupAttachment_withoutPort(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,
@@ -73,7 +73,7 @@ func TestAccAWSLBTargetGroupAttachment_withoutPort(t *testing.T) {
 func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_target_group.test",
 		Providers:     testAccProviders,

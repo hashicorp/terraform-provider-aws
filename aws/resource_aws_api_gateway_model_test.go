@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	var conf apigateway.Model
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,

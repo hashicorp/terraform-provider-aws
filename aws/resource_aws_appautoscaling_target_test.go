@@ -18,7 +18,7 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 
 	randClusterName := fmt.Sprintf("cluster-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_appautoscaling_target.bar",
 		Providers:     testAccProviders,
@@ -50,7 +50,7 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_appautoscaling_target.test",
 		Providers:     testAccProviders,
@@ -72,7 +72,7 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
@@ -96,7 +96,7 @@ func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
@@ -131,7 +131,7 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 
 	r, _ := regexp.Compile("arn:aws:iam::.*:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,

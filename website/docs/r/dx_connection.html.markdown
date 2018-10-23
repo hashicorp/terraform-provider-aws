@@ -35,6 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the connection.
 * `arn` - The ARN of the connection.
+* `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
 
 ## Import
 

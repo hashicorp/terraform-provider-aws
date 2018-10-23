@@ -17,7 +17,7 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.front_end",
 		Providers:     testAccProviders,
@@ -48,7 +48,7 @@ func TestAccAWSLBListenerBackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_listener.front_end",
 		Providers:     testAccProviders,
@@ -79,7 +79,7 @@ func TestAccAWSLBListener_https(t *testing.T) {
 	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.front_end",
 		Providers:     testAccProvidersWithTLS,
@@ -111,7 +111,7 @@ func TestAccAWSLBListener_redirect(t *testing.T) {
 	var conf elbv2.Listener
 	lbName := fmt.Sprintf("testlistener-redirect-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.front_end",
 		Providers:     testAccProviders,
@@ -147,7 +147,7 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 	var conf elbv2.Listener
 	lbName := fmt.Sprintf("testlistener-fixedresponse-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.front_end",
 		Providers:     testAccProviders,
@@ -180,7 +180,7 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 	var conf elbv2.Listener
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.test",
 		Providers:     testAccProvidersWithTLS,
@@ -215,7 +215,7 @@ func TestAccAWSLBListener_oidc(t *testing.T) {
 	var conf elbv2.Listener
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.test",
 		Providers:     testAccProvidersWithTLS,
@@ -254,7 +254,7 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,

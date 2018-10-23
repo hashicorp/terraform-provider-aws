@@ -18,7 +18,7 @@ func TestAccAWSIAMUserPolicy_importBasic(t *testing.T) {
 	suffix := randomString(10)
 	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
@@ -45,7 +45,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 	userResourceName := "aws_iam_user.user"
 	userName := fmt.Sprintf("test_user_%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 	userResourceName := "aws_iam_user.user"
 	userName := fmt.Sprintf("test_user_%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: policyResourceName,
 		Providers:     testAccProviders,
@@ -122,7 +122,7 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 	userResourceName := "aws_iam_user.user"
 	userName := fmt.Sprintf("test_user_%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: policyResourceName,
 		Providers:     testAccProviders,
@@ -159,7 +159,7 @@ func TestAccAWSIAMUserPolicy_multiplePolicies(t *testing.T) {
 	policyResourceName2 := "aws_iam_user_policy.bar"
 	userResourceName := "aws_iam_user.user"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,

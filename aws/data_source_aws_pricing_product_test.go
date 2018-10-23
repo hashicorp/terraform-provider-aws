@@ -14,7 +14,7 @@ func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

@@ -15,7 +15,7 @@ func TestAccDataSourceAwsApiGatewayResource(t *testing.T) {
 	resourceName2 := "aws_api_gateway_resource.example_v1_endpoint"
 	dataSourceName2 := "data.aws_api_gateway_resource.example_v1_endpoint"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

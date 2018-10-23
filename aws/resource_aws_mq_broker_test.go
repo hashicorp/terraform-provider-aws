@@ -241,7 +241,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -308,7 +308,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
   </plugins>
 </broker>`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -414,7 +414,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
   </plugins>
 </broker>`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -506,7 +506,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,

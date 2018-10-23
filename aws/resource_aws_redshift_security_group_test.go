@@ -21,7 +21,7 @@ func TestAccAWSRedshiftSecurityGroup_importBasic(t *testing.T) {
 
 	resourceName := "aws_redshift_security_group.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSecurityGroupDestroy,
@@ -43,7 +43,7 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSecurityGroupDestroy,
@@ -70,7 +70,7 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSecurityGroupDestroy,
@@ -109,7 +109,7 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSecurityGroupDestroy,
@@ -134,7 +134,7 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSecurityGroupDestroy,

@@ -9,78 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 )
 
-func TestValidateRFC3339TimeString(t *testing.T) {
-	testCases := []struct {
-		val         interface{}
-		expectedErr *regexp.Regexp
-	}{
-		{
-			val: "2018-03-01T00:00:00Z",
-		},
-		{
-			val: "2018-03-01T00:00:00-05:00",
-		},
-		{
-			val: "2018-03-01T00:00:00+05:00",
-		},
-		{
-			val:         "03/01/2018",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "1/2018" as "2006"`)),
-		},
-		{
-			val:         "03-01-2018",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "1-2018" as "2006"`)),
-		},
-		{
-			val:         "2018-03-01",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "T"`)),
-		},
-		{
-			val:         "2018-03-01T",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "15"`)),
-		},
-		{
-			val:         "2018-03-01T00:00:00",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`cannot parse "" as "Z07:00"`)),
-		},
-		{
-			val:         "2018-03-01T00:00:00Z05:00",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`extra text: 05:00`)),
-		},
-		{
-			val:         "2018-03-01T00:00:00Z-05:00",
-			expectedErr: regexp.MustCompile(regexp.QuoteMeta(`extra text: -05:00`)),
-		},
-	}
-
-	matchErr := func(errs []error, r *regexp.Regexp) bool {
-		// err must match one provided
-		for _, err := range errs {
-			if r.MatchString(err.Error()) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	for i, tc := range testCases {
-		_, errs := validateRFC3339TimeString(tc.val, "test_property")
-
-		if len(errs) == 0 && tc.expectedErr == nil {
-			continue
-		}
-
-		if len(errs) != 0 && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
-		}
-
-		if !matchErr(errs, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
-		}
-	}
-}
-
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
 	testCases := []struct {
 		val         interface{}
@@ -628,26 +556,6 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 	}
 }
 
-func TestValidateIntegerInRange(t *testing.T) {
-	validIntegers := []int{-259, 0, 1, 5, 999}
-	min := -259
-	max := 999
-	for _, v := range validIntegers {
-		_, errors := validateIntegerInRange(min, max)(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be an integer in range (%d, %d): %q", v, min, max, errors)
-		}
-	}
-
-	invalidIntegers := []int{-260, -99999, 1000, 25678}
-	for _, v := range invalidIntegers {
-		_, errors := validateIntegerInRange(min, max)(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an integer outside range (%d, %d)", v, min, max)
-		}
-	}
-}
-
 func TestResourceAWSElastiCacheClusterIdValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -717,61 +625,6 @@ func TestValidateDbEventSubscriptionName(t *testing.T) {
 		_, errors := validateDbEventSubscriptionName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid RDS Event Subscription Name", v)
-		}
-	}
-}
-
-func TestValidateJsonString(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    `{0:"1"}`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `{'abc':1}`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `{"def":}`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `{"xyz":[}}`,
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateJsonString(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    ``,
-			ErrCount: 0,
-		},
-		{
-			Value:    `{}`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `{"abc":["1","2"]}`,
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateJsonString(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
 	}
 }

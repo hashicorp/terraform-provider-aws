@@ -17,7 +17,7 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -45,7 +45,7 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_scratch_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -66,7 +66,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -109,7 +109,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -172,7 +172,7 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	svcName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -203,7 +203,7 @@ func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-with-task-role-arn-%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_with_task_role_arn_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -226,7 +226,7 @@ func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_ecs_td_with_network_mode_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_with_network_mode_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -249,7 +249,7 @@ func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_constraint_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -273,7 +273,7 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_change_vol_forces_new_resource_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -302,7 +302,7 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_arrays_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -323,7 +323,7 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_fargate_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -354,7 +354,7 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-execution-role-%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_execution_role_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -383,7 +383,7 @@ func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
 		})
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,

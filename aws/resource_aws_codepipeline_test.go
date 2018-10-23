@@ -20,7 +20,7 @@ func TestAccAWSCodePipeline_Import_basic(t *testing.T) {
 
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
@@ -45,7 +45,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
 
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
@@ -115,7 +115,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,

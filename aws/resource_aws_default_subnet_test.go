@@ -11,7 +11,7 @@ import (
 func TestAccAWSDefaultSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultSubnetDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSDefaultSubnet_basic(t *testing.T) {
 func TestAccAWSDefaultSubnet_publicIp(t *testing.T) {
 	var v ec2.Subnet
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultSubnetDestroy,

@@ -16,7 +16,7 @@ func TestAccAWSElasticacheSubnetGroup_importBasic(t *testing.T) {
 	resourceName := "aws_elasticache_subnet_group.bar"
 	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
@@ -40,7 +40,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
@@ -64,7 +64,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 	preConfig := fmt.Sprintf(testAccAWSElasticacheSubnetGroupUpdateConfigPre, ri)
 	postConfig := fmt.Sprintf(testAccAWSElasticacheSubnetGroupUpdateConfigPost, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,

@@ -19,7 +19,7 @@ func TestAccAWSIAMRole_importBasic(t *testing.T) {
 	resourceName := "aws_iam_role.role"
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSIAMRole_basic(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -62,7 +62,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -99,7 +99,7 @@ func TestAccAWSIAMRole_namePrefix(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_iam_role.role",
 		IDRefreshIgnore: []string{"name_prefix"},
@@ -122,7 +122,7 @@ func TestAccAWSIAMRole_testNameChange(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -147,7 +147,7 @@ func TestAccAWSIAMRole_testNameChange(t *testing.T) {
 func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -166,7 +166,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.role"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -187,7 +187,7 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -208,7 +208,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -253,7 +253,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", testAccGetPartition())
 	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", testAccGetPartition())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,

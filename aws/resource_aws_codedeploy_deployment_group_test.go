@@ -23,7 +23,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -109,7 +109,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -199,7 +199,7 @@ func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -239,7 +239,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -261,7 +261,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_basic(t *testing.T
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -308,7 +308,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -367,7 +367,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *tes
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -409,7 +409,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *tes
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -459,7 +459,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *tes
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -501,7 +501,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *te
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -549,7 +549,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T)
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -593,7 +593,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T)
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -647,7 +647,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T)
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -691,7 +691,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -744,7 +744,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_default(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -776,7 +776,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -827,7 +827,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -873,7 +873,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -917,7 +917,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -957,7 +957,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1003,7 +1003,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1043,7 +1043,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1084,7 +1084,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1128,7 +1128,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1168,7 +1168,7 @@ func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_contro
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1221,7 +1221,7 @@ func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_contro
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1294,7 +1294,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1349,7 +1349,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1415,7 +1415,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1481,7 +1481,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1536,7 +1536,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,

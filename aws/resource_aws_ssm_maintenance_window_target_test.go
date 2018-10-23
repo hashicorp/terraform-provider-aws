@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,

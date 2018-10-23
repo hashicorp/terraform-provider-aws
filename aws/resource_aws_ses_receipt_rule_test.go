@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAWSSESReceiptRule_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -32,7 +32,7 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 }
 
 func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -50,7 +50,7 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 }
 
 func TestAccAWSSESReceiptRule_order(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -68,7 +68,7 @@ func TestAccAWSSESReceiptRule_order(t *testing.T) {
 }
 
 func TestAccAWSSESReceiptRule_actions(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},

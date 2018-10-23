@@ -19,7 +19,7 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 	testPolicy2 := fmt.Sprintf("tf-acctest2-%d", rInt)
 	testPolicy3 := fmt.Sprintf("tf-acctest3-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,

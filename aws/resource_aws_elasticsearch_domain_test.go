@@ -76,7 +76,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -98,7 +98,7 @@ func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -130,7 +130,7 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 	ri := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
@@ -178,7 +178,7 @@ func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -200,7 +200,7 @@ func TestAccAWSElasticSearchDomain_v23(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -221,7 +221,7 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -240,7 +240,7 @@ func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -259,7 +259,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -286,7 +286,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -309,7 +309,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -328,7 +328,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -355,7 +355,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -391,7 +391,7 @@ func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *el
 func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -409,7 +409,7 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -428,7 +428,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -447,7 +447,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -468,7 +468,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var td elasticsearch.ListTagsOutput
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
@@ -497,7 +497,7 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -525,7 +525,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,

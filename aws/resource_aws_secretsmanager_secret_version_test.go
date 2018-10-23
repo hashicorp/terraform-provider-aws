@@ -17,7 +17,7 @@ func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
@@ -48,7 +48,7 @@ func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
@@ -79,7 +79,7 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,

@@ -16,7 +16,7 @@ func TestAccAWSCodeCommitRepository_importBasic(t *testing.T) {
 	resName := "aws_codecommit_repository.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSCodeCommitRepository_importBasic(t *testing.T) {
 
 func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
@@ -52,7 +52,7 @@ func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 
 func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
@@ -79,7 +79,7 @@ func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 
 func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
@@ -98,7 +98,7 @@ func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 
 func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,

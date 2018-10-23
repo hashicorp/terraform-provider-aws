@@ -17,7 +17,7 @@ func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
 	var v waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
@@ -53,7 +53,7 @@ func TestAccAWSWafSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSWafSizeConstraintSet_disappears(t *testing.T) {
 	var v waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
@@ -107,7 +107,7 @@ func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
@@ -164,7 +164,7 @@ func TestAccAWSWafSizeConstraintSet_noConstraints(t *testing.T) {
 	var contraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,

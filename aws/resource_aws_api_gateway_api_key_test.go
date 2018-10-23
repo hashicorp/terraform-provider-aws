@@ -15,7 +15,7 @@ import (
 func TestAccAWSAPIGatewayApiKey_importBasic(t *testing.T) {
 	resourceName := "aws_api_gateway_api_key.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
@@ -36,7 +36,7 @@ func TestAccAWSAPIGatewayApiKey_importBasic(t *testing.T) {
 func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 	var conf apigateway.ApiKey
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,

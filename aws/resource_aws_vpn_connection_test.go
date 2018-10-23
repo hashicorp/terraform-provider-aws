@@ -19,7 +19,7 @@ func TestAccAWSVpnConnection_importBasic(t *testing.T) {
 	resourceName := "aws_vpn_connection.foo"
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var vpn ec2.VpnConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_connection.foo",
 		Providers:     testAccProviders,
@@ -79,7 +79,7 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var vpn ec2.VpnConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_connection.foo",
 		Providers:     testAccProviders,
@@ -175,7 +175,7 @@ func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var vpn ec2.VpnConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_connection.foo",
 		Providers:     testAccProviders,
@@ -202,7 +202,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var vpn ec2.VpnConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,

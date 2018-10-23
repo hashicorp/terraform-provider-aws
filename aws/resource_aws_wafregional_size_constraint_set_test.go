@@ -17,7 +17,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
@@ -53,7 +53,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
@@ -107,7 +107,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
@@ -164,7 +164,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,

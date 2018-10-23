@@ -16,7 +16,7 @@ import (
 func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
@@ -68,7 +68,7 @@ func TestAccAWSServiceCatalogPortfolioBasic(t *testing.T) {
 func TestAccAWSServiceCatalogPortfolioDisappears(t *testing.T) {
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
@@ -90,7 +90,7 @@ func TestAccAWSServiceCatalogPortfolioImport(t *testing.T) {
 
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,

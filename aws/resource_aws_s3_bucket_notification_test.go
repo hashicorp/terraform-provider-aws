@@ -88,7 +88,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf-acc-role-s3-b-notification-%s", rString)
 	lambdaFuncName := fmt.Sprintf("tf-acc-lambda-func-s3-b-notification-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
@@ -186,7 +186,7 @@ func TestAccAWSS3BucketNotification_withoutFilter(t *testing.T) {
 	topicName := fmt.Sprintf("tf-acc-topic-s3-b-notification-wo-f-%s", rString)
 	bucketName := fmt.Sprintf("tf-acc-bucket-notification-wo-f-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,

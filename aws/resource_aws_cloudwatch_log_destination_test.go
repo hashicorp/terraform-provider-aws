@@ -15,7 +15,7 @@ func TestAccAWSCloudwatchLogDestination_importBasic(t *testing.T) {
 
 	rstring := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 
 	rstring := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,

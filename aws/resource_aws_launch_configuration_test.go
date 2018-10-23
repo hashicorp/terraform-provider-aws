@@ -83,7 +83,7 @@ func testSweepLaunchConfigurations(region string) error {
 func TestAccAWSLaunchConfiguration_importBasic(t *testing.T) {
 	resourceName := "aws_launch_configuration.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -105,7 +105,7 @@ func TestAccAWSLaunchConfiguration_importBasic(t *testing.T) {
 func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -131,7 +131,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -155,7 +155,7 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -181,7 +181,7 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -203,7 +203,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -229,7 +229,7 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -273,7 +273,7 @@ func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchCo
 func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -292,7 +292,7 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -319,7 +319,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -339,7 +339,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,

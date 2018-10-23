@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	r "github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -15,7 +15,7 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 	imageID := ""
 	accountID := os.Getenv("AWS_ACCOUNT_ID")
 
-	r.Test(t, r.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			if os.Getenv("AWS_ACCOUNT_ID") == "" {
@@ -23,11 +23,11 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 			}
 		},
 		Providers: testAccProviders,
-		Steps: []r.TestStep{
+		Steps: []resource.TestStep{
 			// Scaffold everything
 			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, true),
-				Check: r.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
 					testAccAWSAMILaunchPermissionExists(accountID, &imageID),
 				),
@@ -35,14 +35,14 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 			// Drop just launch permission to test destruction
 			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, false),
-				Check: r.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccAWSAMILaunchPermissionDestroyed(accountID, &imageID),
 				),
 			},
 			// Re-add everything so we can test when AMI disappears
 			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, true),
-				Check: r.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
 					testAccAWSAMILaunchPermissionExists(accountID, &imageID),
 				),
@@ -51,7 +51,7 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 			// should not error.
 			{
 				Config: testAccAWSAMILaunchPermissionConfig(accountID, true),
-				Check: r.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccAWSAMIDisappears(&imageID),
 				),
 				ExpectNonEmptyPlan: true,
@@ -60,7 +60,7 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 	})
 }
 
-func testCheckResourceGetAttr(name, key string, value *string) r.TestCheckFunc {
+func testCheckResourceGetAttr(name, key string, value *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ms := s.RootModule()
 		rs, ok := ms.Resources[name]
@@ -78,7 +78,7 @@ func testCheckResourceGetAttr(name, key string, value *string) r.TestCheckFunc {
 	}
 }
 
-func testAccAWSAMILaunchPermissionExists(accountID string, imageID *string) r.TestCheckFunc {
+func testAccAWSAMILaunchPermissionExists(accountID string, imageID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		if has, err := hasLaunchPermission(conn, *imageID, accountID); err != nil {
@@ -90,7 +90,7 @@ func testAccAWSAMILaunchPermissionExists(accountID string, imageID *string) r.Te
 	}
 }
 
-func testAccAWSAMILaunchPermissionDestroyed(accountID string, imageID *string) r.TestCheckFunc {
+func testAccAWSAMILaunchPermissionDestroyed(accountID string, imageID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		if has, err := hasLaunchPermission(conn, *imageID, accountID); err != nil {
@@ -105,7 +105,7 @@ func testAccAWSAMILaunchPermissionDestroyed(accountID string, imageID *string) r
 // testAccAWSAMIDisappears is technically a "test check function" but really it
 // exists to perform a side effect of deleting an AMI out from under a resource
 // so we can test that Terraform will react properly
-func testAccAWSAMIDisappears(imageID *string) r.TestCheckFunc {
+func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		req := &ec2.DeregisterImageInput{
