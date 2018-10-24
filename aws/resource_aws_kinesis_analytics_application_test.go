@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,7 +66,6 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
 	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
-	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:log-stream:testAcc-testStream$"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -87,7 +85,7 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-					resource.TestMatchResourceAttr(resName, "cloudwatch_logging_options.0.log_stream", streamRe),
+					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
 		},
@@ -100,8 +98,6 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
-	beforeRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:log-stream:testAcc-testStream$"))
-	afterRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:log-stream:testAcc-testStream2$"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -114,7 +110,7 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-					resource.TestMatchResourceAttr(resName, "cloudwatch_logging_options.0.log_stream", beforeRe),
+					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
 			{
@@ -123,7 +119,7 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-					resource.TestMatchResourceAttr(resName, "cloudwatch_logging_options.0.log_stream", afterRe),
+					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
 		},
@@ -204,7 +200,6 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
-	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:stream/testAcc-testStream$"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -229,7 +224,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix2"),
-					resource.TestMatchResourceAttr(resName, "inputs.0.kinesis_stream.0.resource", streamRe),
+					resource.TestCheckResourceAttrPair(resName, "inputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.0.count", "2"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.0.name", "test2"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
@@ -307,7 +302,6 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
-	streamRe := regexp.MustCompile(fmt.Sprintf("^arn:.*:stream/testAcc-testStream$"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -334,7 +328,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name2"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestMatchResourceAttr(resName, "outputs.0.kinesis_stream.0.resource", streamRe),
+					resource.TestCheckResourceAttrPair(resName, "outputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "CSV"),
 				),
@@ -417,7 +411,6 @@ func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 				return fmt.Errorf("Error: Application still exists")
 			}
 		}
-		return nil
 	}
 	return nil
 }
@@ -482,8 +475,8 @@ resource "aws_kinesis_analytics_application" "test" {
   code = "testCode\n"
 
   cloudwatch_logging_options {
-    log_stream = "${aws_cloudwatch_log_stream.test.arn}"
-    role = "${aws_iam_role.test.arn}"
+    log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
+    role_arn = "${aws_iam_role.test.arn}"
   }
 }
 `, rInt, streamName, rInt)
@@ -503,8 +496,8 @@ resource "aws_kinesis_analytics_application" "test" {
   inputs {
     name_prefix = "test_prefix"
     kinesis_stream {
-      resource = "${aws_kinesis_stream.test.arn}"
-      role = "${aws_iam_role.test.arn}"
+      resource_arn = "${aws_kinesis_stream.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
     }
     parallelism {
       count = 1
@@ -543,8 +536,8 @@ resource "aws_kinesis_analytics_application" "test" {
   inputs {
     name_prefix = "test_prefix2"
     kinesis_stream {
-      resource = "${aws_kinesis_stream.test.arn}"
-      role = "${aws_iam_role.test.arn}"
+      resource_arn = "${aws_kinesis_stream.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
     }
     parallelism {
       count = 2
@@ -584,8 +577,8 @@ resource "aws_kinesis_analytics_application" "test" {
   outputs {
     name = "test_name"
     kinesis_stream {
-      resource = "${aws_kinesis_stream.test.arn}"
-      role = "${aws_iam_role.test.arn}"
+      resource_arn = "${aws_kinesis_stream.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
     }
     schema {
       record_format_type = "JSON"
@@ -609,8 +602,8 @@ resource "aws_kinesis_analytics_application" "test" {
   outputs {
     name = "test_name2"
     kinesis_stream {
-      resource = "${aws_kinesis_stream.test.arn}"
-      role = "${aws_iam_role.test.arn}"
+      resource_arn = "${aws_kinesis_stream.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
     }
     schema {
       record_format_type = "CSV"
@@ -632,9 +625,9 @@ resource "aws_kinesis_analytics_application" "test" {
   reference_data_sources {
     table_name = "test_table"
     s3 {
-      bucket = "${aws_s3_bucket.test.arn}"
+      bucket_arn = "${aws_s3_bucket.test.arn}"
       file_key = "test_file_key"
-      role = "${aws_iam_role.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
     }
     schema {
       record_columns {
@@ -668,9 +661,9 @@ resource "aws_kinesis_analytics_application" "test" {
   reference_data_sources {
     table_name = "test_table2"
     s3 {
-      bucket = "${aws_s3_bucket.test.arn}"
+      bucket_arn = "${aws_s3_bucket.test.arn}"
       file_key = "test_file_key"
-      role = "${aws_iam_role.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
     }
     schema {
       record_columns {
