@@ -565,7 +565,7 @@ func TestAccAWSSecurityGroup_importBasic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -594,7 +594,7 @@ func TestAccAWSSecurityGroup_importIpv6(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -613,7 +613,7 @@ func TestAccAWSSecurityGroup_importIpv6(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -633,7 +633,7 @@ func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_importSourceSecurityGroup(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -662,7 +662,7 @@ func TestAccAWSSecurityGroup_importIPRangeAndSecurityGroupWithSameRules(t *testi
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -690,7 +690,7 @@ func TestAccAWSSecurityGroup_importIPRangesWithSameRules(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -718,7 +718,7 @@ func TestAccAWSSecurityGroup_importPrefixList(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -739,7 +739,7 @@ func TestAccAWSSecurityGroup_importPrefixList(t *testing.T) {
 func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -773,7 +773,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 	var group ec2.SecurityGroup
 	sgName := fmt.Sprintf("tf-acc-security-group-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -969,7 +969,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_true(t *testing.T) {
 	// Remove the rules that created the cycle; Terraform/AWS can now destroy them
 	testRemoveCycle := testRemoveRuleCycle(&primary, &secondary)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1040,7 +1040,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_false(t *testing.T) {
 	// Remove the rules that created the cycle; Terraform/AWS can now destroy them
 	testRemoveCycle := testRemoveRuleCycle(&primary, &secondary)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1086,7 +1086,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_false(t *testing.T) {
 func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1127,7 +1127,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 func TestAccAWSSecurityGroup_namePrefix(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_security_group.baz",
 		IDRefreshIgnore: []string{"name_prefix"},
@@ -1163,7 +1163,7 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1197,7 +1197,7 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1250,7 +1250,7 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1292,7 +1292,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1325,7 +1325,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 func TestAccAWSSecurityGroup_MultiIngress(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1344,7 +1344,7 @@ func TestAccAWSSecurityGroup_MultiIngress(t *testing.T) {
 func TestAccAWSSecurityGroup_Change(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1370,7 +1370,7 @@ func TestAccAWSSecurityGroup_Change(t *testing.T) {
 func TestAccAWSSecurityGroup_RuleDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1463,7 +1463,7 @@ func TestAccAWSSecurityGroup_RuleDescription(t *testing.T) {
 func TestAccAWSSecurityGroup_generatedName(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1493,7 +1493,7 @@ func TestAccAWSSecurityGroup_generatedName(t *testing.T) {
 func TestAccAWSSecurityGroup_DefaultEgress_VPC(t *testing.T) {
 
 	// VPC
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.worker",
 		Providers:     testAccProviders,
@@ -1516,7 +1516,7 @@ func TestAccAWSSecurityGroup_DefaultEgress_Classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1535,7 +1535,7 @@ func TestAccAWSSecurityGroup_DefaultEgress_Classic(t *testing.T) {
 // Testing drift detection with groups containing the same port and types
 func TestAccAWSSecurityGroup_drift(t *testing.T) {
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1574,7 +1574,7 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 func TestAccAWSSecurityGroup_drift_complex(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1631,7 +1631,7 @@ func TestAccAWSSecurityGroup_drift_complex(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1804,7 +1804,7 @@ func testAccCheckAWSSecurityGroupAttributesNegOneProtocol(group *ec2.SecurityGro
 func TestAccAWSSecurityGroup_tags(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1833,7 +1833,7 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1852,7 +1852,7 @@ func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 func TestAccAWSSecurityGroup_ingressWithCidrAndSGs(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1896,7 +1896,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGs_classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1926,7 +1926,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGs_classic(t *testing.T) {
 func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1947,7 +1947,7 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1968,7 +1968,7 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2212,7 +2212,7 @@ func testAccCheckAWSSecurityGroupExistsWithoutDefault(n string) resource.TestChe
 func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2233,7 +2233,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2274,7 +2274,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2339,7 +2339,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2380,7 +2380,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2420,7 +2420,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,

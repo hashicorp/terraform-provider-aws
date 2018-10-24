@@ -33,7 +33,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
 	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -119,7 +119,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -159,7 +159,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
 	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,

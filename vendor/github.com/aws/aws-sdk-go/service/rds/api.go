@@ -10749,7 +10749,7 @@ type BacktrackDBClusterInput struct {
 	//
 	//    * Must contain a valid ISO 8601 timestamp.
 	//
-	//    * Cannot contain a timestamp set in the future.
+	//    * Can't contain a timestamp set in the future.
 	//
 	// Example: 2017-07-08T18:00Z
 	//
@@ -10765,7 +10765,7 @@ type BacktrackDBClusterInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: my-cluster1
 	//
@@ -11092,13 +11092,13 @@ type CopyDBClusterParameterGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * Cannot be null, empty, or blank
+	//    * Can't be null, empty, or blank
 	//
 	//    * Must contain from 1 to 255 letters, numbers, or hyphens
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-cluster-param-group1
 	//
@@ -11289,7 +11289,7 @@ type CopyDBClusterSnapshotInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: my-cluster-snapshot2
 	//
@@ -11427,13 +11427,13 @@ type CopyDBParameterGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * Cannot be null, empty, or blank
+	//    * Can't be null, empty, or blank
 	//
 	//    * Must contain from 1 to 255 letters, numbers, or hyphens
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-db-parameter-group
 	//
@@ -11643,13 +11643,13 @@ type CopyDBSnapshotInput struct {
 	//
 	// Constraints:
 	//
-	//    * Cannot be null, empty, or blank
+	//    * Can't be null, empty, or blank
 	//
 	//    * Must contain from 1 to 255 letters, numbers, or hyphens
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-db-snapshot
 	//
@@ -11796,13 +11796,13 @@ type CopyOptionGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * Cannot be null, empty, or blank
+	//    * Can't be null, empty, or blank
 	//
 	//    * Must contain from 1 to 255 letters, numbers, or hyphens
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-option-group
 	//
@@ -11927,7 +11927,7 @@ type CreateDBClusterInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: my-cluster1
 	//
@@ -11939,7 +11939,8 @@ type CreateDBClusterInput struct {
 	//
 	// Constraints:
 	//
-	//    * If supplied, must match the name of an existing DBClusterParameterGroup.
+	//    * If supplied, must match the name of an existing DB cluster parameter
+	//    group.
 	DBClusterParameterGroupName *string `type:"string"`
 
 	// A DB subnet group to associate with this DB cluster.
@@ -12036,7 +12037,7 @@ type CreateDBClusterInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	MasterUsername *string `type:"string"`
 
 	// A value that indicates that the DB cluster should be associated with the
@@ -12374,7 +12375,7 @@ type CreateDBClusterParameterGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must match the name of an existing DBClusterParameterGroup.
+	//    * Must match the name of an existing DB cluster parameter group.
 	//
 	// This value is stored as a lowercase string.
 	//
@@ -12510,7 +12511,7 @@ type CreateDBClusterSnapshotInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: my-cluster1-snapshot1
 	//
@@ -12702,7 +12703,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must be a value from 0 to 35
 	//
-	//    * Cannot be set to 0 if the DB instance is a source to Read Replicas
+	//    * Can't be set to 0 if the DB instance is a source to Read Replicas
 	BackupRetentionPeriod *int64 `type:"integer"`
 
 	// For supported engines, indicates that the DB instance should be associated
@@ -12742,7 +12743,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: mydbinstance
 	//
@@ -12763,7 +12764,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must contain 1 to 64 letters or numbers.
 	//
-	//    * Cannot be a word reserved by the specified database engine
+	//    * Can't be a word reserved by the specified database engine
 	//
 	// MariaDB
 	//
@@ -12774,7 +12775,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must contain 1 to 64 letters or numbers.
 	//
-	//    * Cannot be a word reserved by the specified database engine
+	//    * Can't be a word reserved by the specified database engine
 	//
 	// PostgreSQL
 	//
@@ -12789,7 +12790,7 @@ type CreateDBInstanceInput struct {
 	//    * Must begin with a letter or an underscore. Subsequent characters can
 	//    be letters, underscores, or digits (0-9).
 	//
-	//    * Cannot be a word reserved by the specified database engine
+	//    * Can't be a word reserved by the specified database engine
 	//
 	// Oracle
 	//
@@ -12801,7 +12802,7 @@ type CreateDBInstanceInput struct {
 	//
 	// Constraints:
 	//
-	//    * Cannot be longer than 8 characters
+	//    * Can't be longer than 8 characters
 	//
 	// SQL Server
 	//
@@ -12817,7 +12818,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must contain 1 to 64 letters or numbers.
 	//
-	//    * Cannot be a word reserved by the specified database engine
+	//    * Can't be a word reserved by the specified database engine
 	DBName *string `type:"string"`
 
 	// The name of the DB parameter group to associate with this DB instance. If
@@ -12830,7 +12831,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	DBParameterGroupName *string `type:"string"`
 
 	// A list of DB security groups to associate with this DB instance.
@@ -12969,9 +12970,7 @@ type CreateDBInstanceInput struct {
 	// in the Amazon RDS User Guide.
 	//
 	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
-	// the DB instance. Must also be an integer multiple of 1000. For example, if
-	// the size of your DB instance is 500 GiB, then your Iops value can be 2000,
-	// 3000, 4000, or 5000.
+	// the DB instance.
 	Iops *int64 `type:"integer"`
 
 	// The AWS KMS key identifier for an encrypted DB instance.
@@ -13041,7 +13040,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must be 1 to 16 letters or numbers.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	//
 	// Microsoft SQL Server
 	//
@@ -13053,7 +13052,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * The first character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	//
 	// MySQL
 	//
@@ -13065,7 +13064,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	//
 	// Oracle
 	//
@@ -13077,7 +13076,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	//
 	// PostgreSQL
 	//
@@ -13089,7 +13088,7 @@ type CreateDBInstanceInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	MasterUsername *string `type:"string"`
 
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
@@ -14148,7 +14147,7 @@ type CreateDBParameterGroupInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// This value is stored as a lowercase string.
 	//
@@ -14260,7 +14259,7 @@ type CreateDBSecurityGroupInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	//    * Must not be "Default"
 	//
@@ -14360,13 +14359,13 @@ type CreateDBSnapshotInput struct {
 	//
 	// Constraints:
 	//
-	//    * Cannot be null, empty, or blank
+	//    * Can't be null, empty, or blank
 	//
 	//    * Must contain from 1 to 255 letters, numbers, or hyphens
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-snapshot-id
 	//
@@ -14737,7 +14736,7 @@ type CreateOptionGroupInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: myoptiongroup
 	//
@@ -15438,7 +15437,7 @@ type DBClusterParameterGroupNameMessage struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// This value is stored as a lowercase string.
 	DBClusterParameterGroupName *string `type:"string"`
@@ -17285,7 +17284,7 @@ type DeleteDBClusterInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	FinalDBSnapshotIdentifier *string `type:"string"`
 
 	// Determines whether a final DB cluster snapshot is created before the DB cluster
@@ -17377,7 +17376,7 @@ type DeleteDBClusterParameterGroupInput struct {
 	//
 	//    * You can't delete a default DB cluster parameter group.
 	//
-	//    * Cannot be associated with any DB clusters.
+	//    * Can't be associated with any DB clusters.
 	//
 	// DBClusterParameterGroupName is a required field
 	DBClusterParameterGroupName *string `type:"string" required:"true"`
@@ -17518,9 +17517,9 @@ type DeleteDBInstanceInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
-	//    * Cannot be specified when deleting a Read Replica.
+	//    * Can't be specified when deleting a Read Replica.
 	FinalDBSnapshotIdentifier *string `type:"string"`
 
 	// Determines whether a final DB snapshot is created before the DB instance
@@ -17617,7 +17616,7 @@ type DeleteDBParameterGroupInput struct {
 	//
 	//    * You can't delete a default DB parameter group
 	//
-	//    * Cannot be associated with any DB instances
+	//    * Can't be associated with any DB instances
 	//
 	// DBParameterGroupName is a required field
 	DBParameterGroupName *string `type:"string" required:"true"`
@@ -17679,7 +17678,7 @@ type DeleteDBSecurityGroupInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	//    * Must not be "Default"
 	//
@@ -18155,7 +18154,7 @@ type DescribeDBClusterBacktracksInput struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: my-cluster1
 	//
@@ -20628,7 +20627,7 @@ type DescribeEventsInput struct {
 	//
 	//    * If the source type is DBSnapshot, a DBSnapshotIdentifier must be supplied.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	SourceIdentifier *string `type:"string"`
 
 	// The event source to retrieve events for. If no value is specified, all events
@@ -20918,7 +20917,7 @@ type DescribeOptionGroupsInput struct {
 	// Constraints: Minimum 20, maximum 100.
 	MaxRecords *int64 `type:"integer"`
 
-	// The name of the option group to describe. Cannot be supplied together with
+	// The name of the option group to describe. Can't be supplied together with
 	// EngineName or MajorEngineVersion.
 	OptionGroupName *string `type:"string"`
 }
@@ -22962,7 +22961,7 @@ type ModifyDBClusterInput struct {
 	//
 	//    * The first character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-cluster2
 	NewDBClusterIdentifier *string `type:"string"`
@@ -23422,7 +23421,7 @@ type ModifyDBInstanceInput struct {
 	//    * Can be specified for a PostgreSQL Read Replica only if the source is
 	//    running PostgreSQL 9.3.5
 	//
-	//    * Cannot be set to 0 if the DB instance is a source to Read Replicas
+	//    * Can't be set to 0 if the DB instance is a source to Read Replicas
 	BackupRetentionPeriod *int64 `type:"integer"`
 
 	// Indicates the certificate that needs to be associated with the instance.
@@ -23706,7 +23705,7 @@ type ModifyDBInstanceInput struct {
 	//
 	//    * The first character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: mydbinstance
 	NewDBInstanceIdentifier *string `type:"string"`
@@ -27233,7 +27232,7 @@ type RestoreDBClusterFromS3Input struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: my-cluster1
 	//
@@ -27322,7 +27321,7 @@ type RestoreDBClusterFromS3Input struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	//
 	// MasterUsername is a required field
 	MasterUsername *string `type:"string" required:"true"`
@@ -27663,8 +27662,8 @@ func (s *RestoreDBClusterFromS3Output) SetDBCluster(v *DBCluster) *RestoreDBClus
 type RestoreDBClusterFromSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
-	// Provides the list of EC2 Availability Zones that instances in the restored
-	// DB cluster can be created in.
+	// Provides the list of Amazon EC2 Availability Zones that instances in the
+	// restored DB cluster can be created in.
 	AvailabilityZones []*string `locationNameList:"AvailabilityZone" type:"list"`
 
 	// The target backtrack window, in seconds. To disable backtracking, set this
@@ -27687,16 +27686,32 @@ type RestoreDBClusterFromSnapshotInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-snapshot-id
 	//
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
+	// The name of the DB cluster parameter group to associate with this DB cluster.
+	// If this argument is omitted, the default DB cluster parameter group for the
+	// specified engine is used.
+	//
+	// Constraints:
+	//
+	//    * If supplied, must match the name of an existing default DB cluster parameter
+	//    group.
+	//
+	//    * Must be 1 to 255 letters, numbers, or hyphens.
+	//
+	//    * First character must be a letter.
+	//
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
+	DBClusterParameterGroupName *string `type:"string"`
+
 	// The name of the DB subnet group to use for the new DB cluster.
 	//
-	// Constraints: If supplied, must match the name of an existing DBSubnetGroup.
+	// Constraints: If supplied, must match the name of an existing DB subnet group.
 	//
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
@@ -27709,7 +27724,7 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// false.
 	DeletionProtection *bool `type:"boolean"`
 
-	// The list of logs that the restored DB cluster is to export to CloudWatch
+	// The list of logs that the restored DB cluster is to export to Amazon CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs  (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
 	// in the Amazon Aurora User Guide.
@@ -27745,8 +27760,8 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// the KMS encryption key used to encrypt the new DB cluster, then you can use
 	// the KMS key alias instead of the ARN for the KMS encryption key.
 	//
-	// If you do not specify a value for the KmsKeyId parameter, then the following
-	// will occur:
+	// If you don't specify a value for the KmsKeyId parameter, then the following
+	// occurs:
 	//
 	//    * If the DB snapshot or DB cluster snapshot in SnapshotIdentifier is encrypted,
 	//    then the restored DB cluster is encrypted using the KMS key that was used
@@ -27761,7 +27776,7 @@ type RestoreDBClusterFromSnapshotInput struct {
 
 	// The port number on which the new DB cluster accepts connections.
 	//
-	// Constraints: Value must be 1150-65535
+	// Constraints: This value must be 1150-65535
 	//
 	// Default: The same port as the original DB cluster.
 	Port *int64 `type:"integer"`
@@ -27834,6 +27849,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetBacktrackWindow(v int64) *Restore
 // SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetDBClusterIdentifier(v string) *RestoreDBClusterFromSnapshotInput {
 	s.DBClusterIdentifier = &v
+	return s
+}
+
+// SetDBClusterParameterGroupName sets the DBClusterParameterGroupName field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetDBClusterParameterGroupName(v string) *RestoreDBClusterFromSnapshotInput {
+	s.DBClusterParameterGroupName = &v
 	return s
 }
 
@@ -27975,10 +27996,26 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
+
+	// The name of the DB cluster parameter group to associate with this DB cluster.
+	// If this argument is omitted, the default DB cluster parameter group for the
+	// specified engine is used.
+	//
+	// Constraints:
+	//
+	//    * If supplied, must match the name of an existing DB cluster parameter
+	//    group.
+	//
+	//    * Must be 1 to 255 letters, numbers, or hyphens.
+	//
+	//    * First character must be a letter.
+	//
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
+	DBClusterParameterGroupName *string `type:"string"`
 
 	// The DB subnet group name to use for the new DB cluster.
 	//
@@ -28017,8 +28054,8 @@ type RestoreDBClusterToPointInTimeInput struct {
 	// cluster. The new DB cluster is encrypted with the KMS key identified by the
 	// KmsKeyId parameter.
 	//
-	// If you do not specify a value for the KmsKeyId parameter, then the following
-	// will occur:
+	// If you don't specify a value for the KmsKeyId parameter, then the following
+	// occurs:
 	//
 	//    * If the DB cluster is encrypted, then the restored DB cluster is encrypted
 	//    using the KMS key that was used to encrypt the source DB cluster.
@@ -28050,9 +28087,9 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	//    * Must be specified if UseLatestRestorableTime parameter is not provided
 	//
-	//    * Cannot be specified if UseLatestRestorableTime parameter is true
+	//    * Can't be specified if UseLatestRestorableTime parameter is true
 	//
-	//    * Cannot be specified if RestoreType parameter is copy-on-write
+	//    * Can't be specified if RestoreType parameter is copy-on-write
 	//
 	// Example: 2015-03-07T23:45:00Z
 	RestoreToTime *time.Time `type:"timestamp"`
@@ -28091,7 +28128,7 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	// Default: false
 	//
-	// Constraints: Cannot be specified if RestoreToTime parameter is provided.
+	// Constraints: Can't be specified if RestoreToTime parameter is provided.
 	UseLatestRestorableTime *bool `type:"boolean"`
 
 	// A list of VPC security groups that the new DB cluster belongs to.
@@ -28133,6 +28170,12 @@ func (s *RestoreDBClusterToPointInTimeInput) SetBacktrackWindow(v int64) *Restor
 // SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
 func (s *RestoreDBClusterToPointInTimeInput) SetDBClusterIdentifier(v string) *RestoreDBClusterToPointInTimeInput {
 	s.DBClusterIdentifier = &v
+	return s
+}
+
+// SetDBClusterParameterGroupName sets the DBClusterParameterGroupName field's value.
+func (s *RestoreDBClusterToPointInTimeInput) SetDBClusterParameterGroupName(v string) *RestoreDBClusterToPointInTimeInput {
+	s.DBClusterParameterGroupName = &v
 	return s
 }
 
@@ -28279,7 +28322,7 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// Example: my-snapshot-id
 	//
@@ -28290,6 +28333,21 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	//
 	// This parameter doesn't apply to the MySQL, PostgreSQL, or MariaDB engines.
 	DBName *string `type:"string"`
+
+	// The name of the DB parameter group to associate with this DB instance. If
+	// this argument is omitted, the default DBParameterGroup for the specified
+	// engine is used.
+	//
+	// Constraints:
+	//
+	//    * If supplied, must match the name of an existing DBParameterGroup.
+	//
+	//    * Must be 1 to 255 letters, numbers, or hyphens.
+	//
+	//    * First character must be a letter.
+	//
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
+	DBParameterGroupName *string `type:"string"`
 
 	// The identifier for the DB snapshot to restore from.
 	//
@@ -28512,6 +28570,12 @@ func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBName(v string) *RestoreDBIns
 	return s
 }
 
+// SetDBParameterGroupName sets the DBParameterGroupName field's value.
+func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBParameterGroupName(v string) *RestoreDBInstanceFromDBSnapshotInput {
+	s.DBParameterGroupName = &v
+	return s
+}
+
 // SetDBSnapshotIdentifier sets the DBSnapshotIdentifier field's value.
 func (s *RestoreDBInstanceFromDBSnapshotInput) SetDBSnapshotIdentifier(v string) *RestoreDBInstanceFromDBSnapshotInput {
 	s.DBSnapshotIdentifier = &v
@@ -28720,7 +28784,7 @@ type RestoreDBInstanceFromS3Input struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens.
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Example: mydbinstance
 	//
@@ -28815,7 +28879,7 @@ type RestoreDBInstanceFromS3Input struct {
 	//
 	//    * First character must be a letter.
 	//
-	//    * Cannot be a reserved word for the chosen database engine.
+	//    * Can't be a reserved word for the chosen database engine.
 	MasterUsername *string `type:"string"`
 
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
@@ -29323,6 +29387,21 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// This parameter is not used for the MySQL or MariaDB engines.
 	DBName *string `type:"string"`
 
+	// The name of the DB parameter group to associate with this DB instance. If
+	// this argument is omitted, the default DBParameterGroup for the specified
+	// engine is used.
+	//
+	// Constraints:
+	//
+	//    * If supplied, must match the name of an existing DBParameterGroup.
+	//
+	//    * Must be 1 to 255 letters, numbers, or hyphens.
+	//
+	//    * First character must be a letter.
+	//
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
+	DBParameterGroupName *string `type:"string"`
+
 	// The DB subnet group name to use for the new instance.
 	//
 	// Constraints: If supplied, must match the name of an existing DBSubnetGroup.
@@ -29447,7 +29526,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	//    * Must be before the latest restorable time for the DB instance
 	//
-	//    * Cannot be specified if UseLatestRestorableTime parameter is true
+	//    * Can't be specified if UseLatestRestorableTime parameter is true
 	//
 	// Example: 2009-09-07T23:45:00Z
 	RestoreTime *time.Time `type:"timestamp"`
@@ -29482,7 +29561,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	//    * First character must be a letter
 	//
-	//    * Cannot end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens
 	//
 	// TargetDBInstanceIdentifier is a required field
 	TargetDBInstanceIdentifier *string `type:"string" required:"true"`
@@ -29503,7 +29582,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	// Default: false
 	//
-	// Constraints: Cannot be specified if RestoreTime parameter is provided.
+	// Constraints: Can't be specified if RestoreTime parameter is provided.
 	UseLatestRestorableTime *bool `type:"boolean"`
 }
 
@@ -29560,6 +29639,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetDBInstanceClass(v string) *Rest
 // SetDBName sets the DBName field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetDBName(v string) *RestoreDBInstanceToPointInTimeInput {
 	s.DBName = &v
+	return s
+}
+
+// SetDBParameterGroupName sets the DBParameterGroupName field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetDBParameterGroupName(v string) *RestoreDBInstanceToPointInTimeInput {
+	s.DBParameterGroupName = &v
 	return s
 }
 

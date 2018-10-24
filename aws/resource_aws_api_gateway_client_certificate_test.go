@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	var conf apigateway.ClientCertificate
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
@@ -40,7 +40,7 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 func TestAccAWSAPIGatewayClientCertificate_importBasic(t *testing.T) {
 	resourceName := "aws_api_gateway_client_certificate.cow"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,

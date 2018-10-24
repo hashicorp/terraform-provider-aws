@@ -16,7 +16,7 @@ func TestAccAWSFlowLog_importBasic(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
@@ -39,7 +39,7 @@ func TestAccAWSFlowLog_basic(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_flow_log.test_flow_log",
 		Providers:     testAccProviders,
@@ -61,7 +61,7 @@ func TestAccAWSFlowLog_subnet(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_flow_log.test_flow_log_subnet",
 		Providers:     testAccProviders,

@@ -70,7 +70,7 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 	// Our test cert is for a wildcard on this domain
 	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
@@ -97,7 +97,7 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 	// Our test cert is for a wildcard on this domain
 	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),

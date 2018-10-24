@@ -28,7 +28,7 @@ var ipv6IngressAcl = &ec2.NetworkAclEntry{
 func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -47,7 +47,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -69,7 +69,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 	// additional Egress.
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -88,7 +88,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -107,7 +107,7 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,

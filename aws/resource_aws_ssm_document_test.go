@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -36,7 +36,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 
 func TestAccAWSSSMDocument_update(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -69,7 +69,7 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 
 func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -91,7 +91,7 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	name := acctest.RandString(10)
 	ids := "123456789012"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -113,7 +113,7 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 	idsInitial := "123456789012,123456789013"
 	idsRemove := "123456789012"
 	idsAdd := "123456789012,123456789014"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -151,7 +151,7 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 
 func TestAccAWSSSMDocument_params(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -180,7 +180,7 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 
 func TestAccAWSSSMDocument_automation(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -199,7 +199,7 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 
 func TestAccAWSSSMDocument_session(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -240,7 +240,7 @@ mainSteps:
     runCommand:
       - Get-Process
 `
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
@@ -269,7 +269,7 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 	rName := acctest.RandString(10)
 	resourceName := "aws_ssm_document.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,

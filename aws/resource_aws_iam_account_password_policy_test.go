@@ -13,7 +13,7 @@ import (
 func TestAccAWSIAMAccountPasswordPolicy_importBasic(t *testing.T) {
 	resourceName := "aws_iam_account_password_policy.default"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,
@@ -34,7 +34,7 @@ func TestAccAWSIAMAccountPasswordPolicy_importBasic(t *testing.T) {
 func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 	var policy iam.GetAccountPasswordPolicyOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,

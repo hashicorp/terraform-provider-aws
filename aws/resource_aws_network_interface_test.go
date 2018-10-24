@@ -14,7 +14,7 @@ import (
 func TestAccAWSENI_importBasic(t *testing.T) {
 	resourceName := "aws_network_interface.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSENIDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSENI_importBasic(t *testing.T) {
 func TestAccAWSENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,
@@ -64,7 +64,7 @@ func TestAccAWSENI_disappears(t *testing.T) {
 	var networkInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSENIDestroy,
@@ -84,7 +84,7 @@ func TestAccAWSENI_disappears(t *testing.T) {
 func TestAccAWSENI_updatedDescription(t *testing.T) {
 	var conf ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,
@@ -114,7 +114,7 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 func TestAccAWSENI_attached(t *testing.T) {
 	var conf ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,
@@ -138,7 +138,7 @@ func TestAccAWSENI_attached(t *testing.T) {
 func TestAccAWSENI_ignoreExternalAttachment(t *testing.T) {
 	var conf ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,
@@ -159,7 +159,7 @@ func TestAccAWSENI_ignoreExternalAttachment(t *testing.T) {
 func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 	var conf ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,
@@ -180,7 +180,7 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 func TestAccAWSENI_computedIPs(t *testing.T) {
 	var conf ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,

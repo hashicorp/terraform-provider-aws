@@ -32,7 +32,7 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 
 	apiKey := os.Getenv("GCM_API_KEY")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
