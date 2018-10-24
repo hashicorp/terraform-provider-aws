@@ -27,8 +27,8 @@ resource "aws_kinesis_analytics_application" "test_application" {
   inputs {
     name_prefix = "test_prefix"
     kinesis_stream {
-      resource  = "${aws_kinesis_stream.test_stream.arn}"
-      role      = "${aws_iam_role.test.arn}"
+      resource_arn  = "${aws_kinesis_stream.test_stream.arn}"
+      role_arn      = "${aws_iam_role.test.arn}"
     }
     parallelism {
       count = 1
@@ -72,8 +72,8 @@ Configure a CloudWatch Log Stream to monitor application errors.
 
 The `cloudwatch_logging_options` block supports the following:
 
-* `log_stream` - (Required) The ARN of the CloudWatch Log Stream.
-* `role` - (Required) The ARN of the IAM Role used to send application messages.
+* `log_stream_arn` - (Required) The ARN of the CloudWatch Log Stream.
+* `role_arn` - (Required) The ARN of the IAM Role used to send application messages.
 
 ### Inputs
 
@@ -122,8 +122,8 @@ Configuration for a Kinesis Firehose delivery stream.
 
 The `kinesis_firehose` block supports the following:
 
-* `resource` - (Required) The ARN of the Kinesis Firehose delivery stream.
-* `role` - (Required) The ARN of the IAM Role used to access the stream.
+* `resource_arn` - (Required) The ARN of the Kinesis Firehose delivery stream.
+* `role_arn` - (Required) The ARN of the IAM Role used to access the stream.
 
 #### Kinesis Stream
 
@@ -131,8 +131,8 @@ Configuration for a Kinesis Stream.
 
 The `kinesis_stream` block supports the following:
 
-* `resource` - (Required) The ARN of the Kinesis Stream.
-* `role` - (Required) The ARN of the IAM Role used to access the stream.
+* `resource_arn` - (Required) The ARN of the Kinesis Stream.
+* `role_arn` - (Required) The ARN of the IAM Role used to access the stream.
 
 #### Destination Schema
 
@@ -176,8 +176,8 @@ The Lambda function that pre-processes records in the stream.
 
 The `lambda` block supports the following:
 
-* `resource` - (Required) The ARN of the Lambda function.
-* `role` - (Required) The ARN of the IAM Role used to access the Lambda function.
+* `resource_arn` - (Required) The ARN of the Lambda function.
+* `role_arn` - (Required) The ARN of the IAM Role used to access the Lambda function.
 
 #### Record Columns
 
@@ -233,9 +233,9 @@ Identifies the S3 bucket and object that contains the reference data.
 
 The `s3` blcok supports the following:
 
-* `bucket` - (Required) The S3 Bucket ARN.
+* `bucket_arn` - (Required) The S3 Bucket ARN.
 * `file_key` - (Required) The File Key name containing reference data.
-* `role` - (Required) The IAM Role ARN to read the data.
+* `role_arn` - (Required) The IAM Role ARN to read the data.
 
 ## Attributes Reference
 
