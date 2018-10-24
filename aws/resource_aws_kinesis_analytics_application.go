@@ -797,13 +797,10 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 		CreateTimestamp: aws.Time(createTimestamp),
 	}
 	_, deleteErr := conn.DeleteApplication(deleteOpts)
-	if deleteErr != nil {
-		return fmt.Errorf("error deleting Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
-	}
-	deleteErr = waitForDeleteKinesisAnalyticsApplication(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if isAWSErr(deleteErr, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
+	deleteErr = waitForDeleteKinesisAnalyticsApplication(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if deleteErr != nil {
 		return fmt.Errorf("error waiting for deletion of Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
 	}
