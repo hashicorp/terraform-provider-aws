@@ -1,4 +1,9 @@
 ## 1.42.0 (Unreleased)
+
+NOTES:
+
+* This release will be delayed one week due to HashiConf.
+
 ## 1.41.0 (October 18, 2018)
 
 FEATURES:
