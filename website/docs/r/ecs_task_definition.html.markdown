@@ -113,9 +113,10 @@ resource "aws_ecs_task_definition" "service" {
 
   volume {
     name = "service-storage"
+
     docker_volume_configuration {
-        scope         = "shared"
-        autoprovision = true
+      scope         = "shared"
+      autoprovision = true
     }
   }
 }

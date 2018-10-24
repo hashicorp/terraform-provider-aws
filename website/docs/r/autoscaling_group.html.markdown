@@ -70,18 +70,19 @@ EOF
 
 ```hcl
 resource "aws_launch_template" "foobar" {
-  name_prefix = "foobar"
-  image_id = "ami-1a2b3c"
+  name_prefix   = "foobar"
+  image_id      = "ami-1a2b3c"
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["us-east-1a"]
-  desired_capacity = 1
-  max_size = 1
-  min_size = 1
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
   launch_template = {
-    id = "${aws_launch_template.foobar.id}"
+    id      = "${aws_launch_template.foobar.id}"
     version = "$$Latest"
   }
 }
@@ -93,24 +94,24 @@ resource "aws_autoscaling_group" "bar" {
 variable "extra_tags" {
   default = [
     {
-      key = "Foo"
-      value = "Bar"
+      key                 = "Foo"
+      value               = "Bar"
       propagate_at_launch = true
     },
     {
-      key = "Baz"
-      value = "Bam"
+      key                 = "Baz"
+      value               = "Bam"
       propagate_at_launch = true
     },
   ]
 }
 
 resource "aws_autoscaling_group" "bar" {
-  name                      = "foobar3-terraform-test"
-  max_size                  = 5
-  min_size                  = 2
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
-  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+  name                 = "foobar3-terraform-test"
+  max_size             = 5
+  min_size             = 2
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
   tags = [
     {

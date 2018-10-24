@@ -23,7 +23,7 @@ Basic usage:
 
 ```hcl
 resource "aws_vpc_endpoint_service" "foo" {
-  acceptance_required = false
+  acceptance_required        = false
   network_load_balancer_arns = ["${aws_lb.test.arn}"]
 }
 ```

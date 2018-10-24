@@ -14,7 +14,7 @@ Provides information about an Elastic File System (EFS).
 
 ```hcl
 variable "file_system_id" {
-  type = "string"
+  type    = "string"
   default = ""
 }
 

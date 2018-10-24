@@ -112,7 +112,8 @@ resource "aws_s3_bucket" "bucket" {
     id      = "log"
     enabled = true
 
-    prefix  = "log/"
+    prefix = "log/"
+
     tags {
       "rule"      = "log"
       "autoclean" = "true"
@@ -252,8 +253,8 @@ resource "aws_iam_policy_attachment" "replication" {
 }
 
 resource "aws_s3_bucket" "destination" {
-  bucket   = "tf-test-bucket-destination-12345"
-  region   = "eu-west-1"
+  bucket = "tf-test-bucket-destination-12345"
+  region = "eu-west-1"
 
   versioning {
     enabled = true
@@ -297,6 +298,7 @@ resource "aws_kms_key" "mykey" {
 
 resource "aws_s3_bucket" "mybucket" {
   bucket = "mybucket"
+
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {

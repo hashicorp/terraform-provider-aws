@@ -14,26 +14,28 @@ Provides an SSM Maintenance Window Task resource
 
 ```hcl
 resource "aws_ssm_maintenance_window" "window" {
-  name = "maintenance-window-%s"
+  name     = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
-  cutoff = 1
+  cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_task" "task" {
-  window_id = "${aws_ssm_maintenance_window.window.id}"
-  task_type = "RUN_COMMAND"
-  task_arn = "AWS-RunShellScript"
-  priority = 1
+  window_id        = "${aws_ssm_maintenance_window.window.id}"
+  task_type        = "RUN_COMMAND"
+  task_arn         = "AWS-RunShellScript"
+  priority         = 1
   service_role_arn = "arn:aws:iam::187416307283:role/service-role/AWS_Events_Invoke_Run_Command_112316643"
-  max_concurrency = "2"
-  max_errors = "1"
+  max_concurrency  = "2"
+  max_errors       = "1"
+
   targets {
-    key = "InstanceIds"
+    key    = "InstanceIds"
     values = ["${aws_instance.instance.id}"]
   }
+
   task_parameters {
-    name = "commands"
+    name   = "commands"
     values = ["pwd"]
   }
 }

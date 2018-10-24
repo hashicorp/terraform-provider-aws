@@ -14,9 +14,9 @@ Provides a Connection of Direct Connect.
 
 ```hcl
 resource "aws_dx_connection" "hoge" {
-  name = "tf-dx-connection"
+  name      = "tf-dx-connection"
   bandwidth = "1Gbps"
-  location = "EqDC2"
+  location  = "EqDC2"
 }
 ```
 

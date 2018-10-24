@@ -18,19 +18,22 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "example" {
-  name = "example.terraform.local"
+  name        = "example.terraform.local"
   description = "example"
-  vpc = "${aws_vpc.example.id}"
+  vpc         = "${aws_vpc.example.id}"
 }
 
 resource "aws_service_discovery_service" "example" {
   name = "example"
+
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.example.id}"
+
     dns_records {
-      ttl = 10
+      ttl  = 10
       type = "A"
     }
+
     routing_policy = "MULTIVALUE"
   }
 
@@ -42,23 +45,26 @@ resource "aws_service_discovery_service" "example" {
 
 ```hcl
 resource "aws_service_discovery_public_dns_namespace" "example" {
-  name = "example.terraform.com"
+  name        = "example.terraform.com"
   description = "example"
 }
 
 resource "aws_service_discovery_service" "example" {
   name = "example"
+
   dns_config {
     namespace_id = "${aws_service_discovery_public_dns_namespace.example.id}"
+
     dns_records {
-      ttl = 10
+      ttl  = 10
       type = "A"
     }
   }
+
   health_check_config {
     failure_threshold = 10
-    resource_path = "path"
-    type = "HTTP"
+    resource_path     = "path"
+    type              = "HTTP"
   }
 }
 ```

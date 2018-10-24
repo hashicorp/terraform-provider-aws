@@ -39,10 +39,10 @@ resource "aws_db_instance" "default" {
 }
 
 resource "aws_ssm_parameter" "secret" {
-  name  = "${var.environment}/database/password/master"
-  description  = "The parameter description"
-  type  = "SecureString"
-  value = "${var.database_master_password}"
+  name        = "${var.environment}/database/password/master"
+  description = "The parameter description"
+  type        = "SecureString"
+  value       = "${var.database_master_password}"
 
   tags {
     environment = "${var.environment}"
