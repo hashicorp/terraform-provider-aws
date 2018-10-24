@@ -650,8 +650,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 	}
 
 	if !d.IsNewResource() {
-		applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
-
 		updateApplicationOpts := &kinesisanalytics.UpdateApplicationInput{
 			ApplicationName:             aws.String(name),
 			CurrentApplicationVersionId: aws.Int64(int64(version)),
@@ -800,7 +798,11 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 	}
 	_, deleteErr := conn.DeleteApplication(deleteOpts)
 	if deleteErr != nil {
-		return deleteErr
+		return fmt.Errorf("error deleting Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
+	}
+	deleteErr = waitForDeleteKinesisAnalyticsApplication(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if deleteErr != nil {
+		return fmt.Errorf("error waiting for deletion of Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
 	}
 
 	log.Printf("[DEBUG] Kinesis Analytics Application deleted: %v", d.Id())
@@ -1515,4 +1517,42 @@ func flattenKinesisAnalyticsReferenceDataSources(dataSources []*kinesisanalytics
 	}
 
 	return s
+}
+
+func waitForDeleteKinesisAnalyticsApplication(conn *kinesisanalytics.KinesisAnalytics, applicationId string, timeout time.Duration) error {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{
+			kinesisanalytics.ApplicationStatusRunning,
+			kinesisanalytics.ApplicationStatusDeleting,
+		},
+		Target:  []string{""},
+		Timeout: timeout,
+		Refresh: refreshKinesisAnalyticsApplicationStatus(conn, applicationId),
+	}
+	application, err := stateConf.WaitForState()
+	if err != nil {
+		if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+	}
+	if application == nil {
+		return nil
+	}
+	return err
+}
+
+func refreshKinesisAnalyticsApplicationStatus(conn *kinesisanalytics.KinesisAnalytics, applicationId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := conn.DescribeApplication(&kinesisanalytics.DescribeApplicationInput{
+			ApplicationName: aws.String(applicationId),
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		application := output.ApplicationDetail
+		if application == nil {
+			return application, "", fmt.Errorf("Kinesis Analytics Application (%s) could not be found.", applicationId)
+		}
+		return application, aws.StringValue(application.ApplicationStatus), nil
+	}
 }
