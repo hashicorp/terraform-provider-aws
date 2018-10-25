@@ -42,6 +42,8 @@ Nat Gateway whose data will be exported as attributes.
 * `subnet_id` - (Optional) The id of subnet that the Nat Gateway resides in.
 * `vpc_id` - (Optional) The id of the VPC that the Nat Gateway resides in.
 * `state` - (Optional) The state of the NAT gateway (pending | failed | available | deleting | deleted ).
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+  a pair on the desired Nat Gateway.
 * `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
