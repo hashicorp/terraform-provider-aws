@@ -4,6 +4,10 @@ NOTES:
 
 * This release will be delayed one week due to HashiConf.
 
+BUG FIXES:
+
+* resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
+
 ## 1.41.0 (October 18, 2018)
 
 FEATURES:
