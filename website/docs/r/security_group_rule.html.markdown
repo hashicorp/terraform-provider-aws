@@ -125,11 +125,11 @@ $ terraform import aws_security_group_rule.egress sg-62726f6479_egress_tcp_8000_
 Import a rule applicable to all protocols and ports with a security group source:
 
 ```console
-$ example: sg-7472697374616e_ingress_all_0_65536_sg-6176657279
+$ terraform import aws_security_group_rule.ingress_rule sg-7472697374616e_ingress_all_0_65536_sg-6176657279
 ```
 
 Import a rule that has itself and an IPv6 CIDR block as sources:
 
 ```console
-$ example: sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
+$ terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```
