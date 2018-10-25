@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -60,6 +61,26 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 				Config: testAccAWSNetworkAclRuleIpv6Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_network_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleConfigIpv6ICMP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
 				),
 			},
 		},
@@ -487,3 +508,35 @@ resource "aws_network_acl_rule" "baz" {
 	to_port = 22
 }
 `
+
+func testAccAWSNetworkAclRuleConfigIpv6ICMP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.3.0.0/16"
+
+  tags {
+    Name = %q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags {
+    Name = %q
+  }
+}
+
+resource "aws_network_acl_rule" "test" {
+  from_port       = -1
+  icmp_code       = -1
+  icmp_type       = -1
+  ipv6_cidr_block = "::/0"
+  network_acl_id = "${aws_network_acl.test.id}"
+  protocol        = 58
+  rule_action     = "allow"
+  rule_number     = 150
+  to_port         = -1
+}
+`, rName, rName)
+}
