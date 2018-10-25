@@ -112,6 +112,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 			"website": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
@@ -1315,19 +1316,17 @@ func resourceAwsS3BucketCorsUpdate(s3conn *s3.S3, d *schema.ResourceData) error 
 func resourceAwsS3BucketWebsiteUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
 	ws := d.Get("website").([]interface{})
 
-	if len(ws) == 1 {
-		var w map[string]interface{}
-		if ws[0] != nil {
-			w = ws[0].(map[string]interface{})
-		} else {
-			w = make(map[string]interface{})
-		}
-		return resourceAwsS3BucketWebsitePut(s3conn, d, w)
-	} else if len(ws) == 0 {
+	if len(ws) == 0 {
 		return resourceAwsS3BucketWebsiteDelete(s3conn, d)
-	} else {
-		return fmt.Errorf("Cannot specify more than one website.")
 	}
+
+	var w map[string]interface{}
+	if ws[0] != nil {
+		w = ws[0].(map[string]interface{})
+	} else {
+		w = make(map[string]interface{})
+	}
+	return resourceAwsS3BucketWebsitePut(s3conn, d, w)
 }
 
 func resourceAwsS3BucketWebsitePut(s3conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
