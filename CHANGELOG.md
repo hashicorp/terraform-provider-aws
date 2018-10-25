@@ -8,6 +8,7 @@ FEATURES:
 
 * **New Resource:** `aws_pinpoint_apns_sandbox_channel` [GH-6233]
 * **New Resource:** `aws_pinpoint_apns_voip_channel` [GH-6234]
+* **New Resource:** `aws_pinpoint_apns_voip_sandbox_channel` [GH-6235]
 
 ENHANCEMENTS:
 
