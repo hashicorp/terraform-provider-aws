@@ -11234,6 +11234,32 @@ type AssociationDescription struct {
 	// The date when the association was last updated.
 	LastUpdateAssociationDate *time.Time `type:"timestamp"`
 
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
+
 	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
@@ -11317,6 +11343,18 @@ func (s *AssociationDescription) SetLastSuccessfulExecutionDate(v time.Time) *As
 // SetLastUpdateAssociationDate sets the LastUpdateAssociationDate field's value.
 func (s *AssociationDescription) SetLastUpdateAssociationDate(v time.Time) *AssociationDescription {
 	s.LastUpdateAssociationDate = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *AssociationDescription) SetMaxConcurrency(v string) *AssociationDescription {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *AssociationDescription) SetMaxErrors(v string) *AssociationDescription {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -11875,6 +11913,32 @@ type AssociationVersionInfo struct {
 	// was created.
 	DocumentVersion *string `type:"string"`
 
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
+
 	// The name specified when the association was created.
 	Name *string `type:"string"`
 
@@ -11931,6 +11995,18 @@ func (s *AssociationVersionInfo) SetCreatedDate(v time.Time) *AssociationVersion
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *AssociationVersionInfo) SetDocumentVersion(v string) *AssociationVersionInfo {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *AssociationVersionInfo) SetMaxConcurrency(v string) *AssociationVersionInfo {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *AssociationVersionInfo) SetMaxErrors(v string) *AssociationVersionInfo {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -14028,6 +14104,32 @@ type CreateAssociationBatchRequestEntry struct {
 	// The ID of the instance.
 	InstanceId *string `type:"string"`
 
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
+
 	// The name of the configuration document.
 	//
 	// Name is a required field
@@ -14059,6 +14161,12 @@ func (s CreateAssociationBatchRequestEntry) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateAssociationBatchRequestEntry) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateAssociationBatchRequestEntry"}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -14105,6 +14213,18 @@ func (s *CreateAssociationBatchRequestEntry) SetInstanceId(v string) *CreateAsso
 	return s
 }
 
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *CreateAssociationBatchRequestEntry) SetMaxConcurrency(v string) *CreateAssociationBatchRequestEntry {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *CreateAssociationBatchRequestEntry) SetMaxErrors(v string) *CreateAssociationBatchRequestEntry {
+	s.MaxErrors = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *CreateAssociationBatchRequestEntry) SetName(v string) *CreateAssociationBatchRequestEntry {
 	s.Name = &v
@@ -14148,6 +14268,32 @@ type CreateAssociationInput struct {
 	// The instance ID.
 	InstanceId *string `type:"string"`
 
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
+
 	// The name of the Systems Manager document.
 	//
 	// Name is a required field
@@ -14179,6 +14325,12 @@ func (s CreateAssociationInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateAssociationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateAssociationInput"}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -14222,6 +14374,18 @@ func (s *CreateAssociationInput) SetDocumentVersion(v string) *CreateAssociation
 // SetInstanceId sets the InstanceId field's value.
 func (s *CreateAssociationInput) SetInstanceId(v string) *CreateAssociationInput {
 	s.InstanceId = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *CreateAssociationInput) SetMaxConcurrency(v string) *CreateAssociationInput {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *CreateAssociationInput) SetMaxErrors(v string) *CreateAssociationInput {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -17048,6 +17212,7 @@ type DescribeInstanceInformationInput struct {
 	_ struct{} `type:"structure"`
 
 	// One or more filters. Use a filter to return a more specific list of instances.
+	// You can filter on Amazon EC2 tag. Specify tags by using a key-value mapping.
 	Filters []*InstanceInformationStringFilter `type:"list"`
 
 	// This is a legacy method. We recommend that you don't use this method. Instead,
@@ -17485,8 +17650,7 @@ type DescribeInstancePatchesOutput struct {
 	//
 	// Severity (string)
 	//
-	// State (string: "INSTALLED", "INSTALLED OTHER", "MISSING", "NOT APPLICABLE",
-	// "FAILED")
+	// State (string, such as "INSTALLED" or "FAILED")
 	//
 	// InstalledTime (DateTime)
 	//
@@ -18869,7 +19033,7 @@ type DescribePatchGroupStateOutput struct {
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
 	// The number of instances with patches installed that are specified in a RejectedPatches
-	// list. Patches with a status of InstalledRejected were typically installed
+	// list. Patches with a status of INSTALLED_REJECTED were typically installed
 	// before they were added to a RejectedPatches list.
 	//
 	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
@@ -27483,8 +27647,10 @@ type PatchComplianceData struct {
 	// Severity is a required field
 	Severity *string `type:"string" required:"true"`
 
-	// The state of the patch on the instance (INSTALLED, INSTALLED_OTHER, MISSING,
-	// NOT_APPLICABLE or FAILED).
+	// The state of the patch on the instance, such as INSTALLED or FAILED.
+	//
+	// For descriptions of each patch state, see About Patch Compliance (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-compliance-about.html#sysman-compliance-monitor-patch)
+	// in the AWS Systems Manager User Guide.
 	//
 	// State is a required field
 	State *string `type:"string" required:"true" enum:"PatchComplianceDataState"`
@@ -29398,7 +29564,7 @@ func (s *RegisterTaskWithMaintenanceWindowInput) SetWindowId(v string) *Register
 type RegisterTaskWithMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The id of the task in the Maintenance Window.
+	// The ID of the task in the Maintenance Window.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -31618,6 +31784,32 @@ type UpdateAssociationInput struct {
 	// The document version you want update for the association.
 	DocumentVersion *string `type:"string"`
 
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
+
 	// The name of the association document.
 	Name *string `type:"string"`
 
@@ -31650,6 +31842,12 @@ func (s *UpdateAssociationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateAssociationInput"}
 	if s.AssociationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AssociationId"))
+	}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
 	}
 	if s.ScheduleExpression != nil && len(*s.ScheduleExpression) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ScheduleExpression", 1))
@@ -31697,6 +31895,18 @@ func (s *UpdateAssociationInput) SetAssociationVersion(v string) *UpdateAssociat
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *UpdateAssociationInput) SetDocumentVersion(v string) *UpdateAssociationInput {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *UpdateAssociationInput) SetMaxConcurrency(v string) *UpdateAssociationInput {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *UpdateAssociationInput) SetMaxErrors(v string) *UpdateAssociationInput {
+	s.MaxErrors = &v
 	return s
 }
 
