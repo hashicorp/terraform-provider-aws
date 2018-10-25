@@ -824,16 +824,20 @@ func (c *CloudWatchEvents) PutPermissionRequest(input *PutPermissionInput) (req 
 
 // PutPermission API operation for Amazon CloudWatch Events.
 //
-// Running PutPermission permits the specified AWS account to put events to
-// your account's default event bus. CloudWatch Events rules in your account
-// are triggered by these events arriving to your default event bus.
+// Running PutPermission permits the specified AWS account or AWS organization
+// to put events to your account's default event bus. CloudWatch Events rules
+// in your account are triggered by these events arriving to your default event
+// bus.
 //
 // For another account to send events to your account, that external account
 // must have a CloudWatch Events rule with your account's default event bus
 // as a target.
 //
 // To enable multiple AWS accounts to put events to your default event bus,
-// run PutPermission once for each of these accounts.
+// run PutPermission once for each of these accounts. Or, if all the accounts
+// are members of the same AWS organization, you can run PutPermission once
+// specifying Principal as "*" and specifying the AWS organization ID in Condition,
+// to grant permissions to all accounts in that organization.
 //
 // The permission policy on the default event bus cannot exceed 10 KB in size.
 //
@@ -1639,6 +1643,80 @@ func (s BatchRetryStrategy) GoString() string {
 // SetAttempts sets the Attempts field's value.
 func (s *BatchRetryStrategy) SetAttempts(v int64) *BatchRetryStrategy {
 	s.Attempts = &v
+	return s
+}
+
+// A JSON string which you can use to limit the event bus permissions you are
+// granting to only accounts that fulfill the condition. Currently, the only
+// supported condition is membership in a certain AWS organization. The string
+// must contain Type, Key, and Value fields. The Value field specifies the ID
+// of the AWS organization. Following is an example value for Condition:
+//
+// '{"Type" : "StringEquals", "Key": "aws:PrincipalOrgID", "Value": "o-1234567890"}'
+type Condition struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the key for the condition. Currently the only supported key is
+	// aws:PrincipalOrgID.
+	//
+	// Key is a required field
+	Key *string `type:"string" required:"true"`
+
+	// Specifies the type of condition. Currently the only supported value is StringEquals.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true"`
+
+	// Specifies the value for the key. Currently, this must be the ID of the organization.
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Condition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Condition) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Condition) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Condition"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Condition) SetKey(v string) *Condition {
+	s.Key = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Condition) SetType(v string) *Condition {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Condition) SetValue(v string) *Condition {
+	s.Value = &v
 	return s
 }
 
@@ -2754,15 +2832,28 @@ type PutPermissionInput struct {
 	// Action is a required field
 	Action *string `min:"1" type:"string" required:"true"`
 
+	// This parameter enables you to limit the permission to accounts that fulfill
+	// a certain condition, such as being a member of a certain AWS organization.
+	// For more information about AWS Organizations, see What Is AWS Organizations
+	// (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html)
+	// in the AWS Organizations User Guide.
+	//
+	// If you specify Condition with an AWS organization ID, and specify "*" as
+	// the value for Principal, you grant permission to all the accounts in the
+	// named organization.
+	//
+	// The Condition is a JSON string which must contain Type, Key, and Value fields.
+	Condition *Condition `type:"structure"`
+
 	// The 12-digit AWS account ID that you are permitting to put events to your
 	// default event bus. Specify "*" to permit any account to put events to your
 	// default event bus.
 	//
-	// If you specify "*", avoid creating rules that may match undesirable events.
-	// To create more secure rules, make sure that the event pattern for each rule
-	// contains an account field with a specific account ID from which to receive
-	// events. Rules with an account field do not match any events sent from other
-	// accounts.
+	// If you specify "*" without specifying Condition, avoid creating rules that
+	// may match undesirable events. To create more secure rules, make sure that
+	// the event pattern for each rule contains an account field with a specific
+	// account ID from which to receive events. Rules with an account field do not
+	// match any events sent from other accounts.
 	//
 	// Principal is a required field
 	Principal *string `min:"1" type:"string" required:"true"`
@@ -2806,6 +2897,11 @@ func (s *PutPermissionInput) Validate() error {
 	if s.StatementId != nil && len(*s.StatementId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("StatementId", 1))
 	}
+	if s.Condition != nil {
+		if err := s.Condition.Validate(); err != nil {
+			invalidParams.AddNested("Condition", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2816,6 +2912,12 @@ func (s *PutPermissionInput) Validate() error {
 // SetAction sets the Action field's value.
 func (s *PutPermissionInput) SetAction(v string) *PutPermissionInput {
 	s.Action = &v
+	return s
+}
+
+// SetCondition sets the Condition field's value.
+func (s *PutPermissionInput) SetCondition(v *Condition) *PutPermissionInput {
+	s.Condition = v
 	return s
 }
 

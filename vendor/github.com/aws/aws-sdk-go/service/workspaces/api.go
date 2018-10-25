@@ -5058,6 +5058,12 @@ const (
 
 	// ComputeGraphics is a Compute enum value
 	ComputeGraphics = "GRAPHICS"
+
+	// ComputePowerpro is a Compute enum value
+	ComputePowerpro = "POWERPRO"
+
+	// ComputeGraphicspro is a Compute enum value
+	ComputeGraphicspro = "GRAPHICSPRO"
 )
 
 const (

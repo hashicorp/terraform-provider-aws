@@ -1,4 +1,21 @@
 ## 1.42.0 (Unreleased)
+
+NOTES:
+
+* This release will be delayed one week due to HashiConf.
+
+FEATURES:
+
+* **New Resource:** `aws_pinpoint_apns_sandbox_channel` [GH-6233]
+
+ENHANCEMENTS:
+
+* resource/aws_flow_log: Add `log_destination` and `log_destination_type` arguments (support sending to S3) [GH-5509]
+
+BUG FIXES:
+
+* resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
+
 ## 1.41.0 (October 18, 2018)
 
 FEATURES:

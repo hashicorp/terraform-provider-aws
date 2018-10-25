@@ -243,6 +243,95 @@ func (c *EC2) AcceptVpcPeeringConnectionWithContext(ctx aws.Context, input *Acce
 	return out, req.Send()
 }
 
+const opAdvertiseByoipCidr = "AdvertiseByoipCidr"
+
+// AdvertiseByoipCidrRequest generates a "aws/request.Request" representing the
+// client's request for the AdvertiseByoipCidr operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AdvertiseByoipCidr for more information on using the AdvertiseByoipCidr
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AdvertiseByoipCidrRequest method.
+//    req, resp := client.AdvertiseByoipCidrRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/AdvertiseByoipCidr
+func (c *EC2) AdvertiseByoipCidrRequest(input *AdvertiseByoipCidrInput) (req *request.Request, output *AdvertiseByoipCidrOutput) {
+	op := &request.Operation{
+		Name:       opAdvertiseByoipCidr,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdvertiseByoipCidrInput{}
+	}
+
+	output = &AdvertiseByoipCidrOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AdvertiseByoipCidr API operation for Amazon Elastic Compute Cloud.
+//
+// Advertises an IPv4 address range that is provisioned for use with your AWS
+// resources through bring your own IP addresses (BYOIP).
+//
+// You can perform this operation at most once every 10 seconds, even if you
+// specify different address ranges each time.
+//
+// We recommend that you stop advertising the BYOIP CIDR from other locations
+// when you advertise it from AWS. To minimize down time, you can configure
+// your AWS resources to use an address from a BYOIP CIDR before it is advertised,
+// and then simultaneously stop advertising it from the current location and
+// start advertising it through AWS.
+//
+// It can take a few minutes before traffic to the specified addresses starts
+// routing to AWS because of BGP propagation delays.
+//
+// To stop advertising the BYOIP CIDR, use WithdrawByoipCidr.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation AdvertiseByoipCidr for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/AdvertiseByoipCidr
+func (c *EC2) AdvertiseByoipCidr(input *AdvertiseByoipCidrInput) (*AdvertiseByoipCidrOutput, error) {
+	req, out := c.AdvertiseByoipCidrRequest(input)
+	return out, req.Send()
+}
+
+// AdvertiseByoipCidrWithContext is the same as AdvertiseByoipCidr with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AdvertiseByoipCidr for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) AdvertiseByoipCidrWithContext(ctx aws.Context, input *AdvertiseByoipCidrInput, opts ...request.Option) (*AdvertiseByoipCidrOutput, error) {
+	req, out := c.AdvertiseByoipCidrRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAllocateAddress = "AllocateAddress"
 
 // AllocateAddressRequest generates a "aws/request.Request" representing the
@@ -291,6 +380,13 @@ func (c *EC2) AllocateAddressRequest(input *AllocateAddressInput) (req *request.
 // Elastic IP address you can associate it with an instance or network interface.
 // After you release an Elastic IP address, it is released to the IP address
 // pool and can be allocated to a different AWS account.
+//
+// You can allocate an Elastic IP address from an address pool owned by AWS
+// or from an address pool created from a public IPv4 address range that you
+// have brought to AWS for use with your AWS resources using bring your own
+// IP addresses (BYOIP). For more information, see Bring Your Own IP Addresses
+// (BYOIP) (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-byoip.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // [EC2-VPC] If you release an Elastic IP address, you might be able to recover
 // it. You cannot recover an Elastic IP address that you released after it is
@@ -536,16 +632,23 @@ func (c *EC2) AssignPrivateIpAddressesRequest(input *AssignPrivateIpAddressesInp
 // AssignPrivateIpAddresses API operation for Amazon Elastic Compute Cloud.
 //
 // Assigns one or more secondary private IP addresses to the specified network
-// interface. You can specify one or more specific secondary IP addresses, or
-// you can specify the number of secondary IP addresses to be automatically
-// assigned within the subnet's CIDR block range. The number of secondary IP
-// addresses that you can assign to an instance varies by instance type. For
-// information about instance types, see Instance Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html)
+// interface.
+//
+// You can specify one or more specific secondary IP addresses, or you can specify
+// the number of secondary IP addresses to be automatically assigned within
+// the subnet's CIDR block range. The number of secondary IP addresses that
+// you can assign to an instance varies by instance type. For information about
+// instance types, see Instance Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html)
 // in the Amazon Elastic Compute Cloud User Guide. For more information about
 // Elastic IP addresses, see Elastic IP Addresses (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
-// AssignPrivateIpAddresses is available only in EC2-VPC.
+// When you move a secondary private IP address to another network interface,
+// any Elastic IP address that is associated with the IP address is also moved.
+//
+// Remapping an IP address is an asynchronous operation. When you move an IP
+// address from one network interface to another, check network/interfaces/macs/mac/local-ipv4s
+// in the instance metadata to confirm that the remapping is complete.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8309,6 +8412,86 @@ func (c *EC2) DeleteVpnGatewayWithContext(ctx aws.Context, input *DeleteVpnGatew
 	return out, req.Send()
 }
 
+const opDeprovisionByoipCidr = "DeprovisionByoipCidr"
+
+// DeprovisionByoipCidrRequest generates a "aws/request.Request" representing the
+// client's request for the DeprovisionByoipCidr operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeprovisionByoipCidr for more information on using the DeprovisionByoipCidr
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeprovisionByoipCidrRequest method.
+//    req, resp := client.DeprovisionByoipCidrRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeprovisionByoipCidr
+func (c *EC2) DeprovisionByoipCidrRequest(input *DeprovisionByoipCidrInput) (req *request.Request, output *DeprovisionByoipCidrOutput) {
+	op := &request.Operation{
+		Name:       opDeprovisionByoipCidr,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeprovisionByoipCidrInput{}
+	}
+
+	output = &DeprovisionByoipCidrOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeprovisionByoipCidr API operation for Amazon Elastic Compute Cloud.
+//
+// Releases the specified address range that you provisioned for use with your
+// AWS resources through bring your own IP addresses (BYOIP) and deletes the
+// corresponding address pool.
+//
+// Before you can release an address range, you must stop advertising it using
+// WithdrawByoipCidr and you must not have any IP addresses allocated from its
+// address range.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DeprovisionByoipCidr for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeprovisionByoipCidr
+func (c *EC2) DeprovisionByoipCidr(input *DeprovisionByoipCidrInput) (*DeprovisionByoipCidrOutput, error) {
+	req, out := c.DeprovisionByoipCidrRequest(input)
+	return out, req.Send()
+}
+
+// DeprovisionByoipCidrWithContext is the same as DeprovisionByoipCidr with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeprovisionByoipCidr for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DeprovisionByoipCidrWithContext(ctx aws.Context, input *DeprovisionByoipCidrInput, opts ...request.Option) (*DeprovisionByoipCidrOutput, error) {
+	req, out := c.DeprovisionByoipCidrRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeregisterImage = "DeregisterImage"
 
 // DeregisterImageRequest generates a "aws/request.Request" representing the
@@ -8805,6 +8988,83 @@ func (c *EC2) DescribeBundleTasks(input *DescribeBundleTasksInput) (*DescribeBun
 // for more information on using Contexts.
 func (c *EC2) DescribeBundleTasksWithContext(ctx aws.Context, input *DescribeBundleTasksInput, opts ...request.Option) (*DescribeBundleTasksOutput, error) {
 	req, out := c.DescribeBundleTasksRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeByoipCidrs = "DescribeByoipCidrs"
+
+// DescribeByoipCidrsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeByoipCidrs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeByoipCidrs for more information on using the DescribeByoipCidrs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeByoipCidrsRequest method.
+//    req, resp := client.DescribeByoipCidrsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeByoipCidrs
+func (c *EC2) DescribeByoipCidrsRequest(input *DescribeByoipCidrsInput) (req *request.Request, output *DescribeByoipCidrsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeByoipCidrs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeByoipCidrsInput{}
+	}
+
+	output = &DescribeByoipCidrsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeByoipCidrs API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the IP address ranges that were specified in calls to ProvisionByoipCidr.
+//
+// To describe the address pools that were created when you provisioned the
+// address ranges, use DescribePublicIpv4Pools.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeByoipCidrs for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeByoipCidrs
+func (c *EC2) DescribeByoipCidrs(input *DescribeByoipCidrsInput) (*DescribeByoipCidrsOutput, error) {
+	req, out := c.DescribeByoipCidrsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeByoipCidrsWithContext is the same as DescribeByoipCidrs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeByoipCidrs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeByoipCidrsWithContext(ctx aws.Context, input *DescribeByoipCidrsInput, opts ...request.Option) (*DescribeByoipCidrsOutput, error) {
+	req, out := c.DescribeByoipCidrsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -12161,6 +12421,80 @@ func (c *EC2) DescribePrincipalIdFormatWithContext(ctx aws.Context, input *Descr
 	return out, req.Send()
 }
 
+const opDescribePublicIpv4Pools = "DescribePublicIpv4Pools"
+
+// DescribePublicIpv4PoolsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePublicIpv4Pools operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePublicIpv4Pools for more information on using the DescribePublicIpv4Pools
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePublicIpv4PoolsRequest method.
+//    req, resp := client.DescribePublicIpv4PoolsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribePublicIpv4Pools
+func (c *EC2) DescribePublicIpv4PoolsRequest(input *DescribePublicIpv4PoolsInput) (req *request.Request, output *DescribePublicIpv4PoolsOutput) {
+	op := &request.Operation{
+		Name:       opDescribePublicIpv4Pools,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribePublicIpv4PoolsInput{}
+	}
+
+	output = &DescribePublicIpv4PoolsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePublicIpv4Pools API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the specified IPv4 address pools.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribePublicIpv4Pools for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribePublicIpv4Pools
+func (c *EC2) DescribePublicIpv4Pools(input *DescribePublicIpv4PoolsInput) (*DescribePublicIpv4PoolsOutput, error) {
+	req, out := c.DescribePublicIpv4PoolsRequest(input)
+	return out, req.Send()
+}
+
+// DescribePublicIpv4PoolsWithContext is the same as DescribePublicIpv4Pools with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePublicIpv4Pools for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribePublicIpv4PoolsWithContext(ctx aws.Context, input *DescribePublicIpv4PoolsInput, opts ...request.Option) (*DescribePublicIpv4PoolsOutput, error) {
+	req, out := c.DescribePublicIpv4PoolsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeRegions = "DescribeRegions"
 
 // DescribeRegionsRequest generates a "aws/request.Request" representing the
@@ -13533,7 +13867,7 @@ func (c *EC2) DescribeSpotFleetRequestHistoryRequest(input *DescribeSpotFleetReq
 //
 // Spot Fleet events are delayed by up to 30 seconds before they can be described.
 // This ensures that you can query by the last evaluated time and not miss a
-// recorded event.
+// recorded event. Spot Fleet events are available for 48 hours.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -20048,6 +20382,96 @@ func (c *EC2) MoveAddressToVpcWithContext(ctx aws.Context, input *MoveAddressToV
 	return out, req.Send()
 }
 
+const opProvisionByoipCidr = "ProvisionByoipCidr"
+
+// ProvisionByoipCidrRequest generates a "aws/request.Request" representing the
+// client's request for the ProvisionByoipCidr operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ProvisionByoipCidr for more information on using the ProvisionByoipCidr
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ProvisionByoipCidrRequest method.
+//    req, resp := client.ProvisionByoipCidrRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ProvisionByoipCidr
+func (c *EC2) ProvisionByoipCidrRequest(input *ProvisionByoipCidrInput) (req *request.Request, output *ProvisionByoipCidrOutput) {
+	op := &request.Operation{
+		Name:       opProvisionByoipCidr,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ProvisionByoipCidrInput{}
+	}
+
+	output = &ProvisionByoipCidrOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ProvisionByoipCidr API operation for Amazon Elastic Compute Cloud.
+//
+// Provisions an address range for use with your AWS resources through bring
+// your own IP addresses (BYOIP) and creates a corresponding address pool. After
+// the address range is provisioned, it is ready to be advertised using AdvertiseByoipCidr.
+//
+// AWS verifies that you own the address range and are authorized to advertise
+// it. You must ensure that the address range is registered to you and that
+// you created an RPKI ROA to authorize Amazon ASNs 16509 and 14618 to advertise
+// the address range. For more information, see Bring Your Own IP Addresses
+// (BYOIP) (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-byoip.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
+// Provisioning an address range is an asynchronous operation, so the call returns
+// immediately, but the address range is not ready to use until its status changes
+// from pending-provision to provisioned. To monitor the status of an address
+// range, use DescribeByoipCidrs. To allocate an Elastic IP address from your
+// address pool, use AllocateAddress with either the specific address from the
+// address pool or the ID of the address pool.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ProvisionByoipCidr for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ProvisionByoipCidr
+func (c *EC2) ProvisionByoipCidr(input *ProvisionByoipCidrInput) (*ProvisionByoipCidrOutput, error) {
+	req, out := c.ProvisionByoipCidrRequest(input)
+	return out, req.Send()
+}
+
+// ProvisionByoipCidrWithContext is the same as ProvisionByoipCidr with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ProvisionByoipCidr for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ProvisionByoipCidrWithContext(ctx aws.Context, input *ProvisionByoipCidrInput, opts ...request.Option) (*ProvisionByoipCidrOutput, error) {
+	req, out := c.ProvisionByoipCidrRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPurchaseHostReservation = "PurchaseHostReservation"
 
 // PurchaseHostReservationRequest generates a "aws/request.Request" representing the
@@ -23016,6 +23440,87 @@ func (c *EC2) UpdateSecurityGroupRuleDescriptionsIngressWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
+const opWithdrawByoipCidr = "WithdrawByoipCidr"
+
+// WithdrawByoipCidrRequest generates a "aws/request.Request" representing the
+// client's request for the WithdrawByoipCidr operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See WithdrawByoipCidr for more information on using the WithdrawByoipCidr
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the WithdrawByoipCidrRequest method.
+//    req, resp := client.WithdrawByoipCidrRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/WithdrawByoipCidr
+func (c *EC2) WithdrawByoipCidrRequest(input *WithdrawByoipCidrInput) (req *request.Request, output *WithdrawByoipCidrOutput) {
+	op := &request.Operation{
+		Name:       opWithdrawByoipCidr,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &WithdrawByoipCidrInput{}
+	}
+
+	output = &WithdrawByoipCidrOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// WithdrawByoipCidr API operation for Amazon Elastic Compute Cloud.
+//
+// Stops advertising an IPv4 address range that is provisioned as an address
+// pool.
+//
+// You can perform this operation at most once every 10 seconds, even if you
+// specify different address ranges each time.
+//
+// It can take a few minutes before traffic to the specified addresses stops
+// routing to AWS because of BGP propagation delays.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation WithdrawByoipCidr for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/WithdrawByoipCidr
+func (c *EC2) WithdrawByoipCidr(input *WithdrawByoipCidrInput) (*WithdrawByoipCidrOutput, error) {
+	req, out := c.WithdrawByoipCidrRequest(input)
+	return out, req.Send()
+}
+
+// WithdrawByoipCidrWithContext is the same as WithdrawByoipCidr with the addition of
+// the ability to pass a context and additional request options.
+//
+// See WithdrawByoipCidr for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) WithdrawByoipCidrWithContext(ctx aws.Context, input *WithdrawByoipCidrInput, opts ...request.Option) (*WithdrawByoipCidrOutput, error) {
+	req, out := c.WithdrawByoipCidrRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Contains the parameters for accepting the quote.
 type AcceptReservedInstancesExchangeQuoteInput struct {
 	_ struct{} `type:"structure"`
@@ -23398,6 +23903,9 @@ type Address struct {
 	// The Elastic IP address.
 	PublicIp *string `locationName:"publicIp" type:"string"`
 
+	// The ID of an address pool.
+	PublicIpv4Pool *string `locationName:"publicIpv4Pool" type:"string"`
+
 	// Any tags assigned to the Elastic IP address.
 	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
@@ -23460,17 +23968,96 @@ func (s *Address) SetPublicIp(v string) *Address {
 	return s
 }
 
+// SetPublicIpv4Pool sets the PublicIpv4Pool field's value.
+func (s *Address) SetPublicIpv4Pool(v string) *Address {
+	s.PublicIpv4Pool = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *Address) SetTags(v []*Tag) *Address {
 	s.Tags = v
 	return s
 }
 
-// Contains the parameters for AllocateAddress.
+type AdvertiseByoipCidrInput struct {
+	_ struct{} `type:"structure"`
+
+	// The IPv4 address range, in CIDR notation.
+	//
+	// Cidr is a required field
+	Cidr *string `type:"string" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s AdvertiseByoipCidrInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdvertiseByoipCidrInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdvertiseByoipCidrInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdvertiseByoipCidrInput"}
+	if s.Cidr == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cidr"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCidr sets the Cidr field's value.
+func (s *AdvertiseByoipCidrInput) SetCidr(v string) *AdvertiseByoipCidrInput {
+	s.Cidr = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *AdvertiseByoipCidrInput) SetDryRun(v bool) *AdvertiseByoipCidrInput {
+	s.DryRun = &v
+	return s
+}
+
+type AdvertiseByoipCidrOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the address range.
+	ByoipCidr *ByoipCidr `locationName:"byoipCidr" type:"structure"`
+}
+
+// String returns the string representation
+func (s AdvertiseByoipCidrOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdvertiseByoipCidrOutput) GoString() string {
+	return s.String()
+}
+
+// SetByoipCidr sets the ByoipCidr field's value.
+func (s *AdvertiseByoipCidrOutput) SetByoipCidr(v *ByoipCidr) *AdvertiseByoipCidrOutput {
+	s.ByoipCidr = v
+	return s
+}
+
 type AllocateAddressInput struct {
 	_ struct{} `type:"structure"`
 
-	// [EC2-VPC] The Elastic IP address to recover.
+	// [EC2-VPC] The Elastic IP address to recover or an IPv4 address from an address
+	// pool.
 	Address *string `type:"string"`
 
 	// Set to vpc to allocate the address for use with instances in a VPC.
@@ -23483,6 +24070,11 @@ type AllocateAddressInput struct {
 	// the required permissions, the error response is DryRunOperation. Otherwise,
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
+
+	// The ID of an address pool that you own. Use this parameter to let Amazon
+	// EC2 select an address from the address pool. To specify a specific address
+	// from the address pool, use the Address parameter instead.
+	PublicIpv4Pool *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23513,7 +24105,12 @@ func (s *AllocateAddressInput) SetDryRun(v bool) *AllocateAddressInput {
 	return s
 }
 
-// Contains the output of AllocateAddress.
+// SetPublicIpv4Pool sets the PublicIpv4Pool field's value.
+func (s *AllocateAddressInput) SetPublicIpv4Pool(v string) *AllocateAddressInput {
+	s.PublicIpv4Pool = &v
+	return s
+}
+
 type AllocateAddressOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -23527,6 +24124,9 @@ type AllocateAddressOutput struct {
 
 	// The Elastic IP address.
 	PublicIp *string `locationName:"publicIp" type:"string"`
+
+	// The ID of an address pool.
+	PublicIpv4Pool *string `locationName:"publicIpv4Pool" type:"string"`
 }
 
 // String returns the string representation
@@ -23554,6 +24154,12 @@ func (s *AllocateAddressOutput) SetDomain(v string) *AllocateAddressOutput {
 // SetPublicIp sets the PublicIp field's value.
 func (s *AllocateAddressOutput) SetPublicIp(v string) *AllocateAddressOutput {
 	s.PublicIp = &v
+	return s
+}
+
+// SetPublicIpv4Pool sets the PublicIpv4Pool field's value.
+func (s *AllocateAddressOutput) SetPublicIpv4Pool(v string) *AllocateAddressOutput {
+	s.PublicIpv4Pool = &v
 	return s
 }
 
@@ -23894,7 +24500,6 @@ func (s AssignPrivateIpAddressesOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for AssociateAddress.
 type AssociateAddressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23986,7 +24591,6 @@ func (s *AssociateAddressInput) SetPublicIp(v string) *AssociateAddressInput {
 	return s
 }
 
-// Contains the output of AssociateAddress.
 type AssociateAddressOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -25626,6 +26230,59 @@ func (s *BundleTaskError) SetMessage(v string) *BundleTaskError {
 	return s
 }
 
+// Information about an address range that is provisioned for use with your
+// AWS resources through bring your own IP addresses (BYOIP).
+type ByoipCidr struct {
+	_ struct{} `type:"structure"`
+
+	// The public IPv4 address range, in CIDR notation.
+	Cidr *string `locationName:"cidr" type:"string"`
+
+	// The description of the address range.
+	Description *string `locationName:"description" type:"string"`
+
+	// The state of the address pool.
+	State *string `locationName:"state" type:"string" enum:"ByoipCidrState"`
+
+	// Upon success, contains the ID of the address pool. Otherwise, contains an
+	// error message.
+	StatusMessage *string `locationName:"statusMessage" type:"string"`
+}
+
+// String returns the string representation
+func (s ByoipCidr) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ByoipCidr) GoString() string {
+	return s.String()
+}
+
+// SetCidr sets the Cidr field's value.
+func (s *ByoipCidr) SetCidr(v string) *ByoipCidr {
+	s.Cidr = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ByoipCidr) SetDescription(v string) *ByoipCidr {
+	s.Description = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ByoipCidr) SetState(v string) *ByoipCidr {
+	s.State = &v
+	return s
+}
+
+// SetStatusMessage sets the StatusMessage field's value.
+func (s *ByoipCidr) SetStatusMessage(v string) *ByoipCidr {
+	s.StatusMessage = &v
+	return s
+}
+
 // Contains the parameters for CancelBundleTask.
 type CancelBundleTaskInput struct {
 	_ struct{} `type:"structure"`
@@ -26304,6 +26961,60 @@ func (s *CancelledSpotInstanceRequest) SetSpotInstanceRequestId(v string) *Cance
 // SetState sets the State field's value.
 func (s *CancelledSpotInstanceRequest) SetState(v string) *CancelledSpotInstanceRequest {
 	s.State = &v
+	return s
+}
+
+// Provides authorization for Amazon to bring a specific IP address range to
+// a specific AWS account using bring your own IP addresses (BYOIP).
+type CidrAuthorizationContext struct {
+	_ struct{} `type:"structure"`
+
+	// The plain-text authorization message for the prefix and account.
+	//
+	// Message is a required field
+	Message *string `type:"string" required:"true"`
+
+	// The signed authorization message for the prefix and account.
+	//
+	// Signature is a required field
+	Signature *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CidrAuthorizationContext) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CidrAuthorizationContext) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CidrAuthorizationContext) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CidrAuthorizationContext"}
+	if s.Message == nil {
+		invalidParams.Add(request.NewErrParamRequired("Message"))
+	}
+	if s.Signature == nil {
+		invalidParams.Add(request.NewErrParamRequired("Signature"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMessage sets the Message field's value.
+func (s *CidrAuthorizationContext) SetMessage(v string) *CidrAuthorizationContext {
+	s.Message = &v
+	return s
+}
+
+// SetSignature sets the Signature field's value.
+func (s *CidrAuthorizationContext) SetSignature(v string) *CidrAuthorizationContext {
+	s.Signature = &v
 	return s
 }
 
@@ -28989,8 +29700,8 @@ type CreateNetworkAclEntryInput struct {
 	// Egress is a required field
 	Egress *bool `locationName:"egress" type:"boolean" required:"true"`
 
-	// ICMP protocol: The ICMP or ICMPv6 type and code. Required if specifying the
-	// ICMP protocol, or protocol 58 (ICMPv6) with an IPv6 CIDR block.
+	// ICMP protocol: The ICMP or ICMPv6 type and code. Required if specifying protocol
+	// 1 (ICMP) or protocol 58 (ICMPv6) with an IPv6 CIDR block.
 	IcmpTypeCode *IcmpTypeCode `locationName:"Icmp" type:"structure"`
 
 	// The IPv6 network range to allow or deny, in CIDR notation (for example 2001:db8:1234:1a00::/64).
@@ -29001,16 +29712,17 @@ type CreateNetworkAclEntryInput struct {
 	// NetworkAclId is a required field
 	NetworkAclId *string `locationName:"networkAclId" type:"string" required:"true"`
 
-	// TCP or UDP protocols: The range of ports the rule applies to.
+	// TCP or UDP protocols: The range of ports the rule applies to. Required if
+	// specifying protocol 6 (TCP) or 17 (UDP).
 	PortRange *PortRange `locationName:"portRange" type:"structure"`
 
-	// The protocol. A value of -1 or all means all protocols. If you specify all,
-	// -1, or a protocol number other than 6 (tcp), 17 (udp), or 1 (icmp), traffic
-	// on all ports is allowed, regardless of any ports or ICMP types or codes that
-	// you specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR
-	// block, traffic for all ICMP types and codes allowed, regardless of any that
-	// you specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR
-	// block, you must specify an ICMP type and code.
+	// The protocol number. A value of "-1" means all protocols. If you specify
+	// "-1" or a protocol number other than "6" (TCP), "17" (UDP), or "1" (ICMP),
+	// traffic on all ports is allowed, regardless of any ports or ICMP types or
+	// codes that you specify. If you specify protocol "58" (ICMPv6) and specify
+	// an IPv4 CIDR block, traffic for all ICMP types and codes allowed, regardless
+	// of any that you specify. If you specify protocol "58" (ICMPv6) and specify
+	// an IPv6 CIDR block, you must specify an ICMP type and code.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true"`
@@ -30268,7 +30980,7 @@ type CreateTagsInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The IDs of one or more resources to tag. For example, ami-1a2b3c4d.
+	// The IDs of one or more resources, separated by spaces.
 	//
 	// Resources is a required field
 	Resources []*string `locationName:"ResourceId" type:"list" required:"true"`
@@ -33371,7 +34083,7 @@ type DeleteTagsInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// The IDs of one or more resources.
+	// The IDs of one or more resources, separated by spaces.
 	//
 	// Resources is a required field
 	Resources []*string `locationName:"resourceId" type:"list" required:"true"`
@@ -34062,6 +34774,80 @@ func (s DeleteVpnGatewayOutput) GoString() string {
 	return s.String()
 }
 
+type DeprovisionByoipCidrInput struct {
+	_ struct{} `type:"structure"`
+
+	// The public IPv4 address range, in CIDR notation. The prefix must be the same
+	// prefix that you specified when you provisioned the address range.
+	//
+	// Cidr is a required field
+	Cidr *string `type:"string" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DeprovisionByoipCidrInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeprovisionByoipCidrInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeprovisionByoipCidrInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeprovisionByoipCidrInput"}
+	if s.Cidr == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cidr"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCidr sets the Cidr field's value.
+func (s *DeprovisionByoipCidrInput) SetCidr(v string) *DeprovisionByoipCidrInput {
+	s.Cidr = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeprovisionByoipCidrInput) SetDryRun(v bool) *DeprovisionByoipCidrInput {
+	s.DryRun = &v
+	return s
+}
+
+type DeprovisionByoipCidrOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the address range.
+	ByoipCidr *ByoipCidr `locationName:"byoipCidr" type:"structure"`
+}
+
+// String returns the string representation
+func (s DeprovisionByoipCidrOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeprovisionByoipCidrOutput) GoString() string {
+	return s.String()
+}
+
+// SetByoipCidr sets the ByoipCidr field's value.
+func (s *DeprovisionByoipCidrOutput) SetByoipCidr(v *ByoipCidr) *DeprovisionByoipCidrOutput {
+	s.ByoipCidr = v
+	return s
+}
+
 // Contains the parameters for DeregisterImage.
 type DeregisterImageInput struct {
 	_ struct{} `type:"structure"`
@@ -34187,7 +34973,6 @@ func (s *DescribeAccountAttributesOutput) SetAccountAttributes(v []*AccountAttri
 	return s
 }
 
-// Contains the parameters for DescribeAddresses.
 type DescribeAddressesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -34275,7 +35060,6 @@ func (s *DescribeAddressesInput) SetPublicIps(v []*string) *DescribeAddressesInp
 	return s
 }
 
-// Contains the output of DescribeAddresses.
 type DescribeAddressesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -34528,6 +35312,105 @@ func (s DescribeBundleTasksOutput) GoString() string {
 // SetBundleTasks sets the BundleTasks field's value.
 func (s *DescribeBundleTasksOutput) SetBundleTasks(v []*BundleTask) *DescribeBundleTasksOutput {
 	s.BundleTasks = v
+	return s
+}
+
+type DescribeByoipCidrsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	//
+	// MaxResults is a required field
+	MaxResults *int64 `min:"5" type:"integer" required:"true"`
+
+	// The token for the next page of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeByoipCidrsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeByoipCidrsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeByoipCidrsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeByoipCidrsInput"}
+	if s.MaxResults == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxResults"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeByoipCidrsInput) SetDryRun(v bool) *DescribeByoipCidrsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeByoipCidrsInput) SetMaxResults(v int64) *DescribeByoipCidrsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeByoipCidrsInput) SetNextToken(v string) *DescribeByoipCidrsInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeByoipCidrsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about your address ranges.
+	ByoipCidrs []*ByoipCidr `locationName:"byoipCidrSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeByoipCidrsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeByoipCidrsOutput) GoString() string {
+	return s.String()
+}
+
+// SetByoipCidrs sets the ByoipCidrs field's value.
+func (s *DescribeByoipCidrsOutput) SetByoipCidrs(v []*ByoipCidr) *DescribeByoipCidrsOutput {
+	s.ByoipCidrs = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeByoipCidrsOutput) SetNextToken(v string) *DescribeByoipCidrsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -38220,7 +39103,6 @@ func (s *DescribeLaunchTemplatesOutput) SetNextToken(v string) *DescribeLaunchTe
 	return s
 }
 
-// Contains the parameters for DescribeMovingAddresses.
 type DescribeMovingAddressesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -38244,7 +39126,7 @@ type DescribeMovingAddressesInput struct {
 	// Default: If no value is provided, the default is 1000.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The token to use to retrieve the next page of results.
+	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// One or more Elastic IP addresses.
@@ -38291,7 +39173,6 @@ func (s *DescribeMovingAddressesInput) SetPublicIps(v []*string) *DescribeMoving
 	return s
 }
 
-// Contains the output of DescribeMovingAddresses.
 type DescribeMovingAddressesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -39244,6 +40125,97 @@ func (s *DescribePrincipalIdFormatOutput) SetNextToken(v string) *DescribePrinci
 // SetPrincipals sets the Principals field's value.
 func (s *DescribePrincipalIdFormatOutput) SetPrincipals(v []*PrincipalIdFormat) *DescribePrincipalIdFormatOutput {
 	s.Principals = v
+	return s
+}
+
+type DescribePublicIpv4PoolsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `min:"1" type:"string"`
+
+	// The IDs of the address pools.
+	PoolIds []*string `locationName:"PoolId" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePublicIpv4PoolsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePublicIpv4PoolsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePublicIpv4PoolsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePublicIpv4PoolsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribePublicIpv4PoolsInput) SetMaxResults(v int64) *DescribePublicIpv4PoolsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePublicIpv4PoolsInput) SetNextToken(v string) *DescribePublicIpv4PoolsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPoolIds sets the PoolIds field's value.
+func (s *DescribePublicIpv4PoolsInput) SetPoolIds(v []*string) *DescribePublicIpv4PoolsInput {
+	s.PoolIds = v
+	return s
+}
+
+type DescribePublicIpv4PoolsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Information about the address pools.
+	PublicIpv4Pools []*PublicIpv4Pool `locationName:"publicIpv4PoolSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePublicIpv4PoolsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePublicIpv4PoolsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePublicIpv4PoolsOutput) SetNextToken(v string) *DescribePublicIpv4PoolsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPublicIpv4Pools sets the PublicIpv4Pools field's value.
+func (s *DescribePublicIpv4PoolsOutput) SetPublicIpv4Pools(v []*PublicIpv4Pool) *DescribePublicIpv4PoolsOutput {
+	s.PublicIpv4Pools = v
 	return s
 }
 
@@ -44450,7 +45422,6 @@ func (s *DisableVpcClassicLinkOutput) SetReturn(v bool) *DisableVpcClassicLinkOu
 	return s
 }
 
-// Contains the parameters for DisassociateAddress.
 type DisassociateAddressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -56153,7 +57124,6 @@ func (s *Monitoring) SetState(v string) *Monitoring {
 	return s
 }
 
-// Contains the parameters for MoveAddressToVpc.
 type MoveAddressToVpcInput struct {
 	_ struct{} `type:"structure"`
 
@@ -56204,7 +57174,6 @@ func (s *MoveAddressToVpcInput) SetPublicIp(v string) *MoveAddressToVpcInput {
 	return s
 }
 
-// Contains the output of MoveAddressToVpc.
 type MoveAddressToVpcOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -56608,7 +57577,7 @@ type NetworkAclEntry struct {
 	// TCP or UDP protocols: The range of ports the rule applies to.
 	PortRange *PortRange `locationName:"portRange" type:"structure"`
 
-	// The protocol. A value of -1 means all protocols.
+	// The protocol number. A value of "-1" means all protocols.
 	Protocol *string `locationName:"protocol" type:"string"`
 
 	// Indicates whether to allow or deny the traffic that matches the rule.
@@ -57944,6 +58913,105 @@ func (s *PropagatingVgw) SetGatewayId(v string) *PropagatingVgw {
 	return s
 }
 
+type ProvisionByoipCidrInput struct {
+	_ struct{} `type:"structure"`
+
+	// The public IPv4 address range, in CIDR notation. The most specific prefix
+	// that you can specify is /24. The address range cannot overlap with another
+	// address range that you've brought to this or another region.
+	//
+	// Cidr is a required field
+	Cidr *string `type:"string" required:"true"`
+
+	// A signed document that proves that you are authorized to bring the specified
+	// IP address range to Amazon using BYOIP.
+	CidrAuthorizationContext *CidrAuthorizationContext `type:"structure"`
+
+	// A description for the address range and the address pool.
+	Description *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ProvisionByoipCidrInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionByoipCidrInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProvisionByoipCidrInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProvisionByoipCidrInput"}
+	if s.Cidr == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cidr"))
+	}
+	if s.CidrAuthorizationContext != nil {
+		if err := s.CidrAuthorizationContext.Validate(); err != nil {
+			invalidParams.AddNested("CidrAuthorizationContext", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCidr sets the Cidr field's value.
+func (s *ProvisionByoipCidrInput) SetCidr(v string) *ProvisionByoipCidrInput {
+	s.Cidr = &v
+	return s
+}
+
+// SetCidrAuthorizationContext sets the CidrAuthorizationContext field's value.
+func (s *ProvisionByoipCidrInput) SetCidrAuthorizationContext(v *CidrAuthorizationContext) *ProvisionByoipCidrInput {
+	s.CidrAuthorizationContext = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ProvisionByoipCidrInput) SetDescription(v string) *ProvisionByoipCidrInput {
+	s.Description = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ProvisionByoipCidrInput) SetDryRun(v bool) *ProvisionByoipCidrInput {
+	s.DryRun = &v
+	return s
+}
+
+type ProvisionByoipCidrOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the address pool.
+	ByoipCidr *ByoipCidr `locationName:"byoipCidr" type:"structure"`
+}
+
+// String returns the string representation
+func (s ProvisionByoipCidrOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionByoipCidrOutput) GoString() string {
+	return s.String()
+}
+
+// SetByoipCidr sets the ByoipCidr field's value.
+func (s *ProvisionByoipCidrOutput) SetByoipCidr(v *ByoipCidr) *ProvisionByoipCidrOutput {
+	s.ByoipCidr = v
+	return s
+}
+
 // Reserved. If you need to sustain traffic greater than the documented limits
 // (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
 // contact us through the Support Center (https://console.aws.amazon.com/support/home?).
@@ -58013,6 +59081,117 @@ func (s *ProvisionedBandwidth) SetRequested(v string) *ProvisionedBandwidth {
 // SetStatus sets the Status field's value.
 func (s *ProvisionedBandwidth) SetStatus(v string) *ProvisionedBandwidth {
 	s.Status = &v
+	return s
+}
+
+// Describes an address pool.
+type PublicIpv4Pool struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the address pool.
+	Description *string `locationName:"description" type:"string"`
+
+	// The address ranges.
+	PoolAddressRanges []*PublicIpv4PoolRange `locationName:"poolAddressRangeSet" locationNameList:"item" type:"list"`
+
+	// The ID of the IPv4 address pool.
+	PoolId *string `locationName:"poolId" type:"string"`
+
+	// The total number of addresses.
+	TotalAddressCount *int64 `locationName:"totalAddressCount" type:"integer"`
+
+	// The total number of available addresses.
+	TotalAvailableAddressCount *int64 `locationName:"totalAvailableAddressCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s PublicIpv4Pool) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublicIpv4Pool) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *PublicIpv4Pool) SetDescription(v string) *PublicIpv4Pool {
+	s.Description = &v
+	return s
+}
+
+// SetPoolAddressRanges sets the PoolAddressRanges field's value.
+func (s *PublicIpv4Pool) SetPoolAddressRanges(v []*PublicIpv4PoolRange) *PublicIpv4Pool {
+	s.PoolAddressRanges = v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *PublicIpv4Pool) SetPoolId(v string) *PublicIpv4Pool {
+	s.PoolId = &v
+	return s
+}
+
+// SetTotalAddressCount sets the TotalAddressCount field's value.
+func (s *PublicIpv4Pool) SetTotalAddressCount(v int64) *PublicIpv4Pool {
+	s.TotalAddressCount = &v
+	return s
+}
+
+// SetTotalAvailableAddressCount sets the TotalAvailableAddressCount field's value.
+func (s *PublicIpv4Pool) SetTotalAvailableAddressCount(v int64) *PublicIpv4Pool {
+	s.TotalAvailableAddressCount = &v
+	return s
+}
+
+// Describes an address range of an IPv4 address pool.
+type PublicIpv4PoolRange struct {
+	_ struct{} `type:"structure"`
+
+	// The number of addresses in the range.
+	AddressCount *int64 `locationName:"addressCount" type:"integer"`
+
+	// The number of available addresses in the range.
+	AvailableAddressCount *int64 `locationName:"availableAddressCount" type:"integer"`
+
+	// The first IP address in the range.
+	FirstAddress *string `locationName:"firstAddress" type:"string"`
+
+	// The last IP address in the range.
+	LastAddress *string `locationName:"lastAddress" type:"string"`
+}
+
+// String returns the string representation
+func (s PublicIpv4PoolRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublicIpv4PoolRange) GoString() string {
+	return s.String()
+}
+
+// SetAddressCount sets the AddressCount field's value.
+func (s *PublicIpv4PoolRange) SetAddressCount(v int64) *PublicIpv4PoolRange {
+	s.AddressCount = &v
+	return s
+}
+
+// SetAvailableAddressCount sets the AvailableAddressCount field's value.
+func (s *PublicIpv4PoolRange) SetAvailableAddressCount(v int64) *PublicIpv4PoolRange {
+	s.AvailableAddressCount = &v
+	return s
+}
+
+// SetFirstAddress sets the FirstAddress field's value.
+func (s *PublicIpv4PoolRange) SetFirstAddress(v string) *PublicIpv4PoolRange {
+	s.FirstAddress = &v
+	return s
+}
+
+// SetLastAddress sets the LastAddress field's value.
+func (s *PublicIpv4PoolRange) SetLastAddress(v string) *PublicIpv4PoolRange {
+	s.LastAddress = &v
 	return s
 }
 
@@ -58992,7 +60171,6 @@ func (s *RejectVpcPeeringConnectionOutput) SetReturn(v bool) *RejectVpcPeeringCo
 	return s
 }
 
-// Contains the parameters for ReleaseAddress.
 type ReleaseAddressInput struct {
 	_ struct{} `type:"structure"`
 
@@ -59304,8 +60482,8 @@ type ReplaceNetworkAclEntryInput struct {
 	// Egress is a required field
 	Egress *bool `locationName:"egress" type:"boolean" required:"true"`
 
-	// ICMP protocol: The ICMP or ICMPv6 type and code. Required if specifying the
-	// ICMP (1) protocol, or protocol 58 (ICMPv6) with an IPv6 CIDR block.
+	// ICMP protocol: The ICMP or ICMPv6 type and code. Required if specifying protocol
+	// 1 (ICMP) or protocol 58 (ICMPv6) with an IPv6 CIDR block.
 	IcmpTypeCode *IcmpTypeCode `locationName:"Icmp" type:"structure"`
 
 	// The IPv6 network range to allow or deny, in CIDR notation (for example 2001:bd8:1234:1a00::/64).
@@ -59317,16 +60495,16 @@ type ReplaceNetworkAclEntryInput struct {
 	NetworkAclId *string `locationName:"networkAclId" type:"string" required:"true"`
 
 	// TCP or UDP protocols: The range of ports the rule applies to. Required if
-	// specifying TCP (6) or UDP (17) for the protocol.
+	// specifying protocol 6 (TCP) or 17 (UDP).
 	PortRange *PortRange `locationName:"portRange" type:"structure"`
 
-	// The IP protocol. You can specify all or -1 to mean all protocols. If you
-	// specify all, -1, or a protocol number other than tcp, udp, or icmp, traffic
-	// on all ports is allowed, regardless of any ports or ICMP types or codes you
-	// that specify. If you specify protocol 58 (ICMPv6) and specify an IPv4 CIDR
-	// block, traffic for all ICMP types and codes allowed, regardless of any that
-	// you specify. If you specify protocol 58 (ICMPv6) and specify an IPv6 CIDR
-	// block, you must specify an ICMP type and code.
+	// The protocol number. A value of "-1" means all protocols. If you specify
+	// "-1" or a protocol number other than "6" (TCP), "17" (UDP), or "1" (ICMP),
+	// traffic on all ports is allowed, regardless of any ports or ICMP types or
+	// codes that you specify. If you specify protocol "58" (ICMPv6) and specify
+	// an IPv4 CIDR block, traffic for all ICMP types and codes allowed, regardless
+	// of any that you specify. If you specify protocol "58" (ICMPv6) and specify
+	// an IPv6 CIDR block, you must specify an ICMP type and code.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true"`
@@ -62041,7 +63219,6 @@ func (s *ResponseLaunchTemplateData) SetUserData(v string) *ResponseLaunchTempla
 	return s
 }
 
-// Contains the parameters for RestoreAddressToClassic.
 type RestoreAddressToClassicInput struct {
 	_ struct{} `type:"structure"`
 
@@ -62092,7 +63269,6 @@ func (s *RestoreAddressToClassicInput) SetPublicIp(v string) *RestoreAddressToCl
 	return s
 }
 
-// Contains the output of RestoreAddressToClassic.
 type RestoreAddressToClassicOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -65557,7 +66733,7 @@ type SpotFleetRequestConfigData struct {
 	ExcessCapacityTerminationPolicy *string `locationName:"excessCapacityTerminationPolicy" type:"string" enum:"ExcessCapacityTerminationPolicy"`
 
 	// The number of units fulfilled by this request compared to the set target
-	// capacity.
+	// capacity. You cannot set this value.
 	FulfilledCapacity *float64 `locationName:"fulfilledCapacity" type:"double"`
 
 	// Grants the Spot Fleet permission to terminate Spot Instances on your behalf
@@ -67096,7 +68272,7 @@ type TagDescription struct {
 	// The tag key.
 	Key *string `locationName:"key" type:"string"`
 
-	// The ID of the resource. For example, ami-1a2b3c4d.
+	// The ID of the resource.
 	ResourceId *string `locationName:"resourceId" type:"string"`
 
 	// The resource type.
@@ -70073,6 +71249,79 @@ func (s *VpnTunnelOptionsSpecification) SetTunnelInsideCidr(v string) *VpnTunnel
 	return s
 }
 
+type WithdrawByoipCidrInput struct {
+	_ struct{} `type:"structure"`
+
+	// The public IPv4 address range, in CIDR notation.
+	//
+	// Cidr is a required field
+	Cidr *string `type:"string" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s WithdrawByoipCidrInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WithdrawByoipCidrInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *WithdrawByoipCidrInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "WithdrawByoipCidrInput"}
+	if s.Cidr == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cidr"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCidr sets the Cidr field's value.
+func (s *WithdrawByoipCidrInput) SetCidr(v string) *WithdrawByoipCidrInput {
+	s.Cidr = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *WithdrawByoipCidrInput) SetDryRun(v bool) *WithdrawByoipCidrInput {
+	s.DryRun = &v
+	return s
+}
+
+type WithdrawByoipCidrOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the address pool.
+	ByoipCidr *ByoipCidr `locationName:"byoipCidr" type:"structure"`
+}
+
+// String returns the string representation
+func (s WithdrawByoipCidrOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WithdrawByoipCidrOutput) GoString() string {
+	return s.String()
+}
+
+// SetByoipCidr sets the ByoipCidr field's value.
+func (s *WithdrawByoipCidrOutput) SetByoipCidr(v *ByoipCidr) *WithdrawByoipCidrOutput {
+	s.ByoipCidr = v
+	return s
+}
+
 const (
 	// AccountAttributeNameSupportedPlatforms is a AccountAttributeName enum value
 	AccountAttributeNameSupportedPlatforms = "supported-platforms"
@@ -70216,6 +71465,29 @@ const (
 
 	// BundleTaskStateFailed is a BundleTaskState enum value
 	BundleTaskStateFailed = "failed"
+)
+
+const (
+	// ByoipCidrStateAdvertised is a ByoipCidrState enum value
+	ByoipCidrStateAdvertised = "advertised"
+
+	// ByoipCidrStateDeprovisioned is a ByoipCidrState enum value
+	ByoipCidrStateDeprovisioned = "deprovisioned"
+
+	// ByoipCidrStateFailedDeprovision is a ByoipCidrState enum value
+	ByoipCidrStateFailedDeprovision = "failed-deprovision"
+
+	// ByoipCidrStateFailedProvision is a ByoipCidrState enum value
+	ByoipCidrStateFailedProvision = "failed-provision"
+
+	// ByoipCidrStatePendingDeprovision is a ByoipCidrState enum value
+	ByoipCidrStatePendingDeprovision = "pending-deprovision"
+
+	// ByoipCidrStatePendingProvision is a ByoipCidrState enum value
+	ByoipCidrStatePendingProvision = "pending-provision"
+
+	// ByoipCidrStateProvisioned is a ByoipCidrState enum value
+	ByoipCidrStateProvisioned = "provisioned"
 )
 
 const (

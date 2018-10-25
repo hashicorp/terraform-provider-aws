@@ -30,7 +30,7 @@ resource "aws_cloudformation_stack" "network" {
     }
   },
   "Resources" : {
-    "my-vpc": {
+    "myVpc": {
       "Type" : "AWS::EC2::VPC",
       "Properties" : {
         "CidrBlock" : { "Ref" : "VPCCidr" },
