@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -443,6 +444,26 @@ func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAcl_ipv6ICMPRules(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclConfigIpv6ICMP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
@@ -613,6 +634,37 @@ func testAccCheckSubnetIsNotAssociatedWithAcl(acl string, subnet string) resourc
 		}
 		return nil
 	}
+}
+
+func testAccAWSNetworkAclConfigIpv6ICMP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags {
+    Name = %q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  ingress {
+    action          = "allow"
+    from_port       = 0
+    icmp_code       = -1
+    icmp_type       = -1
+    ipv6_cidr_block =  "::/0"
+    protocol        = 58
+    rule_no         = 1
+    to_port         = 0
+  }
+
+  tags {
+    Name = %q
+  }
+}
+`, rName, rName)
 }
 
 const testAccAWSNetworkAclIpv6Config = `

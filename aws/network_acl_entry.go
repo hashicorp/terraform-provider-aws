@@ -43,7 +43,7 @@ func expandNetworkAclEntries(configured []interface{}, entryType string) ([]*ec2
 		}
 
 		// Specify additional required fields for ICMP
-		if p == 1 {
+		if p == 1 || p == 58 {
 			e.IcmpTypeCode = &ec2.IcmpTypeCode{}
 			if v, ok := data["icmp_code"]; ok {
 				e.IcmpTypeCode.Code = aws.Int64(int64(v.(int)))
