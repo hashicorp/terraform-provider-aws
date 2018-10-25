@@ -34,6 +34,11 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 						"aws_waf_rule.wafrule", "metric_name", wafRuleName),
 				),
 			},
+			{
+				ResourceName:      "aws_waf_rule.wafrule",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
