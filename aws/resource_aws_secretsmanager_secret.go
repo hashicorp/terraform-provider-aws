@@ -37,9 +37,16 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Optional: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -92,9 +99,18 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
 
+	var secretName string
+	if v, ok := d.GetOk("name"); ok {
+		secretName = v.(string)
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		secretName = resource.PrefixedUniqueId(v.(string))
+	} else {
+		secretName = resource.UniqueId()
+	}
+
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(secretName),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {
