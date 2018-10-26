@@ -686,7 +686,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_apns_sandbox_channel":                resourceAwsPinpointAPNSSandboxChannel(),
 			"aws_pinpoint_apns_voip_channel":                   resourceAwsPinpointAPNSVoipChannel(),
 			"aws_pinpoint_apns_voip_sandbox_channel":           resourceAwsPinpointAPNSVoipSandboxChannel(),
-      "aws_pinpoint_baidu_channel":                       resourceAwsPinpointBaiduChannel(),
+			"aws_pinpoint_baidu_channel":                       resourceAwsPinpointBaiduChannel(),
 			"aws_pinpoint_email_channel":                       resourceAwsPinpointEmailChannel(),
 			"aws_pinpoint_event_stream":                        resourceAwsPinpointEventStream(),
 			"aws_pinpoint_gcm_channel":                         resourceAwsPinpointGCMChannel(),
