@@ -103,6 +103,34 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
+	var secret secretsmanager.DescribeSecretOutput
+	rName := "tf-acc-test-"
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_withNamePrefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:secretsmanager:[^:]+:[^:]+:secret:%s.+$", rName))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", rName))),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "name_prefix"},
+			},
+		},
+	})
+}
+
 func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -491,6 +519,14 @@ func testAccAwsSecretsManagerSecretConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%s"
+}
+`, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_withNamePrefix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name_prefix = "%s"
 }
 `, rName)
 }
