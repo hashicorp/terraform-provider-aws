@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -26,6 +27,31 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsElasticSearchDomainImport,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get("elasticsearch_version").(string)
+				domainName := d.Get("domain_name").(string)
+
+				conn := meta.(*AWSClient).esconn
+				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+					DomainName: aws.String(domainName),
+				})
+				if err != nil {
+					log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
+					return false
+				}
+				if len(resp.CompatibleElasticsearchVersions) != 1 {
+					return true
+				}
+				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
+					if aws.StringValue(targetVersion) == newVersion {
+						return false
+					}
+				}
+				return true
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
