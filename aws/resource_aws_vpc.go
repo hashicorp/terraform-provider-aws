@@ -273,7 +273,6 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if err := resourceAwsVpcSetMainRouteTable(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}
-
 	if err := resourceAwsVpcSetDefaultNetworkAcl(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Network ACL: %s", err)
 	}
