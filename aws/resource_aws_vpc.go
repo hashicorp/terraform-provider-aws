@@ -270,9 +270,12 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
 	}
 
-	if err := resourceAwsVpcSetMainRouteTable(conn, d); err != nil {
+	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, vpcid)
+	if err != nil {
 		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}
+	d.Set("main_route_table_id", routeTableId)
+
 	if err := resourceAwsVpcSetDefaultNetworkAcl(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Network ACL: %s", err)
 	}
@@ -654,14 +657,14 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 	return nil
 }
 
-func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, d *schema.ResourceData) error {
+func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
 	filter1 := &ec2.Filter{
 		Name:   aws.String("association.main"),
 		Values: []*string{aws.String("true")},
 	}
 	filter2 := &ec2.Filter{
 		Name:   aws.String("vpc-id"),
-		Values: []*string{aws.String(d.Id())},
+		Values: []*string{aws.String(vpcid)},
 	}
 
 	findOpts := &ec2.DescribeRouteTablesInput{
@@ -670,17 +673,15 @@ func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, d *schema.ResourceData) erro
 
 	resp, err := conn.DescribeRouteTables(findOpts)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
-		return fmt.Errorf("Main Route table not found")
+		return "", fmt.Errorf("Main Route table not found")
 	}
 
 	// There Can Be Only 1 Main Route Table for a VPC
-	d.Set("main_route_table_id", resp.RouteTables[0].RouteTableId)
-
-	return nil
+	return aws.StringValue(resp.RouteTables[0].RouteTableId), nil
 }
 
 func resourceAwsVpcInstanceImport(
