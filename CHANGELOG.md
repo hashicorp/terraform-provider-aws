@@ -13,6 +13,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_nat_gateway: Support `tags` as argument and attribute [GH-6231]
+* resource/aws_lb_target_group: Improve `name` and `name_prefix` argument plan-time validation [GH-6168]
 * resource/aws_flow_log: Add `log_destination` and `log_destination_type` arguments (support sending to S3) [GH-5509]
 * resource/aws_waf_rule: Support resource import [GH-6247]
 
