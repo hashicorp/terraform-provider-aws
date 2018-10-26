@@ -2890,7 +2890,6 @@ func TestValidateLbTargetGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 	}
-
 	for _, tc := range cases {
 		_, errors := validateLbTargetGroupName(tc.Value, "aws_lb_target_group")
 		if len(errors) != tc.ErrCount {
@@ -2917,11 +2916,62 @@ func TestValidateLbTargetGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 	}
-
 	for _, tc := range cases {
 		_, errors := validateLbTargetGroupNamePrefix(tc.Value, "aws_lb_target_group")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateSecretManagerSecretName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(513),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateSecretManagerSecretName(tc.Value, "aws_secretsmanager_secret")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS Secretsmanager Secret Name to not trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateSecretManagerSecretNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing 123",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(512),
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateSecretManagerSecretNamePrefix(tc.Value, "aws_secretsmanager_secret")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS Secretsmanager Secret Name to not trigger a validation error for %q", tc.Value)
 		}
 	}
 }
