@@ -270,26 +270,11 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
 	}
 
-	// Get the main routing table for this VPC
-	// Really Ugly need to make this better - rmenn
-	filter1 := &ec2.Filter{
-		Name:   aws.String("association.main"),
-		Values: []*string{aws.String("true")},
-	}
-	filter2 := &ec2.Filter{
-		Name:   aws.String("vpc-id"),
-		Values: []*string{aws.String(d.Id())},
-	}
-	describeRouteOpts := &ec2.DescribeRouteTablesInput{
-		Filters: []*ec2.Filter{filter1, filter2},
-	}
-	routeResp, err := conn.DescribeRouteTables(describeRouteOpts)
+	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, vpcid)
 	if err != nil {
-		return err
+		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}
-	if v := routeResp.RouteTables; len(v) > 0 {
-		d.Set("main_route_table_id", *v[0].RouteTableId)
-	}
+	d.Set("main_route_table_id", routeTableId)
 
 	if err := resourceAwsVpcSetDefaultNetworkAcl(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Network ACL: %s", err)
@@ -670,6 +655,33 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 	d.Set("default_route_table_id", resp.RouteTables[0].RouteTableId)
 
 	return nil
+}
+
+func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
+	filter1 := &ec2.Filter{
+		Name:   aws.String("association.main"),
+		Values: []*string{aws.String("true")},
+	}
+	filter2 := &ec2.Filter{
+		Name:   aws.String("vpc-id"),
+		Values: []*string{aws.String(vpcid)},
+	}
+
+	findOpts := &ec2.DescribeRouteTablesInput{
+		Filters: []*ec2.Filter{filter1, filter2},
+	}
+
+	resp, err := conn.DescribeRouteTables(findOpts)
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
+		return "", fmt.Errorf("Main Route table not found")
+	}
+
+	// There Can Be Only 1 Main Route Table for a VPC
+	return aws.StringValue(resp.RouteTables[0].RouteTableId), nil
 }
 
 func resourceAwsVpcInstanceImport(
