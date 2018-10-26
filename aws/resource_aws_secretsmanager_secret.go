@@ -42,6 +42,7 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateSecretManagerSecretName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -49,6 +50,7 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateSecretManagerSecretNamePrefix,
 			},
 			"policy": {
 				Type:             schema.TypeString,
