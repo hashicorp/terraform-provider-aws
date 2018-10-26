@@ -24,6 +24,7 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_iam_role.test", "path", "/testpath/"),
 					resource.TestCheckResourceAttr("data.aws_iam_role.test", "permissions_boundary", ""),
 					resource.TestCheckResourceAttr("data.aws_iam_role.test", "name", roleName),
+					resource.TestCheckResourceAttr("data.aws_iam_role.test", "name_with_path", "testpath/"+roleName),
 					resource.TestCheckResourceAttrSet("data.aws_iam_role.test", "create_date"),
 					resource.TestMatchResourceAttr("data.aws_iam_role.test", "arn",
 						regexp.MustCompile(`^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`)),

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,6 +59,10 @@ func dataSourceAwsIAMRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"name_with_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,6 +110,8 @@ func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("max_session_duration", output.Role.MaxSessionDuration)
 	d.Set("name", output.Role.RoleName)
 	d.Set("path", output.Role.Path)
+	d.Set("name_with_path", strings.Replace(aws.StringValue(output.Role.Path), "/", "", 1)+
+		aws.StringValue(output.Role.RoleName))
 	d.Set("permissions_boundary", "")
 	if output.Role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)

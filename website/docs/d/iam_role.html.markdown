@@ -28,6 +28,7 @@ data "aws_iam_role" "example" {
 
 * `id` - The friendly IAM role name to match.
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
+* `name_with_path` - The [friendly name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) of the role including the path without the leading slash.
 * `assume_role_policy` - The policy document associated with the role.
 * `path` - The path to the role.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the role.

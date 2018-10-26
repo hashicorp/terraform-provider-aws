@@ -59,7 +59,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `create_date` - The creation date of the IAM role.
 * `unique_id` - The stable and unique string identifying the role.
-* `name` - The name of the role.
+* `name` - The name of the role, without the path.
+* `name_with_path` - The [friendly name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) of the role including the path without the leading slash.
 * `description` - The description of the role.
 
 ## Example of Using Data Source for Assume Role Policy

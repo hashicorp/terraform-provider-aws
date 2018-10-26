@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -55,6 +56,11 @@ func resourceAwsIamRole() *schema.Resource {
 					}
 					return
 				},
+			},
+
+			"name_with_path": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"name_prefix": {
@@ -210,6 +216,8 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set("name", role.RoleName)
+	d.Set("name_with_path", strings.Replace(aws.StringValue(role.Path), "/", "", 1)+
+		aws.StringValue(role.RoleName))
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)

@@ -51,6 +51,29 @@ func TestAccAWSIAMRole_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists("aws_iam_role.role", &conf),
 					resource.TestCheckResourceAttr("aws_iam_role.role", "path", "/"),
+					resource.TestCheckResourceAttr("aws_iam_role.role", "name_with_path", "test-role-"+rName),
+					resource.TestCheckResourceAttrSet("aws_iam_role.role", "create_date"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_basicWithPath(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfigWithPath(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists("aws_iam_role.role", &conf),
+					resource.TestCheckResourceAttr("aws_iam_role.role", "path", "/foo/bar/"),
+					resource.TestCheckResourceAttr("aws_iam_role.role", "name_with_path", "foo/bar/test-role-"+rName),
 					resource.TestCheckResourceAttrSet("aws_iam_role.role", "create_date"),
 				),
 			},
@@ -477,6 +500,16 @@ func testAccAWSIAMRoleConfig(rName string) string {
 resource "aws_iam_role" "role" {
   name   = "test-role-%s"
   path = "/"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName)
+}
+
+func testAccAWSIAMRoleConfigWithPath(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name   = "test-role-%s"
+  path = "/foo/bar/"
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName)
