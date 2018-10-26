@@ -2867,3 +2867,61 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateLbTargetGroupName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "tf.test.elb.target.1",
+			ErrCount: 1,
+		},
+		{
+			Value:    "-tf-test-target",
+			ErrCount: 1,
+		},
+		{
+			Value:    "tf-test-target-",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(33),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateLbTargetGroupName(tc.Value, "aws_lb_target_group")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateLbTargetGroupNamePrefix(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "tf.lb",
+			ErrCount: 1,
+		},
+		{
+			Value:    "-tf-lb",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(32),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateLbTargetGroupNamePrefix(tc.Value, "aws_lb_target_group")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
