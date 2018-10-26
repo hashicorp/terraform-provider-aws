@@ -192,9 +192,9 @@ The following arguments are supported:
 
 `source` supports the following:
 
-* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
+* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET`, `S3` or `NO_SOURCE`.
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
-* `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
+* `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
