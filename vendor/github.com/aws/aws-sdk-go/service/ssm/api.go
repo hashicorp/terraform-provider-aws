@@ -11216,6 +11216,9 @@ type AssociationDescription struct {
 	// The association version.
 	AssociationVersion *string `type:"string"`
 
+	// The severity level that is assigned to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The date when the association was made.
 	Date *time.Time `type:"timestamp"`
 
@@ -11307,6 +11310,12 @@ func (s *AssociationDescription) SetAssociationName(v string) *AssociationDescri
 // SetAssociationVersion sets the AssociationVersion field's value.
 func (s *AssociationDescription) SetAssociationVersion(v string) *AssociationDescription {
 	s.AssociationVersion = &v
+	return s
+}
+
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *AssociationDescription) SetComplianceSeverity(v string) *AssociationDescription {
+	s.ComplianceSeverity = &v
 	return s
 }
 
@@ -11906,6 +11915,9 @@ type AssociationVersionInfo struct {
 	// The association version.
 	AssociationVersion *string `type:"string"`
 
+	// The severity level that is assigned to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The date the association version was created.
 	CreatedDate *time.Time `type:"timestamp"`
 
@@ -11983,6 +11995,12 @@ func (s *AssociationVersionInfo) SetAssociationName(v string) *AssociationVersio
 // SetAssociationVersion sets the AssociationVersion field's value.
 func (s *AssociationVersionInfo) SetAssociationVersion(v string) *AssociationVersionInfo {
 	s.AssociationVersion = &v
+	return s
+}
+
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *AssociationVersionInfo) SetComplianceSeverity(v string) *AssociationVersionInfo {
+	s.ComplianceSeverity = &v
 	return s
 }
 
@@ -14098,6 +14116,9 @@ type CreateAssociationBatchRequestEntry struct {
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
 
+	// The severity level to assign to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
@@ -14201,6 +14222,12 @@ func (s *CreateAssociationBatchRequestEntry) SetAssociationName(v string) *Creat
 	return s
 }
 
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *CreateAssociationBatchRequestEntry) SetComplianceSeverity(v string) *CreateAssociationBatchRequestEntry {
+	s.ComplianceSeverity = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *CreateAssociationBatchRequestEntry) SetDocumentVersion(v string) *CreateAssociationBatchRequestEntry {
 	s.DocumentVersion = &v
@@ -14260,6 +14287,9 @@ type CreateAssociationInput struct {
 
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
+
+	// The severity level to assign to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
 
 	// The document version you want to associate with the target(s). Can be a specific
 	// version or the default version.
@@ -14362,6 +14392,12 @@ func (s *CreateAssociationInput) Validate() error {
 // SetAssociationName sets the AssociationName field's value.
 func (s *CreateAssociationInput) SetAssociationName(v string) *CreateAssociationInput {
 	s.AssociationName = &v
+	return s
+}
+
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *CreateAssociationInput) SetComplianceSeverity(v string) *CreateAssociationInput {
+	s.ComplianceSeverity = &v
 	return s
 }
 
@@ -31781,6 +31817,9 @@ type UpdateAssociationInput struct {
 	// this request succeeds, either specify $LATEST, or omit this parameter.
 	AssociationVersion *string `type:"string"`
 
+	// The severity level to assign to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The document version you want update for the association.
 	DocumentVersion *string `type:"string"`
 
@@ -31889,6 +31928,12 @@ func (s *UpdateAssociationInput) SetAssociationName(v string) *UpdateAssociation
 // SetAssociationVersion sets the AssociationVersion field's value.
 func (s *UpdateAssociationInput) SetAssociationVersion(v string) *UpdateAssociationInput {
 	s.AssociationVersion = &v
+	return s
+}
+
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *UpdateAssociationInput) SetComplianceSeverity(v string) *UpdateAssociationInput {
+	s.ComplianceSeverity = &v
 	return s
 }
 
@@ -33501,6 +33546,23 @@ func (s *UpdatePatchBaselineOutput) SetSources(v []*PatchSource) *UpdatePatchBas
 	s.Sources = v
 	return s
 }
+
+const (
+	// AssociationComplianceSeverityCritical is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityCritical = "CRITICAL"
+
+	// AssociationComplianceSeverityHigh is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityHigh = "HIGH"
+
+	// AssociationComplianceSeverityMedium is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityMedium = "MEDIUM"
+
+	// AssociationComplianceSeverityLow is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityLow = "LOW"
+
+	// AssociationComplianceSeverityUnspecified is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityUnspecified = "UNSPECIFIED"
+)
 
 const (
 	// AssociationExecutionFilterKeyExecutionId is a AssociationExecutionFilterKey enum value

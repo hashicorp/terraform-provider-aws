@@ -1932,6 +1932,87 @@ func (c *EC2) CancelBundleTaskWithContext(ctx aws.Context, input *CancelBundleTa
 	return out, req.Send()
 }
 
+const opCancelCapacityReservation = "CancelCapacityReservation"
+
+// CancelCapacityReservationRequest generates a "aws/request.Request" representing the
+// client's request for the CancelCapacityReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelCapacityReservation for more information on using the CancelCapacityReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelCapacityReservationRequest method.
+//    req, resp := client.CancelCapacityReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CancelCapacityReservation
+func (c *EC2) CancelCapacityReservationRequest(input *CancelCapacityReservationInput) (req *request.Request, output *CancelCapacityReservationOutput) {
+	op := &request.Operation{
+		Name:       opCancelCapacityReservation,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelCapacityReservationInput{}
+	}
+
+	output = &CancelCapacityReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelCapacityReservation API operation for Amazon Elastic Compute Cloud.
+//
+// Cancels the specified Capacity Reservation, releases the reserved capacity,
+// and changes the Capacity Reservation's state to cancelled.
+//
+// Instances running in the reserved capacity continue running until you stop
+// them. Stopped instances that target the Capacity Reservation can no longer
+// launch. Modify these instances to either target a different Capacity Reservation,
+// launch On-Demand Instance capacity, or run in any open Capacity Reservation
+// that has matching attributes and sufficient capacity.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CancelCapacityReservation for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CancelCapacityReservation
+func (c *EC2) CancelCapacityReservation(input *CancelCapacityReservationInput) (*CancelCapacityReservationOutput, error) {
+	req, out := c.CancelCapacityReservationRequest(input)
+	return out, req.Send()
+}
+
+// CancelCapacityReservationWithContext is the same as CancelCapacityReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelCapacityReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CancelCapacityReservationWithContext(ctx aws.Context, input *CancelCapacityReservationInput, opts ...request.Option) (*CancelCapacityReservationOutput, error) {
+	req, out := c.CancelCapacityReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCancelConversionTask = "CancelConversionTask"
 
 // CancelConversionTaskRequest generates a "aws/request.Request" representing the
@@ -2727,6 +2808,103 @@ func (c *EC2) CopySnapshot(input *CopySnapshotInput) (*CopySnapshotOutput, error
 // for more information on using Contexts.
 func (c *EC2) CopySnapshotWithContext(ctx aws.Context, input *CopySnapshotInput, opts ...request.Option) (*CopySnapshotOutput, error) {
 	req, out := c.CopySnapshotRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateCapacityReservation = "CreateCapacityReservation"
+
+// CreateCapacityReservationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateCapacityReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateCapacityReservation for more information on using the CreateCapacityReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateCapacityReservationRequest method.
+//    req, resp := client.CreateCapacityReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateCapacityReservation
+func (c *EC2) CreateCapacityReservationRequest(input *CreateCapacityReservationInput) (req *request.Request, output *CreateCapacityReservationOutput) {
+	op := &request.Operation{
+		Name:       opCreateCapacityReservation,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateCapacityReservationInput{}
+	}
+
+	output = &CreateCapacityReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateCapacityReservation API operation for Amazon Elastic Compute Cloud.
+//
+// Creates a new Capacity Reservation with the specified attributes.
+//
+// Capacity Reservations enable you to reserve capacity for your Amazon EC2
+// instances in a specific Availability Zone for any duration. This gives you
+// the flexibility to selectively add capacity reservations and still get the
+// Regional RI discounts for that usage. By creating Capacity Reservations,
+// you ensure that you always have access to Amazon EC2 capacity when you need
+// it, for as long as you need it. For more information, see Capacity Reservations
+// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-capacity-reservations.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
+// Your request to create a Capacity Reservation could fail if Amazon EC2 does
+// not have sufficient capacity to fulfill the request. If your request fails
+// due to Amazon EC2 capacity constraints, either try again at a later time,
+// try in a different Availability Zone, or request a smaller capacity reservation.
+// If your application is flexible across instance types and sizes, try to create
+// a Capacity Reservation with different instance attributes.
+//
+// Your request could also fail if the requested quantity exceeds your On-Demand
+// Instance limit for the selected instance type. If your request fails due
+// to limit constraints, increase your On-Demand Instance limit for the required
+// instance type and try again. For more information about increasing your instance
+// limits, see Amazon EC2 Service Limits (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateCapacityReservation for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateCapacityReservation
+func (c *EC2) CreateCapacityReservation(input *CreateCapacityReservationInput) (*CreateCapacityReservationOutput, error) {
+	req, out := c.CreateCapacityReservationRequest(input)
+	return out, req.Send()
+}
+
+// CreateCapacityReservationWithContext is the same as CreateCapacityReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateCapacityReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateCapacityReservationWithContext(ctx aws.Context, input *CreateCapacityReservationInput, opts ...request.Option) (*CreateCapacityReservationOutput, error) {
+	req, out := c.CreateCapacityReservationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -9065,6 +9243,81 @@ func (c *EC2) DescribeByoipCidrs(input *DescribeByoipCidrsInput) (*DescribeByoip
 // for more information on using Contexts.
 func (c *EC2) DescribeByoipCidrsWithContext(ctx aws.Context, input *DescribeByoipCidrsInput, opts ...request.Option) (*DescribeByoipCidrsOutput, error) {
 	req, out := c.DescribeByoipCidrsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeCapacityReservations = "DescribeCapacityReservations"
+
+// DescribeCapacityReservationsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeCapacityReservations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeCapacityReservations for more information on using the DescribeCapacityReservations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeCapacityReservationsRequest method.
+//    req, resp := client.DescribeCapacityReservationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeCapacityReservations
+func (c *EC2) DescribeCapacityReservationsRequest(input *DescribeCapacityReservationsInput) (req *request.Request, output *DescribeCapacityReservationsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeCapacityReservations,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeCapacityReservationsInput{}
+	}
+
+	output = &DescribeCapacityReservationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeCapacityReservations API operation for Amazon Elastic Compute Cloud.
+//
+// Describes one or more of your Capacity Reservations. The results describe
+// only the Capacity Reservations in the AWS Region that you're currently using.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeCapacityReservations for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeCapacityReservations
+func (c *EC2) DescribeCapacityReservations(input *DescribeCapacityReservationsInput) (*DescribeCapacityReservationsOutput, error) {
+	req, out := c.DescribeCapacityReservationsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeCapacityReservationsWithContext is the same as DescribeCapacityReservations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeCapacityReservations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeCapacityReservationsWithContext(ctx aws.Context, input *DescribeCapacityReservationsInput, opts ...request.Option) (*DescribeCapacityReservationsOutput, error) {
+	req, out := c.DescribeCapacityReservationsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -18206,6 +18459,85 @@ func (c *EC2) ImportVolumeWithContext(ctx aws.Context, input *ImportVolumeInput,
 	return out, req.Send()
 }
 
+const opModifyCapacityReservation = "ModifyCapacityReservation"
+
+// ModifyCapacityReservationRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCapacityReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCapacityReservation for more information on using the ModifyCapacityReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyCapacityReservationRequest method.
+//    req, resp := client.ModifyCapacityReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyCapacityReservation
+func (c *EC2) ModifyCapacityReservationRequest(input *ModifyCapacityReservationInput) (req *request.Request, output *ModifyCapacityReservationOutput) {
+	op := &request.Operation{
+		Name:       opModifyCapacityReservation,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyCapacityReservationInput{}
+	}
+
+	output = &ModifyCapacityReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCapacityReservation API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies a Capacity Reservation's capacity and the conditions under which
+// it is to be released. You cannot change a Capacity Reservation's instance
+// type, EBS optimization, instance store settings, platform, Availability Zone,
+// or instance eligibility. If you need to modify any of these attributes, we
+// recommend that you cancel the Capacity Reservation, and then create a new
+// one with the required attributes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyCapacityReservation for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyCapacityReservation
+func (c *EC2) ModifyCapacityReservation(input *ModifyCapacityReservationInput) (*ModifyCapacityReservationOutput, error) {
+	req, out := c.ModifyCapacityReservationRequest(input)
+	return out, req.Send()
+}
+
+// ModifyCapacityReservationWithContext is the same as ModifyCapacityReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCapacityReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyCapacityReservationWithContext(ctx aws.Context, input *ModifyCapacityReservationInput, opts ...request.Option) (*ModifyCapacityReservationOutput, error) {
+	req, out := c.ModifyCapacityReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyFleet = "ModifyFleet"
 
 // ModifyFleetRequest generates a "aws/request.Request" representing the
@@ -18799,6 +19131,83 @@ func (c *EC2) ModifyInstanceAttribute(input *ModifyInstanceAttributeInput) (*Mod
 // for more information on using Contexts.
 func (c *EC2) ModifyInstanceAttributeWithContext(ctx aws.Context, input *ModifyInstanceAttributeInput, opts ...request.Option) (*ModifyInstanceAttributeOutput, error) {
 	req, out := c.ModifyInstanceAttributeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyInstanceCapacityReservationAttributes = "ModifyInstanceCapacityReservationAttributes"
+
+// ModifyInstanceCapacityReservationAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyInstanceCapacityReservationAttributes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyInstanceCapacityReservationAttributes for more information on using the ModifyInstanceCapacityReservationAttributes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyInstanceCapacityReservationAttributesRequest method.
+//    req, resp := client.ModifyInstanceCapacityReservationAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceCapacityReservationAttributes
+func (c *EC2) ModifyInstanceCapacityReservationAttributesRequest(input *ModifyInstanceCapacityReservationAttributesInput) (req *request.Request, output *ModifyInstanceCapacityReservationAttributesOutput) {
+	op := &request.Operation{
+		Name:       opModifyInstanceCapacityReservationAttributes,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyInstanceCapacityReservationAttributesInput{}
+	}
+
+	output = &ModifyInstanceCapacityReservationAttributesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyInstanceCapacityReservationAttributes API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies the Capacity Reservation settings for a stopped instance. Use this
+// action to configure an instance to target a specific Capacity Reservation,
+// run in any open Capacity Reservation with matching attributes, or run On-Demand
+// Instance capacity.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyInstanceCapacityReservationAttributes for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceCapacityReservationAttributes
+func (c *EC2) ModifyInstanceCapacityReservationAttributes(input *ModifyInstanceCapacityReservationAttributesInput) (*ModifyInstanceCapacityReservationAttributesOutput, error) {
+	req, out := c.ModifyInstanceCapacityReservationAttributesRequest(input)
+	return out, req.Send()
+}
+
+// ModifyInstanceCapacityReservationAttributesWithContext is the same as ModifyInstanceCapacityReservationAttributes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyInstanceCapacityReservationAttributes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyInstanceCapacityReservationAttributesWithContext(ctx aws.Context, input *ModifyInstanceCapacityReservationAttributesInput, opts ...request.Option) (*ModifyInstanceCapacityReservationAttributesOutput, error) {
+	req, out := c.ModifyInstanceCapacityReservationAttributesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -26358,6 +26767,79 @@ func (s *CancelBundleTaskOutput) SetBundleTask(v *BundleTask) *CancelBundleTaskO
 	return s
 }
 
+type CancelCapacityReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Capacity Reservation to be cancelled.
+	//
+	// CapacityReservationId is a required field
+	CapacityReservationId *string `type:"string" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s CancelCapacityReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelCapacityReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelCapacityReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelCapacityReservationInput"}
+	if s.CapacityReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityReservationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *CancelCapacityReservationInput) SetCapacityReservationId(v string) *CancelCapacityReservationInput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CancelCapacityReservationInput) SetDryRun(v bool) *CancelCapacityReservationInput {
+	s.DryRun = &v
+	return s
+}
+
+type CancelCapacityReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns true if the request succeeds; otherwise, it returns an error.
+	Return *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s CancelCapacityReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelCapacityReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturn sets the Return field's value.
+func (s *CancelCapacityReservationOutput) SetReturn(v bool) *CancelCapacityReservationOutput {
+	s.Return = &v
+	return s
+}
+
 // Contains the parameters for CancelConversionTask.
 type CancelConversionTaskInput struct {
 	_ struct{} `type:"structure"`
@@ -26961,6 +27443,347 @@ func (s *CancelledSpotInstanceRequest) SetSpotInstanceRequestId(v string) *Cance
 // SetState sets the State field's value.
 func (s *CancelledSpotInstanceRequest) SetState(v string) *CancelledSpotInstanceRequest {
 	s.State = &v
+	return s
+}
+
+// Describes a Capacity Reservation.
+type CapacityReservation struct {
+	_ struct{} `type:"structure"`
+
+	// The Availability Zone in which the capacity is reserved.
+	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
+
+	// The remaining capacity. Indicates the number of instances that can be launched
+	// in the Capacity Reservation.
+	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	// The ID of the Capacity Reservation.
+	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
+
+	// The date and time at which the Capacity Reservation was created.
+	CreateDate *time.Time `locationName:"createDate" type:"timestamp"`
+
+	// Indicates whether the Capacity Reservation supports EBS-optimized instances.
+	// This optimization provides dedicated throughput to Amazon EBS and an optimized
+	// configuration stack to provide optimal I/O performance. This optimization
+	// isn't available with all instance types. Additional usage charges apply when
+	// using an EBS- optimized instance.
+	EbsOptimized *bool `locationName:"ebsOptimized" type:"boolean"`
+
+	// The date and time at which the Capacity Reservation expires. When a Capacity
+	// Reservation expires, the reserved capacity is released and you can no longer
+	// launch instances into it. The Capacity Reservation's state changes to expired
+	// when it reaches its end date and time.
+	EndDate *time.Time `locationName:"endDate" type:"timestamp"`
+
+	// Indicates the way in which the Capacity Reservation ends. A Capacity Reservation
+	// can have one of the following end types:
+	//
+	//    * unlimited - The Capacity Reservation remains active until you explicitly
+	//    cancel it.
+	//
+	//    * limited - The Capacity Reservation expires automatically at a specified
+	//    date and time.
+	EndDateType *string `locationName:"endDateType" type:"string" enum:"EndDateType"`
+
+	// Indicates whether the Capacity Reservation supports instances with temporary,
+	// block-level storage.
+	EphemeralStorage *bool `locationName:"ephemeralStorage" type:"boolean"`
+
+	// Indicates the type of instance launches that the Capacity Reservation accepts.
+	// The options include:
+	//
+	//    * open - The Capacity Reservation accepts all instances that have matching
+	//    attributes (instance type, platform, and Availability Zone). Instances
+	//    that have matching attributes launch into the Capacity Reservation automatically
+	//    without specifying any additional parameters.
+	//
+	//    * targeted - The Capacity Reservation only accepts instances that have
+	//    matching attributes (instance type, platform, and Availability Zone),
+	//    and explicitly target the Capacity Reservation. This ensures that only
+	//    permitted instances can use the reserved capacity.
+	InstanceMatchCriteria *string `locationName:"instanceMatchCriteria" type:"string" enum:"InstanceMatchCriteria"`
+
+	// The type of operating system for which the Capacity Reservation reserves
+	// capacity.
+	InstancePlatform *string `locationName:"instancePlatform" type:"string" enum:"CapacityReservationInstancePlatform"`
+
+	// The type of instance for which the Capacity Reservation reserves capacity.
+	InstanceType *string `locationName:"instanceType" type:"string"`
+
+	// The current state of the Capacity Reservation. A Capacity Reservation can
+	// be in one of the following states:
+	//
+	//    * active - The Capacity Reservation is active and the capacity is available
+	//    for your use.
+	//
+	//    * cancelled - The Capacity Reservation expired automatically at the date
+	//    and time specified in your request. The reserved capacity is no longer
+	//    available for your use.
+	//
+	//    * expired - The Capacity Reservation was manually cancelled. The reserved
+	//    capacity is no longer available for your use.
+	//
+	//    * pending - The Capacity Reservation request was successful but the capacity
+	//    provisioning is still pending.
+	//
+	//    * failed - The Capacity Reservation request has failed. A request might
+	//    fail due to invalid request parameters, capacity constraints, or instance
+	//    limit constraints. Failed requests are retained for 60 minutes.
+	State *string `locationName:"state" type:"string" enum:"CapacityReservationState"`
+
+	// Any tags assigned to the Capacity Reservation.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
+	// Indicates the tenancy of the Capacity Reservation. A Capacity Reservation
+	// can have one of the following tenancy settings:
+	//
+	//    * default - The Capacity Reservation is created on hardware that is shared
+	//    with other AWS accounts.
+	//
+	//    * dedicated - The Capacity Reservation is created on single-tenant hardware
+	//    that is dedicated to a single AWS account.
+	Tenancy *string `locationName:"tenancy" type:"string" enum:"CapacityReservationTenancy"`
+
+	// The number of instances for which the Capacity Reservation reserves capacity.
+	TotalInstanceCount *int64 `locationName:"totalInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s CapacityReservation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservation) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *CapacityReservation) SetAvailabilityZone(v string) *CapacityReservation {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
+func (s *CapacityReservation) SetAvailableInstanceCount(v int64) *CapacityReservation {
+	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *CapacityReservation) SetCapacityReservationId(v string) *CapacityReservation {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetCreateDate sets the CreateDate field's value.
+func (s *CapacityReservation) SetCreateDate(v time.Time) *CapacityReservation {
+	s.CreateDate = &v
+	return s
+}
+
+// SetEbsOptimized sets the EbsOptimized field's value.
+func (s *CapacityReservation) SetEbsOptimized(v bool) *CapacityReservation {
+	s.EbsOptimized = &v
+	return s
+}
+
+// SetEndDate sets the EndDate field's value.
+func (s *CapacityReservation) SetEndDate(v time.Time) *CapacityReservation {
+	s.EndDate = &v
+	return s
+}
+
+// SetEndDateType sets the EndDateType field's value.
+func (s *CapacityReservation) SetEndDateType(v string) *CapacityReservation {
+	s.EndDateType = &v
+	return s
+}
+
+// SetEphemeralStorage sets the EphemeralStorage field's value.
+func (s *CapacityReservation) SetEphemeralStorage(v bool) *CapacityReservation {
+	s.EphemeralStorage = &v
+	return s
+}
+
+// SetInstanceMatchCriteria sets the InstanceMatchCriteria field's value.
+func (s *CapacityReservation) SetInstanceMatchCriteria(v string) *CapacityReservation {
+	s.InstanceMatchCriteria = &v
+	return s
+}
+
+// SetInstancePlatform sets the InstancePlatform field's value.
+func (s *CapacityReservation) SetInstancePlatform(v string) *CapacityReservation {
+	s.InstancePlatform = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *CapacityReservation) SetInstanceType(v string) *CapacityReservation {
+	s.InstanceType = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *CapacityReservation) SetState(v string) *CapacityReservation {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CapacityReservation) SetTags(v []*Tag) *CapacityReservation {
+	s.Tags = v
+	return s
+}
+
+// SetTenancy sets the Tenancy field's value.
+func (s *CapacityReservation) SetTenancy(v string) *CapacityReservation {
+	s.Tenancy = &v
+	return s
+}
+
+// SetTotalInstanceCount sets the TotalInstanceCount field's value.
+func (s *CapacityReservation) SetTotalInstanceCount(v int64) *CapacityReservation {
+	s.TotalInstanceCount = &v
+	return s
+}
+
+// Describes an instance's Capacity Reservation targeting option. You can specify
+// only one option at a time. Use the CapacityReservationPreference parameter
+// to configure the instance to run as an On-Demand Instance or to run in any
+// open Capacity Reservation that has matching attributes (instance type, platform,
+// Availability Zone). Use the CapacityReservationTarget parameter to explicitly
+// target a specific Capacity Reservation.
+type CapacityReservationSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates the instance's Capacity Reservation preferences. Possible preferences
+	// include:
+	//
+	//    * open - The instance can run in any open Capacity Reservation that has
+	//    matching attributes (instance type, platform, Availability Zone).
+	//
+	//    * none - The instance avoids running in a Capacity Reservation even if
+	//    one is available. The instance runs as an On-Demand Instance.
+	CapacityReservationPreference *string `type:"string" enum:"CapacityReservationPreference"`
+
+	// Information about the target Capacity Reservation.
+	CapacityReservationTarget *CapacityReservationTarget `type:"structure"`
+}
+
+// String returns the string representation
+func (s CapacityReservationSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservationSpecification) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationPreference sets the CapacityReservationPreference field's value.
+func (s *CapacityReservationSpecification) SetCapacityReservationPreference(v string) *CapacityReservationSpecification {
+	s.CapacityReservationPreference = &v
+	return s
+}
+
+// SetCapacityReservationTarget sets the CapacityReservationTarget field's value.
+func (s *CapacityReservationSpecification) SetCapacityReservationTarget(v *CapacityReservationTarget) *CapacityReservationSpecification {
+	s.CapacityReservationTarget = v
+	return s
+}
+
+// Describes the instance's Capacity Reservation targeting preferences. The
+// action returns the capacityReservationPreference response element if the
+// instance is configured to run in On-Demand capacity, or if it is configured
+// in run in any open Capacity Reservation that has matching attributes (instance
+// type, platform, Availability Zone). The action returns the capacityReservationTarget
+// response element if the instance explicily targets a specific Capacity Reservation.
+type CapacityReservationSpecificationResponse struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the instance's Capacity Reservation preferences. Possible preferences
+	// include:
+	//
+	//    * open - The instance can run in any open Capacity Reservation that has
+	//    matching attributes (instance type, platform, Availability Zone).
+	//
+	//    * none - The instance avoids running in a Capacity Reservation even if
+	//    one is available. The instance runs in On-Demand capacity.
+	CapacityReservationPreference *string `locationName:"capacityReservationPreference" type:"string" enum:"CapacityReservationPreference"`
+
+	// Information about the targeted Capacity Reservation.
+	CapacityReservationTarget *CapacityReservationTargetResponse `locationName:"capacityReservationTarget" type:"structure"`
+}
+
+// String returns the string representation
+func (s CapacityReservationSpecificationResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservationSpecificationResponse) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationPreference sets the CapacityReservationPreference field's value.
+func (s *CapacityReservationSpecificationResponse) SetCapacityReservationPreference(v string) *CapacityReservationSpecificationResponse {
+	s.CapacityReservationPreference = &v
+	return s
+}
+
+// SetCapacityReservationTarget sets the CapacityReservationTarget field's value.
+func (s *CapacityReservationSpecificationResponse) SetCapacityReservationTarget(v *CapacityReservationTargetResponse) *CapacityReservationSpecificationResponse {
+	s.CapacityReservationTarget = v
+	return s
+}
+
+// Describes a target Capacity Reservation.
+type CapacityReservationTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Capacity Reservation.
+	CapacityReservationId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CapacityReservationTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservationTarget) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *CapacityReservationTarget) SetCapacityReservationId(v string) *CapacityReservationTarget {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// Describes a target Capacity Reservation.
+type CapacityReservationTargetResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Capacity Reservation.
+	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
+}
+
+// String returns the string representation
+func (s CapacityReservationTargetResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservationTargetResponse) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *CapacityReservationTargetResponse) SetCapacityReservationId(v string) *CapacityReservationTargetResponse {
+	s.CapacityReservationId = &v
 	return s
 }
 
@@ -28066,6 +28889,242 @@ func (s *CpuOptionsRequest) SetCoreCount(v int64) *CpuOptionsRequest {
 // SetThreadsPerCore sets the ThreadsPerCore field's value.
 func (s *CpuOptionsRequest) SetThreadsPerCore(v int64) *CpuOptionsRequest {
 	s.ThreadsPerCore = &v
+	return s
+}
+
+type CreateCapacityReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Availability Zone in which to create the Capacity Reservation.
+	//
+	// AvailabilityZone is a required field
+	AvailabilityZone *string `type:"string" required:"true"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 64 ASCII characters.
+	ClientToken *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// Indicates whether the Capacity Reservation supports EBS-optimized instances.
+	// This optimization provides dedicated throughput to Amazon EBS and an optimized
+	// configuration stack to provide optimal I/O performance. This optimization
+	// isn't available with all instance types. Additional usage charges apply when
+	// using an EBS- optimized instance.
+	EbsOptimized *bool `type:"boolean"`
+
+	// The date and time at which the Capacity Reservation expires. When a Capacity
+	// Reservation expires, the reserved capacity is released and you can no longer
+	// launch instances into it. The Capacity Reservation's state changes to expired
+	// when it reaches its end date and time.
+	//
+	// You must provide an EndDate value if EndDateType is limited. Omit EndDate
+	// if EndDateType is unlimited.
+	//
+	// If the EndDateType is limited, the Capacity Reservation is cancelled within
+	// an hour from the specified time. For example, if you specify 5/31/2019, 13:30:55,
+	// the Capacity Reservation is guaranteed to end between 13:30:55 and 14:30:55
+	// on 5/31/2019.
+	EndDate *time.Time `type:"timestamp"`
+
+	// Indicates the way in which the Capacity Reservation ends. A Capacity Reservation
+	// can have one of the following end types:
+	//
+	//    * unlimited - The Capacity Reservation remains active until you explicitly
+	//    cancel it. Do not provide an EndDate if the EndDateType is unlimited.
+	//
+	//    * limited - The Capacity Reservation expires automatically at a specified
+	//    date and time. You must provide an EndDate value if the EndDateType value
+	//    is limited.
+	EndDateType *string `type:"string" enum:"EndDateType"`
+
+	// Indicates whether the Capacity Reservation supports instances with temporary,
+	// block-level storage.
+	EphemeralStorage *bool `type:"boolean"`
+
+	// The number of instances for which to reserve capacity.
+	//
+	// InstanceCount is a required field
+	InstanceCount *int64 `type:"integer" required:"true"`
+
+	// Indicates the type of instance launches that the Capacity Reservation accepts.
+	// The options include:
+	//
+	//    * open - The Capacity Reservation automatically matches all instances
+	//    that have matching attributes (instance type, platform, and Availability
+	//    Zone). Instances that have matching attributes run in the Capacity Reservation
+	//    automatically without specifying any additional parameters.
+	//
+	//    * targeted - The Capacity Reservation only accepts instances that have
+	//    matching attributes (instance type, platform, and Availability Zone),
+	//    and explicitly target the Capacity Reservation. This ensures that only
+	//    permitted instances can use the reserved capacity.
+	//
+	// Default: open
+	InstanceMatchCriteria *string `type:"string" enum:"InstanceMatchCriteria"`
+
+	// The type of operating system for which to reserve capacity.
+	//
+	// InstancePlatform is a required field
+	InstancePlatform *string `type:"string" required:"true" enum:"CapacityReservationInstancePlatform"`
+
+	// The instance type for which to reserve capacity. For more information, see
+	// Instance Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// InstanceType is a required field
+	InstanceType *string `type:"string" required:"true"`
+
+	// The tags to apply to the Capacity Reservation during launch.
+	TagSpecifications []*TagSpecification `locationNameList:"item" type:"list"`
+
+	// Indicates the tenancy of the Capacity Reservation. A Capacity Reservation
+	// can have one of the following tenancy settings:
+	//
+	//    * default - The Capacity Reservation is created on hardware that is shared
+	//    with other AWS accounts.
+	//
+	//    * dedicated - The Capacity Reservation is created on single-tenant hardware
+	//    that is dedicated to a single AWS account.
+	Tenancy *string `type:"string" enum:"CapacityReservationTenancy"`
+}
+
+// String returns the string representation
+func (s CreateCapacityReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCapacityReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateCapacityReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateCapacityReservationInput"}
+	if s.AvailabilityZone == nil {
+		invalidParams.Add(request.NewErrParamRequired("AvailabilityZone"))
+	}
+	if s.InstanceCount == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceCount"))
+	}
+	if s.InstancePlatform == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstancePlatform"))
+	}
+	if s.InstanceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *CreateCapacityReservationInput) SetAvailabilityZone(v string) *CreateCapacityReservationInput {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateCapacityReservationInput) SetClientToken(v string) *CreateCapacityReservationInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateCapacityReservationInput) SetDryRun(v bool) *CreateCapacityReservationInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetEbsOptimized sets the EbsOptimized field's value.
+func (s *CreateCapacityReservationInput) SetEbsOptimized(v bool) *CreateCapacityReservationInput {
+	s.EbsOptimized = &v
+	return s
+}
+
+// SetEndDate sets the EndDate field's value.
+func (s *CreateCapacityReservationInput) SetEndDate(v time.Time) *CreateCapacityReservationInput {
+	s.EndDate = &v
+	return s
+}
+
+// SetEndDateType sets the EndDateType field's value.
+func (s *CreateCapacityReservationInput) SetEndDateType(v string) *CreateCapacityReservationInput {
+	s.EndDateType = &v
+	return s
+}
+
+// SetEphemeralStorage sets the EphemeralStorage field's value.
+func (s *CreateCapacityReservationInput) SetEphemeralStorage(v bool) *CreateCapacityReservationInput {
+	s.EphemeralStorage = &v
+	return s
+}
+
+// SetInstanceCount sets the InstanceCount field's value.
+func (s *CreateCapacityReservationInput) SetInstanceCount(v int64) *CreateCapacityReservationInput {
+	s.InstanceCount = &v
+	return s
+}
+
+// SetInstanceMatchCriteria sets the InstanceMatchCriteria field's value.
+func (s *CreateCapacityReservationInput) SetInstanceMatchCriteria(v string) *CreateCapacityReservationInput {
+	s.InstanceMatchCriteria = &v
+	return s
+}
+
+// SetInstancePlatform sets the InstancePlatform field's value.
+func (s *CreateCapacityReservationInput) SetInstancePlatform(v string) *CreateCapacityReservationInput {
+	s.InstancePlatform = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *CreateCapacityReservationInput) SetInstanceType(v string) *CreateCapacityReservationInput {
+	s.InstanceType = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateCapacityReservationInput) SetTagSpecifications(v []*TagSpecification) *CreateCapacityReservationInput {
+	s.TagSpecifications = v
+	return s
+}
+
+// SetTenancy sets the Tenancy field's value.
+func (s *CreateCapacityReservationInput) SetTenancy(v string) *CreateCapacityReservationInput {
+	s.Tenancy = &v
+	return s
+}
+
+type CreateCapacityReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Capacity Reservation.
+	CapacityReservation *CapacityReservation `locationName:"capacityReservation" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateCapacityReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCapacityReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservation sets the CapacityReservation field's value.
+func (s *CreateCapacityReservationOutput) SetCapacityReservation(v *CapacityReservation) *CreateCapacityReservationOutput {
+	s.CapacityReservation = v
 	return s
 }
 
@@ -35410,6 +36469,103 @@ func (s *DescribeByoipCidrsOutput) SetByoipCidrs(v []*ByoipCidr) *DescribeByoipC
 
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeByoipCidrsOutput) SetNextToken(v string) *DescribeByoipCidrsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeCapacityReservationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Capacity Reservation.
+	CapacityReservationIds []*string `locationName:"CapacityReservationId" locationNameList:"item" type:"list"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more filters.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The maximum number of results to return for the request in a single page.
+	// The remaining results can be seen by sending another request with the returned
+	// nextToken value.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to retrieve the next page of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeCapacityReservationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCapacityReservationsInput) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationIds sets the CapacityReservationIds field's value.
+func (s *DescribeCapacityReservationsInput) SetCapacityReservationIds(v []*string) *DescribeCapacityReservationsInput {
+	s.CapacityReservationIds = v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeCapacityReservationsInput) SetDryRun(v bool) *DescribeCapacityReservationsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeCapacityReservationsInput) SetFilters(v []*Filter) *DescribeCapacityReservationsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeCapacityReservationsInput) SetMaxResults(v int64) *DescribeCapacityReservationsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeCapacityReservationsInput) SetNextToken(v string) *DescribeCapacityReservationsInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeCapacityReservationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Capacity Reservations.
+	CapacityReservations []*CapacityReservation `locationName:"capacityReservationSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeCapacityReservationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCapacityReservationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservations sets the CapacityReservations field's value.
+func (s *DescribeCapacityReservationsOutput) SetCapacityReservations(v []*CapacityReservation) *DescribeCapacityReservationsOutput {
+	s.CapacityReservations = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeCapacityReservationsOutput) SetNextToken(v string) *DescribeCapacityReservationsOutput {
 	s.NextToken = &v
 	return s
 }
@@ -50837,6 +51993,12 @@ type Instance struct {
 	// Any block device mapping entries for the instance.
 	BlockDeviceMappings []*InstanceBlockDeviceMapping `locationName:"blockDeviceMapping" locationNameList:"item" type:"list"`
 
+	// The ID of the Capacity Reservation.
+	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
+
+	// Information about the Capacity Reservation targeting option.
+	CapacityReservationSpecification *CapacityReservationSpecificationResponse `locationName:"capacityReservationSpecification" type:"structure"`
+
 	// The idempotency token you provided when you launched the instance, if applicable.
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
@@ -50995,6 +52157,18 @@ func (s *Instance) SetArchitecture(v string) *Instance {
 // SetBlockDeviceMappings sets the BlockDeviceMappings field's value.
 func (s *Instance) SetBlockDeviceMappings(v []*InstanceBlockDeviceMapping) *Instance {
 	s.BlockDeviceMappings = v
+	return s
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *Instance) SetCapacityReservationId(v string) *Instance {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetCapacityReservationSpecification sets the CapacityReservationSpecification field's value.
+func (s *Instance) SetCapacityReservationSpecification(v *CapacityReservationSpecificationResponse) *Instance {
+	s.CapacityReservationSpecification = v
 	return s
 }
 
@@ -53059,6 +54233,91 @@ func (s *LaunchTemplateBlockDeviceMappingRequest) SetVirtualName(v string) *Laun
 	return s
 }
 
+// Describes an instance's Capacity Reservation targeting option. You can specify
+// only one option at a time. Use the CapacityReservationPreference parameter
+// to configure the instance to run in On-Demand capacity or to run in any open
+// Capacity Reservation that has matching attributes (instance type, platform,
+// Availability Zone). Use the CapacityReservationTarget parameter to explicitly
+// target a specific Capacity Reservation.
+type LaunchTemplateCapacityReservationSpecificationRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates the instance's Capacity Reservation preferences. Possible preferences
+	// include:
+	//
+	//    * open - The instance can run in any open Capacity Reservation that has
+	//    matching attributes (instance type, platform, Availability Zone).
+	//
+	//    * none - The instance avoids running in a Capacity Reservation even if
+	//    one is available. The instance runs in On-Demand capacity.
+	CapacityReservationPreference *string `type:"string" enum:"CapacityReservationPreference"`
+
+	// Information about the target Capacity Reservation.
+	CapacityReservationTarget *CapacityReservationTarget `type:"structure"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateCapacityReservationSpecificationRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateCapacityReservationSpecificationRequest) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationPreference sets the CapacityReservationPreference field's value.
+func (s *LaunchTemplateCapacityReservationSpecificationRequest) SetCapacityReservationPreference(v string) *LaunchTemplateCapacityReservationSpecificationRequest {
+	s.CapacityReservationPreference = &v
+	return s
+}
+
+// SetCapacityReservationTarget sets the CapacityReservationTarget field's value.
+func (s *LaunchTemplateCapacityReservationSpecificationRequest) SetCapacityReservationTarget(v *CapacityReservationTarget) *LaunchTemplateCapacityReservationSpecificationRequest {
+	s.CapacityReservationTarget = v
+	return s
+}
+
+// Information about the Capacity Reservation targeting option.
+type LaunchTemplateCapacityReservationSpecificationResponse struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates the instance's Capacity Reservation preferences. Possible preferences
+	// include:
+	//
+	//    * open - The instance can run in any open Capacity Reservation that has
+	//    matching attributes (instance type, platform, Availability Zone).
+	//
+	//    * none - The instance avoids running in a Capacity Reservation even if
+	//    one is available. The instance runs in On-Demand capacity.
+	CapacityReservationPreference *string `locationName:"capacityReservationPreference" type:"string" enum:"CapacityReservationPreference"`
+
+	// Information about the target Capacity Reservation.
+	CapacityReservationTarget *CapacityReservationTargetResponse `locationName:"capacityReservationTarget" type:"structure"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateCapacityReservationSpecificationResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateCapacityReservationSpecificationResponse) GoString() string {
+	return s.String()
+}
+
+// SetCapacityReservationPreference sets the CapacityReservationPreference field's value.
+func (s *LaunchTemplateCapacityReservationSpecificationResponse) SetCapacityReservationPreference(v string) *LaunchTemplateCapacityReservationSpecificationResponse {
+	s.CapacityReservationPreference = &v
+	return s
+}
+
+// SetCapacityReservationTarget sets the CapacityReservationTarget field's value.
+func (s *LaunchTemplateCapacityReservationSpecificationResponse) SetCapacityReservationTarget(v *CapacityReservationTargetResponse) *LaunchTemplateCapacityReservationSpecificationResponse {
+	s.CapacityReservationTarget = v
+	return s
+}
+
 // Describes a launch template and overrides.
 type LaunchTemplateConfig struct {
 	_ struct{} `type:"structure"`
@@ -54477,6 +55736,123 @@ func (s *LoadPermissionRequest) SetUserId(v string) *LoadPermissionRequest {
 	return s
 }
 
+type ModifyCapacityReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Capacity Reservation.
+	//
+	// CapacityReservationId is a required field
+	CapacityReservationId *string `type:"string" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The date and time at which the Capacity Reservation expires. When a Capacity
+	// Reservation expires, the reserved capacity is released and you can no longer
+	// launch instances into it. The Capacity Reservation's state changes to expired
+	// when it reaches its end date and time.
+	//
+	// The Capacity Reservation is cancelled within an hour from the specified time.
+	// For example, if you specify 5/31/2019, 13:30:55, the Capacity Reservation
+	// is guaranteed to end between 13:30:55 and 14:30:55 on 5/31/2019.
+	//
+	// You must provide an EndDate value if EndDateType is limited. Omit EndDate
+	// if EndDateType is unlimited.
+	EndDate *time.Time `type:"timestamp"`
+
+	// Indicates the way in which the Capacity Reservation ends. A Capacity Reservation
+	// can have one of the following end types:
+	//
+	//    * unlimited - The Capacity Reservation remains active until you explicitly
+	//    cancel it. Do not provide an EndDate value if EndDateType is unlimited.
+	//
+	//    * limited - The Capacity Reservation expires automatically at a specified
+	//    date and time. You must provide an EndDate value if EndDateType is limited.
+	EndDateType *string `type:"string" enum:"EndDateType"`
+
+	// The number of instances for which to reserve capacity.
+	InstanceCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyCapacityReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCapacityReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyCapacityReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyCapacityReservationInput"}
+	if s.CapacityReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityReservationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *ModifyCapacityReservationInput) SetCapacityReservationId(v string) *ModifyCapacityReservationInput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyCapacityReservationInput) SetDryRun(v bool) *ModifyCapacityReservationInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetEndDate sets the EndDate field's value.
+func (s *ModifyCapacityReservationInput) SetEndDate(v time.Time) *ModifyCapacityReservationInput {
+	s.EndDate = &v
+	return s
+}
+
+// SetEndDateType sets the EndDateType field's value.
+func (s *ModifyCapacityReservationInput) SetEndDateType(v string) *ModifyCapacityReservationInput {
+	s.EndDateType = &v
+	return s
+}
+
+// SetInstanceCount sets the InstanceCount field's value.
+func (s *ModifyCapacityReservationInput) SetInstanceCount(v int64) *ModifyCapacityReservationInput {
+	s.InstanceCount = &v
+	return s
+}
+
+type ModifyCapacityReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Capacity Reservation.
+	Return *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s ModifyCapacityReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCapacityReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturn sets the Return field's value.
+func (s *ModifyCapacityReservationOutput) SetReturn(v bool) *ModifyCapacityReservationOutput {
+	s.Return = &v
+	return s
+}
+
 type ModifyFleetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -55353,6 +56729,93 @@ func (s ModifyInstanceAttributeOutput) String() string {
 // GoString returns the string representation
 func (s ModifyInstanceAttributeOutput) GoString() string {
 	return s.String()
+}
+
+type ModifyInstanceCapacityReservationAttributesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Capacity Reservation targeting option.
+	//
+	// CapacityReservationSpecification is a required field
+	CapacityReservationSpecification *CapacityReservationSpecification `type:"structure" required:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the instance to be modified.
+	//
+	// InstanceId is a required field
+	InstanceId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceCapacityReservationAttributesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceCapacityReservationAttributesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyInstanceCapacityReservationAttributesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyInstanceCapacityReservationAttributesInput"}
+	if s.CapacityReservationSpecification == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityReservationSpecification"))
+	}
+	if s.InstanceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityReservationSpecification sets the CapacityReservationSpecification field's value.
+func (s *ModifyInstanceCapacityReservationAttributesInput) SetCapacityReservationSpecification(v *CapacityReservationSpecification) *ModifyInstanceCapacityReservationAttributesInput {
+	s.CapacityReservationSpecification = v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyInstanceCapacityReservationAttributesInput) SetDryRun(v bool) *ModifyInstanceCapacityReservationAttributesInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *ModifyInstanceCapacityReservationAttributesInput) SetInstanceId(v string) *ModifyInstanceCapacityReservationAttributesInput {
+	s.InstanceId = &v
+	return s
+}
+
+type ModifyInstanceCapacityReservationAttributesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns true if the request succeeds; otherwise, it returns an error.
+	Return *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceCapacityReservationAttributesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceCapacityReservationAttributesOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturn sets the Return field's value.
+func (s *ModifyInstanceCapacityReservationAttributesOutput) SetReturn(v bool) *ModifyInstanceCapacityReservationAttributesOutput {
+	s.Return = &v
+	return s
 }
 
 type ModifyInstanceCreditSpecificationInput struct {
@@ -61008,6 +62471,9 @@ type RequestLaunchTemplateData struct {
 	// cannot be changed using this action.
 	BlockDeviceMappings []*LaunchTemplateBlockDeviceMappingRequest `locationName:"BlockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
+	// Information about the Capacity Reservation targeting option.
+	CapacityReservationSpecification *LaunchTemplateCapacityReservationSpecificationRequest `type:"structure"`
+
 	// The CPU options for the instance. For more information, see Optimizing CPU
 	// Options (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
@@ -61141,6 +62607,12 @@ func (s *RequestLaunchTemplateData) Validate() error {
 // SetBlockDeviceMappings sets the BlockDeviceMappings field's value.
 func (s *RequestLaunchTemplateData) SetBlockDeviceMappings(v []*LaunchTemplateBlockDeviceMappingRequest) *RequestLaunchTemplateData {
 	s.BlockDeviceMappings = v
+	return s
+}
+
+// SetCapacityReservationSpecification sets the CapacityReservationSpecification field's value.
+func (s *RequestLaunchTemplateData) SetCapacityReservationSpecification(v *LaunchTemplateCapacityReservationSpecificationRequest) *RequestLaunchTemplateData {
+	s.CapacityReservationSpecification = v
 	return s
 }
 
@@ -63018,6 +64490,9 @@ type ResponseLaunchTemplateData struct {
 	// The block device mappings.
 	BlockDeviceMappings []*LaunchTemplateBlockDeviceMapping `locationName:"blockDeviceMappingSet" locationNameList:"item" type:"list"`
 
+	// Information about the Capacity Reservation targeting option.
+	CapacityReservationSpecification *LaunchTemplateCapacityReservationSpecificationResponse `locationName:"capacityReservationSpecification" type:"structure"`
+
 	// The CPU options for the instance. For more information, see Optimizing CPU
 	// Options (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
@@ -63096,6 +64571,12 @@ func (s ResponseLaunchTemplateData) GoString() string {
 // SetBlockDeviceMappings sets the BlockDeviceMappings field's value.
 func (s *ResponseLaunchTemplateData) SetBlockDeviceMappings(v []*LaunchTemplateBlockDeviceMapping) *ResponseLaunchTemplateData {
 	s.BlockDeviceMappings = v
+	return s
+}
+
+// SetCapacityReservationSpecification sets the CapacityReservationSpecification field's value.
+func (s *ResponseLaunchTemplateData) SetCapacityReservationSpecification(v *LaunchTemplateCapacityReservationSpecificationResponse) *ResponseLaunchTemplateData {
+	s.CapacityReservationSpecification = v
 	return s
 }
 
@@ -63836,6 +65317,9 @@ type RunInstancesInput struct {
 	// its encryption status is used for the volume encryption status.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"BlockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
+	// Information about the Capacity Reservation targeting option.
+	CapacityReservationSpecification *CapacityReservationSpecification `type:"structure"`
+
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
@@ -64074,6 +65558,12 @@ func (s *RunInstancesInput) SetAdditionalInfo(v string) *RunInstancesInput {
 // SetBlockDeviceMappings sets the BlockDeviceMappings field's value.
 func (s *RunInstancesInput) SetBlockDeviceMappings(v []*BlockDeviceMapping) *RunInstancesInput {
 	s.BlockDeviceMappings = v
+	return s
+}
+
+// SetCapacityReservationSpecification sets the CapacityReservationSpecification field's value.
+func (s *RunInstancesInput) SetCapacityReservationSpecification(v *CapacityReservationSpecification) *RunInstancesInput {
+	s.CapacityReservationSpecification = v
 	return s
 }
 
@@ -71522,6 +73012,65 @@ const (
 )
 
 const (
+	// CapacityReservationInstancePlatformLinuxUnix is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformLinuxUnix = "Linux/UNIX"
+
+	// CapacityReservationInstancePlatformRedHatEnterpriseLinux is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformRedHatEnterpriseLinux = "Red Hat Enterprise Linux"
+
+	// CapacityReservationInstancePlatformSuselinux is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformSuselinux = "SUSE Linux"
+
+	// CapacityReservationInstancePlatformWindows is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformWindows = "Windows"
+
+	// CapacityReservationInstancePlatformWindowswithSqlserver is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformWindowswithSqlserver = "Windows with SQL Server"
+
+	// CapacityReservationInstancePlatformWindowswithSqlserverEnterprise is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformWindowswithSqlserverEnterprise = "Windows with SQL Server Enterprise"
+
+	// CapacityReservationInstancePlatformWindowswithSqlserverStandard is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformWindowswithSqlserverStandard = "Windows with SQL Server Standard"
+
+	// CapacityReservationInstancePlatformWindowswithSqlserverWeb is a CapacityReservationInstancePlatform enum value
+	CapacityReservationInstancePlatformWindowswithSqlserverWeb = "Windows with SQL Server Web"
+)
+
+const (
+	// CapacityReservationPreferenceOpen is a CapacityReservationPreference enum value
+	CapacityReservationPreferenceOpen = "open"
+
+	// CapacityReservationPreferenceNone is a CapacityReservationPreference enum value
+	CapacityReservationPreferenceNone = "none"
+)
+
+const (
+	// CapacityReservationStateActive is a CapacityReservationState enum value
+	CapacityReservationStateActive = "active"
+
+	// CapacityReservationStateExpired is a CapacityReservationState enum value
+	CapacityReservationStateExpired = "expired"
+
+	// CapacityReservationStateCancelled is a CapacityReservationState enum value
+	CapacityReservationStateCancelled = "cancelled"
+
+	// CapacityReservationStatePending is a CapacityReservationState enum value
+	CapacityReservationStatePending = "pending"
+
+	// CapacityReservationStateFailed is a CapacityReservationState enum value
+	CapacityReservationStateFailed = "failed"
+)
+
+const (
+	// CapacityReservationTenancyDefault is a CapacityReservationTenancy enum value
+	CapacityReservationTenancyDefault = "default"
+
+	// CapacityReservationTenancyDedicated is a CapacityReservationTenancy enum value
+	CapacityReservationTenancyDedicated = "dedicated"
+)
+
+const (
 	// ConnectionNotificationStateEnabled is a ConnectionNotificationState enum value
 	ConnectionNotificationStateEnabled = "Enabled"
 
@@ -71626,6 +73175,14 @@ const (
 
 	// ElasticGpuStatusImpaired is a ElasticGpuStatus enum value
 	ElasticGpuStatusImpaired = "IMPAIRED"
+)
+
+const (
+	// EndDateTypeUnlimited is a EndDateType enum value
+	EndDateTypeUnlimited = "unlimited"
+
+	// EndDateTypeLimited is a EndDateType enum value
+	EndDateTypeLimited = "limited"
 )
 
 const (
@@ -71961,6 +73518,14 @@ const (
 
 	// InstanceLifecycleTypeScheduled is a InstanceLifecycleType enum value
 	InstanceLifecycleTypeScheduled = "scheduled"
+)
+
+const (
+	// InstanceMatchCriteriaOpen is a InstanceMatchCriteria enum value
+	InstanceMatchCriteriaOpen = "open"
+
+	// InstanceMatchCriteriaTargeted is a InstanceMatchCriteria enum value
+	InstanceMatchCriteriaTargeted = "targeted"
 )
 
 const (
