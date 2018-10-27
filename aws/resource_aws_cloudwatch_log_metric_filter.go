@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -72,9 +71,9 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 100),
 						},
 						"default_value": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  math.NaN(),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateTypeStringNullableFloat,
 						},
 					},
 				},

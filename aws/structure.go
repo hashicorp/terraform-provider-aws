@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"math"
 	"reflect"
 	"regexp"
 	"sort"
@@ -1785,8 +1784,9 @@ func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloud
 		MetricValue:     aws.String(m["value"].(string)),
 	}
 
-	if !math.IsNaN(m["default_value"].(float64)) {
-		transformation.DefaultValue = aws.Float64(m["default_value"].(float64))
+	if m["default_value"].(string) != "" {
+		value, _ := strconv.ParseFloat(m["default_value"].(string), 64)
+		transformation.DefaultValue = aws.Float64(value)
 	}
 
 	return []*cloudwatchlogs.MetricTransformation{&transformation}
@@ -1801,7 +1801,7 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	m["value"] = *ts[0].MetricValue
 
 	if ts[0].DefaultValue == nil {
-		m["default_value"] = math.NaN()
+		m["default_value"] = ""
 	} else {
 		m["default_value"] = *ts[0].DefaultValue
 	}

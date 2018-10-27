@@ -54,6 +54,22 @@ func validateTypeStringNullableBoolean(v interface{}, k string) (ws []string, es
 	return
 }
 
+// validateTypeStringNullableFloat provides custom error messaging for TypeString floats
+// Some arguments require a floating point value or an unspecified, empty field.
+func validateTypeStringNullableFloat(v interface{}, k string) (ws []string, es []error) {
+	value, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if _, err := strconv.ParseFloat(value, 64); err != nil {
+		es = append(es, fmt.Errorf("%s: cannot parse '%s' as float: %s", k, value, err))
+	}
+
+	return
+}
+
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
