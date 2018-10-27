@@ -61,14 +61,14 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 		}
 		if resp != nil && len(resp.EgressOnlyInternetGateways) > 0 {
 			for _, igw := range resp.EgressOnlyInternetGateways {
-				if *igw.EgressOnlyInternetGatewayId == d.Id() {
+				if aws.StringValue(igw.EgressOnlyInternetGatewayId) == d.Id() {
 					found = true
 					break
 				}
 			}
 		}
 		if d.IsNewResource() && !found {
-			return resource.RetryableError(nil)
+			return resource.RetryableError(fmt.Errorf("Egress Only Internet Gateway (%s) not found.", d.Id()))
 		}
 		return nil
 	})
