@@ -38,6 +38,11 @@ func resourceAwsGlueCrawler() *schema.Resource {
 			"role": {
 				Type:     schema.TypeString,
 				Required: true,
+				// Glue API always returns name
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					newName, err := getIAMRoleNameFromIAMRoleARN(new)
+					return err == nil && newName == old
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
