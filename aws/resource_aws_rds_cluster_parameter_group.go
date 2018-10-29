@@ -75,14 +75,6 @@ func resourceAwsRDSClusterParameterGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "immediate",
-							// this parameter is not actually state, but a
-							// meta-parameter describing how the RDS API call
-							// to modify the parameter group should be made.
-							// Future reads of the resource from AWS don't tell
-							// us what we used for apply_method previously, so
-							// by squashing state to an empty string we avoid
-							// needing to do an update for every future run.
-							StateFunc: func(interface{}) string { return "" },
 						},
 					},
 				},
@@ -161,7 +153,7 @@ func resourceAwsRDSClusterParameterGroupRead(d *schema.ResourceData, meta interf
 	// Only include user customized parameters as there's hundreds of system/default ones
 	describeParametersOpts := rds.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
-		Source:                      aws.String("user"),
+		Source: aws.String("user"),
 	}
 
 	describeParametersResp, err := rdsconn.DescribeDBClusterParameters(&describeParametersOpts)
