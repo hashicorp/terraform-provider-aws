@@ -483,6 +483,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_internet_gateway":                             resourceAwsInternetGateway(),
 			"aws_iot_certificate":                              resourceAwsIotCertificate(),
 			"aws_iot_policy":                                   resourceAwsIotPolicy(),
+			"aws_iot_policy_attachment":                        resourceAwsIotPolicyAttachment(),
 			"aws_iot_thing":                                    resourceAwsIotThing(),
 			"aws_iot_thing_type":                               resourceAwsIotThingType(),
 			"aws_iot_topic_rule":                               resourceAwsIotTopicRule(),
