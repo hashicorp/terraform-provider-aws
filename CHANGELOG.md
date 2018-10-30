@@ -35,6 +35,7 @@ BUG FIXES:
 * resource/aws_ami_launch_permission: Prevent panic reading public permissions [GH-6224]
 * resource/aws_budgets_budget: Properly read `time_period_start` and `time_period_end` into Terraform state [GH-6226]
 * resource/aws_cloudwatch_metric_alarm: Allow EC2 Automate ARNs with `alarm_actions` [GH-6206]
+* resource/aws_dx_gateway: Allow legacy `amazon_side_asn` in plan-time validation [GH-6253]
 * resource/aws_egress_only_internet_gateway: Improve eventual consistency logic during creation [GH-6190]
 * resource/aws_glue_crawler: Suppress `role` difference when using ARN [GH-6293]
 * resource/aws_nat_gateway: Remove `network_interface_id`, `private_ip`, and `public_ip` as configurable (they continue to be available as read-only attributes) [GH-6225]
