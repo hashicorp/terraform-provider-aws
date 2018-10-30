@@ -125,7 +125,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, me
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxHostedPrivateVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
+	if err := dxHostedPrivateVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -175,10 +175,11 @@ func resourceAwsDxHostedPrivateVirtualInterfaceImport(d *schema.ResourceData, me
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxHostedPrivateVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
+func dxHostedPrivateVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
 	return dxVirtualInterfaceWaitUntilAvailable(
-		d,
 		conn,
+		vifId,
+		timeout,
 		[]string{
 			directconnect.VirtualInterfaceStatePending,
 		},

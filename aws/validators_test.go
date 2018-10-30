@@ -656,6 +656,56 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 	}
 }
 
+func TestValidateIntegerInSlice(t *testing.T) {
+	cases := []struct {
+		val         interface{}
+		f           schema.SchemaValidateFunc
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: 42,
+			f:   validateIntegerInSlice([]int{2, 4, 42, 420}),
+		},
+		{
+			val:         42,
+			f:           validateIntegerInSlice([]int{0, 43}),
+			expectedErr: regexp.MustCompile("expected [\\w]+ to be one of \\[0 43\\], got 42"),
+		},
+		{
+			val:         "42",
+			f:           validateIntegerInSlice([]int{0, 42}),
+			expectedErr: regexp.MustCompile("expected type of [\\w]+ to be int"),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range cases {
+		_, errs := tc.f(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
+
 func TestResourceAWSElastiCacheClusterIdValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
