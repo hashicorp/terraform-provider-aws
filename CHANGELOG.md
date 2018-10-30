@@ -14,6 +14,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_iot_endpoint: Add `endpoint_type` argument [GH-6215]
 * data-source/aws_nat_gateway: Support `tags` as argument and attribute [GH-6231]
 * resource/aws_flow_log: Add `log_destination` and `log_destination_type` arguments (support sending to S3) [GH-5509]
 * resource/aws_glue_job: Add `security_configuration` argument [GH-6232]
