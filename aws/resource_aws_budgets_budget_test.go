@@ -59,6 +59,12 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicUpdate.TimeUnit),
 				),
 			},
+			{
+				ResourceName:            "aws_budgets_budget.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
 		},
 	})
 }
@@ -100,6 +106,13 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriod.End.Format("2006-01-02_15:04")),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicUpdate.TimeUnit),
 				),
+			},
+
+			{
+				ResourceName:            "aws_budgets_budget.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 		},
 	})
