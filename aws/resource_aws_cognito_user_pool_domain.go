@@ -136,7 +136,10 @@ func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface
 	desc := domain.DomainDescription
 
 	d.Set("domain", d.Id())
-	d.Set("certificate_arn", desc.CustomDomainConfig.CertificateArn)
+	d.Set("certificate_arn", "")
+	if desc.CustomDomainConfig != nil {
+		d.Set("certificate_arn", desc.CustomDomainConfig.CertificateArn)
+	}
 	d.Set("aws_account_id", desc.AWSAccountId)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
 	d.Set("s3_bucket", desc.S3Bucket)
