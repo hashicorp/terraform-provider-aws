@@ -2,7 +2,8 @@
 
 NOTES:
 
-* This release will be delayed one week due to HashiConf.
+* resource/aws_route53_zone: The `vpc_id` and `vpc_region` arguments have been deprecated in favor of `vpc` configuration block(s). To upgrade, wrap existing `vpc_id` and `vpc_region` arguments with `vpc { ... }`. Since `vpc` is an exclusive set of VPC associations, you may need to define other `vpc` configuration blocks to match the infrastructure, or use lifecycle configuration `ignore_changes` to suppress the plan difference.
+* resource/aws_route53_zone_association: Due to the multiple VPC association support now available in the `aws_route53_zone` resource, we recommend removing usage of this resource unless necessary for ordering. To remove this resource from management (without disassociating VPCs), you can use `terraform state rm`. If necessary to keep this resource for ordering, you can use the lifecycle `ignore_changes` in the `aws_route53_zone` resource to suppress plan differences.
 
 FEATURES:
 
@@ -24,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_lb_target_group: Improve `name` and `name_prefix` argument plan-time validation [GH-6168]
 * resource/aws_secretsmanager_secret: Add `name_prefix` argument [GH-6277]
 * resource/aws_secretsmanager_secret: Add plan-time validation for `name` argument [GH-6277]
+* resource/aws_route53_zone: Add `vpc` argument, deprecate `vpc_id` and `vpc_region` arguments (support multiple VPC associations) [GH-6299]
 * resource/aws_waf_rule: Support resource import [GH-6247]
 
 BUG FIXES:
