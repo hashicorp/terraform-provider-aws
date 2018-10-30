@@ -38,6 +38,7 @@ BUG FIXES:
 * resource/aws_network_acl: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6264]
 * resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
 * resource/aws_network_acl_rule: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6263]
+* resource/aws_rds_cluster_parameter_group: Properly read `parameter` `apply_method` into Terraform state [GH-6295]
 
 ## 1.41.0 (October 18, 2018)
 
