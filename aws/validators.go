@@ -1793,7 +1793,7 @@ func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
+func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
@@ -1810,22 +1810,6 @@ func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, erro
 
 	if !isLegacyAsn(asn) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
 		errors = append(errors, fmt.Errorf("%q (%q) must be 7224, 9059, 10124 or 17493 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
-	}
-	return
-}
-
-func validateDxGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	// https://docs.aws.amazon.com/directconnect/latest/APIReference/API_CreateDirectConnectGateway.html
-	asn, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
-		return
-	}
-
-	if (asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
 	}
 	return
 }
