@@ -26,6 +26,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_ami_launch_permission: Prevent panic reading public permissions [GH-6224]
 * resource/aws_cloudwatch_metric_alarm: Allow EC2 Automate ARNs with `alarm_actions` [GH-6206]
 * resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
 
