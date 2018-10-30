@@ -15,42 +15,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestGetIAMRoleNameFromIAMRoleARN(t *testing.T) {
-	var testCases = []struct {
-		ARN      string
-		Name     string
-		ErrCount int
-	}{
-		{
-			ARN:      "not-an-arn",
-			ErrCount: 1,
-		},
-		{
-			ARN:      "arn:aws:iam::123456789012:role/test",
-			Name:     "test",
-			ErrCount: 0,
-		},
-		{
-			ARN:      "arn:aws:iam::123456789012:role/path/to/test",
-			Name:     "path/to/test",
-			ErrCount: 0,
-		},
-	}
-
-	for i, tc := range testCases {
-		actualName, err := getIAMRoleNameFromIAMRoleARN(tc.ARN)
-		if tc.ErrCount == 0 && err != nil {
-			t.Fatalf("Test case %d: expected %q not to trigger an error, received: %s", i, tc.ARN, err)
-		}
-		if tc.ErrCount > 0 && err == nil {
-			t.Fatalf("Test case %d: expected %q to trigger an error", i, tc.ARN)
-		}
-		if actualName != tc.Name {
-			t.Fatalf("Test case %d: expected name %q to be %q", i, actualName, tc.Name)
-		}
-	}
-}
-
 func TestAccAWSIAMRole_importBasic(t *testing.T) {
 	resourceName := "aws_iam_role.role"
 	rName := acctest.RandString(10)

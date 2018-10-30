@@ -5,11 +5,9 @@ import (
 	"log"
 	"net/url"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -401,16 +399,4 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
-}
-
-func getIAMRoleNameFromIAMRoleARN(inputARN string) (string, error) {
-	parsedARN, err := arn.Parse(inputARN)
-
-	if err != nil {
-		return "", fmt.Errorf("error parsing ARN (%s): %s", inputARN, err)
-	}
-
-	name := strings.TrimPrefix(parsedARN.Resource, "role/")
-
-	return name, nil
 }

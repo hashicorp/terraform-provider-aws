@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -40,8 +42,13 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				Required: true,
 				// Glue API always returns name
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					newName, err := getIAMRoleNameFromIAMRoleARN(new)
-					return err == nil && newName == old
+					newARN, err := arn.Parse(new)
+
+					if err != nil {
+						return false
+					}
+
+					return old == strings.TrimPrefix(newARN.Resource, "role/")
 				},
 			},
 			"description": {
