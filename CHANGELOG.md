@@ -34,6 +34,7 @@ BUG FIXES:
 * resource/aws_nat_gateway: Remove `network_interface_id`, `private_ip`, and `public_ip` as configurable (they continue to be available as read-only attributes) [GH-6225]
 * resource/aws_network_acl: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6264]
 * resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
+* resource/aws_network_acl_rule: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6263]
 
 ## 1.41.0 (October 18, 2018)
 
