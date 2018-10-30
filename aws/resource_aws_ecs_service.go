@@ -348,7 +348,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	input.SchedulingStrategy = aws.String(schedulingStrategy)
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
 		// unset these if DAEMON
-		input.DeploymentConfiguration.MaximumPercent = aws.Int64(100)
+		input.DeploymentConfiguration.MaximumPercent = nil
 		input.DesiredCount = nil
 	}
 
