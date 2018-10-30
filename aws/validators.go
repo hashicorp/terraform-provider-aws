@@ -695,7 +695,7 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 	}
 
 	if !regexp.MustCompile(`\.fifo$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("FIFO queue name should ends with \".fifo\": %v", value))
+		errors = append(errors, fmt.Errorf("FIFO queue name should end with \".fifo\": %v", value))
 	}
 
 	return
