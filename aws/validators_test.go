@@ -7,7 +7,74 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
+
+func TestValidationAny(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		f           schema.SchemaValidateFunc
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "valid",
+			f: validateAny(
+				validation.StringLenBetween(5, 42),
+				validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9]+`), "value must be alphanumeric"),
+			),
+		},
+		{
+			val: "foo",
+			f: validateAny(
+				validation.StringLenBetween(5, 42),
+				validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9]+`), "value must be alphanumeric"),
+			),
+		},
+		{
+			val: "!!!!!",
+			f: validateAny(
+				validation.StringLenBetween(5, 42),
+				validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9]+`), "value must be alphanumeric"),
+			),
+		},
+		{
+			val: "!!!",
+			f: validateAny(
+				validation.StringLenBetween(5, 42),
+				validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9]+`), "value must be alphanumeric"),
+			),
+			expectedErr: regexp.MustCompile("value must be alphanumeric"),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := tc.f(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
 
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
 	testCases := []struct {
@@ -334,6 +401,39 @@ func TestValidateArn(t *testing.T) {
 	}
 	for _, v := range invalidNames {
 		_, errors := validateArn(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ARN", v)
+		}
+	}
+}
+
+func TestValidateEC2AutomateARN(t *testing.T) {
+	validNames := []string{
+		"arn:aws:automate:us-east-1:ec2:recover",
+		"arn:aws:automate:us-east-1:ec2:stop",
+		"arn:aws:automate:us-east-1:ec2:terminate",
+	}
+	for _, v := range validNames {
+		_, errors := validateEC2AutomateARN(v, "test_property")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ARN: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"",
+		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // Beanstalk
+		"arn:aws:iam::123456789012:user/David",                                             // IAM User
+		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // RDS
+		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // S3 object
+		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // CloudWatch Rule
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // Lambda function
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // Lambda func qualifier
+		"arn:aws-us-gov:s3:::corp_bucket/object.png",                                       // GovCloud ARN
+		"arn:aws-us-gov:kms:us-gov-west-1:123456789012:key/some-uuid-abc123",               // GovCloud KMS ARN
+	}
+	for _, v := range invalidNames {
+		_, errors := validateEC2AutomateARN(v, "test_property")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ARN", v)
 		}
