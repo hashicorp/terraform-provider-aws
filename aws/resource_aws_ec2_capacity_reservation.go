@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsCapacityReservation() *schema.Resource {
+func resourceAwsEc2CapacityReservation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCapacityReservationCreate,
-		Read:   resourceAwsCapacityReservationRead,
-		Update: resourceAwsCapacityReservationUpdate,
-		Delete: resourceAwsCapacityReservationDelete,
+		Create: resourceAwsEc2CapacityReservationCreate,
+		Read:   resourceAwsEc2CapacityReservationRead,
+		Update: resourceAwsEc2CapacityReservationUpdate,
+		Delete: resourceAwsEc2CapacityReservationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -102,7 +102,7 @@ func resourceAwsCapacityReservation() *schema.Resource {
 	}
 }
 
-func resourceAwsCapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	opts := &ec2.CreateCapacityReservationInput{
@@ -169,10 +169,10 @@ func resourceAwsCapacityReservationCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error creating capacity reservation: %s", err)
 	}
 	d.SetId(*out.CapacityReservation.CapacityReservationId)
-	return resourceAwsCapacityReservationRead(d, meta)
+	return resourceAwsEc2CapacityReservationRead(d, meta)
 }
 
-func resourceAwsCapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
@@ -213,7 +213,7 @@ func resourceAwsCapacityReservationRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)
@@ -259,10 +259,10 @@ func resourceAwsCapacityReservationUpdate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("Error modifying capacity reservation: %s", err)
 	}
-	return resourceAwsCapacityReservationRead(d, meta)
+	return resourceAwsEc2CapacityReservationRead(d, meta)
 }
 
-func resourceAwsCapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2CapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	opts := &ec2.CancelCapacityReservationInput{

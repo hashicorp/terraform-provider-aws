@@ -105,6 +105,43 @@ func TestAccAWSCapacityReservation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCapacityReservation_endDate(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityReservationConfig_endDate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapacityReservationExists("aws_capacity_reservation.default", &cr),
+					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "end_date", "2019-10-31T07:39:57Z"),
+					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "end_date_type", "limited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCapacityReservation_tags(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityReservationConfig_tags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapacityReservationExists("aws_capacity_reservation.default", &cr),
+					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "instance_type", "t2.micro"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityReservationExists(resourceName string, cr *ec2.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -162,6 +199,26 @@ func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
 }
 
 const testAccCapacityReservationConfig = `
+resource "aws_capacity_reservation" "default" {
+  instance_type     = "t2.micro"
+  instance_platform = "Linux/UNIX"
+  availability_zone = "us-west-2a"
+  instance_count    = 1
+}
+`
+
+const testAccCapacityReservationConfig_endDate = `
+resource "aws_capacity_reservation" "default" {
+  instance_type     = "t2.micro"
+  instance_platform = "Linux/UNIX"
+  availability_zone = "us-west-2a"
+  instance_count    = 1
+  end_date          = "2019-10-31T07:39:57Z"
+  end_date_type     = "limited"
+}
+`
+
+const testAccCapacityReservationConfig_tags = `
 resource "aws_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"

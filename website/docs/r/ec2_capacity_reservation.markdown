@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_capacity_reservaton"
-sidebar_current: "docs-aws-resource-capacity-reservation"
+page_title: "AWS: aws_ec2_capacity_reservaton"
+sidebar_current: "docs-aws-resource-ec2-capacity-reservation"
 description: |-
   Provides an EC2 Capacity Reservation. This allows you to reserve capacity for your Amazon EC2 instances in a specific Availability Zone for any duration.
 ---
 
-# aws_capacity_reservaton
+# aws_ec2_capacity_reservaton
 
 Provides an EC2 Capacity Reservation. This allows you to reserve capacity for your Amazon EC2 instances in a specific Availability Zone for any duration.
 
 ## Example Usage
 
 ```hcl
-resource "aws_capacity_reservation" "default" {
+resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
   availability_zone = "eu-west-1a"
@@ -48,5 +48,5 @@ In addition to all arguments above, the following attributes are exported:
 Capacity Reservations can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_capacity_reservaton.web cr-0123456789abcdef0
+$ terraform import aws_ec2_capacity_reservaton.web cr-0123456789abcdef0
 ```
