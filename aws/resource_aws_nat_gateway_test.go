@@ -66,29 +66,9 @@ func testSweepNatGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSNatGateway_importBasic(t *testing.T) {
-	resourceName := "aws_nat_gateway.gateway"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNatGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNatGatewayConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSNatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.gateway"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -99,8 +79,13 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 			{
 				Config: testAccNatGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -108,6 +93,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 
 func TestAccAWSNatGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.gateway"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -117,7 +103,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 			{
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
 					testAccCheckTags(&natGateway.Tags, "foo", "bar"),
 				),
@@ -126,11 +112,16 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 			{
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
 					testAccCheckTags(&natGateway.Tags, "foo", ""),
 					testAccCheckTags(&natGateway.Tags, "bar", "baz"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

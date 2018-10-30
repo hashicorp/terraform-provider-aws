@@ -1,4 +1,45 @@
 ## 1.42.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_route53_zone: The `vpc_id` and `vpc_region` arguments have been deprecated in favor of `vpc` configuration block(s). To upgrade, wrap existing `vpc_id` and `vpc_region` arguments with `vpc { ... }`. Since `vpc` is an exclusive set of VPC associations, you may need to define other `vpc` configuration blocks to match the infrastructure, or use lifecycle configuration `ignore_changes` to suppress the plan difference.
+* resource/aws_route53_zone_association: Due to the multiple VPC association support now available in the `aws_route53_zone` resource, we recommend removing usage of this resource unless necessary for ordering. To remove this resource from management (without disassociating VPCs), you can use `terraform state rm`. If necessary to keep this resource for ordering, you can use the lifecycle `ignore_changes` in the `aws_route53_zone` resource to suppress plan differences.
+
+FEATURES:
+
+* **New Resource:** `aws_iot_policy_attachment` [GH-5864]
+* **New Resource:** `aws_iot_thing_principal_attachment` [GH-5868]
+* **New Resource:** `aws_pinpoint_apns_sandbox_channel` [GH-6233]
+* **New Resource:** `aws_pinpoint_apns_voip_channel` [GH-6234]
+* **New Resource:** `aws_pinpoint_apns_voip_sandbox_channel` [GH-6235]
+
+ENHANCEMENTS:
+
+* data-source/aws_iot_endpoint: Add `endpoint_type` argument [GH-6215]
+* data-source/aws_nat_gateway: Support `tags` as argument and attribute [GH-6231]
+* resource/aws_budgets_budget: Support resource import [GH-6226]
+* resource/aws_cloudwatch_event_permission: Add `condition` argument (support Organizations access) [GH-6261]
+* resource/aws_codepipeline_webhook: Support resource import [GH-6202]
+* resource/aws_flow_log: Add `log_destination` and `log_destination_type` arguments (support sending to S3) [GH-5509]
+* resource/aws_glue_job: Add `security_configuration` argument [GH-6232]
+* resource/aws_lb_target_group: Improve `name` and `name_prefix` argument plan-time validation [GH-6168]
+* resource/aws_secretsmanager_secret: Add `name_prefix` argument [GH-6277]
+* resource/aws_secretsmanager_secret: Add plan-time validation for `name` argument [GH-6277]
+* resource/aws_route53_zone: Add `vpc` argument, deprecate `vpc_id` and `vpc_region` arguments (support multiple VPC associations) [GH-6299]
+* resource/aws_waf_rule: Support resource import [GH-6247]
+
+BUG FIXES:
+
+* resource/aws_ami_launch_permission: Prevent panic reading public permissions [GH-6224]
+* resource/aws_budgets_budget: Properly read `time_period_start` and `time_period_end` into Terraform state [GH-6226]
+* resource/aws_cloudwatch_metric_alarm: Allow EC2 Automate ARNs with `alarm_actions` [GH-6206]
+* resource/aws_glue_crawler: Suppress `role` difference when using ARN [GH-6293]
+* resource/aws_nat_gateway: Remove `network_interface_id`, `private_ip`, and `public_ip` as configurable (they continue to be available as read-only attributes) [GH-6225]
+* resource/aws_network_acl: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6264]
+* resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
+* resource/aws_network_acl_rule: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6263]
+* resource/aws_rds_cluster_parameter_group: Properly read `parameter` `apply_method` into Terraform state [GH-6295]
+
 ## 1.41.0 (October 18, 2018)
 
 FEATURES:

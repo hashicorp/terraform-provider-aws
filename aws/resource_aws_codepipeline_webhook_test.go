@@ -15,6 +15,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
 	}
 
+	resourceName := "aws_codepipeline_webhook.bar"
 	name := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -26,11 +27,17 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 				Config: testAccAWSCodePipelineWebhookConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
-					testAccCheckAWSCodePipelineWebhookExists("aws_codepipeline_webhook.bar"),
-					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "id"),
-					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "url"),
-					resource.TestCheckResourceAttr("aws_codepipeline_webhook.bar", "authentication_configuration.0.secret_token", "super-secret"),
+					testAccCheckAWSCodePipelineWebhookExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "super-secret"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -41,6 +48,7 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
 	}
 
+	resourceName := "aws_codepipeline_webhook.bar"
 	name := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -52,11 +60,17 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 				Config: testAccAWSCodePipelineWebhookConfig_ipAuth(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
-					testAccCheckAWSCodePipelineWebhookExists("aws_codepipeline_webhook.bar"),
-					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "id"),
-					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "url"),
-					resource.TestCheckResourceAttr("aws_codepipeline_webhook.bar", "authentication_configuration.0.allowed_ip_range", "0.0.0.0/0"),
+					testAccCheckAWSCodePipelineWebhookExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.allowed_ip_range", "0.0.0.0/0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -67,6 +81,7 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
 	}
 
+	resourceName := "aws_codepipeline_webhook.bar"
 	name := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -78,10 +93,15 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 				Config: testAccAWSCodePipelineWebhookConfig_unauthenticated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
-					testAccCheckAWSCodePipelineWebhookExists("aws_codepipeline_webhook.bar"),
-					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "id"),
-					resource.TestCheckResourceAttrSet("aws_codepipeline_webhook.bar", "url"),
+					testAccCheckAWSCodePipelineWebhookExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
