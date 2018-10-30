@@ -366,13 +366,11 @@ func validateIntegerInSlice(valid []int) schema.SchemaValidateFunc {
 			es = append(es, fmt.Errorf("expected type of %s to be int", k))
 			return
 		}
-
 		for _, in := range valid {
 			if v == in {
 				return
 			}
 		}
-
 		es = append(es, fmt.Errorf("expected %s to be one of %v, got %d", k, valid, v))
 		return
 	}

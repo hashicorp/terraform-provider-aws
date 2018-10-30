@@ -677,7 +677,6 @@ func TestValidateIntegerInSlice(t *testing.T) {
 			expectedErr: regexp.MustCompile("expected type of [\\w]+ to be int"),
 		},
 	}
-
 	matchErr := func(errs []error, r *regexp.Regexp) bool {
 		// err must match one provided
 		for _, err := range errs {

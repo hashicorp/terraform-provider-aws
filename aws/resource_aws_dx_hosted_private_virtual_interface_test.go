@@ -48,6 +48,54 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsDxHostedPrivateVirtualInterface_mtuUpdate(t *testing.T) {
+	key := "DX_CONNECTION_ID"
+	connectionId := os.Getenv(key)
+	if connectionId == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	key = "DX_HOSTED_VIF_OWNER_ACCOUNT"
+	ownerAccountId := os.Getenv(key)
+	if ownerAccountId == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
+	bgpAsn := randIntRange(64512, 65534)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "1500"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "jumbo_frame_capable", "true"),
+				),
+			},
+			{
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(connectionId, ownerAccountId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "9001"),
+				),
+			},
+			{
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "mtu", "1500"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dxconn
 
@@ -94,6 +142,21 @@ resource "aws_dx_hosted_private_virtual_interface" "foo" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = %d
+}
+`, cid, ownerAcctId, n, bgpAsn)
+}
+
+func testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(cid, ownerAcctId, n string, bgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_hosted_private_virtual_interface" "foo" {
+  connection_id    = "%s"
+  owner_account_id = "%s"
+
+  name           = "%s"
+  vlan           = 4094
+  address_family = "ipv4"
+  bgp_asn        = %d
+  mtu			 = 9001
 }
 `, cid, ownerAcctId, n, bgpAsn)
 }
