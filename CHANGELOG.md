@@ -25,6 +25,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_metric_alarm: Allow EC2 Automate ARNs with `alarm_actions` [GH-6206]
 * resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
 
 ## 1.41.0 (October 18, 2018)
