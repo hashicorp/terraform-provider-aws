@@ -34,6 +34,11 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "version"),
 				),
 			},
+			{
+				ResourceName:      "aws_cognito_user_pool_domain.main",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -64,7 +69,7 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 				"an ISSUED ACM certificate in us-east-1 to enable this test.")
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
@@ -81,27 +86,6 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "s3_bucket"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "version"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSCognitoUserPoolDomain_import(t *testing.T) {
-	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCognitoUserPoolDomainConfig_basic(domainName, poolName),
-			},
-			{
-				ResourceName:      "aws_cognito_user_pool_domain.main",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
