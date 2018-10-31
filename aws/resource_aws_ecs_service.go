@@ -93,10 +93,13 @@ func resourceAwsEcsService() *schema.Resource {
 			"deployment_maximum_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  200,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
 						return true
+					} else { // must be SchedulingStrategyReplica
+						if !d.IsNewResource() && new == "0" {
+							return true
+						}
 					}
 					return false
 				},
@@ -105,7 +108,12 @@ func resourceAwsEcsService() *schema.Resource {
 			"deployment_minimum_healthy_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  100,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if !d.IsNewResource() && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 
 			"load_balancer": {
@@ -326,11 +334,19 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 		DesiredCount:   aws.Int64(int64(d.Get("desired_count").(int))),
 		ClientToken:    aws.String(resource.UniqueId()),
-		DeploymentConfiguration: &ecs.DeploymentConfiguration{
-			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-		},
 	}
+
+	deploymentConfiguration := &ecs.DeploymentConfiguration{}
+
+	if v, ok := d.GetOk("deployment_maximum_percent"); ok {
+		deploymentConfiguration.MaximumPercent = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("deployment_minimum_healthy_percent"); ok {
+		deploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(v.(int)))
+	}
+
+	input.DeploymentConfiguration = deploymentConfiguration
 
 	if v, ok := d.GetOk("cluster"); ok {
 		input.Cluster = aws.String(v.(string))
@@ -770,7 +786,6 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && d.HasChange("deployment_minimum_healthy_percent") {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MaximumPercent:        aws.Int64(100),
 			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
 		}
 	}
