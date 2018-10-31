@@ -107,6 +107,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 
 	opts := &ec2.CreateCapacityReservationInput{
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		EndDateType:      aws.String(d.Get("end_date_type").(string)),
 		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform: aws.String(d.Get("instance_platform").(string)),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
@@ -124,10 +125,6 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 		opts.EndDate = aws.Time(t)
 	}
 
-	if v, ok := d.GetOk("end_date_type"); ok {
-		opts.EndDateType = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("ephemeral_storage"); ok {
 		opts.EphemeralStorage = aws.Bool(v.(bool))
 	}
@@ -140,21 +137,13 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 		opts.Tenancy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		tagsSpec := make([]*ec2.TagSpecification, 0)
-
-		if len(tagsSpec) > 0 {
-			tags := tagsFromMap(v.(map[string]interface{}))
-
-			spec := &ec2.TagSpecification{
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+		opts.TagSpecifications = []*ec2.TagSpecification{
+			{
 				// There is no constant in the SDK for this resource type
 				ResourceType: aws.String("capacity-reservation"),
-				Tags:         tags,
-			}
-
-			tagsSpec = append(tagsSpec, spec)
-
-			opts.TagSpecifications = tagsSpec
+				Tags:         tagsFromMap(v.(map[string]interface{})),
+			},
 		}
 	}
 
@@ -195,14 +184,23 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 
 	d.Set("availability_zone", reservation.AvailabilityZone)
 	d.Set("ebs_optimized", reservation.EbsOptimized)
-	d.Set("end_date", reservation.EndDate)
+
+	d.Set("end_date", "")
+	if reservation.EndDate != nil {
+		d.Set("end_date", aws.TimeValue(reservation.EndDate).Format(time.RFC3339))
+	}
+
 	d.Set("end_date_type", reservation.EndDateType)
 	d.Set("ephemeral_storage", reservation.EphemeralStorage)
 	d.Set("instance_count", reservation.TotalInstanceCount)
 	d.Set("instance_match_criteria", reservation.InstanceMatchCriteria)
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set("instance_type", reservation.InstanceType)
-	d.Set("tags", tagsToMap(reservation.Tags))
+
+	if err := d.Set("tags", tagsToMap(reservation.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("tenancy", reservation.Tenancy)
 
 	return nil
@@ -225,24 +223,16 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 
 	opts := &ec2.ModifyCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
+		EndDateType:           aws.String(d.Get("end_date_type").(string)),
+		InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
 	}
 
-	if d.HasChange("end_date") {
-		if v, ok := d.GetOk("end_date"); ok {
-			t, err := time.Parse(time.RFC3339, v.(string))
-			if err != nil {
-				return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
-			}
-			opts.EndDate = aws.Time(t)
+	if v, ok := d.GetOk("end_date"); ok {
+		t, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
 		}
-	}
-
-	if d.HasChange("end_date_type") {
-		opts.EndDateType = aws.String(d.Get("end_date_type").(string))
-	}
-
-	if d.HasChange("instance_count") {
-		opts.InstanceCount = aws.Int64(int64(d.Get("instance_count").(int)))
+		opts.EndDate = aws.Time(t)
 	}
 
 	log.Printf("[DEBUG] Capacity reservation: %s", opts)
