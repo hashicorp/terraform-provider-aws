@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_flow_log: Add `log_destination` and `log_destination_type` arguments (support sending to S3) [GH-5509]
 * resource/aws_glue_job: Add `security_configuration` argument [GH-6232]
 * resource/aws_lb_target_group: Improve `name` and `name_prefix` argument plan-time validation [GH-6168]
+* resource/aws_s3_bucket: Support S3 Cross-Region Replication filtering based on S3 object tags [GH-6095]
 * resource/aws_secretsmanager_secret: Add `name_prefix` argument [GH-6277]
 * resource/aws_secretsmanager_secret: Add plan-time validation for `name` argument [GH-6277]
 * resource/aws_route53_zone: Add `vpc` argument, deprecate `vpc_id` and `vpc_region` arguments (support multiple VPC associations) [GH-6299]
