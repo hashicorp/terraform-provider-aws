@@ -7,6 +7,7 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_ec2_capacity_reservation` [GH-6291]
 * **New Resource:** `aws_glue_security_configuration` [GH-6288]
 * **New Resource:** `aws_iot_policy_attachment` [GH-5864]
 * **New Resource:** `aws_iot_thing_principal_attachment` [GH-5868]
