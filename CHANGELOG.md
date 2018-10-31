@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * data-source/aws_nat_gateway: Support `tags` as argument and attribute [GH-6231]
 * resource/aws_budgets_budget: Support resource import [GH-6226]
 * resource/aws_cloudwatch_event_permission: Add `condition` argument (support Organizations access) [GH-6261]
+* resource/aws_cognito_user_pool_domain: Add `certificate_arn` argument (support custom domains) [GH-6185]
 * resource/aws_dx_hosted_private_virtual_interface: Add `mtu` argument and `jumbo_frame_capable` attribute [GH-6142]
 * resource/aws_dx_private_virtual_interface: Add `mtu` argument and `jumbo_frame_capable` attribute [GH-6141]
 * resource/aws_codepipeline_webhook: Support resource import [GH-6202]
