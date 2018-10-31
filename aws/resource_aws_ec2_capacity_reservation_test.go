@@ -28,19 +28,19 @@ func testSweepEc2CapacityReservations(region string) error {
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{})
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving capacity reservations: %s", err)
+		return fmt.Errorf("Error retrieving EC2 Capacity Reservations: %s", err)
 	}
 
 	if len(resp.CapacityReservations) == 0 {
-		log.Print("[DEBUG] No capacity reservations to sweep")
+		log.Print("[DEBUG] No EC2 Capacity Reservations to sweep")
 		return nil
 	}
 
 	for _, r := range resp.CapacityReservations {
-		if *r.State != "cancelled" {
+		if aws.StringValue(r.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(r.State) != ec2.CapacityReservationStateExpired {
 			id := aws.StringValue(r.CapacityReservationId)
 
-			log.Printf("[INFO] Cancelling capacity reservation EC2 Instance: %s", id)
+			log.Printf("[INFO] Cancelling EC2 Capacity Reservation EC2 Instance: %s", id)
 
 			opts := &ec2.CancelCapacityReservationInput{
 				CapacityReservationId: aws.String(id),
@@ -49,32 +49,12 @@ func testSweepEc2CapacityReservations(region string) error {
 			_, err := conn.CancelCapacityReservation(opts)
 
 			if err != nil {
-				log.Printf("[ERROR] Error cancelling capacity reservation (%s): %s", id, err)
+				log.Printf("[ERROR] Error cancelling EC2 Capacity Reservation (%s): %s", id, err)
 			}
 		}
 	}
 
 	return nil
-}
-
-func TestAccAWSEc2CapacityReservation_importBasic(t *testing.T) {
-	resourceName := "aws_ec2_capacity_reservation.default"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig,
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
 }
 
 func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
@@ -90,6 +70,11 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 					testAccCheckEc2CapacityReservationExists("aws_ec2_capacity_reservation.default", &cr),
 					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "instance_type", "t2.micro"),
 				),
+			},
+			{
+				ResourceName:      "aws_ec2_capacity_reservation.default",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -110,6 +95,11 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "end_date_type", "limited"),
 				),
 			},
+			{
+				ResourceName:      "aws_ec2_capacity_reservation.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -125,8 +115,14 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 				Config: testAccEc2CapacityReservationConfig_tags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists("aws_ec2_capacity_reservation.default", &cr),
-					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "tags.Name", "foo"),
 				),
+			},
+			{
+				ResourceName:      "aws_ec2_capacity_reservation.default",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -149,15 +145,21 @@ func testAccCheckEc2CapacityReservationExists(resourceName string, cr *ec2.Capac
 		})
 
 		if err != nil {
-			return fmt.Errorf("DescribeCapacityReservations error: %v", err)
+			return fmt.Errorf("Error retrieving EC2 Capacity Reservations: %s", err)
 		}
 
-		if len(resp.CapacityReservations) > 0 {
-			*cr = *resp.CapacityReservations[0]
-			return nil
+		if len(resp.CapacityReservations) == 0 {
+			return fmt.Errorf("EC2 Capacity Reservation (%s) not found", rs.Primary.ID)
 		}
 
-		return fmt.Errorf("Capacity Reservation not found")
+		reservation := resp.CapacityReservations[0]
+
+		if aws.StringValue(reservation.State) != ec2.CapacityReservationStateActive && aws.StringValue(reservation.State) != ec2.CapacityReservationStatePending {
+			return fmt.Errorf("EC2 Capacity Reservation (%s) found in unexpected state: %s", rs.Primary.ID, aws.StringValue(reservation.State))
+		}
+
+		*cr = *reservation
+		return nil
 	}
 }
 
@@ -175,8 +177,8 @@ func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 		})
 		if err == nil {
 			for _, r := range resp.CapacityReservations {
-				if *r.State != "cancelled" {
-					return fmt.Errorf("Found uncancelled Capacity Reservation: %s", r)
+				if aws.StringValue(r.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(r.State) != ec2.CapacityReservationStateExpired {
+					return fmt.Errorf("Found uncancelled EC2 Capacity Reservation: %s", r)
 				}
 			}
 		}
@@ -189,19 +191,23 @@ func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 }
 
 const testAccEc2CapacityReservationConfig = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   instance_count    = 1
 }
 `
 
 const testAccEc2CapacityReservationConfig_endDate = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   instance_count    = 1
   end_date          = "2019-10-31T07:39:57Z"
   end_date_type     = "limited"
@@ -209,10 +215,12 @@ resource "aws_ec2_capacity_reservation" "default" {
 `
 
 const testAccEc2CapacityReservationConfig_tags = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   instance_count    = 1
 
   tags {

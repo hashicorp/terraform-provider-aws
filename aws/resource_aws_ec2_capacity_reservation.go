@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -35,8 +34,9 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 				Default:  false,
 			},
 			"end_date": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
 			"end_date_type": {
 				Type:     schema.TypeString,
@@ -119,7 +119,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("end_date"); ok {
 		t, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return fmt.Errorf("Error parsing capacity reservation end date: %s", err.Error())
+			return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
 		}
 		opts.EndDate = aws.Time(t)
 	}
@@ -166,7 +166,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error creating capacity reservation: %s", err)
+		return fmt.Errorf("Error creating EC2 Capacity Reservation: %s", err)
 	}
 	d.SetId(*out.CapacityReservation.CapacityReservationId)
 	return resourceAwsEc2CapacityReservationRead(d, meta)
@@ -180,23 +180,22 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		// TODO: Check if error is raised if capacity reservation has gone
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
-			d.SetId("")
-			return nil
-		}
-
-		// Some other error, report it
-		return err
+		return fmt.Errorf("Error describing EC2 Capacity Reservations: %s", err)
 	}
 
 	// If nothing was found, then return no state
 	if len(resp.CapacityReservations) == 0 {
+		log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
 	}
 
 	reservation := resp.CapacityReservations[0]
+
+	if aws.StringValue(reservation.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(reservation.State) != ec2.CapacityReservationStateExpired {
+		log.Printf("[WARN] EC2 Capacity Reservation (%s) no longer active, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("availability_zone", reservation.AvailabilityZone)
 	d.Set("ebs_optimized", reservation.EbsOptimized)
@@ -239,7 +238,7 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 		if v, ok := d.GetOk("end_date"); ok {
 			t, err := time.Parse(time.RFC3339, v.(string))
 			if err != nil {
-				return fmt.Errorf("Error parsing capacity reservation end date: %s", err.Error())
+				return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
 			}
 			opts.EndDate = aws.Time(t)
 		}
@@ -257,7 +256,7 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 
 	_, err := conn.ModifyCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error modifying capacity reservation: %s", err)
+		return fmt.Errorf("Error modifying EC2 Capacity Reservation: %s", err)
 	}
 	return resourceAwsEc2CapacityReservationRead(d, meta)
 }
@@ -271,7 +270,7 @@ func resourceAwsEc2CapacityReservationDelete(d *schema.ResourceData, meta interf
 
 	_, err := conn.CancelCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error cancelling capacity reservation: %s", err)
+		return fmt.Errorf("Error cancelling EC2 Capacity Reservation: %s", err)
 	}
 
 	return nil

@@ -27,7 +27,7 @@ The following arguments are supported:
 
 * `availability_zone` - (Required) The Availability Zone in which to create the Capacity Reservation.
 * `ebs_optimized` - (Optional) Indicates whether the Capacity Reservation supports EBS-optimized instances.
-* `end_date` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it.
+* `end_date` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 * `end_date_type` - (Optional) Indicates the way in which the Capacity Reservation ends. Specify either `unlimited` or `limited`.
 * `ephemeral_storage` - (Optional) Indicates whether the Capacity Reservation supports instances with temporary, block-level storage.
 * `instance_count` - (Required) The number of instances for which to reserve capacity.
