@@ -7,6 +7,7 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_glue_security_configuration` [GH-6288]
 * **New Resource:** `aws_iot_policy_attachment` [GH-5864]
 * **New Resource:** `aws_iot_thing_principal_attachment` [GH-5868]
 * **New Resource:** `aws_pinpoint_apns_sandbox_channel` [GH-6233]
