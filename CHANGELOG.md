@@ -40,6 +40,7 @@ BUG FIXES:
 * resource/aws_egress_only_internet_gateway: Improve eventual consistency logic during creation [GH-6190]
 * resource/aws_glue_crawler: Suppress `role` difference when using ARN [GH-6293]
 * resource/aws_iam_role_policy: Properly handle reading attributes into Terraform state after creation and update [GH-6304]
+* resource/aws_kinesis_firehose_delivery_stream: Properly recreate resource when updating `elasticsearch_configuration` `s3_backup_mode` [GH-6305]
 * resource/aws_nat_gateway: Remove `network_interface_id`, `private_ip`, and `public_ip` as configurable (they continue to be available as read-only attributes) [GH-6225]
 * resource/aws_network_acl: Properly handle ICMP code and type with IPv6 ICMP (protocol 58) [GH-6264]
 * resource/aws_network_acl_rule: Suppress `protocol` differences between name and number [GH-2454]
