@@ -140,12 +140,10 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 		opts.Tenancy = aws.String(v.(string))
 	}
 
-	restricted := meta.(*AWSClient).IsChinaCloud()
-	if !restricted {
-
+	if v, ok := d.GetOk("tags"); ok {
 		tagsSpec := make([]*ec2.TagSpecification, 0)
 
-		if v, ok := d.GetOk("tags"); ok {
+		if len(tagsSpec) > 0 {
 			tags := tagsFromMap(v.(map[string]interface{}))
 
 			spec := &ec2.TagSpecification{
@@ -155,9 +153,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 			}
 
 			tagsSpec = append(tagsSpec, spec)
-		}
 
-		if len(tagsSpec) > 0 {
 			opts.TagSpecifications = tagsSpec
 		}
 	}
@@ -216,15 +212,12 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).ec2conn
 
 	d.Partial(true)
-	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	if d.HasChange("tags") {
-		if !d.IsNewResource() || restricted {
-			if err := setTags(conn, d); err != nil {
-				return err
-			} else {
-				d.SetPartial("tags")
-			}
+		if err := setTags(conn, d); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
 		}
 	}
 
