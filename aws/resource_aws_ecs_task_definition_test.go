@@ -321,12 +321,15 @@ func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
-	var before ecs.TaskDefinition
-	var after ecs.TaskDefinition
+func TestAccAWSEcsTaskDefinition_changeForcesNewResource(t *testing.T) {
+	var first ecs.TaskDefinition
+	var second ecs.TaskDefinition
+	var third ecs.TaskDefinition
+	var fourth ecs.TaskDefinition
 
 	rString := acctest.RandString(8)
-	tdName := fmt.Sprintf("tf_acc_td_change_vol_forces_new_resource_%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_change_forces_new_resource_%s", rString)
+	resourceName := "aws_ecs_task_definition.keep"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -334,16 +337,50 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinition(tdName),
+				Config: testAccAWSEcsTaskDefinitionKeepOld(tdName, false, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &before),
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &first),
 				),
 			},
 			{
-				Config: testAccAWSEcsTaskDefinitionUpdatedVolume(tdName),
+				Config: testAccAWSEcsTaskDefinitionKeepOld(tdName, false, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &after),
-					testAccCheckEcsTaskDefinitionRecreated(t, &before, &after),
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &second),
+					testAccCheckEcsTaskDefinitionRecreated(t, &first, &second),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&first, ecs.TaskDefinitionStatusInactive),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskDefinitionKeepOld(tdName, true, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &second),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&second, ecs.TaskDefinitionStatusActive),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskDefinitionKeepOld(tdName, true, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &third),
+					testAccCheckEcsTaskDefinitionRecreated(t, &second, &third),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&second, ecs.TaskDefinitionStatusActive),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&third, ecs.TaskDefinitionStatusActive),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskDefinitionKeepOld(tdName, false, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &third),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&second, ecs.TaskDefinitionStatusActive),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&third, ecs.TaskDefinitionStatusActive),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskDefinitionKeepOld(tdName, false, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &fourth),
+					testAccCheckEcsTaskDefinitionRecreated(t, &third, &fourth),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&third, ecs.TaskDefinitionStatusInactive),
+					testAccCheckEcsTaskDefinitionRevisionStatus(&fourth, ecs.TaskDefinitionStatusActive),
 				),
 			},
 		},
@@ -455,8 +492,8 @@ func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
 				),
 			},
 			{
-				Config:    testAccAWSEcsTaskDefinition(tdName),
 				PreConfig: markTaskDefinitionInactive,
+				Config:    testAccAWSEcsTaskDefinition(tdName),
 				Check:     resource.TestCheckResourceAttr("aws_ecs_task_definition.jenkins", "revision", "2"), // should get re-created
 			},
 		},
@@ -724,6 +761,26 @@ func testAccCheckAWSEcsTaskDefinitionExists(name string, def *ecs.TaskDefinition
 	}
 }
 
+func testAccCheckEcsTaskDefinitionRevisionStatus(def *ecs.TaskDefinition, expectedStatus string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+
+		taskDefinitionArn := def.TaskDefinitionArn
+		out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
+			TaskDefinition: taskDefinitionArn,
+		})
+		if err != nil {
+			return err
+		}
+		status := aws.StringValue(out.TaskDefinition.Status)
+		if status != expectedStatus {
+			return fmt.Errorf("%s was expected to be %s but instead was %s", aws.StringValue(taskDefinitionArn), expectedStatus, status)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(def.Volumes) != 1 {
@@ -849,56 +906,25 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccAWSEcsTaskDefinitionUpdatedVolume(tdName string) string {
+func testAccAWSEcsTaskDefinitionKeepOld(tdName string, keep bool, cpu int) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_task_definition" "jenkins" {
+resource "aws_ecs_task_definition" "keep" {
   family = "%s"
-
+  keep_old_task_definitions = %t
   container_definitions = <<TASK_DEFINITION
 [
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"environment": [
-			{"name": "VARNAME", "value": "VARVAL"}
-		],
-		"essential": true,
-		"image": "jenkins",
-		"links": ["mongodb"],
-		"memory": 128,
-		"name": "jenkins",
-		"portMappings": [
-			{
-				"containerPort": 80,
-				"hostPort": 8080
-			}
-		]
-	},
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"essential": true,
-		"image": "mongodb",
-		"memory": 128,
-		"name": "mongodb",
-		"portMappings": [
-			{
-				"containerPort": 28017,
-				"hostPort": 28017
-			}
-		]
-	}
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": %d,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
 ]
 TASK_DEFINITION
-
-  volume {
-    name      = "jenkins-home"
-    host_path = "/ecs/jenkins"
-  }
 }
-`, tdName)
+`, tdName, keep, cpu)
 }
 
 func testAccAWSEcsTaskDefinitionArrays(tdName string) string {

@@ -112,6 +112,9 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
 * `tags` - (Optional) Key-value mapping of resource tags
+* `keep_old_task_definitions` - (Optional) Keep task definition revisions active when updating or destroying. Defaults to `false`.
+
+~> **NOTE**: `keep_old_task_definitions` must be set to `true` **before** making a change that would replace the old task definition revision.
 
 #### Volume Block Arguments
 

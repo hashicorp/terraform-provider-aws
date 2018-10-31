@@ -263,6 +263,12 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"keep_old_task_definitions": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -514,6 +520,10 @@ func resourceAwsEcsTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcsTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("keep_old_task_definitions"); ok && v.(bool) {
+		return nil
+	}
+
 	conn := meta.(*AWSClient).ecsconn
 
 	_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
