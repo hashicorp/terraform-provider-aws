@@ -44,7 +44,7 @@ The following arguments are supported:
 
 * `cloudwatch_encryption` - (Required) Configuration block containing encryption configuration for CloudWatch. Detailed below.
 * `job_bookmarks_encryption` - (Required) Configuration block containing encryption configuration for job bookmarks. Detailed below.
-* `s3_encryption` - (Required) Configuration block containing encryption configuration for S3 data. Detailed below.
+* `s3_encryption` - (Required) A `s3_encryption ` block as described below, which contains encryption configuration for S3 data.
 
 #### cloudwatch_encryption Argument Reference
 
