@@ -56,7 +56,7 @@ func testSweepGlueSecurityConfigurations(region string) error {
 			}
 		}
 
-		if output.NextToken == nil {
+		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
 
