@@ -65,7 +65,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Security configuration name
+* `id` - Glue security configuration name
 
 ## Import
 
