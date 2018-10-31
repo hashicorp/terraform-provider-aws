@@ -935,6 +935,14 @@
 			"versionExact": "v1.15.64"
 		},
 		{
+			"checksumSHA1": "t0B6j5VfubV4rBgyjh/BC31beAE=",
+			"path": "github.com/aws/aws-sdk-go/service/resourcegroups",
+			"revision": "34ab03ee1a2b90b3baf97ff666397c8fb9b8714b",
+			"revisionTime": "2018-10-26T20:14:28Z",
+			"version": "v1.15.64",
+			"versionExact": "v1.15.64"
+		},
+		{
 			"checksumSHA1": "vn3OhTeWgYQMFDZ+iRuNa1EzNg8=",
 			"path": "github.com/aws/aws-sdk-go/service/route53",
 			"revision": "34ab03ee1a2b90b3baf97ff666397c8fb9b8714b",
