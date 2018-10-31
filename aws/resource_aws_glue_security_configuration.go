@@ -255,13 +255,13 @@ func expandGlueJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncrypt
 }
 
 func expandGlueS3Encryptions(l []interface{}) []*glue.S3Encryption {
-	s3Encryptions := make([]*glue.S3Encryption, len(l))
+	s3Encryptions := make([]*glue.S3Encryption, 0)
 
-	for i, s3Encryption := range l {
+	for _, s3Encryption := range l {
 		if s3Encryption == nil {
 			continue
 		}
-		s3Encryptions[i] = expandGlueS3Encryption(s3Encryption.(map[string]interface{}))
+		s3Encryptions = append(s3Encryptions, expandGlueS3Encryption(s3Encryption.(map[string]interface{})))
 	}
 
 	return s3Encryptions
@@ -320,13 +320,13 @@ func flattenGlueJobBookmarksEncryption(jobBookmarksEncryption *glue.JobBookmarks
 }
 
 func flattenGlueS3Encryptions(s3Encryptions []*glue.S3Encryption) []interface{} {
-	l := make([]interface{}, len(s3Encryptions))
+	l := make([]interface{}, 0)
 
-	for i, s3Encryption := range s3Encryptions {
+	for _, s3Encryption := range s3Encryptions {
 		if s3Encryption == nil {
 			continue
 		}
-		l[i] = flattenGlueS3Encryption(s3Encryption)
+		l = append(l, flattenGlueS3Encryption(s3Encryption))
 	}
 
 	return l
