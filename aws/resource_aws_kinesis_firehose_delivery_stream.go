@@ -1192,6 +1192,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 						"s3_backup_mode": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Optional: true,
 							Default:  "FailedDocumentsOnly",
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
