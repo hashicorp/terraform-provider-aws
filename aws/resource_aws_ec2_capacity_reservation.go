@@ -187,7 +187,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 
 	reservation := resp.CapacityReservations[0]
 
-	if aws.StringValue(reservation.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(reservation.State) != ec2.CapacityReservationStateExpired {
+	if aws.StringValue(reservation.State) == ec2.CapacityReservationStateCancelled || aws.StringValue(reservation.State) == ec2.CapacityReservationStateExpired {
 		log.Printf("[WARN] EC2 Capacity Reservation (%s) no longer active, removing from state", d.Id())
 		d.SetId("")
 		return nil
