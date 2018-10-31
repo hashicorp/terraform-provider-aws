@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,73 +11,62 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-// func init() {
-// 	resource.AddTestSweepers("aws_capacity_reservation", &resource.Sweeper{
-// 		Name: "aws_capacity_reservation",
-// 		F:    testSweepCapacityReservations,
-// 	})
-// }
+func init() {
+	resource.AddTestSweepers("aws_ec2_capacity_reservation", &resource.Sweeper{
+		Name: "aws_ec2_capacity_reservation",
+		F:    testSweepEc2CapacityReservations,
+	})
+}
 
-// func testSweepInstances(region string) error {
-// 	client, err := sharedClientForRegion(region)
-// 	if err != nil {
-// 		return fmt.Errorf("error getting client: %s", err)
-// 	}
-// 	conn := client.(*AWSClient).ec2conn
+func testSweepEc2CapacityReservations(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
 
-// 	err = conn.DescribeInstancesPages(&ec2.DescribeInstancesInput{}, func(page *ec2.DescribeInstancesOutput, isLast bool) bool {
-// 		if len(page.Reservations) == 0 {
-// 			log.Print("[DEBUG] No EC2 Instances to sweep")
-// 			return false
-// 		}
+	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{})
 
-// 		for _, reservation := range page.Reservations {
-// 			for _, instance := range reservation.Instances {
-// 				var nameTag string
-// 				id := aws.StringValue(instance.InstanceId)
+	if err != nil {
+		return fmt.Errorf("Error retrieving capacity reservations: %s", err)
+	}
 
-// 				for _, instanceTag := range instance.Tags {
-// 					if aws.StringValue(instanceTag.Key) == "Name" {
-// 						nameTag = aws.StringValue(instanceTag.Value)
-// 						break
-// 					}
-// 				}
+	if len(resp.CapacityReservations) == 0 {
+		log.Print("[DEBUG] No capacity reservations to sweep")
+		return nil
+	}
 
-// 				if !strings.HasPrefix(nameTag, "tf-acc-test-") {
-// 					log.Printf("[INFO] Skipping EC2 Instance: %s", id)
-// 					continue
-// 				}
+	for _, r := range resp.CapacityReservations {
+		if *r.State != "cancelled" {
+			id := aws.StringValue(r.CapacityReservationId)
 
-// 				log.Printf("[INFO] Terminating EC2 Instance: %s", id)
-// 				err := awsTerminateInstance(conn, id, 5*time.Minute)
-// 				if err != nil {
-// 					log.Printf("[ERROR] Error terminating EC2 Instance (%s): %s", id, err)
-// 				}
-// 			}
-// 		}
-// 		return !isLast
-// 	})
-// 	if err != nil {
-// 		if testSweepSkipSweepError(err) {
-// 			log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, err)
-// 			return nil
-// 		}
-// 		return fmt.Errorf("Error retrieving EC2 Instances: %s", err)
-// 	}
+			log.Printf("[INFO] Cancelling capacity reservation EC2 Instance: %s", id)
 
-// 	return nil
-// }
+			opts := &ec2.CancelCapacityReservationInput{
+				CapacityReservationId: aws.String(id),
+			}
 
-func TestAccAWSCapacityReservation_importBasic(t *testing.T) {
-	resourceName := "aws_capacity_reservation.default"
+			_, err := conn.CancelCapacityReservation(opts)
+
+			if err != nil {
+				log.Printf("[ERROR] Error cancelling capacity reservation (%s): %s", id, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func TestAccAWSEc2CapacityReservation_importBasic(t *testing.T) {
+	resourceName := "aws_ec2_capacity_reservation.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCapacityReservationDestroy,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityReservationConfig,
+				Config: testAccEc2CapacityReservationConfig,
 			},
 			{
 				ResourceName:      resourceName,
@@ -87,62 +77,62 @@ func TestAccAWSCapacityReservation_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCapacityReservation_basic(t *testing.T) {
+func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCapacityReservationDestroy,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityReservationConfig,
+				Config: testAccEc2CapacityReservationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityReservationExists("aws_capacity_reservation.default", &cr),
-					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "instance_type", "t2.micro"),
+					testAccCheckEc2CapacityReservationExists("aws_ec2_capacity_reservation.default", &cr),
+					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "instance_type", "t2.micro"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSCapacityReservation_endDate(t *testing.T) {
+func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCapacityReservationDestroy,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityReservationConfig_endDate,
+				Config: testAccEc2CapacityReservationConfig_endDate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityReservationExists("aws_capacity_reservation.default", &cr),
-					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "end_date", "2019-10-31T07:39:57Z"),
-					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "end_date_type", "limited"),
+					testAccCheckEc2CapacityReservationExists("aws_ec2_capacity_reservation.default", &cr),
+					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "end_date", "2019-10-31T07:39:57Z"),
+					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "end_date_type", "limited"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSCapacityReservation_tags(t *testing.T) {
+func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCapacityReservationDestroy,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityReservationConfig_tags,
+				Config: testAccEc2CapacityReservationConfig_tags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityReservationExists("aws_capacity_reservation.default", &cr),
-					resource.TestCheckResourceAttr("aws_capacity_reservation.default", "instance_type", "t2.micro"),
+					testAccCheckEc2CapacityReservationExists("aws_ec2_capacity_reservation.default", &cr),
+					resource.TestCheckResourceAttr("aws_ec2_capacity_reservation.default", "instance_type", "t2.micro"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCapacityReservationExists(resourceName string, cr *ec2.CapacityReservation) resource.TestCheckFunc {
+func testAccCheckEc2CapacityReservationExists(resourceName string, cr *ec2.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -171,11 +161,11 @@ func testAccCheckCapacityReservationExists(resourceName string, cr *ec2.Capacity
 	}
 }
 
-func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
+func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_capacity_reservation" {
+		if rs.Type != "aws_ec2_capacity_reservation" {
 			continue
 		}
 
@@ -198,8 +188,8 @@ func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
 
 }
 
-const testAccCapacityReservationConfig = `
-resource "aws_capacity_reservation" "default" {
+const testAccEc2CapacityReservationConfig = `
+resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
   availability_zone = "us-west-2a"
@@ -207,8 +197,8 @@ resource "aws_capacity_reservation" "default" {
 }
 `
 
-const testAccCapacityReservationConfig_endDate = `
-resource "aws_capacity_reservation" "default" {
+const testAccEc2CapacityReservationConfig_endDate = `
+resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
   availability_zone = "us-west-2a"
@@ -218,8 +208,8 @@ resource "aws_capacity_reservation" "default" {
 }
 `
 
-const testAccCapacityReservationConfig_tags = `
-resource "aws_capacity_reservation" "default" {
+const testAccEc2CapacityReservationConfig_tags = `
+resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"
   availability_zone = "us-west-2a"
