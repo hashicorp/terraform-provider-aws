@@ -93,13 +93,10 @@ func resourceAwsEcsService() *schema.Resource {
 			"deployment_maximum_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Default:  200,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
+					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon && new == "200" {
 						return true
-					} else { // must be SchedulingStrategyReplica
-						if !d.IsNewResource() && new == "0" {
-							return true
-						}
 					}
 					return false
 				},
@@ -108,8 +105,9 @@ func resourceAwsEcsService() *schema.Resource {
 			"deployment_minimum_healthy_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Default:  100,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if !d.IsNewResource() && new == "0" {
+					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon && new == "100" {
 						return true
 					}
 					return false
@@ -329,24 +327,27 @@ func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*s
 func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
+	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
+	schedulingStrategy := d.Get("scheduling_strategy").(string)
+
 	input := ecs.CreateServiceInput{
-		ServiceName:    aws.String(d.Get("name").(string)),
-		TaskDefinition: aws.String(d.Get("task_definition").(string)),
-		DesiredCount:   aws.Int64(int64(d.Get("desired_count").(int))),
-		ClientToken:    aws.String(resource.UniqueId()),
+		ClientToken:        aws.String(resource.UniqueId()),
+		SchedulingStrategy: aws.String(schedulingStrategy),
+		ServiceName:        aws.String(d.Get("name").(string)),
+		TaskDefinition:     aws.String(d.Get("task_definition").(string)),
 	}
 
-	deploymentConfiguration := &ecs.DeploymentConfiguration{}
-
-	if v, ok := d.GetOk("deployment_maximum_percent"); ok {
-		deploymentConfiguration.MaximumPercent = aws.Int64(int64(v.(int)))
+	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
+		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
+		}
+	} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
+		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
+			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
+		}
+		input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
 	}
-
-	if v, ok := d.GetOk("deployment_minimum_healthy_percent"); ok {
-		deploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(v.(int)))
-	}
-
-	input.DeploymentConfiguration = deploymentConfiguration
 
 	if v, ok := d.GetOk("cluster"); ok {
 		input.Cluster = aws.String(v.(string))
@@ -358,14 +359,6 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
-	}
-
-	schedulingStrategy := d.Get("scheduling_strategy").(string)
-	input.SchedulingStrategy = aws.String(schedulingStrategy)
-	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
-		// unset these if DAEMON
-		input.DeploymentConfiguration.MaximumPercent = nil
-		input.DesiredCount = nil
 	}
 
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
@@ -777,11 +770,26 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
-	// Automatically ignore desired count if DAEMON
-	if schedulingStrategy != ecs.SchedulingStrategyDaemon && d.HasChange("desired_count") {
-		_, n := d.GetChange("desired_count")
-		input.DesiredCount = aws.Int64(int64(n.(int)))
+
+	if schedulingStrategy == ecs.SchedulingStrategyDaemon {
+		if d.HasChange("deployment_minimum_healthy_percent") {
+			input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+				MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
+			}
+		}
+	} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
+		if d.HasChange("desired_count") {
+			input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+		}
+
+		if d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent") {
+			input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+				MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
+				MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
+			}
+		}
 	}
+
 	if d.HasChange("health_check_grace_period_seconds") {
 		_, n := d.GetChange("health_check_grace_period_seconds")
 		input.HealthCheckGracePeriodSeconds = aws.Int64(int64(n.(int)))
@@ -789,19 +797,6 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("task_definition") {
 		_, n := d.GetChange("task_definition")
 		input.TaskDefinition = aws.String(n.(string))
-	}
-
-	if schedulingStrategy == ecs.SchedulingStrategyReplica && (d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent")) {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-		}
-	}
-
-	if schedulingStrategy == ecs.SchedulingStrategyDaemon && d.HasChange("deployment_minimum_healthy_percent") {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-		}
 	}
 
 	if d.HasChange("network_configuration") {
