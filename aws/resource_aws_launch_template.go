@@ -57,6 +57,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 
 			"default_version": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 
@@ -676,6 +677,25 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Partial(false)
+
+	if v, ok := d.GetOk("default_version"); ok {
+		d.Partial(true)
+
+		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+			ClientToken:      aws.String(resource.UniqueId()),
+			LaunchTemplateId: aws.String(d.Id()),
+			DefaultVersion:   aws.String(v.(string)),
+		}
+
+		_, modifyErr := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+		if modifyErr != nil {
+			return modifyErr
+		} else {
+			d.SetPartial("default_version")
+		}
+
+		d.Partial(false)
+	}
 
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
