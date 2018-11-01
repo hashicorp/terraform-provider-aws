@@ -56,9 +56,17 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"default_version": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"update_default_version"},
+			},
+
+			"update_default_version": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"default_version"},
 			},
 
 			"latest_version": {
@@ -670,32 +678,23 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 
 	d.Partial(true)
 
-	if err := setTags(conn, d); err != nil {
-		return err
+	if tagsErr := setTags(conn, d); tagsErr != nil {
+		return tagsErr
 	} else {
 		d.SetPartial("tags")
 	}
 
 	d.Partial(false)
 
-	if v, ok := d.GetOk("default_version"); ok {
-		d.Partial(true)
+	d.Partial(true)
 
-		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
-			ClientToken:      aws.String(resource.UniqueId()),
-			LaunchTemplateId: aws.String(d.Id()),
-			DefaultVersion:   aws.String(v.(string)),
-		}
-
-		_, modifyErr := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
-		if modifyErr != nil {
-			return modifyErr
-		} else {
-			d.SetPartial("default_version")
-		}
-
-		d.Partial(false)
+	if dvErr := setDefaultVersion(conn, d); dvErr != nil {
+		return dvErr
+	} else {
+		d.SetPartial("default_version")
 	}
+
+	d.Partial(false)
 
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
@@ -1377,4 +1376,42 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 	}
 
 	return placement
+}
+
+func setDefaultVersion(conn *ec2.EC2, d *schema.ResourceData) error {
+	var defaultVersion int64
+	if v, ok := d.GetOk("update_default_version"); ok && v.(bool) {
+		describeLaunchTemplateVersionsOpts := &ec2.DescribeLaunchTemplateVersionsInput{
+			LaunchTemplateId: aws.String(d.Id()),
+			MaxResults:       aws.Int64(1),
+		}
+
+		resp, err := conn.DescribeLaunchTemplateVersions(describeLaunchTemplateVersionsOpts)
+		if err != nil {
+			return err
+		}
+
+		defaultVersion = *resp.LaunchTemplateVersions[0].VersionNumber
+	} else if d.HasChange("default_version") {
+		if v, ok := d.GetOk("default_version"); ok {
+			defaultVersion = v.(int64)
+		} else {
+			defaultVersion = 1
+		}
+	}
+
+	if defaultVersion > 0 {
+		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+			ClientToken:      aws.String(resource.UniqueId()),
+			LaunchTemplateId: aws.String(d.Id()),
+			DefaultVersion:   aws.String(strconv.FormatInt(defaultVersion, 10)),
+		}
+
+		_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
