@@ -5,6 +5,10 @@ NOTES:
 * resource/aws_lb_listener: This resource will now sort the API response based on action ordering. If necessary, sorting your configuration based on `order` should resolve any plan difference.
 * resource/aws_lb_listener_rule: This resource will now sort the API response based on action ordering. If necessary, sorting your configuration based on `order` should resolve any plan difference.
 
+ENHANCEMENTS:
+
+* resource/aws_launch_configuration: Add `capacity_reservation_specification` argument [GH-6325]
+
 BUG FIXES:
 
 * resource/aws_lb_listener: Prevent panics with actions deleted outside Terraform [GH-6319]
