@@ -1,4 +1,10 @@
 ## 1.43.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lb_listener: Prevent panics with actions deleted outside Terraform [GH-6319]
+* resource/aws_lb_listener_rule: Prevent panics with actions deleted outside Terraform [GH-6319]
+
 ## 1.42.0 (October 31, 2018)
 
 NOTES:
