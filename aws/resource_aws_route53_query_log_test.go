@@ -25,12 +25,12 @@ func TestAccAWSRoute53QueryLog_Basic(t *testing.T) {
 	rName := fmt.Sprintf("%s-%s", t.Name(), acctest.RandString(5))
 
 	var queryLoggingConfig route53.QueryLoggingConfig
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
@@ -53,16 +53,16 @@ func TestAccAWSRoute53QueryLog_Import(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	rName := fmt.Sprintf("%s-%s", t.Name(), acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

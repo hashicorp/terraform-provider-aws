@@ -119,13 +119,8 @@ resource "aws_s3_bucket" "bucket" {
     }
 
     transition {
-      days = 15
-      storage_class = "ONEZONE_IA"
-    }
-
-    transition {
       days          = 30
-      storage_class = "STANDARD_IA"
+      storage_class = "STANDARD_IA" # or "ONEZONE_IA"
     }
 
     transition {
@@ -320,7 +315,7 @@ The following arguments are supported:
 * `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name.
 * `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`.
 * `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Defaults to "private".
-* `policy` - (Optional) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy.
+* `policy` - (Optional) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
 
 * `tags` - (Optional) A mapping of tags to assign to the bucket.
 * `force_destroy` - (Optional, Default:false ) A boolean that indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
@@ -409,10 +404,19 @@ The `replication_configuration` object supports the following:
 The `rules` object supports the following:
 
 * `id` - (Optional) Unique identifier for the rule.
+* `priority` - (Optional) The priority associated with the rule.
 * `destination` - (Required) Specifies the destination for the rule (documented below).
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
-* `prefix` - (Required) Object keyname prefix identifying one or more objects to which the rule applies. Set as an empty string to replicate the whole bucket.
+* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
+* `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
+
+~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
+With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
+Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
+* For a specific rule, `prefix` conflicts with `filter`
+* If any rule has `filter` specified then they all must
+* `priority` is optional (with a default value of `0`) but must be unique between multiple rules
 
 The `destination` object supports the following:
 
@@ -420,6 +424,8 @@ The `destination` object supports the following:
 * `storage_class` - (Optional) The class of storage used to store the object.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
+* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
+* `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
 
 The `source_selection_criteria` object supports the following:
 
@@ -429,6 +435,12 @@ The `source_selection_criteria` object supports the following:
 The `sse_kms_encrypted_objects` object supports the following:
 
 * `enabled` - (Required) Boolean which indicates if this criteria is enabled.
+
+The `filter` object supports the following:
+
+* `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies.
+* `tags` - (Optional)  A mapping of tags that identifies subset of objects to which the rule applies.
+The rule applies only to objects having all the tags in its tagset.
 
 The `server_side_encryption_configuration` object supports the following:
 
@@ -442,6 +454,10 @@ The `apply_server_side_encryption_by_default` object supports the following:
 
 * `sse_algorithm` - (required) The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
 * `kms_master_key_id` - (optional) The AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
+
+The `access_control_translation` object supports the following:
+
+* `owner` - (Required) The override value for the owner on replicated objects. Currently only `Destination` is supported.
 
 ## Attributes Reference
 

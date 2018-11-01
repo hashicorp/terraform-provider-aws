@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "waf-regional" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName    // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "WAF Regional" // ServiceID is a unique identifer of a specific service
+	ServiceName = "waf-regional" // Name of service.
+	EndpointsID = ServiceName    // ID to lookup a service endpoint with.
+	ServiceID   = "WAF Regional" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the WAFRegional client with a session.

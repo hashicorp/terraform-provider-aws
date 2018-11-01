@@ -16,7 +16,7 @@ const opCreateDeliveryStream = "CreateDeliveryStream"
 // CreateDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDeliveryStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -154,7 +154,7 @@ const opDeleteDeliveryStream = "DeleteDeliveryStream"
 // DeleteDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDeliveryStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -247,7 +247,7 @@ const opDescribeDeliveryStream = "DescribeDeliveryStream"
 // DescribeDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDeliveryStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -329,7 +329,7 @@ const opListDeliveryStreams = "ListDeliveryStreams"
 // ListDeliveryStreamsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeliveryStreams operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -411,7 +411,7 @@ const opListTagsForDeliveryStream = "ListTagsForDeliveryStream"
 // ListTagsForDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForDeliveryStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -497,7 +497,7 @@ const opPutRecord = "PutRecord"
 // PutRecordRequest generates a "aws/request.Request" representing the
 // client's request for the PutRecord operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -618,7 +618,7 @@ const opPutRecordBatch = "PutRecordBatch"
 // PutRecordBatchRequest generates a "aws/request.Request" representing the
 // client's request for the PutRecordBatch operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -763,7 +763,7 @@ const opTagDeliveryStream = "TagDeliveryStream"
 // TagDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the TagDeliveryStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -862,7 +862,7 @@ const opUntagDeliveryStream = "UntagDeliveryStream"
 // UntagDeliveryStreamRequest generates a "aws/request.Request" representing the
 // client's request for the UntagDeliveryStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -955,7 +955,7 @@ const opUpdateDestination = "UpdateDestination"
 // UpdateDestinationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDestination operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1282,6 +1282,8 @@ type CreateDeliveryStreamInput struct {
 	RedshiftDestinationConfiguration *RedshiftDestinationConfiguration `type:"structure"`
 
 	// [Deprecated] The destination in Amazon S3. You can specify only one destination.
+	//
+	// Deprecated: S3DestinationConfiguration has been deprecated
 	S3DestinationConfiguration *S3DestinationConfiguration `deprecated:"true" type:"structure"`
 
 	// The destination in Splunk. You can specify only one destination.
@@ -1549,7 +1551,7 @@ type DeliveryStreamDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time that the delivery stream was created.
-	CreateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreateTimestamp *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the delivery stream. For more information,
 	// see Amazon Resource Names (ARNs) and AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
@@ -1588,7 +1590,7 @@ type DeliveryStreamDescription struct {
 	HasMoreDestinations *bool `type:"boolean" required:"true"`
 
 	// The date and time that the delivery stream was last updated.
-	LastUpdateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdateTimestamp *time.Time `type:"timestamp"`
 
 	// If the DeliveryStreamType parameter is KinesisStreamAsSource, a SourceDescription
 	// object describing the source Kinesis data stream.
@@ -3131,7 +3133,7 @@ type KinesisStreamSourceDescription struct {
 
 	// Kinesis Data Firehose starts retrieving records from the Kinesis data stream
 	// starting with this time stamp.
-	DeliveryStartTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	DeliveryStartTimestamp *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the source Kinesis data stream. For more
 	// information, see Amazon Kinesis Data Streams ARN Format (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kinesis-streams).
@@ -5822,6 +5824,8 @@ type UpdateDestinationInput struct {
 	RedshiftDestinationUpdate *RedshiftDestinationUpdate `type:"structure"`
 
 	// [Deprecated] Describes an update for a destination in Amazon S3.
+	//
+	// Deprecated: S3DestinationUpdate has been deprecated
 	S3DestinationUpdate *S3DestinationUpdate `deprecated:"true" type:"structure"`
 
 	// Describes an update for a destination in Splunk.

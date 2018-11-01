@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -60,9 +61,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8196-L8201
 					value := v.(string)
@@ -158,7 +160,24 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		RoleName:            aws.String(roleName),
 	}
 
-	_, err := iamconn.AddRoleToInstanceProfile(request)
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		var err error
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+		// IAM unfortunately does not provide a better error code or message for eventual consistency
+		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
+		// NoSuchEntity: The request was rejected because it referenced an entity that does not exist. The error message describes the entity. HTTP Status Code: 404
+		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || isAWSErr(err, "NoSuchEntity", "The role with name") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
+	}
+
 	return err
 }
 
@@ -305,6 +324,9 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 		return err
 	}
 	if err := d.Set("arn", result.Arn); err != nil {
+		return err
+	}
+	if err := d.Set("create_date", result.CreateDate.Format(time.RFC3339)); err != nil {
 		return err
 	}
 	if err := d.Set("path", result.Path); err != nil {

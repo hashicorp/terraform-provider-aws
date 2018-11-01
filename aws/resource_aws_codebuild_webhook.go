@@ -84,6 +84,13 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	project := resp.Projects[0]
+
+	if project.Webhook == nil {
+		log.Printf("[WARN] CodeBuild Project %q webhook not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("branch_filter", project.Webhook.BranchFilter)
 	d.Set("payload_url", project.Webhook.PayloadUrl)
 	d.Set("project_name", project.Name)

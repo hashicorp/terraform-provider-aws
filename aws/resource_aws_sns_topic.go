@@ -27,10 +27,10 @@ var SNSAttributeMap = map[string]string{
 	"lambda_failure_feedback_role_arn":    "LambdaFailureFeedbackRoleArn",
 	"lambda_success_feedback_role_arn":    "LambdaSuccessFeedbackRoleArn",
 	"lambda_success_feedback_sample_rate": "LambdaSuccessFeedbackSampleRate",
-	"policy":                           "Policy",
-	"sqs_failure_feedback_role_arn":    "SQSFailureFeedbackRoleArn",
-	"sqs_success_feedback_role_arn":    "SQSSuccessFeedbackRoleArn",
-	"sqs_success_feedback_sample_rate": "SQSSuccessFeedbackSampleRate",
+	"policy":                              "Policy",
+	"sqs_failure_feedback_role_arn":       "SQSFailureFeedbackRoleArn",
+	"sqs_success_feedback_role_arn":       "SQSSuccessFeedbackRoleArn",
+	"sqs_success_feedback_sample_rate":    "SQSSuccessFeedbackSampleRate",
 }
 
 func resourceAwsSnsTopic() *schema.Resource {
@@ -52,9 +52,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -64,7 +65,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -75,7 +76,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         false,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -209,7 +210,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set(terraformAttrName, attrmap[snsAttrName])
 		}
 	} else {
-		for terraformAttrName, _ := range SNSAttributeMap {
+		for terraformAttrName := range SNSAttributeMap {
 			d.Set(terraformAttrName, "")
 		}
 	}

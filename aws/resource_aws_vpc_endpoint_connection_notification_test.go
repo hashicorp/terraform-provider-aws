@@ -13,16 +13,38 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSVpcEndpointConnectionNotification_importBasic(t *testing.T) {
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_vpc_endpoint_connection_notification.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointConnectionNotificationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointConnectionNotificationBasicConfig(lbName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpc_endpoint_connection_notification.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConnectionNotificationBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointConnectionNotificationExists("aws_vpc_endpoint_connection_notification.foo"),
@@ -31,7 +53,7 @@ func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "notification_type", "Topic"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConnectionNotificationModifiedConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointConnectionNotificationExists("aws_vpc_endpoint_connection_notification.foo"),

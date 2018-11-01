@@ -80,6 +80,50 @@ func TestIgnoringTags(t *testing.T) {
 	}
 }
 
+func TestTagsMapToHash(t *testing.T) {
+	cases := []struct {
+		Left, Right map[string]interface{}
+		MustBeEqual bool
+	}{
+		{
+			Left:        map[string]interface{}{},
+			Right:       map[string]interface{}{},
+			MustBeEqual: true,
+		},
+		{
+			Left: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Right: map[string]interface{}{
+				"bar": "baz",
+				"foo": "bar",
+			},
+			MustBeEqual: true,
+		},
+		{
+			Left: map[string]interface{}{
+				"foo": "bar",
+			},
+			Right: map[string]interface{}{
+				"bar": "baz",
+			},
+			MustBeEqual: false,
+		},
+	}
+
+	for i, tc := range cases {
+		l := tagsMapToHash(tc.Left)
+		r := tagsMapToHash(tc.Right)
+		if tc.MustBeEqual && (l != r) {
+			t.Fatalf("%d: Hashes don't match", i)
+		}
+		if !tc.MustBeEqual && (l == r) {
+			t.Logf("%d: Hashes match", i)
+		}
+	}
+}
+
 // testAccCheckTags can be used to check the tags on a resource.
 func testAccCheckTags(
 	ts *[]*ec2.Tag, key string, value string) resource.TestCheckFunc {

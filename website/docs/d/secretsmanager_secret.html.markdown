@@ -43,3 +43,4 @@ data "aws_secretsmanager_secret" "by-name" {
 * `rotation_lambda_arn` - Rotation Lambda function Amazon Resource Name (ARN) if rotation is enabled.
 * `rotation_rules` - Rotation rules if rotation is enabled.
 * `tags` - Tags of the secret.
+* `policy` - The resource-based policy document that's attached to the secret.

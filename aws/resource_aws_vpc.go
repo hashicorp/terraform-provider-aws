@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsVpc() *schema.Resource {
@@ -21,6 +23,7 @@ func resourceAwsVpc() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcInstanceImport,
 		},
+		CustomizeDiff: resourceAwsVpcCustomizeDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsVpcMigrateState,
@@ -34,10 +37,10 @@ func resourceAwsVpc() *schema.Resource {
 			},
 
 			"instance_tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.TenancyDefault,
+				ValidateFunc: validation.StringInSlice([]string{ec2.TenancyDefault, ec2.TenancyDedicated}, false),
 			},
 
 			"enable_dns_hostnames": {
@@ -105,6 +108,11 @@ func resourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -112,15 +120,11 @@ func resourceAwsVpc() *schema.Resource {
 
 func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	instance_tenancy := "default"
-	if v, ok := d.GetOk("instance_tenancy"); ok {
-		instance_tenancy = v.(string)
-	}
 
 	// Create the VPC
 	createOpts := &ec2.CreateVpcInput{
 		CidrBlock:                   aws.String(d.Get("cidr_block").(string)),
-		InstanceTenancy:             aws.String(instance_tenancy),
+		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 	}
 
@@ -178,6 +182,16 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
+
+	// ARN
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	// Tags
 	d.Set("tags", tagsToMap(vpc.Tags))
@@ -256,26 +270,11 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
 	}
 
-	// Get the main routing table for this VPC
-	// Really Ugly need to make this better - rmenn
-	filter1 := &ec2.Filter{
-		Name:   aws.String("association.main"),
-		Values: []*string{aws.String("true")},
-	}
-	filter2 := &ec2.Filter{
-		Name:   aws.String("vpc-id"),
-		Values: []*string{aws.String(d.Id())},
-	}
-	describeRouteOpts := &ec2.DescribeRouteTablesInput{
-		Filters: []*ec2.Filter{filter1, filter2},
-	}
-	routeResp, err := conn.DescribeRouteTables(describeRouteOpts)
+	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, vpcid)
 	if err != nil {
-		return err
+		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}
-	if v := routeResp.RouteTables; len(v) > 0 {
-		d.Set("main_route_table_id", *v[0].RouteTableId)
-	}
+	d.Set("main_route_table_id", routeTableId)
 
 	if err := resourceAwsVpcSetDefaultNetworkAcl(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Network ACL: %s", err)
@@ -397,7 +396,7 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if toAssign {
 			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-				VpcId: &vpcid,
+				VpcId:                       &vpcid,
 				AmazonProvidedIpv6CidrBlock: aws.Bool(toAssign),
 			}
 			log.Printf("[INFO] Enabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
@@ -452,6 +451,21 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		d.SetPartial("assign_generated_ipv6_cidr_block")
 	}
 
+	if d.HasChange("instance_tenancy") && !d.IsNewResource() {
+		modifyOpts := &ec2.ModifyVpcTenancyInput{
+			VpcId:           aws.String(vpcid),
+			InstanceTenancy: aws.String(d.Get("instance_tenancy").(string)),
+		}
+		log.Printf(
+			"[INFO] Modifying instance_tenancy vpc attribute for %s: %#v",
+			d.Id(), modifyOpts)
+		if _, err := conn.ModifyVpcTenancy(modifyOpts); err != nil {
+			return err
+		}
+
+		d.SetPartial("instance_tenancy")
+	}
+
 	if err := setTags(conn, d); err != nil {
 		return err
 	} else {
@@ -490,6 +504,17 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return resource.NonRetryableError(fmt.Errorf("Error deleting VPC: %s", err))
 	})
+}
+
+func resourceAwsVpcCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChange("instance_tenancy") {
+		old, new := diff.GetChange("instance_tenancy")
+		if old.(string) != ec2.TenancyDedicated || new.(string) != ec2.TenancyDefault {
+			diff.ForceNew("instance_tenancy")
+		}
+	}
+
+	return nil
 }
 
 // VPCStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
@@ -632,6 +657,33 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 	return nil
 }
 
+func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
+	filter1 := &ec2.Filter{
+		Name:   aws.String("association.main"),
+		Values: []*string{aws.String("true")},
+	}
+	filter2 := &ec2.Filter{
+		Name:   aws.String("vpc-id"),
+		Values: []*string{aws.String(vpcid)},
+	}
+
+	findOpts := &ec2.DescribeRouteTablesInput{
+		Filters: []*ec2.Filter{filter1, filter2},
+	}
+
+	resp, err := conn.DescribeRouteTables(findOpts)
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
+		return "", fmt.Errorf("Main Route table not found")
+	}
+
+	// There Can Be Only 1 Main Route Table for a VPC
+	return aws.StringValue(resp.RouteTables[0].RouteTableId), nil
+}
+
 func resourceAwsVpcInstanceImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("assign_generated_ipv6_cidr_block", false)
@@ -649,4 +701,34 @@ func awsVpcDescribeVpcAttribute(attribute string, vpcId string, conn *ec2.EC2) (
 	}
 
 	return resp, nil
+}
+
+// vpcDescribe returns EC2 API information about the specified VPC.
+// If the VPC doesn't exist, return nil.
+func vpcDescribe(conn *ec2.EC2, vpcId string) (*ec2.Vpc, error) {
+	resp, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
+		VpcIds: aws.StringSlice([]string{vpcId}),
+	})
+	if err != nil {
+		if !isAWSErr(err, "InvalidVpcID.NotFound", "") {
+			return nil, err
+		}
+		resp = nil
+	}
+
+	if resp == nil {
+		return nil, nil
+	}
+
+	n := len(resp.Vpcs)
+	switch n {
+	case 0:
+		return nil, nil
+
+	case 1:
+		return resp.Vpcs[0], nil
+
+	default:
+		return nil, fmt.Errorf("Found %d VPCs for %s, expected 1", n, vpcId)
+	}
 }

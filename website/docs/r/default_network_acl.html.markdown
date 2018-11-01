@@ -135,7 +135,7 @@ valid network mask.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ### Managing Subnets in the Default Network ACL
 
@@ -159,6 +159,14 @@ as those two Subnets have been orphaned by the now destroyed network acl and thu
 adopted by the Default Network ACL. In order to avoid a reoccurring plan, they
 will need to be reassigned, destroyed, or added to the `subnet_ids` attribute of
 the `aws_default_network_acl` entry.
+
+As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
+
+```hcl
+lifecycle {
+    ignore_changes = ["subnet_ids"]
+}
+ ```
 
 ### Removing `aws_default_network_acl` from your configuration
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,6 +21,7 @@ func init() {
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
+			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
 			"aws_vpn_gateway",
@@ -41,6 +43,7 @@ func testSweepVPCs(region string) error {
 				Name: aws.String("tag-value"),
 				Values: []*string{
 					aws.String("terraform-testacc-*"),
+					aws.String("tf-acc-test-*"),
 				},
 			},
 		},
@@ -60,24 +63,56 @@ func testSweepVPCs(region string) error {
 	}
 
 	for _, vpc := range resp.Vpcs {
-		// delete the vpc
-		_, err := conn.DeleteVpc(&ec2.DeleteVpcInput{
+		input := &ec2.DeleteVpcInput{
 			VpcId: vpc.VpcId,
+		}
+		log.Printf("[DEBUG] Deleting VPC: %s", input)
+
+		// Handle EC2 eventual consistency
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteVpc(input)
+			if isAWSErr(err, "DependencyViolation", "") {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
 		})
+
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting VPC (%s): %s",
-				*vpc.VpcId, err)
+			return fmt.Errorf("Error deleting VPC (%s): %s", aws.StringValue(vpc.VpcId), err)
 		}
 	}
 
 	return nil
 }
 
+func TestAccAWSVpc_importBasic(t *testing.T) {
+	resourceName := "aws_vpc.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpc_basic(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -89,10 +124,16 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(
 						"aws_vpc.foo", "default_route_table_id"),
+					resource.TestCheckResourceAttrSet(
+						"aws_vpc.foo", "main_route_table_id"),
 					resource.TestCheckResourceAttr(
 						"aws_vpc.foo", "enable_dns_support", "true"),
+					resource.TestCheckResourceAttrSet(
+						"aws_vpc.foo", "arn"),
 				),
 			},
 		},
@@ -102,7 +143,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 func TestAccAWSVpc_enableIpv6(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -155,7 +196,7 @@ func TestAccAWSVpc_enableIpv6(t *testing.T) {
 func TestAccAWSVpc_dedicatedTenancy(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -163,9 +204,48 @@ func TestAccAWSVpc_dedicatedTenancy(t *testing.T) {
 			{
 				Config: testAccVpcDedicatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists("aws_vpc.bar", &vpc),
+					testAccCheckVpcExists("aws_vpc.foo", &vpc),
 					resource.TestCheckResourceAttr(
-						"aws_vpc.bar", "instance_tenancy", "dedicated"),
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_modifyTenancy(t *testing.T) {
+	var vpcDedicated ec2.Vpc
+	var vpcDefault ec2.Vpc
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcDedicatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDedicated),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+				),
+			},
+			{
+				Config: testAccVpcConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDefault),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "default"),
+					testAccCheckVpcIdsEqual(&vpcDedicated, &vpcDefault),
+				),
+			},
+			{
+				Config: testAccVpcDedicatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists("aws_vpc.foo", &vpcDedicated),
+					resource.TestCheckResourceAttr(
+						"aws_vpc.foo", "instance_tenancy", "dedicated"),
+					testAccCheckVpcIdsNotEqual(&vpcDedicated, &vpcDefault),
 				),
 			},
 		},
@@ -175,7 +255,7 @@ func TestAccAWSVpc_dedicatedTenancy(t *testing.T) {
 func TestAccAWSVpc_tags(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -206,7 +286,7 @@ func TestAccAWSVpc_tags(t *testing.T) {
 func TestAccAWSVpc_update(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -277,6 +357,26 @@ func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *vpc1.VpcId != *vpc2.VpcId {
+			return fmt.Errorf("VPC IDs not equal")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *vpc1.VpcId == *vpc2.VpcId {
+			return fmt.Errorf("VPC IDs are equal")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -308,7 +408,7 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 
 // https://github.com/hashicorp/terraform/issues/1301
 func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -328,7 +428,7 @@ func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
 
 // https://github.com/hashicorp/terraform/issues/10168
 func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -345,7 +445,7 @@ func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
 }
 
 func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -362,7 +462,7 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 }
 
 func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -438,9 +538,9 @@ resource "aws_vpc" "foo" {
 }
 `
 const testAccVpcDedicatedConfig = `
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "foo" {
 	instance_tenancy = "dedicated"
-	cidr_block = "10.2.0.0/16"
+	cidr_block = "10.1.0.0/16"
 	tags {
 		Name = "terraform-testacc-vpc-dedicated"
 	}

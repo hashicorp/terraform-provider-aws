@@ -16,9 +16,11 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 		Create: resourceAwsMediaStoreContainerCreate,
 		Read:   resourceAwsMediaStoreContainerRead,
 		Delete: resourceAwsMediaStoreContainerDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,6 +84,7 @@ func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	d.Set("arn", resp.Container.ARN)
+	d.Set("name", resp.Container.Name)
 	d.Set("endpoint", resp.Container.Endpoint)
 	return nil
 }

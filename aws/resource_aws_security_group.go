@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -43,14 +44,15 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateMaxLength(100),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(0, 100),
 			},
 
 			"description": {
@@ -58,7 +60,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Managed by Terraform",
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
 			"vpc_id": {
@@ -106,6 +108,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validateCIDRNetworkAddress,
 							},
+						},
+
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 
 						"security_groups": {
@@ -438,7 +446,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d); err != nil {
+	if err := deleteLingeringLambdaENIs(conn, d, "group-id"); err != nil {
 		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
 	}
 
@@ -688,14 +696,14 @@ func resourceAwsSecurityGroupUpdateRules(
 			n = new(schema.Set)
 		}
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os := resourceAwsSecurityGroupExpandRules(o.(*schema.Set))
+		ns := resourceAwsSecurityGroupExpandRules(n.(*schema.Set))
 
-		remove, err := expandIPPerms(group, os.Difference(ns).List())
+		remove, err := expandIPPerms(group, resourceAwsSecurityGroupCollapseRules(ruleset, os.Difference(ns).List()))
 		if err != nil {
 			return err
 		}
-		add, err := expandIPPerms(group, ns.Difference(os).List())
+		add, err := expandIPPerms(group, resourceAwsSecurityGroupCollapseRules(ruleset, ns.Difference(os).List()))
 		if err != nil {
 			return err
 		}
@@ -1143,6 +1151,175 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 	return saves
 }
 
+// Duplicate ingress/egress block structure and fill out all
+// the required fields
+func resourceAwsSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
+	var keys_to_copy = []string{"description", "from_port", "to_port", "protocol"}
+
+	dst := make(map[string]interface{})
+	for _, key := range keys_to_copy {
+		if val, ok := src[key]; ok {
+			dst[key] = val
+		}
+	}
+	if k != "" {
+		dst[k] = v
+	}
+	if _, ok := src["self"]; ok {
+		dst["self"] = self
+	}
+	return dst
+}
+
+// Given a set of SG rules (ingress/egress blocks), this function
+// will group the rules by from_port/to_port/protocol/description
+// tuples. This is inverse operation of
+// resourceAwsSecurityGroupExpandRules()
+//
+// For more detail, see comments for
+// resourceAwsSecurityGroupExpandRules()
+func resourceAwsSecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
+
+	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+
+	collapsed := make(map[string]map[string]interface{})
+
+	for _, rule := range rules {
+		r := rule.(map[string]interface{})
+
+		ruleHash := idCollapseHash(ruleset, r["protocol"].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r["description"].(string))
+
+		if _, ok := collapsed[ruleHash]; ok {
+			if v, ok := r["self"]; ok && v.(bool) {
+				collapsed[ruleHash]["self"] = r["self"]
+			}
+		} else {
+			collapsed[ruleHash] = r
+			continue
+		}
+
+		for _, key := range keys_to_collapse {
+			if _, ok := r[key]; ok {
+				if _, ok := collapsed[ruleHash][key]; ok {
+					if key == "security_groups" {
+						collapsed[ruleHash][key] = collapsed[ruleHash][key].(*schema.Set).Union(r[key].(*schema.Set))
+					} else {
+						collapsed[ruleHash][key] = append(collapsed[ruleHash][key].([]interface{}), r[key].([]interface{})...)
+					}
+				} else {
+					collapsed[ruleHash][key] = r[key]
+				}
+			}
+		}
+	}
+
+	values := make([]interface{}, 0, len(collapsed))
+	for _, val := range collapsed {
+		values = append(values, val)
+	}
+	return values
+}
+
+// resourceAwsSecurityGroupExpandRules works in pair with
+// resourceAwsSecurityGroupCollapseRules and is used as a
+// workaround for the problem explained in
+// https://github.com/terraform-providers/terraform-provider-aws/pull/4726
+//
+// This function converts every ingress/egress block that
+// contains multiple rules to multiple blocks with only one
+// rule. Doing a Difference operation on such a normalized
+// set helps to avoid unnecessary removal of unchanged
+// rules during the Apply step.
+//
+// For example, in terraform syntax, the following block:
+//
+// ingress {
+//   from_port = 80
+//   to_port = 80
+//   protocol = "tcp"
+//   cidr_blocks = [
+//     "192.168.0.1/32",
+//     "192.168.0.2/32",
+//   ]
+// }
+//
+// will be converted to the two blocks below:
+//
+// ingress {
+//   from_port = 80
+//   to_port = 80
+//   protocol = "tcp"
+//   cidr_blocks = [ "192.168.0.1/32" ]
+// }
+//
+// ingress {
+//   from_port = 80
+//   to_port = 80
+//   protocol = "tcp"
+//   cidr_blocks = [ "192.168.0.2/32" ]
+// }
+//
+// Then the Difference operation is executed on the new set
+// to find which rules got modified, and the resulting set
+// is then passed to resourceAwsSecurityGroupCollapseRules
+// to convert the "diff" back to a more compact form for
+// execution. Such compact form helps reduce the number of
+// API calls.
+//
+func resourceAwsSecurityGroupExpandRules(rules *schema.Set) *schema.Set {
+	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+
+	normalized := schema.NewSet(resourceAwsSecurityGroupRuleHash, nil)
+
+	for _, rawRule := range rules.List() {
+		rule := rawRule.(map[string]interface{})
+
+		if v, ok := rule["self"]; ok && v.(bool) {
+			new_rule := resourceAwsSecurityGroupCopyRule(rule, true, "", nil)
+			normalized.Add(new_rule)
+		}
+		for _, key := range keys_to_expand {
+			item, exists := rule[key]
+			if exists {
+				var list []interface{}
+				if key == "security_groups" {
+					list = item.(*schema.Set).List()
+				} else {
+					list = item.([]interface{})
+				}
+				for _, v := range list {
+					var new_rule map[string]interface{}
+					if key == "security_groups" {
+						new_v := schema.NewSet(schema.HashString, nil)
+						new_v.Add(v)
+						new_rule = resourceAwsSecurityGroupCopyRule(rule, false, key, new_v)
+					} else {
+						new_v := make([]interface{}, 0)
+						new_v = append(new_v, v)
+						new_rule = resourceAwsSecurityGroupCopyRule(rule, false, key, new_v)
+					}
+					normalized.Add(new_rule)
+				}
+			}
+		}
+	}
+
+	return normalized
+}
+
+// Convert type-to_port-from_port-protocol-description tuple
+// to a hash to use as a key in Set.
+func idCollapseHash(rType, protocol string, toPort, fromPort int64, description string) string {
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("%s-", rType))
+	buf.WriteString(fmt.Sprintf("%d-", toPort))
+	buf.WriteString(fmt.Sprintf("%d-", fromPort))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
+	buf.WriteString(fmt.Sprintf("%s-", description))
+
+	return fmt.Sprintf("rule-%d", hashcode.String(buf.String()))
+}
+
 // Creates a unique hash for the type, ports, and protocol, used as a key in
 // maps
 func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
@@ -1211,24 +1388,22 @@ func protocolForValue(v string) string {
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", and "all"
 func sgProtocolIntegers() map[string]int {
-	var protocolIntegers = make(map[string]int)
-	protocolIntegers = map[string]int{
+	return map[string]int{
 		"udp":  17,
 		"tcp":  6,
 		"icmp": 1,
 		"all":  -1,
 	}
-	return protocolIntegers
 }
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
+func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName string) error {
 	// Here we carefully find the offenders
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("group-id"),
+				Name:   aws.String(filterName),
 				Values: []*string{aws.String(d.Id())},
 			},
 			{
@@ -1238,6 +1413,11 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 		},
 	}
 	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
+
+	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -1250,6 +1430,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 				AttachmentId: eni.Attachment.AttachmentId,
 			}
 			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+
+			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+				return nil
+			}
 
 			if detachNetworkInterfaceErr != nil {
 				return detachNetworkInterfaceErr
@@ -1273,6 +1457,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 		}
 		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
 
+		if isAWSErr(deleteNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+			return nil
+		}
+
 		if deleteNetworkInterfaceErr != nil {
 			return deleteNetworkInterfaceErr
 		}
@@ -1289,8 +1477,11 @@ func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 		}
 		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			return 42, "false", nil
+		}
+
 		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
 			return nil, "", err
 		}
 

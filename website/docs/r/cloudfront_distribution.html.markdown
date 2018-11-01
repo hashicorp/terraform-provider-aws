@@ -34,10 +34,14 @@ resource "aws_s3_bucket" "b" {
   }
 }
 
+locals {
+  s3_origin_id = "myS3Origin"
+}
+
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name = "${aws_s3_bucket.b.bucket_regional_domain_name}"
-    origin_id   = "myS3Origin"
+    origin_id   = "${local.s3_origin_id}"
 
     s3_origin_config {
       origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
@@ -60,7 +64,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
+    target_origin_id = "${local.s3_origin_id}"
 
     forwarded_values {
       query_string = false
@@ -81,7 +85,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     path_pattern     = "/content/immutable/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "myS3Origin"
+    target_origin_id = "${local.s3_origin_id}"
 
     forwarded_values {
       query_string = false
@@ -103,7 +107,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     path_pattern     = "/content/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
+    target_origin_id = "${local.s3_origin_id}"
 
     forwarded_values {
       query_string = false
@@ -277,13 +281,32 @@ of several sub-resources - these resources are laid out below.
 Lambda@Edge allows you to associate an AWS Lambda Function with a predefined
 event. You can associate a single function per event type. See [What is
 Lambda@Edge](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/what-is-lambda-at-edge.html)
-for more information
+for more information.
 
-  * `event_type` (Required) - The specific event to trigger this function.
+Example configuration:
+
+```hcl
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  # lambda_function_association is also supported by default_cache_behavior
+  ordered_cache_behavior {
+    # ... other configuration ...
+
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = "${aws_lambda_function.example.qualified_arn}"
+      include_body = false
+    }
+  }
+}
+```
+
+* `event_type` (Required) - The specific event to trigger this function.
   Valid values: `viewer-request`, `origin-request`, `viewer-response`,
   `origin-response`
-
-  * `lambda_arn` (Required) - ARN of the Lambda function.
+* `lambda_arn` (Required) - ARN of the Lambda function.
+* `include_body` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
 
 ##### Cookies Arguments
 

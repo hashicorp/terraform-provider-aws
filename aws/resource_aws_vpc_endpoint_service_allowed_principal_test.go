@@ -16,12 +16,12 @@ import (
 func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceAllowedPrincipalExists("aws_vpc_endpoint_service_allowed_principal.foo"),

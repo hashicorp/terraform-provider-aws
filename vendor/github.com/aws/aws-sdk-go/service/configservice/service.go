@@ -29,9 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "config"         // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName      // Service ID for Regions and Endpoints metadata.
-	ServiceID   = "Config Service" // ServiceID is a unique identifer of a specific service
+	ServiceName = "config"         // Name of service.
+	EndpointsID = ServiceName      // ID to lookup a service endpoint with.
+	ServiceID   = "Config Service" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the ConfigService client with a session.

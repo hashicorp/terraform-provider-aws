@@ -15,7 +15,7 @@ const opCreateActivity = "CreateActivity"
 // CreateActivityRequest generates a "aws/request.Request" representing the
 // client's request for the CreateActivity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -103,7 +103,7 @@ const opCreateStateMachine = "CreateStateMachine"
 // CreateStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStateMachine operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -202,7 +202,7 @@ const opDeleteActivity = "DeleteActivity"
 // DeleteActivityRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteActivity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -281,7 +281,7 @@ const opDeleteStateMachine = "DeleteStateMachine"
 // DeleteStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteStateMachine operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -365,7 +365,7 @@ const opDescribeActivity = "DescribeActivity"
 // DescribeActivityRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeActivity operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -447,7 +447,7 @@ const opDescribeExecution = "DescribeExecution"
 // DescribeExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -529,7 +529,7 @@ const opDescribeStateMachine = "DescribeStateMachine"
 // DescribeStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStateMachine operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -611,7 +611,7 @@ const opDescribeStateMachineForExecution = "DescribeStateMachineForExecution"
 // DescribeStateMachineForExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStateMachineForExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -693,7 +693,7 @@ const opGetActivityTask = "GetActivityTask"
 // GetActivityTaskRequest generates a "aws/request.Request" representing the
 // client's request for the GetActivityTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -788,7 +788,7 @@ const opGetExecutionHistory = "GetExecutionHistory"
 // GetExecutionHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetExecutionHistory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -935,7 +935,7 @@ const opListActivities = "ListActivities"
 // ListActivitiesRequest generates a "aws/request.Request" representing the
 // client's request for the ListActivities operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1074,7 +1074,7 @@ const opListExecutions = "ListExecutions"
 // ListExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListExecutions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1219,7 +1219,7 @@ const opListStateMachines = "ListStateMachines"
 // ListStateMachinesRequest generates a "aws/request.Request" representing the
 // client's request for the ListStateMachines operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1358,7 +1358,7 @@ const opSendTaskFailure = "SendTaskFailure"
 // SendTaskFailureRequest generates a "aws/request.Request" representing the
 // client's request for the SendTaskFailure operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1441,7 +1441,7 @@ const opSendTaskHeartbeat = "SendTaskHeartbeat"
 // SendTaskHeartbeatRequest generates a "aws/request.Request" representing the
 // client's request for the SendTaskHeartbeat operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1536,7 +1536,7 @@ const opSendTaskSuccess = "SendTaskSuccess"
 // SendTaskSuccessRequest generates a "aws/request.Request" representing the
 // client's request for the SendTaskSuccess operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1623,7 +1623,7 @@ const opStartExecution = "StartExecution"
 // StartExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1723,7 +1723,7 @@ const opStopExecution = "StopExecution"
 // StopExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StopExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1805,7 +1805,7 @@ const opUpdateStateMachine = "UpdateStateMachine"
 // UpdateStateMachineRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateStateMachine operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1944,7 +1944,7 @@ type ActivityListItem struct {
 	// The date the activity is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The name of the activity.
 	//
@@ -2229,7 +2229,7 @@ type CreateActivityOutput struct {
 	// The date the activity is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -2350,7 +2350,7 @@ type CreateStateMachineOutput struct {
 	// The date the state machine is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) that identifies the created state machine.
 	//
@@ -2542,7 +2542,7 @@ type DescribeActivityOutput struct {
 	// The date the activity is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The name of the activity.
 	//
@@ -2668,7 +2668,7 @@ type DescribeExecutionOutput struct {
 	// The date the execution is started.
 	//
 	// StartDate is a required field
-	StartDate *time.Time `locationName:"startDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartDate *time.Time `locationName:"startDate" type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the executed stated machine.
 	//
@@ -2681,7 +2681,7 @@ type DescribeExecutionOutput struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"ExecutionStatus"`
 
 	// If the execution has already ended, the date the execution stopped.
-	StopDate *time.Time `locationName:"stopDate" type:"timestamp" timestampFormat:"unix"`
+	StopDate *time.Time `locationName:"stopDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -2812,7 +2812,7 @@ type DescribeStateMachineForExecutionOutput struct {
 	// For a newly created state machine, this is the creation date.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -2902,7 +2902,7 @@ type DescribeStateMachineOutput struct {
 	// The date the state machine is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The Amazon States Language definition of the state machine.
 	//
@@ -3083,7 +3083,7 @@ type ExecutionListItem struct {
 	// The date the execution started.
 	//
 	// StartDate is a required field
-	StartDate *time.Time `locationName:"startDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartDate *time.Time `locationName:"startDate" type:"timestamp" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the executed state machine.
 	//
@@ -3096,7 +3096,7 @@ type ExecutionListItem struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"ExecutionStatus"`
 
 	// If the execution already ended, the date the execution stopped.
-	StopDate *time.Time `locationName:"stopDate" type:"timestamp" timestampFormat:"unix"`
+	StopDate *time.Time `locationName:"stopDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -3524,7 +3524,7 @@ type HistoryEvent struct {
 	// The date the event occurred.
 	//
 	// Timestamp is a required field
-	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" timestampFormat:"unix" required:"true"`
+	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" required:"true"`
 
 	// The type of the event.
 	//
@@ -4498,7 +4498,7 @@ type StartExecutionOutput struct {
 	// The date the execution is started.
 	//
 	// StartDate is a required field
-	StartDate *time.Time `locationName:"startDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StartDate *time.Time `locationName:"startDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -4612,7 +4612,7 @@ type StateMachineListItem struct {
 	// The date the state machine is created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
 	// The name of the state machine.
 	//
@@ -4730,7 +4730,7 @@ type StopExecutionOutput struct {
 	// The date the execution is stopped.
 	//
 	// StopDate is a required field
-	StopDate *time.Time `locationName:"stopDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	StopDate *time.Time `locationName:"stopDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation
@@ -4820,7 +4820,7 @@ type UpdateStateMachineOutput struct {
 	// The date and time the state machine was updated.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" timestampFormat:"unix" required:"true"`
+	UpdateDate *time.Time `locationName:"updateDate" type:"timestamp" required:"true"`
 }
 
 // String returns the string representation

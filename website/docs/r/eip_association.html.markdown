@@ -68,3 +68,11 @@ address with an instance.
 * `network_interface_id` - As above
 * `private_ip_address` - As above
 * `public_ip` - As above
+
+## Import
+
+EIP Assocations can be imported using their association ID.
+
+```
+$ terraform import aws_eip_association.test eipassoc-ab12c345
+```

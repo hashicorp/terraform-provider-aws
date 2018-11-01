@@ -370,9 +370,9 @@ func (r *Request) Build() error {
 	return r.Error
 }
 
-// Sign will sign the request returning error if errors are encountered.
+// Sign will sign the request, returning error if errors are encountered.
 //
-// Send will build the request prior to signing. All Sign Handlers will
+// Sign will build the request prior to signing. All Sign Handlers will
 // be executed in the order they were set.
 func (r *Request) Sign() error {
 	r.Build()
@@ -442,7 +442,7 @@ func (r *Request) GetBody() io.ReadSeeker {
 	return r.safeBody
 }
 
-// Send will send the request returning error if errors are encountered.
+// Send will send the request, returning error if errors are encountered.
 //
 // Send will sign the request prior to sending. All Send Handlers will
 // be executed in the order they were set.

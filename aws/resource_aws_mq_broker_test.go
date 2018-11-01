@@ -241,7 +241,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -276,6 +276,8 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.#", "1"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.ip_address",
+						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.0.endpoints.#", "5"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
@@ -306,7 +308,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
   </plugins>
 </broker>`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -348,6 +350,8 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.#", "2"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.ip_address",
+						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.0.endpoints.#", "5"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
@@ -356,6 +360,8 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.ip_address",
+						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.1.endpoints.#", "5"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
@@ -408,7 +414,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
   </plugins>
 </broker>`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -450,6 +456,8 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.#", "2"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.ip_address",
+						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.0.endpoints.#", "5"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
@@ -458,6 +466,8 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.ip_address",
+						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "instances.1.endpoints.#", "5"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "instances.1.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
@@ -496,7 +506,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,

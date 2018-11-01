@@ -18,7 +18,7 @@ const opAcknowledgeJob = "AcknowledgeJob"
 // AcknowledgeJobRequest generates a "aws/request.Request" representing the
 // client's request for the AcknowledgeJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -104,7 +104,7 @@ const opAcknowledgeThirdPartyJob = "AcknowledgeThirdPartyJob"
 // AcknowledgeThirdPartyJobRequest generates a "aws/request.Request" representing the
 // client's request for the AcknowledgeThirdPartyJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -193,7 +193,7 @@ const opCreateCustomActionType = "CreateCustomActionType"
 // CreateCustomActionTypeRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCustomActionType operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -277,7 +277,7 @@ const opCreatePipeline = "CreatePipeline"
 // CreatePipelineRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePipeline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -375,7 +375,7 @@ const opDeleteCustomActionType = "DeleteCustomActionType"
 // DeleteCustomActionTypeRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCustomActionType operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -463,7 +463,7 @@ const opDeletePipeline = "DeletePipeline"
 // DeletePipelineRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePipeline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -544,7 +544,7 @@ const opDeleteWebhook = "DeleteWebhook"
 // DeleteWebhookRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteWebhook operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -627,7 +627,7 @@ const opDeregisterWebhookWithThirdParty = "DeregisterWebhookWithThirdParty"
 // DeregisterWebhookWithThirdPartyRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterWebhookWithThirdParty operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -711,7 +711,7 @@ const opDisableStageTransition = "DisableStageTransition"
 // DisableStageTransitionRequest generates a "aws/request.Request" representing the
 // client's request for the DisableStageTransition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -799,7 +799,7 @@ const opEnableStageTransition = "EnableStageTransition"
 // EnableStageTransitionRequest generates a "aws/request.Request" representing the
 // client's request for the EnableStageTransition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -886,7 +886,7 @@ const opGetJobDetails = "GetJobDetails"
 // GetJobDetailsRequest generates a "aws/request.Request" representing the
 // client's request for the GetJobDetails operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -973,7 +973,7 @@ const opGetPipeline = "GetPipeline"
 // GetPipelineRequest generates a "aws/request.Request" representing the
 // client's request for the GetPipeline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1061,7 +1061,7 @@ const opGetPipelineExecution = "GetPipelineExecution"
 // GetPipelineExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetPipelineExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1149,7 +1149,7 @@ const opGetPipelineState = "GetPipelineState"
 // GetPipelineStateRequest generates a "aws/request.Request" representing the
 // client's request for the GetPipelineState operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1232,7 +1232,7 @@ const opGetThirdPartyJobDetails = "GetThirdPartyJobDetails"
 // GetThirdPartyJobDetailsRequest generates a "aws/request.Request" representing the
 // client's request for the GetThirdPartyJobDetails operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1326,7 +1326,7 @@ const opListActionTypes = "ListActionTypes"
 // ListActionTypesRequest generates a "aws/request.Request" representing the
 // client's request for the ListActionTypes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1410,7 +1410,7 @@ const opListPipelineExecutions = "ListPipelineExecutions"
 // ListPipelineExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPipelineExecutions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1496,7 +1496,7 @@ const opListPipelines = "ListPipelines"
 // ListPipelinesRequest generates a "aws/request.Request" representing the
 // client's request for the ListPipelines operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1579,7 +1579,7 @@ const opListWebhooks = "ListWebhooks"
 // ListWebhooksRequest generates a "aws/request.Request" representing the
 // client's request for the ListWebhooks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1664,7 +1664,7 @@ const opPollForJobs = "PollForJobs"
 // PollForJobsRequest generates a "aws/request.Request" representing the
 // client's request for the PollForJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1754,7 +1754,7 @@ const opPollForThirdPartyJobs = "PollForThirdPartyJobs"
 // PollForThirdPartyJobsRequest generates a "aws/request.Request" representing the
 // client's request for the PollForThirdPartyJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1841,7 +1841,7 @@ const opPutActionRevision = "PutActionRevision"
 // PutActionRevisionRequest generates a "aws/request.Request" representing the
 // client's request for the PutActionRevision operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1929,7 +1929,7 @@ const opPutApprovalResult = "PutApprovalResult"
 // PutApprovalResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutApprovalResult operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2024,7 +2024,7 @@ const opPutJobFailureResult = "PutJobFailureResult"
 // PutJobFailureResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutJobFailureResult operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2112,7 +2112,7 @@ const opPutJobSuccessResult = "PutJobSuccessResult"
 // PutJobSuccessResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutJobSuccessResult operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2200,7 +2200,7 @@ const opPutThirdPartyJobFailureResult = "PutThirdPartyJobFailureResult"
 // PutThirdPartyJobFailureResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutThirdPartyJobFailureResult operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2291,7 +2291,7 @@ const opPutThirdPartyJobSuccessResult = "PutThirdPartyJobSuccessResult"
 // PutThirdPartyJobSuccessResultRequest generates a "aws/request.Request" representing the
 // client's request for the PutThirdPartyJobSuccessResult operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2382,7 +2382,7 @@ const opPutWebhook = "PutWebhook"
 // PutWebhookRequest generates a "aws/request.Request" representing the
 // client's request for the PutWebhook operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2481,7 +2481,7 @@ const opRegisterWebhookWithThirdParty = "RegisterWebhookWithThirdParty"
 // RegisterWebhookWithThirdPartyRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterWebhookWithThirdParty operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2564,7 +2564,7 @@ const opRetryStageExecution = "RetryStageExecution"
 // RetryStageExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the RetryStageExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2659,7 +2659,7 @@ const opStartPipelineExecution = "StartPipelineExecution"
 // StartPipelineExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartPipelineExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2742,7 +2742,7 @@ const opUpdatePipeline = "UpdatePipeline"
 // UpdatePipelineRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePipeline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2808,6 +2808,10 @@ func (c *CodePipeline) UpdatePipelineRequest(input *UpdatePipelineInput) (req *r
 //
 //   * ErrCodeInvalidStructureException "InvalidStructureException"
 //   The specified structure was specified in an invalid format.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The number of pipelines associated with the AWS account has exceeded the
+//   limit allowed for the account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codepipeline-2015-07-09/UpdatePipeline
 func (c *CodePipeline) UpdatePipeline(input *UpdatePipelineInput) (*UpdatePipelineOutput, error) {
@@ -3391,7 +3395,7 @@ type ActionExecution struct {
 	ExternalExecutionUrl *string `locationName:"externalExecutionUrl" min:"1" type:"string"`
 
 	// The last status change of the action.
-	LastStatusChange *time.Time `locationName:"lastStatusChange" type:"timestamp" timestampFormat:"unix"`
+	LastStatusChange *time.Time `locationName:"lastStatusChange" type:"timestamp"`
 
 	// The ARN of the user who last changed the pipeline.
 	LastUpdatedBy *string `locationName:"lastUpdatedBy" type:"string"`
@@ -3485,7 +3489,7 @@ type ActionRevision struct {
 	// in timestamp format.
 	//
 	// Created is a required field
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix" required:"true"`
+	Created *time.Time `locationName:"created" type:"timestamp" required:"true"`
 
 	// The unique identifier of the change that set the state to this revision,
 	// for example a deployment ID or timestamp.
@@ -4045,7 +4049,7 @@ type ArtifactRevision struct {
 
 	// The date and time when the most recent revision of the artifact was created,
 	// in timestamp format.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The name of an artifact. This name might be system-generated, such as "MyApp",
 	// or might be defined by the user when an action is created.
@@ -4505,7 +4509,7 @@ type CurrentRevision struct {
 
 	// The date and time when the most recent revision of the artifact was created,
 	// in timestamp format.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The revision ID of the current version of an artifact.
 	//
@@ -5531,7 +5535,7 @@ type GetPipelineStateOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the pipeline was created, in timestamp format.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The name of the pipeline for which you want to get the state.
 	PipelineName *string `locationName:"pipelineName" min:"1" type:"string"`
@@ -5546,7 +5550,7 @@ type GetPipelineStateOutput struct {
 	StageStates []*StageState `locationName:"stageStates" type:"list"`
 
 	// The date and time the pipeline was last updated, in timestamp format.
-	Updated *time.Time `locationName:"updated" type:"timestamp" timestampFormat:"unix"`
+	Updated *time.Time `locationName:"updated" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -6195,7 +6199,7 @@ type ListWebhookItem struct {
 
 	// The date and time a webhook was last successfully triggered, in timestamp
 	// format.
-	LastTriggered *time.Time `locationName:"lastTriggered" type:"timestamp" timestampFormat:"unix"`
+	LastTriggered *time.Time `locationName:"lastTriggered" type:"timestamp"`
 
 	// A unique URL generated by CodePipeline. When a POST request is made to this
 	// URL, the defined pipeline is started as long as the body of the post request
@@ -6621,7 +6625,7 @@ type PipelineExecutionSummary struct {
 
 	// The date and time of the last change to the pipeline execution, in timestamp
 	// format.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
 
 	// The ID of the pipeline execution.
 	PipelineExecutionId *string `locationName:"pipelineExecutionId" type:"string"`
@@ -6629,7 +6633,7 @@ type PipelineExecutionSummary struct {
 	SourceRevisions []*SourceRevision `locationName:"sourceRevisions" type:"list"`
 
 	// The date and time when the pipeline execution began, in timestamp format.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
 
 	// The status of the pipeline execution.
 	//
@@ -6690,13 +6694,13 @@ type PipelineMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the pipeline was created, in timestamp format.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The Amazon Resource Name (ARN) of the pipeline.
 	PipelineArn *string `locationName:"pipelineArn" type:"string"`
 
 	// The date and time the pipeline was last updated, in timestamp format.
-	Updated *time.Time `locationName:"updated" type:"timestamp" timestampFormat:"unix"`
+	Updated *time.Time `locationName:"updated" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -6732,13 +6736,13 @@ type PipelineSummary struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the pipeline was created, in timestamp format.
-	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+	Created *time.Time `locationName:"created" type:"timestamp"`
 
 	// The name of the pipeline.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
 	// The date and time of the last update to the pipeline, in timestamp format.
-	Updated *time.Time `locationName:"updated" type:"timestamp" timestampFormat:"unix"`
+	Updated *time.Time `locationName:"updated" type:"timestamp"`
 
 	// The version number of the pipeline.
 	Version *int64 `locationName:"version" min:"1" type:"integer"`
@@ -7196,7 +7200,7 @@ type PutApprovalResultOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The timestamp showing when the approval or rejection was submitted.
-	ApprovedAt *time.Time `locationName:"approvedAt" type:"timestamp" timestampFormat:"unix"`
+	ApprovedAt *time.Time `locationName:"approvedAt" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -8379,7 +8383,7 @@ type TransitionState struct {
 	Enabled *bool `locationName:"enabled" type:"boolean"`
 
 	// The timestamp when the transition state was last changed.
-	LastChangedAt *time.Time `locationName:"lastChangedAt" type:"timestamp" timestampFormat:"unix"`
+	LastChangedAt *time.Time `locationName:"lastChangedAt" type:"timestamp"`
 
 	// The ID of the user who last changed the transition state.
 	LastChangedBy *string `locationName:"lastChangedBy" type:"string"`

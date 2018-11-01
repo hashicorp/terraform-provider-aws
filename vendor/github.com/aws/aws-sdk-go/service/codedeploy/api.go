@@ -17,7 +17,7 @@ const opAddTagsToOnPremisesInstances = "AddTagsToOnPremisesInstances"
 // AddTagsToOnPremisesInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToOnPremisesInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -117,7 +117,7 @@ const opBatchGetApplicationRevisions = "BatchGetApplicationRevisions"
 // BatchGetApplicationRevisionsRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetApplicationRevisions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -211,7 +211,7 @@ const opBatchGetApplications = "BatchGetApplications"
 // BatchGetApplicationsRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetApplications operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -299,7 +299,7 @@ const opBatchGetDeploymentGroups = "BatchGetDeploymentGroups"
 // BatchGetDeploymentGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetDeploymentGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -393,7 +393,7 @@ const opBatchGetDeploymentInstances = "BatchGetDeploymentInstances"
 // BatchGetDeploymentInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetDeploymentInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -488,7 +488,7 @@ const opBatchGetDeployments = "BatchGetDeployments"
 // BatchGetDeploymentsRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetDeployments operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -573,7 +573,7 @@ const opBatchGetOnPremisesInstances = "BatchGetOnPremisesInstances"
 // BatchGetOnPremisesInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetOnPremisesInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -658,7 +658,7 @@ const opContinueDeployment = "ContinueDeployment"
 // ContinueDeploymentRequest generates a "aws/request.Request" representing the
 // client's request for the ContinueDeployment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -759,7 +759,7 @@ const opCreateApplication = "CreateApplication"
 // CreateApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -851,7 +851,7 @@ const opCreateDeployment = "CreateDeployment"
 // CreateDeploymentRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDeployment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1016,7 +1016,7 @@ const opCreateDeploymentConfig = "CreateDeploymentConfig"
 // CreateDeploymentConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDeploymentConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1115,7 +1115,7 @@ const opCreateDeploymentGroup = "CreateDeploymentGroup"
 // CreateDeploymentGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDeploymentGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1295,7 +1295,7 @@ const opDeleteApplication = "DeleteApplication"
 // DeleteApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1379,7 +1379,7 @@ const opDeleteDeploymentConfig = "DeleteDeploymentConfig"
 // DeleteDeploymentConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDeploymentConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1472,7 +1472,7 @@ const opDeleteDeploymentGroup = "DeleteDeploymentGroup"
 // DeleteDeploymentGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDeploymentGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1565,7 +1565,7 @@ const opDeleteGitHubAccountToken = "DeleteGitHubAccountToken"
 // DeleteGitHubAccountTokenRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteGitHubAccountToken operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1656,7 +1656,7 @@ const opDeregisterOnPremisesInstance = "DeregisterOnPremisesInstance"
 // DeregisterOnPremisesInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterOnPremisesInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1740,7 +1740,7 @@ const opGetApplication = "GetApplication"
 // GetApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the GetApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1825,7 +1825,7 @@ const opGetApplicationRevision = "GetApplicationRevision"
 // GetApplicationRevisionRequest generates a "aws/request.Request" representing the
 // client's request for the GetApplicationRevision operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1919,7 +1919,7 @@ const opGetDeployment = "GetDeployment"
 // GetDeploymentRequest generates a "aws/request.Request" representing the
 // client's request for the GetDeployment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2004,7 +2004,7 @@ const opGetDeploymentConfig = "GetDeploymentConfig"
 // GetDeploymentConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetDeploymentConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2090,7 +2090,7 @@ const opGetDeploymentGroup = "GetDeploymentGroup"
 // GetDeploymentGroupRequest generates a "aws/request.Request" representing the
 // client's request for the GetDeploymentGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2185,7 +2185,7 @@ const opGetDeploymentInstance = "GetDeploymentInstance"
 // GetDeploymentInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the GetDeploymentInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2279,7 +2279,7 @@ const opGetOnPremisesInstance = "GetOnPremisesInstance"
 // GetOnPremisesInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the GetOnPremisesInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2364,7 +2364,7 @@ const opListApplicationRevisions = "ListApplicationRevisions"
 // ListApplicationRevisionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListApplicationRevisions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2527,7 +2527,7 @@ const opListApplications = "ListApplications"
 // ListApplicationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListApplications operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2662,7 +2662,7 @@ const opListDeploymentConfigs = "ListDeploymentConfigs"
 // ListDeploymentConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeploymentConfigs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2797,7 +2797,7 @@ const opListDeploymentGroups = "ListDeploymentGroups"
 // ListDeploymentGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeploymentGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2942,7 +2942,7 @@ const opListDeploymentInstances = "ListDeploymentInstances"
 // ListDeploymentInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeploymentInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3102,7 +3102,7 @@ const opListDeployments = "ListDeployments"
 // ListDeploymentsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDeployments operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3263,7 +3263,7 @@ const opListGitHubAccountTokenNames = "ListGitHubAccountTokenNames"
 // ListGitHubAccountTokenNamesRequest generates a "aws/request.Request" representing the
 // client's request for the ListGitHubAccountTokenNames operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3348,7 +3348,7 @@ const opListOnPremisesInstances = "ListOnPremisesInstances"
 // ListOnPremisesInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListOnPremisesInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3437,7 +3437,7 @@ const opPutLifecycleEventHookExecutionStatus = "PutLifecycleEventHookExecutionSt
 // PutLifecycleEventHookExecutionStatusRequest generates a "aws/request.Request" representing the
 // client's request for the PutLifecycleEventHookExecutionStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3538,7 +3538,7 @@ const opRegisterApplicationRevision = "RegisterApplicationRevision"
 // RegisterApplicationRevisionRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterApplicationRevision operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3634,7 +3634,7 @@ const opRegisterOnPremisesInstance = "RegisterOnPremisesInstance"
 // RegisterOnPremisesInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterOnPremisesInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3748,7 +3748,7 @@ const opRemoveTagsFromOnPremisesInstances = "RemoveTagsFromOnPremisesInstances"
 // RemoveTagsFromOnPremisesInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromOnPremisesInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3848,7 +3848,7 @@ const opSkipWaitTimeForInstanceTermination = "SkipWaitTimeForInstanceTermination
 // SkipWaitTimeForInstanceTerminationRequest generates a "aws/request.Request" representing the
 // client's request for the SkipWaitTimeForInstanceTermination operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3945,7 +3945,7 @@ const opStopDeployment = "StopDeployment"
 // StopDeploymentRequest generates a "aws/request.Request" representing the
 // client's request for the StopDeployment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4033,7 +4033,7 @@ const opUpdateApplication = "UpdateApplication"
 // UpdateApplicationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApplication operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4124,7 +4124,7 @@ const opUpdateDeploymentGroup = "UpdateDeploymentGroup"
 // UpdateDeploymentGroupRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDeploymentGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4458,7 +4458,7 @@ type ApplicationInfo struct {
 	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 
 	// The time at which the application was created.
-	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
 	// The name for a connection to a GitHub account.
 	GitHubAccountName *string `locationName:"gitHubAccountName" type:"string"`
@@ -6033,7 +6033,7 @@ type DeploymentConfigInfo struct {
 	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 
 	// The time at which the deployment configuration was created.
-	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
 	// The deployment configuration ID.
 	DeploymentConfigId *string `locationName:"deploymentConfigId" type:"string"`
@@ -6320,13 +6320,13 @@ type DeploymentInfo struct {
 	BlueGreenDeploymentConfiguration *BlueGreenDeploymentConfiguration `locationName:"blueGreenDeploymentConfiguration" type:"structure"`
 
 	// A timestamp indicating when the deployment was complete.
-	CompleteTime *time.Time `locationName:"completeTime" type:"timestamp" timestampFormat:"unix"`
+	CompleteTime *time.Time `locationName:"completeTime" type:"timestamp"`
 
 	// The destination platform type for the deployment (Lambda or Server).
 	ComputePlatform *string `locationName:"computePlatform" type:"string" enum:"ComputePlatform"`
 
 	// A timestamp indicating when the deployment was created.
-	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
 	// The means by which the deployment was created:
 	//
@@ -6413,7 +6413,7 @@ type DeploymentInfo struct {
 	// In some cases, the reported value of the start time may be later than the
 	// complete time. This is due to differences in the clock settings of back-end
 	// servers that participate in the deployment process.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
 
 	// The current state of the deployment as a whole.
 	Status *string `locationName:"status" type:"string" enum:"DeploymentStatus"`
@@ -7059,13 +7059,13 @@ type GenericRevisionInfo struct {
 	Description *string `locationName:"description" type:"string"`
 
 	// When the revision was first used by AWS CodeDeploy.
-	FirstUsedTime *time.Time `locationName:"firstUsedTime" type:"timestamp" timestampFormat:"unix"`
+	FirstUsedTime *time.Time `locationName:"firstUsedTime" type:"timestamp"`
 
 	// When the revision was last used by AWS CodeDeploy.
-	LastUsedTime *time.Time `locationName:"lastUsedTime" type:"timestamp" timestampFormat:"unix"`
+	LastUsedTime *time.Time `locationName:"lastUsedTime" type:"timestamp"`
 
 	// When the revision was registered with AWS CodeDeploy.
-	RegisterTime *time.Time `locationName:"registerTime" type:"timestamp" timestampFormat:"unix"`
+	RegisterTime *time.Time `locationName:"registerTime" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -7701,7 +7701,7 @@ type InstanceInfo struct {
 
 	// If the on-premises instance was deregistered, the time at which the on-premises
 	// instance was deregistered.
-	DeregisterTime *time.Time `locationName:"deregisterTime" type:"timestamp" timestampFormat:"unix"`
+	DeregisterTime *time.Time `locationName:"deregisterTime" type:"timestamp"`
 
 	// The ARN of the IAM session associated with the on-premises instance.
 	IamSessionArn *string `locationName:"iamSessionArn" type:"string"`
@@ -7716,7 +7716,7 @@ type InstanceInfo struct {
 	InstanceName *string `locationName:"instanceName" type:"string"`
 
 	// The time at which the on-premises instance was registered.
-	RegisterTime *time.Time `locationName:"registerTime" type:"timestamp" timestampFormat:"unix"`
+	RegisterTime *time.Time `locationName:"registerTime" type:"timestamp"`
 
 	// The tags currently associated with the on-premises instance.
 	Tags []*Tag `locationName:"tags" type:"list"`
@@ -7793,7 +7793,7 @@ type InstanceSummary struct {
 	InstanceType *string `locationName:"instanceType" type:"string" enum:"InstanceType"`
 
 	// A timestamp indicating when the instance information was last updated.
-	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// A list of lifecycle events for this instance.
 	LifecycleEvents []*LifecycleEvent `locationName:"lifecycleEvents" type:"list"`
@@ -7867,14 +7867,14 @@ type LastDeploymentInfo struct {
 
 	// A timestamp indicating when the most recent deployment to the deployment
 	// group started.
-	CreateTime *time.Time `locationName:"createTime" type:"timestamp" timestampFormat:"unix"`
+	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
 	// The deployment ID.
 	DeploymentId *string `locationName:"deploymentId" type:"string"`
 
 	// A timestamp indicating when the most recent deployment to the deployment
 	// group completed.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
 	// The status of the most recent deployment.
 	Status *string `locationName:"status" type:"string" enum:"DeploymentStatus"`
@@ -7922,14 +7922,14 @@ type LifecycleEvent struct {
 	Diagnostics *Diagnostics `locationName:"diagnostics" type:"structure"`
 
 	// A timestamp indicating when the deployment lifecycle event ended.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
 	// The deployment lifecycle event name, such as ApplicationStop, BeforeInstall,
 	// AfterInstall, ApplicationStart, or ValidateService.
 	LifecycleEventName *string `locationName:"lifecycleEventName" type:"string"`
 
 	// A timestamp indicating when the deployment lifecycle event started.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
 
 	// The deployment lifecycle event status:
 	//
@@ -9783,12 +9783,12 @@ type TimeRange struct {
 	// The end time of the time range.
 	//
 	// Specify null to leave the end time open-ended.
-	End *time.Time `locationName:"end" type:"timestamp" timestampFormat:"unix"`
+	End *time.Time `locationName:"end" type:"timestamp"`
 
 	// The start time of the time range.
 	//
 	// Specify null to leave the start time open-ended.
-	Start *time.Time `locationName:"start" type:"timestamp" timestampFormat:"unix"`
+	Start *time.Time `locationName:"start" type:"timestamp"`
 }
 
 // String returns the string representation

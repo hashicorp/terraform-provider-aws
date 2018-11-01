@@ -12,7 +12,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -32,7 +32,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -74,7 +74,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -83,6 +83,40 @@ func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStateValue("data.aws_iam_policy_document.test_override", "json",
 						testAccAWSIAMPolicyDocumentOverrideExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMPolicyDocument_noStatementMerge(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentNoStatementMergeConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStateValue("data.aws_iam_policy_document.yak_politik", "json",
+						testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMPolicyDocument_noStatementOverride(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyDocumentNoStatementOverrideConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStateValue("data.aws_iam_policy_document.yak_politik", "json",
+						testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON,
 					),
 				),
 			},
@@ -516,6 +550,82 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
       "Sid": "SidToOverwrite",
       "Effect": "Allow",
       "Action": "s3:*",
+      "Resource": "*"
+    }
+  ]
+}`
+
+var testAccAWSIAMPolicyDocumentNoStatementMergeConfig = `
+data "aws_iam_policy_document" "source" {
+  statement {
+    sid = ""
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid = "OverridePlaceholder"
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "yak_politik" {
+  source_json = "${data.aws_iam_policy_document.source.json}"
+  override_json = "${data.aws_iam_policy_document.override.json}"
+}
+`
+
+var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:DescribeAccountAttributes",
+      "Resource": "*"
+    },
+    {
+      "Sid": "OverridePlaceholder",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "*"
+    }
+  ]
+}`
+
+var testAccAWSIAMPolicyDocumentNoStatementOverrideConfig = `
+data "aws_iam_policy_document" "source" {
+  statement {
+    sid = "OverridePlaceholder"
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid = "OverridePlaceholder"
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "yak_politik" {
+  source_json = "${data.aws_iam_policy_document.source.json}"
+  override_json = "${data.aws_iam_policy_document.override.json}"
+}
+`
+
+var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OverridePlaceholder",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
       "Resource": "*"
     }
   ]

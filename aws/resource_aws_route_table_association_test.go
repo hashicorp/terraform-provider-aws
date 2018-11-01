@@ -14,12 +14,12 @@ import (
 func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 	var v, v2 ec2.RouteTable
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
@@ -27,7 +27,7 @@ func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccRouteTableAssociationConfigChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(

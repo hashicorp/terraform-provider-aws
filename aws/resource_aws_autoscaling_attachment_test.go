@@ -15,7 +15,7 @@ func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -136,7 +136,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 		})
 
 		if err != nil {
-			return fmt.Errorf("Recieved an error when attempting to load %s:  %s", asg, err)
+			return fmt.Errorf("Received an error when attempting to load %s:  %s", asg, err)
 		}
 
 		if targetGroupCount != len(actual.AutoScalingGroups[0].TargetGroupARNs) {

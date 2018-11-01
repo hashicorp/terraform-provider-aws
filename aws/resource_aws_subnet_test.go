@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,11 +25,13 @@ func init() {
 			"aws_batch_compute_environment",
 			"aws_beanstalk_environment",
 			"aws_db_instance",
+			"aws_directory_service_directory",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",
+			"aws_instance",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
@@ -84,6 +87,27 @@ func testSweepSubnets(region string) error {
 	return nil
 }
 
+func TestAccAWSSubnet_importBasic(t *testing.T) {
+	resourceName := "aws_subnet.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 
@@ -99,7 +123,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_subnet.foo",
 		Providers:     testAccProviders,
@@ -111,6 +135,10 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 					testAccCheckSubnetExists(
 						"aws_subnet.foo", &v),
 					testCheck,
+					resource.TestMatchResourceAttr(
+						"aws_subnet.foo",
+						"arn",
+						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)),
 				),
 			},
 		},
@@ -120,7 +148,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 func TestAccAWSSubnet_ipv6(t *testing.T) {
 	var before, after ec2.Subnet
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_subnet.foo",
 		Providers:     testAccProviders,
@@ -158,7 +186,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	var subnet ec2.Subnet
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_subnet.foo",
 		Providers:     testAccProviders,

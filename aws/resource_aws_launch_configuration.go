@@ -35,10 +35,11 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
 			},
 
 			"image_id": {

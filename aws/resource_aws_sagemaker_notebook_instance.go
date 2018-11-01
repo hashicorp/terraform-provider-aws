@@ -202,6 +202,10 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: notebookInstance.NotebookInstanceArn,
 	})
+	if err != nil {
+		log.Printf("[ERR] Error reading tags: %s", err)
+		return err
+	}
 
 	d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags))
 

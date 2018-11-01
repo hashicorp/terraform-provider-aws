@@ -11,11 +11,34 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCloudWatchLogGroup_importBasic(t *testing.T) {
+	resourceName := "aws_cloudwatch_log_group.foobar"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_in_days"}, //this has a default value
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -34,7 +57,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -54,7 +77,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -82,7 +105,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -101,7 +124,7 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -128,7 +151,7 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -152,7 +175,7 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -173,7 +196,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -228,7 +251,7 @@ func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -271,11 +294,11 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
-		logGroup, exists, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID, nil)
+		logGroup, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		if !exists {
+		if logGroup == nil {
 			return fmt.Errorf("Bad: LogGroup %q does not exist", rs.Primary.ID)
 		}
 
@@ -292,12 +315,12 @@ func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudwatch_log_group" {
 			continue
 		}
-		_, exists, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID, nil)
+		logGroup, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID)
 		if err != nil {
 			return nil
 		}
 
-		if exists {
+		if logGroup != nil {
 			return fmt.Errorf("Bad: LogGroup still exists: %q", rs.Primary.ID)
 		}
 

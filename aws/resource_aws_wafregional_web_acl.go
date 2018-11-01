@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -18,52 +19,75 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 		Delete: resourceAwsWafRegionalWebAclDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"default_action": &schema.Schema{
+			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"metric_name": &schema.Schema{
+			"metric_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": &schema.Schema{
+						"action": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"priority": &schema.Schema{
+						"override_action": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"priority": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"rule_id": &schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  waf.WafRuleTypeRegular,
+							ValidateFunc: validation.StringInSlice([]string{
+								waf.WafRuleTypeRegular,
+								waf.WafRuleTypeRateBased,
+								waf.WafRuleTypeGroup,
+							}, false),
+						},
+						"rule_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -82,7 +106,7 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandDefaultActionWR(d.Get("default_action").([]interface{})),
+			DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
@@ -106,7 +130,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
 		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-			log.Printf("[WARN] WAF Regional ACL (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -114,24 +138,42 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	d.Set("default_action", flattenDefaultActionWR(resp.WebACL.DefaultAction))
+	if resp == nil || resp.WebACL == nil {
+		log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err := d.Set("default_action", flattenWafAction(resp.WebACL.DefaultAction)); err != nil {
+		return fmt.Errorf("error setting default_action: %s", err)
+	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
-	d.Set("rule", flattenWafWebAclRules(resp.WebACL.Rules))
+	if err := d.Set("rule", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
+		return fmt.Errorf("error setting rule: %s", err)
+	}
 
 	return nil
 }
 
 func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("default_action") || d.HasChange("rule") {
-		conn := meta.(*AWSClient).wafregionalconn
-		region := meta.(*AWSClient).region
+	conn := meta.(*AWSClient).wafregionalconn
+	region := meta.(*AWSClient).region
 
-		action := expandDefaultActionWR(d.Get("default_action").([]interface{}))
+	if d.HasChange("default_action") || d.HasChange("rule") {
 		o, n := d.GetChange("rule")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateWebAclResourceWR(d.Id(), action, oldR, newR, conn, region)
+		wr := newWafRegionalRetryer(conn, region)
+		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.UpdateWebACLInput{
+				ChangeToken:   token,
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWafWebAclRules(oldR, newR),
+				WebACLId:      aws.String(d.Id()),
+			}
+			return conn.UpdateWebACL(req)
+		})
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional ACL: %s", err)
 		}
@@ -143,11 +185,19 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
 
-	action := expandDefaultActionWR(d.Get("default_action").([]interface{}))
+	// First, need to delete all rules
 	rules := d.Get("rule").(*schema.Set).List()
 	if len(rules) > 0 {
-		noRules := []interface{}{}
-		err := updateWebAclResourceWR(d.Id(), action, rules, noRules, conn, region)
+		wr := newWafRegionalRetryer(conn, region)
+		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.UpdateWebACLInput{
+				ChangeToken:   token,
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWafWebAclRules(rules, []interface{}{}),
+				WebACLId:      aws.String(d.Id()),
+			}
+			return conn.UpdateWebACL(req)
+		})
 		if err != nil {
 			return fmt.Errorf("Error Removing WAF Regional ACL Rules: %s", err)
 		}
@@ -167,100 +217,4 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error Deleting WAF Regional ACL: %s", err)
 	}
 	return nil
-}
-
-func updateWebAclResourceWR(id string, a *waf.WafAction, oldR, newR []interface{}, conn *wafregional.WAFRegional, region string) error {
-	wr := newWafRegionalRetryer(conn, region)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.UpdateWebACLInput{
-			DefaultAction: a,
-			ChangeToken:   token,
-			WebACLId:      aws.String(id),
-			Updates:       diffWafWebAclRules(oldR, newR),
-		}
-		return conn.UpdateWebACL(req)
-	})
-	if err != nil {
-		return fmt.Errorf("Error Updating WAF Regional ACL: %s", err)
-	}
-	return nil
-}
-
-func expandDefaultActionWR(d []interface{}) *waf.WafAction {
-	if d == nil || len(d) == 0 {
-		return nil
-	}
-
-	if d[0] == nil {
-		log.Printf("[ERR] First element of Default Action is set to nil")
-		return nil
-	}
-
-	dA := d[0].(map[string]interface{})
-
-	return &waf.WafAction{
-		Type: aws.String(dA["type"].(string)),
-	}
-}
-
-func flattenDefaultActionWR(n *waf.WafAction) []map[string]interface{} {
-	if n == nil {
-		return nil
-	}
-
-	m := setMap(make(map[string]interface{}))
-
-	m.SetString("type", n.Type)
-	return m.MapList()
-}
-
-func flattenWafWebAclRules(ts []*waf.ActivatedRule) []interface{} {
-	out := make([]interface{}, len(ts), len(ts))
-	for i, r := range ts {
-		actionMap := map[string]interface{}{
-			"type": *r.Action.Type,
-		}
-		m := make(map[string]interface{})
-		m["action"] = []interface{}{actionMap}
-		m["priority"] = *r.Priority
-		m["rule_id"] = *r.RuleId
-		out[i] = m
-	}
-	return out
-}
-
-func expandWafWebAclUpdate(updateAction string, aclRule map[string]interface{}) *waf.WebACLUpdate {
-	ruleAction := aclRule["action"].([]interface{})[0].(map[string]interface{})
-	rule := &waf.ActivatedRule{
-		Action:   &waf.WafAction{Type: aws.String(ruleAction["type"].(string))},
-		Priority: aws.Int64(int64(aclRule["priority"].(int))),
-		RuleId:   aws.String(aclRule["rule_id"].(string)),
-	}
-
-	update := &waf.WebACLUpdate{
-		Action:        aws.String(updateAction),
-		ActivatedRule: rule,
-	}
-
-	return update
-}
-
-func diffWafWebAclRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
-	updates := make([]*waf.WebACLUpdate, 0)
-
-	for _, or := range oldR {
-		aclRule := or.(map[string]interface{})
-
-		if idx, contains := sliceContainsMap(newR, aclRule); contains {
-			newR = append(newR[:idx], newR[idx+1:]...)
-			continue
-		}
-		updates = append(updates, expandWafWebAclUpdate(waf.ChangeActionDelete, aclRule))
-	}
-
-	for _, nr := range newR {
-		aclRule := nr.(map[string]interface{})
-		updates = append(updates, expandWafWebAclUpdate(waf.ChangeActionInsert, aclRule))
-	}
-	return updates
 }
