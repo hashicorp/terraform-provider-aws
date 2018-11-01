@@ -7,7 +7,9 @@ NOTES:
 
 ENHANCEMENTS:
 
+* resource/aws_mq_broker: Add `logs` attribute [GH-6122]
 * resource/aws_launch_configuration: Add `capacity_reservation_specification` argument [GH-6325]
+* resource/aws_mq_broker: Add `logs` argument [GH-6122]
 
 BUG FIXES:
 
