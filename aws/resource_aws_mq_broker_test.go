@@ -614,9 +614,9 @@ resource "aws_mq_broker" "test" {
   host_instance_type = "mq.t2.micro"
   security_groups = ["${aws_security_group.test.id}"]
   logs {
-		general = true
-	}
-	user {
+    general = true
+  }
+  user {
     username = "Test"
     password = "TestTest1234"
   }
@@ -746,9 +746,9 @@ resource "aws_mq_broker" "test" {
   engine_version = "5.15.0"
   host_instance_type = "mq.t2.micro"
   logs {
-		general = true
-		audit = true
-	}
+    general = true
+    audit = true
+  }
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
     time_of_day = "02:00"

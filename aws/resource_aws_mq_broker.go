@@ -304,8 +304,6 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("engine_version", out.EngineVersion)
 	d.Set("host_instance_type", out.HostInstanceType)
 	d.Set("publicly_accessible", out.PubliclyAccessible)
-	d.Set("enable_logging", out.Logs.General)
-	d.Set("enable_auditing", out.Logs.Audit)
 	err = d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(out.MaintenanceWindowStartTime))
 	if err != nil {
 		return err
@@ -351,20 +349,11 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
-	if d.HasChange("configuration") {
+	if d.HasChange("configuration") || d.HasChange("logs") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandMqConfigurationId(d.Get("configuration").([]interface{})),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("logs") {
-		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
-			BrokerId: aws.String(d.Id()),
-			Logs:     expandMqLogs(d.Get("logs").([]interface{})),
+			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
 		})
 		if err != nil {
 			return err

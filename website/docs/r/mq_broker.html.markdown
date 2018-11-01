@@ -62,7 +62,7 @@ The following arguments are supported:
 * `security_groups` - (Required) The list of security group IDs assigned to the broker.
 * `subnet_ids` - (Optional) The list of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires two subnets.
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
-* `logging` - (Optional) Logging configuration of the broker. See below.
+* `logs` - (Optional) Logging configuration of the broker. See below.
 * `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
 
 ### Nested Fields
@@ -78,7 +78,7 @@ The following arguments are supported:
 * `time_of_day` - (Required) The time, in 24-hour format. e.g. `02:00`
 * `time_zone` - (Required) The time zone, UTC by default, in either the Country/City format, or the UTC offset format. e.g. `CET`
 
-### `logging`
+### `logs`
 
 * `general` - (Optional) Enables general logging via CloudWatch. Defaults to `false`.
 * `audit` - (Optional) Enables audit logging. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
