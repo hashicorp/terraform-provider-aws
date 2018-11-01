@@ -439,6 +439,10 @@ func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: trainingJob.TrainingJobArn,
 	})
+	if err != nil {
+		log.Printf("[ERR] Error reading tag: %s", err)
+		return err
+	}
 
 	d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags))
 
