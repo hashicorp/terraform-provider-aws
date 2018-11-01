@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -550,9 +551,11 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 
-	sortedActions := sortActionsBasedonTypeinTFFile("default_action", listener.DefaultActions, d)
-	defaultActions := make([]interface{}, len(sortedActions))
-	for i, defaultAction := range sortedActions {
+	sort.Slice(listener.DefaultActions, func(i, j int) bool {
+		return aws.Int64Value(listener.DefaultActions[i].Order) < aws.Int64Value(listener.DefaultActions[j].Order)
+	})
+	defaultActions := make([]interface{}, len(listener.DefaultActions))
+	for i, defaultAction := range listener.DefaultActions {
 		defaultActionMap := make(map[string]interface{})
 		defaultActionMap["type"] = aws.StringValue(defaultAction.Type)
 		defaultActionMap["order"] = aws.Int64Value(defaultAction.Order)

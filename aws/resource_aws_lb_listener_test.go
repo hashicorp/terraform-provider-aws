@@ -272,6 +272,60 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
+func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
+	var listener elbv2.Listener
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerExists(resourceName, &listener),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
+					testAccCheckAWSLBListenerDefaultActionOrderDisappears(&listener, 1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSLBListenerDefaultActionOrderDisappears(listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var newDefaultActions []*elbv2.Action
+
+		for i, action := range listener.DefaultActions {
+			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
+				newDefaultActions = append(listener.DefaultActions[:i], listener.DefaultActions[i+1:]...)
+				break
+			}
+		}
+
+		if len(newDefaultActions) == 0 {
+			return fmt.Errorf("Unable to find default action order %d from default actions: %#v", actionOrderToDelete, listener.DefaultActions)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+		input := &elbv2.ModifyListenerInput{
+			DefaultActions: newDefaultActions,
+			ListenerArn:    listener.ListenerArn,
+		}
+
+		_, err := conn.ModifyListener(input)
+
+		return err
+	}
+}
+
 func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -452,6 +452,60 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
+func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
+	var rule elbv2.Rule
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					testAccCheckAWSLBListenerRuleActionOrderDisappears(&rule, 1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSLBListenerRuleActionOrderDisappears(rule *elbv2.Rule, actionOrderToDelete int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var newActions []*elbv2.Action
+
+		for i, action := range rule.Actions {
+			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
+				newActions = append(rule.Actions[:i], rule.Actions[i+1:]...)
+				break
+			}
+		}
+
+		if len(newActions) == 0 {
+			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+		input := &elbv2.ModifyRuleInput{
+			Actions: newActions,
+			RuleArn: rule.RuleArn,
+		}
+
+		_, err := conn.ModifyRule(input)
+
+		return err
+	}
+}
+
 func testAccCheckAWSLbListenerRuleRecreated(t *testing.T,
 	before, after *elbv2.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
