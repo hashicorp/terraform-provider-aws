@@ -38,6 +38,7 @@ resource "aws_s3_bucket_inventory" "test" {
       format = "ORC"
       bucket_arn = "${aws_s3_bucket.inventory.arn}"
     }
+  }
 }
 ```
 
