@@ -241,7 +241,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = iamconn.ListSSHPublicKeysPages(listSSHPublicKeys, pageOfListSSHPublicKeys)
 		if err != nil {
-			return fmt.Errorf("Error removing public ssh keys of user %s: %s", d.Id(), err)
+			return fmt.Errorf("Error removing public SSH keys of user %s: %s", d.Id(), err)
 		}
 		for _, k := range publicKeys {
 			_, err := iamconn.DeleteSSHPublicKey(&iam.DeleteSSHPublicKeyInput{
@@ -249,7 +249,7 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 				SSHPublicKeyId: aws.String(k),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting access key %s: %s", k, err)
+				return fmt.Errorf("Error deleting public SSH key %s: %s", k, err)
 			}
 		}
 
