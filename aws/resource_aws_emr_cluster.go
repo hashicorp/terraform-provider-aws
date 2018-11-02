@@ -1303,7 +1303,7 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) ([]*emr.Inst
 		applyBidPrice(config, configAttributes)
 		applyEbsConfig(configAttributes, config)
 
-		if v, ok := configAttributes["autoscaling_policy"]; ok {
+		if v, ok := configAttributes["autoscaling_policy"]; ok && v.(string) != "" {
 			var autoScalingPolicy *emr.AutoScalingPolicy
 
 			err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
