@@ -1093,19 +1093,6 @@ func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} 
 	return result
 }
 
-func loadGroups(d *schema.ResourceData, meta interface{}) ([]*emr.InstanceGroup, error) {
-	emrconn := meta.(*AWSClient).emrconn
-	reqGrps := &emr.ListInstanceGroupsInput{
-		ClusterId: aws.String(d.Id()),
-	}
-
-	respGrps, errGrps := emrconn.ListInstanceGroups(reqGrps)
-	if errGrps != nil {
-		return nil, fmt.Errorf("Error reading EMR cluster: %s", errGrps)
-	}
-	return respGrps.InstanceGroups, nil
-}
-
 func findGroup(grps []*emr.InstanceGroup, typ string) *emr.InstanceGroup {
 	for _, grp := range grps {
 		if grp.InstanceGroupType != nil {

@@ -701,18 +701,6 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]stri
 	return result, nil
 }
 
-func readDynamoDbPITR(table string, conn *dynamodb.DynamoDB) (bool, error) {
-	output, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
-		TableName: aws.String(table),
-	})
-	if err != nil {
-		return false, fmt.Errorf("Error reading backup status from dynamodb resource: %s", err)
-	}
-
-	pitr := output.ContinuousBackupsDescription.PointInTimeRecoveryDescription
-	return *pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled, nil
-}
-
 // Waiters
 
 func waitForDynamoDbGSIToBeActive(tableName string, gsiName string, conn *dynamodb.DynamoDB) error {

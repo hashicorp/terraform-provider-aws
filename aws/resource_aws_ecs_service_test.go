@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
+
 func TestParseTaskDefinition(t *testing.T) {
 	cases := map[string]map[string]interface{}{
 		"invalid": {
@@ -900,6 +902,18 @@ func testAccCheckAWSEcsServiceDisappears(service *ecs.Service) resource.TestChec
 
 		return err
 	}
+}
+
+func parseTaskDefinition(taskDefinition string) (string, string, error) {
+	matches := taskDefinitionRE.FindAllStringSubmatch(taskDefinition, 2)
+
+	if len(matches) == 0 || len(matches[0]) != 3 {
+		return "", "", fmt.Errorf(
+			"Invalid task definition format, family:rev or ARN expected (%#v)",
+			taskDefinition)
+	}
+
+	return matches[0][1], matches[0][2], nil
 }
 
 func testAccAWSEcsService(clusterName, tdName, svcName string) string {

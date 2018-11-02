@@ -2331,14 +2331,6 @@ func normalizeCloudFormationTemplate(templateString interface{}) (string, error)
 	return checkYamlString(templateString)
 }
 
-func flattenInspectorTags(cfTags []*cloudformation.Tag) map[string]string {
-	tags := make(map[string]string, len(cfTags))
-	for _, t := range cfTags {
-		tags[*t.Key] = *t.Value
-	}
-	return tags
-}
-
 func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]interface{} {
 	stages := make([]map[string]interface{}, 0)
 

@@ -1,7 +1,9 @@
 package aws
 
 import (
+	"log"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -74,4 +76,18 @@ func TestIgnoringTagsACMPCA(t *testing.T) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
 		}
 	}
+}
+
+// compare a tag against a list of strings and checks if it should
+// be ignored or not
+func tagIgnoredACMPCA(t *acmpca.Tag) bool {
+	filter := []string{"^aws:"}
+	for _, v := range filter {
+		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))
+		if r, _ := regexp.MatchString(v, aws.StringValue(t.Key)); r == true {
+			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", aws.StringValue(t.Key), aws.StringValue(t.Value))
+			return true
+		}
+	}
+	return false
 }

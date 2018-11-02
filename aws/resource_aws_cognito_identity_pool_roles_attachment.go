@@ -5,12 +5,9 @@ import (
 	"log"
 	"time"
 
-	"bytes"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -262,36 +259,4 @@ func validateRoleMappings(roleMappings []interface{}) []error {
 	}
 
 	return errors
-}
-
-func cognitoRoleMappingHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["identity_provider"].(string)))
-
-	return hashcode.String(buf.String())
-}
-
-func cognitoRoleMappingValueHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-	if d, ok := m["ambiguous_role_resolution"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-
-	return hashcode.String(buf.String())
-}
-
-func cognitoRoleMappingRulesConfigurationHash(v interface{}) int {
-	var buf bytes.Buffer
-	for _, rule := range v.([]interface{}) {
-		r := rule.(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", r["claim"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", r["match_type"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", r["role_arn"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", r["value"].(string)))
-	}
-
-	return hashcode.String(buf.String())
 }
