@@ -694,7 +694,8 @@ func validateSQSQueueName(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validateSQSNonFifoQueueName(v interface{}, k string) (errors []error) {
+func validateSQSNonFifoQueueName(v interface{}) (errors []error) {
+	k := "name"
 	value := v.(string)
 	if len(value) > 80 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 80 characters", k))
@@ -706,7 +707,8 @@ func validateSQSNonFifoQueueName(v interface{}, k string) (errors []error) {
 	return
 }
 
-func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
+func validateSQSFifoQueueName(v interface{}) (errors []error) {
+	k := "name"
 	value := v.(string)
 
 	if len(value) > 80 {
@@ -1677,7 +1679,8 @@ func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string
 }
 
 // Validates that either authenticated or unauthenticated is defined
-func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
+func validateCognitoRoles(v map[string]interface{}) (errors []error) {
+	k := "roles"
 	_, hasAuthenticated := v["authenticated"].(string)
 	_, hasUnauthenticated := v["unauthenticated"].(string)
 

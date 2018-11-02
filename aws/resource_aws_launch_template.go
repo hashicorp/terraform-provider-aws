@@ -494,7 +494,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		ltName = resource.UniqueId()
 	}
 
-	launchTemplateData, err := buildLaunchTemplateData(d, meta)
+	launchTemplateData, err := buildLaunchTemplateData(d)
 	if err != nil {
 		return err
 	}
@@ -650,7 +650,7 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).ec2conn
 
 	if !d.IsNewResource() {
-		launchTemplateData, err := buildLaunchTemplateData(d, meta)
+		launchTemplateData, err := buildLaunchTemplateData(d)
 		if err != nil {
 			return err
 		}
@@ -925,7 +925,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	return s
 }
 
-func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.RequestLaunchTemplateData, error) {
+func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplateData, error) {
 	opts := &ec2.RequestLaunchTemplateData{
 		UserData: aws.String(d.Get("user_data").(string)),
 	}

@@ -380,13 +380,13 @@ func (c *Config) Client() (interface{}, error) {
 		}
 		// RequestError: send request failed
 		// caused by: Post https://FQDN/: dial tcp: lookup FQDN: no such host
-		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
+		if IsAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
 			log.Printf("[WARN] Disabling retries after next request due to networking issue")
 			r.Retryable = aws.Bool(false)
 		}
 		// RequestError: send request failed
 		// caused by: Post https://FQDN/: dial tcp IPADDRESS:443: connect: connection refused
-		if isAWSErrExtended(r.Error, "RequestError", "send request failed", "connection refused") {
+		if IsAWSErrExtended(r.Error, "RequestError", "send request failed", "connection refused") {
 			log.Printf("[WARN] Disabling retries after next request due to networking issue")
 			r.Retryable = aws.Bool(false)
 		}

@@ -57,7 +57,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 				continue
 			}
 			log.Printf("[INFO] Deleting Elasticache Replication Group: %s", id)
-			err := deleteElasticacheReplicationGroup(id, 40*time.Minute, conn)
+			err := deleteElasticacheReplicationGroup(id, conn)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Elasticache Replication Group (%s): %s", id, err)
 			}
