@@ -37,7 +37,6 @@ func testSweepGameliftQueue(region string) error {
 			return nil
 		}
 		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
-
 	}
 
 	if len(out.GameSessionQueues) == 0 {
@@ -71,27 +70,19 @@ func testSweepGameliftQueue(region string) error {
 	}
 
 	return nil
-
 }
 
 func TestAccAWSGameliftQueue_basic(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
-	rString := acctest.RandString(8)
-	queueName := getComposedQueueName(rString)
-	destinations := gamelift.GameSessionQueueDestination{
-		DestinationArn: aws.String(acctest.RandString(8)),
-	}
+	queueName := testAccGameliftQueuePrefix + acctest.RandString(8)
 	playerLatencyPolicies := gamelift.PlayerLatencyPolicy{
 		MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(20),
 		PolicyDurationSeconds:                      aws.Int64(30),
 	}
 	timeoutInSeconds := int64(124)
 
-	//uQueueName := getComposedQueueName(fmt.Sprintf("else-%s", rString))
-	uDestinations := gamelift.GameSessionQueueDestination{
-		DestinationArn: aws.String(acctest.RandString(8)),
-	}
+	uQueueName := queueName + "-updated"
 	uPlayerLatencyPolicies := gamelift.PlayerLatencyPolicy{
 		MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(30),
 		PolicyDurationSeconds:                      aws.Int64(40),
@@ -104,19 +95,14 @@ func TestAccAWSGameliftQueue_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGameliftQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftQueueBasicConfig(queueName, destinations,
+				Config: testAccAWSGameliftQueueBasicConfig(queueName,
 					playerLatencyPolicies, timeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftQueueExists("aws_gamelift_queue.test", &conf),
 					resource.TestCheckResourceAttr("aws_gamelift_queue.test", "name", queueName),
 
 					resource.TestCheckResourceAttr("aws_gamelift_queue.test",
-						"destinations.#",
-						"1"),
-
-					resource.TestCheckResourceAttr("aws_gamelift_queue.test",
-						"destinations.0",
-						fmt.Sprintf("%s", *destinations.DestinationArn)),
+						"destinations.#", "0"),
 
 					resource.TestCheckResourceAttr("aws_gamelift_queue.test",
 						"player_latency_policies.#", "1"),
@@ -134,18 +120,14 @@ func TestAccAWSGameliftQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGameliftQueueBasicConfig(queueName, uDestinations,
+				Config: testAccAWSGameliftQueueBasicConfig(uQueueName,
 					uPlayerLatencyPolicies, uTimeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftQueueExists("aws_gamelift_queue.test", &conf),
-					resource.TestCheckResourceAttr("aws_gamelift_queue.test", "name", queueName),
+					resource.TestCheckResourceAttr("aws_gamelift_queue.test", "name", uQueueName),
 
 					resource.TestCheckResourceAttr("aws_gamelift_queue.test",
-						"destinations.#", "1"),
-
-					resource.TestCheckResourceAttr("aws_gamelift_queue.test",
-						"destinations.0",
-						fmt.Sprintf("%s", *uDestinations.DestinationArn)),
+						"destinations.#", "0"),
 
 					resource.TestCheckResourceAttr("aws_gamelift_queue.test",
 						"player_latency_policies.#", "1"),
@@ -222,6 +204,9 @@ func testAccCheckAWSGameliftQueueDestroy(s *terraform.State) error {
 			Names: aws.StringSlice([]string{name}),
 			Limit: &limit,
 		})
+		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -236,29 +221,23 @@ func testAccCheckAWSGameliftQueueDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
-func testAccAWSGameliftQueueBasicConfig(queueName string, destinations gamelift.GameSessionQueueDestination,
+func testAccAWSGameliftQueueBasicConfig(queueName string,
 	playerLatencyPolicies gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_queue" "test" {
   name = "%s"
-  destinations = ["%s"]
+  destinations = []
   player_latency_policies {
-	maximum_individual_player_latency_milliseconds = %d
-	policy_duration_seconds = %d
+    maximum_individual_player_latency_milliseconds = %d
+    policy_duration_seconds = %d
   }
   timeout_in_seconds = %d
 }
 `,
 		queueName,
-		*destinations.DestinationArn,
 		*playerLatencyPolicies.MaximumIndividualPlayerLatencyMilliseconds,
 		*playerLatencyPolicies.PolicyDurationSeconds,
 		timeoutInSeconds)
-}
-
-func getComposedQueueName(name string) string {
-	return fmt.Sprintf("%s%s", testAccGameliftQueuePrefix, name)
 }
