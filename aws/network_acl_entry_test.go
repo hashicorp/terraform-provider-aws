@@ -82,60 +82,6 @@ func Test_expandNetworkACLEntry(t *testing.T) {
 
 }
 
-func Test_flattenNetworkACLEntry(t *testing.T) {
-
-	apiInput := []*ec2.NetworkAclEntry{
-		{
-			Protocol: aws.String("tcp"),
-			PortRange: &ec2.PortRange{
-				From: aws.Int64(22),
-				To:   aws.Int64(22),
-			},
-			RuleAction: aws.String("deny"),
-			RuleNumber: aws.Int64(1),
-			CidrBlock:  aws.String("0.0.0.0/0"),
-		},
-		{
-			Protocol: aws.String("tcp"),
-			PortRange: &ec2.PortRange{
-				From: aws.Int64(443),
-				To:   aws.Int64(443),
-			},
-			RuleAction: aws.String("deny"),
-			RuleNumber: aws.Int64(2),
-			CidrBlock:  aws.String("0.0.0.0/0"),
-		},
-	}
-	flattened := flattenNetworkAclEntries(apiInput)
-
-	expected := []map[string]interface{}{
-		{
-			"protocol":   "tcp",
-			"from_port":  int64(22),
-			"to_port":    int64(22),
-			"cidr_block": "0.0.0.0/0",
-			"action":     "deny",
-			"rule_no":    int64(1),
-		},
-		{
-			"protocol":   "tcp",
-			"from_port":  int64(443),
-			"to_port":    int64(443),
-			"cidr_block": "0.0.0.0/0",
-			"action":     "deny",
-			"rule_no":    int64(2),
-		},
-	}
-
-	if !reflect.DeepEqual(flattened, expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			flattened,
-			expected)
-	}
-
-}
-
 func Test_validatePorts(t *testing.T) {
 	for _, ts := range []struct {
 		to       int64
@@ -171,32 +117,4 @@ func Test_validateCIDRBlock(t *testing.T) {
 			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
 		}
 	}
-}
-
-func flattenNetworkAclEntries(list []*ec2.NetworkAclEntry) []map[string]interface{} {
-	entries := make([]map[string]interface{}, 0, len(list))
-
-	for _, entry := range list {
-
-		newEntry := map[string]interface{}{
-			"from_port": *entry.PortRange.From,
-			"to_port":   *entry.PortRange.To,
-			"action":    *entry.RuleAction,
-			"rule_no":   *entry.RuleNumber,
-			"protocol":  *entry.Protocol,
-		}
-
-		if entry.CidrBlock != nil {
-			newEntry["cidr_block"] = *entry.CidrBlock
-		}
-
-		if entry.Ipv6CidrBlock != nil {
-			newEntry["ipv6_cidr_block"] = *entry.Ipv6CidrBlock
-		}
-
-		entries = append(entries, newEntry)
-	}
-
-	return entries
-
 }
