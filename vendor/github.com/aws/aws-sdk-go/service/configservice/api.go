@@ -10597,4 +10597,22 @@ const (
 
 	// ResourceTypeAwsXrayEncryptionConfig is a ResourceType enum value
 	ResourceTypeAwsXrayEncryptionConfig = "AWS::XRay::EncryptionConfig"
+
+	// ResourceTypeAwsSsmAssociationCompliance is a ResourceType enum value
+	ResourceTypeAwsSsmAssociationCompliance = "AWS::SSM::AssociationCompliance"
+
+	// ResourceTypeAwsSsmPatchCompliance is a ResourceType enum value
+	ResourceTypeAwsSsmPatchCompliance = "AWS::SSM::PatchCompliance"
+
+	// ResourceTypeAwsShieldProtection is a ResourceType enum value
+	ResourceTypeAwsShieldProtection = "AWS::Shield::Protection"
+
+	// ResourceTypeAwsShieldRegionalProtection is a ResourceType enum value
+	ResourceTypeAwsShieldRegionalProtection = "AWS::ShieldRegional::Protection"
+
+	// ResourceTypeAwsConfigResourceCompliance is a ResourceType enum value
+	ResourceTypeAwsConfigResourceCompliance = "AWS::Config::ResourceCompliance"
+
+	// ResourceTypeAwsCodePipelinePipeline is a ResourceType enum value
+	ResourceTypeAwsCodePipelinePipeline = "AWS::CodePipeline::Pipeline"
 )

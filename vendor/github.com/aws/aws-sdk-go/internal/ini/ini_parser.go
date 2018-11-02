@@ -25,8 +25,7 @@ const (
 	// SkipTokenState will skip any token and push the previous
 	// state onto the stack.
 	SkipTokenState
-	// comment -> # comment' | ; comment' | / comment_slash
-	// comment_slash -> / comment'
+	// comment -> # comment' | ; comment'
 	// comment' -> MarkComplete | value
 	CommentState
 	// MarkComplete state will complete statements and move that
@@ -157,6 +156,12 @@ loop:
 
 		step := parseTable[k.Kind][tok.Type()]
 		if s.ShouldSkip(tok) {
+			// being in a skip state with no tokens will break out of
+			// the parse loop since there is nothing left to process.
+			if len(tokens) == 0 {
+				break loop
+			}
+
 			step = SkipTokenState
 		}
 

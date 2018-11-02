@@ -16087,6 +16087,9 @@ type DBInstance struct {
 	// License model information for this DB instance.
 	LicenseModel *string `type:"string"`
 
+	// Specifies the listener connection endpoint for SQL Server Always On.
+	ListenerEndpoint *Endpoint `type:"structure"`
+
 	// Contains the master username for the DB instance.
 	MasterUsername *string `type:"string"`
 
@@ -16381,6 +16384,12 @@ func (s *DBInstance) SetLatestRestorableTime(v time.Time) *DBInstance {
 // SetLicenseModel sets the LicenseModel field's value.
 func (s *DBInstance) SetLicenseModel(v string) *DBInstance {
 	s.LicenseModel = &v
+	return s
+}
+
+// SetListenerEndpoint sets the ListenerEndpoint field's value.
+func (s *DBInstance) SetListenerEndpoint(v *Endpoint) *DBInstance {
+	s.ListenerEndpoint = v
 	return s
 }
 
