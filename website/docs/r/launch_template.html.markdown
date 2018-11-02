@@ -96,6 +96,7 @@ The following arguments are supported:
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
 * `credit_specification` - Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
+* `default_version` - The default version of the launch template.
 * `disable_api_termination` - If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
 * `ebs_optimized` - If `true`, the launched EC2 instance will be EBS-optimized.
@@ -121,6 +122,7 @@ The following arguments are supported:
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tags](#tags) below for more details.
 * `tags` - (Optional) A mapping of tags to assign to the launch template.
+* `update_default_version` - (Optional) If `true`, sets the default version of launch template to the latest version.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 
 ### Block devices
@@ -265,7 +267,6 @@ The following attributes are exported along with all argument references:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
-* `default_version` - The default version of the launch template.
 * `latest_version` - The latest version of the launch template.
 
 ## Import
