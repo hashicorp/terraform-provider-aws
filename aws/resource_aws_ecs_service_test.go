@@ -13,80 +13,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
-
-func TestParseTaskDefinition(t *testing.T) {
-	cases := map[string]map[string]interface{}{
-		"invalid": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalidWithColon:": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"1234": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalid:aaa": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalid=family:1": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalid:name:1": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"valid:1": {
-			"family":   "valid",
-			"revision": "1",
-			"isValid":  true,
-		},
-		"abc12-def:54": {
-			"family":   "abc12-def",
-			"revision": "54",
-			"isValid":  true,
-		},
-		"lorem_ip-sum:123": {
-			"family":   "lorem_ip-sum",
-			"revision": "123",
-			"isValid":  true,
-		},
-		"lorem-ipsum:1": {
-			"family":   "lorem-ipsum",
-			"revision": "1",
-			"isValid":  true,
-		},
-	}
-
-	for input, expectedOutput := range cases {
-		family, revision, err := parseTaskDefinition(input)
-		isValid := expectedOutput["isValid"].(bool)
-		if !isValid && err == nil {
-			t.Fatalf("Task definition %s should fail", input)
-		}
-
-		expectedFamily := expectedOutput["family"].(string)
-		if family != expectedFamily {
-			t.Fatalf("Unexpected family (%#v) for task definition %s\n%#v", family, input, err)
-		}
-		expectedRevision := expectedOutput["revision"].(string)
-		if revision != expectedRevision {
-			t.Fatalf("Unexpected revision (%#v) for task definition %s\n%#v", revision, input, err)
-		}
-	}
-}
-
 func TestAccAWSEcsService_withARN(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -902,18 +828,6 @@ func testAccCheckAWSEcsServiceDisappears(service *ecs.Service) resource.TestChec
 
 		return err
 	}
-}
-
-func parseTaskDefinition(taskDefinition string) (string, string, error) {
-	matches := taskDefinitionRE.FindAllStringSubmatch(taskDefinition, 2)
-
-	if len(matches) == 0 || len(matches[0]) != 3 {
-		return "", "", fmt.Errorf(
-			"Invalid task definition format, family:rev or ARN expected (%#v)",
-			taskDefinition)
-	}
-
-	return matches[0][1], matches[0][2], nil
 }
 
 func testAccAWSEcsService(clusterName, tdName, svcName string) string {

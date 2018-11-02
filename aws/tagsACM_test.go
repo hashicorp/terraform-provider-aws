@@ -1,13 +1,8 @@
 package aws
 
 import (
-	"log"
 	"reflect"
-	"regexp"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
 )
 
 func TestDiffTagsACM(t *testing.T) {
@@ -59,35 +54,4 @@ func TestDiffTagsACM(t *testing.T) {
 			t.Fatalf("%d: bad remove: %#v", i, rm)
 		}
 	}
-}
-
-func TestIgnoringTagsACM(t *testing.T) {
-	var ignoredTags []*acm.Tag
-	ignoredTags = append(ignoredTags, &acm.Tag{
-		Key:   aws.String("aws:cloudformation:logical-id"),
-		Value: aws.String("foo"),
-	})
-	ignoredTags = append(ignoredTags, &acm.Tag{
-		Key:   aws.String("aws:foo:bar"),
-		Value: aws.String("baz"),
-	})
-	for _, tag := range ignoredTags {
-		if !tagIgnoredACM(tag) {
-			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
-		}
-	}
-}
-
-// compare a tag against a list of strings and checks if it should
-// be ignored or not
-func tagIgnoredACM(t *acm.Tag) bool {
-	filter := []string{"^aws:"}
-	for _, v := range filter {
-		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
-			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
-			return true
-		}
-	}
-	return false
 }
