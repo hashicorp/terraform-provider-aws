@@ -430,6 +430,74 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_defaultVersion(t *testing.T) {
+	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_defaultVersion(rInt, 2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "2"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
+	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_updateDefaultVersion(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "2"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_updateDefaultVersion(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resName, "default_version", "4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.test"
@@ -857,6 +925,24 @@ resource "aws_launch_template" "foo" {
   }
 }
 `, instanceType, rName, cpuCredits)
+}
+
+func testAccAWSLaunchTemplateConfig_defaultVersion(rInt, defaultVersion int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name            = "foo_%d"
+	default_version = %d
+}
+`, rInt, defaultVersion)
+}
+
+func testAccAWSLaunchTemplateConfig_updateDefaultVersion(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name                   = "foo_%d"
+	update_default_version = true
+}
+`, rInt)
 }
 
 const testAccAWSLaunchTemplateConfig_networkInterface = `

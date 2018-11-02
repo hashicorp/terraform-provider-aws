@@ -65,7 +65,6 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"update_default_version": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				Default:       false,
 				ConflictsWith: []string{"default_version"},
 			},
 
@@ -674,24 +673,24 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		if createErr != nil {
 			return createErr
 		}
+
+		d.Partial(true)
+
+		if dvErr := setDefaultVersion(conn, d); dvErr != nil {
+			return dvErr
+		} else {
+			d.SetPartial("default_version")
+		}
+
+		d.Partial(false)
 	}
 
 	d.Partial(true)
 
-	if tagsErr := setTags(conn, d); tagsErr != nil {
-		return tagsErr
+	if err := setTags(conn, d); err != nil {
+		return err
 	} else {
 		d.SetPartial("tags")
-	}
-
-	d.Partial(false)
-
-	d.Partial(true)
-
-	if dvErr := setDefaultVersion(conn, d); dvErr != nil {
-		return dvErr
-	} else {
-		d.SetPartial("default_version")
 	}
 
 	d.Partial(false)
@@ -1379,7 +1378,7 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 }
 
 func setDefaultVersion(conn *ec2.EC2, d *schema.ResourceData) error {
-	var defaultVersion int64
+	defaultVersion := int64(1)
 	if v, ok := d.GetOk("update_default_version"); ok && v.(bool) {
 		describeLaunchTemplateVersionsOpts := &ec2.DescribeLaunchTemplateVersionsInput{
 			LaunchTemplateId: aws.String(d.Id()),
@@ -1393,24 +1392,18 @@ func setDefaultVersion(conn *ec2.EC2, d *schema.ResourceData) error {
 
 		defaultVersion = *resp.LaunchTemplateVersions[0].VersionNumber
 	} else if d.HasChange("default_version") {
-		if v, ok := d.GetOk("default_version"); ok {
-			defaultVersion = v.(int64)
-		} else {
-			defaultVersion = 1
-		}
+		defaultVersion = int64(d.Get("default_version").(int))
 	}
 
-	if defaultVersion > 0 {
-		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
-			ClientToken:      aws.String(resource.UniqueId()),
-			LaunchTemplateId: aws.String(d.Id()),
-			DefaultVersion:   aws.String(strconv.FormatInt(defaultVersion, 10)),
-		}
+	modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+		ClientToken:      aws.String(resource.UniqueId()),
+		LaunchTemplateId: aws.String(d.Id()),
+		DefaultVersion:   aws.String(strconv.FormatInt(defaultVersion, 10)),
+	}
 
-		_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
-		if err != nil {
-			return err
-		}
+	_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+	if err != nil {
+		return err
 	}
 
 	return nil
