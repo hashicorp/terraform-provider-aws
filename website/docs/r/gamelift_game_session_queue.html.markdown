@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_gamelift_session_queue"
+page_title: "AWS: aws_gamelift_game_session_queue"
 sidebar_current: "docs-aws-resource-gamelift-session-queue"
 description: |-
-  Provides a Gamelift Session Queue resource.
+  Provides a Gamelift Game Session Queue resource.
 ---
 
-# aws_gamelift_session_queue
+# aws_gamelift_game_session_queue
 
-Provides an Gamelift Session Queue resource.
+Provides an Gamelift Game Session Queue resource.
 
 ## Example Usage
 
 ```hcl
-resource "aws_gamelift_session_queue" "test" {
+resource "aws_gamelift_game_session_queue" "test" {
   name = "example-session-queue"
   destinations = [
     "${aws_gamelift_fleet.us_west_2_fleet.arn}",
@@ -50,7 +50,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Session Queue ARN.
+* `arn` - Game Session Queue ARN.
 
 ## Import
 

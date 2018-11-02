@@ -442,7 +442,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_gamelift_alias":                               resourceAwsGameliftAlias(),
 			"aws_gamelift_build":                               resourceAwsGameliftBuild(),
 			"aws_gamelift_fleet":                               resourceAwsGameliftFleet(),
-			"aws_gamelift_session_queue":                       resourceAwsGameliftSessionQueue(),
+			"aws_gamelift_game_session_queue":                  resourceAwsGameliftGameSessionQueue(),
 			"aws_glacier_vault":                                resourceAwsGlacierVault(),
 			"aws_glue_catalog_database":                        resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                           resourceAwsGlueCatalogTable(),

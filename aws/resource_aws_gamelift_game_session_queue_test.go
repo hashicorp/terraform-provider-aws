@@ -13,16 +13,16 @@ import (
 	"strings"
 )
 
-const testAccGameliftSessionQueuePrefix = "tfAccQueue-"
+const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
 
 func init() {
-	resource.AddTestSweepers("aws_gamelift_session_queue", &resource.Sweeper{
-		Name: "aws_gamelift_session_queue",
-		F:    testSweepGameliftSessionQueue,
+	resource.AddTestSweepers("aws_gamelift_game_session_queue", &resource.Sweeper{
+		Name: "aws_gamelift_game_session_queue",
+		F:    testSweepGameliftGameSessionQueue,
 	})
 }
 
-func testSweepGameliftSessionQueue(region string) error {
+func testSweepGameliftGameSessionQueue(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -47,7 +47,7 @@ func testSweepGameliftSessionQueue(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Session Queue", len(out.GameSessionQueues))
 
 	for _, queue := range out.GameSessionQueues {
-		if !strings.HasPrefix(*queue.Name, testAccGameliftSessionQueuePrefix) {
+		if !strings.HasPrefix(*queue.Name, testAccGameliftGameSessionQueuePrefix) {
 			continue
 		}
 
@@ -72,10 +72,10 @@ func testSweepGameliftSessionQueue(region string) error {
 	return nil
 }
 
-func TestAccAWSGameliftSessionQueue_basic(t *testing.T) {
+func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
-	queueName := testAccGameliftSessionQueuePrefix + acctest.RandString(8)
+	queueName := testAccGameliftGameSessionQueuePrefix + acctest.RandString(8)
 	playerLatencyPolicies := []gamelift.PlayerLatencyPolicy{
 		{
 			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(100),
@@ -104,69 +104,69 @@ func TestAccAWSGameliftSessionQueue_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSGameliftSessionQueueDestroy,
+		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftSessionQueueBasicConfig(queueName,
+				Config: testAccAWSGameliftGameSessionQueueBasicConfig(queueName,
 					playerLatencyPolicies, timeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftSessionQueueExists("aws_gamelift_session_queue.test", &conf),
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test", "name", queueName),
+					testAccCheckAWSGameliftGameSessionQueueExists("aws_gamelift_game_session_queue.test", &conf),
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test", "name", queueName),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"destinations.#", "0"),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.#", "2"),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.0.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.0.policy_duration_seconds",
 						fmt.Sprintf("%d", *playerLatencyPolicies[0].PolicyDurationSeconds)),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.1.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *playerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.1.policy_duration_seconds", "0"),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"timeout_in_seconds", fmt.Sprintf("%d", timeoutInSeconds)),
 				),
 			},
 			{
-				Config: testAccAWSGameliftSessionQueueBasicConfig(uQueueName,
+				Config: testAccAWSGameliftGameSessionQueueBasicConfig(uQueueName,
 					uPlayerLatencyPolicies, uTimeoutInSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftSessionQueueExists("aws_gamelift_session_queue.test", &conf),
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test", "name", uQueueName),
+					testAccCheckAWSGameliftGameSessionQueueExists("aws_gamelift_game_session_queue.test", &conf),
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test", "name", uQueueName),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"destinations.#", "0"),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.#", "2"),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.0.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.0.policy_duration_seconds",
 						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].PolicyDurationSeconds)),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.1.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *uPlayerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"player_latency_policy.1.policy_duration_seconds", "0"),
 
-					resource.TestCheckResourceAttr("aws_gamelift_session_queue.test",
+					resource.TestCheckResourceAttr("aws_gamelift_game_session_queue.test",
 						"timeout_in_seconds", fmt.Sprintf("%d", uTimeoutInSeconds)),
 				),
 			},
@@ -174,7 +174,7 @@ func TestAccAWSGameliftSessionQueue_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSGameliftSessionQueueExists(n string, res *gamelift.GameSessionQueue) resource.TestCheckFunc {
+func testAccCheckAWSGameliftGameSessionQueueExists(n string, res *gamelift.GameSessionQueue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -216,11 +216,11 @@ func testAccCheckAWSGameliftSessionQueueExists(n string, res *gamelift.GameSessi
 	}
 }
 
-func testAccCheckAWSGameliftSessionQueueDestroy(s *terraform.State) error {
+func testAccCheckAWSGameliftGameSessionQueueDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_gamelift_session_queue" {
+		if rs.Type != "aws_gamelift_game_session_queue" {
 			continue
 		}
 
@@ -249,10 +249,10 @@ func testAccCheckAWSGameliftSessionQueueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSGameliftSessionQueueBasicConfig(queueName string,
+func testAccAWSGameliftGameSessionQueueBasicConfig(queueName string,
 	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
 	return fmt.Sprintf(`
-resource "aws_gamelift_session_queue" "test" {
+resource "aws_gamelift_game_session_queue" "test" {
   name = "%s"
   destinations = []
   player_latency_policy {
