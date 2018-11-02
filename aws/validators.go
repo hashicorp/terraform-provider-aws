@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
@@ -286,28 +285,6 @@ func validateElbNamePrefix(v interface{}, k string) (ws []string, errors []error
 		errors = append(errors, fmt.Errorf(
 			"%q cannot begin with a hyphen: %q", k, value))
 	}
-	return
-}
-
-func validateEcrRepositoryName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) < 2 {
-		errors = append(errors, fmt.Errorf(
-			"%q must be at least 2 characters long: %q", k, value))
-	}
-	if len(value) > 256 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 256 characters: %q", k, value))
-	}
-
-	// http://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_CreateRepository.html
-	pattern := `^(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
 	return
 }
 
@@ -1338,23 +1315,6 @@ func validateCognitoUserPoolSmsVerificationMessage(v interface{}, k string) (ws 
 	if !regexp.MustCompile(`.*\{####\}.*`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q does not contain {####}", k))
 	}
-	return
-}
-
-func validateCognitoUserPoolClientAuthFlows(v interface{}, k string) (ws []string, es []error) {
-	validValues := []string{
-		cognitoidentityprovider.AuthFlowTypeAdminNoSrpAuth,
-		cognitoidentityprovider.AuthFlowTypeCustomAuth,
-	}
-	period := v.(string)
-	for _, f := range validValues {
-		if period == f {
-			return
-		}
-	}
-	es = append(es, fmt.Errorf(
-		"%q contains an invalid auth flow %q. Valid auth flows are %q.",
-		k, period, validValues))
 	return
 }
 

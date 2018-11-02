@@ -238,16 +238,3 @@ func batchJobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.State
 		return ce, *ce.Status, nil
 	}
 }
-
-func batchJobQueueRefreshStateFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		ce, err := getJobQueue(conn, sn)
-		if err != nil {
-			return nil, "failed", err
-		}
-		if ce == nil {
-			return 42, batch.JQStateDisabled, nil
-		}
-		return ce, *ce.State, nil
-	}
-}

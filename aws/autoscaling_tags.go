@@ -248,36 +248,6 @@ func autoscalingTagFromMap(attr map[string]interface{}, resourceID string) (*aut
 	return t, nil
 }
 
-// autoscalingTagsToMap turns the list of tags into a map.
-func autoscalingTagsToMap(ts []*autoscaling.Tag) map[string]interface{} {
-	tags := make(map[string]interface{})
-	for _, t := range ts {
-		tag := map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
-			"propagate_at_launch": *t.PropagateAtLaunch,
-		}
-		tags[*t.Key] = tag
-	}
-
-	return tags
-}
-
-// autoscalingTagDescriptionsToMap turns the list of tags into a map.
-func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
-	tags := make(map[string]map[string]interface{})
-	for _, t := range *ts {
-		tag := map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
-			"propagate_at_launch": *t.PropagateAtLaunch,
-		}
-		tags[*t.Key] = tag
-	}
-
-	return tags
-}
-
 // autoscalingTagDescriptionsToSlice turns the list of tags into a slice.
 func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription) []map[string]interface{} {
 	tags := make([]map[string]interface{}, 0, len(ts))

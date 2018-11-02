@@ -451,6 +451,27 @@ func testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName string, certif
 	}
 }
 
+func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
+	certificateAuthorities := []*acmpca.CertificateAuthority{}
+	input := &acmpca.ListCertificateAuthoritiesInput{}
+
+	for {
+		output, err := conn.ListCertificateAuthorities(input)
+		if err != nil {
+			return certificateAuthorities, err
+		}
+		for _, certificateAuthority := range output.CertificateAuthorities {
+			certificateAuthorities = append(certificateAuthorities, certificateAuthority)
+		}
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return certificateAuthorities, nil
+}
+
 func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {

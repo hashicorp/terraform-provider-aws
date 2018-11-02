@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -16,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
-
-var taskDefinitionRE = regexp.MustCompile("^([a-zA-Z0-9_-]+):([0-9]+)$")
 
 func resourceAwsEcsService() *schema.Resource {
 	return &schema.Resource{
@@ -941,16 +938,4 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 // arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
 func getNameFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
-}
-
-func parseTaskDefinition(taskDefinition string) (string, string, error) {
-	matches := taskDefinitionRE.FindAllStringSubmatch(taskDefinition, 2)
-
-	if len(matches) == 0 || len(matches[0]) != 3 {
-		return "", "", fmt.Errorf(
-			"Invalid task definition format, family:rev or ARN expected (%#v)",
-			taskDefinition)
-	}
-
-	return matches[0][1], matches[0][2], nil
 }
