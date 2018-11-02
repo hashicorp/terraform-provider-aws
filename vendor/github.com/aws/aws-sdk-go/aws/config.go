@@ -45,8 +45,8 @@ type Config struct {
 	// that overrides the default generated endpoint for a client. Set this
 	// to `""` to use the default generated endpoint.
 	//
-	// @note You must still provide a `Region` value when specifying an
-	//   endpoint for a client.
+	// Note: You must still provide a `Region` value when specifying an
+	// endpoint for a client.
 	Endpoint *string
 
 	// The resolver to use for looking up endpoints for AWS service clients
@@ -65,8 +65,8 @@ type Config struct {
 	// noted. A full list of regions is found in the "Regions and Endpoints"
 	// document.
 	//
-	// @see http://docs.aws.amazon.com/general/latest/gr/rande.html
-	//   AWS Regions and Endpoints
+	// See http://docs.aws.amazon.com/general/latest/gr/rande.html for AWS
+	// Regions and Endpoints.
 	Region *string
 
 	// Set this to `true` to disable SSL when sending requests. Defaults
@@ -120,9 +120,10 @@ type Config struct {
 	// will use virtual hosted bucket addressing when possible
 	// (`http://BUCKET.s3.amazonaws.com/KEY`).
 	//
-	// @note This configuration option is specific to the Amazon S3 service.
-	// @see http://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html
-	//   Amazon S3: Virtual Hosting of Buckets
+	// Note: This configuration option is specific to the Amazon S3 service.
+	//
+	// See http://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html
+	// for Amazon S3: Virtual Hosting of Buckets
 	S3ForcePathStyle *bool
 
 	// Set this to `true` to disable the SDK adding the `Expect: 100-Continue`

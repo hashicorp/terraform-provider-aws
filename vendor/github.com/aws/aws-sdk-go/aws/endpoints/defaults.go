@@ -60,6 +60,7 @@ const (
 	BatchServiceID                        = "batch"                        // Batch.
 	BudgetsServiceID                      = "budgets"                      // Budgets.
 	CeServiceID                           = "ce"                           // Ce.
+	ChimeServiceID                        = "chime"                        // Chime.
 	Cloud9ServiceID                       = "cloud9"                       // Cloud9.
 	ClouddirectoryServiceID               = "clouddirectory"               // Clouddirectory.
 	CloudformationServiceID               = "cloudformation"               // Cloudformation.
@@ -504,6 +505,23 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"chime": service{
+			PartitionEndpoint: "aws-global",
+			IsRegionalized:    boxedFalse,
+			Defaults: endpoint{
+				SSLCommonName: "service.chime.aws.amazon.com",
+				Protocols:     []string{"https"},
+			},
+			Endpoints: endpoints{
+				"aws-global": endpoint{
+					Hostname:  "service.chime.aws.amazon.com",
+					Protocols: []string{"https"},
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+			},
+		},
 		"cloud9": service{
 
 			Endpoints: endpoints{
@@ -584,6 +602,7 @@ var awsPartition = partition{
 			},
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
 				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
@@ -591,6 +610,7 @@ var awsPartition = partition{
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
+				"eu-west-3":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-1":      endpoint{},
@@ -689,11 +709,17 @@ var awsPartition = partition{
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
 				"eu-west-3":      endpoint{},
-				"sa-east-1":      endpoint{},
-				"us-east-1":      endpoint{},
-				"us-east-2":      endpoint{},
-				"us-west-1":      endpoint{},
-				"us-west-2":      endpoint{},
+				"fips": endpoint{
+					Hostname: "codecommit-fips.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				"sa-east-1": endpoint{},
+				"us-east-1": endpoint{},
+				"us-east-2": endpoint{},
+				"us-west-1": endpoint{},
+				"us-west-2": endpoint{},
 			},
 		},
 		"codedeploy": service{
@@ -711,9 +737,33 @@ var awsPartition = partition{
 				"eu-west-3":      endpoint{},
 				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
-				"us-east-2":      endpoint{},
-				"us-west-1":      endpoint{},
-				"us-west-2":      endpoint{},
+				"us-east-1-fips": endpoint{
+					Hostname: "codedeploy-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				"us-east-2": endpoint{},
+				"us-east-2-fips": endpoint{
+					Hostname: "codedeploy-fips.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				"us-west-1": endpoint{},
+				"us-west-1-fips": endpoint{
+					Hostname: "codedeploy-fips.us-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-1",
+					},
+				},
+				"us-west-2": endpoint{},
+				"us-west-2-fips": endpoint{
+					Hostname: "codedeploy-fips.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
 			},
 		},
 		"codepipeline": service{
@@ -2690,6 +2740,13 @@ var awscnPartition = partition{
 				"cn-northwest-1": endpoint{},
 			},
 		},
+		"dms": service{
+
+			Endpoints: endpoints{
+				"cn-north-1":     endpoint{},
+				"cn-northwest-1": endpoint{},
+			},
+		},
 		"ds": service{
 
 			Endpoints: endpoints{
@@ -2775,6 +2832,7 @@ var awscnPartition = partition{
 		"es": service{
 
 			Endpoints: endpoints{
+				"cn-north-1":     endpoint{},
 				"cn-northwest-1": endpoint{},
 			},
 		},
@@ -3042,6 +3100,12 @@ var awsusgovPartition = partition{
 
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{},
+				"us-gov-west-1-fips": endpoint{
+					Hostname: "codedeploy-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 			},
 		},
 		"config": service{
@@ -3155,6 +3219,15 @@ var awsusgovPartition = partition{
 				"us-gov-west-1": endpoint{
 					Protocols: []string{"http", "https"},
 				},
+			},
+		},
+		"guardduty": service{
+			IsRegionalized: boxedTrue,
+			Defaults: endpoint{
+				Protocols: []string{"https"},
+			},
+			Endpoints: endpoints{
+				"us-gov-west-1": endpoint{},
 			},
 		},
 		"iam": service{
