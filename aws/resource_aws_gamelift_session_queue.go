@@ -9,12 +9,12 @@ import (
 	"log"
 )
 
-func resourceAwsGameliftQueue() *schema.Resource {
+func resourceAwsGameliftSessionQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftQueueCreate,
-		Read:   resourceAwsGameliftQueueRead,
-		Update: resourceAwsGameliftQueueUpdate,
-		Delete: resourceAwsGameliftQueueDelete,
+		Create: resourceAwsGameliftSessionQueueCreate,
+		Read:   resourceAwsGameliftSessionQueueRead,
+		Update: resourceAwsGameliftSessionQueueUpdate,
+		Delete: resourceAwsGameliftSessionQueueDelete,
 
 		Schema: map[string]*schema.Schema{
 			"destinations": {
@@ -58,7 +58,7 @@ func resourceAwsGameliftQueue() *schema.Resource {
 	}
 }
 
-func resourceAwsGameliftQueueCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGameliftSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
 
 	input := gamelift.CreateGameSessionQueueInput{
@@ -79,10 +79,10 @@ func resourceAwsGameliftQueueCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(*out.GameSessionQueue.GameSessionQueueArn)
 	d.Set("name", out.GameSessionQueue.Name)
 
-	return resourceAwsGameliftQueueRead(d, meta)
+	return resourceAwsGameliftSessionQueueRead(d, meta)
 }
 
-func resourceAwsGameliftQueueRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGameliftSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
 	log.Printf("[INFO] Describing Gamelift Session Queues: %s", d.Get("name"))
 	limit := int64(1)
@@ -134,7 +134,7 @@ func flattenGameliftPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.Play
 	return lst
 }
 
-func resourceAwsGameliftQueueUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGameliftSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
 
 	name := d.Get("name").(string)
@@ -153,10 +153,10 @@ func resourceAwsGameliftQueueUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceAwsGameliftQueueRead(d, meta)
+	return resourceAwsGameliftSessionQueueRead(d, meta)
 }
 
-func resourceAwsGameliftQueueDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsGameliftSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Gamelift Session Queue: %s", name)
