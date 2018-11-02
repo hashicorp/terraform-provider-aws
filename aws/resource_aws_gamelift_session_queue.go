@@ -28,7 +28,7 @@ func resourceAwsGameliftSessionQueue() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"player_latency_policies": {
+			"player_latency_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -64,7 +64,7 @@ func resourceAwsGameliftSessionQueueCreate(d *schema.ResourceData, meta interfac
 	input := gamelift.CreateGameSessionQueueInput{
 		Name:                  aws.String(d.Get("name").(string)),
 		Destinations:          expandGameliftGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
-		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policies").([]interface{})),
+		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
 	}
 	if v, ok := d.GetOk("name"); ok {
@@ -115,8 +115,8 @@ func resourceAwsGameliftSessionQueueRead(d *schema.ResourceData, meta interface{
 	d.Set("name", sessionQueue.Name)
 	d.Set("timeout_in_seconds", sessionQueue.TimeoutInSeconds)
 	d.Set("destinations", sessionQueue.Destinations)
-	if err := d.Set("player_latency_policies", flattenGameliftPlayerLatencyPolicies(sessionQueue.PlayerLatencyPolicies)); err != nil {
-		return fmt.Errorf("error setting player_latency_policies: %s", err)
+	if err := d.Set("player_latency_policy", flattenGameliftPlayerLatencyPolicies(sessionQueue.PlayerLatencyPolicies)); err != nil {
+		return fmt.Errorf("error setting player_latency_policy: %s", err)
 	}
 
 	return nil
@@ -144,7 +144,7 @@ func resourceAwsGameliftSessionQueueUpdate(d *schema.ResourceData, meta interfac
 	input := gamelift.UpdateGameSessionQueueInput{
 		Name:                  aws.String(d.Get("name").(string)),
 		Destinations:          expandGameliftGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
-		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policies").([]interface{})),
+		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
 	}
 
