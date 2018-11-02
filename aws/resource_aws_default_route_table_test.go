@@ -118,11 +118,6 @@ func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDefaultRouteTableExists(s *terraform.State) error {
-	// We can't destroy this resource; it comes and goes with the VPC itself.
-	return nil
-}
-
 const testAccDefaultRouteTableConfig = `
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"

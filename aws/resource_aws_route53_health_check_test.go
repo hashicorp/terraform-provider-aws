@@ -258,10 +258,6 @@ func testAccCheckRoute53HealthCheckExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testUpdateHappened(n string) resource.TestCheckFunc {
-	return nil
-}
-
 const testAccRoute53HealthCheckConfig = `
 resource "aws_route53_health_check" "foo" {
   fqdn = "dev.notexample.com"
