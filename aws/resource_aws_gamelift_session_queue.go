@@ -47,8 +47,9 @@ func resourceAwsGameliftSessionQueue() *schema.Resource {
 				},
 			},
 			"timeout_in_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(10, 600),
 			},
 			"arn": {
 				Type:     schema.TypeString,
