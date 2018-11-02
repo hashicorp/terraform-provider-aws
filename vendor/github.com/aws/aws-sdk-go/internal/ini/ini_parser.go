@@ -87,8 +87,9 @@ var parseTable = map[ASTKind]map[TokenType]int{
 	},
 	ASTKindSectionStatement: map[TokenType]int{
 		TokenLit: SectionState,
+		TokenOp:  SectionState,
 		TokenSep: CloseScopeState,
-		TokenWS:  SkipTokenState,
+		TokenWS:  SectionState,
 		TokenNL:  SkipTokenState,
 	},
 	ASTKindCompletedSectionStatement: map[TokenType]int{
@@ -253,6 +254,26 @@ loop:
 				return nil, NewParseError("expected ']'")
 			}
 
+			// trim left hand side of spaces
+			for i := 0; i < len(k.Root.raw); i++ {
+				if !isWhitespace(k.Root.raw[i]) {
+					break
+				}
+
+				k.Root.raw = k.Root.raw[1:]
+				i--
+			}
+
+			// trim right hand side of spaces
+			for i := len(k.Root.raw) - 1; i > 0; i-- {
+				if !isWhitespace(k.Root.raw[i]) {
+					break
+				}
+
+				k.Root.raw = k.Root.raw[:len(k.Root.raw)-1]
+				i--
+			}
+
 			stack.Push(newCompletedSectionStatement(k))
 		case SectionState:
 			var stmt AST
@@ -268,7 +289,6 @@ loop:
 				// the label of the section
 				stmt = newSectionStatement(tok)
 			case ASTKindSectionStatement:
-				k.Root.raw = append(k.Root.raw, ' ')
 				k.Root.raw = append(k.Root.raw, tok.Raw()...)
 				stmt = k
 			default:
