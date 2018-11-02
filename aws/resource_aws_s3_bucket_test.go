@@ -1119,6 +1119,33 @@ func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T)
 	})
 }
 
+// Prefix issue: https://github.com/terraform-providers/terraform-provider-aws/issues/6340
+func TestAccAWSS3Bucket_ReplicationWithoutPrefix(t *testing.T) {
+	rInt := acctest.RandInt()
+	region := testAccGetRegion()
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithoutPrefix(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
@@ -1127,7 +1154,7 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	// record the initialized providers so that we can use them to check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
@@ -2623,6 +2650,43 @@ resource "aws_s3_bucket" "bucket" {
 
             destination {
                 bucket        = "${aws_s3_bucket.destination.arn}"
+            }
+        }
+    }
+}
+
+resource "aws_s3_bucket" "destination" {
+    provider = "aws.euwest"
+    bucket   = "tf-test-bucket-destination-%d"
+    region   = "eu-west-1"
+
+    versioning {
+        enabled = true
+    }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccAWSS3BucketConfigReplicationWithoutPrefix(randInt int) string {
+	return fmt.Sprintf(testAccAWSS3BucketConfigReplicationBasic+`
+resource "aws_s3_bucket" "bucket" {
+    provider = "aws.uswest2"
+    bucket   = "tf-test-bucket-%d"
+    acl      = "private"
+
+    versioning {
+        enabled = true
+    }
+
+    replication_configuration {
+        role = "${aws_iam_role.role.arn}"
+        rules {
+            id     = "foobar"
+            status = "Enabled"
+
+            destination {
+                bucket        = "${aws_s3_bucket.destination.arn}"
+                storage_class = "STANDARD"
             }
         }
     }
