@@ -229,6 +229,30 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		var publicKeys []string
+		listSSHPublicKeys := &iam.ListSSHPublicKeysInput{
+			UserName: aws.String(d.Id()),
+		}
+		pageOfListSSHPublicKeys := func(page *iam.ListSSHPublicKeysOutput, lastPage bool) (shouldContinue bool) {
+			for _, k := range page.SSHPublicKeys {
+				publicKeys = append(publicKeys, *k.SSHPublicKeyId)
+			}
+			return !lastPage
+		}
+		err = iamconn.ListSSHPublicKeysPages(listSSHPublicKeys, pageOfListSSHPublicKeys)
+		if err != nil {
+			return fmt.Errorf("Error removing public ssh keys of user %s: %s", d.Id(), err)
+		}
+		for _, k := range publicKeys {
+			_, err := iamconn.DeleteSSHPublicKey(&iam.DeleteSSHPublicKeyInput{
+				UserName:       aws.String(d.Id()),
+				SSHPublicKeyId: aws.String(k),
+			})
+			if err != nil {
+				return fmt.Errorf("Error deleting access key %s: %s", k, err)
+			}
+		}
+
 		var MFADevices []string
 		listMFADevices := &iam.ListMFADevicesInput{
 			UserName: aws.String(d.Id()),
