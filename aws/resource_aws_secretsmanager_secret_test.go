@@ -617,49 +617,6 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_RotationLambdaARN_Updated(rName string) string {
-	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
-# Not a real rotation function
-resource "aws_lambda_function" "test1" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%[1]s-1"
-  handler       = "exports.example"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs4.3"
-}
-
-resource "aws_lambda_permission" "test1" {
-  action         = "lambda:InvokeFunction"
-  function_name  = "${aws_lambda_function.test1.function_name}"
-  principal      = "secretsmanager.amazonaws.com"
-  statement_id   = "AllowExecutionFromSecretsManager1"
-}
-
-# Not a real rotation function
-resource "aws_lambda_function" "test2" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%[1]s-2"
-  handler       = "exports.example"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs4.3"
-}
-
-resource "aws_lambda_permission" "test2" {
-  action         = "lambda:InvokeFunction"
-  function_name  = "${aws_lambda_function.test2.function_name}"
-  principal      = "secretsmanager.amazonaws.com"
-  statement_id   = "AllowExecutionFromSecretsManager2"
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name                = "%[1]s"
-  rotation_lambda_arn = "${aws_lambda_function.test2.arn}"
-
-  depends_on = ["aws_lambda_permission.test2"]
-}
-`, rName)
-}
-
 func testAccAwsSecretsManagerSecretConfig_RotationRules(rName string, automaticallyAfterDays int) string {
 	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function

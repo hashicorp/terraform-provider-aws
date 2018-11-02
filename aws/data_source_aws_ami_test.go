@@ -174,10 +174,6 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAmiDataSourceDestroy(s *terraform.State) error {
-	return nil
-}
-
 func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
 	// Wait for IAM role
 	return func(s *terraform.State) error {

@@ -381,20 +381,6 @@ resource "aws_cloudwatch_log_group" "foobar" {
 `, rInt)
 }
 
-func testAccAWSCloudWatchLogGroupConfigWithTagsRemoval(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
-
-    tags {
-    	Environment = "Production"
-    	Foo = "Bar"
-    	Empty = ""
-    }
-}
-`, rInt)
-}
-
 func testAccAWSCloudWatchLogGroupConfig_withRetention(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
