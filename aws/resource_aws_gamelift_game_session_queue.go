@@ -26,7 +26,7 @@ func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"player_latency_policy": {
 				Type:     schema.TypeList,
