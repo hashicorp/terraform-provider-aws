@@ -68,9 +68,6 @@ func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta inte
 		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
 	}
-	if v, ok := d.GetOk("name"); ok {
-		input.Name = aws.String(v.(string))
-	}
 	log.Printf("[INFO] Creating Gamelift Session Queue: %s", input)
 	out, err := conn.CreateGameSessionQueue(&input)
 	if err != nil {
