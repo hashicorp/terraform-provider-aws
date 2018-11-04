@@ -10,24 +10,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsVpcPeeringConnections() *schema.Resource {
+func dataSourceAwsVpcPeeringConnectionIds() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcPeeringConnectionsRead,
+		Read: dataSourceAwsVpcPeeringConnectionIdsRead,
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"cidr_blocks": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"peer_cidr_blocks": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -39,7 +27,7 @@ func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsVpcPeeringConnectionIdsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	log.Printf("[DEBUG] Reading VPC Peering Connections.")
@@ -70,11 +58,9 @@ func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("no matching VPC peering connections found")
 	}
 
-	var ids, cidr_blocks, peer_cidr_blocks []string
+	var ids []string
 	for _, pcx := range resp.VpcPeeringConnections {
 		ids = append(ids, aws.StringValue(pcx.VpcPeeringConnectionId))
-		cidr_blocks = append(cidr_blocks, *pcx.RequesterVpcInfo.CidrBlock)
-		peer_cidr_blocks = append(peer_cidr_blocks, *pcx.AccepterVpcInfo.CidrBlock)
 	}
 
 	if len(ids) < 1 {
@@ -89,14 +75,5 @@ func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	err = d.Set("cidr_blocks", cidr_blocks)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("peer_cidr_blocks", peer_cidr_blocks)
-	if err != nil {
-		return err
-	}
 	return nil
 }

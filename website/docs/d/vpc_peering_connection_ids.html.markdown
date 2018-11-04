@@ -1,15 +1,16 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_vpc_peering_connections"
-sidebar_current: "docs-aws-datasource-vpc-peering-connections"
+page_title: "AWS: aws_vpc_peering_connection_ids"
+sidebar_current: "docs-aws-datasource-vpc-peering-connection-ids"
 description: |-
-    Provides details about VPC peering connections.
+    Lists peering connection ids
 ---
 
 # Data Source: aws_vpc_peering_connections
 
-Use this data source to get IDs, and cidr blocks of Amazon VPC peering connections
-e.g. to set up routing to all VPCs that a VPC is peered with
+Use this data source to get IDs of Amazon VPC peering connections
+To get more details on each connection, use the data resource [aws_vpc_peering_connection](/docs/providers/aws/d/vpc_peering_connection.html)
+
 Note: To use this data source in a count, the resources should exist before trying to access
 the data source, as noted in [issue 4149](https://github.com/hashicorp/terraform/issues/4149)
 
@@ -17,24 +18,17 @@ the data source, as noted in [issue 4149](https://github.com/hashicorp/terraform
 
 ```hcl
 # Declare the data source
-data "aws_vpc_peering_connections" "pcs" {
+data "aws_vpc_peering_connection_ids" "pcs" {
   filter {
     name = "requester-vpc-info.vpc-id"
     values = ["${aws_vpc.foo.id}"]
   }
 }
 
-# Create a route table
-resource "aws_route_table" "rt" {
-  vpc_id = "${aws_vpc.foo.id}"
-}
-
-# Create a route
-resource "aws_route" "r" {
-  count                     = "${length(data.aws_vpc_peering_connections.pcs.ids)}"
-  route_table_id            = "${aws_route_table.rt.id}"
-  destination_cidr_block    = "${element(data.aws_vpc_peering_connections.pcs.peer_cidr_blocks, count.index)}"
-  vpc_peering_connection_id = "${element(data.aws_vpc_peering_connections.pcs.ids, count.index)}"
+# get the details of each resource
+data "aws_vpc_peering_connection" "pc" {
+  count = "${length(data.aws_vpc_peering_connection_ids.pcs.ids)}"
+  id = "${data.aws_vpc_peering_connection_ids.pcs.ids[count.index]}"
 }
 ```
 
@@ -61,7 +55,3 @@ which take the following arguments:
 All of the argument attributes except `filter` are also exported as result attributes.
 
 * `ids` - The IDs of the VPC Peering Connections.
-
-* `cidr_blocks` - The CIDR block of the requester VPC of the VPC Peering Connections.
-
-* `peer_cidr_blocks` - The CIDR block of the accepter VPC of the VPC Peering Connections.

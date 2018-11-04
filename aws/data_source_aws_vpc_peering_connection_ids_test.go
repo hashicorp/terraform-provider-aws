@@ -6,17 +6,15 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAwsVpcPeeringConnections_basic(t *testing.T) {
+func TestAccDataSourceAwsVpcPeeringConnectionIds_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcPeeringConnectionsConfig,
+				Config: testAccDataSourceAwsVpcPeeringConnectionIdsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test_by_filters", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test_by_filters", "cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test_by_filters", "peer_cidr_blocks.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_vpc_peering_connection_ids.test_by_filters", "ids.#", "2"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -24,7 +22,7 @@ func TestAccDataSourceAwsVpcPeeringConnections_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsVpcPeeringConnectionsConfig = `
+const testAccDataSourceAwsVpcPeeringConnectionIdsConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -74,7 +72,7 @@ resource "aws_vpc_peering_connection" "conn2" {
     }
 }
 
-data "aws_vpc_peering_connections" "test_by_filters" {
+data "aws_vpc_peering_connection_ids" "test_by_filters" {
   filter {
     name = "requester-vpc-info.vpc-id"
     values = ["${aws_vpc.foo.id}"]
