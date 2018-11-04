@@ -56,7 +56,7 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					networkMode, ok := d.GetOk("network_mode")
 					isAWSVPC := ok && networkMode.(string) == ecs.NetworkModeAwsvpc
-					equal, _ := ecsContainerDefinitionsAreEquivalent(old, new, isAWSVPC)
+					equal, _ := EcsContainerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
 				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,

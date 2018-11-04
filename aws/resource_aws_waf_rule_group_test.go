@@ -267,7 +267,7 @@ func testAccCheckAWSWafRuleGroupDisappears(group *waf.RuleGroup) resource.TestCh
 			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
 		}
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleGroupInput{
 				ChangeToken: token,

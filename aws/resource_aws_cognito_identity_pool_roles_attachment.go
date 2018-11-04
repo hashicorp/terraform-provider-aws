@@ -118,7 +118,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles"); len(errors) > 0 {
+	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
 		return fmt.Errorf("Error validating Roles: %v", errors)
 	}
 
@@ -180,7 +180,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles"); len(errors) > 0 {
+	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
 		return fmt.Errorf("Error validating Roles: %v", errors)
 	}
 

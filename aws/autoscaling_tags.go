@@ -58,8 +58,8 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 
 	if d.HasChange("tag") || d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tag")
-		o := setToMapByKey(oraw.(*schema.Set), "key")
-		n := setToMapByKey(nraw.(*schema.Set), "key")
+		o := setToMapByKey(oraw.(*schema.Set))
+		n := setToMapByKey(nraw.(*schema.Set))
 
 		old, err := autoscalingTagsFromMap(o, resourceID)
 		if err != nil {
@@ -262,11 +262,11 @@ func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription) []map[s
 	return tags
 }
 
-func setToMapByKey(s *schema.Set, key string) map[string]interface{} {
+func setToMapByKey(s *schema.Set) map[string]interface{} {
 	result := make(map[string]interface{})
 	for _, rawData := range s.List() {
 		data := rawData.(map[string]interface{})
-		result[data[key].(string)] = data
+		result[data["key"].(string)] = data
 	}
 
 	return result

@@ -9,6 +9,7 @@
         "misspell",
         "structcheck",
         "unconvert",
+        "unparam",
         "unused",
         "varcheck",
         "vet"

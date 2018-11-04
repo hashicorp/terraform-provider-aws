@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -56,14 +55,14 @@ func testSweepBatchJobQueues(region string) error {
 		}
 
 		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
-		err := disableBatchJobQueue(*name, 10*time.Minute, conn)
+		err := disableBatchJobQueue(*name, conn)
 		if err != nil {
 			log.Printf("[ERROR] Failed to disable Batch Job Queue %s: %s", *name, err)
 			continue
 		}
 
 		log.Printf("[INFO] Deleting Batch Job Queue: %s", *name)
-		err = deleteBatchJobQueue(*name, 10*time.Minute, conn)
+		err = deleteBatchJobQueue(*name, conn)
 		if err != nil {
 			log.Printf("[ERROR] Failed to delete Batch Job Queue %s: %s", *name, err)
 		}
@@ -218,12 +217,12 @@ func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resourc
 		conn := testAccProvider.Meta().(*AWSClient).batchconn
 		name := aws.StringValue(jobQueue.JobQueueName)
 
-		err := disableBatchJobQueue(name, 10*time.Minute, conn)
+		err := disableBatchJobQueue(name, conn)
 		if err != nil {
 			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
 		}
 
-		return deleteBatchJobQueue(name, 10*time.Minute, conn)
+		return deleteBatchJobQueue(name, conn)
 	}
 }
 

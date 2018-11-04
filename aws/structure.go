@@ -1892,7 +1892,8 @@ func sortInterfaceSlice(in []interface{}) []interface{} {
 }
 
 // This function sorts List A to look like a list found in the tf file.
-func sortListBasedonTFFile(in []string, d *schema.ResourceData, listName string) ([]string, error) {
+func sortListBasedonTFFile(in []string, d *schema.ResourceData) ([]string, error) {
+	listName := "layer_ids"
 	if attributeCount, ok := d.Get(listName + ".#").(int); ok {
 		for i := 0; i < attributeCount; i++ {
 			currAttributeId := d.Get(listName + "." + strconv.Itoa(i))
@@ -1958,22 +1959,6 @@ func getStringPtr(m interface{}, key string) *string {
 
 	default:
 		panic("unknown type in getStringPtr")
-	}
-
-	return nil
-}
-
-// getStringPtrList returns a []*string version of the map value. If the key
-// isn't present, getNilStringList returns nil.
-func getStringPtrList(m map[string]interface{}, key string) []*string {
-	if v, ok := m[key]; ok {
-		var stringList []*string
-		for _, i := range v.([]interface{}) {
-			s := i.(string)
-			stringList = append(stringList, &s)
-		}
-
-		return stringList
 	}
 
 	return nil

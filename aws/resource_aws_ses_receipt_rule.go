@@ -360,7 +360,7 @@ func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).sesConn
 
 	createOpts := &ses.CreateReceiptRuleInput{
-		Rule:        buildReceiptRule(d, meta),
+		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
@@ -382,7 +382,7 @@ func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).sesConn
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
-		Rule:        buildReceiptRule(d, meta),
+		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
@@ -598,7 +598,7 @@ func resourceAwsSesReceiptRuleDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func buildReceiptRule(d *schema.ResourceData, meta interface{}) *ses.ReceiptRule {
+func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 	receiptRule := &ses.ReceiptRule{
 		Name: aws.String(d.Get("name").(string)),
 	}

@@ -5,7 +5,6 @@ import (
 	"log"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -63,7 +62,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 			}
 
 			log.Printf("[INFO] Waiting for Directory Service Directory (%q) to be deleted", id)
-			err = waitForDirectoryServiceDirectoryDeletion(conn, id, 60*time.Minute)
+			err = waitForDirectoryServiceDirectoryDeletion(conn, id)
 			if err != nil {
 				return fmt.Errorf("error waiting for Directory Service (%s) to be deleted: %s", id, err)
 			}
