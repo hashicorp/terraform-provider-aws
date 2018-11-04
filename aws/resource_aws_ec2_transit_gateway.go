@@ -222,6 +222,10 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 			return resource.RetryableError(err)
 		}
 
+		if isAWSErr(err, "IncorrectState", "has non-deleted VPN Attachments") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
