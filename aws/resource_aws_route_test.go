@@ -380,6 +380,33 @@ func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_TransitGatewayID_DestinationCidrBlock(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -925,3 +952,38 @@ resource "aws_route" "bar" {
 	gateway_id = "${aws_internet_gateway.bar.id}"
 }
 `)
+
+func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "tf-acc-test-ec2-route-transit-gateway-id"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "tf-acc-test-ec2-route-transit-gateway-id"
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = ["${aws_subnet.test.id}"]
+  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
+  vpc_id             = "${aws_vpc.test.id}"
+}
+
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  route_table_id         = "${aws_vpc.test.default_route_table_id}"
+  transit_gateway_id     = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
+}
+`)
+}
