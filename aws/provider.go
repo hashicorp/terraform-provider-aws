@@ -338,6 +338,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint":                               dataSourceAwsVpcEndpoint(),
 			"aws_vpc_endpoint_service":                       dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":                     dataSourceAwsVpcPeeringConnection(),
+			"aws_vpc_peering_connections":                    dataSourceAwsVpcPeeringConnections(),
 			"aws_vpn_gateway":                                dataSourceAwsVpnGateway(),
 			"aws_waf_ipset":                                  dataSourceAwsWafIpSet(),
 			"aws_waf_rule":                                   dataSourceAwsWafRule(),
@@ -353,7 +354,6 @@ func Provider() *schema.Provider {
 			"aws_wafv2_web_acl":                              dataSourceAwsWafv2WebACL(),
 			"aws_workspaces_bundle":                          dataSourceAwsWorkspacesBundle(),
 			"aws_workspaces_directory":                       dataSourceAwsWorkspacesDirectory(),
-
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
 			"aws_alb":              dataSourceAwsLb(),
