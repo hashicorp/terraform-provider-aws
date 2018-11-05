@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"io/ioutil"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -122,6 +124,95 @@ func TestAccAWSUser_disappears(t *testing.T) {
 					testAccCheckAWSUserDisappears(&user),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfigForceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserCreatesAccessKey(&user),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfigForceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserCreatesLoginProfile(&user),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
+	t.Skip("Virtual MFA device creation is not currently implemented")
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfigForceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserCreatesMFADevice(&user),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfigForceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserUploadsSSHKey(&user),
+				),
 			},
 		},
 	})
@@ -351,6 +442,95 @@ func testAccCheckAWSUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, ex
 	}
 }
 
+func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		input := &iam.CreateAccessKeyInput{
+			UserName: getUserOutput.User.UserName,
+		}
+
+		if _, err := iamconn.CreateAccessKey(input); err != nil {
+			return fmt.Errorf("error creating IAM User (%s) Access Key: %s", aws.StringValue(getUserOutput.User.UserName), err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		input := &iam.CreateLoginProfileInput{
+			Password: aws.String(generateIAMPassword(32)),
+			UserName: getUserOutput.User.UserName,
+		}
+
+		if _, err := iamconn.CreateLoginProfile(input); err != nil {
+			return fmt.Errorf("error creating IAM User (%s) Login Profile: %s", aws.StringValue(getUserOutput.User.UserName), err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
+			Path:                 getUserOutput.User.Path,
+			VirtualMFADeviceName: getUserOutput.User.UserName,
+		}
+
+		createVirtualMFADeviceOutput, err := iamconn.CreateVirtualMFADevice(createVirtualMFADeviceInput)
+		if err != nil {
+			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
+		}
+
+		// To properly setup this acceptance test, we need to vendor an OTP library.
+		// InvalidAuthenticationCode: Authentication code for device is not valid.
+		enableVirtualMFADeviceInput := &iam.EnableMFADeviceInput{
+			AuthenticationCode1: aws.String("123456"),
+			AuthenticationCode2: aws.String("654321"),
+			SerialNumber:        createVirtualMFADeviceOutput.VirtualMFADevice.SerialNumber,
+			UserName:            getUserOutput.User.UserName,
+		}
+
+		if _, err := iamconn.EnableMFADevice(enableVirtualMFADeviceInput); err != nil {
+			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+
+	return func(s *terraform.State) error {
+
+		sshKey, err := ioutil.ReadFile("./test-fixtures/public-ssh-key.pub")
+		if err != nil {
+			return fmt.Errorf("error reading SSH fixture: %s", err)
+		}
+
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		input := &iam.UploadSSHPublicKeyInput{
+			UserName:         getUserOutput.User.UserName,
+			SSHPublicKeyBody: aws.String(string(sshKey)),
+		}
+
+		_, err = iamconn.UploadSSHPublicKey(input)
+		if err != nil {
+			return fmt.Errorf("error uploading IAM User (%s) SSH key: %s", *getUserOutput.User.UserName, err)
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSUserConfig(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
@@ -367,4 +547,13 @@ resource "aws_iam_user" "user" {
   permissions_boundary = %q
 }
 `, rName, permissionsBoundary)
+}
+
+func testAccAWSUserConfigForceDestroy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  force_destroy = true
+  name = %q
+}
+`, rName)
 }
