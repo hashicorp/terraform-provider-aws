@@ -2248,11 +2248,22 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 
 		if _, ok := indexedAttributes[attrName]; !ok {
 			missingAttrDefs = append(missingAttrDefs, attrName)
+		} else {
+			delete(indexedAttributes, attrName)
 		}
 	}
 
 	if len(missingAttrDefs) > 0 {
 		return fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs)
+	}
+
+	if len(indexedAttributes) > 0 {
+		missingIndexes := []string{}
+		for index := range indexedAttributes {
+			missingIndexes = append(missingIndexes, index)
+		}
+
+		return fmt.Errorf("All indexes must be attribute. Unused indexes: %q", missingIndexes)
 	}
 
 	return nil
