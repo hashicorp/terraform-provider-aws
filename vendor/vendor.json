@@ -1125,6 +1125,24 @@
 			"versionExact": "v3.5.1"
 		},
 		{
+			"checksumSHA1": "X/ezkFEECpsC9T8wf1m6jbJo3A4=",
+			"path": "github.com/boombuler/barcode",
+			"revision": "34fff276c74eba9c3506f0c6f4064dbaa67d8da3",
+			"revisionTime": "2018-08-09T05:23:37Z"
+		},
+		{
+			"checksumSHA1": "jWsoIeAcg4+QlCJLZ8jXHiJ5a3s=",
+			"path": "github.com/boombuler/barcode/qr",
+			"revision": "34fff276c74eba9c3506f0c6f4064dbaa67d8da3",
+			"revisionTime": "2018-08-09T05:23:37Z"
+		},
+		{
+			"checksumSHA1": "axe0OTdOjYa+XKDUYqzOv7FGaWo=",
+			"path": "github.com/boombuler/barcode/utils",
+			"revision": "34fff276c74eba9c3506f0c6f4064dbaa67d8da3",
+			"revisionTime": "2018-08-09T05:23:37Z"
+		},
+		{
 			"checksumSHA1": "CSPbwbyzqA6sfORicn4HFtIhF/c=",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "8991bc29aa16c548c550c7ff78260e27b9ab7c73",
@@ -1814,6 +1832,24 @@
 			"path": "github.com/posener/complete/match",
 			"revision": "f4461a52b6329c11190f11fe3384ec8aa964e21c",
 			"revisionTime": "2017-07-30T19:30:24Z"
+		},
+		{
+			"checksumSHA1": "vCogt04lbcE8fUgvRCOaZQUo+Pk=",
+			"path": "github.com/pquerna/otp",
+			"revision": "be78767b3e392ce45ea73444451022a6fc32ad0d",
+			"revisionTime": "2018-08-13T14:46:49Z"
+		},
+		{
+			"checksumSHA1": "Rpx/4T1X/tZgHG56AJ6G8nPk7Gw=",
+			"path": "github.com/pquerna/otp/hotp",
+			"revision": "be78767b3e392ce45ea73444451022a6fc32ad0d",
+			"revisionTime": "2018-08-13T14:46:49Z"
+		},
+		{
+			"checksumSHA1": "OvSOUZb554+cPpvBOK4kEjv2ZpE=",
+			"path": "github.com/pquerna/otp/totp",
+			"revision": "be78767b3e392ce45ea73444451022a6fc32ad0d",
+			"revisionTime": "2018-08-13T14:46:49Z"
 		},
 		{
 			"checksumSHA1": "EUR26b2t3XDPxiEMwDBtn8Ajp8A=",

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"io/ioutil"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/pquerna/otp/totp"
 )
 
 func TestValidateIamUserName(t *testing.T) {
@@ -174,7 +176,6 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 }
 
 func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
-	t.Skip("Virtual MFA device creation is not currently implemented")
 	var user iam.GetUserOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -489,11 +490,19 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
-		// To properly setup this acceptance test, we need to vendor an OTP library.
-		// InvalidAuthenticationCode: Authentication code for device is not valid.
+		secret := string(createVirtualMFADeviceOutput.VirtualMFADevice.Base32StringSeed)
+		authenticationCode1, err := totp.GenerateCode(secret, time.Now().Add(time.Duration(-30*time.Second)))
+		if err != nil {
+			return fmt.Errorf("error generating Virtual MFA Device authentication code 1: %s", err)
+		}
+		authenticationCode2, err := totp.GenerateCode(secret, time.Now())
+		if err != nil {
+			return fmt.Errorf("error generating Virtual MFA Device authentication code 2: %s", err)
+		}
+
 		enableVirtualMFADeviceInput := &iam.EnableMFADeviceInput{
-			AuthenticationCode1: aws.String("123456"),
-			AuthenticationCode2: aws.String("654321"),
+			AuthenticationCode1: aws.String(authenticationCode1),
+			AuthenticationCode2: aws.String(authenticationCode2),
 			SerialNumber:        createVirtualMFADeviceOutput.VirtualMFADevice.SerialNumber,
 			UserName:            getUserOutput.User.UserName,
 		}
