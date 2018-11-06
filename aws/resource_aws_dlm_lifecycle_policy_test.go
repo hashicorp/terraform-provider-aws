@@ -5,22 +5,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dlm"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSDlmLifecyclePolicyBasic(t *testing.T) {
+func TestAccAWSDlmLifecyclePolicy_Basic(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.basic"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyBasicConfig(),
+				Config: dlmLifecyclePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
@@ -44,16 +45,17 @@ func TestAccAWSDlmLifecyclePolicyBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDlmLifecyclePolicyFull(t *testing.T) {
+func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.full"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dlmLifecyclePolicyFullConfig(),
+				Config: dlmLifecyclePolicyFullConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
@@ -70,7 +72,7 @@ func TestAccAWSDlmLifecyclePolicyFull(t *testing.T) {
 				),
 			},
 			{
-				Config: dlmLifecyclePolicyFullUpdateConfig(),
+				Config: dlmLifecyclePolicyFullUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full-updated"),
@@ -99,16 +101,17 @@ func dlmLifecyclePolicyDestroy(s *terraform.State) error {
 		}
 
 		input := dlm.GetLifecyclePolicyInput{
-			PolicyId: aws.String(rs.Primary.Attributes["name"]),
+			PolicyId: aws.String(rs.Primary.ID),
 		}
 
 		out, err := conn.GetLifecyclePolicy(&input)
 
+		if isAWSErr(err, dlm.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				return nil
-			}
-			return err
+			return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
 		}
 
 		if out.Policy != nil {
@@ -121,19 +124,31 @@ func dlmLifecyclePolicyDestroy(s *terraform.State) error {
 
 func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dlmconn
+
+		input := dlm.GetLifecyclePolicyInput{
+			PolicyId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetLifecyclePolicy(&input)
+
+		if err != nil {
+			return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
 		}
 
 		return nil
 	}
 }
 
-func dlmLifecyclePolicyBasicConfig() string {
-	return fmt.Sprint(`
+func dlmLifecyclePolicyBasicConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
-  name = "tf-acc-basic-dlm-lifecycle-role"
+  name = %q
 
   assume_role_policy = <<EOF
 {
@@ -176,13 +191,13 @@ resource "aws_dlm_lifecycle_policy" "basic" {
     }
   }
 }
-`)
+`, rName)
 }
 
-func dlmLifecyclePolicyFullConfig() string {
-	return fmt.Sprint(`
+func dlmLifecyclePolicyFullConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
-  name = "tf-acc-full-dlm-lifecycle-role"
+  name = %q
 
   assume_role_policy = <<EOF
 {
@@ -232,13 +247,13 @@ resource "aws_dlm_lifecycle_policy" "full" {
     }
   }
 }
-`)
+`, rName)
 }
 
-func dlmLifecyclePolicyFullUpdateConfig() string {
-	return fmt.Sprint(`
+func dlmLifecyclePolicyFullUpdateConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
-  name = "tf-acc-full-dlm-lifecycle-role"
+  name = %q
 
   assume_role_policy = <<EOF
 {
@@ -288,5 +303,5 @@ resource "aws_dlm_lifecycle_policy" "full" {
     }
   }
 }
-`)
+`, rName)
 }

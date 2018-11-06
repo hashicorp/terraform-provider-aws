@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -145,7 +144,7 @@ func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
 	out, err := conn.CreateLifecyclePolicy(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating DLM Lifecycle Policy: %s", err)
 	}
 
 	d.SetId(*out.PolicyId)
@@ -160,12 +159,15 @@ func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 	out, err := conn.GetLifecyclePolicy(&dlm.GetLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, dlm.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] DLM Lifecycle Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" && !d.IsNewResource() {
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading DLM Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("description", out.Policy.Description)
@@ -201,7 +203,7 @@ func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] Updating lifecycle policy %s", d.Id())
 	_, err := conn.UpdateLifecyclePolicy(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating DLM Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsDlmLifecyclePolicyRead(d, meta)
@@ -215,13 +217,17 @@ func resourceAwsDlmLifecyclePolicyDelete(d *schema.ResourceData, meta interface{
 		PolicyId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting DLM Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+
 	policyDetails := &dlm.PolicyDetails{}
 	m := cfg[0].(map[string]interface{})
 	if v, ok := m["resource_types"]; ok {
@@ -284,6 +290,9 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 }
 
 func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
 	c := cfg[0].(map[string]interface{})
 	createRule := &dlm.CreateRule{
 		Interval:     aws.Int64(int64(c["interval"].(int))),
@@ -310,8 +319,12 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 }
 
 func expandDlmRetainRule(cfg []interface{}) *dlm.RetainRule {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
 	return &dlm.RetainRule{
-		Count: aws.Int64(int64(cfg[0].(map[string]interface{})["count"].(int))),
+		Count: aws.Int64(int64(m["count"].(int))),
 	}
 }
 
@@ -337,7 +350,7 @@ func expandDlmTags(m map[string]interface{}) []*dlm.Tag {
 func flattenDlmTags(tags []*dlm.Tag) map[string]string {
 	result := make(map[string]string)
 	for _, t := range tags {
-		result[*t.Key] = *t.Value
+		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	return result
