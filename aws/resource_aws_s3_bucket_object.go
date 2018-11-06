@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -63,6 +64,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 
 			"content_disposition": {
@@ -73,11 +75,13 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			"content_encoding": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 
 			"content_language": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 
 			"metadata": {
@@ -198,6 +202,10 @@ func resourceAwsS3BucketObject() *schema.Resource {
 }
 
 func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("source"); ok && strings.HasPrefix(v.(string), "s3://") {
+		return resourceAwsS3BucketObjectCopy(d, meta)
+	}
+
 	s3conn := meta.(*AWSClient).s3conn
 
 	var body io.ReadSeeker
@@ -312,6 +320,144 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsS3BucketObjectPut(d, meta)
+}
+
+func resourceAwsS3BucketObjectCopy(d *schema.ResourceData, meta interface{}) error {
+	s3conn := meta.(*AWSClient).s3conn
+
+	destBucket := d.Get("bucket").(string)
+	destKey := d.Get("key").(string)
+
+	copySource := strings.TrimPrefix(d.Get("source").(string), "s3://")
+	srcParts := strings.SplitN(copySource, "/", 2)
+	if len(srcParts) != 2 {
+		return fmt.Errorf(
+			"S3 source (%s) must be the name of the source bucket and key name of the source object, separated by a slash (/)",
+			copySource)
+	}
+	srcBucket := srcParts[0]
+	srcKey := srcParts[1]
+	copySource = url.QueryEscape(fmt.Sprintf("/%s", copySource))
+
+	resp, err := s3conn.HeadObject(
+		&s3.HeadObjectInput{
+			Bucket: aws.String(srcBucket),
+			Key:    aws.String(srcKey),
+		})
+	if err != nil {
+		return fmt.Errorf("source S3 object (%s/%s) could not be read: %s", srcBucket, srcKey, err)
+	}
+
+	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+
+	// data structure
+	copyInput := &s3.CopyObjectInput{
+		Bucket:     aws.String(destBucket),
+		Key:        aws.String(destKey),
+		CopySource: aws.String(copySource),
+	}
+
+	// metadata can only be copied or replaced
+	// this section merges changes / source values
+	copyInput.MetadataDirective = aws.String(s3.MetadataDirectiveReplace)
+
+	if v, ok := d.GetOk("cache_control"); ok {
+		copyInput.CacheControl = aws.String(v.(string))
+	} else {
+		copyInput.CacheControl = resp.CacheControl
+	}
+
+	if v, ok := d.GetOk("content_disposition"); ok {
+		copyInput.ContentDisposition = aws.String(v.(string))
+	} else {
+		copyInput.ContentDisposition = resp.ContentDisposition
+	}
+
+	if v, ok := d.GetOk("content_encoding"); ok {
+		copyInput.ContentEncoding = aws.String(v.(string))
+	} else {
+		copyInput.ContentEncoding = resp.ContentEncoding
+	}
+
+	if v, ok := d.GetOk("content_language"); ok {
+		copyInput.ContentLanguage = aws.String(v.(string))
+	} else {
+		copyInput.ContentLanguage = resp.ContentLanguage
+	}
+
+	if v, ok := d.GetOk("content_type"); ok {
+		copyInput.ContentType = aws.String(v.(string))
+	} else {
+		copyInput.ContentType = resp.ContentType
+	}
+
+	if v, ok := d.GetOk("server_side_encryption"); ok {
+		copyInput.ServerSideEncryption = aws.String(v.(string))
+	} else {
+		copyInput.ServerSideEncryption = resp.ServerSideEncryption
+	}
+
+	if v, ok := d.GetOk("website_redirect"); ok {
+		copyInput.WebsiteRedirectLocation = aws.String(v.(string))
+	} else {
+		copyInput.WebsiteRedirectLocation = resp.WebsiteRedirectLocation
+	}
+
+	if v, ok := d.GetOk("storage_class"); ok {
+		copyInput.StorageClass = aws.String(v.(string))
+	} else {
+		copyInput.StorageClass = aws.String(s3.StorageClassStandard)
+		if resp.StorageClass != nil {
+			copyInput.StorageClass = resp.StorageClass
+		}
+	}
+
+	if v, ok := d.GetOk("acl"); ok {
+		copyInput.ACL = aws.String(v.(string))
+		// canned ACL cannot be retrieved from source object
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		copyInput.SSEKMSKeyId = aws.String(v.(string))
+		copyInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
+	} else if resp.SSEKMSKeyId != nil {
+		// retrieve S3 KMS Default Master Key
+		kmsconn := meta.(*AWSClient).kmsconn
+		kmsresp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
+			KeyId: aws.String("alias/aws/s3"),
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
+		}
+
+		if *resp.SSEKMSKeyId != *kmsresp.KeyMetadata.Arn {
+			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *resp.SSEKMSKeyId)
+			copyInput.SSEKMSKeyId = resp.SSEKMSKeyId
+			copyInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
+		}
+	}
+
+	copyInput.TaggingDirective = aws.String(s3.TaggingDirectiveCopy)
+	if v, ok := d.GetOk("tags"); ok {
+
+		copyInput.TaggingDirective = aws.String(s3.TaggingDirectiveReplace)
+
+		// The tag-set must be encoded as URL Query parameters.
+		values := url.Values{}
+		for k, v := range v.(map[string]interface{}) {
+			values.Add(k, v.(string))
+		}
+		copyInput.Tagging = aws.String(values.Encode())
+	}
+
+	log.Printf("[DEBUG] copying S3 object (%s)", d.Get("source").(string))
+	_, err = s3conn.CopyObject(copyInput)
+	if err != nil {
+		return fmt.Errorf("failed to copy S3 object (%s) to S3 bucket (%s), key (%s): %s", d.Get("source").(string), destBucket, destKey, err)
+	}
+
+	d.SetId(destKey)
+	return resourceAwsS3BucketObjectRead(d, meta)
 }
 
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
@@ -529,6 +675,32 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if d.HasChange("etag") {
 		d.SetNewComputed("version_id")
+	}
+
+	// creates a diff if the etag of the s3 source is different
+	if v, ok := d.GetOk("source"); ok && strings.HasPrefix(v.(string), "s3://") && !d.HasChange("etag") && d.Get("server_side_encryption").(string) == "" && d.Get("kms_key_id").(string) == "" {
+
+		copySource := strings.TrimPrefix(v.(string), "s3://")
+		s := strings.SplitN(copySource, "/", 2)
+		if len(s) > 1 {
+			bucket := s[0]
+			key := s[1]
+
+			log.Printf("[DEBUG] reading object meta, bucket (%s) and key (%s)", bucket, key)
+			s3conn := meta.(*AWSClient).s3conn
+			resp, err := s3conn.HeadObject(&s3.HeadObjectInput{
+				Bucket: aws.String(bucket),
+				Key:    aws.String(key),
+			})
+
+			if err == nil {
+				newETag := strings.Trim(*resp.ETag, `"`)
+				if v, ok := d.GetOk("etag"); ok && v.(string) != newETag {
+					log.Printf("[DEBUG] source etag (%s) is not equal to destination etag (%s)", newETag, v.(string))
+					d.SetNew("etag", newETag)
+				}
+			}
+		}
 	}
 
 	return nil

@@ -27,6 +27,16 @@ resource "aws_s3_bucket_object" "object" {
 }
 ```
 
+### Copying an S3 object to a bucket
+
+```hcl
+resource "aws_s3_bucket_object" "object" {
+  bucket = "dest_bucket_name"
+  key    = "dest_object_key"
+  source = "s3://source_bucket_name/source_object_key"
+}
+```
+
 ### Encrypting with KMS Key
 
 ```hcl
@@ -117,10 +127,10 @@ The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket to put the file in. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified.
 * `key` - (Required) The name of the object once it is in the bucket.
-* `source` - (Optional, conflicts with `content` and `content_base64`) The path to a file that will be read and uploaded as raw bytes for the object content.
+* `source` - (Optional, conflicts with `content` and `content_base64`) The path to a file or an existing S3 object to be the object content. A file will be read and uploaded as raw bytes. An S3 object with its metadata will be copied, with any metadata changes applied to the new object.
 * `content` - (Optional, conflicts with `source` and `content_base64`) Literal string value to use as the object content, which will be uploaded as UTF-8-encoded text.
 * `content_base64` - (Optional, conflicts with `source` and `content`) Base64-encoded data that will be decoded and uploaded as raw bytes for the object content. This allows safely uploading non-UTF8 binary data, but is recommended only for small content such as the result of the `gzipbase64` function with small text strings. For larger objects, use `source` to stream the content from a disk file.
-* `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Defaults to "private".
+* `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Defaults to "private". (Note: If copying an S3 object, the source object's canned ACL is not copied to the new object.)
 * `cache_control` - (Optional) Specifies caching behavior along the request/reply chain Read [w3c cache_control](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9) for further details.
 * `content_disposition` - (Optional) Specifies presentational information for the object. Read [w3c content_disposition](http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1) for further information.
 * `content_encoding` - (Optional) Specifies what content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field. Read [w3c content encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11) for further information.

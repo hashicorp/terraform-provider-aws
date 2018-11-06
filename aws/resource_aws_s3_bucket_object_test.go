@@ -954,6 +954,46 @@ func TestAccAWSS3BucketObject_ObjectLockRetentionStartWithSet(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_s3SourceBasic(t *testing.T) {
+	rInt1 := acctest.RandInt()
+	rInt2 := acctest.RandInt()
+	var obj s3.GetObjectOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObject_s3Source(rInt1, rInt2),
+				Check:  testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.dest_object", &obj),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_s3SourceWithContentCharacteristics(t *testing.T) {
+	rInt1 := acctest.RandInt()
+	rInt2 := acctest.RandInt()
+	var obj s3.GetObjectOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObject_s3SourceWithContentCharacteristics(rInt1, rInt2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.dest_object", &obj),
+					resource.TestCheckResourceAttr("aws_s3_bucket_object.dest_object", "content_language", "es"),
+					resource.TestCheckResourceAttr("aws_s3_bucket_object.dest_object", "content_type", "text/plain"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if first.VersionId == nil {
@@ -1226,15 +1266,15 @@ resource "aws_s3_bucket_object" "object" {
 func testAccAWSS3BucketObjectEtagEncryption(randInt int, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[1]d"
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket                 = aws_s3_bucket.object_bucket.bucket
   key                    = "test-key"
   server_side_encryption = "AES256"
-  source                 = %[1]q
-  etag                   = filemd5(%[1]q)
+  source                 = %[2]q
+  etag                   = filemd5(%[2]q)
 }
 `, randInt, source)
 }
@@ -1256,10 +1296,10 @@ resource "aws_s3_bucket_object" "object" {
 func testAccAWSS3BucketObjectConfig_updateable(randInt int, bucketVersioning bool, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[1]d"
 
   versioning {
-    enabled = %t
+    enabled = %[2]t
   }
 }
 
@@ -1447,6 +1487,56 @@ resource "aws_s3_bucket_object" "object" {
 `, randInt, metadataKey1, metadataValue1, metadataKey2, metadataValue2)
 }
 
+func testAccAWSS3BucketObject_s3Source(randInt1, randInt2 int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "source_object" {
+  bucket  = aws_s3_bucket.source_bucket.id
+  key     = "object-to-copy"
+  content = "Jelly Bean"
+}
+
+resource "aws_s3_bucket" "dest_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "dest_object" {
+  bucket = aws_s3_bucket.dest_bucket.id
+  key    = "copied-object"
+  source = "s3://${aws_s3_bucket.source_bucket.id}/${aws_s3_bucket_object.source_object.id}"
+}
+`, randInt1, randInt2)
+}
+
+func testAccAWSS3BucketObject_s3SourceWithContentCharacteristics(randInt1, randInt2 int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "source_object" {
+  bucket           = aws_s3_bucket.source_bucket.id
+  key              = "object-to-copy"
+  content          = "El hábito no hace al monje."
+  content_language = "es"
+  content_type     = "text/plain"
+}
+
+resource "aws_s3_bucket" "dest_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "dest_object" {
+  bucket = aws_s3_bucket.dest_bucket.id
+  key    = "copied-object"
+  source = "s3://${aws_s3_bucket.source_bucket.id}/${aws_s3_bucket_object.source_object.id}"
+}
+`, randInt1, randInt2)
+}
+
 func testAccAWSS3BucketObjectConfig_noObjectLockLegalHold(randInt int, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
@@ -1566,14 +1656,14 @@ func testAccAWSS3BucketObjectConfig_NonVersioned(randInt int, source string) str
 
 	return testAccProviderConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[1]d"
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.object_bucket_3.bucket
   key    = "updateable-key"
-  source = %[1]q
-  etag   = filemd5(%[1]q)
+  source = %[2]q
+  etag   = filemd5(%[2]q)
 }
 `, randInt, source)
 }
