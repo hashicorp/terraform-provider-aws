@@ -5,6 +5,10 @@ NOTES:
 * resource/aws_lb_listener: This resource will now sort the API response based on action ordering. If necessary, sorting your configuration based on `order` should resolve any plan difference.
 * resource/aws_lb_listener_rule: This resource will now sort the API response based on action ordering. If necessary, sorting your configuration based on `order` should resolve any plan difference.
 
+FEATURES:
+
+* **New Resource:** `aws_dlm_lifecycle_policy` [GH-5558]
+
 ENHANCEMENTS:
 
 * resource/aws_mq_broker: Add `logs` attribute [GH-6122]
