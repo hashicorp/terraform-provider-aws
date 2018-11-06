@@ -11,7 +11,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_mq_broker: Add `logs` attribute [GH-6122]
+* data-source/aws_efs_file_system: Add `arn` attribute [GH-6371]
+* data-source/aws_efs_mount_target: Add `file_system_arn` attribute [GH-6371]
+* data-source/aws_mq_broker: Add `logs` attribute [GH-6122]
+* resource/aws_efs_file_system: Add `arn` attribute [GH-6371]
+* resource/aws_efs_mount_target: Add `file_system_arn` attribute [GH-6371]
 * resource/aws_launch_configuration: Add `capacity_reservation_specification` argument [GH-6325]
 * resource/aws_mq_broker: Add `logs` argument [GH-6122]
 
