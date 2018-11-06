@@ -187,22 +187,47 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 // the set of tags that must be created, and the set of tags that must
 // be destroyed.
 func diffTags(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
-	// First, we're creating everything we have
-	create := make(map[string]interface{})
-	for _, t := range newTags {
-		create[*t.Key] = *t.Value
-	}
+	oldTagsMap := tagsToMap(oldTags)
+	newTagsMap := tagsToMap(newTags)
 
-	// Build the list of what to remove
-	var remove []*ec2.Tag
-	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
-			remove = append(remove, t)
+	// These maps will hold the Tags to create and remove, respectively
+	var create = make(map[string]interface{})
+	var remove = make(map[string]interface{})
+
+	// For each new Tag, we check if an identical Tag (in key and value) already exists.
+	// If yes, we don't have to do anything with this Tag.
+	// Else, if the key was found with a different value, remove it and recreate it with the new value
+	// If the key was not found in the in the old Tags, just create it.
+	// Then, if one of the old Tags is no longer in the new Tags, delete the old Tag.
+	for key, newval := range newTagsMap {
+		oldval, found := oldTagsMap[key]
+		if found {
+			// New key exists in the old Tags already
+			// Check if the value is the same, too
+			if newval != oldval {
+				// If not, recreate the Tag with the new value
+				remove[key] = oldval
+				create[key] = newval
+			} else {
+				// If the key and value are the same, ignore the Tag
+			}
+		} else {
+			// If new Tag key is not in old Tags, create the new Tag
+			create[key] = newval
 		}
 	}
 
-	return tagsFromMap(create), remove
+	// Now we handled the new Tags and the Tags that need to be updated
+	// We still have to handle the Tags that have to be deleted
+	for key, oldval := range oldTagsMap {
+		_, found := newTagsMap[key]
+		// Delete old Tag if it is not found in the new Tags
+		if !found {
+			remove[key] = oldval
+		}
+	}
+
+	return tagsFromMap(create), tagsFromMap(remove)
 }
 
 // tagsFromMap returns the tags for the given map of data.
