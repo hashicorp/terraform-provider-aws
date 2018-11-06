@@ -50,6 +50,7 @@ resource "aws_s3_bucket_policy" "hoge" {
     ]
 }
 EOF
+}
 
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
