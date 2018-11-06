@@ -49,6 +49,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 			{
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
+					testAccMatchResourceAttrRegionalARN("aws_efs_mount_target.alpha", "file_system_arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					testAccCheckEfsMountTarget(
 						"aws_efs_mount_target.alpha",
 						&mount,
