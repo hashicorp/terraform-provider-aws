@@ -41,7 +41,7 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 
     tags {
       priority = "high"
-      class = "blue"
+      class    = "blue"
     }
   }
 }

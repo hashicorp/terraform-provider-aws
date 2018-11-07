@@ -27,7 +27,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
-  rate_key = "IP"
+  rate_key   = "IP"
   rate_limit = 2000
 
   predicates {

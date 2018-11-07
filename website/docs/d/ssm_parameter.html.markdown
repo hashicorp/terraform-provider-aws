@@ -14,7 +14,7 @@ Provides an SSM Parameter data source.
 
 ```hcl
 data "aws_ssm_parameter" "foo" {
-  name  = "foo"
+  name = "foo"
 }
 ```
 

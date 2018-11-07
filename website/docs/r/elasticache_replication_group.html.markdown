@@ -72,9 +72,10 @@ resource "aws_elasticache_replication_group" "baz" {
   port                          = 6379
   parameter_group_name          = "default.redis3.2.cluster.on"
   automatic_failover_enabled    = true
+
   cluster_mode {
-    replicas_per_node_group     = 1
-    num_node_groups             = 2
+    replicas_per_node_group = 1
+    num_node_groups         = 2
   }
 }
 ```

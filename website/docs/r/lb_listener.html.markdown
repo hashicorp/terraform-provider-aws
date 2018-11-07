@@ -53,9 +53,10 @@ resource "aws_lb_listener" "front_end" {
 
   default_action {
     type = "redirect"
+
     redirect {
-      port = "443"
-      protocol = "HTTPS"
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
@@ -76,10 +77,11 @@ resource "aws_lb_listener" "front_end" {
 
   default_action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Fixed response content"
-      status_code = "200"
+      status_code  = "200"
     }
   }
 }
@@ -114,7 +116,8 @@ resource "aws_lb_listener" "front_end" {
   protocol          = "HTTP"
 
   default_action {
-    type  = "authenticate-cognito"
+    type = "authenticate-cognito"
+
     authenticate_cognito {
       user_pool_arn       = "${aws_cognito_user_pool.pool.arn}"
       user_pool_client_id = "${aws_cognito_user_pool_client.client.id}"
@@ -146,7 +149,8 @@ resource "aws_lb_listener" "front_end" {
   protocol          = "HTTP"
 
   default_action {
-    type  = "authenticate-oidc"
+    type = "authenticate-oidc"
+
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
       client_id              = "client_id"

@@ -14,11 +14,11 @@ Provides a Direct Connect LAG.
 
 ```hcl
 resource "aws_dx_lag" "hoge" {
-  name = "tf-dx-lag"
+  name                  = "tf-dx-lag"
   connections_bandwidth = "1Gbps"
-  location = "EqDC2"
+  location              = "EqDC2"
   number_of_connections = 2
-  force_destroy = true
+  force_destroy         = true
 }
 ```
 

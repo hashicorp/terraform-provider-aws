@@ -14,8 +14,8 @@ Provides a Cognito User Identity Provider resource.
 
 ```hcl
 resource "aws_cognito_user_pool" "example" {
-  name                      = "example-pool"
-  auto_verified_attributes  = ["email"]
+  name                     = "example-pool"
+  auto_verified_attributes = ["email"]
 }
 
 resource "aws_cognito_identity_provider" "example_provider" {
@@ -24,9 +24,9 @@ resource "aws_cognito_identity_provider" "example_provider" {
   provider_type = "Google"
 
   provider_details {
-    authorize_scopes  = "email"
-    client_id         = "your client_id"
-    client_secret     = "your client_secret"
+    authorize_scopes = "email"
+    client_id        = "your client_id"
+    client_secret    = "your client_secret"
   }
 
   attribute_mapping {

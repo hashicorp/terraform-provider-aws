@@ -14,7 +14,7 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name = "MyCatalogTable"
+  name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 }
 ```

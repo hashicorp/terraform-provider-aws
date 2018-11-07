@@ -69,9 +69,9 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
   destination {
     bucket {
-      format = "ORC"
+      format     = "ORC"
       bucket_arn = "${aws_s3_bucket.inventory.arn}"
-      prefix = "inventory"
+      prefix     = "inventory"
     }
   }
 }

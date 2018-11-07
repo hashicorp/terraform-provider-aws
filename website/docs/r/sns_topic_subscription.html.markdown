@@ -61,20 +61,20 @@ You can subscribe SNS topics to SQS queues in different Amazon accounts and regi
 */
 variable "sns" {
   default = {
-    account-id    = "111111111111"
-    role-name     = "service/service-hashicorp-terraform"
-    name          = "example-sns-topic"
-    display_name  = "example"
-    region        = "us-west-1"
+    account-id   = "111111111111"
+    role-name    = "service/service-hashicorp-terraform"
+    name         = "example-sns-topic"
+    display_name = "example"
+    region       = "us-west-1"
   }
 }
 
 variable "sqs" {
   default = {
-    account-id    = "222222222222"
-    role-name     = "service/service-hashicorp-terraform"
-    name          = "example-sqs-queue"
-    region        = "us-east-1"
+    account-id = "222222222222"
+    role-name  = "service/service-hashicorp-terraform"
+    name       = "example-sqs-queue"
+    region     = "us-east-1"
   }
 }
 

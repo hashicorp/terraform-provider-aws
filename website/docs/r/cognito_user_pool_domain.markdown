@@ -15,7 +15,7 @@ Provides a Cognito User Pool Domain resource.
 ### Amazon Cognito domain
 ```hcl
 resource "aws_cognito_user_pool_domain" "main" {
-  domain = "example-domain"
+  domain       = "example-domain"
   user_pool_id = "${aws_cognito_user_pool.example.id}"
 }
 
