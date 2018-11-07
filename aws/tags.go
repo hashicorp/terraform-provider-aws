@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -219,6 +220,22 @@ func tagsFromMap(m map[string]interface{}) []*ec2.Tag {
 	return result
 }
 
+// tagsAcmFromMap returns the tags (acm) for the given map of data.
+func tagsAcmFromMap(m map[string]interface{}) []*acm.Tag {
+	result := make([]*acm.Tag, 0, len(m))
+	for k, v := range m {
+		t := &acm.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v.(string)),
+		}
+		if !tagIgnoredAcm(t) {
+			result = append(result, t)
+		}
+	}
+
+	return result
+}
+
 // tagsToMap turns the list of tags into a map.
 func tagsToMap(ts []*ec2.Tag) map[string]string {
 	result := make(map[string]string)
@@ -282,6 +299,20 @@ func tagsFromMapELBv2(m map[string]interface{}) []*elbv2.Tag {
 // tagIgnored compares a tag against a list of strings and checks if it should
 // be ignored or not
 func tagIgnored(t *ec2.Tag) bool {
+	filter := []string{"^aws:"}
+	for _, v := range filter {
+		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
+		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
+			return true
+		}
+	}
+	return false
+}
+
+// tagIgnoredAcm compares a tag (acm) against a list of strings and checks if it should
+// be ignored or not
+func tagIgnoredAcm(t *acm.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)

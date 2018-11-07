@@ -37,6 +37,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -75,17 +76,24 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	filterMostRecent := d.Get("most_recent").(bool)
 	filterTypes, filterTypesOk := d.GetOk("types")
+	_, filterTagsOk := d.GetOk("tags")
 
 	var matchedCertificate *acm.CertificateDetail
 
-	if !filterMostRecent && !filterTypesOk && len(arns) > 1 {
+	if !filterMostRecent && !filterTypesOk && !filterTagsOk && len(arns) > 1 {
 		// Multiple certificates have been found and no additional filtering set
 		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
 	}
 
 	typesStrings := expandStringList(filterTypes.([]interface{}))
+	var tagsMap []*acm.Tag
+
+	if filterTagsOk {
+		tagsMap = tagsAcmFromMap(d.Get("tags").(map[string]interface{}))
+	}
 
 	for _, arn := range arns {
+		var filterMatch bool
 		var err error
 
 		input := &acm.DescribeCertificateInput{
@@ -98,29 +106,45 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		}
 		certificate := output.Certificate
 
-		if filterTypesOk {
+		if filterTypesOk && filterTagsOk {
+			for _, certType := range typesStrings {
+				listTags, err := conn.ListTagsForCertificate(&acm.ListTagsForCertificateInput{CertificateArn: certificate.CertificateArn})
+				if err != nil {
+					return err
+				}
+
+				if *certificate.Type != *certType || !tagsMatch(listTags.Tags, tagsMap) {
+					continue
+				}
+
+				filterMatch = true
+			}
+		}
+
+		if filterTypesOk && !filterTagsOk {
 			for _, certType := range typesStrings {
 				if *certificate.Type == *certType {
-					// We do not have a candidate certificate
-					if matchedCertificate == nil {
-						matchedCertificate = certificate
-						break
-					}
-					// At this point, we already have a candidate certificate
-					// Check if we are filtering by most recent and update if necessary
-					if filterMostRecent {
-						matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
-						if err != nil {
-							return err
-						}
-						break
-					}
-					// Now we have multiple candidate certificates and we only allow one certificate
-					return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+					filterMatch = true
 				}
 			}
+		}
+
+		if !filterTypesOk && filterTagsOk {
+			listTags, err := conn.ListTagsForCertificate(&acm.ListTagsForCertificateInput{CertificateArn: certificate.CertificateArn})
+			if err != nil {
+				return err
+			}
+
+			if tagsMatch(listTags.Tags, tagsMap) {
+				filterMatch = true
+			}
+		}
+
+		// We have filter, and no one match with the certificate
+		if (filterTypesOk || filterTagsOk) && !filterMatch {
 			continue
 		}
+
 		// We do not have a candidate certificate
 		if matchedCertificate == nil {
 			matchedCertificate = certificate
@@ -165,4 +189,27 @@ func mostRecentAcmCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDeta
 		return i, nil
 	}
 	return j, nil
+}
+
+func tagsMatch(tc, tm []*acm.Tag) bool {
+	if len(tm) > len(tc) {
+		return false
+	}
+
+	for _, vm := range tm {
+		match := false
+
+		for _, vc := range tc {
+			if *vm.Key == *vc.Key && *vm.Value == *vc.Value {
+				match = true
+				break
+			}
+		}
+
+		if !match {
+			return false
+		}
+	}
+
+	return true
 }

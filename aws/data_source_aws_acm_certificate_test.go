@@ -83,8 +83,13 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
 
+	if os.Getenv("ACM_CERTIFICATE_NAME") == "" {
+		t.Skip("Environment variable ACM_CERTIFICATE_NAME is not set")
+	}
+
 	var arnRe *regexp.Regexp
 	var domain string
+	var name = os.Getenv("ACM_CERTIFICATE_NAME")
 
 	if os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN") != "" {
 		arnRe = regexp.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN")))
@@ -123,6 +128,12 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithTags(domain, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+				),
+			},
+			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -144,6 +155,7 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	}
 
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
+	name := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_NAME"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -159,6 +171,10 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 			},
 			{
 				Config:      testAccCheckAwsAcmCertificateDataSourceConfigWithTypes(domain, acm.CertificateTypeAmazonIssued),
+				ExpectError: regexp.MustCompile(`No certificate for domain`),
+			},
+			{
+				Config:      testAccCheckAwsAcmCertificateDataSourceConfigWithTags(domain, name),
 				ExpectError: regexp.MustCompile(`No certificate for domain`),
 			},
 			{
@@ -210,6 +226,17 @@ data "aws_acm_certificate" "test" {
 	most_recent = %v
 }
 `, domain, mostRecent)
+}
+
+func testAccCheckAwsAcmCertificateDataSourceConfigWithTags(domain, name string) string {
+	return fmt.Sprintf(`
+data "aws_acm_certificate" "test" {
+	domain = "%s"
+	tags {
+		Name = "%s"
+	}
+}
+`, domain, name)
 }
 
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain, status string, mostRecent bool) string {
