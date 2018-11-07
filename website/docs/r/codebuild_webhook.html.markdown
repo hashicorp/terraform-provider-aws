@@ -22,7 +22,7 @@ When working with [GitHub](https://github.com) source CodeBuild webhooks, the Co
 
 ```hcl
 resource "aws_codebuild_webhook" "example" {
-  name = "${aws_codebuild_project.example.name}"
+  project_name = "${aws_codebuild_project.example.name}"
 }
 ```
 
