@@ -1,4 +1,4 @@
-## 1.43.0 (Unreleased)
+## 1.43.0 (November 07, 2018)
 
 NOTES:
 
@@ -7,28 +7,28 @@ NOTES:
 
 FEATURES:
 
-* **New Resource:** `aws_dlm_lifecycle_policy` [GH-5558]
-* **New Resource:** `aws_kinesis_analytics_application` [GH-5456]
+* **New Resource:** `aws_dlm_lifecycle_policy` ([#5558](https://github.com/terraform-providers/terraform-provider-aws/issues/5558))
+* **New Resource:** `aws_kinesis_analytics_application` ([#5456](https://github.com/terraform-providers/terraform-provider-aws/issues/5456))
 
 ENHANCEMENTS:
 
-* data-source/aws_efs_file_system: Add `arn` attribute [GH-6371]
-* data-source/aws_efs_mount_target: Add `file_system_arn` attribute [GH-6371]
-* data-source/aws_mq_broker: Add `logs` attribute [GH-6122]
-* resource/aws_efs_file_system: Add `arn` attribute [GH-6371]
-* resource/aws_efs_mount_target: Add `file_system_arn` attribute [GH-6371]
-* resource/aws_launch_configuration: Add `capacity_reservation_specification` argument [GH-6325]
-* resource/aws_mq_broker: Add `logs` argument [GH-6122]
+* data-source/aws_efs_file_system: Add `arn` attribute ([#6371](https://github.com/terraform-providers/terraform-provider-aws/issues/6371))
+* data-source/aws_efs_mount_target: Add `file_system_arn` attribute ([#6371](https://github.com/terraform-providers/terraform-provider-aws/issues/6371))
+* data-source/aws_mq_broker: Add `logs` attribute ([#6122](https://github.com/terraform-providers/terraform-provider-aws/issues/6122))
+* resource/aws_efs_file_system: Add `arn` attribute ([#6371](https://github.com/terraform-providers/terraform-provider-aws/issues/6371))
+* resource/aws_efs_mount_target: Add `file_system_arn` attribute ([#6371](https://github.com/terraform-providers/terraform-provider-aws/issues/6371))
+* resource/aws_launch_configuration: Add `capacity_reservation_specification` argument ([#6325](https://github.com/terraform-providers/terraform-provider-aws/issues/6325))
+* resource/aws_mq_broker: Add `logs` argument ([#6122](https://github.com/terraform-providers/terraform-provider-aws/issues/6122))
 
 BUG FIXES:
 
-* resource/aws_ecs_service: Continue supporting replica `deployment_minimum_healthy_percent = 0` and `deployment_maximum_percent = 100` [GH-6316]
-* resource/aws_flow_log: Automatically trim `:*` suffix from `log_destination` argument [GH-6377]
-* resource/aws_iam_user: Delete SSH keys with `force_delete` [GH-6337]
-* resource/aws_lb_listener: Prevent panics with actions deleted outside Terraform [GH-6319]
-* resource/aws_lb_listener_rule: Prevent panics with actions deleted outside Terraform [GH-6319]
-* resource/aws_opsworks_application: Properly recreate resource on `short_name` updates [GH-6359]
-* resource/aws_s3_bucket: Prevent `MalformedXML` error when using cross-region replication V1 with an empty `prefix` [GH-6344]
+* resource/aws_ecs_service: Continue supporting replica `deployment_minimum_healthy_percent = 0` and `deployment_maximum_percent = 100` ([#6316](https://github.com/terraform-providers/terraform-provider-aws/issues/6316))
+* resource/aws_flow_log: Automatically trim `:*` suffix from `log_destination` argument ([#6377](https://github.com/terraform-providers/terraform-provider-aws/issues/6377))
+* resource/aws_iam_user: Delete SSH keys with `force_delete` ([#6337](https://github.com/terraform-providers/terraform-provider-aws/issues/6337))
+* resource/aws_lb_listener: Prevent panics with actions deleted outside Terraform ([#6319](https://github.com/terraform-providers/terraform-provider-aws/issues/6319))
+* resource/aws_lb_listener_rule: Prevent panics with actions deleted outside Terraform ([#6319](https://github.com/terraform-providers/terraform-provider-aws/issues/6319))
+* resource/aws_opsworks_application: Properly recreate resource on `short_name` updates ([#6359](https://github.com/terraform-providers/terraform-provider-aws/issues/6359))
+* resource/aws_s3_bucket: Prevent `MalformedXML` error when using cross-region replication V1 with an empty `prefix` ([#6344](https://github.com/terraform-providers/terraform-provider-aws/issues/6344))
 
 ## 1.42.0 (October 31, 2018)
 
