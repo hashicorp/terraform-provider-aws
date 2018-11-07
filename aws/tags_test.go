@@ -16,20 +16,19 @@ func TestDiffTags(t *testing.T) {
 		Old, New       map[string]interface{}
 		Create, Remove map[string]string
 	}{
-		// Basic add/remove
+		// Add
 		{
 			Old: map[string]interface{}{
 				"foo": "bar",
 			},
 			New: map[string]interface{}{
+				"foo": "bar",
 				"bar": "baz",
 			},
 			Create: map[string]string{
 				"bar": "baz",
 			},
-			Remove: map[string]string{
-				"foo": "bar",
-			},
+			Remove: map[string]string{},
 		},
 
 		// Modify
@@ -47,12 +46,28 @@ func TestDiffTags(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]string{},
+			Remove: map[string]string{
+				"bar": "baz",
+			},
+		},
 	}
 
 	for i, tc := range cases {
 		c, r := diffTags(tagsFromMap(tc.Old), tagsFromMap(tc.New))
+		t.Logf("create: %v remove: %v", c, r)
 		cm := tagsToMap(c)
 		rm := tagsToMap(r)
+		t.Logf("maps: create: %v remove: %v", cm, rm)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
