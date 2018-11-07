@@ -229,6 +229,27 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSElasticTranscoderPipeline_import(t *testing.T) {
+	resourceName := "aws_elastictranscoder_pipeline.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: awsElasticTranscoderPipelineConfigBasic,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 const awsElasticTranscoderPipelineConfigBasic = `
 resource "aws_elastictranscoder_pipeline" "bar" {
   input_bucket  = "${aws_s3_bucket.test_bucket.bucket}"
