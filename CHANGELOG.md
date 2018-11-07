@@ -27,6 +27,7 @@ BUG FIXES:
 * resource/aws_lb_listener: Prevent panics with actions deleted outside Terraform [GH-6319]
 * resource/aws_lb_listener_rule: Prevent panics with actions deleted outside Terraform [GH-6319]
 * resource/aws_opsworks_application: Properly recreate resource on `short_name` updates [GH-6359]
+* resource/aws_s3_bucket: Prevent `MalformedXML` error when using cross-region replication V1 with an empty `prefix` [GH-6344]
 
 ## 1.42.0 (October 31, 2018)
 
