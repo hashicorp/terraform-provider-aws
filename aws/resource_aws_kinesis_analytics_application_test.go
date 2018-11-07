@@ -16,7 +16,7 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -67,7 +67,7 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
 	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -99,7 +99,7 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -131,7 +131,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 	resName := "aws_kinesis_analytics_application.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -162,7 +162,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -201,7 +201,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -240,7 +240,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -268,7 +268,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -303,7 +303,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -343,7 +343,7 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -371,7 +371,7 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
@@ -466,7 +466,7 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_cloudwatch_log_stream" "test" {
-  name = "testAcc-%s"
+  name = "testAcc-%s-%d"
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
 }
 
@@ -479,7 +479,7 @@ resource "aws_kinesis_analytics_application" "test" {
     role_arn = "${aws_iam_role.test.arn}"
   }
 }
-`, rInt, streamName, rInt)
+`, rInt, streamName, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt int) string {
@@ -525,7 +525,7 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%s"
+  name = "testAcc-%s-%d"
   shard_count = 1
 }
 
@@ -560,7 +560,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, streamName, rInt)
+`, streamName, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt int) string {
@@ -591,7 +591,7 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%s"
+  name = "testAcc-%s-%d"
   shard_count = 1
 }
 
@@ -610,7 +610,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, streamName, rInt)
+`, streamName, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_referenceDataSource(rInt int) string {
