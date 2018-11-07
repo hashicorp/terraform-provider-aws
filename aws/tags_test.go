@@ -64,10 +64,8 @@ func TestDiffTags(t *testing.T) {
 
 	for i, tc := range cases {
 		c, r := diffTags(tagsFromMap(tc.Old), tagsFromMap(tc.New))
-		t.Logf("create: %v remove: %v", c, r)
 		cm := tagsToMap(c)
 		rm := tagsToMap(r)
-		t.Logf("maps: create: %v remove: %v", cm, rm)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
