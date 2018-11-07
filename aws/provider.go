@@ -494,6 +494,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_key_pair":                                     resourceAwsKeyPair(),
 			"aws_kinesis_firehose_delivery_stream":             resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                               resourceAwsKinesisStream(),
+			"aws_kinesis_analytics_application":                resourceAwsKinesisAnalyticsApplication(),
 			"aws_kms_alias":                                    resourceAwsKmsAlias(),
 			"aws_kms_grant":                                    resourceAwsKmsGrant(),
 			"aws_kms_key":                                      resourceAwsKmsKey(),
@@ -762,6 +763,8 @@ func init() {
 		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to kinesalite.",
 
+		"kinesis_analytics_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"iam_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -887,6 +890,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
+		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
@@ -1060,6 +1064,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["kinesis_endpoint"],
+				},
+				"kinesis_analytics": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["kinesis_analytics_endpoint"],
 				},
 				"kms": {
 					Type:        schema.TypeString,
