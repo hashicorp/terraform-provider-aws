@@ -25,6 +25,14 @@ data "aws_acm_certificate" "example" {
   types = ["AMAZON_ISSUED"]
   most_recent = true
 }
+
+data "aws_acm_certificate" "example" {
+  domain   = "tf.example.com"
+  types = ["AMAZON_ISSUED"]
+  tags {
+    Name = "certificate-name"
+  }  
+}
 ```
 
 ## Argument Reference
@@ -35,6 +43,8 @@ data "aws_acm_certificate" "example" {
    are returned.
  * `types` - (Optional) A list of types on which to filter the returned list. Valid values are `AMAZON_ISSUED` and `IMPORTED`.
  * `most_recent` - (Optional) If set to true, it sorts the certificates matched by previous criteria by the NotBefore field, returning only the most recent one. If set to false, it returns an error if more than one certificate is found. Defaults to false.
+ * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+   a pair on the desired certificate.
 
 ## Attributes Reference
 
