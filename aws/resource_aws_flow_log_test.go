@@ -58,7 +58,7 @@ func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
@@ -91,7 +91,7 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 	resourceName := "aws_flow_log.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
@@ -101,9 +101,10 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					testAccCheckAWSFlowLogAttributes(&flowLog),
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, "arn"),
+					// We automatically trim :* from ARNs if present
+					testAccCheckResourceAttrRegionalARN(resourceName, "log_destination", "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_group_name", fmt.Sprintf("%s:*", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
 				),
 			},
 			{
@@ -121,7 +122,7 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 	resourceName := "aws_flow_log.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
