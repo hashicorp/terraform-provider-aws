@@ -1783,9 +1783,6 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 		if rrid, ok := rr["id"]; ok && rrid != "" {
 			rcRule.ID = aws.String(rrid.(string))
 		}
-		if prefix, ok := rr["prefix"]; ok && prefix != "" {
-			rcRule.Prefix = aws.String(prefix.(string))
-		}
 
 		ruleDestination := &s3.Destination{}
 		if dest, ok := rr["destination"].(*schema.Set); ok && dest.Len() > 0 {
@@ -1849,6 +1846,9 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
 				Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
 			}
+		} else {
+			// XML schema V1.
+			rcRule.Prefix = aws.String(rr["prefix"].(string))
 		}
 
 		rules = append(rules, rcRule)
