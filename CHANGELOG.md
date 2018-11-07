@@ -8,6 +8,7 @@ NOTES:
 FEATURES:
 
 * **New Resource:** `aws_dlm_lifecycle_policy` [GH-5558]
+* **New Resource:** `aws_kinesis_analytics_application` [GH-5456]
 
 ENHANCEMENTS:
 
