@@ -22,6 +22,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_ecs_service: Continue supporting replica `deployment_minimum_healthy_percent = 0` and `deployment_maximum_percent = 100` [GH-6316]
+* resource/aws_flow_log: Automatically trim `:*` suffix from `log_destination` argument [GH-6377]
 * resource/aws_iam_user: Delete SSH keys with `force_delete` [GH-6337]
 * resource/aws_lb_listener: Prevent panics with actions deleted outside Terraform [GH-6319]
 * resource/aws_lb_listener_rule: Prevent panics with actions deleted outside Terraform [GH-6319]
