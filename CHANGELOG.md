@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_vpc: Always set `assign_generated_ipv6_cidr_block`, `ipv6_association_id`, and `ipv6_cidr_block` attributes in Terraform state [GH-2103]
+* resource/aws_vpc: Always wait for IPv6 CIDR block association on resource creation if `assign_generated_ipv6_cidr_block` is set [GH-6394]
 
 ## 1.43.0 (November 07, 2018)
 
