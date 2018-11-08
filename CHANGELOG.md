@@ -5,6 +5,7 @@ BUG FIXES:
 * resource/aws_rds_cluster: Prevent `InvalidParameterCombination` error with `engine_version` and `snapshot_identifier` on creation [GH-6391]
 * resource/aws_vpc: Always set `assign_generated_ipv6_cidr_block`, `ipv6_association_id`, and `ipv6_cidr_block` attributes in Terraform state [GH-2103]
 * resource/aws_vpc: Always wait for IPv6 CIDR block association on resource creation if `assign_generated_ipv6_cidr_block` is set [GH-6394]
+* service/ec2: Properly ignore sending existing tags during updates [GH-5108] / [GH-6370]
 
 ## 1.43.0 (November 07, 2018)
 
