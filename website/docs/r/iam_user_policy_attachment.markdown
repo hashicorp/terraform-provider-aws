@@ -10,6 +10,8 @@ description: |-
 
 Attaches a Managed IAM Policy to an IAM user
 
+~> **NOTE:** The usage of this resource conflicts with the `aws_iam_policy_attachment` resource and will permanently show a difference if both are defined.
+
 ## Example Usage
 
 ```hcl
