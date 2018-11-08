@@ -54,7 +54,7 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_EC2Automate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricAlarmConfigAlarmActionsEC2Automate(rName, "recover"),
+				Config: testAccAWSCloudWatchMetricAlarmConfigAlarmActionsEC2Automate(rName, "reboot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
@@ -64,6 +64,27 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_EC2Automate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigAlarmActionsEC2Automate(rName, "recover"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigAlarmActionsEC2Automate(rName, "stop"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigAlarmActionsEC2Automate(rName, "terminate"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
+				),
 			},
 		},
 	})

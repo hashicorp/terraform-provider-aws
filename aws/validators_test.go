@@ -369,6 +369,7 @@ func TestValidateArn(t *testing.T) {
 
 func TestValidateEC2AutomateARN(t *testing.T) {
 	validNames := []string{
+		"arn:aws:automate:us-east-1:ec2:reboot",
 		"arn:aws:automate:us-east-1:ec2:recover",
 		"arn:aws:automate:us-east-1:ec2:stop",
 		"arn:aws:automate:us-east-1:ec2:terminate",
