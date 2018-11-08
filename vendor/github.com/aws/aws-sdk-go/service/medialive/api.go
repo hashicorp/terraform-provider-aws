@@ -7534,16 +7534,72 @@ func (s *FixedModeScheduleActionStartSettings) SetTime(v string) *FixedModeSched
 	return s
 }
 
+// Settings to specify if an action follows another.
+type FollowModeScheduleActionStartSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Identifies whether this action starts relative to the start or relative to
+	// the end of the reference action.
+	//
+	// FollowPoint is a required field
+	FollowPoint *string `locationName:"followPoint" type:"string" required:"true" enum:"FollowPoint"`
+
+	// The action name of another action that this one refers to.
+	//
+	// ReferenceActionName is a required field
+	ReferenceActionName *string `locationName:"referenceActionName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s FollowModeScheduleActionStartSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FollowModeScheduleActionStartSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FollowModeScheduleActionStartSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FollowModeScheduleActionStartSettings"}
+	if s.FollowPoint == nil {
+		invalidParams.Add(request.NewErrParamRequired("FollowPoint"))
+	}
+	if s.ReferenceActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReferenceActionName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFollowPoint sets the FollowPoint field's value.
+func (s *FollowModeScheduleActionStartSettings) SetFollowPoint(v string) *FollowModeScheduleActionStartSettings {
+	s.FollowPoint = &v
+	return s
+}
+
+// SetReferenceActionName sets the ReferenceActionName field's value.
+func (s *FollowModeScheduleActionStartSettings) SetReferenceActionName(v string) *FollowModeScheduleActionStartSettings {
+	s.ReferenceActionName = &v
+	return s
+}
+
 type GlobalConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Value to set the initial audio gain for the Live Event.
 	InitialAudioGain *int64 `locationName:"initialAudioGain" type:"integer"`
 
-	// Indicates the action to take when the input completes (e.g. end-of-file).
-	// Options include looping on the input (via "switchAndLoopInputs") or transcoding
-	// black / color / slate images per the "Input Loss Behavior" configuration
-	// (via "none").
+	// Indicates the action to take when the current input completes (e.g. end-of-file).
+	// When switchAndLoopInputs is configured the encoder will restart at the beginning
+	// of the first input. When "none" is configured the encoder will transcode
+	// either black, a solid color, or a user specified slate images per the "Input
+	// Loss Behavior" configuration until the next input switch occurs (which is
+	// controlled through the Channel Schedule API).
 	InputEndAction *string `locationName:"inputEndAction" type:"string" enum:"GlobalConfigurationInputEndAction"`
 
 	// Settings for system actions when input is lost.
@@ -9033,6 +9089,10 @@ func (s *Input) SetType(v string) *Input {
 type InputAttachment struct {
 	_ struct{} `type:"structure"`
 
+	// User-specified name for the attachment. This is required if the user wants
+	// to use this input in an input switch action.
+	InputAttachmentName *string `locationName:"inputAttachmentName" type:"string"`
+
 	// The ID of the input
 	InputId *string `locationName:"inputId" type:"string"`
 
@@ -9063,6 +9123,12 @@ func (s *InputAttachment) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetInputAttachmentName sets the InputAttachmentName field's value.
+func (s *InputAttachment) SetInputAttachmentName(v string) *InputAttachment {
+	s.InputAttachmentName = &v
+	return s
 }
 
 // SetInputId sets the InputId field's value.
@@ -9662,6 +9728,45 @@ func (s *InputSpecification) SetMaximumBitrate(v string) *InputSpecification {
 // SetResolution sets the Resolution field's value.
 func (s *InputSpecification) SetResolution(v string) *InputSpecification {
 	s.Resolution = &v
+	return s
+}
+
+// Settings for the action to switch an input.
+type InputSwitchScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the input attachment that should be switched to by this action.
+	//
+	// InputAttachmentNameReference is a required field
+	InputAttachmentNameReference *string `locationName:"inputAttachmentNameReference" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s InputSwitchScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputSwitchScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputSwitchScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputSwitchScheduleActionSettings"}
+	if s.InputAttachmentNameReference == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputAttachmentNameReference"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
+func (s *InputSwitchScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputSwitchScheduleActionSettings {
+	s.InputAttachmentNameReference = &v
 	return s
 }
 
@@ -12509,6 +12614,9 @@ func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSe
 type ScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Settings to switch an input
+	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
+
 	// Settings for SCTE-35 return_to_network message
 	Scte35ReturnToNetworkSettings *Scte35ReturnToNetworkScheduleActionSettings `locationName:"scte35ReturnToNetworkSettings" type:"structure"`
 
@@ -12538,6 +12646,11 @@ func (s ScheduleActionSettings) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ScheduleActionSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ScheduleActionSettings"}
+	if s.InputSwitchSettings != nil {
+		if err := s.InputSwitchSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputSwitchSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Scte35ReturnToNetworkSettings != nil {
 		if err := s.Scte35ReturnToNetworkSettings.Validate(); err != nil {
 			invalidParams.AddNested("Scte35ReturnToNetworkSettings", err.(request.ErrInvalidParams))
@@ -12563,6 +12676,12 @@ func (s *ScheduleActionSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetInputSwitchSettings sets the InputSwitchSettings field's value.
+func (s *ScheduleActionSettings) SetInputSwitchSettings(v *InputSwitchScheduleActionSettings) *ScheduleActionSettings {
+	s.InputSwitchSettings = v
+	return s
 }
 
 // SetScte35ReturnToNetworkSettings sets the Scte35ReturnToNetworkSettings field's value.
@@ -12601,6 +12720,9 @@ type ScheduleActionStartSettings struct {
 
 	// Holds the start time for the action.
 	FixedModeScheduleActionStartSettings *FixedModeScheduleActionStartSettings `locationName:"fixedModeScheduleActionStartSettings" type:"structure"`
+
+	// Specifies an action to follow for scheduling this action.
+	FollowModeScheduleActionStartSettings *FollowModeScheduleActionStartSettings `locationName:"followModeScheduleActionStartSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -12621,6 +12743,11 @@ func (s *ScheduleActionStartSettings) Validate() error {
 			invalidParams.AddNested("FixedModeScheduleActionStartSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.FollowModeScheduleActionStartSettings != nil {
+		if err := s.FollowModeScheduleActionStartSettings.Validate(); err != nil {
+			invalidParams.AddNested("FollowModeScheduleActionStartSettings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12631,6 +12758,12 @@ func (s *ScheduleActionStartSettings) Validate() error {
 // SetFixedModeScheduleActionStartSettings sets the FixedModeScheduleActionStartSettings field's value.
 func (s *ScheduleActionStartSettings) SetFixedModeScheduleActionStartSettings(v *FixedModeScheduleActionStartSettings) *ScheduleActionStartSettings {
 	s.FixedModeScheduleActionStartSettings = v
+	return s
+}
+
+// SetFollowModeScheduleActionStartSettings sets the FollowModeScheduleActionStartSettings field's value.
+func (s *ScheduleActionStartSettings) SetFollowModeScheduleActionStartSettings(v *FollowModeScheduleActionStartSettings) *ScheduleActionStartSettings {
+	s.FollowModeScheduleActionStartSettings = v
 	return s
 }
 
@@ -14146,7 +14279,7 @@ type UdpOutputSettings struct {
 	// UDP output buffering in milliseconds. Larger values increase latency through
 	// the transcoder but simultaneously assist the transcoder in maintaining a
 	// constant, low-jitter UDP/RTP output while accommodating clock recovery, input
-	// disruptions, picture reordering, etc.
+	// switching, input disruptions, picture reordering, etc.
 	BufferMsec *int64 `locationName:"bufferMsec" type:"integer"`
 
 	// ContainerSettings is a required field
@@ -15498,6 +15631,15 @@ const (
 	FixedAfdAfd1111 = "AFD_1111"
 )
 
+// Follow reference point.
+const (
+	// FollowPointEnd is a FollowPoint enum value
+	FollowPointEnd = "END"
+
+	// FollowPointStart is a FollowPoint enum value
+	FollowPointStart = "START"
+)
+
 const (
 	// GlobalConfigurationInputEndActionNone is a GlobalConfigurationInputEndAction enum value
 	GlobalConfigurationInputEndActionNone = "NONE"
@@ -16061,6 +16203,9 @@ const (
 
 	// InputTypeUrlPull is a InputType enum value
 	InputTypeUrlPull = "URL_PULL"
+
+	// InputTypeMp4File is a InputType enum value
+	InputTypeMp4File = "MP4_FILE"
 )
 
 // The log level the user wants for their channel.

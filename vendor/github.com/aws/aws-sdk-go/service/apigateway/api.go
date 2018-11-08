@@ -21554,6 +21554,9 @@ type Stage struct {
 	// can have alphanumeric and underscore characters, and the values must match
 	// [A-Za-z0-9-._~:/?#&=,]+.
 	Variables map[string]*string `locationName:"variables" type:"map"`
+
+	// The ARN of the WebAcl associated with the Stage.
+	WebAclArn *string `locationName:"webAclArn" type:"string"`
 }
 
 // String returns the string representation
@@ -21659,6 +21662,12 @@ func (s *Stage) SetTracingEnabled(v bool) *Stage {
 // SetVariables sets the Variables field's value.
 func (s *Stage) SetVariables(v map[string]*string) *Stage {
 	s.Variables = v
+	return s
+}
+
+// SetWebAclArn sets the WebAclArn field's value.
+func (s *Stage) SetWebAclArn(v string) *Stage {
+	s.WebAclArn = &v
 	return s
 }
 
