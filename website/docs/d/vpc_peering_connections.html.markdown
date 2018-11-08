@@ -1,9 +1,9 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_vpc_peering_connection_ids"
-sidebar_current: "docs-aws-datasource-vpc-peering-connection-ids"
+page_title: "AWS: aws_vpc_peering_connections"
+sidebar_current: "docs-aws-datasource-vpc-peering-connections"
 description: |-
-    Lists peering connection ids
+    Lists peering connections
 ---
 
 # Data Source: aws_vpc_peering_connections
@@ -18,7 +18,7 @@ the data source, as noted in [issue 4149](https://github.com/hashicorp/terraform
 
 ```hcl
 # Declare the data source
-data "aws_vpc_peering_connection_ids" "pcs" {
+data "aws_vpc_peering_connections" "pcs" {
   filter {
     name = "requester-vpc-info.vpc-id"
     values = ["${aws_vpc.foo.id}"]
@@ -27,8 +27,8 @@ data "aws_vpc_peering_connection_ids" "pcs" {
 
 # get the details of each resource
 data "aws_vpc_peering_connection" "pc" {
-  count = "${length(data.aws_vpc_peering_connection_ids.pcs.ids)}"
-  id = "${data.aws_vpc_peering_connection_ids.pcs.ids[count.index]}"
+  count = "${length(data.aws_vpc_peering_connections.pcs.ids)}"
+  id = "${data.aws_vpc_peering_connections.pcs.ids[count.index]}"
 }
 ```
 

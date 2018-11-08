@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsVpcPeeringConnectionIds() *schema.Resource {
+func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcPeeringConnectionIdsRead,
+		Read: dataSourceAwsVpcPeeringConnectionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
@@ -27,7 +27,7 @@ func dataSourceAwsVpcPeeringConnectionIds() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcPeeringConnectionIdsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	log.Printf("[DEBUG] Reading VPC Peering Connections.")
