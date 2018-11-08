@@ -1,4 +1,9 @@
 ## 1.43.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_vpc: Always set `assign_generated_ipv6_cidr_block`, `ipv6_association_id`, and `ipv6_cidr_block` attributes in Terraform state [GH-2103]
+
 ## 1.43.0 (November 07, 2018)
 
 NOTES:
