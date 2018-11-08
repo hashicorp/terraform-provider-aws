@@ -190,18 +190,18 @@ func diffTags(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+		create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	// Build the list of what to remove
 	var remove []*ec2.Tag
 	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			remove = append(remove, t)
 		} else if ok {
 			// already present so remove from new
-			delete(create, *t.Key)
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
