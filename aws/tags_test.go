@@ -47,6 +47,24 @@ func TestDiffTags(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+		},
 	}
 
 	for i, tc := range cases {
