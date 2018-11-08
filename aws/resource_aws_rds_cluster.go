@@ -489,7 +489,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			opts.VpcSecurityGroupIds = expandStringList(attr.List())
-			// requiresModifyDbCluster = true
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore from snapshot configuration: %s", opts)
