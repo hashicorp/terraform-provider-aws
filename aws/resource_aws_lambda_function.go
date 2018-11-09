@@ -27,6 +27,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 		Read:   resourceAwsLambdaFunctionRead,
 		Update: resourceAwsLambdaFunctionUpdate,
 		Delete: resourceAwsLambdaFunctionDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -392,11 +395,11 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
-		// Allow 9 more minutes for EC2 throttling
-		err := resource.Retry(9*time.Minute, func() *resource.RetryError {
+		// Allow additional time for slower uploads or EC2 throttling
+		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 			if err != nil {
 				log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
