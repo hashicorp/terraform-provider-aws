@@ -1,14 +1,14 @@
-## 1.43.1 (Unreleased)
+## 1.43.1 (November 09, 2018)
 
 BUG FIXES:
 
-* resource/aws_cloudwatch_metric_alarm: Accept EC2 automate reboot ARN [GH-6405]
-* resource/aws_lambda_function: Handle slower code uploads on creation with configurable timeout [GH-6409]
-* resource/aws_rds_cluster: Prevent `InvalidParameterCombination` error with `engine_version` and `snapshot_identifier` on creation [GH-6391]
-* resource/aws_security_group_rule: Properly handle updating description when `protocol` is -1/ALL [GH-6407]
-* resource/aws_vpc: Always set `assign_generated_ipv6_cidr_block`, `ipv6_association_id`, and `ipv6_cidr_block` attributes in Terraform state [GH-2103]
-* resource/aws_vpc: Always wait for IPv6 CIDR block association on resource creation if `assign_generated_ipv6_cidr_block` is set [GH-6394]
-* service/ec2: Properly ignore sending existing tags during updates [GH-5108] / [GH-6370]
+* resource/aws_cloudwatch_metric_alarm: Accept EC2 automate reboot ARN ([#6405](https://github.com/terraform-providers/terraform-provider-aws/issues/6405))
+* resource/aws_lambda_function: Handle slower code uploads on creation with configurable timeout ([#6409](https://github.com/terraform-providers/terraform-provider-aws/issues/6409))
+* resource/aws_rds_cluster: Prevent `InvalidParameterCombination` error with `engine_version` and `snapshot_identifier` on creation ([#6391](https://github.com/terraform-providers/terraform-provider-aws/issues/6391))
+* resource/aws_security_group_rule: Properly handle updating description when `protocol` is -1/ALL ([#6407](https://github.com/terraform-providers/terraform-provider-aws/issues/6407))
+* resource/aws_vpc: Always set `assign_generated_ipv6_cidr_block`, `ipv6_association_id`, and `ipv6_cidr_block` attributes in Terraform state ([#2103](https://github.com/terraform-providers/terraform-provider-aws/issues/2103))
+* resource/aws_vpc: Always wait for IPv6 CIDR block association on resource creation if `assign_generated_ipv6_cidr_block` is set ([#6394](https://github.com/terraform-providers/terraform-provider-aws/issues/6394))
+* service/ec2: Properly ignore sending existing tags during updates ([#5108](https://github.com/terraform-providers/terraform-provider-aws/issues/5108)] / [[#6370](https://github.com/terraform-providers/terraform-provider-aws/issues/6370))
 
 ## 1.43.0 (November 07, 2018)
 
