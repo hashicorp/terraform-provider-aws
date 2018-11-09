@@ -14,7 +14,7 @@ Retrieve information about an EKS Cluster.
 
 ```hcl
 data "aws_eks_cluster" "example" {
-  name  = "example"
+  name = "example"
 }
 
 output "endpoint" {

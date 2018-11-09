@@ -307,7 +307,7 @@ Use without a `statement`:
 ```hcl
 data "aws_iam_policy_document" "source" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["ec2:DescribeAccountAttributes"]
     resources = ["*"]
   }
@@ -315,14 +315,14 @@ data "aws_iam_policy_document" "source" {
 
 data "aws_iam_policy_document" "override" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["s3:GetObject"]
     resources = ["*"]
   }
 }
 
 data "aws_iam_policy_document" "politik" {
-  source_json = "${data.aws_iam_policy_document.source.json}"
+  source_json   = "${data.aws_iam_policy_document.source.json}"
   override_json = "${data.aws_iam_policy_document.override.json}"
 }
 ```

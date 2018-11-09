@@ -57,7 +57,7 @@ resource "aws_lb_listener" "front_end" {
 ```hcl
 resource "aws_acm_certificate" "cert" {
   domain_name               = "example.com"
-  subject_alternative_names = ["www.example.com","example.org"]
+  subject_alternative_names = ["www.example.com", "example.org"]
   validation_method         = "DNS"
 }
 
@@ -97,16 +97,17 @@ resource "aws_route53_record" "cert_validation_alt2" {
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
+
   validation_record_fqdns = [
     "${aws_route53_record.cert_validation.fqdn}",
     "${aws_route53_record.cert_validation_alt1.fqdn}",
-    "${aws_route53_record.cert_validation_alt2.fqdn}"
+    "${aws_route53_record.cert_validation_alt2.fqdn}",
   ]
 }
 
 resource "aws_lb_listener" "front_end" {
   # [...]
-  certificate_arn   = "${aws_acm_certificate_validation.cert.certificate_arn}"
+  certificate_arn = "${aws_acm_certificate_validation.cert.certificate_arn}"
 }
 ```
 

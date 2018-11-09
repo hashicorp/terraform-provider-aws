@@ -18,6 +18,7 @@ resource "aws_launch_template" "foo" {
 
   block_device_mappings {
     device_name = "/dev/sda1"
+
     ebs {
       volume_size = 20
     }
@@ -71,11 +72,12 @@ resource "aws_launch_template" "foo" {
 
   tag_specifications {
     resource_type = "instance"
+
     tags {
       Name = "test"
     }
   }
-  
+
   user_data = "${base64encode(...)}"
 }
 ```

@@ -13,9 +13,7 @@ Provides a way to set SNS SMS preferences.
 ## Example Usage
 
 ```hcl
-resource "aws_sns_sms_preferences" "update_sms_prefs" {
-
-}
+resource "aws_sns_sms_preferences" "update_sms_prefs" {}
 ```
 
 ## Argument Reference

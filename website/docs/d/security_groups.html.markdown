@@ -15,7 +15,7 @@ outside of Terraform.
 ```hcl
 data "aws_security_groups" "test" {
   tags {
-    Application = "k8s",
+    Application = "k8s"
     Environment = "dev"
   }
 }
@@ -27,6 +27,7 @@ data "aws_security_groups" "test" {
     name   = "group-name"
     values = ["*nodes*"]
   }
+
   filter {
     name   = "vpc-id"
     values = ["${var.vpc_id}"]

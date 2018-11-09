@@ -89,7 +89,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     forwarded_values {
       query_string = false
-      headers = ["Origin"]
+      headers      = ["Origin"]
+
       cookies {
         forward = "none"
       }
@@ -111,6 +112,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     forwarded_values {
       query_string = false
+
       cookies {
         forward = "none"
       }

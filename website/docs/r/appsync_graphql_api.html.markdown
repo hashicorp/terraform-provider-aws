@@ -15,7 +15,7 @@ Provides an AppSync GraphQL API.
 ```hcl
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "API_KEY"
-  name = "example"
+  name                = "example"
 }
 ```
 

@@ -20,7 +20,7 @@ resource "aws_iam_group" "group" {
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-  policy      = # omitted
+  policy      = ""  # insert policy here
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
@@ -33,5 +33,5 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 
 The following arguments are supported:
 
-* `group`		(Required) - The group the policy should be applied to
-* `policy_arn`	(Required) - The ARN of the policy you want to apply
+* `group`  (Required) - The group the policy should be applied to
+* `policy_arn`  (Required) - The ARN of the policy you want to apply

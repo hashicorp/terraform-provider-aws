@@ -17,7 +17,7 @@ resource "aws_api_gateway_rest_api" "myapi" {
   name = "MyDemoAPI"
 }
 
-...
+# ...
 
 resource "aws_api_gateway_deployment" "dev" {
   rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
@@ -102,6 +102,6 @@ In addition to all arguments above, the following attributes are exported:
 
 AWS API Gateway Usage Plan can be imported using the `id`, e.g.
 
-```
+```sh
 $ terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>
 ```

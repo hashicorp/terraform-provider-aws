@@ -14,13 +14,13 @@ Provides a budgets budget resource. Budgets use the cost visualisation provided 
 
 ```hcl
 resource "aws_budgets_budget" "ec2" {
-  name                  = "budget-ec2-monthly"
-  budget_type           = "COST"
-  limit_amount          = "1200"
-  limit_unit            = "USD"
-  time_period_end       = "2087-06-15_00:00"
-  time_period_start     = "2017-07-01_00:00"
-  time_unit             = "MONTHLY"
+  name              = "budget-ec2-monthly"
+  budget_type       = "COST"
+  limit_amount      = "1200"
+  limit_unit        = "USD"
+  time_period_end   = "2087-06-15_00:00"
+  time_period_start = "2017-07-01_00:00"
+  time_unit         = "MONTHLY"
 
   cost_filters {
     service = "ec2"
@@ -32,7 +32,7 @@ Create a budget for *$100*.
 
 ```hcl
 resource "aws_budgets_budget" "cost" {
-  ...
+  # ...
   budget_type  = "COST"
   limit_amount = "100"
   limit_unit   = "USD"
@@ -43,7 +43,7 @@ Create a budget for s3 with a limit of *3 GB* of storage.
 
 ```hcl
 resource "aws_budgets_budget" "s3" {
-  ...
+  # ...
   budget_type  = "USAGE"
   limit_amount = "3"
   limit_unit   = "GB"

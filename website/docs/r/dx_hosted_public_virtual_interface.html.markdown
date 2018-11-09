@@ -15,7 +15,7 @@ A hosted virtual interface is a virtual interface that is owned by another AWS a
 
 ```hcl
 resource "aws_dx_hosted_public_virtual_interface" "foo" {
-  connection_id    = "dxcon-zzzzzzzz"
+  connection_id = "dxcon-zzzzzzzz"
 
   name           = "vif-foo"
   vlan           = 4094
@@ -24,9 +24,10 @@ resource "aws_dx_hosted_public_virtual_interface" "foo" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
-      "210.52.109.0/24",
-      "175.45.176.0/22"
+    "210.52.109.0/24",
+    "175.45.176.0/22",
   ]
 }
 ```

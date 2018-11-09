@@ -10,7 +10,6 @@ description: |-
 
 Attaches a Managed IAM Policy to an IAM user
 
-
 ## Example Usage
 
 ```hcl
@@ -21,7 +20,7 @@ resource "aws_iam_user" "user" {
 resource "aws_iam_policy" "policy" {
     name        = "test-policy"
     description = "A test policy"
-    policy      = # omitted
+    policy      = ""  # insert policy here
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
@@ -34,5 +33,5 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 
 The following arguments are supported:
 
-* `user`		(Required) - The user the policy should be applied to
-* `policy_arn`	(Required) - The ARN of the policy you want to apply
+* `user`  (Required) - The user the policy should be applied to
+* `policy_arn`  (Required) - The ARN of the policy you want to apply

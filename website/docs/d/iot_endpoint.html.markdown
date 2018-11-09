@@ -19,6 +19,7 @@ resource "kubernetes_pod" "agent" {
   metadata {
     name = "my-device"
   }
+
   spec {
     container {
       image = "gcr.io/my-project/image-name"
