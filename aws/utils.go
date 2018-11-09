@@ -47,3 +47,8 @@ func isResourceNotFoundError(err error) bool {
 	_, ok := err.(*resource.NotFoundError)
 	return ok
 }
+
+func isResourceTimeoutErrorLastError(err, lastError error) bool {
+	timeoutErr, ok := err.(*resource.TimeoutError)
+	return ok && timeoutErr.LastError == lastError
+}
