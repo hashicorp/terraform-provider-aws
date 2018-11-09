@@ -164,9 +164,9 @@ As an alternative to the above, you can also specify the following lifecycle con
 
 ```hcl
 lifecycle {
-    ignore_changes = ["subnet_ids"]
+  ignore_changes = ["subnet_ids"]
 }
- ```
+```
 
 ### Removing `aws_default_network_acl` from your configuration
 
