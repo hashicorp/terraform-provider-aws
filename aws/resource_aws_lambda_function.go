@@ -395,7 +395,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		if !isResourceTimeoutErrorLastError(err, nil) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
 		// Allow additional time for slower uploads or EC2 throttling
