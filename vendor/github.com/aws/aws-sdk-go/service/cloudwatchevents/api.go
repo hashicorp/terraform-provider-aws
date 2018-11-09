@@ -839,6 +839,12 @@ func (c *CloudWatchEvents) PutPermissionRequest(input *PutPermissionInput) (req 
 // specifying Principal as "*" and specifying the AWS organization ID in Condition,
 // to grant permissions to all accounts in that organization.
 //
+// If you grant permissions using an organization, then accounts in that organization
+// must specify a RoleArn with proper permissions when they use PutTarget to
+// add your account's event bus as a target. For more information, see Sending
+// and Receiving Events Between AWS Accounts (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/CloudWatchEvents-CrossAccountEventDelivery.html)
+// in the Amazon CloudWatch Events User Guide.
+//
 // The permission policy on the default event bus cannot exceed 10 KB in size.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -949,6 +955,20 @@ func (c *CloudWatchEvents) PutRuleRequest(input *PutRuleInput) (req *request.Req
 // Names (ARNs). However, CloudWatch Events uses an exact match in event patterns
 // and rules. Be sure to use the correct ARN characters when creating event
 // patterns so that they match the ARN syntax in the event you want to match.
+//
+// In CloudWatch Events, it is possible to create rules that lead to infinite
+// loops, where a rule is fired repeatedly. For example, a rule might detect
+// that ACLs have changed on an S3 bucket, and trigger software to change them
+// to the desired state. If the rule is not written carefully, the subsequent
+// change to the ACLs fires the rule again, creating an infinite loop.
+//
+// To prevent this, write the rules so that the triggered actions do not re-fire
+// the same rule. For example, your rule could fire only if ACLs are found to
+// be in a bad state, instead of after any change.
+//
+// An infinite loop can quickly cause higher than expected charges. We recommend
+// that you use budgeting, which alerts you when charges exceed your specified
+// limit. For more information, see Managing Your Costs with Budgets (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-managing-costs.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1099,6 +1119,13 @@ func (c *CloudWatchEvents) PutTargetsRequest(input *PutTargetsInput) (req *reque
 // account is charged for each sent event. Each event sent to another account
 // is charged as a custom event. The account receiving the event is not charged.
 // For more information, see Amazon CloudWatch Pricing (https://aws.amazon.com/cloudwatch/pricing/).
+//
+// If you are setting the event bus of another account as the target, and that
+// account granted permission to your account through an organization instead
+// of directly by the account ID, then you must specify a RoleArn with proper
+// permissions in the Target structure. For more information, see Sending and
+// Receiving Events Between AWS Accounts (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/CloudWatchEvents-CrossAccountEventDelivery.html)
+// in the Amazon CloudWatch Events User Guide.
 //
 // For more information about enabling cross-account events, see PutPermission.
 //
@@ -3617,6 +3644,13 @@ func (s *SqsParameters) SetMessageGroupId(v string) *SqsParameters {
 
 // Targets are the resources to be invoked when a rule is triggered. For a complete
 // list of services and resources that can be set as a target, see PutTargets.
+//
+// If you are setting the event bus of another account as the target, and that
+// account granted permission to your account through an organization instead
+// of directly by the account ID, then you must specify a RoleArn with proper
+// permissions in the Target structure. For more information, see Sending and
+// Receiving Events Between AWS Accounts (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/CloudWatchEvents-CrossAccountEventDelivery.html)
+// in the Amazon CloudWatch Events User Guide.
 type Target struct {
 	_ struct{} `type:"structure"`
 

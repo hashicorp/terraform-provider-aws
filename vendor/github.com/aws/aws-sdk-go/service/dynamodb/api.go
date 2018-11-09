@@ -4,10 +4,12 @@ package dynamodb
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/aws/crr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
@@ -58,6 +60,27 @@ func (c *DynamoDB) BatchGetItemRequest(input *BatchGetItemInput) (req *request.R
 
 	output = &BatchGetItemOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -247,6 +270,27 @@ func (c *DynamoDB) BatchWriteItemRequest(input *BatchWriteItemInput) (req *reque
 
 	output = &BatchWriteItemOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -413,6 +457,27 @@ func (c *DynamoDB) CreateBackupRequest(input *CreateBackupInput) (req *request.R
 
 	output = &CreateBackupOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -548,6 +613,27 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 
 	output = &CreateGlobalTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -679,6 +765,27 @@ func (c *DynamoDB) CreateTableRequest(input *CreateTableInput) (req *request.Req
 
 	output = &CreateTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -790,6 +897,27 @@ func (c *DynamoDB) DeleteBackupRequest(input *DeleteBackupInput) (req *request.R
 
 	output = &DeleteBackupOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -891,6 +1019,27 @@ func (c *DynamoDB) DeleteItemRequest(input *DeleteItemInput) (req *request.Reque
 
 	output = &DeleteItemOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1002,6 +1151,27 @@ func (c *DynamoDB) DeleteTableRequest(input *DeleteTableInput) (req *request.Req
 
 	output = &DeleteTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1120,6 +1290,27 @@ func (c *DynamoDB) DescribeBackupRequest(input *DescribeBackupInput) (req *reque
 
 	output = &DescribeBackupOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1204,6 +1395,27 @@ func (c *DynamoDB) DescribeContinuousBackupsRequest(input *DescribeContinuousBac
 
 	output = &DescribeContinuousBackupsOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1332,6 +1544,65 @@ func (c *DynamoDB) DescribeEndpointsWithContext(ctx aws.Context, input *Describe
 	return out, req.Send()
 }
 
+type discovererDescribeEndpoints struct {
+	Client        *DynamoDB
+	Required      bool
+	EndpointCache *crr.EndpointCache
+	Params        map[string]*string
+	Key           string
+}
+
+func (d *discovererDescribeEndpoints) Discover() (crr.Endpoint, error) {
+	input := &DescribeEndpointsInput{}
+
+	resp, err := d.Client.DescribeEndpoints(input)
+	if err != nil {
+		return crr.Endpoint{}, err
+	}
+
+	endpoint := crr.Endpoint{
+		Key: d.Key,
+	}
+
+	for _, e := range resp.Endpoints {
+		if e.Address == nil {
+			continue
+		}
+
+		cachedInMinutes := aws.Int64Value(e.CachePeriodInMinutes)
+		u, err := url.Parse(*e.Address)
+		if err != nil {
+			continue
+		}
+
+		addr := crr.WeightedAddress{
+			URL:     u,
+			Expired: time.Now().Add(time.Duration(cachedInMinutes) * time.Minute),
+		}
+
+		endpoint.Add(addr)
+	}
+
+	d.EndpointCache.Add(endpoint)
+
+	return endpoint, nil
+}
+
+func (d *discovererDescribeEndpoints) Handler(r *request.Request) {
+	endpointKey := crr.BuildEndpointKey(d.Params)
+	d.Key = endpointKey
+
+	endpoint, err := d.EndpointCache.Get(d, endpointKey, d.Required)
+	if err != nil {
+		r.Error = err
+		return
+	}
+
+	if endpoint.URL != nil && len(endpoint.URL.String()) > 0 {
+		r.HTTPRequest.URL = endpoint.URL
+	}
+}
+
 const opDescribeGlobalTable = "DescribeGlobalTable"
 
 // DescribeGlobalTableRequest generates a "aws/request.Request" representing the
@@ -1371,6 +1642,27 @@ func (c *DynamoDB) DescribeGlobalTableRequest(input *DescribeGlobalTableInput) (
 
 	output = &DescribeGlobalTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1453,6 +1745,27 @@ func (c *DynamoDB) DescribeGlobalTableSettingsRequest(input *DescribeGlobalTable
 
 	output = &DescribeGlobalTableSettingsOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1535,6 +1848,27 @@ func (c *DynamoDB) DescribeLimitsRequest(input *DescribeLimitsInput) (req *reque
 
 	output = &DescribeLimitsOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1670,6 +2004,27 @@ func (c *DynamoDB) DescribeTableRequest(input *DescribeTableInput) (req *request
 
 	output = &DescribeTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1761,6 +2116,27 @@ func (c *DynamoDB) DescribeTimeToLiveRequest(input *DescribeTimeToLiveInput) (re
 
 	output = &DescribeTimeToLiveOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1844,6 +2220,27 @@ func (c *DynamoDB) GetItemRequest(input *GetItemInput) (req *request.Request, ou
 
 	output = &GetItemOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -1942,6 +2339,27 @@ func (c *DynamoDB) ListBackupsRequest(input *ListBackupsInput) (req *request.Req
 
 	output = &ListBackupsOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2029,6 +2447,27 @@ func (c *DynamoDB) ListGlobalTablesRequest(input *ListGlobalTablesInput) (req *r
 
 	output = &ListGlobalTablesOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2114,6 +2553,27 @@ func (c *DynamoDB) ListTablesRequest(input *ListTablesInput) (req *request.Reque
 
 	output = &ListTablesOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2245,6 +2705,27 @@ func (c *DynamoDB) ListTagsOfResourceRequest(input *ListTagsOfResourceInput) (re
 
 	output = &ListTagsOfResourceOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2332,6 +2813,27 @@ func (c *DynamoDB) PutItemRequest(input *PutItemInput) (req *request.Request, ou
 
 	output = &PutItemOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2479,6 +2981,27 @@ func (c *DynamoDB) QueryRequest(input *QueryInput) (req *request.Request, output
 
 	output = &QueryOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2667,6 +3190,27 @@ func (c *DynamoDB) RestoreTableFromBackupRequest(input *RestoreTableFromBackupIn
 
 	output = &RestoreTableFromBackupOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2789,6 +3333,27 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 
 	output = &RestoreTableToPointInTimeOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -2941,6 +3506,27 @@ func (c *DynamoDB) ScanRequest(input *ScanInput) (req *request.Request, output *
 
 	output = &ScanOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3111,6 +3697,27 @@ func (c *DynamoDB) TagResourceRequest(input *TagResourceInput) (req *request.Req
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3220,6 +3827,27 @@ func (c *DynamoDB) UntagResourceRequest(input *UntagResourceInput) (req *request
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3325,6 +3953,27 @@ func (c *DynamoDB) UpdateContinuousBackupsRequest(input *UpdateContinuousBackups
 
 	output = &UpdateContinuousBackupsOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3421,6 +4070,27 @@ func (c *DynamoDB) UpdateGlobalTableRequest(input *UpdateGlobalTableInput) (req 
 
 	output = &UpdateGlobalTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3532,6 +4202,27 @@ func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSett
 
 	output = &UpdateGlobalTableSettingsOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3638,6 +4329,27 @@ func (c *DynamoDB) UpdateItemRequest(input *UpdateItemInput) (req *request.Reque
 
 	output = &UpdateItemOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3743,6 +4455,27 @@ func (c *DynamoDB) UpdateTableRequest(input *UpdateTableInput) (req *request.Req
 
 	output = &UpdateTableOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 
@@ -3861,6 +4594,27 @@ func (c *DynamoDB) UpdateTimeToLiveRequest(input *UpdateTimeToLiveInput) (req *r
 
 	output = &UpdateTimeToLiveOutput{}
 	req = c.newRequest(op, input, output)
+	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+		de := discovererDescribeEndpoints{
+			Required:      false,
+			EndpointCache: c.endpointCache,
+			Params: map[string]*string{
+				"op": aws.String(req.Operation.Name),
+			},
+			Client: c,
+		}
+
+		for k, v := range de.Params {
+			if v == nil {
+				delete(de.Params, k)
+			}
+		}
+
+		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+			Name: "crr.endpointdiscovery",
+			Fn:   de.Handler,
+		})
+	}
 	return
 }
 

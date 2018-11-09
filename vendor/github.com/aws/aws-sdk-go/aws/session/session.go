@@ -452,6 +452,14 @@ func mergeConfigSrcs(cfg, userCfg *aws.Config, envCfg envConfig, sharedCfg share
 		}
 	}
 
+	if aws.BoolValue(envCfg.EnableEndpointDiscovery) {
+		if envCfg.EnableEndpointDiscovery != nil {
+			cfg.WithEndpointDiscovery(*envCfg.EnableEndpointDiscovery)
+		} else if envCfg.EnableSharedConfig && sharedCfg.EnableEndpointDiscovery != nil {
+			cfg.WithEndpointDiscovery(*sharedCfg.EnableEndpointDiscovery)
+		}
+	}
+
 	// Configure credentials if not already set
 	if cfg.Credentials == credentials.AnonymousCredentials && userCfg.Credentials == nil {
 

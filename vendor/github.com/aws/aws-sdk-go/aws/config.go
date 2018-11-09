@@ -224,6 +224,21 @@ type Config struct {
 	//    	Key: aws.String("//foo//bar//moo"),
 	//    })
 	DisableRestProtocolURICleaning *bool
+
+	// EnableEndpointDiscovery will allow for endpoint discovery on operations that
+	// have the definition in its model. By default, endpoint discovery is off.
+	//
+	// Example:
+	//    sess := session.Must(session.NewSession(&aws.Config{
+	//         EnableEndpointDiscovery: aws.Bool(true),
+	//    }))
+	//
+	//    svc := s3.New(sess)
+	//    out, err := svc.GetObject(&s3.GetObjectInput {
+	//    	Bucket: aws.String("bucketname"),
+	//    	Key: aws.String("/foo/bar/moo"),
+	//    })
+	EnableEndpointDiscovery *bool
 }
 
 // NewConfig returns a new Config pointer that can be chained with builder
@@ -378,6 +393,12 @@ func (c *Config) WithSleepDelay(fn func(time.Duration)) *Config {
 	return c
 }
 
+// WithEndpointDiscovery will set whether or not to use endpoint discovery.
+func (c *Config) WithEndpointDiscovery(t bool) *Config {
+	c.EnableEndpointDiscovery = &t
+	return c
+}
+
 // MergeIn merges the passed in configs into the existing config object.
 func (c *Config) MergeIn(cfgs ...*Config) {
 	for _, other := range cfgs {
@@ -476,6 +497,10 @@ func mergeInConfig(dst *Config, other *Config) {
 
 	if other.EnforceShouldRetryCheck != nil {
 		dst.EnforceShouldRetryCheck = other.EnforceShouldRetryCheck
+	}
+
+	if other.EnableEndpointDiscovery != nil {
+		dst.EnableEndpointDiscovery = other.EnableEndpointDiscovery
 	}
 }
 

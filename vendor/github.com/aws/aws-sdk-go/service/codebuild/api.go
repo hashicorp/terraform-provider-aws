@@ -379,8 +379,8 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 // CreateWebhook API operation for AWS CodeBuild.
 //
 // For an existing AWS CodeBuild build project that has its source code stored
-// in a GitHub repository, enables AWS CodeBuild to begin automatically rebuilding
-// the source code every time a code change is pushed to the repository.
+// in a GitHub or Bitbucket repository, enables AWS CodeBuild to begin automatically
+// rebuilding the source code every time a code change is pushed to the repository.
 //
 // If you enable webhooks for an AWS CodeBuild project, and the project is used
 // as a build step in AWS CodePipeline, then two identical builds will be created
@@ -558,8 +558,8 @@ func (c *CodeBuild) DeleteWebhookRequest(input *DeleteWebhookInput) (req *reques
 // DeleteWebhook API operation for AWS CodeBuild.
 //
 // For an existing AWS CodeBuild build project that has its source code stored
-// in a GitHub repository, stops AWS CodeBuild from automatically rebuilding
-// the source code every time a code change is pushed to the repository.
+// in a GitHub or Bitbucket repository, stops AWS CodeBuild from automatically
+// rebuilding the source code every time a code change is pushed to the repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1292,6 +1292,8 @@ func (c *CodeBuild) UpdateWebhookRequest(input *UpdateWebhookInput) (req *reques
 // UpdateWebhook API operation for AWS CodeBuild.
 //
 // Updates the webhook associated with an AWS CodeBuild build project.
+//
+// If you use Bitbucket for your repository then rotateSecret is ignored.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2481,8 +2483,8 @@ func (s *CreateWebhookInput) SetProjectName(v string) *CreateWebhookInput {
 type CreateWebhookOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about a webhook in GitHub that connects repository events to
-	// a build project in AWS CodeBuild.
+	// Information about a webhook that connects repository events to a build project
+	// in AWS CodeBuild.
 	Webhook *Webhook `locationName:"webhook" type:"structure"`
 }
 
@@ -3447,8 +3449,8 @@ type Project struct {
 	// Information about the VPC configuration that AWS CodeBuild will access.
 	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 
-	// Information about a webhook in GitHub that connects repository events to
-	// a build project in AWS CodeBuild.
+	// Information about a webhook that connects repository events to a build project
+	// in AWS CodeBuild.
 	Webhook *Webhook `locationName:"webhook" type:"structure"`
 }
 
@@ -4048,8 +4050,13 @@ type ProjectSource struct {
 	//    example, https://git-codecommit.region-ID.amazonaws.com/v1/repos/repo-name).
 	//
 	//    * For source code in an Amazon Simple Storage Service (Amazon S3) input
-	//    bucket, the path to the ZIP file that contains the source code (for example,
-	//    bucket-name/path/to/object-name.zip)
+	//    bucket, one of the following.
+	//
+	//  The path to the ZIP file that contains the source code (for example, bucket-name/path/to/object-name.zip).
+	//
+	//
+	//  The path to the folder that contains the source code (for example, bucket-name/path/to/source-code/folder/).
+	//
 	//
 	//    * For source code in a GitHub repository, the HTTPS clone URL to the repository
 	//    that contains the source and the build spec. Also, you must connect your
@@ -4077,9 +4084,9 @@ type ProjectSource struct {
 	Location *string `locationName:"location" type:"string"`
 
 	// Set to true to report the status of a build's start and finish to your source
-	// provider. This option is only valid when your source provider is GitHub.
-	// If this is set and you use a different source provider, an invalidInputException
-	// is thrown.
+	// provider. This option is only valid when your source provider is GitHub,
+	// GitHub Enterprise, or Bitbucket. If this is set and you use a different source
+	// provider, an invalidInputException is thrown.
 	ReportBuildStatus *bool `locationName:"reportBuildStatus" type:"boolean"`
 
 	// An identifier for this project source.
@@ -4427,7 +4434,7 @@ type StartBuildInput struct {
 
 	// Set to true to report to your source provider the status of a build's start
 	// and completion. If you use this option with a source provider other than
-	// GitHub, an invalidInputException is thrown.
+	// GitHub, GitHub Enterprise, or Bitbucket, an invalidInputException is thrown.
 	ReportBuildStatusOverride *bool `locationName:"reportBuildStatusOverride" type:"boolean"`
 
 	// An array of ProjectArtifacts objects.
@@ -5150,8 +5157,9 @@ type UpdateWebhookInput struct {
 	// ProjectName is a required field
 	ProjectName *string `locationName:"projectName" min:"2" type:"string" required:"true"`
 
-	// A boolean value that specifies whether the associated repository's secret
-	// token should be updated.
+	// A boolean value that specifies whether the associated GitHub repository's
+	// secret token should be updated. If you use Bitbucket for your repository
+	// then rotateSecret is ignored.
 	RotateSecret *bool `locationName:"rotateSecret" type:"boolean"`
 }
 
@@ -5278,8 +5286,8 @@ func (s *VpcConfig) SetVpcId(v string) *VpcConfig {
 	return s
 }
 
-// Information about a webhook in GitHub that connects repository events to
-// a build project in AWS CodeBuild.
+// Information about a webhook that connects repository events to a build project
+// in AWS CodeBuild.
 type Webhook struct {
 	_ struct{} `type:"structure"`
 
@@ -5296,6 +5304,8 @@ type Webhook struct {
 	PayloadUrl *string `locationName:"payloadUrl" min:"1" type:"string"`
 
 	// The secret token of the associated repository.
+	//
+	// A Bitbucket webhook does not support secret.
 	Secret *string `locationName:"secret" min:"1" type:"string"`
 
 	// The URL to the webhook.
