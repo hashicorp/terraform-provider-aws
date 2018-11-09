@@ -473,7 +473,7 @@ func validateEC2AutomateARN(v interface{}, k string) (ws []string, errors []erro
 	value := v.(string)
 
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html
-	pattern := `^arn:[\w-]+:automate:[\w-]+:ec2:(recover|stop|terminate)$`
+	pattern := `^arn:[\w-]+:automate:[\w-]+:ec2:(reboot|recover|stop|terminate)$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q does not match EC2 automation ARN (%q): %q",
