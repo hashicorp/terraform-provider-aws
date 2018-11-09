@@ -169,7 +169,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     username           = "testuser"
     password           = "T3stPass"
     data_table_name    = "test-table"
-    copy_options       = "delimiter '|'"                                                                                                    # the default delimiter
+    copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "test-col"
     s3_backup_mode     = "Enabled"
 

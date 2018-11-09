@@ -143,7 +143,7 @@ The following arguments are supported:
 * `step_adjustment` - (Optional) A set of adjustments that manage scaling. These have the following structure:
 
  ```hcl
- resource "aws_appautoscaling_policy" "ecs_policy" {
+resource "aws_appautoscaling_policy" "ecs_policy" {
   # ...
 
   step_scaling_policy_configuration {

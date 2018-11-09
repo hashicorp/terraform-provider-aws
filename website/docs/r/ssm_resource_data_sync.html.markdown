@@ -56,7 +56,7 @@ resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
   s3_destination = {
     bucket_name = "${aws_s3_bucket.hoge.bucket}"
-    region = "${aws_s3_bucket.hoge.region}"
+    region      = "${aws_s3_bucket.hoge.region}"
   }
 }
 ```

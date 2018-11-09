@@ -21,12 +21,12 @@ resource "aws_api_gateway_rest_api" "myapi" {
 
 resource "aws_api_gateway_deployment" "dev" {
   rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
-  stage_name = "dev"
+  stage_name  = "dev"
 }
 
 resource "aws_api_gateway_deployment" "prod" {
   rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
-  stage_name = "prod"
+  stage_name  = "prod"
 }
 
 resource "aws_api_gateway_usage_plan" "MyUsagePlan" {

@@ -76,7 +76,7 @@ which take the following arguments:
 ```hcl
 data "aws_subnet" "selected" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = "" # insert value here
   }
 }
