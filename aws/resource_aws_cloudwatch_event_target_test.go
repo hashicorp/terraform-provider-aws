@@ -21,7 +21,7 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	targetID1 := fmt.Sprintf("tf-acc-cw-target-%s", rName1)
 	targetID2 := fmt.Sprintf("tf-acc-cw-target-%s", rName2)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -56,7 +56,7 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 	ruleName := fmt.Sprintf("tf-acc-cw-event-rule-missing-target-id-%s", rName)
 	snsTopicName := fmt.Sprintf("tf-acc-%s", rName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 	ssmDocumentName := acctest.RandomWithPrefix("tf_ssm_Document")
 	targetID := fmt.Sprintf("tf-acc-cw-target-full-%s", rName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -106,7 +106,7 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_ssm_Document")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -125,7 +125,7 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_ecs_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -144,7 +144,7 @@ func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_batch_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -163,7 +163,7 @@ func TestAccAWSCloudWatchEventTarget_kinesis(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_kinesis_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -182,7 +182,7 @@ func TestAccAWSCloudWatchEventTarget_sqs(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_sqs_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -201,7 +201,7 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_input_transformer")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,

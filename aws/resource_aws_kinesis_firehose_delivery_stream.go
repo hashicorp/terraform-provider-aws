@@ -1192,6 +1192,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 						"s3_backup_mode": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Optional: true,
 							Default:  "FailedDocumentsOnly",
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -1234,7 +1235,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      180,
-							ValidateFunc: validateIntegerInRange(180, 600),
+							ValidateFunc: validation.IntBetween(180, 600),
 						},
 
 						"hec_endpoint": {
@@ -1279,7 +1280,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      3600,
-							ValidateFunc: validateIntegerInRange(0, 7200),
+							ValidateFunc: validation.IntBetween(0, 7200),
 						},
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),

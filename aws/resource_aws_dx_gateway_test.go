@@ -16,7 +16,7 @@ import (
 func TestAccAwsDxGateway_importBasic(t *testing.T) {
 	resourceName := "aws_dx_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
@@ -42,7 +42,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
@@ -62,7 +62,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 }
 
 func TestAccAwsDxGateway_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,

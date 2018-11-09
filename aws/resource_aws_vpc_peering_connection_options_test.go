@@ -11,7 +11,7 @@ import (
 func TestAccAWSVpcPeeringConnectionOptions_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection_options.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
@@ -30,7 +30,7 @@ func TestAccAWSVpcPeeringConnectionOptions_importBasic(t *testing.T) {
 }
 
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,

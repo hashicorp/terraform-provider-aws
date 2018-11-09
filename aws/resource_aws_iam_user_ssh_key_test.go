@@ -18,7 +18,7 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAWSSSHKeyConfig_sshEncoding, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
@@ -39,7 +39,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAWSSSHKeyConfig_pemEncoding, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,

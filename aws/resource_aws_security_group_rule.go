@@ -577,10 +577,14 @@ func ipPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermission, error) {
 	var perm ec2.IpPermission
 
-	perm.FromPort = aws.Int64(int64(d.Get("from_port").(int)))
-	perm.ToPort = aws.Int64(int64(d.Get("to_port").(int)))
 	protocol := protocolForValue(d.Get("protocol").(string))
 	perm.IpProtocol = aws.String(protocol)
+
+	// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
+	if protocol != "-1" {
+		perm.FromPort = aws.Int64(int64(d.Get("from_port").(int)))
+		perm.ToPort = aws.Int64(int64(d.Get("to_port").(int)))
+	}
 
 	// build a group map that behaves like a set
 	groups := make(map[string]bool)

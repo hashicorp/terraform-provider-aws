@@ -10,13 +10,14 @@ import (
 )
 
 func TestAccDataSourceAwsEfsFileSystem(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEfsFileSystemConfig,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.aws_efs_file_system.by_id", "arn", "aws_efs_file_system.test", "arn"),
 					testAccDataSourceAwsEfsFileSystemCheck("data.aws_efs_file_system.by_creation_token"),
 					testAccDataSourceAwsEfsFileSystemCheck("data.aws_efs_file_system.by_id"),
 					resource.TestMatchResourceAttr("data.aws_efs_file_system.by_creation_token", "dns_name", regexp.MustCompile("^[^.]+.efs.([a-z]{2}-(gov-)?[a-z]+-\\d{1})?.amazonaws.com$")),

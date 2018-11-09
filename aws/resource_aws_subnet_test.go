@@ -90,7 +90,7 @@ func testSweepSubnets(region string) error {
 func TestAccAWSSubnet_importBasic(t *testing.T) {
 	resourceName := "aws_subnet.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
@@ -123,7 +123,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_subnet.foo",
 		Providers:     testAccProviders,
@@ -148,7 +148,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 func TestAccAWSSubnet_ipv6(t *testing.T) {
 	var before, after ec2.Subnet
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_subnet.foo",
 		Providers:     testAccProviders,
@@ -186,7 +186,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	var subnet ec2.Subnet
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_subnet.foo",
 		Providers:     testAccProviders,

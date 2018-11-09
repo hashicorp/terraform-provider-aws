@@ -115,7 +115,7 @@ The following arguments are supported:
 
   * `default_email_option` (Optional) - The default email option. Must be either `CONFIRM_WITH_CODE` or `CONFIRM_WITH_LINK`. Defaults to `CONFIRM_WITH_CODE`.
   * `email_message` (Optional) - The email message template. Must contain the `{####}` placeholder. **NOTE:** - If `email_verification_message` and `verification_message_template.email_message` are specified and the values are different, either one is prioritized and updated.
-  * `email_message_by_link` (Optional) - The email message template for sending a confirmation link to the user, it must contain the `{##VERIFY EMAIL##}` placeholder.
+  * `email_message_by_link` (Optional) - The email message template for sending a confirmation link to the user, it must contain the `{##Click Here##}` placeholder.
   * `email_subject` (Optional) - The subject line for the email message template. **NOTE:** - If `email_verification_subject` and `verification_message_template.email_subject` are specified and the values are different, either one is prioritized and updated.
   * `email_subject_by_link` (Optional) - The subject line for the email message template for sending a confirmation link to the user.
   * `sms_message` (Optional) - The SMS message template. Must contain the `{####}` placeholder.

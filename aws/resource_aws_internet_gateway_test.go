@@ -96,7 +96,7 @@ func testSweepInternetGateways(region string) error {
 func TestAccAWSInternetGateway_importBasic(t *testing.T) {
 	resourceName := "aws_internet_gateway.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInternetGatewayDestroy,
@@ -134,7 +134,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_internet_gateway.foo",
 		Providers:     testAccProviders,
@@ -173,7 +173,7 @@ func TestAccAWSInternetGateway_delete(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_internet_gateway.foo",
 		Providers:     testAccProviders,
@@ -195,7 +195,7 @@ func TestAccAWSInternetGateway_delete(t *testing.T) {
 func TestAccAWSInternetGateway_tags(t *testing.T) {
 	var v ec2.InternetGateway
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_internet_gateway.foo",
 		Providers:     testAccProviders,

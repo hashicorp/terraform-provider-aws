@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -92,6 +93,7 @@ func resourceAwsLbListener() *schema.Resource {
 						"order": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 50000),
 						},
 
@@ -355,14 +357,12 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		defaultActionMap := defaultAction.(map[string]interface{})
 
 		action := &elbv2.Action{
-			Type: aws.String(defaultActionMap["type"].(string)),
+			Order: aws.Int64(int64(i + 1)),
+			Type:  aws.String(defaultActionMap["type"].(string)),
 		}
 
-		if order, ok := defaultActionMap["order"]; ok && order != 0 {
+		if order, ok := defaultActionMap["order"]; ok && order.(int) != 0 {
 			action.Order = aws.Int64(int64(order.(int)))
-		}
-		if len(defaultActions) != 1 && action.Order == nil {
-			return errors.New("when using more then one action, you need to specify 'order' for each action")
 		}
 
 		switch defaultActionMap["type"].(string) {
@@ -551,9 +551,11 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 
-	sortedActions := sortActionsBasedonTypeinTFFile("default_action", listener.DefaultActions, d)
-	defaultActions := make([]interface{}, len(sortedActions))
-	for i, defaultAction := range sortedActions {
+	sort.Slice(listener.DefaultActions, func(i, j int) bool {
+		return aws.Int64Value(listener.DefaultActions[i].Order) < aws.Int64Value(listener.DefaultActions[j].Order)
+	})
+	defaultActions := make([]interface{}, len(listener.DefaultActions))
+	for i, defaultAction := range listener.DefaultActions {
 		defaultActionMap := make(map[string]interface{})
 		defaultActionMap["type"] = aws.StringValue(defaultAction.Type)
 		defaultActionMap["order"] = aws.Int64Value(defaultAction.Order)
@@ -663,14 +665,12 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 			defaultActionMap := defaultAction.(map[string]interface{})
 
 			action := &elbv2.Action{
-				Type: aws.String(defaultActionMap["type"].(string)),
+				Order: aws.Int64(int64(i + 1)),
+				Type:  aws.String(defaultActionMap["type"].(string)),
 			}
 
-			if order, ok := defaultActionMap["order"]; ok && order != 0 {
+			if order, ok := defaultActionMap["order"]; ok && order.(int) != 0 {
 				action.Order = aws.Int64(int64(order.(int)))
-			}
-			if len(defaultActions) != 1 && action.Order == nil {
-				return errors.New("when using more then one action, you need to specify 'order' for each action")
 			}
 
 			switch defaultActionMap["type"].(string) {

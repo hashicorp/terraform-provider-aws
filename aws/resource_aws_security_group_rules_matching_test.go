@@ -10,10 +10,9 @@ import (
 // testing rulesForGroupPermissions
 func TestRulesMixedMatching(t *testing.T) {
 	cases := []struct {
-		groupId string
-		local   []interface{}
-		remote  []map[string]interface{}
-		saves   []map[string]interface{}
+		local  []interface{}
+		remote []map[string]interface{}
+		saves  []map[string]interface{}
 	}{
 		{
 			local: []interface{}{

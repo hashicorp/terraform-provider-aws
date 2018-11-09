@@ -59,7 +59,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.static",
 		Providers:     testAccProviders,
@@ -73,6 +73,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "action.0.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "0"),
@@ -92,7 +93,7 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_listener_rule.static",
 		Providers:     testAccProviders,
@@ -106,6 +107,7 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "action.0.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.redirect.#", "0"),
@@ -124,7 +126,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.static",
 		Providers:     testAccProviders,
@@ -138,6 +140,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "redirect"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.target_group_arn", ""),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "1"),
@@ -162,7 +165,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-fixedresponse-%s", acctest.RandStringFromCharSet(9, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.static",
 		Providers:     testAccProviders,
@@ -176,6 +179,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "fixed-response"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.target_group_arn", ""),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "0"),
@@ -198,7 +202,7 @@ func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.static",
 		Providers:     testAccProviders,
@@ -227,7 +231,7 @@ func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.static",
 		Providers:     testAccProviders,
@@ -254,7 +258,7 @@ func TestAccAWSLBListenerRule_multipleConditionThrowsError(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
@@ -272,7 +276,7 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.first",
 		Providers:     testAccProviders,
@@ -348,7 +352,7 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 	certificateName := fmt.Sprintf("testcert-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	cognitoPrefix := fmt.Sprintf("testcog-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.cognito",
 		Providers:     testAccProvidersWithTLS,
@@ -362,16 +366,15 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.type", "authenticate-cognito"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.order", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.type", "authenticate-cognito"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.user_pool_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.user_pool_client_id"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.user_pool_domain"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.authentication_request_extra_params.%", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.authentication_request_extra_params.param", "test"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.1.type", "forward"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.1.order", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.1.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.1.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "condition.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "condition.1366281676.field", "path-pattern"),
@@ -389,7 +392,7 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	certificateName := fmt.Sprintf("testcert-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.oidc",
 		Providers:     testAccProvidersWithTLS,
@@ -403,8 +406,8 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.oidc", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.type", "authenticate-oidc"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.order", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.type", "authenticate-oidc"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.authorization_endpoint", "https://example.com/authorization_endpoint"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.client_id", "s6BhdRkqt3"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.client_secret", "7Fjfp0ZBr1KtDRbnfVdmIw"),
@@ -413,9 +416,8 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.user_info_endpoint", "https://example.com/user_info_endpoint"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.authentication_request_extra_params.%", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.authentication_request_extra_params.param", "test"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.1.type", "forward"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.1.order", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.1.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.oidc", "action.1.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "condition.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "condition.1366281676.field", "path-pattern"),
@@ -425,6 +427,83 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
+	var rule elbv2.Rule
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
+func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
+	var rule elbv2.Rule
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					testAccCheckAWSLBListenerRuleActionOrderDisappears(&rule, 1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSLBListenerRuleActionOrderDisappears(rule *elbv2.Rule, actionOrderToDelete int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var newActions []*elbv2.Action
+
+		for i, action := range rule.Actions {
+			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
+				newActions = append(rule.Actions[:i], rule.Actions[i+1:]...)
+				break
+			}
+		}
+
+		if len(newActions) == 0 {
+			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+		input := &elbv2.ModifyRuleInput{
+			Actions: newActions,
+			RuleArn: rule.RuleArn,
+		}
+
+		_, err := conn.ModifyRule(input)
+
+		return err
+	}
 }
 
 func testAccCheckAWSLbListenerRuleRecreated(t *testing.T,
@@ -1520,7 +1599,6 @@ func testAccAWSLBListenerRuleConfig_cognito(lbName string, targetGroupName strin
   priority = 100
 
   action {
-    order = 1
     type = "authenticate-cognito"
     authenticate_cognito {
       user_pool_arn = "${aws_cognito_user_pool.test.arn}"
@@ -1534,7 +1612,6 @@ func testAccAWSLBListenerRuleConfig_cognito(lbName string, targetGroupName strin
   }
 
   action {
-    order = 2
     type = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
@@ -1697,7 +1774,6 @@ func testAccAWSLBListenerRuleConfig_oidc(lbName string, targetGroupName string, 
   priority = 100
 
   action {
-    order = 1
     type = "authenticate-oidc"
     authenticate_oidc {
       authorization_endpoint =  "https://example.com/authorization_endpoint"
@@ -1714,7 +1790,6 @@ func testAccAWSLBListenerRuleConfig_oidc(lbName string, targetGroupName string, 
   }
 
   action {
-    order = 2
     type = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
@@ -1848,4 +1923,155 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_cognito"
   }
 }`, lbName, targetGroupName, certificateName)
+}
+
+func testAccAWSLBListenerRuleConfig_Action_Order(rName string) string {
+	return fmt.Sprintf(`
+variable "rName" {
+  default = %q
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = "${aws_lb_listener.test.arn}"
+
+  action {
+    order = 1
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+
+      authentication_request_extra_params {
+        param  = "test"
+      }
+    }
+  }
+
+  action {
+    order            = 2
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+  }
+
+  condition {
+    field = "path-pattern"
+    values = ["/static/*"]
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  name             = "${var.rName}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  validity_period_hours = 12
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = "${aws_lb.test.id}"
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal                   = true
+  name                       = "${var.rName}"
+  security_groups            = ["${aws_security_group.test.id}"]
+  subnets                    = ["${aws_subnet.test.*.id}"]
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = "${var.rName}"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.test.id}"
+
+  health_check {
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags {
+    Name = "${var.rName}"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone       = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block              = "10.0.${count.index}.0/24"
+  map_public_ip_on_launch = true
+  vpc_id                  = "${aws_vpc.test.id}"
+
+  tags {
+    Name = "${var.rName}"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = "${var.rName}"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name = "${var.rName}"
+  }
+}`, rName)
 }

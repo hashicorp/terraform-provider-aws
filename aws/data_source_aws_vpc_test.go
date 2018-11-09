@@ -15,7 +15,7 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 	rInt := rand.Intn(16)
 	cidr := fmt.Sprintf("172.%d.0.0/16", rInt)
 	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-basic-%d", rInt)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -32,6 +32,8 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 						"data.aws_vpc.by_id", "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttrSet(
 						"data.aws_vpc.by_id", "arn"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_vpc.by_id", "main_route_table_id", "aws_vpc.test", "main_route_table_id"),
 				),
 			},
 		},
@@ -43,7 +45,7 @@ func TestAccDataSourceAwsVpc_ipv6Associated(t *testing.T) {
 	rInt := rand.Intn(16)
 	cidr := fmt.Sprintf("172.%d.0.0/16", rInt)
 	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-ipv6-associated-%d", rInt)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -65,7 +67,7 @@ func TestAccDataSourceAwsVpc_multipleCidr(t *testing.T) {
 	rInt := rand.Intn(16)
 	rName := "data.aws_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,

@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayAccount_importBasic(t *testing.T) {
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	expectedRoleArn_first := regexp.MustCompile(":role/" + firstName + "$")
 	expectedRoleArn_second := regexp.MustCompile(":role/" + secondName + "$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,

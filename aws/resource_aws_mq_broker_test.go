@@ -241,7 +241,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -262,6 +262,9 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttrSet("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckResourceAttrSet("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.general", "true"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.audit", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
@@ -308,7 +311,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
   </plugins>
 </broker>`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -330,6 +333,9 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day", "02:00"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "CET"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.general", "false"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.audit", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "subnet_ids.#", "2"),
@@ -414,7 +420,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
   </plugins>
 </broker>`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -436,6 +442,9 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day", "02:00"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "CET"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.general", "true"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.audit", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "subnet_ids.#", "2"),
@@ -506,7 +515,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
@@ -604,6 +613,9 @@ resource "aws_mq_broker" "test" {
   engine_version = "5.15.0"
   host_instance_type = "mq.t2.micro"
   security_groups = ["${aws_security_group.test.id}"]
+  logs {
+    general = true
+  }
   user {
     username = "Test"
     password = "TestTest1234"
@@ -733,6 +745,10 @@ resource "aws_mq_broker" "test" {
   engine_type = "ActiveMQ"
   engine_version = "5.15.0"
   host_instance_type = "mq.t2.micro"
+  logs {
+    general = true
+    audit = true
+  }
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
     time_of_day = "02:00"

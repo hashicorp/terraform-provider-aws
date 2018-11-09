@@ -18,7 +18,7 @@ resource "aws_elastictranscoder_preset" "bar" {
   description = "Sample Preset"
   name        = "sample_preset"
 
-  audio = {
+  audio {
     audio_packing_mode = "SingleTrack"
     bit_rate           = 96
     channels           = 2
@@ -26,11 +26,11 @@ resource "aws_elastictranscoder_preset" "bar" {
     sample_rate        = 44100
   }
 
-  audio_codec_options = {
+  audio_codec_options {
     profile = "AAC-LC"
   }
 
-  video = {
+  video {
     bit_rate             = "1600"
     codec                = "H.264"
     display_aspect_ratio = "16:9"
@@ -52,7 +52,7 @@ resource "aws_elastictranscoder_preset" "bar" {
     ColorSpaceConversionMode = "None"
   }
 
-  video_watermarks = {
+  video_watermarks {
     id                = "Terraform Test"
     max_width         = "20%"
     max_height        = "20%"
@@ -65,7 +65,7 @@ resource "aws_elastictranscoder_preset" "bar" {
     target            = "Content"
   }
 
-  thumbnails = {
+  thumbnails {
     format         = "png"
     interval       = 120
     max_width      = "auto"

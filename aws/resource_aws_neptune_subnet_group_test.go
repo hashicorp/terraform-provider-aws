@@ -19,7 +19,7 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
@@ -47,7 +47,7 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
@@ -74,7 +74,7 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
@@ -99,7 +99,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,

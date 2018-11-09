@@ -12,7 +12,7 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := "data.aws_launch_configuration.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -35,7 +35,7 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := "data.aws_launch_configuration.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

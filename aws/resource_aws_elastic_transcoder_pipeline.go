@@ -323,11 +323,18 @@ func expandETPermList(permissions *schema.Set) []*elastictranscoder.Permission {
 	var perms []*elastictranscoder.Permission
 
 	for _, p := range permissions.List() {
+		if p == nil {
+			continue
+		}
+
+		m := p.(map[string]interface{})
+
 		perm := &elastictranscoder.Permission{
-			Access:      getStringPtrList(p.(map[string]interface{}), "access"),
+			Access:      expandStringList(m["access"].([]interface{})),
 			Grantee:     getStringPtr(p, "grantee"),
 			GranteeType: getStringPtr(p, "grantee_type"),
 		}
+
 		perms = append(perms, perm)
 	}
 	return perms

@@ -33,6 +33,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `file_system_arn` - Amazon Resource Name of the file system for which the mount target is intended.
 * `file_system_id` - ID of the file system for which the mount target is intended.
 * `subnet_id` - ID of the mount target's subnet.
 * `ip_address` - Address at which the file system may be mounted via the mount target.

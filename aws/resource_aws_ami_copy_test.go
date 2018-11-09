@@ -15,7 +15,7 @@ func TestAccAWSAMICopy_basic(t *testing.T) {
 	var image ec2.Image
 	resourceName := "aws_ami_copy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
@@ -36,7 +36,7 @@ func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_copy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,

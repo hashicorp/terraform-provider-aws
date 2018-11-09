@@ -56,7 +56,7 @@ func TestAccAWSIAMGroup_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-import-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupDestroy,

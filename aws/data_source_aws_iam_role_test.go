@@ -12,7 +12,7 @@ import (
 func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 	roleName := fmt.Sprintf("test-role-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
