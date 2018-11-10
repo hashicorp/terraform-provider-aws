@@ -62,6 +62,13 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					protocol := protocolForValue(d.Get("protocol").(string))
+					if protocol == "-1" && old == "0" && new == "65535" {
+						return true
+					}
+					return false
+				},
 			},
 
 			"protocol": {
@@ -430,21 +437,24 @@ func (b ByGroupPair) Less(i, j int) bool {
 func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *ec2.IpPermission {
 	var rule *ec2.IpPermission
 	for _, r := range rules {
-		if r.ToPort != nil && *p.ToPort != *r.ToPort {
+		if p.ToPort != nil && r.ToPort != nil && *p.ToPort != *r.ToPort {
 			continue
 		}
 
-		if r.FromPort != nil && *p.FromPort != *r.FromPort {
+		if p.FromPort != nil && r.FromPort != nil && *p.FromPort != *r.FromPort {
 			continue
 		}
 
-		if r.IpProtocol != nil && *p.IpProtocol != *r.IpProtocol {
+		if p.IpProtocol != nil && r.IpProtocol != nil && *p.IpProtocol != *r.IpProtocol {
 			continue
 		}
 
 		remaining := len(p.IpRanges)
 		for _, ip := range p.IpRanges {
 			for _, rip := range r.IpRanges {
+				if ip.CidrIp == nil || rip.CidrIp == nil {
+					continue
+				}
 				if *ip.CidrIp == *rip.CidrIp {
 					remaining--
 				}
@@ -458,6 +468,9 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 		remaining = len(p.Ipv6Ranges)
 		for _, ipv6 := range p.Ipv6Ranges {
 			for _, ipv6ip := range r.Ipv6Ranges {
+				if ipv6.CidrIpv6 == nil || ipv6ip.CidrIpv6 == nil {
+					continue
+				}
 				if *ipv6.CidrIpv6 == *ipv6ip.CidrIpv6 {
 					remaining--
 				}
@@ -471,6 +484,9 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 		remaining = len(p.PrefixListIds)
 		for _, pl := range p.PrefixListIds {
 			for _, rpl := range r.PrefixListIds {
+				if pl.PrefixListId == nil || rpl.PrefixListId == nil {
+					continue
+				}
 				if *pl.PrefixListId == *rpl.PrefixListId {
 					remaining--
 				}
@@ -485,10 +501,16 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 		for _, ip := range p.UserIdGroupPairs {
 			for _, rip := range r.UserIdGroupPairs {
 				if isVPC {
+					if ip.GroupId == nil || rip.GroupId == nil {
+						continue
+					}
 					if *ip.GroupId == *rip.GroupId {
 						remaining--
 					}
 				} else {
+					if ip.GroupName == nil || rip.GroupName == nil {
+						continue
+					}
 					if *ip.GroupName == *rip.GroupName {
 						remaining--
 					}
