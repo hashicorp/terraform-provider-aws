@@ -843,8 +843,7 @@ func TestAccAWSSecurityGroupRule_Description_AllPorts(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6416
-func TestAccAWSSecurityGroupRule_Description_AllPorts_ToPort65535(t *testing.T) {
+func TestAccAWSSecurityGroupRule_Description_AllPorts_NonZeroPorts(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	securityGroupResourceName := "aws_security_group.test"
@@ -870,14 +869,14 @@ func TestAccAWSSecurityGroupRule_Description_AllPorts_ToPort65535(t *testing.T) 
 		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPortsToPort65535(rName, "description1"),
+				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPortsNonZeroPorts(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
 					testAccCheckAWSSecurityGroupRuleAttributes(resourceName, &group, &rule1, "ingress"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
-					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "to_port", "65535"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
 				),
 			},
 			{
@@ -887,7 +886,7 @@ func TestAccAWSSecurityGroupRule_Description_AllPorts_ToPort65535(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPorts(rName, "description2"),
+				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPortsNonZeroPorts(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
 					testAccCheckAWSSecurityGroupRuleAttributes(resourceName, &group, &rule2, "ingress"),
@@ -1922,7 +1921,7 @@ resource "aws_security_group_rule" "test" {
 `, rName, description)
 }
 
-func testAccAWSSecurityGroupRuleConfigDescriptionAllPortsToPort65535(rName, description string) string {
+func testAccAWSSecurityGroupRuleConfigDescriptionAllPortsNonZeroPorts(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %q
@@ -1935,10 +1934,10 @@ resource "aws_security_group" "test" {
 resource "aws_security_group_rule" "test" {
   cidr_blocks       = ["0.0.0.0/0"]
   description       = %q
-  from_port         = 0
+  from_port         = -1
   protocol          = -1
   security_group_id = "${aws_security_group.test.id}"
-  to_port           = 65535
+  to_port           = -1
   type              = "ingress"
 }
 `, rName, description)
