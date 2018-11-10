@@ -1,4 +1,9 @@
-## 1.44.0 (Unreleased)
+## 1.43.2 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_security_group_rule: Prevent crash when reading rules from groups containing an `ALL`/`-1` `protocol` rule [GH-6419]
+
 ## 1.43.1 (November 09, 2018)
 
 BUG FIXES:
