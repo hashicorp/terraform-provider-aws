@@ -1,8 +1,8 @@
-## 1.43.2 (Unreleased)
+## 1.43.2 (November 10, 2018)
 
 BUG FIXES:
 
-* resource/aws_security_group_rule: Prevent crash when reading rules from groups containing an `ALL`/`-1` `protocol` rule [GH-6419]
+* resource/aws_security_group_rule: Prevent crash when reading rules from groups containing an `ALL`/`-1` `protocol` rule ([#6419](https://github.com/terraform-providers/terraform-provider-aws/issues/6419))
 
 ## 1.43.1 (November 09, 2018)
 
